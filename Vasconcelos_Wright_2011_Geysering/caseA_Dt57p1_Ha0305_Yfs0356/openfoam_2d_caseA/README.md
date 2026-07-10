@@ -47,6 +47,7 @@ The vertical-plane geometry preserves every published length and diameter,
 but a planar 2-D extrusion cannot preserve the circular pipe/tower area ratio
 at the same time. Its area ratio is `Dt/D = 0.607`, whereas the physical
 circular ratio is `(Dt/D)^2 = 0.369`. It also cannot resolve the annular
-three-dimensional wall film. Consequently this run is a morphology and
-time-history diagnostic, not a geometry-exact substitute for a 3-D circular
-T-junction simulation.
+three-dimensional wall film, and its pressure outlet at the tower rim removes
+any above-rim jet from the domain. Consequently this run is a morphology and
+time-history diagnostic, not a geometry-exact substitute. Use
+`../openfoam_3d_caseA` for the circular T-junction and above-rim atmosphere.
