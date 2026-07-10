@@ -249,7 +249,10 @@ def main() -> None:
     ax.legend(frameon=False, fontsize=8)
     fig.tight_layout()
     fig.savefig(OUT / "openfoam_2d_pressure_comparison.png", dpi=300)
-    fig.savefig(OUT / "openfoam_2d_pressure_comparison.pdf")
+    fig.savefig(
+        OUT / "openfoam_2d_pressure_comparison.pdf",
+        metadata={"CreationDate": None, "ModDate": None},
+    )
     plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(7.3, 4.3))
@@ -285,7 +288,10 @@ def main() -> None:
     ax.legend(frameon=False, fontsize=8, ncol=2)
     fig.tight_layout()
     fig.savefig(OUT / "openfoam_2d_levels_comparison.png", dpi=300)
-    fig.savefig(OUT / "openfoam_2d_levels_comparison.pdf")
+    fig.savefig(
+        OUT / "openfoam_2d_levels_comparison.pdf",
+        metadata={"CreationDate": None, "ModDate": None},
+    )
     plt.close(fig)
 
     print(json.dumps(metrics, indent=2, allow_nan=False))
