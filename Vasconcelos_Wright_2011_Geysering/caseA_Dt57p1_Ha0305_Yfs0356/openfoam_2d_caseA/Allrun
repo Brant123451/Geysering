@@ -16,7 +16,9 @@ if (( NP > 6 )); then
 elif (( NP < 1 )); then
     NP=1
 fi
-foamDictionary system/decomposeParDict \
+DECOMP_DICT="decomposeParDict.runtime"
+cp system/decomposeParDict "$DECOMP_DICT"
+foamDictionary "$DECOMP_DICT" \
     -entry numberOfSubdomains \
     -set "$NP" >/dev/null
 
@@ -28,7 +30,7 @@ setFields > log.setFields 2>&1
 # p_rgh is hydrostatically consistent in the connected water. The solver
 # reconstructs p from p_rgh, phase density and gh on its first correction.
 
-decomposePar > log.decomposePar 2>&1
+decomposePar -decomposeParDict "$DECOMP_DICT" > log.decomposePar 2>&1
 OMPI_ALLOW_RUN_AS_ROOT=1 \
 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
 mpirun -np "$NP" compressibleInterFoam -parallel > log.compressibleInterFoam 2>&1

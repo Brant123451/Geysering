@@ -126,6 +126,10 @@ def first_time(time: np.ndarray, condition: np.ndarray) -> float:
     return float(time[idx[0]]) if idx.size else float("nan")
 
 
+def finite_or_none(value: float) -> float | None:
+    return value if math.isfinite(value) else None
+
+
 def main() -> None:
     transducer = read_probe("transducer", "p")
     tower = read_probe("towerCentreline", "alpha.water")
@@ -180,19 +184,21 @@ def main() -> None:
     plateau = (tstar >= 1.0) & (tstar <= min(7.0, np.nanmax(tstar)))
     liftoff = first_time(tstar_tower, yint > 0.02)
     catch = first_time(tstar_tower, (yint > 0.05) & ((yfs - yint) < 0.02))
+    plateau_mean = (
+        float(np.nanmean(hstar[plateau])) if np.any(plateau) else float("nan")
+    )
+    free_surface_max = float(np.nanmax(yfs))
     metrics = {
-        "simulation_end_s": float(time[-1]),
-        "simulation_end_Tstar": float(tstar[-1]),
-        "pressure_plateau_Hstar_mean_T1to7": (
-            float(np.nanmean(hstar[plateau])) if np.any(plateau) else float("nan")
-        ),
-        "pressure_RMSE_Hstar_no_shift": pressure_rmse,
-        "free_surface_max_Ystar": float(np.nanmax(yfs)),
-        "free_surface_RMSE_Ystar_no_shift": fs_rmse,
-        "interface_RMSE_Ystar_no_shift": int_rmse,
-        "interface_liftoff_Tstar": liftoff,
-        "interface_catch_Tstar": catch,
-        "geysering": bool(np.nanmax(yfs) >= 0.98),
+        "simulation_end_s": finite_or_none(float(time[-1])),
+        "simulation_end_Tstar": finite_or_none(float(tstar[-1])),
+        "pressure_plateau_Hstar_mean_T1to7": finite_or_none(plateau_mean),
+        "pressure_RMSE_Hstar_no_shift": finite_or_none(pressure_rmse),
+        "free_surface_max_Ystar": finite_or_none(free_surface_max),
+        "free_surface_RMSE_Ystar_no_shift": finite_or_none(fs_rmse),
+        "interface_RMSE_Ystar_no_shift": finite_or_none(int_rmse),
+        "interface_liftoff_Tstar": finite_or_none(liftoff),
+        "interface_catch_Tstar": finite_or_none(catch),
+        "geysering": bool(free_surface_max >= 0.98),
         "comparison_targets": {
             "pressure_plateau_Hstar": 0.54,
             "free_surface_max_Ystar": 0.63,
@@ -215,7 +221,7 @@ def main() -> None:
         writer.writerow(["time_s", "Tstar", "Yint_star", "Yfs_star"])
         writer.writerows(zip(t_tower, tstar_tower, yint, yfs))
     (OUT / "openfoam_2d_metrics.json").write_text(
-        json.dumps(metrics, indent=2, allow_nan=True),
+        json.dumps(metrics, indent=2, allow_nan=False),
         encoding="utf-8",
     )
 
@@ -281,7 +287,7 @@ def main() -> None:
     fig.savefig(OUT / "openfoam_2d_levels_comparison.pdf")
     plt.close(fig)
 
-    print(json.dumps(metrics, indent=2, allow_nan=True))
+    print(json.dumps(metrics, indent=2, allow_nan=False))
 
 
 if __name__ == "__main__":
