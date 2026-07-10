@@ -36,9 +36,10 @@ runtime:
     postprocess: python3 scripts/postprocess_compare.py
 
 validated_run:
-  model_commit: 662781e4ae6004126acc466761ba219c93ec232a
-  output_commit: 08d4a9a376f8db29385a22cfb42a57df5a67bb15
+  model_commit: a808bef573a4da09a5ded833ed1d2dc9495a1232
+  output_commit: d29865b3ec3aaa1b9c7a38be6bf8d12d7c63dc77
   simulation_end_s: 9.0
+  mpi_ranks: 4
   mesh_cells: 26128
   metrics: outputs/openfoam_2d_metrics.json
   figures:

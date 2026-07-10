@@ -29,6 +29,13 @@ so the Case can be moved or invoked from another working directory.
 - Initial chamber gauge-pressure head: `Ha0 = 0.305 m`.
 - Pressure transducer: `x = 1.616 m`, near the pipe invert.
 
+These values give the paper's Case A nominal initial air volume
+`pi D^2 (0.546)/4 = 3.79 L`, `Dt/D = 0.607`, `Ha0/L = 0.500`, and
+`Yfs0/L = 0.584`. The executable initial fields use zero velocity,
+`T = 293.15 K`, atmospheric pressure `101325 Pa`, chamber pressure
+`104311.7 Pa`, and hydrostatic water pressure `105271.3 Pa` at the pipe
+centreline.
+
 The valve is represented by an initially open interface at `x = 0.546 m`.
 The initial pressure and phase discontinuity therefore approximates an
 instantaneous opening; the experiment reports a manual opening in under one
@@ -54,13 +61,14 @@ From this directory:
 
 ```bash
 ./scripts/validate.sh
-OPENFOAM_NP=6 ./scripts/run.sh
+./scripts/run.sh
 ```
 
 `validate.sh` builds the mesh and runs a short solver start-up in a temporary
 directory. `run.sh` performs the full 9 s simulation and regenerates
-`outputs/`. Set `OPENFOAM_NP=1` for a serial run. To continue an interrupted
-simulation or start over:
+`outputs/`. It automatically uses the available processors, capped at six;
+set `OPENFOAM_NP=4` to reproduce the tracked run or `OPENFOAM_NP=1` for a
+serial run. To continue an interrupted simulation or start over:
 
 ```bash
 ./scripts/resume.sh
@@ -75,7 +83,7 @@ The tracked outputs are from a completed 9 s OpenFOAM v2512 run:
 | Quantity | Model | Experimental target |
 | --- | ---: | ---: |
 | Mean pressure plateau, `H*` (`1 <= T* <= 7`) | 0.710 | 0.54 |
-| Maximum free-surface level, `Y*` | 0.623 | 0.63 |
+| Maximum free-surface level, `Y*` | 0.628 | 0.63 |
 | Interface lift-off, `T*` | 8.03 | 7.3, 7.8, 7.9 |
 | Geysering | false | false |
 
@@ -88,9 +96,11 @@ values are in `outputs/openfoam_2d_metrics.json`.
 The vertical-plane geometry preserves the published lengths and diameters but
 cannot preserve the circular pipe/tower area ratio. Its ratio is
 `Dt/D = 0.607`, whereas the physical circular ratio is
-`(Dt/D)^2 = 0.369`. It also cannot resolve the three-dimensional annular wall
-film. This run is therefore a morphology and time-history diagnostic, not a
-geometry-exact substitute for a circular 3-D T-junction simulation.
+`(Dt/D)^2 = 0.369`; consequently the physical `3.79 L` air volume is not a
+literal volume in the planar mesh. The model also cannot resolve the
+three-dimensional annular wall film. This run is therefore a morphology and
+time-history diagnostic, not a geometry-exact substitute for a circular 3-D
+T-junction simulation.
 
 OpenFOAM time directories, `processor*`, raw probes, and logs are deliberately
 excluded. Recreate all of them with `./scripts/run.sh`.
