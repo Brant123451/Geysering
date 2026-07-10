@@ -43,10 +43,11 @@ chmod +x Allrun Allrun.resume
 
 The defaults use an `8 mm` nominal tetrahedron edge in the apparatus, a
 `20 mm` atmosphere far field, at most six local MPI ranks, and an end time of
-`9 s`. Override them for a smoke run or grid study:
+`9 s`. Override the mesh sizes for a grid study, or request the solver's
+single-step dry run for a smoke test:
 
 ```bash
-CASEA_CORE_SIZE=0.012 CASEA_PLUME_SIZE=0.030 CASEA_END_TIME=0.02 ./Allrun
+CASEA_CORE_SIZE=0.012 CASEA_PLUME_SIZE=0.030 CASEA_DRY_RUN=1 ./Allrun
 ```
 
 Resume an interrupted decomposed run with `./Allrun.resume`.

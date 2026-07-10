@@ -30,6 +30,7 @@ def load_common_postprocessor():
 
 
 def main() -> None:
+    OUT.mkdir(parents=True, exist_ok=True)
     common = load_common_postprocessor()
     common.main()
 
