@@ -1,0 +1,41 @@
+case_id: caseA_Dt57p1_Ha0305_Yfs0356
+description: Vasconcelos and Wright (2011) Case A, planar OpenFOAM model
+
+geometry_m:
+  horizontal_pipe_diameter: 0.094
+  upstream_air_chamber_length: 0.546
+  water_filled_pipe_length: 2.970
+  downstream_closed_pipe_length: 0.490
+  tower_diameter: 0.0571
+  tower_length_above_pipe_crown: 0.610
+  tower_center_x: 3.516
+  transducer_x: 1.616
+
+initial_state:
+  water_temperature_K: 293.15
+  atmospheric_pressure_Pa: 101325
+  water_density_kg_m3: 998.2
+  gravity_m_s2: 9.81
+  air_pressure_head_m: 0.305
+  tower_water_level_above_crown_m: 0.356
+
+numerics:
+  software: OpenFOAM
+  version: v2512
+  solver: compressibleInterFoam
+  dimensions: 2
+  turbulence_model: laminar
+  nominal_in_plane_cell_size_m: 0.004
+  expected_cells: 26208
+  simulation_end_s: 9.0
+  maximum_mpi_ranks: 6
+
+paths:
+  model: ../model/openfoam_2d_caseA
+  pressure_reference_data: ../data/fig5_caseA_Hstar_band.csv
+  level_reference_data: ../data/fig7_caseA_levels.csv
+  outputs: ../outputs
+
+notes:
+  - OpenFOAM dictionaries are the executable source of truth.
+  - The planar tower-to-pipe area ratio is 0.607; the physical circular ratio is 0.369.

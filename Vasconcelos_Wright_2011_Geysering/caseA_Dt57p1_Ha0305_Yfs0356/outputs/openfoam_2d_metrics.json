@@ -1,0 +1,24 @@
+{
+  "simulation_end_s": 9.0,
+  "simulation_end_Tstar": 11.042444680426986,
+  "pressure_plateau_Hstar_mean_T1to7": 0.7099099073959965,
+  "pressure_RMSE_Hstar_no_shift": 0.20115404446704468,
+  "free_surface_max_Ystar": 0.6229442203888638,
+  "free_surface_RMSE_Ystar_no_shift": 0.0121925553100324,
+  "interface_RMSE_Ystar_no_shift": 0.319615886819979,
+  "interface_liftoff_Tstar": 8.030311159266068,
+  "interface_catch_Tstar": null,
+  "geysering": false,
+  "comparison_targets": {
+    "pressure_plateau_Hstar": 0.54,
+    "free_surface_max_Ystar": 0.63,
+    "interface_liftoff_Tstar_repetitions": [
+      7.3,
+      7.8,
+      7.9
+    ],
+    "interface_catch_Tstar": 8.4,
+    "observed_geysering": false
+  },
+  "caveat": "Planar 2-D area ratio Dt/D=0.607; physical circular area ratio (Dt/D)^2=0.369. No event-time shift was applied."
+}

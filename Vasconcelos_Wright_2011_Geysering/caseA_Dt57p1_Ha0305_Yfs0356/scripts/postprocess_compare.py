@@ -13,10 +13,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-HERE = Path(__file__).resolve().parent
-CASE_A = HERE.parent
-OUT = HERE / "outputs"
-OUT.mkdir(exist_ok=True)
+SCRIPT_DIR = Path(__file__).resolve().parent
+CASE_ROOT = SCRIPT_DIR.parent
+MODEL_DIR = CASE_ROOT / "model" / "openfoam_2d_caseA"
+DATA_DIR = CASE_ROOT / "data"
+OUT = CASE_ROOT / "outputs"
+OUT.mkdir(parents=True, exist_ok=True)
 
 P_ATM = 101325.0
 RHO_W = 998.2
@@ -29,7 +31,7 @@ PROBE_Y = np.arange(0.052, 0.653, 0.010)
 
 
 def probe_files(name: str, field: str) -> list[Path]:
-    root = HERE / "postProcessing" / name
+    root = MODEL_DIR / "postProcessing" / name
     if not root.exists():
         raise FileNotFoundError(root)
     return sorted(
@@ -126,6 +128,11 @@ def first_time(time: np.ndarray, condition: np.ndarray) -> float:
     return float(time[idx[0]]) if idx.size else float("nan")
 
 
+def json_number(value: float) -> float | None:
+    number = float(value)
+    return number if math.isfinite(number) else None
+
+
 def main() -> None:
     transducer = read_probe("transducer", "p")
     tower = read_probe("towerCentreline", "alpha.water")
@@ -144,12 +151,12 @@ def main() -> None:
     yint, yfs = extract_levels(alpha)
 
     pressure_exp = np.genfromtxt(
-        CASE_A / "digitized" / "fig5_caseA_Hstar_band.csv",
+        DATA_DIR / "fig5_caseA_Hstar_band.csv",
         delimiter=",",
         names=True,
     )
     levels_exp = np.genfromtxt(
-        CASE_A / "digitized" / "fig7_caseA_levels.csv",
+        DATA_DIR / "fig7_caseA_levels.csv",
         delimiter=",",
         names=True,
         dtype=None,
@@ -181,17 +188,17 @@ def main() -> None:
     liftoff = first_time(tstar_tower, yint > 0.02)
     catch = first_time(tstar_tower, (yint > 0.05) & ((yfs - yint) < 0.02))
     metrics = {
-        "simulation_end_s": float(time[-1]),
-        "simulation_end_Tstar": float(tstar[-1]),
+        "simulation_end_s": json_number(time[-1]),
+        "simulation_end_Tstar": json_number(tstar[-1]),
         "pressure_plateau_Hstar_mean_T1to7": (
-            float(np.nanmean(hstar[plateau])) if np.any(plateau) else float("nan")
+            json_number(np.nanmean(hstar[plateau])) if np.any(plateau) else None
         ),
-        "pressure_RMSE_Hstar_no_shift": pressure_rmse,
-        "free_surface_max_Ystar": float(np.nanmax(yfs)),
-        "free_surface_RMSE_Ystar_no_shift": fs_rmse,
-        "interface_RMSE_Ystar_no_shift": int_rmse,
-        "interface_liftoff_Tstar": liftoff,
-        "interface_catch_Tstar": catch,
+        "pressure_RMSE_Hstar_no_shift": json_number(pressure_rmse),
+        "free_surface_max_Ystar": json_number(np.nanmax(yfs)),
+        "free_surface_RMSE_Ystar_no_shift": json_number(fs_rmse),
+        "interface_RMSE_Ystar_no_shift": json_number(int_rmse),
+        "interface_liftoff_Tstar": json_number(liftoff),
+        "interface_catch_Tstar": json_number(catch),
         "geysering": bool(np.nanmax(yfs) >= 0.98),
         "comparison_targets": {
             "pressure_plateau_Hstar": 0.54,
@@ -215,7 +222,7 @@ def main() -> None:
         writer.writerow(["time_s", "Tstar", "Yint_star", "Yfs_star"])
         writer.writerows(zip(t_tower, tstar_tower, yint, yfs))
     (OUT / "openfoam_2d_metrics.json").write_text(
-        json.dumps(metrics, indent=2, allow_nan=True),
+        json.dumps(metrics, indent=2, allow_nan=False) + "\n",
         encoding="utf-8",
     )
 
@@ -281,7 +288,7 @@ def main() -> None:
     fig.savefig(OUT / "openfoam_2d_levels_comparison.pdf")
     plt.close(fig)
 
-    print(json.dumps(metrics, indent=2, allow_nan=True))
+    print(json.dumps(metrics, indent=2, allow_nan=False))
 
 
 if __name__ == "__main__":
