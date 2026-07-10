@@ -87,6 +87,10 @@ def main() -> None:
                 "alpha.water >= 0.05 on the external-atmosphere centreline; "
                 "20 mm vertical sampling"
             ),
+            "caveat": (
+                "Circular 3-D apparatus with an external atmosphere. No event-time "
+                "shift or fitted wall/turbulence parameters were applied."
+            ),
         }
     )
     metrics_path.replace(OUT / "openfoam_3d_metrics.json")
