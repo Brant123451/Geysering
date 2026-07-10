@@ -1,0 +1,123 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<title>Case B: Cong 2017 Run B-H6（不喷发）对比</title>
+<style>
+body{font-family:-apple-system,Segoe UI,Arial,'Microsoft YaHei',sans-serif;margin:0;background:#f6f8fb;color:#1f2937}
+.wrap{max-width:1180px;margin:24px auto;padding:0 18px}
+.panel{background:#fff;border:1px solid #ddd;border-radius:12px;padding:16px;margin-bottom:16px}
+img{width:100%;border:1px solid #ddd;border-radius:10px;background:#fff}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #eee}
+th{background:#f3f4f6}
+p{line-height:1.55;color:#374151}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.muted{font-size:13px;color:#6b7280}
+</style></head><body><div class="wrap">
+<h1>Case B — Cong, Chan &amp; Lee (2017) Run B-H6（不喷发分支，高速摄像）</h1>
+<p>工况：<code>D=50 mm</code>、<code>Dr=41 mm</code>（Dr/D=0.82）、<code>H0=0.66 m</code>、
+<code>L0=0.61 m</code>（V*air=1.37）。与 Case A（B-H1）<b>唯一差别是竖管直径</b>——同一释放条件下
+分支翻转，是"直径比主控喷发"结论最干净的受控对照。实验：气囊 t≈8.1 s 到达竖管，
+以泰勒气泡形态稳定上升（vint=0.476 m/s，vnet≈vTaylor），水面被温和顶托
+（0.58→1.2 m），气囊于 ~10.5 s 追上水面破碎，<b>无喷发</b>；管端压力只有 ~1.4H0 的缓峰。</p>
+<div class="panel">
+  <h2 style="margin-top:0">论文中与本工况相关的图表</h2>
+  <table>
+    <tr><th>论文图表</th><th>内容</th><th>与本工况的关系</th><th>本报告中的对照</th></tr>
+    <tr><td><b>Table 2</b>（p7）</td><td>Series B 汇总</td>
+        <td><b>B-H6 行</b>：Ta=8.1 s、Uf=0.443√(gD)、v_fs=0.246、v_int=0.476 m/s、NO geyser</td>
+        <td>指标对照表</td></tr>
+    <tr><td><b>Fig. 6</b>（p6）</td><td>B-H6 竖管内气囊上升瞬时帧（t=8.7/9.3/9.9/10.5/10.9 s）</td>
+        <td><b>正是本工况</b></td><td>下方原图收录，可与帧查看器对照</td></tr>
+    <tr><td><b>Fig. 7</b>（p7）</td><td>B-H6 的 Yfs/Yint/速度/Lw/Ha 四联图（高速摄像）</td>
+        <td><b>正是本工况</b>；(a) 面板已数字化</td><td>水位叠加图</td></tr>
+    <tr><td><b>Fig. 10(b)</b>（p10）</td><td>PT1/PT2 压力时程（Run B-32，同 Dr=41 mm 的录像系列）</td>
+        <td>同名义工况重复（视频采样）</td><td>压力叠加图</td></tr>
+    <tr><td class="muted">Fig. 5</td><td class="muted">Series A/B 全工况 vnet vs vTaylor</td>
+        <td class="muted">B-H6 落在泰勒线附近（不喷发判据一侧）</td><td class="muted">正文引用</td></tr>
+  </table>
+</div>
+<div class="panel">
+  <h2 style="margin-top:0">论文原图（扫描）</h2>
+  <div class="grid2">
+    <div><h3 style="margin:4px 0">Fig.7 B-H6 竖管数据（(a) 已数字化）</h3><img src="paper_scans/fig7_bh6_riser.png"></div>
+    <div><h3 style="margin:4px 0">Fig.10 压力时程（下=B-32 不喷发）</h3><img src="paper_scans/fig10_pressure.png"></div>
+  </div>
+  <h3 style="margin:12px 0 4px 0">Fig.6 B-H6 高速摄像瞬时帧</h3>
+  <img src="paper_scans/fig6_bh6_photos.png">
+</div>
+<div class="panel">
+  <h2 style="margin-top:0">叠加对比</h2>
+  <h3>竖管水面与气核前端 Y(t)</h3><img src="outputs/caseB_comparison_levels.png">
+  <h3>气囊压头 H/H0</h3><img src="outputs/caseB_comparison_pressure.png">
+  <h3>指标对照</h3>
+  <table>
+    <tr><th>指标</th><th>论文实验</th><th>模型</th><th>备注</th></tr>
+    <tr><td>是否喷发</td><td>否（气囊在竖管内破碎）</td><td>否（水面最高 0.78 m，未到 1.8 m 管顶）</td><td>分支判别正确</td></tr><tr><td>气囊到达竖管 Ta</td><td>8.10 s</td><td>9.16 s</td><td>同 Case A 的几何/波速小幅偏早</td></tr><tr><td>水面最高位置</td><td>约 1.21 m（Fig.7a）</td><td>0.78 m</td><td></td></tr><tr><td>排气段水面上升速度 v_fs</td><td>0.246 m/s（Table 2）</td><td>0.020 m/s</td><td>到达至气核峰的拟合斜率</td></tr><tr><td>排气段气核上升速度 v_int</td><td>0.476 m/s（Table 2）</td><td>0.291 m/s</td><td>实测泰勒尺度 vTaylor=0.219 m/s</td></tr><tr><td>气囊追上水面（破碎）</td><td>约 10.5 s（Fig.7a 两线相遇）</td><td>11.2 s</td><td></td></tr><tr><td>到达后管端压力峰 / H0</td><td>约 1.4（正文；缓峰非激增）</td><td>1.02（t=12.9 s）</td><td>与 Case A 喷发激增的分化 = 全耦合关键核对项</td></tr><tr><td>喷发前压头平台 / H0</td><td>约 1.3（Fig.10b 数字化；基准面存疑 ±0.3）</td><td>0.98</td><td>形态均为长平台</td></tr>
+  </table>
+  <p class="muted"><b>与 Case A 的联合读法（全耦合关键核对项）</b>：两工况共用同一冻结求解器
+  与几何、只改 Dr——模型在 16 mm 竖管喷发（气囊压缩激增 1.71H0）、在 41 mm 竖管不喷发
+  （缓峰 1.02H0），与实验的分支翻转一致；旧分级耦合给两工况相同的 2.07H0 峰压，
+  全同步耦合恢复了"宽竖管排气抑制管道压力"的实验分化（实测 1.9 vs 1.4H0）。<br>
+  <b>诚实记录</b>：① 宽竖管的水面顶托不足（模型 +0.19 m vs 实测 +0.63 m）——口部体积
+  中性交换抵消了进气的抬水位移；对水库布置关闭该交换可恢复顶托但会同时废掉 B-H1 的
+  气囊压力重建路径（已试已回退，代码内注记）——两分支对口部闭合的需求冲突是已识别的
+  一维局限，与论文 Discussion 的液膜卷吸/口部透射短板一致；② 气核爬升 0.29 vs 实测
+  0.476 m/s（泰勒尺度偏向，实测有同向卷吸增强）；③ 到达偏晚 ~1 s；④ PT1 基准面存疑
+  ±0.3H0，压力对比以形态锚点为主。模型序列见 <code>outputs/caseB_model_series.csv</code>；
+  数字化中间产物见 <code>digitized/</code>。</p>
+</div>
+
+<div class="panel">
+  <h2 style="margin-top:0">两流体模拟逐帧查看器 — 水平管 + 竖管全场演化</h2>
+  <p class="muted">同一冻结求解器的 B-H6 全场演化（水=蓝，气=白/浅灰）：开阀释放振荡 →
+  气囊沿管顶向竖管迁移 → 宽竖管进气、泰勒气泡式上升、水面温和顶托 →
+  气囊追上水面破碎、平缓排气（无喷发）。<b>左图为真实比例 1:1</b>
+  （D=50 mm、Dr=41 mm），右侧为竖管放大同步视图（按当地 α_g 画气核宽度）。
+  左右方向键 / 滑块 / 播放均可调帧。</p>
+  <div class="meta" style="display:flex;gap:18px;margin:10px 0;font-weight:700;flex-wrap:wrap">
+    <span id="vIdx"></span><span id="vTime"></span><span id="vWtop"></span>
+    <span id="vItop"></span><span id="vMass"></span><span id="vHead"></span></div>
+  <div style="display:grid;grid-template-columns:minmax(0,2.6fr) minmax(220px,1fr);gap:14px;align-items:start">
+    <div><h3 style="margin:0 0 8px 0;font-size:15px">全局 1:1 视图</h3>
+      <img id="vFrame" style="width:100%">
+      <p class="muted" style="margin:6px 0 0 0">水平管按截面含水率显示分层气团推进；左端为定水头水箱。</p></div>
+    <div><h3 style="margin:0 0 8px 0;font-size:15px">竖管放大同步视图</h3>
+      <img id="vRiser" style="width:100%">
+      <p class="muted" style="margin:6px 0 0 0">气核宽度 = 当地 α_g；蓝线=可见水面，红虚线=气相前沿。</p></div>
+  </div>
+  <div style="margin-top:8px">
+    <button id="vPrev" style="padding:8px 14px;margin:6px;border:1px solid #bbb;border-radius:8px;background:#fff;cursor:pointer">上一帧</button>
+    <button id="vPlay" style="padding:8px 14px;margin:6px;border:1px solid #bbb;border-radius:8px;background:#fff;cursor:pointer">播放</button>
+    <input id="vSlider" type="range" style="width:60%;vertical-align:middle">
+    <button id="vNext" style="padding:8px 14px;margin:6px;border:1px solid #bbb;border-radius:8px;background:#fff;cursor:pointer">下一帧</button>
+  </div>
+  <p class="muted">整段 GIF 备份：<a href="outputs/caseB_animation.gif">caseB_animation.gif</a></p>
+</div>
+<script>
+const vFrames=[{"file": "outputs/frames/frame_0000.png", "riserFile": "outputs/riser_frames/riser_0000.png", "time": 0.0, "wtop": 0.66, "itop": 0.0, "coreMassMg": 0.0, "head": 0.0}, {"file": "outputs/frames/frame_0001.png", "riserFile": "outputs/riser_frames/riser_0001.png", "time": 0.12, "wtop": 0.54, "itop": 0.0, "coreMassMg": 0.0, "head": 0.031}, {"file": "outputs/frames/frame_0002.png", "riserFile": "outputs/riser_frames/riser_0002.png", "time": 0.26, "wtop": 0.45, "itop": 0.0, "coreMassMg": 0.0, "head": 1.27}, {"file": "outputs/frames/frame_0003.png", "riserFile": "outputs/riser_frames/riser_0003.png", "time": 0.4, "wtop": 0.47, "itop": 0.0, "coreMassMg": 0.0, "head": 0.0}, {"file": "outputs/frames/frame_0004.png", "riserFile": "outputs/riser_frames/riser_0004.png", "time": 0.54, "wtop": 0.4, "itop": 0.0, "coreMassMg": 0.0, "head": 0.617}, {"file": "outputs/frames/frame_0005.png", "riserFile": "outputs/riser_frames/riser_0005.png", "time": 0.68, "wtop": 0.38, "itop": 0.0, "coreMassMg": 0.0, "head": 0.289}, {"file": "outputs/frames/frame_0006.png", "riserFile": "outputs/riser_frames/riser_0006.png", "time": 0.82, "wtop": 0.36, "itop": 0.0, "coreMassMg": 0.0, "head": 0.484}, {"file": "outputs/frames/frame_0007.png", "riserFile": "outputs/riser_frames/riser_0007.png", "time": 0.94, "wtop": 0.4, "itop": 0.0, "coreMassMg": 0.0, "head": 0.599}, {"file": "outputs/frames/frame_0008.png", "riserFile": "outputs/riser_frames/riser_0008.png", "time": 1.08, "wtop": 0.44, "itop": 0.0, "coreMassMg": 0.0, "head": 0.423}, {"file": "outputs/frames/frame_0009.png", "riserFile": "outputs/riser_frames/riser_0009.png", "time": 1.22, "wtop": 0.51, "itop": 0.0, "coreMassMg": 0.0, "head": 0.951}, {"file": "outputs/frames/frame_0010.png", "riserFile": "outputs/riser_frames/riser_0010.png", "time": 1.36, "wtop": 0.58, "itop": 0.0, "coreMassMg": 0.0, "head": 0.479}, {"file": "outputs/frames/frame_0011.png", "riserFile": "outputs/riser_frames/riser_0011.png", "time": 1.5, "wtop": 0.59, "itop": 0.0, "coreMassMg": 0.0, "head": 1.001}, {"file": "outputs/frames/frame_0012.png", "riserFile": "outputs/riser_frames/riser_0012.png", "time": 1.64, "wtop": 0.69, "itop": 0.0, "coreMassMg": 0.0, "head": 0.502}, {"file": "outputs/frames/frame_0013.png", "riserFile": "outputs/riser_frames/riser_0013.png", "time": 1.76, "wtop": 0.68, "itop": 0.0, "coreMassMg": 0.0, "head": 0.699}, {"file": "outputs/frames/frame_0014.png", "riserFile": "outputs/riser_frames/riser_0014.png", "time": 1.9, "wtop": 0.75, "itop": 0.0, "coreMassMg": 0.0, "head": 0.637}, {"file": "outputs/frames/frame_0015.png", "riserFile": "outputs/riser_frames/riser_0015.png", "time": 2.04, "wtop": 0.74, "itop": 0.0, "coreMassMg": 0.0, "head": 0.607}, {"file": "outputs/frames/frame_0016.png", "riserFile": "outputs/riser_frames/riser_0016.png", "time": 2.18, "wtop": 0.77, "itop": 0.0, "coreMassMg": 0.0, "head": 0.836}, {"file": "outputs/frames/frame_0017.png", "riserFile": "outputs/riser_frames/riser_0017.png", "time": 2.32, "wtop": 0.73, "itop": 0.0, "coreMassMg": 0.0, "head": 0.733}, {"file": "outputs/frames/frame_0018.png", "riserFile": "outputs/riser_frames/riser_0018.png", "time": 2.46, "wtop": 0.74, "itop": 0.0, "coreMassMg": 0.0, "head": 0.509}, {"file": "outputs/frames/frame_0019.png", "riserFile": "outputs/riser_frames/riser_0019.png", "time": 2.6, "wtop": 0.71, "itop": 0.0, "coreMassMg": 0.0, "head": 0.878}, {"file": "outputs/frames/frame_0020.png", "riserFile": "outputs/riser_frames/riser_0020.png", "time": 2.72, "wtop": 0.72, "itop": 0.0, "coreMassMg": 0.0, "head": 0.589}, {"file": "outputs/frames/frame_0021.png", "riserFile": "outputs/riser_frames/riser_0021.png", "time": 2.86, "wtop": 0.69, "itop": 0.0, "coreMassMg": 0.0, "head": 0.958}, {"file": "outputs/frames/frame_0022.png", "riserFile": "outputs/riser_frames/riser_0022.png", "time": 3.0, "wtop": 0.68, "itop": 0.0, "coreMassMg": 0.0, "head": 0.511}, {"file": "outputs/frames/frame_0023.png", "riserFile": "outputs/riser_frames/riser_0023.png", "time": 3.14, "wtop": 0.65, "itop": 0.0, "coreMassMg": 0.0, "head": 0.337}, {"file": "outputs/frames/frame_0024.png", "riserFile": "outputs/riser_frames/riser_0024.png", "time": 3.28, "wtop": 0.61, "itop": 0.0, "coreMassMg": 0.0, "head": 0.694}, {"file": "outputs/frames/frame_0025.png", "riserFile": "outputs/riser_frames/riser_0025.png", "time": 3.42, "wtop": 0.59, "itop": 0.0, "coreMassMg": 0.0, "head": 0.517}, {"file": "outputs/frames/frame_0026.png", "riserFile": "outputs/riser_frames/riser_0026.png", "time": 3.54, "wtop": 0.58, "itop": 0.0, "coreMassMg": 0.0, "head": 0.712}, {"file": "outputs/frames/frame_0027.png", "riserFile": "outputs/riser_frames/riser_0027.png", "time": 3.68, "wtop": 0.57, "itop": 0.0, "coreMassMg": 0.0, "head": 0.514}, {"file": "outputs/frames/frame_0028.png", "riserFile": "outputs/riser_frames/riser_0028.png", "time": 3.82, "wtop": 0.58, "itop": 0.0, "coreMassMg": 0.0, "head": 0.749}, {"file": "outputs/frames/frame_0029.png", "riserFile": "outputs/riser_frames/riser_0029.png", "time": 3.96, "wtop": 0.58, "itop": 0.0, "coreMassMg": 0.0, "head": 0.36}, {"file": "outputs/frames/frame_0030.png", "riserFile": "outputs/riser_frames/riser_0030.png", "time": 4.1, "wtop": 0.58, "itop": 0.0, "coreMassMg": 0.0, "head": 0.526}, {"file": "outputs/frames/frame_0031.png", "riserFile": "outputs/riser_frames/riser_0031.png", "time": 4.24, "wtop": 0.55, "itop": 0.0, "coreMassMg": 0.0, "head": 0.658}, {"file": "outputs/frames/frame_0032.png", "riserFile": "outputs/riser_frames/riser_0032.png", "time": 4.36, "wtop": 0.57, "itop": 0.0, "coreMassMg": 0.0, "head": 0.57}, {"file": "outputs/frames/frame_0033.png", "riserFile": "outputs/riser_frames/riser_0033.png", "time": 4.5, "wtop": 0.58, "itop": 0.0, "coreMassMg": 0.0, "head": 0.722}, {"file": "outputs/frames/frame_0034.png", "riserFile": "outputs/riser_frames/riser_0034.png", "time": 4.64, "wtop": 0.62, "itop": 0.0, "coreMassMg": 0.0, "head": 0.505}, {"file": "outputs/frames/frame_0035.png", "riserFile": "outputs/riser_frames/riser_0035.png", "time": 4.78, "wtop": 0.6, "itop": 0.0, "coreMassMg": 0.0, "head": 0.837}, {"file": "outputs/frames/frame_0036.png", "riserFile": "outputs/riser_frames/riser_0036.png", "time": 4.92, "wtop": 0.64, "itop": 0.0, "coreMassMg": 0.0, "head": 0.426}, {"file": "outputs/frames/frame_0037.png", "riserFile": "outputs/riser_frames/riser_0037.png", "time": 5.06, "wtop": 0.63, "itop": 0.0, "coreMassMg": 0.0, "head": 0.777}, {"file": "outputs/frames/frame_0038.png", "riserFile": "outputs/riser_frames/riser_0038.png", "time": 5.2, "wtop": 0.66, "itop": 0.0, "coreMassMg": 0.0, "head": 0.41}, {"file": "outputs/frames/frame_0039.png", "riserFile": "outputs/riser_frames/riser_0039.png", "time": 5.32, "wtop": 0.65, "itop": 0.0, "coreMassMg": 0.0, "head": 0.991}, {"file": "outputs/frames/frame_0040.png", "riserFile": "outputs/riser_frames/riser_0040.png", "time": 5.46, "wtop": 0.63, "itop": 0.0, "coreMassMg": 0.0, "head": 0.74}, {"file": "outputs/frames/frame_0041.png", "riserFile": "outputs/riser_frames/riser_0041.png", "time": 5.6, "wtop": 0.63, "itop": 0.0, "coreMassMg": 0.0, "head": 0.44}, {"file": "outputs/frames/frame_0042.png", "riserFile": "outputs/riser_frames/riser_0042.png", "time": 5.74, "wtop": 0.63, "itop": 0.0, "coreMassMg": 0.0, "head": 0.773}, {"file": "outputs/frames/frame_0043.png", "riserFile": "outputs/riser_frames/riser_0043.png", "time": 5.88, "wtop": 0.63, "itop": 0.0, "coreMassMg": 0.0, "head": 0.767}, {"file": "outputs/frames/frame_0044.png", "riserFile": "outputs/riser_frames/riser_0044.png", "time": 6.02, "wtop": 0.63, "itop": 0.0, "coreMassMg": 0.0, "head": 0.68}, {"file": "outputs/frames/frame_0045.png", "riserFile": "outputs/riser_frames/riser_0045.png", "time": 6.14, "wtop": 0.64, "itop": 0.0, "coreMassMg": 0.0, "head": 0.704}, {"file": "outputs/frames/frame_0046.png", "riserFile": "outputs/riser_frames/riser_0046.png", "time": 6.28, "wtop": 0.64, "itop": 0.0, "coreMassMg": 0.0, "head": 0.674}, {"file": "outputs/frames/frame_0047.png", "riserFile": "outputs/riser_frames/riser_0047.png", "time": 6.42, "wtop": 0.65, "itop": 0.0, "coreMassMg": 0.0, "head": 0.529}, {"file": "outputs/frames/frame_0048.png", "riserFile": "outputs/riser_frames/riser_0048.png", "time": 6.56, "wtop": 0.64, "itop": 0.0, "coreMassMg": 0.0, "head": 0.68}, {"file": "outputs/frames/frame_0049.png", "riserFile": "outputs/riser_frames/riser_0049.png", "time": 6.7, "wtop": 0.64, "itop": 0.0, "coreMassMg": 0.0, "head": 0.639}, {"file": "outputs/frames/frame_0050.png", "riserFile": "outputs/riser_frames/riser_0050.png", "time": 6.84, "wtop": 0.64, "itop": 0.0, "coreMassMg": 0.0, "head": 0.623}, {"file": "outputs/frames/frame_0051.png", "riserFile": "outputs/riser_frames/riser_0051.png", "time": 6.96, "wtop": 0.63, "itop": 0.0, "coreMassMg": 0.0, "head": 0.712}, {"file": "outputs/frames/frame_0052.png", "riserFile": "outputs/riser_frames/riser_0052.png", "time": 7.1, "wtop": 0.64, "itop": 0.0, "coreMassMg": 0.0, "head": 0.478}, {"file": "outputs/frames/frame_0053.png", "riserFile": "outputs/riser_frames/riser_0053.png", "time": 7.24, "wtop": 0.63, "itop": 0.0, "coreMassMg": 0.0, "head": 0.744}, {"file": "outputs/frames/frame_0054.png", "riserFile": "outputs/riser_frames/riser_0054.png", "time": 7.38, "wtop": 0.61, "itop": 0.0, "coreMassMg": 0.0, "head": 0.651}, {"file": "outputs/frames/frame_0055.png", "riserFile": "outputs/riser_frames/riser_0055.png", "time": 7.52, "wtop": 0.62, "itop": 0.0, "coreMassMg": 0.0, "head": 0.534}, {"file": "outputs/frames/frame_0056.png", "riserFile": "outputs/riser_frames/riser_0056.png", "time": 7.66, "wtop": 0.61, "itop": 0.0, "coreMassMg": 0.0, "head": 0.722}, {"file": "outputs/frames/frame_0057.png", "riserFile": "outputs/riser_frames/riser_0057.png", "time": 7.8, "wtop": 0.6, "itop": 0.0, "coreMassMg": 0.0, "head": 0.559}, {"file": "outputs/frames/frame_0058.png", "riserFile": "outputs/riser_frames/riser_0058.png", "time": 7.92, "wtop": 0.61, "itop": 0.0, "coreMassMg": 0.0, "head": 0.64}, {"file": "outputs/frames/frame_0059.png", "riserFile": "outputs/riser_frames/riser_0059.png", "time": 8.06, "wtop": 0.59, "itop": 0.0, "coreMassMg": 0.0, "head": 0.709}, {"file": "outputs/frames/frame_0060.png", "riserFile": "outputs/riser_frames/riser_0060.png", "time": 8.2, "wtop": 0.6, "itop": 0.0, "coreMassMg": 0.0, "head": 0.498}, {"file": "outputs/frames/frame_0061.png", "riserFile": "outputs/riser_frames/riser_0061.png", "time": 8.34, "wtop": 0.6, "itop": 0.0, "coreMassMg": 0.0, "head": 0.646}, {"file": "outputs/frames/frame_0062.png", "riserFile": "outputs/riser_frames/riser_0062.png", "time": 8.48, "wtop": 0.6, "itop": 0.0, "coreMassMg": 0.0, "head": 0.69}, {"file": "outputs/frames/frame_0063.png", "riserFile": "outputs/riser_frames/riser_0063.png", "time": 8.62, "wtop": 0.61, "itop": 0.0, "coreMassMg": 0.0, "head": 0.532}, {"file": "outputs/frames/frame_0064.png", "riserFile": "outputs/riser_frames/riser_0064.png", "time": 8.74, "wtop": 0.61, "itop": 0.0, "coreMassMg": 0.0, "head": 0.662}, {"file": "outputs/frames/frame_0065.png", "riserFile": "outputs/riser_frames/riser_0065.png", "time": 8.88, "wtop": 0.61, "itop": 0.0, "coreMassMg": 0.0, "head": 0.672}, {"file": "outputs/frames/frame_0066.png", "riserFile": "outputs/riser_frames/riser_0066.png", "time": 9.02, "wtop": 0.62, "itop": 0.0, "coreMassMg": 0.0, "head": 0.579}, {"file": "outputs/frames/frame_0067.png", "riserFile": "outputs/riser_frames/riser_0067.png", "time": 9.16, "wtop": 0.622, "itop": 0.02, "coreMassMg": 3.52, "head": 0.591}, {"file": "outputs/frames/frame_0068.png", "riserFile": "outputs/riser_frames/riser_0068.png", "time": 9.3, "wtop": 0.675, "itop": 0.14, "coreMassMg": 75.67, "head": 0.587}, {"file": "outputs/frames/frame_0069.png", "riserFile": "outputs/riser_frames/riser_0069.png", "time": 9.44, "wtop": 0.702, "itop": 0.27, "coreMassMg": 118.95, "head": 0.644}, {"file": "outputs/frames/frame_0070.png", "riserFile": "outputs/riser_frames/riser_0070.png", "time": 9.56, "wtop": 0.702, "itop": 0.32, "coreMassMg": 118.91, "head": 0.615}, {"file": "outputs/frames/frame_0071.png", "riserFile": "outputs/riser_frames/riser_0071.png", "time": 9.7, "wtop": 0.712, "itop": 0.36, "coreMassMg": 118.74, "head": 0.658}, {"file": "outputs/frames/frame_0072.png", "riserFile": "outputs/riser_frames/riser_0072.png", "time": 9.84, "wtop": 0.712, "itop": 0.4, "coreMassMg": 118.95, "head": 0.661}, {"file": "outputs/frames/frame_0073.png", "riserFile": "outputs/riser_frames/riser_0073.png", "time": 9.98, "wtop": 0.713, "itop": 0.43, "coreMassMg": 118.38, "head": 0.635}, {"file": "outputs/frames/frame_0074.png", "riserFile": "outputs/riser_frames/riser_0074.png", "time": 10.12, "wtop": 0.713, "itop": 0.47, "coreMassMg": 118.78, "head": 0.648}, {"file": "outputs/frames/frame_0075.png", "riserFile": "outputs/riser_frames/riser_0075.png", "time": 10.26, "wtop": 0.713, "itop": 0.5, "coreMassMg": 118.56, "head": 0.651}, {"file": "outputs/frames/frame_0076.png", "riserFile": "outputs/riser_frames/riser_0076.png", "time": 10.4, "wtop": 0.703, "itop": 0.54, "coreMassMg": 118.55, "head": 0.638}, {"file": "outputs/frames/frame_0077.png", "riserFile": "outputs/riser_frames/riser_0077.png", "time": 10.52, "wtop": 0.703, "itop": 0.56, "coreMassMg": 118.38, "head": 0.633}, {"file": "outputs/frames/frame_0078.png", "riserFile": "outputs/riser_frames/riser_0078.png", "time": 10.66, "wtop": 0.694, "itop": 0.59, "coreMassMg": 118.42, "head": 0.632}, {"file": "outputs/frames/frame_0079.png", "riserFile": "outputs/riser_frames/riser_0079.png", "time": 10.8, "wtop": 0.683, "itop": 0.61, "coreMassMg": 117.31, "head": 0.626}, {"file": "outputs/frames/frame_0080.png", "riserFile": "outputs/riser_frames/riser_0080.png", "time": 10.94, "wtop": 0.667, "itop": 0.6, "coreMassMg": 106.97, "head": 0.615}, {"file": "outputs/frames/frame_0081.png", "riserFile": "outputs/riser_frames/riser_0081.png", "time": 11.08, "wtop": 0.646, "itop": 0.59, "coreMassMg": 89.25, "head": 0.603}, {"file": "outputs/frames/frame_0082.png", "riserFile": "outputs/riser_frames/riser_0082.png", "time": 11.22, "wtop": 0.614, "itop": 0.57, "coreMassMg": 69.94, "head": 0.592}, {"file": "outputs/frames/frame_0083.png", "riserFile": "outputs/riser_frames/riser_0083.png", "time": 11.34, "wtop": 0.596, "itop": 0.56, "coreMassMg": 56.57, "head": 0.587}, {"file": "outputs/frames/frame_0084.png", "riserFile": "outputs/riser_frames/riser_0084.png", "time": 11.48, "wtop": 0.586, "itop": 0.56, "coreMassMg": 40.59, "head": 0.586}, {"file": "outputs/frames/frame_0085.png", "riserFile": "outputs/riser_frames/riser_0085.png", "time": 11.62, "wtop": 0.577, "itop": 0.56, "coreMassMg": 27.04, "head": 0.589}, {"file": "outputs/frames/frame_0086.png", "riserFile": "outputs/riser_frames/riser_0086.png", "time": 11.76, "wtop": 0.569, "itop": 0.56, "coreMassMg": 13.7, "head": 0.589}, {"file": "outputs/frames/frame_0087.png", "riserFile": "outputs/riser_frames/riser_0087.png", "time": 11.9, "wtop": 0.574, "itop": 0.57, "coreMassMg": 6.18, "head": 0.599}, {"file": "outputs/frames/frame_0088.png", "riserFile": "outputs/riser_frames/riser_0088.png", "time": 12.04, "wtop": 0.582, "itop": 0.57, "coreMassMg": 1.65, "head": 0.613}, {"file": "outputs/frames/frame_0089.png", "riserFile": "outputs/riser_frames/riser_0089.png", "time": 12.16, "wtop": 0.601, "itop": 0.0, "coreMassMg": 0.0, "head": 0.624}, {"file": "outputs/frames/frame_0090.png", "riserFile": "outputs/riser_frames/riser_0090.png", "time": 12.3, "wtop": 0.62, "itop": 0.0, "coreMassMg": 0.0, "head": 0.638}, {"file": "outputs/frames/frame_0091.png", "riserFile": "outputs/riser_frames/riser_0091.png", "time": 12.44, "wtop": 0.63, "itop": 0.0, "coreMassMg": 0.0, "head": 0.651}, {"file": "outputs/frames/frame_0092.png", "riserFile": "outputs/riser_frames/riser_0092.png", "time": 12.58, "wtop": 0.65, "itop": 0.0, "coreMassMg": 0.0, "head": 0.661}, {"file": "outputs/frames/frame_0093.png", "riserFile": "outputs/riser_frames/riser_0093.png", "time": 12.72, "wtop": 0.66, "itop": 0.0, "coreMassMg": 0.0, "head": 0.668}, {"file": "outputs/frames/frame_0094.png", "riserFile": "outputs/riser_frames/riser_0094.png", "time": 12.86, "wtop": 0.67, "itop": 0.0, "coreMassMg": 0.0, "head": 0.672}, {"file": "outputs/frames/frame_0095.png", "riserFile": "outputs/riser_frames/riser_0095.png", "time": 13.0, "wtop": 0.67, "itop": 0.0, "coreMassMg": 0.0, "head": 0.667}];
+let vI=0,vTimer=null;
+const vImg=document.getElementById('vFrame'),vRImg=document.getElementById('vRiser'),
+      vSld=document.getElementById('vSlider'),vBtn=document.getElementById('vPlay');
+vSld.min=0;vSld.max=Math.max(0,vFrames.length-1);vSld.value=0;
+function vShow(k){
+  vI=Math.max(0,Math.min(vFrames.length-1,k));
+  const f=vFrames[vI];
+  vImg.src=f.file; vRImg.src=f.riserFile; vSld.value=vI;
+  vIdx.textContent=`帧 ${vI+1}/${vFrames.length}`;
+  vTime.textContent=`t=${f.time.toFixed(2)} s`;
+  vWtop.textContent=`竖管可见水位=${f.wtop.toFixed(3)} m`;
+  vItop.textContent=`竖管气相前沿=${f.itop.toFixed(3)} m`;
+  vMass.textContent=`竖管解析气体质量=${f.coreMassMg.toFixed(2)} mg`;
+  vHead.textContent=`气囊压力头=${f.head.toFixed(3)} m`;
+}
+function vStop(){if(vTimer)clearInterval(vTimer);vTimer=null;vBtn.textContent='播放';}
+vPrev.onclick=()=>{vStop();vShow(vI-1)};
+vNext.onclick=()=>{vStop();vShow(vI+1)};
+vSld.oninput=e=>{vStop();vShow(Number(e.target.value))};
+vBtn.onclick=()=>{if(vTimer){vStop();return};vBtn.textContent='暂停';
+  vTimer=setInterval(()=>vShow(vI>=vFrames.length-1?0:vI+1),260)};
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'){vStop();vShow(vI-1)}
+  if(e.key==='ArrowRight'){vStop();vShow(vI+1)}});
+vShow(0);
+</script>
+</div></body></html>

@@ -1,0 +1,44 @@
+{
+  "case": "Liu2020 C9: Q 25->40 L/s, hr0=0.30 m, upstream air pocket",
+  "model_all_water": {
+    "geyser": true,
+    "P1m_kPa": 11.493097119799085,
+    "t_P1m_s": 0.5400738613291445,
+    "t_first_top_s": 0.93035705533587,
+    "T_osc_s": 1.13,
+    "PT2_final_kPa": 10.627392888085321,
+    "PT3_final_kPa": 15.444208570061853,
+    "PT4_final_kPa": 11.094382622303904,
+    "wr_eject": 0.968838040941431,
+    "h_jet": 1.2678413429956794,
+    "overflow_L": 0.555096343713627,
+    "mass_error_L": -1.6566403197165736e-10
+  },
+  "model_sealed_pocket": {
+    "P1m_kPa": 16.484777937335306,
+    "t_P1m_s": 3.7202640535470355,
+    "note": "cushioning delays the first peak; drifts after ~4 s (declared reduced-solver limit)"
+  },
+  "analytic_eq7": {
+    "T_s": 1.5188114669006794,
+    "amp_m": 0.36937991925543634
+  },
+  "paper": {
+    "geyser": true,
+    "n_geysers": 8,
+    "P1m_kPa": 10.69,
+    "t_P1m_s": 0.5,
+    "t_first_top_s": 0.73,
+    "t_pocket_arrival_s": 6.46,
+    "PT2_initial_kPa": 2.97,
+    "PT3_initial_kPa": 7.09,
+    "PT2_final_kPa": 8.79,
+    "PT3_final_kPa": 12.76,
+    "PT4_final_kPa": 9.25,
+    "T_eq8_s": 1.45,
+    "fig11_h_slope": 1.5385,
+    "fig11_h_intercept": 0.6087,
+    "fig11_pf_slope": 0.6971,
+    "fig11_pf_intercept": -0.0245
+  }
+}

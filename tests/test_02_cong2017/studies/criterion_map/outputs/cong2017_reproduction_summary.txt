@@ -1,0 +1,28 @@
+Cong, Chan & Lee (2017, JHE 143(9):04017039) geyser reproduction
+OUR decoupled two-fluid model; exact paper geometry & initial conditions.
+==========================================================================
+Rig: horizontal pipe ~6 m, D=0.05 m; riser 1.8 m, Dr=16-46 mm; constant-head tank.
+Series B (independent upstream head). Geometry/initial conditions per paper.
+
+[Signature runs]
+  BH1_16mm_geyser   : Dr=  16mm Dr/D=0.32 Vair*= 9.03 Ta=8.27s peakH/H0=2.07 model_geyser=True(t=0.93s)
+  BH6_41mm_nogeyser : Dr=  41mm Dr/D=0.82 Vair*= 1.37 Ta=8.27s peakH/H0=2.07 model_geyser=False(t=-)
+  paper: B-H1 geyser (peak ~1.9 H0); B-H6 no geyser (peak ~1.4 H0).
+
+[B-H1..B-H7 model vs measured]  (H0=0.66 m, L0=0.61 m)
+  run   Dr/D  Vair*  Ta_meas Ta_mod  geyser(meas/mod)  vfs(meas/mod)  vint(meas/mod)
+  B-H1  0.32   9.03   8.07   8.27   True /True  [OK]  0.92/1.22   1.23/1.34
+  B-H2  0.42   5.24   7.84   8.27   True /True  [OK]  0.77/1.12   1.02/1.26
+  B-H3  0.52   3.42   8.18   8.27   True /True  [OK]  0.66/0.61   0.92/0.77
+  B-H4  0.62   2.40   8.14   8.27   False/False [OK]  0.21/0.00   0.42/0.17
+  B-H5  0.72   1.78   8.10   8.27   False/False [OK]  0.26/0.00   0.48/0.19
+  B-H6  0.82   1.37   8.10   8.27   False/False [OK]  0.25/0.00   0.48/0.20
+  B-H7  0.92   1.09   8.22   8.27   False/False [OK]  0.20/0.00   0.44/0.21
+  geyser classification: 7/7 match measured.
+  mean |Ta_model - Ta_meas| = 0.18 s.
+
+[Broad criterion scan] 63 cases, model vs paper criterion agreement 62/63 = 98%
+
+[Outputs] cong2017_signature_cases.*, cong2017_BH_model_vs_measured.*,
+          cong2017_criterion_map.*, cong2017_*_riser.csv, *_stage1.csv,
+          cong2017_BH_model_vs_measured.csv, cong2017_criterion_scan.csv

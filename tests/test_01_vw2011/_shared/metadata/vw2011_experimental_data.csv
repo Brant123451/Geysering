@@ -1,0 +1,17 @@
+## V&W (2011) air-capsule experiments, geyser strength (Table 2.3 of Lewis & Wright 2012, JWMM R245-02; = Lewis 2011 PhD; = Vasconcelos & Wright 2011 JHE 137(5) 543-555)
+## Apparatus (Fig 2.9): horizontal tunnel D=0.095 m, capped both ends, fed by a constant-head reservoir; single vertical riser near the upstream reservoir (side-T on the crown), riser height ~0.8 m, open top; a butterfly valve isolates the air capsule (right of valve). Opening the valve releases the air pocket which migrates to the riser and rises.
+## geyser_strength_m = elevation of the riser free surface above the tunnel invert at the instant the rising air-pocket nose reaches the free surface (experimental, +/-0.04 m; +/-0.15 m for the two largest-rise cases).
+## columns: riser_diameter_m, reservoir_level_m, air_volume_L, init_surcharge_volume_L, geyser_strength_m, geyser_strength_norm_by_reservoir
+riser_diameter_m,reservoir_level_m,air_volume_L,init_surcharge_volume_L,geyser_strength_m,geyser_strength_norm
+0.044,0.203,1.59,0.31,0.33,1.63
+0.044,0.203,3.14,0.31,0.37,1.82
+0.044,0.203,5.97,0.31,0.40,1.96
+0.044,0.457,1.59,0.69,0.78,1.72
+0.044,0.457,3.14,0.69,2.07,4.54
+0.044,0.457,5.97,0.69,2.23,4.88
+0.095,0.203,1.59,1.44,0.24,1.16
+0.095,0.203,3.14,1.44,0.26,1.30
+0.095,0.203,5.97,1.44,0.26,1.30
+0.095,0.457,1.59,3.24,0.51,1.11
+0.095,0.457,3.14,3.24,0.59,1.29
+0.095,0.457,5.97,3.24,0.61,1.34

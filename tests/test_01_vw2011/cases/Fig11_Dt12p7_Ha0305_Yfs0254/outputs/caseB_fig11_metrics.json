@@ -1,0 +1,57 @@
+{
+  "condition": "Dt*=0.135, Ha0=0.305, WL=0.254 (paper Fig.11 case)",
+  "shift_Tstar": 0.5982596535114251,
+  "model": {
+    "geyser": false,
+    "Vint_star_climb_fit": 1.591227072486138,
+    "Yfs_max": 0.6147199449885535,
+    "Hstar_plateau_crown": 0.3317991506175313
+  },
+  "paper_fig11_reading": {
+    "Vint_star_plateau": "~2.4 rising to ~5 near the top (their model)",
+    "Yfs_climb": "0.44 -> 1.0 over T* 3.6..4.1",
+    "Hstar": "plateau ~0.42, decays from T*~3.7, ~0.25 at 4.15 (their model stops)"
+  },
+  "axes": {
+    "yint": {
+      "x_t0": 348,
+      "x_t1": 806,
+      "y_top": 111,
+      "y_bot": 448,
+      "t0": 3.0,
+      "t1": 4.5
+    },
+    "yfs": {
+      "x_t0": 944,
+      "x_t1": 1401,
+      "y_top": 111,
+      "y_bot": 448,
+      "t0": 3.0,
+      "t1": 4.5
+    },
+    "vint": {
+      "x_t0": 324,
+      "x_t1": 807,
+      "y_top": 612,
+      "y_bot": 943,
+      "t0": 3.0,
+      "t1": 4.5
+    },
+    "vfs": {
+      "x_t0": 920,
+      "x_t1": 1402,
+      "y_top": 609,
+      "y_bot": 943,
+      "t0": 3.0,
+      "t1": 4.5
+    },
+    "head": {
+      "x_t0": 626,
+      "x_t1": 1105,
+      "y_top": 1103,
+      "y_bot": 1453,
+      "t0": 3.0,
+      "t1": 4.5
+    }
+  }
+}

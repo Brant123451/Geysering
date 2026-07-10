@@ -1,0 +1,15 @@
+{
+  "case": "Dt*=0.607, Ha0=0.305, WL=0.254 (Fig.10 case)",
+  "model": {
+    "Vint_star_climb_fit": -0.02331420916707082,
+    "Vfs_star_mean_7p5_8p8": -0.21526890371890334,
+    "Yfs_end": 0.1864073057585144,
+    "Hstar_at_7": 0.36908820335735715
+  },
+  "paper_fig10_reading": {
+    "Vint_star_plateau": "~0.4 (their model & exp)",
+    "Vfs_star_band": "0.03..0.13 oscillating",
+    "Yfs_span": "0.42 -> 0.52",
+    "Hstar_at_7": "~0.43, collapsing after T*~7.5"
+  }
+}

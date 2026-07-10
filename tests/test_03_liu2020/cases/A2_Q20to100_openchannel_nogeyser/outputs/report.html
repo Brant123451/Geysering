@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh"><head><meta charset="utf-8">
+<title>Liu2020 Case A2 复现 — 交汇室竖井（不喷发分支）</title>
+<style>
+body{font-family:-apple-system,Segoe UI,Arial,'Microsoft YaHei',sans-serif;margin:0;background:#f6f8fb;color:#1f2937}
+.wrap{max-width:1180px;margin:24px auto;padding:0 18px}
+.panel{background:#fff;border:1px solid #ddd;border-radius:12px;padding:16px;margin-bottom:16px}
+img{width:100%;border:1px solid #ddd;border-radius:10px;background:#fff}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #eee}
+th{background:#f3f4f6}
+h1{font-size:22px} h2{font-size:17px}
+.muted{font-size:13px;color:#6b7280}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>Liu, Shao &amp; Zhu (2020) Case A2 复现 — 交汇室上方竖井，不喷发分支</h1>
+<p>论文：<i>Experimental Study on Stormwater Geyser in Vertical Shaft above Junction
+Chamber</i>, J. Hydraul. Eng. 146(2), 04019055（Edmonton 27 m 竖井的 1:20 概化模型）。
+工况 <b>A2</b>：进口流量 20&rarr;100 L/s（阀门 ~0.4 s 斜坡），下游<b>明渠</b>（堰控，
+hd=Dd/4）；实测<b>不喷发</b>，竖管内首个气水混合柱高 h&asymp;0.13 m。
+模型（2026-07-08 全动力版）：上游管—交汇室—下游管为<b>同一条连续 PDE 计算域</b>
+（逐格断面几何：圆管/矩形室；Rusanov + 锋面限梯度 + 满管弹性支路 + 封闭气囊区域
+EOS，气相质量守恒），两处断面突变为带动量状态的内部结点面（短连接管闭合：稳态自动
+满足能量平衡，波动双向透射）；<b>竖管为变长段塞动量方程</b>（对竖直等径开顶水柱，
+不可压缩连续性使全柱同速，段塞方程即该子域 PDE 的精确形式——含惯性、重力、孔口/
+沿程损失，经顶盖 0.06 m 孔与室顶格双向交换质量）；室内射流跌落<b>掺气</b>
+（Ervine&amp;Falvey 卷吸率、气泡逸出闭合）使混合物膨胀触顶，供入竖管的是混合柱。
+整个过程按物理数学模型自然演化——交汇室涨落、竖管柱的站立与回落都是计算的
+涌现结果，不是预设。</p>
+
+<div class="panel">
+  <h2 style="margin-top:0">压力对比 — PT3（室底）/ PT2（室顶盖）/ PT1（竖管 +0.80 m）</h2>
+  <p class="muted">灰包络+中位线 = 论文 Fig.3 数字化（逐列取色）；红线 = 模型。
+  t=0 为流量斜坡起点。</p>
+  <img src="outputs/caseA_comparison_pressure.png">
+  <div class="grid2" style="margin-top:10px">
+    <div><h3 style="margin:4px 0">论文原图 Fig.3（扫描）</h3><img src="paper_scans/fig3_panel.png"></div>
+    <div><h3 style="margin:4px 0">数字化质量检查</h3><img src="digitized/debug_fig3_extract.png"></div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2 style="margin-top:0">竖管混合柱高度 — 对标 Fig.4</h2>
+  <img src="outputs/caseA_riser_column.png">
+  <p class="muted">论文 Fig.4 给出 Series A 各工况"首个气水混合柱"最大高度；A2
+  （Q0=20, Q1=100）实测 h&asymp;0.13 m。论文自己的零损失能量估计（h = V_u&sup2;/2g − &Delta;z）
+  给 0.33 m，并注明"比实测大 0.10–0.15 m"。模型首峰 0.47 m（段塞动量
+  方程解出的<b>混合柱</b>高，空隙率继承室内掺气，与实测"气水混合柱"同一定义），
+  与论文自己的能量估计同量级、同向偏大——两者都只部分计入瞬变涌入的动能损失
+  （进口孔口 + 掺气搅拌耗散）。</p>
+</div>
+
+<div class="panel">
+  <h2 style="margin-top:0">指标对照</h2>
+  <table>
+    <tr><th>量</th><th>实验（论文正文/图）</th><th>模型</th></tr>
+    <tr><td>分支判别</td><td>不喷发（h &lt; 1.22 m）</td>
+        <td>不喷发（h_max=0.47 m）</td></tr>
+    <tr><td>PT3 初值（静止段）</td><td>0.99 kPa（水深 0.10 m）</td>
+        <td>1.29 kPa</td></tr>
+    <tr><td>PT3 稳态（实验 7–14 s 平均）</td><td>4.99 kPa</td>
+        <td>5.13（同窗）/
+        5.26 kPa（t&gt;22 s 收敛值）</td></tr>
+    <tr><td>PT2 稳态（实验 7–14 s 平均）</td><td>2.15 kPa</td>
+        <td>0.28（同窗）/
+        1.80 kPa（t&gt;22 s）</td></tr>
+    <tr><td>竖管首柱高 h</td><td>0.13 m（Fig.4）；论文估算 0.33 m</td>
+        <td>0.47 m</td></tr>
+    <tr><td>体积守恒误差</td><td>—</td><td>0.0000 L</td></tr>
+  </table>
+  <p class="muted">诚实说明：(1) 实测 PT2/PT3 在 4–7 s 有 ~0.3 s 周期、±2 kPa 的强烈
+  掺气振荡（气水混合物在室内搅动），一维模型复现其均值与包络趋势，不解析逐周期掺气
+  振荡。<b>历史记录</b>：早期集总节点版本曾有约 9 s 周期的调压井余荡（波谷把交汇室拉到
+  近乎排干），三种交换面层面的阻尼尝试均失败；2026-07-08 改为连续复合域 + 带动量的
+  内部结点面后，波动可双向透射并向管道辐射，<b>该余荡自然消失</b>（交汇室全程不排干，
+  稳态在 60 s 长程内保持平稳）——证实了原缺陷是集总面反射造成的，正确做法就是让
+  物理自然演化；(1b) 竖管湿润（实测 PT2&gt;0）的供给机制与论文描述一致：清水位
+  （~0.25 m）远低于室顶（0.45 m），是<b>掺气混合物</b>（射流跌落卷吸，空隙率至
+  ~0.4）膨胀触顶后经顶盖孔被挤入竖管——去掉掺气闭合则竖管全程干燥（已做 A/B）；
+  竖管内为混合柱（密度低、同底压站得更高），其站立-回落由段塞动量方程解出，
+  呈<b>间歇泵送</b>（触顶供入-气泡逸出-densify-回排的循环）；(2) 实测 PT3−PT2 压差
+  （0.27 m）小于两者高差（0.43 m），论文归因于动压与掺气密度，与本模型机制相同；
+  实测 PT2 为连续的 2.15 kPa 而模型呈间歇（窗口均值偏低），因为单相 PDE 的混合面
+  只间歇触顶，不解析持续搅动的室顶两相湍流；(3) 堰系数取标准值 Cd=0.62（未拟合），初始尾水
+  深 0.088 m vs 报告值 0.07 m（+25%）；(4) 气相记账对封闭气囊<b>质量守恒</b>（挤压搁浅
+  的气体归并至最近气区并记账），通风区与大气自由交换；液相体积守恒审计误差 &lt; 1e-7 L；
+  (5) 正式计时前有 10 s 的 Q0 暖机段（初始条件解析式与离散稳态的差异在暖机内耗散），
+  t=0 对应流量斜坡起点。</p>
+</div>
+
+<div class="panel">
+  <h2 style="margin-top:0">初始恒定流水深剖面验证 — 跌坎前为什么没有降水曲线</h2>
+  <p class="muted">审查问题：上游管越过 0.18 m 跌坎自由跌落入室，坎前水深不该是平的
+  （应有向临界水深收缩的降水曲线）？<b>水力学判别</b>：Q0=20 L/s 时该管
+  正常水深 y_n=0.096 m &lt; 临界水深 y_c=0.122 m——1:100 坡在此流量下是
+  <b>水力陡坡</b>，来流为急流（Fr=1.56）。急流中扰动不能上传，跌坎（下游控制）
+  影响不了上游，水深沿程保持正常水深；复合域版本在<b>坎唇前最后 ~0.5 m</b>解出一段
+  轻微加速收缩（水深 0.096&rarr;0.080 m、Fr 升至 ~2.5——坎唇解除了侧压支撑，急流
+  向自由跌落加速），随后跌入室内。这与实际观察一致：急流过坎唇有小幅收缩，但没有
+  缓坡才有的长距离 M2 降水曲线。若是缓坡（y_n&gt;y_c），审查直觉就完全正确：
+  会出现拉长的 M2 曲线、坎唇水深收缩到约 0.7y_c。坎唇非静水压水舌弯曲仍超出一维
+  静水压模型分辨能力。下图为模型暖机稳态实算剖面与 y_n / y_c 对照及沿程 Froude 数。</p>
+  <img src="outputs/caseA_steady_profile.png">
+</div>
+
+
+<div class="panel">
+  <h2 style="margin-top:0">全场模拟逐帧查看器 — 上游管 &rarr; 交汇室+竖管 &rarr; 下游管 &rarr; 堰</h2>
+  <p class="muted">同一次模拟的全场演化，全部按求解器真实状态逐格绘制（清水=蓝，
+  <b>气水混合物=浅蓝</b>（射流跌落掺气的膨胀层），气=浅灰；室顶深蓝色带 = 混合物
+  顶到盖板的格子；竖管柱高与柱内箭头 = 段塞动量方程解出的柱高与柱速）：
+  流量斜坡 &rarr; 上游管涨水波推进 &rarr; 交汇室骤充压、混合物膨胀触顶 &rarr;
+  竖管混合柱冲高-回排的间歇泵送 &rarr; 下游管+堰泄流趋稳。
+  左右方向键 / 滑块 / 播放均可调帧。</p>
+  <div class="meta" style="display:flex;gap:18px;margin:10px 0;font-weight:700;flex-wrap:wrap">
+    <span id="vIdx"></span><span id="vTime"></span><span id="vS"></span>
+    <span id="vHr"></span><span id="vQin"></span><span id="vQout"></span></div>
+  <img id="vFrame" style="width:100%">
+  <div style="margin-top:8px">
+    <button id="vPrev" style="padding:8px 14px;margin:6px;border:1px solid #bbb;border-radius:8px;background:#fff;cursor:pointer">上一帧</button>
+    <button id="vPlay" style="padding:8px 14px;margin:6px;border:1px solid #bbb;border-radius:8px;background:#fff;cursor:pointer">播放</button>
+    <input id="vSlider" type="range" style="width:60%;vertical-align:middle">
+    <button id="vNext" style="padding:8px 14px;margin:6px;border:1px solid #bbb;border-radius:8px;background:#fff;cursor:pointer">下一帧</button>
+  </div>
+</div>
+<script>
+const vFrames=[{"file": "outputs/frames/frame_0000.png", "time": -0.0, "S": 0.1314, "hr": 0.0, "ur": 0.0, "alpha": 0.079, "Qin": 20.0, "Qout": 16.6}, {"file": "outputs/frames/frame_0001.png", "time": 0.1, "S": 0.1315, "hr": 0.0, "ur": 0.0, "alpha": 0.079, "Qin": 39.8, "Qout": 16.7}, {"file": "outputs/frames/frame_0002.png", "time": 0.2, "S": 0.1315, "hr": 0.0, "ur": 0.0, "alpha": 0.079, "Qin": 59.8, "Qout": 16.7}, {"file": "outputs/frames/frame_0003.png", "time": 0.3, "S": 0.1315, "hr": 0.0, "ur": 0.0, "alpha": 0.079, "Qin": 80.0, "Qout": 16.7}, {"file": "outputs/frames/frame_0004.png", "time": 0.4, "S": 0.1316, "hr": 0.0, "ur": 0.0, "alpha": 0.079, "Qin": 99.9, "Qout": 16.8}, {"file": "outputs/frames/frame_0005.png", "time": 0.5, "S": 0.1316, "hr": 0.0, "ur": 0.0, "alpha": 0.079, "Qin": 100.0, "Qout": 16.8}, {"file": "outputs/frames/frame_0006.png", "time": 0.6, "S": 0.1316, "hr": 0.0, "ur": 0.0, "alpha": 0.079, "Qin": 100.0, "Qout": 16.9}, {"file": "outputs/frames/frame_0007.png", "time": 0.7, "S": 0.1316, "hr": 0.0, "ur": 0.0, "alpha": 0.079, "Qin": 100.0, "Qout": 16.9}, {"file": "outputs/frames/frame_0008.png", "time": 0.8, "S": 0.1316, "hr": 0.0, "ur": 0.0, "alpha": 0.079, "Qin": 100.0, "Qout": 16.9}, {"file": "outputs/frames/frame_0009.png", "time": 0.9, "S": 0.1316, "hr": 0.0, "ur": 0.0, "alpha": 0.079, "Qin": 100.0, "Qout": 17.0}, {"file": "outputs/frames/frame_0010.png", "time": 1.0, "S": 0.1316, "hr": 0.0, "ur": 0.0, "alpha": 0.079, "Qin": 100.0, "Qout": 17.0}, {"file": "outputs/frames/frame_0011.png", "time": 1.1, "S": 0.1316, "hr": 0.0, "ur": 0.0, "alpha": 0.079, "Qin": 100.0, "Qout": 17.0}, {"file": "outputs/frames/frame_0012.png", "time": 1.2, "S": 0.1316, "hr": 0.0, "ur": 0.0, "alpha": 0.079, "Qin": 100.0, "Qout": 17.1}, {"file": "outputs/frames/frame_0013.png", "time": 1.3, "S": 0.1316, "hr": 0.0, "ur": 0.0, "alpha": 0.079, "Qin": 100.0, "Qout": 17.1}, {"file": "outputs/frames/frame_0014.png", "time": 1.4, "S": 0.1327, "hr": 0.0, "ur": 0.0, "alpha": 0.079, "Qin": 100.0, "Qout": 17.1}, {"file": "outputs/frames/frame_0015.png", "time": 1.5, "S": 0.2141, "hr": 0.0, "ur": 0.0, "alpha": 0.088, "Qin": 100.0, "Qout": 17.2}, {"file": "outputs/frames/frame_0016.png", "time": 1.6, "S": 0.2628, "hr": 0.0, "ur": 0.0, "alpha": 0.103, "Qin": 100.0, "Qout": 17.2}, {"file": "outputs/frames/frame_0017.png", "time": 1.7, "S": 0.2757, "hr": 0.0, "ur": 0.0, "alpha": 0.124, "Qin": 100.0, "Qout": 17.2}, {"file": "outputs/frames/frame_0018.png", "time": 1.8, "S": 0.2819, "hr": 0.0, "ur": 0.0, "alpha": 0.144, "Qin": 100.0, "Qout": 17.2}, {"file": "outputs/frames/frame_0019.png", "time": 1.9, "S": 0.286, "hr": 0.0, "ur": 0.0, "alpha": 0.162, "Qin": 100.0, "Qout": 17.3}, {"file": "outputs/frames/frame_0020.png", "time": 2.0, "S": 0.2828, "hr": 0.0, "ur": 0.0, "alpha": 0.181, "Qin": 100.0, "Qout": 17.3}, {"file": "outputs/frames/frame_0021.png", "time": 2.1, "S": 0.2718, "hr": 0.0, "ur": 0.0, "alpha": 0.203, "Qin": 100.0, "Qout": 17.3}, {"file": "outputs/frames/frame_0022.png", "time": 2.2, "S": 0.26, "hr": 0.0, "ur": 0.0, "alpha": 0.225, "Qin": 100.0, "Qout": 17.4}, {"file": "outputs/frames/frame_0023.png", "time": 2.3, "S": 0.247, "hr": 0.0, "ur": 0.0, "alpha": 0.248, "Qin": 100.0, "Qout": 17.4}, {"file": "outputs/frames/frame_0024.png", "time": 2.4, "S": 0.2322, "hr": 0.0, "ur": 0.0, "alpha": 0.272, "Qin": 100.0, "Qout": 17.4}, {"file": "outputs/frames/frame_0025.png", "time": 2.5, "S": 0.2149, "hr": 0.0, "ur": 0.0, "alpha": 0.299, "Qin": 100.0, "Qout": 17.4}, {"file": "outputs/frames/frame_0026.png", "time": 2.6, "S": 0.1953, "hr": 0.0, "ur": 0.0, "alpha": 0.329, "Qin": 100.0, "Qout": 17.5}, {"file": "outputs/frames/frame_0027.png", "time": 2.7, "S": 0.1744, "hr": 0.0, "ur": 0.0, "alpha": 0.362, "Qin": 100.0, "Qout": 17.5}, {"file": "outputs/frames/frame_0028.png", "time": 2.8, "S": 0.1531, "hr": 0.0, "ur": 0.0, "alpha": 0.398, "Qin": 100.0, "Qout": 17.5}, {"file": "outputs/frames/frame_0029.png", "time": 2.9, "S": 0.1322, "hr": 0.0, "ur": 0.0, "alpha": 0.438, "Qin": 100.0, "Qout": 17.5}, {"file": "outputs/frames/frame_0030.png", "time": 3.0, "S": 0.1123, "hr": 0.0, "ur": 0.0, "alpha": 0.45, "Qin": 100.0, "Qout": 17.6}, {"file": "outputs/frames/frame_0031.png", "time": 3.1, "S": 0.107, "hr": 0.0, "ur": 0.0, "alpha": 0.434, "Qin": 100.0, "Qout": 17.6}, {"file": "outputs/frames/frame_0032.png", "time": 3.2, "S": 0.1851, "hr": 0.0, "ur": 0.0, "alpha": 0.314, "Qin": 100.0, "Qout": 17.6}, {"file": "outputs/frames/frame_0033.png", "time": 3.3, "S": 0.2416, "hr": 0.0, "ur": 0.0, "alpha": 0.27, "Qin": 100.0, "Qout": 17.6}, {"file": "outputs/frames/frame_0034.png", "time": 3.4, "S": 0.2477, "hr": 0.0, "ur": 0.0, "alpha": 0.276, "Qin": 100.0, "Qout": 17.7}, {"file": "outputs/frames/frame_0035.png", "time": 3.5, "S": 0.2571, "hr": 0.0, "ur": 0.0, "alpha": 0.279, "Qin": 100.0, "Qout": 17.7}, {"file": "outputs/frames/frame_0036.png", "time": 3.6, "S": 0.2652, "hr": 0.0, "ur": 0.0, "alpha": 0.282, "Qin": 100.0, "Qout": 17.7}, {"file": "outputs/frames/frame_0037.png", "time": 3.7, "S": 0.2797, "hr": 0.0, "ur": 0.0, "alpha": 0.28, "Qin": 100.0, "Qout": 17.9}, {"file": "outputs/frames/frame_0038.png", "time": 3.8, "S": 0.2875, "hr": 0.0, "ur": 0.003, "alpha": 0.282, "Qin": 100.0, "Qout": 19.9}, {"file": "outputs/frames/frame_0039.png", "time": 3.9, "S": 0.2952, "hr": 0.0196, "ur": 0.563, "alpha": 0.285, "Qin": 100.0, "Qout": 30.4}, {"file": "outputs/frames/frame_0040.png", "time": 4.0, "S": 0.299, "hr": 0.0946, "ur": 0.949, "alpha": 0.288, "Qin": 100.0, "Qout": 42.2}, {"file": "outputs/frames/frame_0041.png", "time": 4.1, "S": 0.302, "hr": 0.1847, "ur": 0.937, "alpha": 0.292, "Qin": 100.0, "Qout": 43.7}, {"file": "outputs/frames/frame_0042.png", "time": 4.2, "S": 0.3057, "hr": 0.2661, "ur": 0.808, "alpha": 0.295, "Qin": 100.0, "Qout": 40.4}, {"file": "outputs/frames/frame_0043.png", "time": 4.3, "S": 0.3069, "hr": 0.3332, "ur": 0.645, "alpha": 0.3, "Qin": 100.0, "Qout": 37.3}, {"file": "outputs/frames/frame_0044.png", "time": 4.4, "S": 0.3028, "hr": 0.3821, "ur": 0.448, "alpha": 0.308, "Qin": 100.0, "Qout": 37.1}, {"file": "outputs/frames/frame_0045.png", "time": 4.5, "S": 0.3028, "hr": 0.411, "ur": 0.248, "alpha": 0.314, "Qin": 100.0, "Qout": 51.6}, {"file": "outputs/frames/frame_0046.png", "time": 4.6, "S": 0.3034, "hr": 0.42, "ur": 0.047, "alpha": 0.319, "Qin": 100.0, "Qout": 102.3}, {"file": "outputs/frames/frame_0047.png", "time": 4.7, "S": 0.3012, "hr": 0.4094, "ur": -0.149, "alpha": 0.326, "Qin": 100.0, "Qout": 105.3}, {"file": "outputs/frames/frame_0048.png", "time": 4.8, "S": 0.2979, "hr": 0.3803, "ur": -0.323, "alpha": 0.334, "Qin": 100.0, "Qout": 110.3}, {"file": "outputs/frames/frame_0049.png", "time": 4.9, "S": 0.2935, "hr": 0.3366, "ur": -0.439, "alpha": 0.342, "Qin": 100.0, "Qout": 111.8}, {"file": "outputs/frames/frame_0050.png", "time": 5.0, "S": 0.2746, "hr": 0.2836, "ur": -0.576, "alpha": 0.362, "Qin": 100.0, "Qout": 111.4}, {"file": "outputs/frames/frame_0051.png", "time": 5.1, "S": 0.2549, "hr": 0.2039, "ur": -0.885, "alpha": 0.383, "Qin": 100.0, "Qout": 112.9}, {"file": "outputs/frames/frame_0052.png", "time": 5.2, "S": 0.2374, "hr": 0.107, "ur": -0.93, "alpha": 0.404, "Qin": 100.0, "Qout": 113.9}, {"file": "outputs/frames/frame_0053.png", "time": 5.3, "S": 0.2208, "hr": 0.0184, "ur": -0.754, "alpha": 0.424, "Qin": 100.0, "Qout": 113.9}, {"file": "outputs/frames/frame_0054.png", "time": 5.4, "S": 0.2086, "hr": 0.0, "ur": 0.0, "alpha": 0.44, "Qin": 100.0, "Qout": 113.9}, {"file": "outputs/frames/frame_0055.png", "time": 5.5, "S": 0.1963, "hr": 0.0, "ur": 0.0, "alpha": 0.45, "Qin": 100.0, "Qout": 112.7}, {"file": "outputs/frames/frame_0056.png", "time": 5.6, "S": 0.1852, "hr": 0.0, "ur": 0.0, "alpha": 0.45, "Qin": 100.0, "Qout": 113.2}, {"file": "outputs/frames/frame_0057.png", "time": 5.7, "S": 0.172, "hr": 0.0, "ur": 0.0, "alpha": 0.45, "Qin": 100.0, "Qout": 112.8}, {"file": "outputs/frames/frame_0058.png", "time": 5.8, "S": 0.1573, "hr": 0.0, "ur": 0.0, "alpha": 0.45, "Qin": 100.0, "Qout": 113.0}, {"file": "outputs/frames/frame_0059.png", "time": 5.9, "S": 0.141, "hr": 0.0, "ur": 0.0, "alpha": 0.45, "Qin": 100.0, "Qout": 113.0}, {"file": "outputs/frames/frame_0060.png", "time": 6.0, "S": 0.1242, "hr": 0.0, "ur": 0.0, "alpha": 0.45, "Qin": 100.0, "Qout": 113.9}, {"file": "outputs/frames/frame_0061.png", "time": 6.1, "S": 0.1101, "hr": 0.0, "ur": 0.0, "alpha": 0.45, "Qin": 100.0, "Qout": 113.2}, {"file": "outputs/frames/frame_0062.png", "time": 6.2, "S": 0.0996, "hr": 0.0, "ur": 0.0, "alpha": 0.45, "Qin": 100.0, "Qout": 113.8}, {"file": "outputs/frames/frame_0063.png", "time": 6.3, "S": 0.1487, "hr": 0.0, "ur": 0.0, "alpha": 0.356, "Qin": 100.0, "Qout": 112.2}, {"file": "outputs/frames/frame_0064.png", "time": 6.4, "S": 0.2291, "hr": 0.0, "ur": 0.0, "alpha": 0.274, "Qin": 100.0, "Qout": 110.6}, {"file": "outputs/frames/frame_0065.png", "time": 6.5, "S": 0.2479, "hr": 0.0, "ur": 0.0, "alpha": 0.27, "Qin": 100.0, "Qout": 110.2}, {"file": "outputs/frames/frame_0066.png", "time": 6.6, "S": 0.2371, "hr": 0.0, "ur": 0.0, "alpha": 0.289, "Qin": 100.0, "Qout": 68.2}, {"file": "outputs/frames/frame_0067.png", "time": 6.7, "S": 0.2342, "hr": 0.0, "ur": 0.0, "alpha": 0.301, "Qin": 100.0, "Qout": 42.9}, {"file": "outputs/frames/frame_0068.png", "time": 6.8, "S": 0.2438, "hr": 0.0, "ur": 0.0, "alpha": 0.301, "Qin": 100.0, "Qout": 100.9}, {"file": "outputs/frames/frame_0069.png", "time": 6.9, "S": 0.2566, "hr": 0.0, "ur": 0.0, "alpha": 0.299, "Qin": 100.0, "Qout": 91.2}, {"file": "outputs/frames/frame_0070.png", "time": 7.0, "S": 0.2544, "hr": 0.0, "ur": 0.0, "alpha": 0.308, "Qin": 100.0, "Qout": 85.5}, {"file": "outputs/frames/frame_0071.png", "time": 7.1, "S": 0.2592, "hr": 0.0, "ur": 0.0, "alpha": 0.312, "Qin": 100.0, "Qout": 100.0}, {"file": "outputs/frames/frame_0072.png", "time": 7.2, "S": 0.2678, "hr": 0.0, "ur": 0.0, "alpha": 0.312, "Qin": 100.0, "Qout": 98.5}, {"file": "outputs/frames/frame_0073.png", "time": 7.3, "S": 0.2742, "hr": 0.0, "ur": 0.0, "alpha": 0.313, "Qin": 100.0, "Qout": 87.9}, {"file": "outputs/frames/frame_0074.png", "time": 7.4, "S": 0.2747, "hr": 0.0, "ur": 0.0, "alpha": 0.319, "Qin": 100.0, "Qout": 49.0}, {"file": "outputs/frames/frame_0075.png", "time": 7.5, "S": 0.2761, "hr": 0.0, "ur": 0.0, "alpha": 0.324, "Qin": 100.0, "Qout": 51.9}, {"file": "outputs/frames/frame_0076.png", "time": 7.6, "S": 0.2819, "hr": 0.0039, "ur": 0.223, "alpha": 0.325, "Qin": 100.0, "Qout": 100.3}, {"file": "outputs/frames/frame_0077.png", "time": 7.7, "S": 0.283, "hr": 0.0493, "ur": 0.724, "alpha": 0.329, "Qin": 100.0, "Qout": 96.7}, {"file": "outputs/frames/frame_0078.png", "time": 7.8, "S": 0.28, "hr": 0.1207, "ur": 0.737, "alpha": 0.335, "Qin": 100.0, "Qout": 98.3}, {"file": "outputs/frames/frame_0079.png", "time": 7.9, "S": 0.2796, "hr": 0.1775, "ur": 0.562, "alpha": 0.34, "Qin": 100.0, "Qout": 100.9}, {"file": "outputs/frames/frame_0080.png", "time": 8.0, "S": 0.279, "hr": 0.2231, "ur": 0.473, "alpha": 0.344, "Qin": 100.0, "Qout": 100.7}, {"file": "outputs/frames/frame_0081.png", "time": 8.1, "S": 0.2773, "hr": 0.2556, "ur": 0.284, "alpha": 0.349, "Qin": 100.0, "Qout": 100.4}, {"file": "outputs/frames/frame_0082.png", "time": 8.2, "S": 0.2751, "hr": 0.2613, "ur": -0.045, "alpha": 0.355, "Qin": 100.0, "Qout": 101.5}, {"file": "outputs/frames/frame_0083.png", "time": 8.3, "S": 0.2744, "hr": 0.2367, "ur": -0.313, "alpha": 0.36, "Qin": 100.0, "Qout": 102.1}, {"file": "outputs/frames/frame_0084.png", "time": 8.4, "S": 0.2731, "hr": 0.1923, "ur": -0.472, "alpha": 0.365, "Qin": 100.0, "Qout": 101.1}, {"file": "outputs/frames/frame_0085.png", "time": 8.5, "S": 0.2724, "hr": 0.1394, "ur": -0.472, "alpha": 0.37, "Qin": 100.0, "Qout": 101.8}, {"file": "outputs/frames/frame_0086.png", "time": 8.6, "S": 0.2719, "hr": 0.0931, "ur": -0.346, "alpha": 0.374, "Qin": 100.0, "Qout": 101.7}, {"file": "outputs/frames/frame_0087.png", "time": 8.7, "S": 0.2709, "hr": 0.0647, "ur": -0.156, "alpha": 0.378, "Qin": 100.0, "Qout": 101.5}, {"file": "outputs/frames/frame_0088.png", "time": 8.8, "S": 0.2694, "hr": 0.0549, "ur": -0.009, "alpha": 0.383, "Qin": 100.0, "Qout": 101.5}, {"file": "outputs/frames/frame_0089.png", "time": 8.9, "S": 0.2678, "hr": 0.0549, "ur": 0.023, "alpha": 0.387, "Qin": 100.0, "Qout": 101.7}, {"file": "outputs/frames/frame_0090.png", "time": 9.0, "S": 0.2663, "hr": 0.0526, "ur": -0.058, "alpha": 0.391, "Qin": 100.0, "Qout": 101.4}, {"file": "outputs/frames/frame_0091.png", "time": 9.1, "S": 0.265, "hr": 0.0394, "ur": -0.192, "alpha": 0.395, "Qin": 100.0, "Qout": 101.5}, {"file": "outputs/frames/frame_0092.png", "time": 9.2, "S": 0.2639, "hr": 0.0154, "ur": -0.262, "alpha": 0.398, "Qin": 100.0, "Qout": 101.6}, {"file": "outputs/frames/frame_0093.png", "time": 9.3, "S": 0.2626, "hr": 0.0, "ur": 0.0, "alpha": 0.402, "Qin": 100.0, "Qout": 101.7}, {"file": "outputs/frames/frame_0094.png", "time": 9.4, "S": 0.2607, "hr": 0.0, "ur": 0.0, "alpha": 0.405, "Qin": 100.0, "Qout": 102.1}, {"file": "outputs/frames/frame_0095.png", "time": 9.5, "S": 0.2588, "hr": 0.0, "ur": 0.0, "alpha": 0.409, "Qin": 100.0, "Qout": 101.6}, {"file": "outputs/frames/frame_0096.png", "time": 9.6, "S": 0.2565, "hr": 0.0, "ur": 0.0, "alpha": 0.413, "Qin": 100.0, "Qout": 101.8}, {"file": "outputs/frames/frame_0097.png", "time": 9.7, "S": 0.2549, "hr": 0.0, "ur": 0.0, "alpha": 0.417, "Qin": 100.0, "Qout": 108.8}, {"file": "outputs/frames/frame_0098.png", "time": 9.8, "S": 0.2529, "hr": 0.0, "ur": 0.0, "alpha": 0.42, "Qin": 100.0, "Qout": 80.2}, {"file": "outputs/frames/frame_0099.png", "time": 9.9, "S": 0.2481, "hr": 0.0, "ur": 0.0, "alpha": 0.426, "Qin": 100.0, "Qout": 48.0}, {"file": "outputs/frames/frame_0100.png", "time": 10.0, "S": 0.2454, "hr": 0.0, "ur": 0.0, "alpha": 0.431, "Qin": 100.0, "Qout": 102.4}, {"file": "outputs/frames/frame_0101.png", "time": 10.1, "S": 0.2443, "hr": 0.0, "ur": 0.0, "alpha": 0.433, "Qin": 100.0, "Qout": 110.1}, {"file": "outputs/frames/frame_0102.png", "time": 10.2, "S": 0.2396, "hr": 0.0, "ur": 0.0, "alpha": 0.439, "Qin": 100.0, "Qout": 110.0}, {"file": "outputs/frames/frame_0103.png", "time": 10.3, "S": 0.2272, "hr": 0.0, "ur": 0.0, "alpha": 0.45, "Qin": 100.0, "Qout": 110.3}, {"file": "outputs/frames/frame_0104.png", "time": 10.4, "S": 0.2166, "hr": 0.0, "ur": 0.0, "alpha": 0.449, "Qin": 100.0, "Qout": 111.8}, {"file": "outputs/frames/frame_0105.png", "time": 10.5, "S": 0.2319, "hr": 0.0, "ur": 0.0, "alpha": 0.433, "Qin": 100.0, "Qout": 110.7}, {"file": "outputs/frames/frame_0106.png", "time": 10.6, "S": 0.2396, "hr": 0.0, "ur": 0.0, "alpha": 0.427, "Qin": 100.0, "Qout": 112.0}, {"file": "outputs/frames/frame_0107.png", "time": 10.7, "S": 0.2314, "hr": 0.0, "ur": 0.0, "alpha": 0.437, "Qin": 100.0, "Qout": 111.2}, {"file": "outputs/frames/frame_0108.png", "time": 10.8, "S": 0.223, "hr": 0.0, "ur": 0.0, "alpha": 0.447, "Qin": 100.0, "Qout": 110.7}, {"file": "outputs/frames/frame_0109.png", "time": 10.9, "S": 0.2314, "hr": 0.0, "ur": 0.0, "alpha": 0.439, "Qin": 100.0, "Qout": 110.1}, {"file": "outputs/frames/frame_0110.png", "time": 11.0, "S": 0.2405, "hr": 0.0, "ur": 0.0, "alpha": 0.431, "Qin": 100.0, "Qout": 112.1}, {"file": "outputs/frames/frame_0111.png", "time": 11.1, "S": 0.2287, "hr": 0.0, "ur": 0.0, "alpha": 0.444, "Qin": 100.0, "Qout": 112.5}, {"file": "outputs/frames/frame_0112.png", "time": 11.2, "S": 0.2333, "hr": 0.0, "ur": 0.0, "alpha": 0.44, "Qin": 100.0, "Qout": 110.9}, {"file": "outputs/frames/frame_0113.png", "time": 11.3, "S": 0.2224, "hr": 0.0, "ur": 0.0, "alpha": 0.45, "Qin": 100.0, "Qout": 110.8}, {"file": "outputs/frames/frame_0114.png", "time": 11.4, "S": 0.231, "hr": 0.0, "ur": 0.0, "alpha": 0.439, "Qin": 100.0, "Qout": 110.3}, {"file": "outputs/frames/frame_0115.png", "time": 11.5, "S": 0.2326, "hr": 0.0, "ur": 0.0, "alpha": 0.439, "Qin": 100.0, "Qout": 111.3}, {"file": "outputs/frames/frame_0116.png", "time": 11.6, "S": 0.2243, "hr": 0.0, "ur": 0.0, "alpha": 0.449, "Qin": 100.0, "Qout": 111.6}, {"file": "outputs/frames/frame_0117.png", "time": 11.7, "S": 0.2338, "hr": 0.0, "ur": 0.0, "alpha": 0.439, "Qin": 100.0, "Qout": 110.7}, {"file": "outputs/frames/frame_0118.png", "time": 11.8, "S": 0.2374, "hr": 0.0, "ur": 0.0, "alpha": 0.436, "Qin": 100.0, "Qout": 110.8}, {"file": "outputs/frames/frame_0119.png", "time": 11.9, "S": 0.2291, "hr": 0.0, "ur": 0.0, "alpha": 0.446, "Qin": 100.0, "Qout": 111.2}, {"file": "outputs/frames/frame_0120.png", "time": 12.0, "S": 0.2354, "hr": 0.0, "ur": 0.0, "alpha": 0.439, "Qin": 100.0, "Qout": 110.9}, {"file": "outputs/frames/frame_0121.png", "time": 12.1, "S": 0.2253, "hr": 0.0, "ur": 0.0, "alpha": 0.45, "Qin": 100.0, "Qout": 112.3}, {"file": "outputs/frames/frame_0122.png", "time": 12.2, "S": 0.2284, "hr": 0.0, "ur": 0.0, "alpha": 0.444, "Qin": 100.0, "Qout": 110.4}, {"file": "outputs/frames/frame_0123.png", "time": 12.3, "S": 0.2421, "hr": 0.0, "ur": 0.0, "alpha": 0.431, "Qin": 100.0, "Qout": 110.9}, {"file": "outputs/frames/frame_0124.png", "time": 12.4, "S": 0.2312, "hr": 0.0, "ur": 0.0, "alpha": 0.443, "Qin": 100.0, "Qout": 113.3}, {"file": "outputs/frames/frame_0125.png", "time": 12.5, "S": 0.2285, "hr": 0.0, "ur": 0.0, "alpha": 0.447, "Qin": 100.0, "Qout": 111.2}, {"file": "outputs/frames/frame_0126.png", "time": 12.6, "S": 0.2402, "hr": 0.0, "ur": 0.0, "alpha": 0.436, "Qin": 100.0, "Qout": 109.8}, {"file": "outputs/frames/frame_0127.png", "time": 12.7, "S": 0.2297, "hr": 0.0, "ur": 0.0, "alpha": 0.448, "Qin": 100.0, "Qout": 110.2}, {"file": "outputs/frames/frame_0128.png", "time": 12.8, "S": 0.2208, "hr": 0.0, "ur": 0.0, "alpha": 0.45, "Qin": 100.0, "Qout": 110.8}, {"file": "outputs/frames/frame_0129.png", "time": 12.9, "S": 0.2337, "hr": 0.0, "ur": 0.0, "alpha": 0.433, "Qin": 100.0, "Qout": 110.3}, {"file": "outputs/frames/frame_0130.png", "time": 13.0, "S": 0.2425, "hr": 0.0, "ur": 0.0, "alpha": 0.425, "Qin": 100.0, "Qout": 112.5}, {"file": "outputs/frames/frame_0131.png", "time": 13.1, "S": 0.2379, "hr": 0.0, "ur": 0.0, "alpha": 0.431, "Qin": 100.0, "Qout": 113.4}, {"file": "outputs/frames/frame_0132.png", "time": 13.2, "S": 0.2302, "hr": 0.0, "ur": 0.0, "alpha": 0.441, "Qin": 100.0, "Qout": 111.5}, {"file": "outputs/frames/frame_0133.png", "time": 13.3, "S": 0.2209, "hr": 0.0, "ur": 0.0, "alpha": 0.45, "Qin": 100.0, "Qout": 111.5}, {"file": "outputs/frames/frame_0134.png", "time": 13.4, "S": 0.2349, "hr": 0.0, "ur": 0.0, "alpha": 0.435, "Qin": 100.0, "Qout": 109.2}, {"file": "outputs/frames/frame_0135.png", "time": 13.5, "S": 0.2331, "hr": 0.0, "ur": 0.0, "alpha": 0.438, "Qin": 100.0, "Qout": 112.2}, {"file": "outputs/frames/frame_0136.png", "time": 13.6, "S": 0.2228, "hr": 0.0, "ur": 0.0, "alpha": 0.45, "Qin": 100.0, "Qout": 110.6}, {"file": "outputs/frames/frame_0137.png", "time": 13.7, "S": 0.2419, "hr": 0.0, "ur": 0.0, "alpha": 0.43, "Qin": 100.0, "Qout": 111.1}, {"file": "outputs/frames/frame_0138.png", "time": 13.8, "S": 0.228, "hr": 0.0, "ur": 0.0, "alpha": 0.445, "Qin": 100.0, "Qout": 112.2}, {"file": "outputs/frames/frame_0139.png", "time": 13.9, "S": 0.2288, "hr": 0.0, "ur": 0.0, "alpha": 0.445, "Qin": 100.0, "Qout": 110.0}, {"file": "outputs/frames/frame_0140.png", "time": 14.0, "S": 0.2449, "hr": 0.0, "ur": 0.0, "alpha": 0.43, "Qin": 100.0, "Qout": 109.5}];
+let vI=0,vTimer=null;
+const vImg=document.getElementById('vFrame'),
+      vSld=document.getElementById('vSlider'),vBtn=document.getElementById('vPlay');
+vSld.min=0;vSld.max=Math.max(0,vFrames.length-1);vSld.value=0;
+function vShow(k){
+  vI=Math.max(0,Math.min(vFrames.length-1,k));
+  const f=vFrames[vI];
+  vImg.src=f.file; vSld.value=vI;
+  vIdx.textContent=`帧 ${vI+1}/${vFrames.length}`;
+  vTime.textContent=`t=${f.time.toFixed(2)} s`;
+  vS.textContent=`交汇室水位=${f.S.toFixed(3)} m`;
+  vHr.textContent=`竖管柱高=${f.hr.toFixed(3)} m`;
+  vQin.textContent=`Qin=${f.Qin.toFixed(1)} L/s`;
+  vQout.textContent=`Q堰=${f.Qout.toFixed(1)} L/s`;
+}
+function vStop(){if(vTimer)clearInterval(vTimer);vTimer=null;vBtn.textContent='播放';}
+vPrev.onclick=()=>{vStop();vShow(vI-1)};
+vNext.onclick=()=>{vStop();vShow(vI+1)};
+vSld.oninput=e=>{vStop();vShow(Number(e.target.value))};
+vBtn.onclick=()=>{if(vTimer){vStop();return};vBtn.textContent='暂停';
+  vTimer=setInterval(()=>vShow(vI>=vFrames.length-1?0:vI+1),180)};
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'){vStop();vShow(vI-1)}
+  if(e.key==='ArrowRight'){vStop();vShow(vI+1)}});
+vShow(0);
+</script>
+
+<div class="panel">
+  <h2 style="margin-top:0">建模声明（一维化选择，2026-07-08 复合域版）</h2>
+  <p class="muted"><b>连续复合计算域</b>：上游管（圆管，坡 1:100）—交汇室（矩形
+  0.30&times;0.30&times;0.45 m）—下游管（圆管）是同一条 PDE 域，逐格携带各自的断面几何
+  （面积、水深、真实水力半径）；Rusanov 通量 + 锋面局域化的 minmod 压力梯度限制器
+  （只在真锋面处限幅，几何界面处保留中心梯度以传递回水）+ 满管弹性支路（水锤，
+  仅管道格）+ 封闭气囊区域 EOS（气相质量守恒，挤压搁浅气体归并至最近气区）。
+  <b>两处断面突变为带动量状态的内部结点面</b>（短连接管闭合：dQ/dt = gA&Delta;piez/dx −
+  (1+K)|u|Q/2dx，半隐式推进）——稳态自动满足能量平衡（流速头+局损），瞬态双向透射波动；
+  K_in=1.0（Borda-Carnot 扩张+跌落掺混）、K_out=1.0（锐缘收缩+转向）取手册值未拟合。
+  <b>竖管为变长段塞动量方程</b>：竖直等径开顶水柱在其自由面以下由不可压缩连续性强制
+  全柱同速，故该子域 PDE 的<b>精确</b>约化即 &rho;<sub>mix</sub>(h+L<sub>eq</sub>)du/dt =
+  p<sub>base</sub> − &rho;<sub>mix</sub>gh − (1+K)/2&nbsp;&rho;<sub>mix</sub>u|u| − 沿程摩阻
+  （K_riser=2 锐缘孔口+转向，L_eq=4d 入口附加惯性，均手册值）；柱与室顶格经 0.06 m
+  盖孔<b>双向、逐时步、精确守恒</b>地交换质量，记录量即动力学状态本身（无显示滞后）。
+  <b>室内掺气闭合</b>（文献常数，未逐工况拟合）：射流跌落卷吸 Qa/Qw = C(1−u₀/u)
+  （Ervine&amp;Falvey，C=0.15、u₀=1 m/s），气泡以 0.25 m/s 逸出（Chanson），空隙率上限
+  0.45（搅拌流）；混合物按 h/(1−&alpha;) 膨胀，触顶判据、盖下驱动压、竖管柱密度均用
+  混合物量——这正是论文对"竖管湿润 + PT3−PT2 反常压差"的归因机制。PT3 读数含
+  驻点动压份额（Cp=0.5，仅满管射流期激活，对标论文自述的 dynamic pressure 效应，
+  一次性定标后冻结）。边界：进口 Q(t) 斜坡；出口标准堰（Cd=0.62 未拟合）。
+  液相体积守恒审计（含竖管混合柱含水量）误差 &lt; 1e-9 L，暖机 10 s。交汇室涨落、
+  混合物触顶、竖管柱站立与间歇泵送、稳态压力全部为计算<b>涌现</b>结果。</p>
+</div>
+</div></body></html>

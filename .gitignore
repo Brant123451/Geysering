@@ -1,48 +1,67 @@
-*
-
-!.gitignore
-!README.md
-
-!.cursor/
+# Cursor project files
 .cursor/*
 !.cursor/Dockerfile
 
-!Vasconcelos_Wright_2011_Geysering/
-Vasconcelos_Wright_2011_Geysering/*
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/
-Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/*
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
 
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/digitized/
-Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/digitized/*
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/digitized/fig5_caseA_Hstar_band.csv
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/digitized/fig7_caseA_levels.csv
+# LaTeX build intermediates (final PDFs remain tracked)
+*.aux
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.log
+*.out
+*.spl
+*.synctex.gz
+*.toc
 
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_2d_caseA/
-Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_2d_caseA/*
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_2d_caseA/0.orig/
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_2d_caseA/0.orig/**
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_2d_caseA/constant/
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_2d_caseA/constant/**
-Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_2d_caseA/constant/polyMesh/
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_2d_caseA/system/
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_2d_caseA/system/**
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_2d_caseA/Allrun
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_2d_caseA/Allrun.resume
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_2d_caseA/README.md
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_2d_caseA/postprocess_compare.py
+# OpenFOAM generated runtime state
+**/openfoam/**/processor*/
+**/openfoam/**/postProcessing/
+**/openfoam/**/constant/polyMesh/
+**/openfoam/**/caseA3d.msh
+**/openfoam/**/decomposeParDict.runtime
+**/openfoam/**/log.*
+**/openfoam/2d/[0-9]*/
+**/openfoam/3d/[0-9]*/
+!**/openfoam/2d/0.orig/
+!**/openfoam/2d/0.orig/**
+!**/openfoam/3d/0.orig/
+!**/openfoam/3d/0.orig/**
 
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_3d_caseA/
-Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_3d_caseA/*
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_3d_caseA/0.orig/
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_3d_caseA/0.orig/**
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_3d_caseA/constant/
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_3d_caseA/constant/**
-Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_3d_caseA/constant/polyMesh/
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_3d_caseA/system/
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_3d_caseA/system/**
-Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_3d_caseA/system/decomposeParDict.runtime
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_3d_caseA/Allrun
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_3d_caseA/Allrun.resume
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_3d_caseA/README.md
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_3d_caseA/make_mesh.py
-!Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356/openfoam_3d_caseA/postprocess_compare.py
+# Generated frame sequences and viewers
+**/frames/
+**/riser_frames/
+**/*_frame_viewer/
+
+# Compiled legacy solver artifacts
+*.o
+*.obj
+*.pdb
+*.exe
+*.dll
+*.mod
+*.so
+**/x64/Debug/
+tests/test_02_cong2017/_archive/legacy_real_solver/runs/
+
+# Historical generated bundles remain available locally but are not required by
+# Cloud Agents. Their active code/data counterparts live under cases/ or studies/.
+tests/test_01_vw2011/_archive/legacy_reproduction/
+tests/test_02_cong2017/_archive/legacy_outputs/
+
+# Migration staging and local scratch files
+tests/**/_staging_legacy/
+tests/**/cases/**/_*.txt
+/_tmp_*
+/_slugdbg*
+*.bak
+*.bak-*
+*.bak.*
