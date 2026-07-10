@@ -39,18 +39,15 @@ shopt -s nullglob
 processors=(processor[0-9]*)
 if (( ${#processors[@]} > 0 )); then
     NP="${#processors[@]}"
-    original_np="$(
-        foamDictionary system/decomposeParDict \
-            -entry numberOfSubdomains \
-            -value
-    )"
+    decompose_dict="system/decomposeParDict"
+    decompose_backup="$(mktemp "${TMPDIR:-/tmp}/caseA-decomposeParDict.XXXXXX")"
+    cp -- "${decompose_dict}" "${decompose_backup}"
     restore_decomposition_config() {
-        foamDictionary system/decomposeParDict \
-            -entry numberOfSubdomains \
-            -set "${original_np}" >/dev/null 2>&1 || true
+        cp -- "${decompose_backup}" "${decompose_dict}" >/dev/null 2>&1 || true
+        rm -f -- "${decompose_backup}" >/dev/null 2>&1 || true
     }
     trap restore_decomposition_config EXIT
-    foamDictionary system/decomposeParDict \
+    foamDictionary "${decompose_dict}" \
         -entry numberOfSubdomains \
         -set "${NP}" >/dev/null
     OMPI_ALLOW_RUN_AS_ROOT=1 \

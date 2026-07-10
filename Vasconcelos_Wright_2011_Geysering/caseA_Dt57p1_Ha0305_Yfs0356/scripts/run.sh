@@ -55,18 +55,15 @@ setFields > log.setFields 2>&1
 # p_rgh is hydrostatically consistent in the connected water. The solver
 # reconstructs p from p_rgh, phase density and gh on its first correction.
 if (( NP > 1 )); then
-    original_np="$(
-        foamDictionary system/decomposeParDict \
-            -entry numberOfSubdomains \
-            -value
-    )"
+    decompose_dict="system/decomposeParDict"
+    decompose_backup="$(mktemp "${TMPDIR:-/tmp}/caseA-decomposeParDict.XXXXXX")"
+    cp -- "${decompose_dict}" "${decompose_backup}"
     restore_decomposition_config() {
-        foamDictionary system/decomposeParDict \
-            -entry numberOfSubdomains \
-            -set "${original_np}" >/dev/null 2>&1 || true
+        cp -- "${decompose_backup}" "${decompose_dict}" >/dev/null 2>&1 || true
+        rm -f -- "${decompose_backup}" >/dev/null 2>&1 || true
     }
     trap restore_decomposition_config EXIT
-    foamDictionary system/decomposeParDict \
+    foamDictionary "${decompose_dict}" \
         -entry numberOfSubdomains \
         -set "${NP}" >/dev/null
     decomposePar > log.decomposePar 2>&1
