@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "case_name": "Test 1 Case B 2-D",
+  "checkpoint_type": "safe_shutdown_research_checkpoint",
+  "simulation_ready": false,
+  "primary_case_mapping_verified": false,
+  "source": {
+    "authors": [
+      "Steven J. Wright",
+      "James W. Lewis",
+      "Jose G. Vasconcelos"
+    ],
+    "year": 2007,
+    "title": "Mechanisms for Stormwater Surges in Vertical Shafts",
+    "doi": "10.14796/JWMM.R227-05",
+    "relevant_section": "5.3.1 Geysering at Head of Air Pocket",
+    "relevant_figure": "Figure 5.7"
+  },
+  "apparatus_evidence": {
+    "horizontal_pipe_length_m": {
+      "value": 4.0,
+      "qualifier": "approximately"
+    },
+    "horizontal_pipe_diameter_m": {
+      "value": 0.094
+    },
+    "valve_distance_from_air_end_m": {
+      "value": 0.55
+    },
+    "shaft_distance_from_far_end_m": {
+      "value": 0.49
+    },
+    "shaft_height_m": {
+      "value": 0.61
+    },
+    "pressure_transducer_distance_upstream_of_shaft_m": {
+      "value": 1.9
+    }
+  },
+  "experiment_matrix": {
+    "shaft_diameters_m": [
+      0.0127,
+      0.0254,
+      0.0444,
+      0.0571
+    ],
+    "initial_air_pressure_heads_m": [
+      0.303,
+      0.61,
+      0.915
+    ],
+    "initial_shaft_water_levels_m": [
+      0.254,
+      0.356,
+      0.457
+    ],
+    "combinations": 36,
+    "repetitions_per_combination": 3
+  },
+  "candidate_case_b_mapping": {
+    "tower_diameter_m": {
+      "value": 0.0127,
+      "status": "candidate",
+      "basis": "Figure 5.7(b) is labelled as the 12.7 mm tower and contrasts with the existing 57.1 mm Case A."
+    },
+    "initial_air_pressure_head_m": {
+      "value": null,
+      "status": "unresolved",
+      "candidates": [
+        0.303,
+        0.305
+      ],
+      "basis": "The 2007 source lists 0.303 m; the existing repository Case A uses 0.305 m."
+    },
+    "initial_shaft_water_level_m": {
+      "value": 0.356,
+      "status": "candidate",
+      "basis": "Shared-state hypothesis from the existing Case A; not yet checked against the primary 2011 Case B definition."
+    }
+  },
+  "experimental_observation": {
+    "smallest_shaft_diameter_m": 0.0127,
+    "all_smallest_diameter_tests_spilled_from_top": true,
+    "figure_5_7b_curve_digitized": false
+  },
+  "solver_state": {
+    "openfoam_case_created": false,
+    "mesh_created": false,
+    "solver_started": false,
+    "latest_time": null,
+    "processor_directories": 0,
+    "resume_command": null
+  }
+}
