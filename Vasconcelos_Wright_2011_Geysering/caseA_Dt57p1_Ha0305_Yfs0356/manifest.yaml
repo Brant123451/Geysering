@@ -37,9 +37,9 @@ runtime:
 
 validated_run:
   model_commit: 662781e4ae6004126acc466761ba219c93ec232a
-  output_commit: 08d4a9a
+  output_commit: 08d4a9a376f8db29385a22cfb42a57df5a67bb15
   simulation_end_s: 9.0
-  mesh_cells: 26208
+  mesh_cells: 26128
   metrics: outputs/openfoam_2d_metrics.json
   figures:
     - outputs/openfoam_2d_pressure_comparison.png

@@ -40,13 +40,15 @@ second.
 - Laminar, isothermal-start air-water VOF.
 - Ideal-gas air and weakly compressible water (`rho0 = 998.2 kg/m3`,
   `c = sqrt(2.2e6) = 1483 m/s`).
-- Approximately `4 mm` in-plane resolution, 26,208 cells.
+- Approximately `4 mm` in-plane resolution, 26,128 cells.
 - Serial or automatic Scotch decomposition, capped at six MPI ranks.
 
 ## Reproduce
 
-OpenFOAM v2512 must be loaded in the shell, or `OPENFOAM_BASHRC` must point to
-its `etc/bashrc`. Python 3, NumPy, and Matplotlib are required for plots.
+OpenFOAM v2512 must be installed. The scripts use an already loaded
+environment or discover the packaged `openfoam2512` launcher; for other
+installations, set `OPENFOAM_BASHRC` to the installation's `etc/bashrc`.
+Python 3, NumPy, and Matplotlib are required for plots.
 
 From this directory:
 

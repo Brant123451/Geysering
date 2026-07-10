@@ -26,7 +26,7 @@ numerics:
   dimensions: 2
   turbulence_model: laminar
   nominal_in_plane_cell_size_m: 0.004
-  expected_cells: 26208
+  expected_cells: 26128
   simulation_end_s: 9.0
   maximum_mpi_ranks: 6
 
