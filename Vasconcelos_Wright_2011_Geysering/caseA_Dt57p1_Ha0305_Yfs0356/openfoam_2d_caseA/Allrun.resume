@@ -9,7 +9,7 @@ if [[ ! -d processor0 ]]; then
     echo "No decomposed solution exists; run ./Allrun first." >&2
     exit 1
 fi
-if pgrep -x compressibleInterFoam >/dev/null; then
+if pgrep -f '[c]ompressibleInterFoam -parallel' >/dev/null; then
     echo "compressibleInterFoam is already running." >&2
     exit 1
 fi
