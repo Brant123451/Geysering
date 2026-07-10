@@ -95,10 +95,10 @@ def main() -> None:
     )
     metrics_path.replace(OUT / "openfoam_3d_metrics.json")
     (OUT / "openfoam_3d_metrics.json").write_text(
-        json.dumps(metrics, indent=2, allow_nan=True),
+        json.dumps(metrics, indent=2, allow_nan=False),
         encoding="utf-8",
     )
-    print(json.dumps(metrics, indent=2, allow_nan=True))
+    print(json.dumps(metrics, indent=2, allow_nan=False))
 
 
 if __name__ == "__main__":

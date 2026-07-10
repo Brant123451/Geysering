@@ -7,7 +7,7 @@
   "free_surface_RMSE_Ystar_no_shift": 0.0121925553100324,
   "interface_RMSE_Ystar_no_shift": 0.319615886819979,
   "interface_liftoff_Tstar": 8.030311159266068,
-  "interface_catch_Tstar": NaN,
+  "interface_catch_Tstar": null,
   "geysering": false,
   "comparison_targets": {
     "pressure_plateau_Hstar": 0.54,
