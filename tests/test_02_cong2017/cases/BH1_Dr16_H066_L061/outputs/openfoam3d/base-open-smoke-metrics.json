@@ -1,5 +1,5 @@
 {
-  "PT1_peak_over_H0": 0.05806794861956439,
+  "PT1_peak_over_H0": 0.057817288925025696,
   "Ta_gas_enters_riser_s": null,
   "Yfs_max_m": 0.605,
   "Yint_max_m": 0.0,
@@ -7,11 +7,11 @@
   "comparison_warning": "Fig.10(a) is the same nominal B-1 condition; PT1 exact axial offset was not reported, so the 3-D curve is labelled PT1_proxy.",
   "conservation": {
     "budget_definition": "final inventory + integrated outward boundary flux - initial inventory",
-    "gas_budget_error_kg": 3.841041978924764e-08,
-    "gas_budget_relative_error": 2.945325607267217e-07,
+    "gas_budget_error_kg": 3.313534668869522e-08,
+    "gas_budget_relative_error": 2.5408314035328544e-07,
     "gas_flux_definition": "solver rhoPhi minus alphaPhi0.water times 998.2 kg/m3",
-    "water_budget_error_kg": 2.3217771655481556e-05,
-    "water_budget_relative_error": 1.976967923093161e-06
+    "water_budget_error_kg": 2.248868557863659e-05,
+    "water_budget_relative_error": 1.9148870228650356e-06
   },
   "ejected_water_max_m3": 0.0,
   "experimental_targets": {
@@ -23,15 +23,15 @@
   "initial_inventory": {
     "analytic_pocket_air_mass_kg": 0.0014276016764529437,
     "analytic_pocket_volume_m3": 0.0011977321991811086,
-    "pocket_volume_relative_error": -0.005713956079487281,
-    "total_domain_gas_mass_kg": 0.130411455,
+    "pocket_volume_relative_error": -0.00571393938126381,
+    "total_domain_gas_mass_kg": 0.130411434,
     "total_gas_volume_m3": 0.109428811,
-    "tunnel_pocket_volume_m3": 0.00119088841,
+    "tunnel_pocket_volume_m3": 0.00119088843,
     "water_volume_m3": 0.0117652914
   },
   "mode": "smoke",
   "observed_3d_geyser": false,
-  "pocket_peak_over_H0": 0.05813448174836306,
+  "pocket_peak_over_H0": 0.05788490515126957,
   "reached_time_s": 0.05,
   "rim_water_flow_peak_m3_s": 0.0,
   "run": "base-open-smoke",
@@ -46,8 +46,8 @@
       600.0
     ],
     "clipping_applied": false,
-    "maximum_K": 298.997772,
-    "minimum_K": 294.163947,
+    "maximum_K": 298.938839,
+    "minimum_K": 294.223898,
     "pass": true
   },
   "valve_duration_s": 0.0,

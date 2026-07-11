@@ -7,11 +7,11 @@
   "comparison_warning": "Fig.10(a) is the same nominal B-1 condition; PT1 exact axial offset was not reported, so the 3-D curve is labelled PT1_proxy.",
   "conservation": {
     "budget_definition": "final inventory + integrated outward boundary flux - initial inventory",
-    "gas_budget_error_kg": 1.885786757305219e-08,
-    "gas_budget_relative_error": 1.4460292716668083e-07,
+    "gas_budget_error_kg": 2.660126538489571e-08,
+    "gas_budget_relative_error": 2.0397962169435185e-07,
     "gas_flux_definition": "solver rhoPhi minus alphaPhi0.water times 998.2 kg/m3",
-    "water_budget_error_kg": -8.888415603536259e-07,
-    "water_budget_relative_error": -7.568437623127719e-08
+    "water_budget_error_kg": -8.245002138806967e-07,
+    "water_budget_relative_error": -7.020574551586966e-08
   },
   "ejected_water_max_m3": 0.0,
   "experimental_targets": {
@@ -24,14 +24,14 @@
     "analytic_pocket_air_mass_kg": 0.0014276016764529437,
     "analytic_pocket_volume_m3": 0.0011977321991811086,
     "pocket_volume_relative_error": -0.005601969443333088,
-    "total_domain_gas_mass_kg": 0.130411382,
+    "total_domain_gas_mass_kg": 0.130411387,
     "total_gas_volume_m3": 0.109428902,
     "tunnel_pocket_volume_m3": 0.00119102254,
     "water_volume_m3": 0.0117652005
   },
   "mode": "static",
   "observed_3d_geyser": false,
-  "pocket_peak_over_H0": 0.0,
+  "pocket_peak_over_H0": 7.736410332495585e-07,
   "reached_time_s": 0.5,
   "rim_water_flow_peak_m3_s": 0.0,
   "run": "base-closed-static",
@@ -47,8 +47,8 @@
       600.0
     ],
     "clipping_applied": false,
-    "maximum_K": 306.146772,
-    "minimum_K": 285.272756,
+    "maximum_K": 307.178499,
+    "minimum_K": 284.632755,
     "pass": true
   },
   "valve_duration_s": 0.0,
