@@ -2,7 +2,7 @@
   "schema_version": 1,
   "case_id": "BH2_Dr21_H066_L061",
   "run": "B-H2",
-  "solver": "compressibleInterFoam",
+  "solver": "compressibleInterIsoFoam",
   "openfoam_version": "v2512",
   "geometry_m": {
     "pipe_diameter": 0.05,

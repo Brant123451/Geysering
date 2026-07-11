@@ -24,8 +24,9 @@ export FOAM_APPBIN="${OF_PLATFORM}/bin"
 export FOAM_LIBBIN="${OF_PLATFORM}/lib"
 export PATH="${FOAM_APPBIN}:${OF_ROOT}/bin:${PATH}"
 export LD_LIBRARY_PATH="${FOAM_LIBBIN}:${FOAM_LIBBIN}/sys-openmpi:/usr/lib/x86_64-linux-gnu/openmpi/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+SOLVER=compressibleInterIsoFoam
 
-for command_name in gmshToFoam createPatch setFields setAlphaField setExprFields topoSet createBaffles checkMesh compressibleInterFoam; do
+for command_name in gmshToFoam createPatch setFields setAlphaField setExprFields topoSet createBaffles checkMesh "$SOLVER"; do
     command -v "$command_name" >/dev/null || {
         echo "Missing OpenFOAM v2512 command: $command_name" >&2
         exit 1
@@ -92,7 +93,7 @@ run_parallel()
             -entry numberOfSubdomains -set "$np" >/dev/null
         decomposePar > log.decomposePar 2>&1
         mpirun --oversubscribe -np "$np" \
-            compressibleInterFoam -parallel > "$log_name" 2>&1
+            "$SOLVER" -parallel > "$log_name" 2>&1
     )
 }
 
@@ -112,7 +113,7 @@ case "$ACTION" in
             # mesh and cannot retain the valve faceZone/ACMI.  Run one real
             # physical step instead.
             foamDictionary system/controlDict -entry endTime -set 1e-5 >/dev/null
-            compressibleInterFoam > log.smoke 2>&1
+            "$SOLVER" > log.smoke 2>&1
         )
         echo "SMOKE_OK $RUN_DIR"
         ;;

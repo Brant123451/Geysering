@@ -1,8 +1,8 @@
 # B-H2 initial and boundary-condition register
 
 This register distinguishes paper inputs from explicit numerical choices.  All
-pressures used by `compressibleInterFoam` are absolute.  Coordinates and paper
-evidence are defined in `PAPER_AUDIT.md`.
+pressures used by `compressibleInterIsoFoam` are absolute.  Coordinates and
+paper evidence are defined in `PAPER_AUDIT.md`.
 
 ## Material and initial state
 

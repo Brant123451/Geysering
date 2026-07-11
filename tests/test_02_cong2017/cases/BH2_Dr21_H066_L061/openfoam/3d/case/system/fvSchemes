@@ -21,6 +21,8 @@ divSchemes
     default             none;
     div(phi,alpha)      Gauss vanLeer;
     div(phirb,alpha)    Gauss linear;
+    div(phi,thermo:rho.water) Gauss upwind;
+    div(phi,thermo:rho.air)   Gauss upwind;
     div(rhoPhi,U)       Gauss limitedLinearV 1;
     div(rhoPhi,T)       Gauss limitedLinear 1;
     div(rhoPhi,K)       Gauss limitedLinear 1;

@@ -10,7 +10,7 @@ Series B case with `Dr=21 mm`, `H0=0.66 m`, and `L0=0.61 m`.
 ## Paper-audited three-dimensional model
 
 `openfoam/3d` contains an independent OpenFOAM v2512
-`compressibleInterFoam` model with a circular 6.59 m main, circular 21 mm
+`compressibleInterIsoFoam` model with a circular 6.59 m main, circular 21 mm
 riser, true T junction, compressible ideal-gas pocket, physical 1.8 m riser,
 and a separate external atmosphere.  The 3-D model uses the paper geometry
 (`xT=3.47 m`) rather than inheriting the reduced model's 6.0 m / 2.88 m

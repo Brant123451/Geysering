@@ -2,9 +2,10 @@
 
 This directory models Cong, Chan & Lee (2017) high-speed-camera Run B-H2
 without using its reported geyser classification as an input.  The model uses
-OpenFOAM v2512 `compressibleInterFoam`: water has constant density and air uses
-the ideal-gas equation of state.  There is no pressure, momentum, or velocity
-source intended to create an eruption.
+OpenFOAM v2512 `compressibleInterIsoFoam`: water has constant density, air uses
+the ideal-gas equation of state, and geometric VOF reconstruction limits
+interface smearing on the tetrahedral T junction.  There is no pressure,
+momentum, or velocity source intended to create an eruption.
 
 Read `PAPER_AUDIT.md` before changing any dimension.  The resolved geometry is:
 

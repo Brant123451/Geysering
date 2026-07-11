@@ -517,7 +517,7 @@ def aggregate() -> None:
             "run": "B-H2",
             "geometry_3d": "paper-audited 6.59 m main, tee x=3.47 m",
             "geometry_1d": model_1d["geometry"],
-            "solver_3d": "OpenFOAM v2512 compressibleInterFoam",
+            "solver_3d": "OpenFOAM v2512 compressibleInterIsoFoam",
         },
         "experiment": experiment,
         "model_1d": model_1d,
