@@ -26,7 +26,7 @@ valveResistance
         openingStart        0.0;
         openingDuration     0.20;
         lossRate            500.0;
-        minimumAreaFraction 0.001;
+        minimumAreaFraction 0.01;
 
         codeInclude
         #{
@@ -59,7 +59,7 @@ valveResistance
                 coeffs().getOrDefault<scalar>
                 (
                     "minimumAreaFraction",
-                    0.001
+                    0.01
                 ),
                 SMALL
             );
