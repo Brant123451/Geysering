@@ -117,7 +117,8 @@
     "status": "screen_passed_hold_pending",
     "source_commits": [
       "0f5e816",
-      "9a59974"
+      "9a59974",
+      "e506a7d"
     ],
     "purpose": "Screen the pinned compressibleInterFlow isoAdvection, plicRDF and RDF candidate against the sustained stock-solver free-surface parasitic current before attempting the canonical hold.",
     "configuration": {
@@ -136,6 +137,13 @@
       "max_capillary_number": 1.0,
       "n_alpha_bounds": 5,
       "alpha_clip": false
+    },
+    "legacy_corrector_configuration": {
+      "n_alpha_corr": 2,
+      "n_alpha_subcycles": 2,
+      "n_outer_correctors": 2,
+      "n_pressure_correctors": 3,
+      "n_non_orthogonal_correctors": 2
     },
     "clean_run_result_0p006_s": {
       "cells": 1904269,
@@ -167,12 +175,53 @@
       "water_above_rim_m3": 0.0,
       "gas_entry_detected": false
     },
+    "reference_corrector_configuration": {
+      "n_alpha_corr": 1,
+      "n_alpha_subcycles": 2,
+      "n_outer_correctors": 1,
+      "n_pressure_correctors": 2,
+      "n_non_orthogonal_correctors": 0
+    },
+    "reference_corrector_run_result_0p006_s": {
+      "cells": 1904269,
+      "solver_exit_code": 0,
+      "execution_time_s": 576.71,
+      "clock_time_s": 587,
+      "final_delta_t_s": 6.875e-05,
+      "courant_max": 0.44986716,
+      "interface_courant_max": 0.25081351,
+      "capillary_number_max": 0.40956045,
+      "alpha_water_min": -5.7692016e-09,
+      "alpha_water_max": 1.0000000000035136,
+      "max_velocity_by_time_m_per_s": {
+        "0.001": 1.6815591,
+        "0.002": 1.320912,
+        "0.003": 1.4373148,
+        "0.004": 1.635278,
+        "0.005": 1.3500066,
+        "0.006": 1.2850141
+      },
+      "peak_velocity_location_m": [
+        3.5163674,
+        0.4046661,
+        -0.0013608496
+      ],
+      "liquid_mass_error_pct_max_abs": 0.0,
+      "gas_mass_error_pct_max_abs": 3.1558798385199068e-06,
+      "total_mass_error_pct_max_abs": 1.799348407386692e-08,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
     "comparison": {
       "stock_gauss_linear_velocity_at_0p001_s_m_per_s": 3.207,
       "stock_gauss_linear_velocity_at_0p006_s_m_per_s": 3.8390766,
       "rdf_to_stock_velocity_ratio_at_0p001_s": 0.30368212347988777,
       "rdf_to_stock_velocity_ratio_at_0p006_s": 0.28051524160783875,
-      "interpretation": "RDF reduced the written-time free-surface velocity by about 70 percent at 0.001 s and 72 percent at 0.006 s while retaining tight alpha and mass bounds. The hotspot remains at the initial tower free surface, so this is only a short numerical screen; the 1.0 s closed-valve hold remains mandatory."
+      "reference_to_legacy_clock_time_ratio": 0.5250447227191414,
+      "reference_to_legacy_peak_velocity_ratio": 1.226338461457679,
+      "reference_to_legacy_velocity_ratio_at_0p006_s": 1.1932313418040994,
+      "reference_to_stock_velocity_ratio_at_0p006_s": 0.3347195781402226,
+      "interpretation": "The TwoPhaseFlow-reference correctors cut screening wall time by 47.5 percent. Their peak velocity was 22.6 percent above the legacy-corrector RDF screen, but the 0.006 s value remained 66.5 percent below stock Gauss-linear compressibleInterFoam. Alpha and phase/total balances remained tight. The hotspot remains at the initial tower free surface, so this is only a short numerical screen; the 1.0 s closed-valve hold remains mandatory."
     },
     "teardown_regression": {
       "initial_exit_code": 134,

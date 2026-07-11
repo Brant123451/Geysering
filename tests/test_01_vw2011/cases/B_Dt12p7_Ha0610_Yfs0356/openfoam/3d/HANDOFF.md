@@ -29,8 +29,11 @@ The first full-hold attempt then exposed stock-deck corrector counts that made
 each step perform about 18 pressure solves.  The source now materialises the
 TwoPhaseFlow surface-tension-case pattern (one alpha correction, two alpha
 subcycles, one outer loop, two pressure correctors and no non-orthogonal
-corrector).  This lower-cost candidate is not yet accepted: it must repeat the
-0.006 s screen before restarting the hold.
+corrector).  This lower-cost candidate passed its repeat 0.006 s screen in
+587 s wall time.  Its peak velocity rose from 1.371 to 1.682 m/s relative to
+the legacy-corrector RDF screen, but the 0.006 s value remained 66.5% below
+stock `compressibleInterFoam`; alpha and mass bounds remained tight.  It is
+therefore cleared for the full hold, not accepted as a baseline.
 
 ## Verified before handoff
 
@@ -70,14 +73,22 @@ corrector).  This lower-cost candidate is not yet accepted: it must repeat the
    `fieldFunctionObjects` loaded stock `libgeometricVoF` beside TwoPhaseFlow
    `libVoF`; commit `9a59974` moved extrema into the existing accounting object,
    and the clean rerun exited normally.
+9. The repeat 0.006 s screen with the materialised TwoPhaseFlow-reference
+   correctors also exited normally:
+   * wall time 587 s, 47.5% below the legacy-corrector RDF screen;
+   * peak velocity 1.682 m/s and final velocity 1.285 m/s, versus
+     3.839 m/s for stock `compressibleInterFoam` at 0.006 s;
+   * alpha range
+     \([-5.77\times10^{-9}, 1+3.52\times10^{-12}]\);
+   * maximum gas and total balance errors \(3.16\times10^{-6}\%\) and
+     \(1.80\times10^{-8}\%\), with no water above the rim.
 
 ## Still required
 
 The scientific reproduction is **not complete**.  Continue in this order:
 
-1. Repeat the 0.006 s RDF screen with the materialised TwoPhaseFlow-reference
-   corrector counts, then run the full 1.0 s closed-valve hold and assess
-   leakage, interface drift, pressure drift, alpha bounds and mass balance.
+1. Run the full 1.0 s closed-valve hold and assess leakage, interface drift,
+   pressure drift, alpha bounds and mass balance.
 2. Run the opened-valve 0.5 s smoke case.
 3. Run the 10.5 s base case through \(T^*\ge6\).
 4. Run the refined grid and required timestep/valve/compressibility

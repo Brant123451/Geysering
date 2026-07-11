@@ -63,10 +63,11 @@ compressibility, an energy equation, gravity, viscosity and surface tension.
 The baseline numerical candidate uses geometric `isoAdvection`, `plicRDF`
 interface reconstruction and RDF curvature.  This migration addresses the
 sustained free-surface parasitic currents found with stock
-`compressibleInterFoam`.  A clean 0.006 s RDF screen exited normally and
-reduced the written-time free-surface velocity from 3.839 to 1.077 m/s at
-0.006 s; its peak over the screen was 1.371 m/s.  Alpha remained within
-\([-2.66\times10^{-9},1+3.40\times10^{-9}]\), and gas/total balance errors
+`compressibleInterFoam`.  A clean 0.006 s RDF screen exited normally, and its
+repeat with the current TwoPhaseFlow-reference correctors reduced the
+written-time free-surface velocity from stock's 3.839 to 1.285 m/s at
+0.006 s; its peak over the screen was 1.682 m/s.  Alpha remained within
+\([-5.77\times10^{-9},1+3.52\times10^{-12}]\), and gas/total balance errors
 remained below \(4\times10^{-6}\%\).  The hotspot is still at the initial free
 surface, so the candidate does not count as an accepted baseline until the
 full 1.0 s hold passes.  A compressible solver remains necessary because the
@@ -86,9 +87,12 @@ correctors and two non-orthogonal passes caused about 18 pressure solves per
 step.  TwoPhaseFlow's supplied surface-tension cases normally use one outer
 loop, two pressure correctors and zero non-orthogonal passes, with one alpha
 correction and two alpha subcycles.  Those values are now the numerical
-candidate and are materialised in the run manifest.  They must repeat the
-0.006 s screen before the full hold restarts; reduced cost alone is not
-evidence of equivalent stability.
+candidate and are materialised in the run manifest.  Their repeat 0.006 s
+screen exited normally in 587 s, 47.5% faster than the legacy-corrector RDF
+screen.  Peak velocity increased by 22.6%, but the final velocity remained
+66.5% below the stock-solver diagnostic, while alpha and mass bounds remained
+tight.  The candidate is therefore cleared for the full hold; reduced cost
+alone is not treated as hold evidence.
 
 Thermophysical choices are:
 

@@ -150,8 +150,9 @@ Copy the full block below into the new Cursor account's Cloud Agent.
     2 outer × 3 pressure × 3 non-orthogonal = 18 次压力求解。当前候选改用
     TwoPhaseFlow 自带表面张力算例常用的 1 次 alpha correction、2 次 alpha
     subcycle、1 outer、2 pressure corrector、0 non-orthogonal corrector。
-    这些值必须写入 manifest，且必须重新通过 0.006 s 筛选；不能仅因更快就
-    接受。
+    这些值已写入 manifest，并通过 0.006 s 复筛：wall time 587 s，峰值速度
+    1.682 m/s，末帧 1.285 m/s，alpha 和质量守恒仍稳定。该结果只允许继续
+    完整 hold，不能仅因更快就接受为 baseline。
 
 六、阀门
 
@@ -255,7 +256,16 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
    第一次尝试在 `End` 后因 stock `libgeometricVoF` 与 TwoPhaseFlow `libVoF`
    重复加载而析构失败；commit `9a59974` 移除了冲突依赖，以上数据来自随后
    exit 0 的干净复测。
-6. 下一项工作必须是完整 1.0 s closed-valve hold。
+6. TwoPhaseFlow-reference corrector 配置的 0.006 s 复筛也已 exit 0：
+   - wall time = 587 s，比旧 corrector RDF 筛选缩短 47.5%；
+   - `|U|max` 峰值 1.682 m/s，0.006 s 为 1.285 m/s，仍比 stock 同时刻低
+     66.5%；
+   - alpha 范围约
+     \([-5.77\times10^{-9},1+3.52\times10^{-12}]\)；
+   - gas/total balance 最大误差分别约
+     \(3.16\times10^{-6}\%\) 和 \(1.80\times10^{-8}\%\)；
+   - 无 rim 以上水量或 gas-entry。
+7. 下一项工作必须是完整 1.0 s closed-valve hold。
 
 十、hold 验收
 

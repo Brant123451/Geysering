@@ -42,6 +42,11 @@
     "accounting_interval_s": 0.006,
     "c_alpha": 1.0,
     "n_alpha_bounds": 5,
+    "n_alpha_corr": 1,
+    "n_alpha_subcycles": 2,
+    "n_outer_correctors": 1,
+    "n_pressure_correctors": 2,
+    "n_non_orthogonal_correctors": 0,
     "alpha_clip": false,
     "tower_probe_lines": 5,
     "tower_probe_spacing_m": 0.005,
@@ -124,28 +129,28 @@
     "overflow_volume_m3": 0.0,
     "overflow_volume_method": "maximum liquid inventory above physical rim",
     "numerical_diagnostics": {
-      "max_courant_number": 0.31504586,
-      "max_interface_courant_number": 0.2342725,
-      "max_capillary_number": 0.4105486,
-      "minimum_alpha_water": -2.6578337e-09,
-      "maximum_alpha_water": 1.0000000034019312,
-      "final_delta_t_s": 0.00011111111,
-      "execution_time_s": 1106.08,
-      "clock_time_s": 1118.0,
-      "max_velocity_m_per_s": 1.3712031,
+      "max_courant_number": 0.44986716,
+      "max_interface_courant_number": 0.25081351,
+      "max_capillary_number": 0.40956045,
+      "minimum_alpha_water": -5.7692016e-09,
+      "maximum_alpha_water": 1.0000000000035136,
+      "final_delta_t_s": 6.875e-05,
+      "execution_time_s": 576.71,
+      "clock_time_s": 587.0,
+      "max_velocity_m_per_s": 1.6815591,
       "max_velocity_location_m": [
-        3.51307,
-        0.40397566,
-        0.0037364212
+        3.5163674,
+        0.4046661,
+        -0.0013608496
       ],
-      "last_written_velocity_max_m_per_s": 1.0769195
+      "last_written_velocity_max_m_per_s": 1.2850141
     },
     "liquid_mass_error_pct_final": 0.0,
     "liquid_mass_error_pct_max_abs": 0.0,
-    "gas_mass_error_pct_final": -3.739734697360403e-06,
-    "gas_mass_error_pct_max_abs": 3.739734697360403e-06,
-    "total_mass_error_pct_final": -1.527200778804715e-08,
-    "total_mass_error_pct_max_abs": 1.527200778804715e-08,
+    "gas_mass_error_pct_final": -3.1558798385199068e-06,
+    "gas_mass_error_pct_max_abs": 3.1558798385199068e-06,
+    "total_mass_error_pct_final": -1.799348407386692e-08,
+    "total_mass_error_pct_max_abs": 1.799348407386692e-08,
     "mass_balance_method": {
       "total": "solver rho and rhoPhi (signed atmosphere flux)",
       "phases": "registered thermo:rho phase densities and geometric alphaPhi.water boundary flux; transported alpha is not clipped"
@@ -183,7 +188,7 @@
     "max_water_above_rim_m3": 0.0,
     "gas_entry_detected": false,
     "liquid_mass_error_pct_max_abs": 0.0,
-    "gas_mass_error_pct_max_abs": 3.739734697360403e-06,
+    "gas_mass_error_pct_max_abs": 3.1558798385199068e-06,
     "passed": false
   }
 }
