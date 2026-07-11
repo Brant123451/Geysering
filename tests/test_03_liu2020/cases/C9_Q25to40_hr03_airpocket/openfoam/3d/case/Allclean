@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
 set -eo pipefail
 cd "$(dirname "$0")"
-source /usr/lib/openfoam/openfoam2512/etc/bashrc
 rm -rf processor* postProcessing constant/polyMesh 0
 foamListTimes -rm >/dev/null 2>&1 || true
 rm -f log.*

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
 set -eo pipefail
 cd "$(dirname "$0")"
-source /usr/lib/openfoam/openfoam2512/etc/bashrc
 NP="${OPENFOAM_NP:-4}"
 test "$NP" -eq 4 || {
     echo "OPENFOAM_NP must match system/decomposeParDict (4)" >&2

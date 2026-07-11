@@ -1132,9 +1132,9 @@ method scotch;
     )
 
     bash_prefix = f"""#!/usr/bin/env bash
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
 set -eo pipefail
 cd "$(dirname "$0")"
-source /usr/lib/openfoam/openfoam2512/etc/bashrc
 NP="${{OPENFOAM_NP:-{args.np}}}"
 """
     write(
@@ -1234,9 +1234,9 @@ cd "$(dirname "$0")"
     write(
         "Allrun.reconstruct",
         """#!/usr/bin/env bash
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
 set -eo pipefail
 cd "$(dirname "$0")"
-source /usr/lib/openfoam/openfoam2512/etc/bashrc
 reconstructPar -latestTime > log.reconstructPar 2>&1
 """,
         executable=True,
@@ -1253,9 +1253,9 @@ python3 ../postprocess_openfoam.py --case .
     write(
         "Allclean",
         """#!/usr/bin/env bash
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
 set -eo pipefail
 cd "$(dirname "$0")"
-source /usr/lib/openfoam/openfoam2512/etc/bashrc
 rm -rf processor* postProcessing constant/polyMesh 0
 foamListTimes -rm >/dev/null 2>&1 || true
 rm -f log.*
