@@ -5,12 +5,46 @@
   "plume_top_z_m": 2.67,
   "riser_rim_z_m": 1.67,
   "surface_triangle_counts": {
-    "walls": 1248,
+    "walls": 1246,
     "riserWall": 192,
     "inlet": 96,
     "gateWall": 192,
     "gateOutlet": 96,
     "atmosphere": 672
   },
-  "diagnostic_combined_triangle_count": 2496
+  "surface_candidate_triangle_counts": {
+    "walls": 1247,
+    "riserWall": 192,
+    "inlet": 96,
+    "gateWall": 192,
+    "gateOutlet": 96,
+    "atmosphere": 672
+  },
+  "degenerate_triangles_skipped": {
+    "walls": 1,
+    "riserWall": 0,
+    "inlet": 0,
+    "gateWall": 0,
+    "gateOutlet": 0,
+    "atmosphere": 0
+  },
+  "diagnostic_combined_triangle_count": 2494,
+  "diagnostic_combined_candidate_triangle_count": 2495,
+  "diagnostic_degenerate_triangles_skipped": 1,
+  "multisolid_triangle_counts": {
+    "walls": 1246,
+    "riserWall": 192,
+    "inlet": 96,
+    "gateWall": 192,
+    "gateOutlet": 96,
+    "atmosphere": 672
+  },
+  "multisolid_degenerate_triangles_skipped": {
+    "walls": 1,
+    "riserWall": 0,
+    "inlet": 0,
+    "gateWall": 0,
+    "gateOutlet": 0,
+    "atmosphere": 0
+  }
 }

@@ -180,28 +180,47 @@ def rect_with_hole(plane_axis, plane_value, u0, u1, v0, v1, cu, cv, radius, nseg
     )
 
 
-def write_stl(path, solid_name, triangles):
-    """Write non-degenerate triangles and return ``(written, skipped)``."""
-    path.parent.mkdir(parents=True, exist_ok=True)
+def write_triangle_block(stream, triangles):
+    """Write one STL triangle block and return ``(written, skipped)``."""
     written = 0
     skipped = 0
+    for tri in triangles:
+        normal = np.cross(tri[1] - tri[0], tri[2] - tri[0])
+        magnitude = np.linalg.norm(normal)
+        if magnitude < 1e-16:
+            skipped += 1
+            continue
+        normal /= magnitude
+        stream.write(f" facet normal {normal[0]:.8e} {normal[1]:.8e} {normal[2]:.8e}\n")
+        stream.write("  outer loop\n")
+        for point in tri:
+            stream.write(f"   vertex {point[0]:.8e} {point[1]:.8e} {point[2]:.8e}\n")
+        stream.write("  endloop\n endfacet\n")
+        written += 1
+    return written, skipped
+
+
+def write_stl(path, solid_name, triangles):
+    """Write one STL solid and return ``(written, skipped)``."""
+    path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="ascii") as stream:
         stream.write(f"solid {solid_name}\n")
-        for tri in triangles:
-            normal = np.cross(tri[1] - tri[0], tri[2] - tri[0])
-            magnitude = np.linalg.norm(normal)
-            if magnitude < 1e-16:
-                skipped += 1
-                continue
-            normal /= magnitude
-            stream.write(f" facet normal {normal[0]:.8e} {normal[1]:.8e} {normal[2]:.8e}\n")
-            stream.write("  outer loop\n")
-            for point in tri:
-                stream.write(f"   vertex {point[0]:.8e} {point[1]:.8e} {point[2]:.8e}\n")
-            stream.write("  endloop\n endfacet\n")
-            written += 1
+        written, skipped = write_triangle_block(stream, triangles)
         stream.write(f"endsolid {solid_name}\n")
-    return written, skipped
+        return written, skipped
+
+
+def write_multi_stl(path, pieces):
+    """Write a watertight multi-solid STL so cfMesh preserves patch names."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    counts = {}
+    skipped = {}
+    with path.open("w", encoding="ascii") as stream:
+        for name, triangles in pieces.items():
+            stream.write(f"solid {name}\n")
+            counts[name], skipped[name] = write_triangle_block(stream, triangles)
+            stream.write(f"endsolid {name}\n")
+    return counts, skipped
 
 
 def build(gate_area):
@@ -304,6 +323,7 @@ def build(gate_area):
     combined_written, combined_skipped = write_stl(
         OUT / "diagnosticCombined.stl", "diagnosticCombined", combined
     )
+    multi_counts, multi_skipped = write_multi_stl(OUT / "c9Rig.stl", pieces)
 
     metadata = {
         "source": "Liu et al. (2020), pp. 2-3, Fig. 2; plume and equivalent gate are model closures",
@@ -319,6 +339,8 @@ def build(gate_area):
         "diagnostic_combined_triangle_count": combined_written,
         "diagnostic_combined_candidate_triangle_count": int(len(combined)),
         "diagnostic_degenerate_triangles_skipped": combined_skipped,
+        "multisolid_triangle_counts": multi_counts,
+        "multisolid_degenerate_triangles_skipped": multi_skipped,
     }
     with (HERE / "case" / "generated_geometry.json").open("w", encoding="utf-8") as stream:
         json.dump(metadata, stream, indent=2)

@@ -1,4 +1,4 @@
-solid diagnosticCombined
+solid walls
  facet normal -7.29844633e-03 -6.83574095e-01 -7.29844633e-01
   outer loop
    vertex -5.80000000e+00 -7.07106781e-02 2.67289322e-01
@@ -8721,6 +8721,8 @@ solid diagnosticCombined
    vertex 6.25000000e+00 -1.05257573e-01 4.76915859e-02
   endloop
  endfacet
+endsolid walls
+solid riserWall
  facet normal -6.83592302e-01 -7.29864073e-01 0.00000000e+00
   outer loop
    vertex 1.28786797e-01 -2.12132034e-02 4.50000000e-01
@@ -10065,6 +10067,8 @@ solid diagnosticCombined
    vertex 1.27444806e-01 -1.97803745e-02 1.67000000e+00
   endloop
  endfacet
+endsolid riserWall
+solid inlet
  facet normal -1.00000000e+00 0.00000000e+00 0.00000000e+00
   outer loop
    vertex -5.80000000e+00 -6.59345815e-02 2.62816019e-01
@@ -10737,6 +10741,8 @@ solid diagnosticCombined
    vertex -5.80000000e+00 0.00000000e+00 3.38000000e-01
   endloop
  endfacet
+endsolid inlet
+solid gateWall
  facet normal 1.00000000e+00 0.00000000e+00 0.00000000e+00
   outer loop
    vertex 6.25000000e+00 -4.00534871e-02 9.99465129e-02
@@ -12081,6 +12087,8 @@ solid diagnosticCombined
    vertex 6.25000000e+00 -4.00534871e-02 9.99465129e-02
   endloop
  endfacet
+endsolid gateWall
+solid gateOutlet
  facet normal 1.00000000e+00 0.00000000e+00 0.00000000e+00
   outer loop
    vertex 6.25000000e+00 0.00000000e+00 1.40000000e-01
@@ -12753,6 +12761,8 @@ solid diagnosticCombined
    vertex 6.25000000e+00 -4.00534871e-02 9.99465129e-02
   endloop
  endfacet
+endsolid gateOutlet
+solid atmosphere
  facet normal 1.00000000e+00 0.00000000e+00 0.00000000e+00
   outer loop
    vertex -1.50000000e-01 0.00000000e+00 2.17000000e+00
@@ -17457,4 +17467,4 @@ solid diagnosticCombined
    vertex 4.50000000e-01 -2.00000000e-01 1.67000000e+00
   endloop
  endfacet
-endsolid diagnosticCombined
+endsolid atmosphere

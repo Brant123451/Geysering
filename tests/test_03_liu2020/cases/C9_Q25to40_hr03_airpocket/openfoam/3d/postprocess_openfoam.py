@@ -607,6 +607,7 @@ def main() -> None:
             else "not_run"
         ),
         "solver": metadata.get("application", "unknown"),
+        "mesh_generator": metadata.get("mesh_generator", "unknown"),
         "simulation_end_paper_time_s": sim_end,
         "paper_time_offset_s": offset,
         "phase_1": {
@@ -759,6 +760,7 @@ def main() -> None:
             "status",
             "solver",
             "interface_solver",
+            "mesh_generator",
             "cells",
             "strict_check_passed",
             "maxCo",
@@ -786,6 +788,7 @@ def main() -> None:
                 metrics["status"],
                 metadata.get("application"),
                 metadata.get("interface_solver"),
+                metadata.get("mesh_generator"),
                 mesh.get("cells"),
                 mesh.get("all_geometry_passed"),
                 metadata.get("maxCo"),

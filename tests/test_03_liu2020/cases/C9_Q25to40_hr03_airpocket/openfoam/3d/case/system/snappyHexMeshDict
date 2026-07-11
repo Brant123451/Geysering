@@ -57,6 +57,21 @@ geometry
         min (-1.250000 -0.12 0.32);
         max (-0.750000 0.12 0.47);
     }
+    pocketInterface
+    {
+        type searchableBox;
+        min (-4.880000 -0.12 0.363000);
+        max (-0.920000 0.12 0.393000);
+    }
+    thinLayerZone
+    {
+        // The reported crown layer is only 8 mm in the base prior.  The old
+        // 10 mm cells represented it by one cell and generated a >12 m/s
+        // gas jet at the pocket nose.  Resolve it with at least three cells.
+        type searchableBox;
+        min (-1.080000 -0.12 0.360000);
+        max (0.02 0.12 0.398000);
+    }
     riserFreeSurface
     {
         type searchableCylinder;
@@ -135,9 +150,11 @@ castellatedMeshControls
         riserZone        { mode inside; levels ((1e15 2)); }
         plumeCore        { mode inside; levels ((1e15 1)); }
         pocketZone       { mode inside; levels ((1e15 2)); }
-        pocketTail       { mode inside; levels ((1e15 2)); }
-        pocketNose       { mode inside; levels ((1e15 2)); }
-        riserFreeSurface { mode inside; levels ((1e15 2)); }
+        pocketTail       { mode inside; levels ((1e15 3)); }
+        pocketNose       { mode inside; levels ((1e15 3)); }
+        pocketInterface  { mode inside; levels ((1e15 3)); }
+        thinLayerZone    { mode inside; levels ((1e15 4)); }
+        riserFreeSurface { mode inside; levels ((1e15 3)); }
         gateZone         { mode inside; levels ((1e15 2)); }
     }
     locationInMesh (0.15 0 0.20);
@@ -146,13 +163,17 @@ castellatedMeshControls
 snapControls
 {
     nSmoothPatch 5;
+    nSmoothInternal 3;
     tolerance 2.0;
     nSolveIter 80;
     nRelaxIter 8;
     nFeatureSnapIter 15;
+    nFaceSplitInterval 5;
+    concaveAngle 30;
     implicitFeatureSnap false;
     explicitFeatureSnap true;
     multiRegionFeatureSnap false;
+    strictRegionSnap true;
 }
 addLayersControls
 {

@@ -24,6 +24,7 @@ OUTPUT = HERE.parents[1] / "outputs" / "openfoam_3d_mesh_sensitivity.csv"
 VARIANTS = {
     "base": [],
     "mesh_refined": ["--mesh-profile", "refined"],
+    "mesh_snappy": ["--mesh-generator", "snappy"],
     "time_tight": ["--max-co", "0.20", "--max-alpha-co", "0.10", "--max-dt", "0.00025"],
     "pocket_small": ["--pocket-profile", "pocket_small"],
     "pocket_large": ["--pocket-profile", "pocket_large"],
@@ -149,6 +150,7 @@ def main():
                     "error": error,
                     "solver": generated.get("application"),
                     "interface_solver": generated.get("interface_solver"),
+                    "mesh_generator": generated.get("mesh_generator"),
                     "mesh_profile": generated.get("mesh_profile"),
                     "cells": mesh.get("cells"),
                     "checkMesh_passed": mesh.get("checkMesh_passed"),
@@ -189,6 +191,7 @@ def main():
         "error",
         "solver",
         "interface_solver",
+        "mesh_generator",
         "mesh_profile",
         "cells",
         "checkMesh_passed",

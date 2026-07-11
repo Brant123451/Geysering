@@ -3,6 +3,7 @@
   "openfoam_version": "v2512",
   "application": "compressibleInterFoam",
   "interface_solver": "mules",
+  "mesh_generator": "cartesian",
   "mesh_profile": "base",
   "pocket_profile": "base",
   "pocket_parameters_are_paper_values": false,
@@ -16,6 +17,7 @@
   },
   "analytic_initial_air_volume_m3": 0.012642174103355249,
   "initial_air_gauge_pressure_Pa": 3642.751224,
+  "main_body_probe_depth_below_crown_m": 0.012,
   "gate_area_m2": 0.01008,
   "gate_area_kind": "resolved_geometric",
   "target_effective_discharge_area_m2": 0.00823,
@@ -25,6 +27,7 @@
   "interface_compression": 1.0,
   "air_Cp_J_kg_K": 1005.0,
   "water_bulk_modulus_Pa": 2200000000.0,
+  "velocity_limit_m_s": 12.0,
   "maxCo": 0.35,
   "maxAlphaCo": 0.2,
   "maxDeltaT": 0.0005,
@@ -37,13 +40,47 @@
     "plume_top_z_m": 2.67,
     "riser_rim_z_m": 1.67,
     "surface_triangle_counts": {
-      "walls": 1248,
+      "walls": 1246,
       "riserWall": 192,
       "inlet": 96,
       "gateWall": 192,
       "gateOutlet": 96,
       "atmosphere": 672
     },
-    "diagnostic_combined_triangle_count": 2496
+    "surface_candidate_triangle_counts": {
+      "walls": 1247,
+      "riserWall": 192,
+      "inlet": 96,
+      "gateWall": 192,
+      "gateOutlet": 96,
+      "atmosphere": 672
+    },
+    "degenerate_triangles_skipped": {
+      "walls": 1,
+      "riserWall": 0,
+      "inlet": 0,
+      "gateWall": 0,
+      "gateOutlet": 0,
+      "atmosphere": 0
+    },
+    "diagnostic_combined_triangle_count": 2494,
+    "diagnostic_combined_candidate_triangle_count": 2495,
+    "diagnostic_degenerate_triangles_skipped": 1,
+    "multisolid_triangle_counts": {
+      "walls": 1246,
+      "riserWall": 192,
+      "inlet": 96,
+      "gateWall": 192,
+      "gateOutlet": 96,
+      "atmosphere": 672
+    },
+    "multisolid_degenerate_triangles_skipped": {
+      "walls": 1,
+      "riserWall": 0,
+      "inlet": 0,
+      "gateWall": 0,
+      "gateOutlet": 0,
+      "atmosphere": 0
+    }
   }
 }

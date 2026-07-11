@@ -82,7 +82,15 @@
       "interface_level": 3,
       "thin_layer_level": 4,
       "gate_level": 2,
-      "max_global_cells": 2000000
+      "max_global_cells": 2000000,
+      "cartesian_max_cell_size_m": 0.04,
+      "cartesian_boundary_cell_size_m": 0.01,
+      "cartesian_chamber_cell_size_m": 0.01,
+      "cartesian_riser_cell_size_m": 0.005,
+      "cartesian_pocket_cell_size_m": 0.01,
+      "cartesian_interface_cell_size_m": 0.005,
+      "cartesian_thin_layer_cell_size_m": 0.0025,
+      "cartesian_gate_cell_size_m": 0.005
     },
     "refined": {
       "background_cells": [306, 16, 69],
@@ -93,7 +101,15 @@
       "interface_level": 4,
       "thin_layer_level": 5,
       "gate_level": 3,
-      "max_global_cells": 8000000
+      "max_global_cells": 8000000,
+      "cartesian_max_cell_size_m": 0.04,
+      "cartesian_boundary_cell_size_m": 0.005,
+      "cartesian_chamber_cell_size_m": 0.005,
+      "cartesian_riser_cell_size_m": 0.0025,
+      "cartesian_pocket_cell_size_m": 0.005,
+      "cartesian_interface_cell_size_m": 0.0025,
+      "cartesian_thin_layer_cell_size_m": 0.00125,
+      "cartesian_gate_cell_size_m": 0.0025
     }
   }
 }

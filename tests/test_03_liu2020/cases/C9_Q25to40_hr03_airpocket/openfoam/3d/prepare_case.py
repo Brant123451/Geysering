@@ -623,6 +623,107 @@ boundary
         "system/surfaceFeatureExtractDict",
         foam_header("dictionary", "surfaceFeatureExtractDict") + feature_entries,
     )
+    write(
+        "system/meshDict",
+        foam_header("dictionary", "meshDict")
+        + f"""
+// cfMesh Cartesian path.  Physical cell sizes retain the same local-resolution
+// intent as the snappyHexMesh levels while avoiding concave transition cells.
+surfaceFile "constant/triSurface/c9Rig.stl";
+maxCellSize {mesh['cartesian_max_cell_size_m']:.8g};
+boundaryCellSize {mesh['cartesian_boundary_cell_size_m']:.8g};
+
+objectRefinements
+{{
+    chamber
+    {{
+        type box;
+        cellSize {mesh['cartesian_chamber_cell_size_m']:.8g};
+        centre (0.15 0 0.265);
+        lengthX 0.90;
+        lengthY 0.40;
+        lengthZ 0.57;
+    }}
+    riser
+    {{
+        type cone;
+        cellSize {mesh['cartesian_riser_cell_size_m']:.8g};
+        p0 (0.15 0 0.43);
+        radius0 0.04;
+        p1 (0.15 0 {z_rim + 0.03:.8g});
+        radius1 0.04;
+    }}
+    pocket
+    {{
+        type box;
+        cellSize {mesh['cartesian_pocket_cell_size_m']:.8g};
+        centre ({0.5 * (tail - 0.10 + 0.05):.8g} 0 0.39);
+        lengthX {0.05 - (tail - 0.10):.8g};
+        lengthY 0.24;
+        lengthZ 0.14;
+    }}
+    pocketTail
+    {{
+        type box;
+        cellSize {mesh['cartesian_interface_cell_size_m']:.8g};
+        centre ({tail:.8g} 0 0.395);
+        lengthX 0.36;
+        lengthY 0.24;
+        lengthZ 0.15;
+    }}
+    pocketNose
+    {{
+        type box;
+        cellSize {mesh['cartesian_interface_cell_size_m']:.8g};
+        centre ({nose:.8g} 0 0.395);
+        lengthX 0.50;
+        lengthY 0.24;
+        lengthZ 0.15;
+    }}
+    pocketInterface
+    {{
+        type box;
+        cellSize {mesh['cartesian_interface_cell_size_m']:.8g};
+        centre ({0.5 * (tail + nose):.8g} 0 {pocket_interface:.8g});
+        lengthX {nose - tail + 0.16:.8g};
+        lengthY 0.24;
+        lengthZ 0.03;
+    }}
+    thinLayer
+    {{
+        type box;
+        cellSize {mesh['cartesian_thin_layer_cell_size_m']:.8g};
+        centre ({0.5 * (nose - 0.08 + 0.02):.8g} 0
+                {0.5 * (0.38 - thin_layer - 0.012 + 0.38 - 0.01 * nose + 0.008):.8g});
+        lengthX {0.02 - (nose - 0.08):.8g};
+        lengthY 0.24;
+        lengthZ {(0.38 - 0.01 * nose + 0.008) - (0.38 - thin_layer - 0.012):.8g};
+    }}
+    gate
+    {{
+        type cone;
+        cellSize {mesh['cartesian_gate_cell_size_m']:.8g};
+        p0 ({lc + ld - 0.25:.8g} 0 {dd / 2:.8g});
+        radius0 0.15;
+        p1 ({lc + ld + 0.02:.8g} 0 {dd / 2:.8g});
+        radius1 0.15;
+    }}
+}}
+
+renameBoundary
+{{
+    newPatchNames
+    {{
+        walls       {{ newName walls;       type wall; }}
+        riserWall   {{ newName riserWall;   type wall; }}
+        inlet       {{ newName inlet;       type patch; }}
+        gateWall    {{ newName gateWall;    type wall; }}
+        gateOutlet  {{ newName gateOutlet;  type patch; }}
+        atmosphere  {{ newName atmosphere;  type patch; }}
+    }}
+}}
+""",
+    )
 
     geometry_entries = "\n".join(
         f"    {name}.stl {{ type triSurfaceMesh; name {name}; }}" for name in surfaces
@@ -820,7 +921,7 @@ actions
         type cellSet;
         action new;
         source boxToCell;
-        box (-5.82 -0.12 0.14) (0.0 0.12 0.46);
+        box (-5.82 -0.12 0.14) (-0.001 0.12 0.46);
     }
     {
         name upstreamPipe;
@@ -834,7 +935,7 @@ actions
         type cellSet;
         action new;
         source boxToCell;
-        box (0 -0.16 -0.01) (0.30 0.16 0.46);
+        box (0 -0.16 -0.01) (0.30 0.16 0.449);
     }
     {
         name chamber;
@@ -848,7 +949,7 @@ actions
         type cellSet;
         action new;
         source cylinderToCell;
-        p1 (0.15 0 0.44);
+        p1 (0.15 0 0.451);
         p2 (0.15 0 1.68);
         radius 0.032;
     }
@@ -1253,23 +1354,18 @@ set -eo pipefail
 cd "$(dirname "$0")"
 NP="${{OPENFOAM_NP:-{args.np}}}"
 """
-    write(
-        "Allrun.mesh",
-        bash_prefix
-        + f"""test "$NP" -eq {args.np} || {{
-    echo "OPENFOAM_NP must match system/decomposeParDict ({args.np})" >&2
-    exit 2
-}}
-rm -rf constant/polyMesh processor*
-surfaceCheck constant/triSurface/diagnosticCombined.stl -checkSelfIntersection > log.surfaceCheck 2>&1
-rg -q '^Surface is closed' log.surfaceCheck || {{
-    echo "Combined C9 surface is not topologically closed; see log.surfaceCheck" >&2
-    exit 2
-}}
-if rg -q '^Surface is self-intersecting' log.surfaceCheck; then
-    echo "Combined C9 surface self-intersects; see log.surfaceCheck" >&2
-    exit 2
-fi
+    surface_name = (
+        "c9Rig.stl" if args.mesh_generator == "cartesian" else "diagnosticCombined.stl"
+    )
+    if args.mesh_generator == "cartesian":
+        mesh_command = """rm -rf constant/polyMesh processor*
+export LD_LIBRARY_PATH="${FOAM_LIBBIN}:${FOAM_LIBBIN}/sys-openmpi:${LD_LIBRARY_PATH:-}"
+cartesianMesh > log.cartesianMesh 2>&1
+rm -rf 0
+cp -r 0.orig 0
+"""
+    else:
+        mesh_command = """rm -rf constant/polyMesh processor*
 blockMesh > log.blockMesh 2>&1
 surfaceFeatureExtract > log.surfaceFeatureExtract 2>&1
 rm -rf 0
@@ -1278,6 +1374,24 @@ decomposePar -copyZero > log.decomposePar.mesh 2>&1
 mpirun -np "$NP" snappyHexMesh -parallel -overwrite > log.snappyHexMesh 2>&1
 reconstructParMesh -constant > log.reconstructParMesh 2>&1
 rm -rf processor*
+"""
+    write(
+        "Allrun.mesh",
+        bash_prefix
+        + f"""test "$NP" -eq {args.np} || {{
+    echo "OPENFOAM_NP must match system/decomposeParDict ({args.np})" >&2
+    exit 2
+}}
+surfaceCheck constant/triSurface/{surface_name} -checkSelfIntersection > log.surfaceCheck 2>&1
+rg -q '^Surface is closed' log.surfaceCheck || {{
+    echo "Combined C9 surface is not topologically closed; see log.surfaceCheck" >&2
+    exit 2
+}}
+if rg -q '^Surface is self-intersecting' log.surfaceCheck; then
+    echo "Combined C9 surface self-intersects; see log.surfaceCheck" >&2
+    exit 2
+fi
+{mesh_command}
 topoSet > log.topoSet 2>&1
 checkMesh > log.checkMesh 2>&1
 checkMesh -allGeometry -allTopology > log.checkMesh.all 2>&1
@@ -1409,6 +1523,7 @@ rm -f log.*
         "openfoam_version": "v2512",
         "application": application,
         "interface_solver": args.interface_solver,
+        "mesh_generator": args.mesh_generator,
         "mesh_profile": args.mesh_profile,
         "pocket_profile": args.pocket_profile,
         "pocket_parameters_are_paper_values": False,
@@ -1439,6 +1554,12 @@ rm -f log.*
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--mesh-generator",
+        choices=("cartesian", "snappy"),
+        default="cartesian",
+        help="strict-quality cfMesh Cartesian mesh or the retained snappyHexMesh sensitivity",
+    )
     parser.add_argument("--mesh-profile", choices=("base", "refined"), default="base")
     parser.add_argument(
         "--pocket-profile",

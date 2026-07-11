@@ -7,21 +7,30 @@ test "$NP" -eq 4 || {
     echo "OPENFOAM_NP must match system/decomposeParDict (4)" >&2
     exit 2
 }
-rm -rf constant/polyMesh processor*
-surfaceCheck constant/triSurface/diagnosticCombined.stl -checkSelfIntersection > log.surfaceCheck 2>&1
+surfaceCheck constant/triSurface/c9Rig.stl -checkSelfIntersection > log.surfaceCheck 2>&1
 rg -q '^Surface is closed' log.surfaceCheck || {
     echo "Combined C9 surface is not topologically closed; see log.surfaceCheck" >&2
     exit 2
 }
-blockMesh > log.blockMesh 2>&1
-surfaceFeatureExtract > log.surfaceFeatureExtract 2>&1
+if rg -q '^Surface is self-intersecting' log.surfaceCheck; then
+    echo "Combined C9 surface self-intersects; see log.surfaceCheck" >&2
+    exit 2
+fi
+rm -rf constant/polyMesh processor*
+export LD_LIBRARY_PATH="${FOAM_LIBBIN}:${FOAM_LIBBIN}/sys-openmpi:${LD_LIBRARY_PATH:-}"
+cartesianMesh > log.cartesianMesh 2>&1
 rm -rf 0
 cp -r 0.orig 0
-decomposePar -copyZero > log.decomposePar.mesh 2>&1
-mpirun -np "$NP" snappyHexMesh -parallel -overwrite > log.snappyHexMesh 2>&1
-reconstructParMesh -constant > log.reconstructParMesh 2>&1
-rm -rf processor*
+
 topoSet > log.topoSet 2>&1
 checkMesh > log.checkMesh 2>&1
 checkMesh -allGeometry -allTopology > log.checkMesh.all 2>&1
+rg -q 'Mesh OK\.' log.checkMesh || {
+    echo "C9 mesh failed the standard check; see log.checkMesh" >&2
+    exit 3
+}
+rg -q 'Mesh OK\.' log.checkMesh.all || {
+    echo "C9 mesh failed the strict geometry/topology check; see log.checkMesh.all" >&2
+    exit 4
+}
 echo MESH_DONE
