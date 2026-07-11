@@ -304,7 +304,7 @@ def main() -> None:
         )
         audit = {
             "geometry": "3-D circular pipe, circular riser, fused external air",
-            "element_types_3d": element_types,
+            "element_types_3d": [int(value) for value in element_types],
             "cells_3d": cell_count,
             "cad_fluid_volume_m3": fluid_volume,
             "pipe_diameter_m": PIPE_DIAMETER,
