@@ -1,0 +1,90 @@
+{
+  "case": "Liu2020 C9 three-dimensional compressible VOF",
+  "status": "smoke_only",
+  "solver": "compressibleInterFoam",
+  "simulation_end_paper_time_s": 1.0,
+  "paper_time_offset_s": 0.25,
+  "phase_1": {
+    "window_complete": false,
+    "reproduced": false,
+    "P1m_kPa": 10.817660000000004,
+    "P1m_time_s": 0.392,
+    "first_riser_top_s": 0.64,
+    "oscillation_period_s": null
+  },
+  "phase_2": {
+    "window_complete": false,
+    "reproduced": false,
+    "events_after_simulated_pocket_arrival": 1,
+    "note": "A phase-1 match is not counted as phase-2 reproduction."
+  },
+  "simulated_geyser_count": 1,
+  "experimental_geyser_count": 8,
+  "simulated_air_pocket_arrival_s": 0.62,
+  "air_pocket_arrival_definition": "first nonnegative paper time with at least 20% upstream gas-mass loss and chamber gas-volume gain of at least max(1 L, 10% initial upstream volume)",
+  "experimental_air_pocket_arrival_s": 6.46,
+  "air_pocket_arrival_error_percent": -90.40247678018576,
+  "major_pressure_peak_error_percent": 1.1942001870907775,
+  "major_pressure_peak_time_error_percent": -21.599999999999998,
+  "first_top_time_error_percent": -12.328767123287667,
+  "oscillation_period_error_percent": null,
+  "final_pressure_kPa": {
+    "PT2": null,
+    "PT3": null,
+    "PT4": null
+  },
+  "final_pressure_error_percent": {
+    "PT2": null,
+    "PT3": null,
+    "PT4": null
+  },
+  "mass_conservation_relative_error": 4.184266436041732e-06,
+  "gas_mass_conservation_relative_error": 7.978795134987557e-05,
+  "gas_mass_method": "alpha.air-weighted thermo:rho.air inventory; boundary gas flux is rhoPhi minus density-weighted conservative alphaPhi0.water",
+  "pre_ramp_upstream_air_mass_change_relative": -0.005374727438495802,
+  "initial_air_volume_m3": 0.014064849000000018,
+  "initial_air_mass_kg": 0.0175569089,
+  "end_upstream_air_volume_m3": 0.005815511999999995,
+  "end_upstream_air_mass_kg": 0.00732916481,
+  "upstream_air_mass_retained_fraction": 0.4174518904065168,
+  "mesh": {
+    "checkMesh_run": true,
+    "checkMesh_passed": true,
+    "all_geometry_passed": false,
+    "concave_cells": 2228,
+    "cells": 142343,
+    "max_non_orthogonality": 60.429395,
+    "max_skewness": 2.8780084,
+    "max_aspect_ratio": 6.8366433,
+    "min_volume_m3": 1.0566891e-07
+  },
+  "numerics": {
+    "logs": [
+      "log.initialize",
+      "log.smoke"
+    ],
+    "max_courant_number": 0.49042379,
+    "max_interface_courant_number": 0.24832321,
+    "minimum_delta_t_s": 1.1999904e-06,
+    "maximum_velocity_m_s": 12.0,
+    "maximum_limited_cells": 7206,
+    "maximum_limited_cell_percent": 5.06,
+    "maximum_limited_faces": 20,
+    "velocity_limiter_activated": true
+  },
+  "source_parameter_status": {
+    "air_pocket_size": "uncertain sensitivity parameter, not reported by paper",
+    "tailgate_opening": "derived boundary parameter, not reported by paper"
+  },
+  "paper_targets": {
+    "P1m_kPa": 10.69,
+    "t_P1m_s": 0.5,
+    "t_first_top_s": 0.73,
+    "T_osc_s": 1.45,
+    "air_pocket_arrival_s": 6.46,
+    "geyser_count": 8,
+    "PT2_final_kPa": 8.79,
+    "PT3_final_kPa": 12.76,
+    "PT4_final_kPa": 9.25
+  }
+}

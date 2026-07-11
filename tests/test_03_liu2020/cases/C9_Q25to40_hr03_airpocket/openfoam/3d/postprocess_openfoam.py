@@ -227,6 +227,74 @@ def parse_mesh_quality(case: Path) -> dict:
     return result
 
 
+def parse_numerics(case: Path) -> dict:
+    """Summarize stability controls from all completed stage logs."""
+    result = {
+        "logs": [],
+        "max_courant_number": None,
+        "max_interface_courant_number": None,
+        "minimum_delta_t_s": None,
+        "maximum_velocity_m_s": None,
+        "maximum_limited_cells": 0,
+        "maximum_limited_cell_percent": 0.0,
+        "maximum_limited_faces": 0,
+        "velocity_limiter_activated": False,
+    }
+    number = r"[-+0-9.eE]+"
+    courant = re.compile(rf"Courant Number mean:\s*{number}\s+max:\s*({number})")
+    alpha_courant = re.compile(
+        rf"Interface Courant Number mean:\s*{number}\s+max:\s*({number})"
+    )
+    delta_t = re.compile(rf"deltaT\s*=\s*({number})")
+    velocity = re.compile(rf"max\(mag\(U\)\)\s*=\s*({number})")
+    limited = re.compile(
+        r"limitVelocity\s+\S+\s+Limited\s+(\d+)\s+\(([-+0-9.eE]+)%\)"
+        r"\s+of cells,\s+(\d+)\s+\(([-+0-9.eE]+)%\)\s+of faces"
+    )
+    max_co = max_alpha_co = max_velocity = None
+    min_delta_t = None
+    for stage in ("initialize", "smoke", "phase1", "full"):
+        path = case / f"log.{stage}"
+        if not path.exists():
+            continue
+        result["logs"].append(path.name)
+        with path.open(errors="replace") as stream:
+            for line in stream:
+                match = courant.search(line)
+                if match:
+                    value = float(match.group(1))
+                    max_co = value if max_co is None else max(max_co, value)
+                match = alpha_courant.search(line)
+                if match:
+                    value = float(match.group(1))
+                    max_alpha_co = value if max_alpha_co is None else max(max_alpha_co, value)
+                match = delta_t.search(line)
+                if match:
+                    value = float(match.group(1))
+                    min_delta_t = value if min_delta_t is None else min(min_delta_t, value)
+                match = velocity.search(line)
+                if match:
+                    value = float(match.group(1))
+                    max_velocity = value if max_velocity is None else max(max_velocity, value)
+                match = limited.search(line)
+                if match:
+                    result["maximum_limited_cells"] = max(
+                        result["maximum_limited_cells"], int(match.group(1))
+                    )
+                    result["maximum_limited_cell_percent"] = max(
+                        result["maximum_limited_cell_percent"], float(match.group(2))
+                    )
+                    result["maximum_limited_faces"] = max(
+                        result["maximum_limited_faces"], int(match.group(3))
+                    )
+    result["max_courant_number"] = max_co
+    result["max_interface_courant_number"] = max_alpha_co
+    result["minimum_delta_t_s"] = min_delta_t
+    result["maximum_velocity_m_s"] = max_velocity
+    result["velocity_limiter_activated"] = result["maximum_limited_cells"] > 0
+    return result
+
+
 def relative_error(value, target):
     if value is None or not np.isfinite(value):
         return None
@@ -317,10 +385,20 @@ def main() -> None:
     chamber_air = chamber_zone_volume - interp_series(cv_t, chamber_water, uv_t_solver)
 
     arrival_time = None
-    if len(uv_t):
+    arrival_definition = (
+        "first nonnegative paper time with at least 20% upstream gas-mass loss "
+        "and chamber gas-volume gain of at least max(1 L, 10% initial upstream volume)"
+    )
+    if len(uv_t) and len(upstream_air_mass):
         initial_air = float(upstream_air_volume[0])
-        threshold = max(0.001, 0.05 * max(initial_air, 0.0))
-        candidates = np.where((uv_t >= 3.99) & (chamber_air > threshold))[0]
+        initial_air_mass = float(upstream_air_mass[0])
+        initial_chamber_air = float(chamber_air[0])
+        chamber_gain_threshold = max(0.001, 0.10 * max(initial_air, 0.0))
+        candidates = np.where(
+            (uv_t >= 0.0)
+            & (upstream_air_mass <= 0.80 * initial_air_mass)
+            & (chamber_air - initial_chamber_air >= chamber_gain_threshold)
+        )[0]
         if len(candidates):
             arrival_time = float(uv_t[candidates[0]])
     write_csv(
@@ -435,7 +513,7 @@ def main() -> None:
             first_top = float(alpha_time[indices[0]])
     peaks = local_peaks(p_time, pressure[:, 1] if len(p_time) else np.empty(0))
     period = None
-    if len(peaks) >= 2:
+    if sim_end is not None and sim_end >= 2.0 and len(peaks) >= 2:
         period = float(peaks[1][0] - peaks[0][0])
 
     finals = [None, None, None]
@@ -487,6 +565,7 @@ def main() -> None:
         "simulated_geyser_count": len(event_rows),
         "experimental_geyser_count": PAPER["geyser_count"],
         "simulated_air_pocket_arrival_s": arrival_time,
+        "air_pocket_arrival_definition": arrival_definition,
         "experimental_air_pocket_arrival_s": PAPER["air_pocket_arrival_s"],
         "air_pocket_arrival_error_percent": relative_error(arrival_time, PAPER["air_pocket_arrival_s"]),
         "major_pressure_peak_error_percent": relative_error(p1m, PAPER["P1m_kPa"]),
@@ -508,7 +587,19 @@ def main() -> None:
         "pre_ramp_upstream_air_mass_change_relative": pre_ramp_air_mass_change,
         "initial_air_volume_m3": float(upstream_air_volume[0]) if len(upstream_air_volume) else None,
         "initial_air_mass_kg": float(upstream_air_mass[0]) if len(upstream_air_mass) else None,
+        "end_upstream_air_volume_m3": (
+            float(upstream_air_volume[-1]) if len(upstream_air_volume) else None
+        ),
+        "end_upstream_air_mass_kg": (
+            float(upstream_air_mass[-1]) if len(upstream_air_mass) else None
+        ),
+        "upstream_air_mass_retained_fraction": (
+            float(upstream_air_mass[-1] / upstream_air_mass[0])
+            if len(upstream_air_mass) and abs(upstream_air_mass[0]) > 1e-12
+            else None
+        ),
         "mesh": parse_mesh_quality(case),
+        "numerics": parse_numerics(case),
         "source_parameter_status": {
             "air_pocket_size": "uncertain sensitivity parameter, not reported by paper",
             "tailgate_opening": "derived boundary parameter, not reported by paper",
@@ -569,55 +660,54 @@ def main() -> None:
     plt.close(figure)
 
     sensitivity = OUTPUTS / "openfoam_3d_mesh_sensitivity.csv"
-    if not sensitivity.exists():
-        mesh = metrics["mesh"]
-        write_csv(
-            sensitivity,
+    mesh = metrics["mesh"]
+    write_csv(
+        sensitivity,
+        [
+            "variant",
+            "status",
+            "solver",
+            "interface_solver",
+            "cells",
+            "maxCo",
+            "maxDeltaT_s",
+            "pocket_profile",
+            "gate_area_m2",
+            "contact_angle_deg",
+            "cAlpha",
+            "air_Cp_J_kg_K",
+            "water_bulk_modulus_Pa",
+            "P1m_kPa",
+            "first_top_s",
+            "geyser_count",
+            "air_arrival_s",
+            "mass_error",
+            "gas_mass_error",
+        ],
+        [
             [
-                "variant",
-                "status",
-                "solver",
-                "interface_solver",
-                "cells",
-                "maxCo",
-                "maxDeltaT_s",
-                "pocket_profile",
-                "gate_area_m2",
-                "contact_angle_deg",
-                "cAlpha",
-                "air_Cp_J_kg_K",
-                "water_bulk_modulus_Pa",
-                "P1m_kPa",
-                "first_top_s",
-                "geyser_count",
-                "air_arrival_s",
-                "mass_error",
-                "gas_mass_error",
-            ],
-            [
-                [
-                    metadata.get("mesh_profile", "base"),
-                    metrics["status"],
-                    metadata.get("application"),
-                    metadata.get("interface_solver"),
-                    mesh.get("cells"),
-                    metadata.get("maxCo"),
-                    metadata.get("maxDeltaT"),
-                    metadata.get("pocket_profile"),
-                    metadata.get("gate_area_m2"),
-                    metadata.get("contact_angle_deg"),
-                    metadata.get("interface_compression"),
-                    metadata.get("air_Cp_J_kg_K"),
-                    metadata.get("water_bulk_modulus_Pa"),
-                    p1m,
-                    first_top,
-                    len(event_rows),
-                    arrival_time,
-                    mass_error,
-                    gas_error,
-                ]
-            ],
-        )
+                metadata.get("mesh_profile", "base"),
+                metrics["status"],
+                metadata.get("application"),
+                metadata.get("interface_solver"),
+                mesh.get("cells"),
+                metadata.get("maxCo"),
+                metadata.get("maxDeltaT"),
+                metadata.get("pocket_profile"),
+                metadata.get("gate_area_m2"),
+                metadata.get("contact_angle_deg"),
+                metadata.get("interface_compression"),
+                metadata.get("air_Cp_J_kg_K"),
+                metadata.get("water_bulk_modulus_Pa"),
+                p1m,
+                first_top,
+                len(event_rows),
+                arrival_time,
+                mass_error,
+                gas_error,
+            ]
+        ],
+    )
 
     print(json.dumps(metrics, indent=2))
 

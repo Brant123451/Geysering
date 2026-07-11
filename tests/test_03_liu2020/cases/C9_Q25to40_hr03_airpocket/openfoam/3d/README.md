@@ -89,9 +89,12 @@ pressure are recorded in `case/generated_case.json`.
 is 306 × 16 × 69 cells, with local refinement at the pocket body and
 interfaces, chamber, riser, initial riser free surface, and tailgate. The
 `refined` profile adds one local level in the chamber, riser, pocket
-interfaces, and gate while retaining the same far-field background. `checkMesh
--allGeometry -allTopology` is mandatory and its log is consumed by
-post-processing.
+interfaces, and gate while retaining the same far-field background. Both
+standard `checkMesh` and `checkMesh -allGeometry -allTopology` are run and
+their logs are consumed by post-processing. The current 142,343-cell base mesh
+passes the standard check (maximum nonorthogonality 60.43 and skewness 2.88);
+the strict check reports 2,228 concave cells, so it is not represented as a
+strict `Mesh OK`.
 
 The default transient limits are `maxCo=0.35`, `maxAlphaCo=0.20`, and
 `maxDeltaT=5e-4 s`; the tighter timestep case halves these limits. MULES uses
@@ -99,7 +102,9 @@ one alpha correction with two subcycles. Two pressure correctors and one
 non-orthogonal corrector are used, following the supplied v2512
 `compressibleInterFoam` tutorial structure. A
 12 m/s velocity limiter is a numerical safety bound, more than twice the
-5.75 m/s experimental maximum quoted by the paper.
+5.75 m/s experimental maximum quoted by the paper. Its activation is recorded
+in `openfoam_3d_metrics.json`; a result that depends on clipping is treated as
+numerically qualified, not silently accepted.
 
 ## Diagnostics and required artifacts
 
@@ -124,6 +129,33 @@ creates in the C9 `outputs/` directory:
 The event table is generated only from actual `alpha.water` crossing the
 physical riser rim. Missing stages remain `not_run`, `smoke_only`, or
 `complete_phase1_only`; the postprocessor does not invent phase-2 eruptions.
+
+## Current validation status
+
+The committed baseline covers the initialization and 1.00 s paper-time smoke
+window only. It is **not** a completed phase-1 or phase-2 validation. Measured
+against the paper targets, the smoke run gives:
+
+- initialized PT2 = 2.853 kPa gauge versus 2.970 kPa;
+- first PT2 peak = 10.818 kPa at 0.392 s versus 10.690 kPa at 0.500 s;
+- first mixture crossing of the riser rim = 0.640 s versus 0.730 s;
+- total- and gas-mass residuals = \(4.18\times10^{-6}\) and
+  \(7.98\times10^{-5}\);
+- mesh-integrated initial upstream gas volume = 14.065 L versus the
+  12.642 L analytic pocket construction;
+- upstream-zone gas mass falls from 17.557 g to 7.329 g by 1.00 s, showing
+  that the baseline pocket is transported/released much earlier than the
+  paper's 6.46 s main-pocket arrival. The declared 20%-mass-transfer criterion
+  gives 0.620 s (−90.4%).
+
+The velocity limiter activated during the transient and reached 7,206 cells
+(5.06%) on the final smoke step; the final maximum-velocity location was in
+the atmospheric plume. This is an unresolved numerical qualification and
+requires the declared control sensitivity before claiming eruption-count
+agreement. No air-pocket arrival or eight-eruption claim is made from this
+short run. The early upstream gas loss is a physical-model discrepancy, not a
+mass-conservation failure: the domain-wide gas residual remains below
+\(10^{-4}\).
 
 ## Sensitivities
 
