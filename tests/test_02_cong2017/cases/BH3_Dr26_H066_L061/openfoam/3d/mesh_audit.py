@@ -19,7 +19,7 @@ def parse_args() -> argparse.Namespace:
 
 def first(pattern: str, text: str, cast=float):
     match = re.search(pattern, text, flags=re.MULTILINE)
-    return cast(match.group(1)) if match else None
+    return cast(match.group(1).rstrip(".,;")) if match else None
 
 
 def main() -> None:

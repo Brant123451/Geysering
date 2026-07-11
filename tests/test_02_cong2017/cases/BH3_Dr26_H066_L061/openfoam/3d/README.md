@@ -65,10 +65,11 @@ pressure and temperature: `1.427602 g`.
 
 ## Mesh profiles
 
-`make_geometry.py` builds one exact Boolean fluid volume and exports matching
-STL patches. `make_block_mesh.py` builds a conformal, locally narrow
-background mesh; `snappyHexMesh` snaps it to the circular apparatus and adds
-wall-normal layers at the riser.
+`make_geometry.py` builds one exact OpenCASCADE Boolean fluid volume and
+generates a boundary-fitted HXT tetrahedral mesh with named inlet, cap, wall,
+riser-wall, and atmosphere physical groups. The base and refined profiles use
+independent pipe/riser/atmosphere target sizes; no cut-cell background or
+rectangular equivalent flow area enters the solution.
 
 ```bash
 MESH_PROFILE=base ./Allmesh

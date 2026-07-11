@@ -63,16 +63,14 @@
     },
     "mesh_profiles": {
       "base": {
-        "pipe_cross_cell_m": 0.00625,
-        "pipe_axial_cell_m": 0.015,
-        "riser_axial_cell_m": 0.0125,
-        "atmosphere_cell_m": 0.025
+        "pipe_tetrahedron_target_m": 0.012,
+        "riser_tetrahedron_target_m": 0.005,
+        "atmosphere_tetrahedron_target_m": 0.03
       },
       "refined": {
-        "pipe_cross_cell_m": 0.005,
-        "pipe_axial_cell_m": 0.01,
-        "riser_axial_cell_m": 0.01,
-        "atmosphere_cell_m": 0.02
+        "pipe_tetrahedron_target_m": 0.009,
+        "riser_tetrahedron_target_m": 0.004,
+        "atmosphere_tetrahedron_target_m": 0.025
       }
     },
     "classification": {

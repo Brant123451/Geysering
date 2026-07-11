@@ -40,7 +40,10 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--riser-diameter", type=float, default=0.026)
     parser.add_argument("--atmosphere-width", type=float, default=0.300)
-    parser.add_argument("--surface-size", type=float, default=0.004)
+    parser.add_argument("--mesh-output", type=Path, default=Path("bh3.msh"))
+    parser.add_argument("--pipe-size", type=float, default=0.012)
+    parser.add_argument("--riser-size", type=float, default=0.005)
+    parser.add_argument("--atmosphere-size", type=float, default=0.030)
     return parser.parse_args()
 
 
@@ -64,8 +67,10 @@ def main() -> None:
         raise ValueError("riser-diameter must be between zero and pipe diameter")
     if args.atmosphere_width <= 4 * args.riser_diameter:
         raise ValueError("external atmosphere must span more than four riser diameters")
-    if args.surface_size <= 0:
-        raise ValueError("surface-size must be positive")
+    if min(args.pipe_size, args.riser_size, args.atmosphere_size) <= 0:
+        raise ValueError("mesh sizes must be positive")
+    if args.riser_size > args.pipe_size:
+        raise ValueError("riser-size must not exceed pipe-size")
 
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=True)
@@ -168,18 +173,85 @@ def main() -> None:
             else:
                 patches["walls"].append(tag)
 
-        gmsh.option.setNumber("Mesh.MeshSizeMin", args.surface_size)
-        gmsh.option.setNumber("Mesh.MeshSizeMax", args.surface_size)
-        gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 24)
-        gmsh.option.setNumber("Mesh.Algorithm", 6)
-        gmsh.model.mesh.generate(2)
+        # Physical groups are written directly into the volume mesh so
+        # gmshToFoam receives exact patch names without a cut-cell background.
+        for name, surfaces in patches.items():
+            group = gmsh.model.addPhysicalGroup(2, surfaces)
+            gmsh.model.setPhysicalName(2, group, name)
+        fluid_group = gmsh.model.addPhysicalGroup(3, volumes)
+        gmsh.model.setPhysicalName(3, fluid_group, "fluid")
 
+        pipe_field = gmsh.model.mesh.field.add("Box")
+        gmsh.model.mesh.field.setNumber(pipe_field, "VIn", args.pipe_size)
+        gmsh.model.mesh.field.setNumber(pipe_field, "VOut", args.atmosphere_size)
+        gmsh.model.mesh.field.setNumber(pipe_field, "XMin", -0.01)
+        gmsh.model.mesh.field.setNumber(pipe_field, "XMax", PIPE_LENGTH + 0.01)
+        gmsh.model.mesh.field.setNumber(pipe_field, "YMin", -0.03)
+        gmsh.model.mesh.field.setNumber(pipe_field, "YMax", 0.03)
+        gmsh.model.mesh.field.setNumber(pipe_field, "ZMin", -0.01)
+        gmsh.model.mesh.field.setNumber(pipe_field, "ZMax", 0.06)
+
+        riser_field = gmsh.model.mesh.field.add("Box")
+        gmsh.model.mesh.field.setNumber(riser_field, "VIn", args.riser_size)
+        gmsh.model.mesh.field.setNumber(riser_field, "VOut", args.atmosphere_size)
+        gmsh.model.mesh.field.setNumber(
+            riser_field, "XMin", TEE_X - riser_radius - 0.005
+        )
+        gmsh.model.mesh.field.setNumber(
+            riser_field, "XMax", TEE_X + riser_radius + 0.005
+        )
+        gmsh.model.mesh.field.setNumber(
+            riser_field, "YMin", -riser_radius - 0.005
+        )
+        gmsh.model.mesh.field.setNumber(
+            riser_field, "YMax", riser_radius + 0.005
+        )
+        gmsh.model.mesh.field.setNumber(riser_field, "ZMin", 0.035)
+        gmsh.model.mesh.field.setNumber(
+            riser_field, "ZMax", PHYSICAL_RIM_Z + 0.02
+        )
+
+        tee_field = gmsh.model.mesh.field.add("Box")
+        gmsh.model.mesh.field.setNumber(tee_field, "VIn", args.riser_size)
+        gmsh.model.mesh.field.setNumber(tee_field, "VOut", args.atmosphere_size)
+        gmsh.model.mesh.field.setNumber(tee_field, "XMin", TEE_X - 0.05)
+        gmsh.model.mesh.field.setNumber(tee_field, "XMax", TEE_X + 0.05)
+        gmsh.model.mesh.field.setNumber(tee_field, "YMin", -0.035)
+        gmsh.model.mesh.field.setNumber(tee_field, "YMax", 0.035)
+        gmsh.model.mesh.field.setNumber(tee_field, "ZMin", -0.005)
+        gmsh.model.mesh.field.setNumber(tee_field, "ZMax", 0.10)
+
+        minimum_field = gmsh.model.mesh.field.add("Min")
+        gmsh.model.mesh.field.setNumbers(
+            minimum_field,
+            "FieldsList",
+            [pipe_field, riser_field, tee_field],
+        )
+        gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
+
+        gmsh.option.setNumber("Mesh.MeshSizeMin", args.riser_size)
+        gmsh.option.setNumber("Mesh.MeshSizeMax", args.atmosphere_size)
+        gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
+        gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
+        gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 20)
+        gmsh.option.setNumber("Mesh.Algorithm", 6)
+        gmsh.option.setNumber("Mesh.Algorithm3D", 10)
+        gmsh.option.setNumber("Mesh.Optimize", 1)
+        gmsh.option.setNumber("Mesh.OptimizeNetgen", 1)
+        gmsh.option.setNumber("Mesh.MshFileVersion", 2.2)
+        gmsh.option.setNumber("Mesh.Binary", 0)
+        gmsh.model.mesh.generate(3)
+        args.mesh_output.parent.mkdir(parents=True, exist_ok=True)
+        gmsh.write(str(args.mesh_output))
+
+        # Export review/debug surfaces from the exact same volume mesh.
         for name, surfaces in patches.items():
             export_patch(output, name, surfaces)
 
         fluid_volume = occ.getMass(3, volumes[0])
         analytic_pocket = math.pi * PIPE_DIAMETER**2 * 0.61 / 4.0
         print(f"output_dir={output}")
+        print(f"mesh_output={args.mesh_output.resolve()}")
         print(f"fluid_volume_m3={fluid_volume:.12g}")
         print(f"analytic_initial_pocket_m3={analytic_pocket:.12g}")
         print(f"pipe_diameter_m={PIPE_DIAMETER}")
@@ -187,6 +259,11 @@ def main() -> None:
         print(f"circular_area_ratio={(args.riser_diameter / PIPE_DIAMETER) ** 2:.9g}")
         print(f"physical_rim_z_m={PHYSICAL_RIM_Z}")
         print(f"computational_top_z_m={COMPUTATIONAL_TOP_Z}")
+        element_blocks = gmsh.model.mesh.getElements(3)[1]
+        print(f"cells_3d={sum(len(block) for block in element_blocks)}")
+        print(f"pipe_size_m={args.pipe_size}")
+        print(f"riser_size_m={args.riser_size}")
+        print(f"atmosphere_size_m={args.atmosphere_size}")
         for name, surfaces in patches.items():
             print(f"{name}_surfaces={len(surfaces)}")
     finally:

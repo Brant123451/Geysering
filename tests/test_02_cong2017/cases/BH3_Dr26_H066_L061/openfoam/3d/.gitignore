@@ -12,4 +12,5 @@ system/riserProbeLocations.runtime
 system/plumeProbeLocations.runtime
 log.*
 *.foam
+*.msh
 _work/
