@@ -43,6 +43,69 @@ class DominantGasComponentTests(unittest.TestCase):
         self.assertTrue(np.isnan(furthest))
 
 
+class ProbeParsingTests(unittest.TestCase):
+    def test_scalar_probe_coordinates_come_from_header(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            post_dir = Path(directory)
+            output = post_dir / "deep" / "0" / "alpha.water"
+            output.parent.mkdir(parents=True)
+            output.write_text(
+                "\n".join(
+                    [
+                        "# Probe 0 (-1.2 0 0.4)",
+                        "# Probe 1 (-0.17 0 0.39)",
+                        "# Time",
+                        "0.0 0.0 1.0",
+                        "0.1 0.2 0.8",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            times, values, locations = post.parse_probe_scalar_with_locations(
+                post_dir, "deep", "alpha.water"
+            )
+
+        np.testing.assert_allclose(times, [0.0, 0.1])
+        np.testing.assert_allclose(values, [[0.0, 1.0], [0.2, 0.8]])
+        np.testing.assert_allclose(locations[:, 0], [-1.2, -0.17])
+
+    def test_scalar_probe_width_mismatch_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            post_dir = Path(directory)
+            output = post_dir / "deep" / "0" / "alpha.water"
+            output.parent.mkdir(parents=True)
+            output.write_text(
+                "\n".join(
+                    [
+                        "# Probe 0 (-1 0 0.4)",
+                        "# Probe 1 (0 0 0.4)",
+                        "0.0 0.0 1.0",
+                        "0.1 0.2",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "expected 2"):
+                post.parse_probe_scalar_with_locations(
+                    post_dir, "deep", "alpha.water"
+                )
+
+    def test_sustained_state_does_not_bridge_output_gap(self) -> None:
+        time = np.array([0.00, 0.01, 0.02, 0.20, 0.21, 0.22])
+        active = np.ones(len(time), dtype=bool)
+
+        detected = post.first_sustained_time(
+            time,
+            active,
+            minimum_duration=0.05,
+            maximum_gap=0.025,
+        )
+
+        self.assertIsNone(detected)
+
+
 class LogParsingTests(unittest.TestCase):
     def test_strict_mesh_pass_reports_zero_concave_cells(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

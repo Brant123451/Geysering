@@ -180,8 +180,8 @@ def main():
                     "first_top_s": phase1.get("first_riser_top_s"),
                     "geyser_count": metrics.get("simulated_geyser_count"),
                     "air_arrival_s": metrics.get("simulated_air_pocket_arrival_s"),
-                    "gas_transfer_onset_s": metrics.get(
-                        "simulated_gas_transfer_onset_s"
+                    "gas_transfer_20pct_s": metrics.get(
+                        "simulated_gas_transfer_20pct_s"
                     ),
                     "mass_error": metrics.get("mass_conservation_relative_error"),
                     "gas_mass_error": metrics.get("gas_mass_conservation_relative_error"),
@@ -221,7 +221,7 @@ def main():
         "first_top_s",
         "geyser_count",
         "air_arrival_s",
-        "gas_transfer_onset_s",
+        "gas_transfer_20pct_s",
         "mass_error",
         "gas_mass_error",
     ]

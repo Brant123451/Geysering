@@ -58,15 +58,33 @@ def numeric_dirs(root: Path) -> list[Path]:
     return sorted(out, key=lambda path: float(path.name))
 
 
-def parse_probe_scalar(post: Path, name: str, field: str) -> tuple[np.ndarray, np.ndarray]:
+def parse_probe_scalar_with_locations(
+    post: Path, name: str, field: str
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Read a scalar probe history without silently remapping probe columns."""
     rows: dict[float, list[float]] = {}
+    locations: np.ndarray | None = None
+    probe_pattern = re.compile(
+        r"^#\s*Probe\s+(\d+)\s+\(\s*"
+        r"([-+0-9.eE]+)\s+([-+0-9.eE]+)\s+([-+0-9.eE]+)\s*\)"
+    )
     for directory in numeric_dirs(post / name):
         path = directory / field
         if not path.exists():
             continue
+        file_locations: dict[int, tuple[float, float, float]] = {}
+        file_rows: list[tuple[float, list[float]]] = []
         for line in path.read_text(errors="replace").splitlines():
             stripped = line.strip()
-            if not stripped or stripped.startswith("#"):
+            if not stripped:
+                continue
+            match = probe_pattern.match(stripped)
+            if match:
+                file_locations[int(match.group(1))] = tuple(
+                    float(match.group(index)) for index in range(2, 5)
+                )
+                continue
+            if stripped.startswith("#"):
                 continue
             values = stripped.replace("(", " ").replace(")", " ").split()
             try:
@@ -74,12 +92,49 @@ def parse_probe_scalar(post: Path, name: str, field: str) -> tuple[np.ndarray, n
                 row = [float(value) for value in values[1:]]
             except (ValueError, IndexError):
                 continue
+            file_rows.append((time, row))
+        if file_locations:
+            indices = sorted(file_locations)
+            if indices != list(range(len(indices))):
+                raise ValueError(f"{path}: non-contiguous probe indices {indices}")
+            current_locations = np.asarray(
+                [file_locations[index] for index in indices], dtype=float
+            )
+            if locations is None:
+                locations = current_locations
+            elif locations.shape != current_locations.shape or not np.allclose(
+                locations, current_locations, rtol=0.0, atol=1e-9
+            ):
+                raise ValueError(f"{path}: probe locations changed across restarts")
+        expected_width = len(locations) if locations is not None else None
+        for time, row in file_rows:
+            if expected_width is None:
+                expected_width = len(row)
+            if len(row) != expected_width:
+                raise ValueError(
+                    f"{path}: time {time:g} has {len(row)} values; "
+                    f"expected {expected_width}"
+                )
             rows[time] = row
     if not rows:
-        return np.empty(0), np.empty((0, 0))
+        return np.empty(0), np.empty((0, 0)), np.empty((0, 3))
     times = np.array(sorted(rows), dtype=float)
-    width = min(len(rows[time]) for time in times)
-    values = np.asarray([rows[time][:width] for time in times], dtype=float)
+    widths = {len(rows[time]) for time in times}
+    if len(widths) != 1:
+        raise ValueError(f"{post / name}: inconsistent scalar probe row widths")
+    values = np.asarray([rows[time] for time in times], dtype=float)
+    if locations is None:
+        locations = np.empty((0, 3))
+    elif len(locations) != values.shape[1]:
+        raise ValueError(
+            f"{post / name}: {len(locations)} probe locations but "
+            f"{values.shape[1]} data columns"
+        )
+    return times, values, locations
+
+
+def parse_probe_scalar(post: Path, name: str, field: str) -> tuple[np.ndarray, np.ndarray]:
+    times, values, _ = parse_probe_scalar_with_locations(post, name, field)
     return times, values
 
 
@@ -163,10 +218,20 @@ def local_peaks(times, values, start=0.0, end=6.5, separation=0.4):
     return sorted([(float(t[index]), float(y[index])) for index in chosen])
 
 
-def contiguous_events(times, active, minimum_duration=0.015):
+def contiguous_events(times, active, minimum_duration=0.015, maximum_gap=None):
     events = []
     start = None
     for index, flag in enumerate(active):
+        if (
+            start is not None
+            and maximum_gap is not None
+            and index > 0
+            and times[index] - times[index - 1] > maximum_gap
+        ):
+            stop = index - 1
+            if times[stop] - times[start] >= minimum_duration:
+                events.append((start, stop))
+            start = None
         if flag and start is None:
             start = index
         if start is not None and (not flag or index == len(active) - 1):
@@ -177,9 +242,14 @@ def contiguous_events(times, active, minimum_duration=0.015):
     return events
 
 
-def first_sustained_time(times, active, minimum_duration):
+def first_sustained_time(times, active, minimum_duration, maximum_gap=None):
     """Return the start of the first sustained true interval."""
-    events = contiguous_events(times, active, minimum_duration=minimum_duration)
+    events = contiguous_events(
+        times,
+        active,
+        minimum_duration=minimum_duration,
+        maximum_gap=maximum_gap,
+    )
     return float(times[events[0][0]]) if events else None
 
 
@@ -441,10 +511,14 @@ def main() -> None:
         ((t, *row) for t, row in zip(p_time, pressure)),
     )
 
-    alpha_time_solver, alpha_values = parse_probe_scalar(post, "riserCentreline", "alpha.water")
+    alpha_time_solver, alpha_values, riser_locations = parse_probe_scalar_with_locations(
+        post, "riserCentreline", "alpha.water"
+    )
     alpha_time = alpha_time_solver - offset
     if alpha_values.size:
-        z = np.linspace(0.46, 2.67, alpha_values.shape[1])
+        if not len(riser_locations):
+            raise ValueError("riserCentreline probe output has no coordinate header")
+        z = riser_locations[:, 2]
         h50, h10, integral = [], [], []
         for row in alpha_values:
             wet50 = z[row >= 0.50]
@@ -464,12 +538,14 @@ def main() -> None:
         zip(alpha_time, h50, h10, integral),
     )
 
-    deep_t_solver, deep_alpha = parse_probe_scalar(
+    deep_t_solver, deep_alpha, deep_locations = parse_probe_scalar_with_locations(
         post, "upstreamCrownDeep", "alpha.water"
     )
     deep_t = deep_t_solver - offset
     if deep_alpha.size:
-        deep_x = np.linspace(-5.75, -0.05, deep_alpha.shape[1])
+        if not len(deep_locations):
+            raise ValueError("upstreamCrownDeep probe output has no coordinate header")
+        deep_x = deep_locations[:, 0]
         component_diagnostics = [
             dominant_gas_component(deep_x, row) for row in deep_alpha
         ]
@@ -495,7 +571,10 @@ def main() -> None:
             & (deep_t >= 0.0)
         )
         arrival_time = first_sustained_time(
-            deep_t, connected_body_at_chamber, minimum_duration=0.05
+            deep_t,
+            connected_body_at_chamber,
+            minimum_duration=0.05,
+            maximum_gap=0.025,
         )
     else:
         main_body_front = np.empty(0)
@@ -512,8 +591,9 @@ def main() -> None:
         "the line is "
         f"{probe_depth if probe_depth is not None else 'unknown'} m below the "
         "upstream-pipe crown; the probe is 4 mm below the selected initial "
-        "thin-layer thickness, and connectivity separates the thick main "
-        "pocket from detached bubbles or local layer thickening"
+        "thin-layer thickness. This is a line-sampled morphology proxy, not "
+        "a three-dimensional component or source-identity tracker; a connected "
+        "deep gas finger can still trigger it"
     )
 
     uv_t_solver, upstream_water = first_column(post, "upstreamWaterVolume")
@@ -541,23 +621,31 @@ def main() -> None:
     )
     chamber_air = chamber_zone_volume - interp_series(cv_t, chamber_water, uv_t_solver)
 
-    gas_transfer_onset = None
+    gas_transfer_20pct = None
+    transfer_baseline_time = None
     gas_transfer_definition = (
         "first nonnegative paper time with at least 20% upstream gas-mass loss "
-        "and chamber gas-volume gain of at least max(1 L, 10% initial upstream volume)"
+        "and chamber gas-volume gain of at least max(1 L, 10% upstream volume), "
+        "both relative to the first inventory sample at or after paper t=0; "
+        "this is a substantial-transfer milestone, not gas-transfer onset or "
+        "coherent main-pocket arrival"
     )
     if len(uv_t) and len(upstream_air_mass):
-        initial_air = float(upstream_air_volume[0])
-        initial_air_mass = float(upstream_air_mass[0])
-        initial_chamber_air = float(chamber_air[0])
-        chamber_gain_threshold = max(0.001, 0.10 * max(initial_air, 0.0))
-        candidates = np.where(
-            (uv_t >= 0.0)
-            & (upstream_air_mass <= 0.80 * initial_air_mass)
-            & (chamber_air - initial_chamber_air >= chamber_gain_threshold)
-        )[0]
-        if len(candidates):
-            gas_transfer_onset = float(uv_t[candidates[0]])
+        baseline_candidates = np.where(uv_t >= -1e-9)[0]
+        if len(baseline_candidates):
+            baseline_index = int(baseline_candidates[0])
+            transfer_baseline_time = float(uv_t[baseline_index])
+            baseline_air = float(upstream_air_volume[baseline_index])
+            baseline_air_mass = float(upstream_air_mass[baseline_index])
+            baseline_chamber_air = float(chamber_air[baseline_index])
+            chamber_gain_threshold = max(0.001, 0.10 * max(baseline_air, 0.0))
+            candidates = np.where(
+                (np.arange(len(uv_t)) >= baseline_index)
+                & (upstream_air_mass <= 0.80 * baseline_air_mass)
+                & (chamber_air - baseline_chamber_air >= chamber_gain_threshold)
+            )[0]
+            if len(candidates):
+                gas_transfer_20pct = float(uv_t[candidates[0]])
     body_front_at_inventory_times = (
         interp_series(deep_t_solver, main_body_front, uv_t_solver)
         if len(deep_t_solver)
@@ -681,10 +769,22 @@ def main() -> None:
         total_residual = total_mass - total_mass[0] + cumulative_trapezoid(mass_t, total_flux)
         gas_residual = gas_mass - gas_mass[0] + cumulative_trapezoid(mass_t, gas_flux)
         mass_error = float(np.nanmax(np.abs(total_residual)) / max(abs(total_mass[0]), 1e-12))
-        gas_error = float(np.nanmax(np.abs(gas_residual)) / max(abs(gas_mass[0]), 1e-12))
+        gas_residual_abs_max = float(np.nanmax(np.abs(gas_residual)))
+        gas_error = float(gas_residual_abs_max / max(abs(gas_mass[0]), 1e-12))
+        pocket_mass_reference = (
+            float(upstream_air_mass[0]) if len(upstream_air_mass) else math.nan
+        )
+        gas_error_pocket_scale = (
+            float(gas_residual_abs_max / abs(pocket_mass_reference))
+            if np.isfinite(pocket_mass_reference)
+            and abs(pocket_mass_reference) > 1e-12
+            else None
+        )
     else:
         mass_error = None
         gas_error = None
+        gas_residual_abs_max = None
+        gas_error_pocket_scale = None
 
     sim_end = float(np.nanmax(p_time)) if len(p_time) else None
     p1m = t_p1m = None
@@ -781,10 +881,17 @@ def main() -> None:
         "experimental_geyser_count": PAPER["geyser_count"],
         "simulated_air_pocket_arrival_s": arrival_time,
         "air_pocket_arrival_definition": arrival_definition,
+        "air_pocket_arrival_proxy_plane_x_m": (
+            float(deep_x[-1]) if deep_alpha.size else None
+        ),
+        "air_pocket_arrival_proxy_offset_from_chamber_m": (
+            float(-deep_x[-1]) if deep_alpha.size else None
+        ),
         "main_body_probe_depth_below_crown_m": probe_depth,
         "minimum_main_body_component_span_m": minimum_body_span,
-        "simulated_gas_transfer_onset_s": gas_transfer_onset,
-        "gas_transfer_onset_definition": gas_transfer_definition,
+        "simulated_gas_transfer_20pct_s": gas_transfer_20pct,
+        "gas_transfer_20pct_definition": gas_transfer_definition,
+        "gas_transfer_baseline_paper_time_s": transfer_baseline_time,
         "experimental_air_pocket_arrival_s": PAPER["air_pocket_arrival_s"],
         "air_pocket_arrival_error_percent": relative_error(arrival_time, PAPER["air_pocket_arrival_s"]),
         "major_pressure_peak_error_percent": relative_error(p1m, PAPER["P1m_kPa"]),
@@ -799,6 +906,8 @@ def main() -> None:
         },
         "mass_conservation_relative_error": mass_error,
         "gas_mass_conservation_relative_error": gas_error,
+        "gas_mass_conservation_absolute_error_kg": gas_residual_abs_max,
+        "gas_mass_conservation_error_per_initial_pocket_mass": gas_error_pocket_scale,
         "gas_mass_method": (
             "alpha.air-weighted thermo:rho.air inventory; boundary gas flux is "
             "rhoPhi minus density-weighted conservative alphaPhi0.water"
@@ -806,6 +915,16 @@ def main() -> None:
         "pre_ramp_upstream_air_mass_change_relative": pre_ramp_air_mass_change,
         "initial_air_volume_m3": float(upstream_air_volume[0]) if len(upstream_air_volume) else None,
         "initial_air_mass_kg": float(upstream_air_mass[0]) if len(upstream_air_mass) else None,
+        "paper_time_zero_upstream_air_volume_m3": (
+            float(upstream_air_volume[np.where(uv_t >= -1e-9)[0][0]])
+            if len(uv_t) and len(np.where(uv_t >= -1e-9)[0])
+            else None
+        ),
+        "paper_time_zero_upstream_air_mass_kg": (
+            float(upstream_air_mass[np.where(uv_t >= -1e-9)[0][0]])
+            if len(uv_t) and len(np.where(uv_t >= -1e-9)[0])
+            else None
+        ),
         "end_upstream_air_volume_m3": (
             float(upstream_air_volume[-1]) if len(upstream_air_volume) else None
         ),
