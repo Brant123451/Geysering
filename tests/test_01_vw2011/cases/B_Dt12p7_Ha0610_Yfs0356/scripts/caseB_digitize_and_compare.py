@@ -29,10 +29,7 @@ SCANS = CASE_ROOT / "reference" / "paper_scans"
 OUTPUTS = CASE_ROOT / "outputs"
 sys.path.insert(0, str(MODEL))     # frozen per-case copies of the solver + digitizer
 
-from digitize_paper_curves import (load_gray, find_panels, draw_panel_debug,
-                                   label_boxes_in_panel, digitize_fig6, digitize_fig8)
 from vw2011_network_twofluid import G, NetworkCase, run_network
-from PIL import Image
 
 FIG6 = SCANS / "raw_p5_x101_2000x1457.png"   # pressure heads, Dt*=0.135
 FIG8 = SCANS / "raw_p7_x121_2145x1534.png"   # levels, Dt*=0.135
@@ -58,6 +55,8 @@ CASE = dict(
 
 
 def crop_panel(gray, box, dst: Path, margin: int = 70):
+    from PIL import Image
+
     x0, x1, y0, y1 = box
     H, W = gray.shape
     r0 = max(0, y0 - margin); r1 = min(H, y1 + margin)
@@ -69,6 +68,14 @@ def digitize():
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    from digitize_paper_curves import (
+        digitize_fig6,
+        digitize_fig8,
+        draw_panel_debug,
+        find_panels,
+        label_boxes_in_panel,
+        load_gray,
+    )
 
     # ---------------- Fig. 6 : pressure head (T* 0..5) ----------------
     g6 = load_gray(FIG6)
