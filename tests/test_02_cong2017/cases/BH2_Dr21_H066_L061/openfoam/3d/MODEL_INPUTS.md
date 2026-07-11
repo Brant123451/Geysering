@@ -47,12 +47,14 @@ equal the analytic values by adjusting geometry or phase fraction.
 
 ## Temporal controls
 
-The solver uses adaptive time stepping with `maxCo=0.5`,
-`maxAlphaCo=0.5`, `maxDeltaT=1e-3 s`, and one geometric-alpha subcycle.
-These are the standard conservative controls used by the OpenFOAM v2512
-`compressibleInterIsoFoam` 3-D depth-charge tutorial.  They are fixed for the
-closed hold and every event/sensitivity run and were not selected using the
-known B-H2 classification.
+The solver uses adaptive time stepping with `maxCo=0.35`,
+`maxAlphaCo=0.35`, `maxDeltaT=1e-3 s`, and one geometric-alpha subcycle.
+An initial closed-valve-only test of the OpenFOAM tutorial limits
+(`maxCo=maxAlphaCo=0.5`) destabilized the temperature equation at
+`t=1.636 s`; no open-valve result existed at that point.  The lower limits are
+therefore a static-stability choice.  They are fixed for the accepted closed
+hold and every event/sensitivity run and were not selected using the known
+B-H2 classification.
 
 ## Patch conditions
 
