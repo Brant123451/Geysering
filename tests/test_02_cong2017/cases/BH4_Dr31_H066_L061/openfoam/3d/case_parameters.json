@@ -64,9 +64,9 @@
     "representation": "cyclic porousBafflePressure face zone at x=5.98 m; passive Darcy pressure loss only",
     "baseline_opening_time_s": 0.2,
     "opening_law": "D=D_closed*(1-t/t_open)^4 for 0<=t<=t_open",
-    "closed_darcy_coefficient_per_m2": 1000000000000.0,
+    "closed_darcy_coefficient_per_m2": 100000000000.0,
     "baffle_length_m": 0.02,
-    "pressure_jump_relaxation": 0.2,
+    "pressure_jump_relaxation": 0.01,
     "sensitivity_opening_times_s": [0.1, 0.3]
   },
   "experiment": {

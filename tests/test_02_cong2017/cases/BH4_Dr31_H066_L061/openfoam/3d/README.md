@@ -65,7 +65,7 @@ poorly conditioned pressure cell.  For the baseline manual opening:
 
 ```text
 D(t) = D_closed (1 - t/t_open)^4,  0 <= t <= t_open
-D_closed = 1e12 1/m2
+D_closed = 1e11 1/m2
 L = 0.02 m
 t_open = 0.20 s
 ```

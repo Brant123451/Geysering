@@ -7,7 +7,7 @@ import argparse
 from pathlib import Path
 
 
-D_CLOSED = 1.0e12  # 1/m2; acceptance is set by the closed-valve leakage gate
+D_CLOSED = 1.0e11  # 1/m2; acceptance is set by the closed-valve leakage gate
 VALVE_LENGTH = 0.02  # m
 
 
@@ -88,7 +88,7 @@ baffles
                         I               0;
                         length          {VALVE_LENGTH:.9g};
                         uniformJump     true;
-                        relax           0.2;
+                        relax           0.01;
                         jump            uniform 0;
                         jump0           uniform 0;
                         value           uniform 101325;
