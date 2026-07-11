@@ -72,7 +72,7 @@ objectRefinements
     thinLayer00
     {
         type box;
-        cellSize 0.01;
+        cellSize 0.005;
         centre (-0.95 0 0.3855);
         lengthX 0.105;
         lengthY 0.090383672;
@@ -81,7 +81,7 @@ objectRefinements
     thinLayer01
     {
         type box;
-        cellSize 0.01;
+        cellSize 0.005;
         centre (-0.85 0 0.3845);
         lengthX 0.105;
         lengthY 0.090383672;
@@ -90,7 +90,7 @@ objectRefinements
     thinLayer02
     {
         type box;
-        cellSize 0.01;
+        cellSize 0.005;
         centre (-0.75 0 0.3835);
         lengthX 0.105;
         lengthY 0.090383672;
@@ -99,7 +99,7 @@ objectRefinements
     thinLayer03
     {
         type box;
-        cellSize 0.01;
+        cellSize 0.005;
         centre (-0.65 0 0.3825);
         lengthX 0.105;
         lengthY 0.090383672;
@@ -108,7 +108,7 @@ objectRefinements
     thinLayer04
     {
         type box;
-        cellSize 0.01;
+        cellSize 0.005;
         centre (-0.55 0 0.3815);
         lengthX 0.105;
         lengthY 0.090383672;
@@ -117,7 +117,7 @@ objectRefinements
     thinLayer05
     {
         type box;
-        cellSize 0.01;
+        cellSize 0.005;
         centre (-0.45 0 0.3805);
         lengthX 0.105;
         lengthY 0.090383672;
@@ -126,7 +126,7 @@ objectRefinements
     thinLayer06
     {
         type box;
-        cellSize 0.01;
+        cellSize 0.005;
         centre (-0.35 0 0.3795);
         lengthX 0.105;
         lengthY 0.090383672;
@@ -135,7 +135,7 @@ objectRefinements
     thinLayer07
     {
         type box;
-        cellSize 0.01;
+        cellSize 0.005;
         centre (-0.25 0 0.3785);
         lengthX 0.105;
         lengthY 0.090383672;
@@ -144,7 +144,7 @@ objectRefinements
     thinLayer08
     {
         type box;
-        cellSize 0.01;
+        cellSize 0.005;
         centre (-0.15 0 0.3775);
         lengthX 0.105;
         lengthY 0.090383672;
@@ -153,7 +153,7 @@ objectRefinements
     thinLayer09
     {
         type box;
-        cellSize 0.01;
+        cellSize 0.005;
         centre (-0.05 0 0.3765);
         lengthX 0.105;
         lengthY 0.090383672;
@@ -167,21 +167,6 @@ objectRefinements
         radius0 0.15;
         p1 (6.27 0 0.14);
         radius1 0.15;
-    }
-}
-
-anisotropicSources
-{
-    thinLayerVertical
-    {
-        type box;
-        centre (-0.5 0 0.381);
-        lengthX 1.01;
-        lengthY 0.095383672;
-        lengthZ 0.024;
-        scaleX 1;
-        scaleY 1;
-        scaleZ 0.25;
     }
 }
 
