@@ -1,0 +1,86 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setExprBoundaryFieldsDict;
+}
+
+initialPhaseBoundary
+{
+    field alpha.water;
+    phaseValue
+    {
+        target value;
+        expression
+        #{
+            (
+                pos().x() < 5.98
+             && pos().z() < 0.66
+              ? 1
+              : 0
+            )
+        #};
+    }
+    expressions
+    (
+        { $phaseValue; patch inlet; }
+        { $phaseValue; patch closedEnd; }
+        { $phaseValue; patch walls; }
+        { $phaseValue; patch riserWall; }
+        { $phaseValue; patch atmosphere; }
+    );
+}
+
+initialAbsolutePressureBoundary
+{
+    field p;
+    pressureValue
+    {
+        target value;
+        expression
+        #{
+            101325
+          + (
+                pos().x() < 5.98
+             && pos().z() < 0.66
+              ? 998*9.81*max(0.66-pos().z(), 0)
+              : 0
+            )
+        #};
+    }
+    expressions
+    (
+        { $pressureValue; patch inlet; }
+        { $pressureValue; patch closedEnd; }
+        { $pressureValue; patch walls; }
+        { $pressureValue; patch riserWall; }
+        { $pressureValue; patch atmosphere; }
+    );
+}
+
+initialReducedPressureBoundary
+{
+    field p_rgh;
+    reducedPressureValue
+    {
+        target value;
+        expression
+        #{
+            (
+                pos().x() < 5.98
+             && pos().z() < 0.66
+              ? 107786.6508
+              : 101325
+              + (101325/(287.05*296.15))*9.81*pos().z()
+            )
+        #};
+    }
+    expressions
+    (
+        { $reducedPressureValue; patch closedEnd; }
+        { $reducedPressureValue; patch walls; }
+        { $reducedPressureValue; patch riserWall; }
+        { $reducedPressureValue; patch atmosphere; }
+    );
+}

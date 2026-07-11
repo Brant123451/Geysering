@@ -53,7 +53,9 @@ After `setFields`, `setExprFields` imposes
 `p=101325+alpha.water*rhoWater*g*max(H0-z,0)` and then
 `p_rgh=p-rhoMix*(g dot x)`. This makes the absolute pressure used to
 initialize both equations of state consistent with the reduced hydrostatic
-pressure before the first PIMPLE iteration.
+pressure before the first PIMPLE iteration. `setExprBoundaryFields` applies
+the same phase, `p`, and `p_rgh` state to every wall face, including the
+water/air transitions along the riser wall and downstream pocket.
 
 Analytic pocket target: `1.1977322 L`; ideal-gas mass target at the stated
 pressure and temperature: `1.427602 g`.
