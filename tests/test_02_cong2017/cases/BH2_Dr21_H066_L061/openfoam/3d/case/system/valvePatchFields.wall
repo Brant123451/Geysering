@@ -38,3 +38,8 @@ alphat
     type    compressible::alphatWallFunction;
     value   uniform 1e-3;
 }
+nut
+{
+    type    nutkWallFunction;
+    value   uniform 0;
+}

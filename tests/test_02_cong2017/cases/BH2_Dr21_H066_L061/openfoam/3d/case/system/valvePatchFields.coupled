@@ -38,3 +38,8 @@ alphat
     type    cyclicACMI;
     value   uniform 1e-3;
 }
+nut
+{
+    type    cyclicACMI;
+    value   uniform 0;
+}
