@@ -9,10 +9,9 @@ FoamFile
 
 // setFields supplies phase topology and piecewise hydraulic estimates.
 // These expressions then ramp p_rgh to the tailwater boundary, enforce
-// p = p_rgh + rho*g.z, and replace the discontinuous gate-cylinder velocity
-// with an axisymmetric, constant-Q contraction over one downstream-pipe
-// diameter.  The correction changes no pocket coordinate, volume prior, gate
-// area, or paper-time forcing.
+// p = p_rgh + rho*g.z, and replace discontinuous chamber/gate velocity boxes
+// with smooth axisymmetric constant-Q streamtubes.  The correction changes no
+// pocket coordinate, volume prior, gate area, or paper-time forcing.
 readFields (alpha.water p_rgh U);
 
 expressions
@@ -46,6 +45,57 @@ expressions
           + (alpha.water*998.2
           + (1 - alpha.water)*1.24739885895)
            *((vector(0, 0, -9.81)) & pos())
+        #};
+    }
+
+    stopChamberBackground
+    {
+        field U;
+        dimensions [0 1 -1 0 0 0 0];
+        fieldMask
+        #{
+            (pos().x() >= 0)
+         && (pos().x() <= 0.3)
+        #};
+        expression "vector(0, 0, 0)";
+    }
+
+    chamberStreamtube
+    {
+        field U;
+        dimensions [0 1 -1 0 0 0 0];
+        variables
+        (
+            "x0 = 0"
+            "x1 = 0.3"
+            "length = x1 - x0"
+            "xi = min(max((pos().x() - x0)/length, 0), 1)"
+            "smooth = 3*sqr(xi) - 2*xi*sqr(xi)"
+            "radius0 = 0.1"
+            "radius1 = 0.14"
+            "radius = radius0 + (radius1 - radius0)*smooth"
+            "drdx = (radius1 - radius0)*6*xi*(1 - xi)/length"
+            "z0 = 0.28"
+            "z1 = 0.14"
+            "zaxis = z0 + (z1 - z0)*smooth"
+            "dzdx = (z1 - z0)*6*xi*(1 - xi)/length"
+            "speed = 0.025/(3.141592653589793*sqr(radius))"
+            "radial = sqrt(sqr(pos().y()) + sqr(pos().z() - zaxis))"
+        );
+        fieldMask
+        #{
+            (pos().x() >= x0)
+         && (pos().x() <= x1)
+         && (radial <= radius)
+        #};
+        expression
+        #{
+            vector
+            (
+                speed,
+                pos().y()*speed*drdx/radius,
+                speed*dzdx + (pos().z() - zaxis)*speed*drdx/radius
+            )
         #};
     }
 

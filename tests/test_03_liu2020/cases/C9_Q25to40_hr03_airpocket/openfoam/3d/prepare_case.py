@@ -108,14 +108,6 @@ def generate_set_fields(paper: dict, model: dict, pocket: dict) -> str:
     }}""",
         f"""    boxToCell
     {{
-        box (-0.01 -0.16 -0.01) (0.31 0.16 0.46);
-        fieldValues
-        (
-            volVectorFieldValue U (0.12 0 0)
-        );
-    }}""",
-        f"""    boxToCell
-    {{
         box (-1 -1 {free_z:.8g}) (1 1 2.80);
         fieldValues
         (
@@ -188,7 +180,12 @@ def generate_initial_field_correction(
 ) -> str:
     """Return hydrostatic pressure and divergence-free gate-start corrections."""
     q0 = paper["initial_flow_m3_s"]
+    upstream_radius = paper["upstream_diameter_m"] / 2.0
+    chamber_start = 0.0
+    chamber_end = paper["chamber_length_m"]
+    upstream_axis_z = paper["invert_drop_m"] + upstream_radius
     downstream_radius = paper["downstream_diameter_m"] / 2.0
+    downstream_axis_z = downstream_radius
     gate_radius = math.sqrt(model["tailgate_geometric_area_m2"] / math.pi)
     x_gate = paper["chamber_length_m"] + paper["downstream_length_m"]
     x_transition = x_gate - paper["downstream_diameter_m"]
@@ -221,10 +218,9 @@ def generate_initial_field_correction(
         + f"""
 // setFields supplies phase topology and piecewise hydraulic estimates.
 // These expressions then ramp p_rgh to the tailwater boundary, enforce
-// p = p_rgh + rho*g.z, and replace the discontinuous gate-cylinder velocity
-// with an axisymmetric, constant-Q contraction over one downstream-pipe
-// diameter.  The correction changes no pocket coordinate, volume prior, gate
-// area, or paper-time forcing.
+// p = p_rgh + rho*g.z, and replace discontinuous chamber/gate velocity boxes
+// with smooth axisymmetric constant-Q streamtubes.  The correction changes no
+// pocket coordinate, volume prior, gate area, or paper-time forcing.
 readFields (alpha.water p_rgh U);
 
 expressions
@@ -258,6 +254,57 @@ expressions
           + (alpha.water*{model['water_density_kg_m3']:.12g}
           + (1 - alpha.water)*{rho_air:.12g})
            *((vector(0, 0, -9.81)) & pos())
+        #}};
+    }}
+
+    stopChamberBackground
+    {{
+        field U;
+        dimensions [0 1 -1 0 0 0 0];
+        fieldMask
+        #{{
+            (pos().x() >= {chamber_start:.12g})
+         && (pos().x() <= {chamber_end:.12g})
+        #}};
+        expression "vector(0, 0, 0)";
+    }}
+
+    chamberStreamtube
+    {{
+        field U;
+        dimensions [0 1 -1 0 0 0 0];
+        variables
+        (
+            "x0 = {chamber_start:.12g}"
+            "x1 = {chamber_end:.12g}"
+            "length = x1 - x0"
+            "xi = min(max((pos().x() - x0)/length, 0), 1)"
+            "smooth = 3*sqr(xi) - 2*xi*sqr(xi)"
+            "radius0 = {upstream_radius:.12g}"
+            "radius1 = {downstream_radius:.12g}"
+            "radius = radius0 + (radius1 - radius0)*smooth"
+            "drdx = (radius1 - radius0)*6*xi*(1 - xi)/length"
+            "z0 = {upstream_axis_z:.12g}"
+            "z1 = {downstream_axis_z:.12g}"
+            "zaxis = z0 + (z1 - z0)*smooth"
+            "dzdx = (z1 - z0)*6*xi*(1 - xi)/length"
+            "speed = {q0:.12g}/(3.141592653589793*sqr(radius))"
+            "radial = sqrt(sqr(pos().y()) + sqr(pos().z() - zaxis))"
+        );
+        fieldMask
+        #{{
+            (pos().x() >= x0)
+         && (pos().x() <= x1)
+         && (radial <= radius)
+        #}};
+        expression
+        #{{
+            vector
+            (
+                speed,
+                pos().y()*speed*drdx/radius,
+                speed*dzdx + (pos().z() - zaxis)*speed*drdx/radius
+            )
         #}};
     }}
 
@@ -1695,9 +1742,9 @@ rm -f log.*
                 "smooth p_rgh ramp to the static tailwater boundary, then "
                 "p = p_rgh + rho_mixture*g.z"
             ),
-            "gate_velocity": (
-                "axisymmetric constant-Q smooth contraction over one "
-                "downstream-pipe diameter"
+            "velocity": (
+                "axisymmetric constant-Q streamtube through the chamber and "
+                "smooth contraction over one downstream-pipe diameter"
             ),
             "gate_contraction_length_m": paper["downstream_diameter_m"],
         },

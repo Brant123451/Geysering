@@ -32,7 +32,7 @@
   "water_bulk_modulus_Pa": 2200000000.0,
   "initial_field_correction": {
     "pressure": "smooth p_rgh ramp to the static tailwater boundary, then p = p_rgh + rho_mixture*g.z",
-    "gate_velocity": "axisymmetric constant-Q smooth contraction over one downstream-pipe diameter",
+    "velocity": "axisymmetric constant-Q streamtube through the chamber and smooth contraction over one downstream-pipe diameter",
     "gate_contraction_length_m": 0.28
   },
   "velocity_limit_m_s": null,
