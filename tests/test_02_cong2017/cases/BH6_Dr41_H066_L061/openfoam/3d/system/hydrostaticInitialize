@@ -163,6 +163,18 @@ hydrostaticInitialize
             dimAcceleration,
             vector(0.0, 0.0, gravityZ)
         );
+        const uniformDimensionedScalarField hRef
+        (
+            IOobject
+            (
+                "hRef",
+                mesh().time().constant(),
+                mesh(),
+                IOobject::READ_IF_PRESENT,
+                IOobject::NO_WRITE
+            ),
+            dimensionedScalar(word::null, dimLength, Zero)
+        );
         const volScalarField gh
         (
             IOobject
