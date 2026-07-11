@@ -4,6 +4,12 @@
   "source": "Cong, Chan & Lee (2017), JHE 143(9):04017039",
   "solver": "compressibleInterFoam",
   "openfoam_version": "v2512",
+  "thermodynamics": {
+    "air_equation_of_state": "perfectGas",
+    "water_equation_of_state": "rhoConst",
+    "water_density_kg_m3": 998.0,
+    "gas_compressibility_solved": true
+  },
   "coordinates": {
     "pipe_axis": "x",
     "vertical_axis": "z",

@@ -34,11 +34,12 @@ artificially lengthened riser.
 
 ## Solver and material model
 
-The solver is OpenFOAM v2512 `compressibleInterFoam`.  Air uses `perfectGas`;
-water uses `perfectFluid` with the physical water acoustic modulus at 23 degC.
-Surface tension is `0.072 N/m`.  This allows the entrapped gas to compress and
-expand without pressure, velocity, or eruption forcing.  No outcome-dependent
-source is present.
+The solver is OpenFOAM v2512 `compressibleInterFoam`.  Air uses `perfectGas`
+and therefore compresses and expands with its solved absolute pressure and
+temperature.  Water uses the paper's constant `998 kg/m3` density; water
+acoustic compressibility is not needed to represent the entrapped-gas spring.
+Surface tension is `0.072 N/m`.  There is no pressure, velocity, or eruption
+forcing and no outcome-dependent source.
 
 The passive valve model is the only momentum sink.  A `10 mm` cell zone at the
 measured valve plane represents a quarter-turn valve.  Its loss decreases

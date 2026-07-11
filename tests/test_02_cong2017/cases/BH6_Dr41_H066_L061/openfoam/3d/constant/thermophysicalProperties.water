@@ -15,7 +15,7 @@ thermoType
     mixture         pureMixture;
     transport       const;
     thermo          hConst;
-    equationOfState perfectFluid;
+    equationOfState rhoConst;
     specie          specie;
     energy          sensibleInternalEnergy;
 }
@@ -28,10 +28,8 @@ mixture
     }
     equationOfState
     {
-        // R*T ~= 2.20e6 m2/s2 at 296.15 K, giving c ~= 1483 m/s.
-        // rho0 is offset so rho(101325 Pa, 296.15 K) is 998 kg/m3.
-        R           7430;
-        rho0        997.954;
+        // The experiment reports 998 kg/m3. Gas remains fully compressible.
+        rho         998;
     }
     thermodynamics
     {

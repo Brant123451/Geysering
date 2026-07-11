@@ -123,8 +123,6 @@ functions
                 mesh().lookupObject<surfaceScalarField>("alphaPhi0.water");
 
             const scalar Rair = 8314.46261815324/28.965;
-            const scalar Rwater = 7430.0;
-            const scalar rho0water = 997.954;
             const vectorField& centres = mesh().C();
             const scalarField& volumes = mesh().V();
 
@@ -146,8 +144,7 @@ functions
                 const scalar temp = max(temperature[cellI], 200.0);
                 const scalar pAbs = max(pressure[cellI], 1.0);
                 const scalar rhoAir = pAbs/(Rair*temp);
-                const scalar rhoWater =
-                    rho0water + pAbs/(Rwater*temp);
+                const scalar rhoWater = 998.0;
                 const scalar cellVolume = volumes[cellI];
 
                 waterVolume += aw*cellVolume;
