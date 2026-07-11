@@ -1,0 +1,56 @@
+{
+  "PT1_peak_over_H0": 0.05790857856686358,
+  "Ta_gas_enters_riser_s": null,
+  "Yfs_max_m": 0.605,
+  "Yint_max_m": 0.0,
+  "atmosphere_water_outflow_peak_m3_s": 0.0,
+  "comparison_warning": "Fig.10(a) is the same nominal B-1 condition; PT1 exact axial offset was not reported, so the 3-D curve is labelled PT1_proxy.",
+  "conservation": {
+    "budget_definition": "final inventory + integrated outward boundary flux - initial inventory",
+    "gas_budget_error_kg": 3.878417897951181e-08,
+    "gas_budget_relative_error": 2.9715472127294515e-07,
+    "gas_flux_definition": "solver rhoPhi minus alphaPhi0.water times 998.2 kg/m3",
+    "water_budget_error_kg": 2.3350008174105596e-05,
+    "water_budget_relative_error": 1.9882276506499445e-06
+  },
+  "ejected_water_max_m3": 0.0,
+  "experimental_targets": {
+    "Ta_s": 8.07,
+    "classification": "GEYSER",
+    "vfs_m_per_s": 0.924,
+    "vint_m_per_s": 1.231
+  },
+  "initial_inventory": {
+    "analytic_pocket_air_mass_kg": 0.0014276016764529437,
+    "analytic_pocket_volume_m3": 0.0011977321991811086,
+    "pocket_volume_relative_error": -0.0057141230617227135,
+    "total_domain_gas_mass_kg": 0.130518468,
+    "total_gas_volume_m3": 0.109518615,
+    "tunnel_pocket_volume_m3": 0.00119088821,
+    "water_volume_m3": 0.0117652917
+  },
+  "mode": "smoke",
+  "observed_3d_geyser": false,
+  "pocket_peak_over_H0": 0.05797526642386935,
+  "reached_time_s": 0.05,
+  "rim_water_flow_peak_m3_s": 0.0,
+  "run": "base-open-smoke",
+  "smoke": {
+    "pass": true
+  },
+  "solver": "compressibleInterFoam",
+  "t_free_surface_at_rim_s": null,
+  "temperature_validity": {
+    "acceptance_bounds_K": [
+      200.0,
+      600.0
+    ],
+    "clipping_applied": false,
+    "maximum_K": 303.874708,
+    "minimum_K": 284.072111,
+    "pass": true
+  },
+  "valve_duration_s": 0.0,
+  "vfs_fit_m_per_s": null,
+  "vint_fit_m_per_s": null
+}
