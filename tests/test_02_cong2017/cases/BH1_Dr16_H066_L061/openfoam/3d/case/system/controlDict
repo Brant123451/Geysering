@@ -68,6 +68,7 @@ functions
         regionType      all;
         fields          (alpha.water);
         operation       volIntegrate;
+        writeFields     false;
         writeControl    adjustableRunTime;
         writeInterval   0.01;
     }
@@ -79,6 +80,7 @@ functions
         regionType      all;
         fields          (alpha.air);
         operation       volIntegrate;
+        writeFields     false;
         writeControl    adjustableRunTime;
         writeInterval   0.01;
     }
@@ -91,6 +93,7 @@ functions
         fields          (alpha.water);
         operation       weightedVolIntegrate;
         weightField     "thermo:rho.water";
+        writeFields     false;
         writeControl    adjustableRunTime;
         writeInterval   0.01;
     }
@@ -103,6 +106,7 @@ functions
         fields          (alpha.air);
         operation       weightedVolIntegrate;
         weightField     "thermo:rho.air";
+        writeFields     false;
         writeControl    adjustableRunTime;
         writeInterval   0.01;
     }
@@ -115,6 +119,7 @@ functions
         name            tunnelZone;
         fields          (alpha.air);
         operation       volIntegrate;
+        writeFields     false;
         writeControl    adjustableRunTime;
         writeInterval   0.01;
     }
@@ -128,6 +133,7 @@ functions
         fields          (p T);
         operation       weightedVolAverage;
         weightField     alpha.air;
+        writeFields     false;
         writeControl    adjustableRunTime;
         writeInterval   0.002;
     }
@@ -140,6 +146,7 @@ functions
         name            physicalRiserZone;
         fields          (alpha.water);
         operation       volIntegrate;
+        writeFields     false;
         writeControl    adjustableRunTime;
         writeInterval   0.01;
     }
@@ -152,6 +159,7 @@ functions
         name            exteriorZone;
         fields          (alpha.water);
         operation       volIntegrate;
+        writeFields     false;
         writeControl    adjustableRunTime;
         writeInterval   0.01;
     }
@@ -175,6 +183,7 @@ functions
         name            atmosphere;
         fields          (phi alphaPhi0.water airPhi rhoPhi);
         operation       sum;
+        writeFields     false;
         writeControl    adjustableRunTime;
         writeInterval   0.01;
     }
@@ -187,6 +196,7 @@ functions
         name            inlet;
         fields          (phi alphaPhi0.water airPhi rhoPhi);
         operation       sum;
+        writeFields     false;
         writeControl    adjustableRunTime;
         writeInterval   0.01;
     }
@@ -201,6 +211,7 @@ functions
         // Face-zone flipMap supplies a common upward orientation for oriented
         // surface fields; "sum" is the valid v2512 scalar-flux operation.
         operation       sum;
+        writeFields     false;
         writeControl    adjustableRunTime;
         writeInterval   0.01;
     }
