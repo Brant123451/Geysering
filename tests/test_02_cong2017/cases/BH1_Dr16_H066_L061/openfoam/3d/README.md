@@ -40,6 +40,9 @@ rim; it is not a confined `3.0 m` riser.
 - Pocket and riser/exterior air start at `101325 Pa` absolute and `296.15 K`.
 - Water starts at `296.15 K`, `rho0=998.2 kg/m3`, with physical bulk modulus
   `2.2 GPa`; air uses `perfectGas`.
+- The energy equation is active and `fieldMinMax` records temperature
+  extrema. A non-positive temperature invalidates the run; temperature is not
+  clipped to conceal a failed thermo inversion.
 - Hydrostatic water has `p_rgh=107543.13717 Pa` for the chosen coordinate
   origin. `setFieldsDict` assigns atmospheric `p/p_rgh` to the pocket and
   headspace.
@@ -73,8 +76,9 @@ described as a measured `90 deg` contact angle.
    `A/A0=sin(pi*t/(2*tau))^2`; the loss is `K=(A0/A)^2-1`.
    This is a monotone uncertainty envelope, not a measured ball-angle law.
 
-The baffle is a passive loss, not a pressure or velocity source. No result is
-tuned to the known `GEYSER` classification.
+The baffle is a passive loss, not a pressure or velocity source. No pressure,
+velocity, or thermal forcing is used. No result is tuned to the known
+`GEYSER` classification.
 
 ## Meshes and execution
 

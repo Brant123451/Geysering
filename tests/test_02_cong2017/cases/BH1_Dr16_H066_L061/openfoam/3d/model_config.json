@@ -46,6 +46,8 @@
   "materials": {
     "water_reference_density_kg_per_m3": 998.2,
     "water_bulk_modulus_Pa": 2200000000.0,
+    "water_perfectFluid_R_J_per_kg_K": 7442.063619292711,
+    "water_perfectFluid_rho0_kg_per_m3": 998.154026084091,
     "water_dynamic_viscosity_Pa_s": 0.001003,
     "air_equation_of_state": "perfectGas",
     "air_molar_mass_kg_per_kmol": 28.965,
@@ -98,7 +100,8 @@
     "simulation_type": "laminar",
     "end_time_s": 13.0,
     "max_Courant": 0.2,
-    "max_alpha_Courant": 0.15
+    "max_alpha_Courant": 0.15,
+    "temperature_acceptance": "minimum temperature must remain positive; no clipping"
   },
   "experimental_targets_not_used_as_forcing": {
     "classification": "GEYSER",

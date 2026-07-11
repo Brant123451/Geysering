@@ -25,9 +25,10 @@ mixture
     }
     equationOfState
     {
-        // R is K/rho0 and gives c=sqrt(R) ~= 1483 m/s for water.
-        R           2.2e6;
-        rho0        998.2;
+        // perfectFluid uses rho=rho0+p/(R*T).  These values give
+        // rho(101325 Pa,296.15 K)=998.2 kg/m3 and K=rho*R*T=2.2 GPa.
+        R           7442.063619292711;
+        rho0        998.154026084091;
     }
     thermodynamics
     {

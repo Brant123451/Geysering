@@ -116,7 +116,11 @@ measurements exist:
 6. **Thermal state:** initialize water and air at the measured laboratory
    temperature `296.15 K` (`23 degC`). Air uses an ideal-gas equation of state
    at `101325 Pa`; water uses the measured `998 kg/m3` density and physical
-   bulk compressibility.
+   bulk compressibility; the OpenFOAM `perfectFluid` coefficients are computed
+   from its `rho=rho0+p/(R*T)` equation at `296.15 K`, not by inserting the
+   bulk-modulus ratio directly as `R`. The energy equation remains active and
+   temperature extrema are recorded; a non-positive temperature invalidates a
+   run rather than being hidden by clipping.
 
 With these declarations, all model-affecting paper conflicts are either
 resolved by primary evidence or isolated as named numerical sensitivities.
