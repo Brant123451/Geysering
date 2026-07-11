@@ -244,7 +244,7 @@ functions
         type            surfaceFieldValue;
         libs            (fieldFunctionObjects);
         regionType      patch;
-        name            valveCoupleUpstream;
+        name            valveWallUpstream;
         operation       areaAverage;
         fields          (p);
         writeFields     false;
@@ -257,7 +257,7 @@ functions
         type            surfaceFieldValue;
         libs            (fieldFunctionObjects);
         regionType      patch;
-        name            valveCoupleDownstream;
+        name            valveWallDownstream;
         operation       areaAverage;
         fields          (p);
         writeFields     false;

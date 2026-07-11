@@ -85,9 +85,26 @@ def interp_column(table: np.ndarray | None, times: np.ndarray, column: int) -> n
     return np.interp(times, table[:, 0], table[:, column])
 
 
-def first_finite_time(times: np.ndarray, values: np.ndarray) -> float | None:
-    valid = np.flatnonzero(np.isfinite(values))
-    return None if not valid.size else float(times[valid[0]])
+def first_threshold_time(
+    times: np.ndarray, values: np.ndarray, threshold: float
+) -> float | None:
+    for index, value in enumerate(values):
+        if not np.isfinite(value) or value < threshold:
+            continue
+        if (
+            index > 0
+            and np.isfinite(values[index - 1])
+            and values[index - 1] < threshold
+        ):
+            fraction = (threshold - values[index - 1]) / max(
+                value - values[index - 1], 1.0e-14
+            )
+            return float(
+                times[index - 1]
+                + fraction * (times[index] - times[index - 1])
+            )
+        return float(times[index])
+    return None
 
 
 def crossing_time(
@@ -123,11 +140,12 @@ def interface_levels(
     return yfs, yint
 
 
-def fit_velocity(
+def max_climb_rate(
     times: np.ndarray,
     values: np.ndarray,
     start: float | None,
     stop: float | None,
+    window: float = 0.6,
 ) -> float | None:
     if start is None:
         return None
@@ -137,9 +155,29 @@ def fit_velocity(
         & (times <= upper)
         & np.isfinite(values)
     )
-    if np.count_nonzero(mask) < 4:
+    sample_time = times[mask]
+    sample_value = values[mask]
+    if len(sample_time) < 4:
         return None
-    return float(np.polyfit(times[mask], values[mask], 1)[0])
+    best = None
+    start_index = 0
+    for end_index in range(len(sample_time)):
+        while (
+            sample_time[end_index] - sample_time[start_index] > window
+        ):
+            start_index += 1
+        if (
+            end_index - start_index >= 2
+            and sample_time[end_index] > sample_time[start_index]
+        ):
+            slope = (
+                sample_value[end_index] - sample_value[start_index]
+            ) / (
+                sample_time[end_index] - sample_time[start_index]
+            )
+            if best is None or slope > best:
+                best = slope
+    return None if best is None else float(best)
 
 
 def cumulative_trapezoid(times: np.ndarray, values: np.ndarray) -> np.ndarray:
@@ -184,7 +222,8 @@ def main() -> None:
     probe_z = RISER_Z[:probe_count]
     yfs_z, yint_z = interface_levels(alpha, probe_z)
 
-    ta = first_finite_time(time, yint_z)
+    yint_above_crown = yint_z - PIPE_CROWN_Z
+    ta = first_threshold_time(time, yint_above_crown, 0.02)
     t_break = None
     if ta is not None:
         after = np.flatnonzero(
@@ -197,8 +236,20 @@ def main() -> None:
             t_break = float(time[after[0]])
     t_rim = crossing_time(time, yfs_z, RISER_RIM_Z - 0.01)
     fit_stop = t_rim if t_rim is not None else t_break
-    vfs = fit_velocity(time, yfs_z, ta, fit_stop)
-    vint = fit_velocity(time, yint_z, ta, fit_stop)
+    if fit_stop is None and ta is not None:
+        post_arrival = np.flatnonzero(
+            (time >= ta) & np.isfinite(yint_z)
+        )
+        if post_arrival.size:
+            fit_stop = float(
+                time[
+                    post_arrival[
+                        int(np.argmax(yint_z[post_arrival]))
+                    ]
+                ]
+            )
+    vfs = max_climb_rate(time, yfs_z, ta, fit_stop)
+    vint = max_climb_rate(time, yint_z, ta, fit_stop)
 
     def optional_table(function_name: str, filename: str) -> np.ndarray | None:
         files = data_files(case_dir, function_name, filename)
@@ -231,6 +282,15 @@ def main() -> None:
     atmosphere_gas_flux_table = optional_table(
         "atmosphereGasMassFlux", "surfaceFieldValue.dat"
     )
+    valve_flux_table = optional_table(
+        "valveVolumeFlux", "surfaceFieldValue.dat"
+    )
+    valve_upstream_pressure_table = optional_table(
+        "valveUpstreamPressure", "surfaceFieldValue.dat"
+    )
+    valve_downstream_pressure_table = optional_table(
+        "valveDownstreamPressure", "surfaceFieldValue.dat"
+    )
 
     pocket_pressure = interp_column(pocket_pressure_table, time, 1)
     pt2_pressure = interp_column(pt2_pressure_table, time, 1)
@@ -251,6 +311,13 @@ def main() -> None:
     atmosphere_gas_flux = interp_column(
         atmosphere_gas_flux_table, time, 1
     )
+    valve_flux = interp_column(valve_flux_table, time, 1)
+    valve_upstream_pressure = interp_column(
+        valve_upstream_pressure_table, time, 1
+    )
+    valve_downstream_pressure = interp_column(
+        valve_downstream_pressure_table, time, 1
+    )
 
     water_net_out = cumulative_trapezoid(
         time, np.nan_to_num(atmosphere_water_flux + reservoir_water_flux)
@@ -263,9 +330,12 @@ def main() -> None:
     )
     water_balance = water_volume - water_volume[0] + water_net_out
     gas_balance = gas_mass - gas_mass[0] + gas_net_out
+    valve_pressure_drop = (
+        valve_upstream_pressure - valve_downstream_pressure
+    )
+    valve_pressure_flow_power = valve_pressure_drop * valve_flux
 
     yfs_above_crown = yfs_z - PIPE_CROWN_Z
-    yint_above_crown = yint_z - PIPE_CROWN_Z
     max_yfs = float(np.nanmax(yfs_z))
     geyser = bool(max_yfs >= RISER_RIM_Z - 0.01)
     pocket_head = (pocket_pressure - PATM) / (RHO_WATER * GRAVITY)
@@ -314,6 +384,15 @@ def main() -> None:
             float(np.nanmax(pocket_head))
         ),
         "pt2_pressure_peak_gauge_head_m": safe_float(float(np.nanmax(pt2_head))),
+        "valve_volume_flux_peak_abs_m3_s": safe_float(
+            float(np.nanmax(np.abs(valve_flux)))
+        ),
+        "valve_pressure_drop_peak_abs_Pa": safe_float(
+            float(np.nanmax(np.abs(valve_pressure_drop)))
+        ),
+        "valve_pressure_flow_power_min_W": safe_float(
+            float(np.nanmin(valve_pressure_flow_power))
+        ),
         "pocket_volume_min_m3": safe_float(float(np.nanmin(pocket_volume))),
         "pocket_volume_initial_m3": safe_float(float(pocket_volume[0])),
         "pocket_volume_final_m3": safe_float(float(pocket_volume[-1])),
@@ -345,7 +424,9 @@ def main() -> None:
         "notes": [
             "PT1 is a gas-volume-weighted pocket pressure proxy because the paper does not report its exact x.",
             "Yfs and Yint use alpha.water=0.5 on the three-dimensional riser centreline.",
+            "Ta is the first Yint crossing 0.02 m above the pipe crown; vfs and vint are maximum sustained 0.6 s climb rates, matching the existing 1D reduction.",
             "Gas balance includes the atmosphere gas-mass flux; water balance includes reservoir and atmosphere volume fluxes.",
+            "Valve pressure is sampled on the complementary wall faces, not on the blended cyclicACMI values.",
         ],
     }
 
@@ -356,6 +437,9 @@ def main() -> None:
         "Yint_m_above_crown",
         "pocket_gauge_head_m",
         "pt2_gauge_head_m",
+        "valve_volume_flux_m3_s",
+        "valve_pressure_drop_Pa",
+        "valve_pressure_flow_power_W",
         "pocket_gas_volume_m3",
         "pocket_gas_mass_kg",
         "external_water_volume_m3",
@@ -376,6 +460,9 @@ def main() -> None:
                     f"{yint_above_crown[index]:.8g}",
                     f"{pocket_head[index]:.8g}",
                     f"{pt2_head[index]:.8g}",
+                    f"{valve_flux[index]:.8g}",
+                    f"{valve_pressure_drop[index]:.8g}",
+                    f"{valve_pressure_flow_power[index]:.8g}",
                     f"{pocket_volume[index]:.8g}",
                     f"{pocket_mass[index]:.8g}",
                     f"{external_water[index]:.8g}",
