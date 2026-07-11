@@ -80,6 +80,16 @@
       "pipe_size_m": 0.003125,
       "riser_size_m": 0.00078125,
       "plume_size_m": 0.00625
+    },
+    "quality_acceptance": {
+      "standard_checkMesh_must_pass": true,
+      "extended_check_is_always_recorded": true,
+      "max_concave_cell_fraction": 0.01,
+      "max_low_determinant_cells": 10,
+      "min_cell_determinant": 0.0004,
+      "max_non_orthogonality_deg": 70.0,
+      "max_skewness": 4.0,
+      "negative_volume_cells_allowed": 0
     }
   },
   "solver": {

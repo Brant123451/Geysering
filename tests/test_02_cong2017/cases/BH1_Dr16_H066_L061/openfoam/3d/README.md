@@ -85,6 +85,15 @@ The declared nominal sizes are:
 | base | `6.25 mm` | `1.5625 mm` | `12.5 mm` plume |
 | refined | `3.125 mm` | `0.78125 mm` | `6.25 mm` plume |
 
+Every mesh runs both standard `checkMesh` and
+`checkMesh -allGeometry -allTopology`. Standard checks must report `Mesh OK`.
+The extended report is retained even when it flags the small population of
+non-convex polyhedra created at body-fitted local-refinement transitions.
+Acceptance additionally limits those cells to `1%`, low-determinant cells to
+10, the minimum determinant to `4e-4`, non-orthogonality to `70 deg`, and
+skewness to 4; any negative-volume cell is fatal. These are explicit mesh
+diagnostics, not silently converted into a strict-check pass.
+
 Each run is created under ignored `runs/`; source templates remain clean.
 OpenFOAM v2512, Gmsh, NumPy, and Matplotlib are required.
 
