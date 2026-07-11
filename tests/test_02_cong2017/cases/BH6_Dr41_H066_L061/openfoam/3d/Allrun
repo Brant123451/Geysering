@@ -19,6 +19,7 @@ END_TIME=13.0
 OPENING_START=0.0
 OPENING_DURATION=0.20
 WRITE_INTERVAL=0.10
+VALVE_STAGES=20
 
 case "$PROFILE" in
     static)
@@ -60,6 +61,7 @@ END_TIME="${BH6_END_TIME:-$END_TIME}"
 OPENING_START="${BH6_OPENING_START:-$OPENING_START}"
 OPENING_DURATION="${BH6_OPENING_DURATION:-$OPENING_DURATION}"
 WRITE_INTERVAL="${BH6_WRITE_INTERVAL:-$WRITE_INTERVAL}"
+VALVE_STAGES="${BH6_VALVE_STAGES:-$VALVE_STAGES}"
 RESULTS_DIR="${BH6_RESULTS_DIR:-$PWD/results/$PROFILE}"
 REFERENCE_CASE_ROOT="${BH6_REFERENCE_CASE_ROOT:-$(cd ../.. && pwd)}"
 
@@ -93,28 +95,80 @@ foamDictionary system/controlDict \
     -entry endTime -set "$END_TIME" >/dev/null
 foamDictionary system/controlDict \
     -entry writeInterval -set "$WRITE_INTERVAL" >/dev/null
-foamDictionary constant/fvOptions \
-    -entry valveResistance.vectorCodedSourceCoeffs.openingStart \
-    -set "$OPENING_START" >/dev/null
-foamDictionary constant/fvOptions \
-    -entry valveResistance.vectorCodedSourceCoeffs.openingDuration \
-    -set "$OPENING_DURATION" >/dev/null
 
 DECOMP_DICT="system/decomposeParDict.runtime"
 cp system/decomposeParDict "$DECOMP_DICT"
 foamDictionary "$DECOMP_DICT" \
     -entry numberOfSubdomains -set "$NP" >/dev/null
 
-if (( NP == 1 )); then
-    compressibleInterFoam > log.compressibleInterFoam 2>&1
-else
+if (( NP != 1 )); then
     decomposePar -decomposeParDict "$DECOMP_DICT" > log.decomposePar 2>&1
-    OMPI_ALLOW_RUN_AS_ROOT=1 \
-    OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
-    mpirun --oversubscribe -np "$NP" \
-        compressibleInterFoam -parallel \
-        > log.compressibleInterFoam 2>&1
 fi
+
+OPENING_WRITE_INTERVAL="$(
+    python3 -c \
+        'import sys; print(min(float(sys.argv[1]), float(sys.argv[2]) / int(sys.argv[3])))' \
+        "$WRITE_INTERVAL" "$OPENING_DURATION" "$VALVE_STAGES"
+)"
+SCHEDULE_FILE="valve_schedule.runtime.tsv"
+python3 valve_schedule.py \
+    --opening-start "$OPENING_START" \
+    --opening-duration "$OPENING_DURATION" \
+    --end-time "$END_TIME" \
+    --stages "$VALVE_STAGES" \
+    > "$SCHEDULE_FILE"
+
+set_valve_resistance()
+{
+    local darcy="$1"
+    local forchheimer="$2"
+    foamDictionary constant/fvOptions \
+        -entry valveResistance.explicitPorositySourceCoeffs.DarcyForchheimerCoeffs.d \
+        -set "d [0 -2 0 0 0 0 0] ($darcy -1000 -1000)" >/dev/null
+    foamDictionary constant/fvOptions \
+        -entry valveResistance.explicitPorositySourceCoeffs.DarcyForchheimerCoeffs.f \
+        -set "f [0 -1 0 0 0 0 0] ($forchheimer $forchheimer $forchheimer)" \
+        >/dev/null
+}
+
+run_solver_segment()
+{
+    local segment_end="$1"
+    local darcy="$2"
+    local forchheimer="$3"
+    local area_fraction="$4"
+    local phase="$5"
+    local segment_write_interval="$WRITE_INTERVAL"
+    if [[ "$phase" == "opening" ]]; then
+        segment_write_interval="$OPENING_WRITE_INTERVAL"
+    fi
+
+    foamDictionary system/controlDict \
+        -entry endTime -set "$segment_end" >/dev/null
+    foamDictionary system/controlDict \
+        -entry writeInterval -set "$segment_write_interval" >/dev/null
+    set_valve_resistance "$darcy" "$forchheimer"
+    printf 'BH6_VALVE_STAGE end=%s area=%s d=%s f=%s phase=%s\n' \
+        "$segment_end" "$area_fraction" "$darcy" "$forchheimer" "$phase" \
+        >> log.compressibleInterFoam
+
+    if (( NP == 1 )); then
+        compressibleInterFoam >> log.compressibleInterFoam 2>&1
+    else
+        OMPI_ALLOW_RUN_AS_ROOT=1 \
+        OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
+        mpirun --oversubscribe -np "$NP" \
+            compressibleInterFoam -parallel \
+            >> log.compressibleInterFoam 2>&1
+    fi
+}
+
+: > log.compressibleInterFoam
+while IFS=$'\t' read -r segment_end darcy forchheimer area_fraction phase
+do
+    run_solver_segment \
+        "$segment_end" "$darcy" "$forchheimer" "$area_fraction" "$phase"
+done < "$SCHEDULE_FILE"
 
 python3 postprocess.py \
     --case "$PWD" \

@@ -46,7 +46,9 @@ measured valve plane represents a quarter-turn valve.  A Darcy sealing term
 prevents numerical leakage while the smoothstep area fraction is below `0.02`;
 it then vanishes.  During opening, the contraction loss follows
 `K=((1-A)/A)^2`, with `A` bounded only while the valve is nominally closed.
-Both terms are zero after opening.  The same law is used for the `0.10 s` and
+The OpenFOAM-native Darcy--Forchheimer option is updated at 20 equal opening
+stages, restarting from the immediately preceding field state; both terms are
+zero after opening.  The same staging and law are used for the `0.10 s` and
 `0.40 s` sensitivity runs; no coefficient is fitted to B-H6 observations.
 
 ## Initial and boundary conditions

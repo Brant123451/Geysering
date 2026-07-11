@@ -11,136 +11,29 @@ FoamFile
 
 valveResistance
 {
-    type            vectorCodedSource;
+    type            explicitPorositySource;
     active          true;
-    // v2512 reads the redirect name from the outer option dictionary.
-    name            timeVaryingBallValve;
 
-    vectorCodedSourceCoeffs
+    explicitPorositySourceCoeffs
     {
         selectionMode       cellZone;
         cellZone            valveZone;
-        fields              (U);
-        name                timeVaryingBallValve;
+        type                DarcyForchheimer;
 
-        openingStart           0.0;
-        openingDuration        0.20;
-        linearLossRate         500.0;
-        minimumAreaFraction    0.01;
-        sealDarcyCoefficient   1e15;
-        sealReleaseFraction    0.02;
-        valveZoneLength        0.01;
+        DarcyForchheimerCoeffs
+        {
+            // Allrun replaces d and f between opening-stage restarts.
+            // Negative transverse entries are multipliers of the axial value.
+            d d [0 -2 0 0 0 0 0] (1e12 -1000 -1000);
+            f f [0 -1 0 0 0 0 0] (0 0 0);
 
-        codeInclude
-        #{
-            #include "fvCFD.H"
-        #};
-
-        codeCorrect
-        #{
-        #};
-
-        codeAddSup
-        #{
-            // compressibleInterFoam calls the rho-aware overload below.
-        #};
-
-        codeAddSupRho
-        #{
-            const scalar now = mesh().time().value();
-            const scalar start =
-                coeffs().getOrDefault<scalar>("openingStart", 0.0);
-            const scalar duration = max
-            (
-                coeffs().getOrDefault<scalar>("openingDuration", 0.20),
-                SMALL
-            );
-            const scalar linearLossRate =
-                coeffs().getOrDefault<scalar>("linearLossRate", 500.0);
-            const scalar minArea = max
-            (
-                coeffs().getOrDefault<scalar>
-                (
-                    "minimumAreaFraction",
-                    0.01
-                ),
-                SMALL
-            );
-            const scalar sealDarcy = max
-            (
-                coeffs().getOrDefault<scalar>
-                (
-                    "sealDarcyCoefficient",
-                    1e15
-                ),
-                0.0
-            );
-            const scalar sealRelease = max
-            (
-                coeffs().getOrDefault<scalar>
-                (
-                    "sealReleaseFraction",
-                    0.02
-                ),
-                SMALL
-            );
-            const scalar valveLength = max
-            (
-                coeffs().getOrDefault<scalar>("valveZoneLength", 0.01),
-                SMALL
-            );
-
-            scalar openFraction = 0.0;
-            if (now >= start + duration)
+            coordinateSystem
             {
-                openFraction = 1.0;
+                origin  (0 0 0);
+                e1      (1 0 0);
+                e2      (0 1 0);
             }
-            else if (now > start)
-            {
-                const scalar s = (now - start)/duration;
-                openFraction = s*s*(3.0 - 2.0*s);
-            }
-
-            scalar lossCoefficient = 0.0;
-            if (openFraction < 1.0 - SMALL)
-            {
-                const scalar effectiveArea = max(openFraction, minArea);
-                lossCoefficient =
-                    sqr((1.0 - openFraction)/effectiveArea);
-            }
-            const scalar sealWeight =
-                max(1.0 - openFraction/sealRelease, 0.0);
-
-            scalarField& diagonal = eqn.diag();
-            const scalarField& volume = mesh().V();
-            const scalarField& density = rho.primitiveField();
-            const vectorField& velocity = eqn.psi().primitiveField();
-            const volScalarField& alpha =
-                mesh().lookupObject<volScalarField>("alpha.water");
-            forAll(cells_, selectedI)
-            {
-                const label cellI = cells_[selectedI];
-                const scalar waterFraction =
-                    min(max(alpha[cellI], 0.0), 1.0);
-                const scalar dynamicViscosity =
-                    waterFraction*9.32e-4
-                  + (1.0 - waterFraction)*1.846e-5;
-                const scalar axialSpeed = mag(velocity[cellI].x());
-                const scalar resistance =
-                    dynamicViscosity*sealDarcy*sqr(sealWeight)
-                  + density[cellI]*lossCoefficient
-                   *(
-                        linearLossRate
-                      + 0.5*axialSpeed/valveLength
-                    );
-                diagonal[cellI] +=
-                    resistance*volume[cellI];
-            }
-        #};
-
-        codeConstrain
-        #{
-        #};
+        }
     }
 }
 

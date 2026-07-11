@@ -57,6 +57,7 @@ def source_ignore(_directory: str, names: list[str]) -> set[str]:
         "geometry_audit.runtime.json",
         "checkMesh.runtime.json",
         "initial_audit.runtime.json",
+        "valve_schedule.runtime.tsv",
     }
     ignored.update(name for name in names if name.startswith("processor"))
     ignored.update(name for name in names if name.startswith("log."))
