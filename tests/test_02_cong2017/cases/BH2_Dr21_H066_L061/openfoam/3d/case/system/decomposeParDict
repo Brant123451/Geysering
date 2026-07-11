@@ -7,3 +7,13 @@ FoamFile
 
 numberOfSubdomains 4;
 method              scotch;
+
+constraints
+{
+    valveOnOneProcessor
+    {
+        type        singleProcessorFaceSets;
+        sets        ((valvePatchFaces -1));
+        enabled     true;
+    }
+}

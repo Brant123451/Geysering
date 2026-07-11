@@ -1,0 +1,17 @@
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      topoSetDict;
+}
+
+actions
+(
+    {
+        name    valvePatchFaces;
+        type    faceSet;
+        action  new;
+        source  patchToFace;
+        patch   "valve.*";
+    }
+);

@@ -70,6 +70,8 @@ PY
         createBaffles \
             -dict "system/createBafflesDict.${VALVE}" \
             -overwrite > log.createBaffles 2>&1
+        topoSet -dict system/topoSetValvePatchesDict \
+            > log.topoSetValvePatches 2>&1
         checkMesh -allGeometry -allTopology > log.checkMesh 2>&1
     )
 
