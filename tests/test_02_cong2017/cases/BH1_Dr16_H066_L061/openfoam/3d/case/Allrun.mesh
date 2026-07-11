@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MODEL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+CASE_ROOT="$(cd "$MODEL_DIR/../.." && pwd)"
+RUNS_DIR="$MODEL_DIR/runs"
+OUTPUT_DIR="$CASE_ROOT/outputs/openfoam3d"
+
+MESH_LEVEL="${BH1_MESH_LEVEL:-base}"
+VALVE_STATE="${BH1_VALVE_STATE:-open}"
+RUN_NAME="${BH1_RUN_NAME:-${MESH_LEVEL}-${VALVE_STATE}}"
+REBUILD="${BH1_REBUILD:-0}"
+RUN_DIR="$RUNS_DIR/$RUN_NAME"
+
+case "$MESH_LEVEL" in
+    base)
+        PIPE_SIZE=0.00625
+        RISER_SIZE=0.00200
+        PLUME_SIZE=0.02000
+        ;;
+    refined)
+        PIPE_SIZE=0.00450
+        RISER_SIZE=0.00140
+        PLUME_SIZE=0.01400
+        ;;
+    *)
+        echo "BH1_MESH_LEVEL must be base or refined" >&2
+        exit 2
+        ;;
+esac
+
+if [[ "$VALVE_STATE" != "open" && "$VALVE_STATE" != "closed" ]]; then
+    echo "BH1_VALVE_STATE must be open or closed" >&2
+    exit 2
+fi
+if [[ ! -f /usr/lib/openfoam/openfoam2512/etc/bashrc ]]; then
+    echo "OpenFOAM v2512 is required at /usr/lib/openfoam/openfoam2512" >&2
+    exit 3
+fi
+
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+mkdir -p "$RUNS_DIR" "$OUTPUT_DIR"
+if [[ -e "$RUN_DIR" ]]; then
+    if [[ "$REBUILD" != "1" ]]; then
+        echo "$RUN_DIR already exists; set BH1_REBUILD=1 to replace it" >&2
+        exit 4
+    fi
+    rm -rf -- "$RUN_DIR"
+fi
+cp -a "$SCRIPT_DIR" "$RUN_DIR"
+cd "$RUN_DIR"
+
+python3 "$MODEL_DIR/make_mesh.py" \
+    --output bh1_3d.msh \
+    --metadata "$OUTPUT_DIR/mesh-${RUN_NAME}.json" \
+    --pipe-size "$PIPE_SIZE" \
+    --riser-size "$RISER_SIZE" \
+    --plume-size "$PLUME_SIZE" \
+    --valve-state "$VALVE_STATE" \
+    > log.gmsh 2>&1
+
+gmshToFoam bh1_3d.msh > log.gmshToFoam 2>&1
+createPatch -overwrite > log.createPatch 2>&1
+topoSet > log.topoSet 2>&1
+checkMesh -allGeometry -allTopology > log.checkMesh 2>&1
+
+python3 "$MODEL_DIR/audit_mesh.py" \
+    --run-dir "$RUN_DIR" \
+    --geometry "$OUTPUT_DIR/mesh-${RUN_NAME}.json" \
+    --output "$OUTPUT_DIR/checkMesh-${RUN_NAME}.json"
+
+echo "BH1_MESH_READY=$RUN_DIR"

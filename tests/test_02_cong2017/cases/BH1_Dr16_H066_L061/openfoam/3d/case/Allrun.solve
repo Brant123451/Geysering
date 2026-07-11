@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MODEL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+CASE_ROOT="$(cd "$MODEL_DIR/../.." && pwd)"
+OUTPUT_DIR="$CASE_ROOT/outputs/openfoam3d"
+
+RUN_NAME="${BH1_RUN_NAME:-base-open}"
+RUN_DIR="$MODEL_DIR/runs/$RUN_NAME"
+MODE="${BH1_MODE:-full}"
+VALVE_DURATION="${BH1_VALVE_DURATION:-0}"
+NP="${OPENFOAM_NP:-$(nproc)}"
+
+case "$MODE" in
+    static)
+        END_TIME="${BH1_END_TIME:-0.50}"
+        WRITE_INTERVAL=0.01
+        ;;
+    smoke)
+        END_TIME="${BH1_END_TIME:-0.05}"
+        WRITE_INTERVAL=0.01
+        ;;
+    full)
+        END_TIME="${BH1_END_TIME:-13.0}"
+        WRITE_INTERVAL=0.10
+        ;;
+    *)
+        echo "BH1_MODE must be static, smoke, or full" >&2
+        exit 2
+        ;;
+esac
+
+if [[ ! -f /usr/lib/openfoam/openfoam2512/etc/bashrc ]]; then
+    echo "OpenFOAM v2512 is required at /usr/lib/openfoam/openfoam2512" >&2
+    exit 3
+fi
+if [[ ! -d "$RUN_DIR/constant/polyMesh" ]]; then
+    echo "Missing mesh in $RUN_DIR; run Allrun.mesh first" >&2
+    exit 4
+fi
+if [[ -d "$RUN_DIR/0" || -d "$RUN_DIR/processor0" ]]; then
+    echo "$RUN_DIR already has solution state; rebuild the run directory" >&2
+    exit 5
+fi
+if (( NP > 8 )); then
+    NP=8
+elif (( NP < 1 )); then
+    NP=1
+fi
+
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+mkdir -p "$OUTPUT_DIR"
+cd "$RUN_DIR"
+
+cp -a 0.orig 0
+python3 "$MODEL_DIR/generate_probes.py" \
+    --output system/riserProbeLocations.runtime
+setFields > log.setFields 2>&1
+
+if [[ "$VALVE_DURATION" != "0" && "$VALVE_DURATION" != "0.0" ]]; then
+    if [[ "$MODE" == "static" ]]; then
+        echo "The static check uses the solid closed-valve mesh, not a baffle" >&2
+        exit 6
+    fi
+    python3 "$MODEL_DIR/configure_valve.py" \
+        --duration "$VALVE_DURATION" \
+        --output system/createBafflesDict.runtime
+    createBaffles \
+        -dict system/createBafflesDict.runtime \
+        -overwrite > log.createBaffles 2>&1
+    checkMesh -allGeometry -allTopology > log.checkMesh.afterBaffle 2>&1
+fi
+
+foamDictionary system/controlDict -entry endTime -set "$END_TIME" >/dev/null
+foamDictionary system/controlDict -entry writeInterval -set "$WRITE_INTERVAL" >/dev/null
+
+cp system/decomposeParDict system/decomposeParDict.runtime
+foamDictionary system/decomposeParDict.runtime \
+    -entry numberOfSubdomains -set "$NP" >/dev/null
+decomposePar -decomposeParDict system/decomposeParDict.runtime \
+    > log.decomposePar 2>&1
+
+OMPI_ALLOW_RUN_AS_ROOT=1 \
+OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
+mpirun -np "$NP" compressibleInterFoam -parallel \
+    > log.compressibleInterFoam 2>&1
+
+python3 "$MODEL_DIR/postprocess_openfoam.py" \
+    --run-dir "$RUN_DIR" \
+    --mode "$MODE" \
+    --valve-duration "$VALVE_DURATION" \
+    --output-dir "$OUTPUT_DIR" \
+    --experimental-levels "$CASE_ROOT/data/digitized/fig9a_levels.csv" \
+    --experimental-pressure "$CASE_ROOT/data/digitized/fig10a_pt1.csv" \
+    --one-d "$CASE_ROOT/outputs/caseA_model_series.csv"
+
+echo "BH1_${MODE^^}_DONE=$RUN_DIR"

@@ -1,11 +1,11 @@
 # Cong, Chan & Lee (2017) Test 2 / Series B paper audit
 
-Audit decision: **STOP — MODEL WORK BLOCKED**
+Audit decision: **PASS FOR B-H1 — DECLARED NUMERICAL CLOSURES REQUIRED**
 
-No production mesh, solver dictionary, or simulation has been created. The
-model-defining items in [Blocking unresolved items](#blocking-unresolved-items)
-must be resolved by the Case owner; choosing values would change the simulated
-run or add geometry that the papers do not specify.
+The Case owner subsequently assigned Run B-H1 with `Dr=0.016 m`,
+`H0=0.66 m`, and `L0=0.61 m`. The paper-defined geometry is now fixed. Items
+that the papers do not measure are closed below as explicit, non-fitted
+numerical treatments; none may be described as an experimental input.
 
 ## Sources and coordinate convention
 
@@ -44,7 +44,7 @@ invert. Thus the pipe crown/soffit is at `z = D = 0.050 m`.
 | Upstream head for the high-speed Series-B set | PDF p.3, Table 2, rows B-H1 through B-H7; p.12 notation says Series-B `H0` is measured from tunnel invert | `H0 = 0.66 m` above pipe invert for all B-H1…B-H7. Values `0.77/0.88 m` belong to other Series-B runs, not this fixed high-speed set. | RESOLVED |
 | Initial riser water level | PDF p.3: pressurized-pipe Series B has the initial riser water depth at the same level; p.12 defines `H0` | Free surface initially at `z = H0 = 0.66 m`. `L0=0.61 m` is the horizontal air-pocket length, not a riser water level. | RESOLVED |
 | Experimental valve opening time | PDF p.3, Experimental Procedure: manual operation “takes approximately `0.2 s`” | Experimental baseline duration is approximately `0.2 s`. The companion CFD paper says `0.5 s` and used instantaneous opening; that discrepancy belongs in the requested sensitivity study, not in the baseline geometry. | RESOLVED for duration; opening law unresolved below |
-| Pressure taps | PDF p.4, Measurements; Fig. 1: PT1 at pipe crown near the capped end, PT2 at pipe invert directly beneath the riser | PT2/Point B: `x=3.47 m`, invert. PT1/Point A: crown/soffit near the downstream end. The exact axial offset of PT1 from the cap is not reported. | UNRESOLVED (PT1 exact `x`) |
+| Pressure taps | PDF p.4, Measurements; Fig. 1: PT1 at pipe crown near the capped end, PT2 at pipe invert directly beneath the riser | PT2/Point B: `x=3.47 m`, invert. PT1/Point A: crown/soffit near the downstream end. Because the exact PT1 offset is not reported, 3-D output must label a reproducible end-pocket proxy and a pocket-volume average rather than claim the experimental coordinate. | RESOLVED as a bounded measurement operator |
 
 ## Conflict adjudication
 
@@ -73,42 +73,51 @@ The primary paper defines
   pressure `101325 Pa`, and `R_air=287.05 J/(kg K)`,
   `m_air = 0.00142760 kg = 1.42760 g`.
 
-This is only the isolated pocket check. A complete initial water/gas inventory
-cannot be performed until the selected riser diameter and required exterior
-air-domain geometry are known.
+The isolated pocket values are the mandatory pre-mesh targets. The exact
+mesh-integrated water and gas inventories must be generated and checked after
+field initialization because the conformal circular T-junction has a Boolean
+overlap volume.
 
-## Blocking unresolved items
+## B-H1 assignment and numerical closures
 
-1. **Owned Case / riser diameter is not identified.** Table 2 contains seven
-   high-speed runs, B-H1…B-H7, with
-   `Dr = 16, 21, 26, 31, 36, 41, 46 mm`; their measured outcome changes from
-   geyser to no-geyser. The task says to modify one assigned Case and also
-   refers to five Cases, but supplies no Case ID or `Dr`. Selecting one would
-   select the expected physical branch and violate the no-tuning requirement.
-2. **The required exterior air domain is undefined.** The primary experiment
-   is open to the laboratory above the physical `1.8 m` rim. The companion
-   model instead uses a confined `3.0 m` riser with a pressure outlet at its
-   top. Neither paper specifies the width, height, lateral boundaries, or
-   initial inventory of an exterior air volume of the kind required here.
-   Treating the extra `1.2 m` as open air would be a new geometry, not the
-   published companion model.
-3. **PT1 has no exact axial coordinate.** The paper gives only “at the pipe
-   crown near the pipe end” / Point A at the downstream soffit. An exact
-   pressure-wave comparison cannot silently substitute the repository’s
-   `x=5.85 m`.
-4. **The ball-valve opening law is not measured.** The primary paper reports
-   only an approximately `0.2 s` manual duration. It gives no angle-time,
-   effective-area-time, or loss-coefficient-time curve. A linear area ramp,
-   moving solid ball, porous baffle, or instantaneous topology change are
-   materially different model assumptions.
-5. **Wall contact angle is not reported.** The apparatus is acrylic
-   (PDF p.2), but neither the primary nor companion paper gives static,
-   advancing, or receding water-air contact angles. This affects the
-   millimetric wall film, especially in the narrow risers, and the task
-   explicitly requires a documented contact angle.
+These treatments close the audit gate without pretending that unpublished
+measurements exist:
 
-Because these items affect geometry, initial inventory, pressure validation,
-and the only parameter that distinguishes the Series-B Cases, the audit gate
-fails. Per the task instruction, work stops here without guessing, meshing, or
-solving.
+1. **Owned Case:** `tests/test_02_cong2017/cases/BH1_Dr16_H066_L061`,
+   Run B-H1, `Dr=0.016 m` (`Dr/D=0.32`). The experimental targets are
+   `Ta=8.07 s`, `vfs=0.924 m/s`, `vint=1.231 m/s`, and `GEYSER`. The
+   classification is validation data, never an initial or source term.
+2. **Exterior atmosphere:** retain the physical riser rim at `1.80 m` above
+   the pipe crown. Above it, use an explicitly numerical
+   `0.30 m x 0.30 m` exterior-air box extending `1.20 m`, so its top is
+   `3.00 m` above the crown. The box sides and top are atmospheric; its floor
+   outside the circular riser mouth is a wall. This separates the experimental
+   `1.8 m` riser from the companion paper's `3.0 m` *confined* riser and lets
+   expelled water remain in the domain. The lateral clearance is `>9 Dr` from
+   the riser axis; boundary flux and pressure must be checked before accepting
+   an event result.
+3. **Pressure operator:** PT2 is sampled just inside the fluid at the invert
+   below `x=3.47 m`. PT1 is reported as `PT1_proxy`, sampled one pipe radius
+   upstream of the cap and `1 mm` below the crown, plus an independent
+   end-pocket gas-pressure volume average. The repository's unsupported
+   `x=5.85 m` is not used for the 3-D probe.
+4. **Valve:** the companion CFD baseline is an instantaneous fully open
+   internal connection at `t=0`; a separate closed-disk mesh is used only for
+   the static-hold check. Opening-time sensitivity uses the same monotone,
+   non-fitted normalized effective-area law for `0.2 s` and `0.5 s`. It is
+   labelled an equivalent-valve uncertainty study, not a measured ball-angle
+   history. No pressure or velocity source may be used.
+5. **Wall wetting:** no contact angle is reported. The baseline therefore
+   imposes no fitted contact-angle model (`alpha.water` uses `zeroGradient` on
+   smooth no-slip acrylic walls). This is recorded as “contact angle not
+   prescribed”, not as a measured `90 deg` angle.
+6. **Thermal state:** initialize water and air at the measured laboratory
+   temperature `296.15 K` (`23 degC`). Air uses an ideal-gas equation of state
+   at `101325 Pa`; water uses the measured `998 kg/m3` density and physical
+   bulk compressibility.
+
+With these declarations, all model-affecting paper conflicts are either
+resolved by primary evidence or isolated as named numerical sensitivities.
+Production setup may proceed, but validation claims remain conditional on the
+mesh, domain-boundary, conservation, and valve-sensitivity checks.
 

@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "case": "BH1_Dr16_H066_L061",
+  "run": "B-H1",
+  "coordinate_system": {
+    "x": "horizontal pipe axis, upstream to capped end",
+    "y": "vertical, upward",
+    "z": "horizontal transverse",
+    "main_axis_y_m": 0.0,
+    "pipe_invert_y_m": -0.025,
+    "pipe_crown_y_m": 0.025
+  },
+  "geometry": {
+    "pipe_length_m": 6.6,
+    "pipe_inner_diameter_m": 0.05,
+    "tee_axis_x_m": 3.47,
+    "valve_x_m": 5.99,
+    "closed_cap_x_m": 6.6,
+    "initial_pocket_interval_x_m": [
+      5.99,
+      6.6
+    ],
+    "riser_inner_diameter_m": 0.016,
+    "riser_height_above_pipe_crown_m": 1.8,
+    "riser_rim_y_m": 1.825,
+    "external_atmosphere_width_m": 0.3,
+    "external_atmosphere_height_m": 1.2,
+    "external_atmosphere_top_y_m": 3.025
+  },
+  "initial_state": {
+    "velocity_m_per_s": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "H0_above_pipe_invert_m": 0.66,
+    "free_surface_y_m": 0.635,
+    "free_surface_height_above_crown_m": 0.61,
+    "pocket_length_m": 0.61,
+    "pocket_pressure_absolute_Pa": 101325.0,
+    "atmosphere_pressure_absolute_Pa": 101325.0,
+    "temperature_K": 296.15,
+    "analytic_pocket_volume_m3": 0.0011977322,
+    "analytic_pocket_air_mass_kg": 0.0014276
+  },
+  "materials": {
+    "water_reference_density_kg_per_m3": 998.2,
+    "water_bulk_modulus_Pa": 2200000000.0,
+    "water_dynamic_viscosity_Pa_s": 0.001003,
+    "air_equation_of_state": "perfectGas",
+    "air_molar_mass_kg_per_kmol": 28.965,
+    "air_dynamic_viscosity_Pa_s": 1.81e-05,
+    "surface_tension_N_per_m": 0.072,
+    "gravity_m_per_s2": 9.81
+  },
+  "boundaries": {
+    "inlet": "pressure-driven constant reservoir head H0=0.66 m",
+    "atmosphere": "101325 Pa on exterior-box sides and top",
+    "walls": "smooth no-slip acrylic; alpha.water zeroGradient",
+    "cap": "part of walls, closed",
+    "contact_angle": "not prescribed; no fitted value is available"
+  },
+  "valve": {
+    "baseline": "instantaneously fully open at t=0, matching Chan et al. (2018)",
+    "static_hold": "separate 1 mm solid disk at x=5.99 m",
+    "sensitivity_durations_s": [
+      0.2,
+      0.5
+    ],
+    "sensitivity_area_law": "A/A0=sin(pi*t/(2*tau))^2 for 0<t<tau",
+    "sensitivity_note": "equivalent porous-baffle uncertainty model, not a measured ball-angle law"
+  },
+  "meshes": {
+    "base": {
+      "pipe_size_m": 0.00625,
+      "riser_size_m": 0.002,
+      "plume_size_m": 0.02
+    },
+    "refined": {
+      "pipe_size_m": 0.0045,
+      "riser_size_m": 0.0014,
+      "plume_size_m": 0.014
+    }
+  },
+  "solver": {
+    "openfoam_release": "OpenCFD v2512",
+    "application": "compressibleInterFoam",
+    "simulation_type": "laminar",
+    "end_time_s": 13.0,
+    "max_Courant": 0.2,
+    "max_alpha_Courant": 0.15
+  },
+  "experimental_targets_not_used_as_forcing": {
+    "classification": "GEYSER",
+    "Ta_s": 8.07,
+    "vfs_m_per_s": 0.924,
+    "vint_m_per_s": 1.231,
+    "levels_csv": "../../data/digitized/fig9a_levels.csv",
+    "pressure_csv": "../../data/digitized/fig10a_pt1.csv"
+  }
+}

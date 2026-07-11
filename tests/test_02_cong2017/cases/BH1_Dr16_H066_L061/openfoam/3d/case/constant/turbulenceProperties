@@ -1,0 +1,10 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      turbulenceProperties;
+}
+
+// Neither paper reports turbulence inlet data or a calibrated closure.
+simulationType  laminar;
