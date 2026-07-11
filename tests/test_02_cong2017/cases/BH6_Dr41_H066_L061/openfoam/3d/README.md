@@ -43,15 +43,14 @@ acoustic compressibility is not needed to represent the entrapped-gas spring.
 Surface tension is `0.072 N/m`.  There is no pressure, velocity, or eruption
 forcing and no outcome-dependent source.
 
-The passive valve model is the only pressure loss.  A zero-thickness cyclic
-baffle at the measured valve plane uses OpenFOAM's
-`porousBafflePressure` condition over a nominal `10 mm` valve length.  A Darcy
-sealing term prevents numerical leakage while the smoothstep area fraction is
-below `0.02`; it then vanishes.  During opening, the contraction loss follows
-`K=((1-A)/A)^2`, with `A` bounded only while the valve is nominally closed.
-Forty tabulated samples are linearly interpolated in simulation time, and both
-terms are zero after opening.  The same law is used for the `0.10 s` and
-`0.40 s` sensitivity runs; no coefficient is fitted to B-H6 observations.
+The passive valve is a zero-thickness `cyclicACMI` baffle at the measured
+valve plane.  Its coupled area follows the smoothstep opening fraction; the
+non-overlap area is a no-slip wall.  Thus it is exactly impermeable at zero
+opening and exactly transparent when fully open, without an ill-conditioned
+penalty coefficient or a prescribed pressure/velocity.  Forty tabulated
+samples are linearly interpolated in simulation time.  The same law is used
+for the `0.10 s` and `0.40 s` sensitivity runs; no coefficient is fitted to
+B-H6 observations.
 
 ## Initial and boundary conditions
 

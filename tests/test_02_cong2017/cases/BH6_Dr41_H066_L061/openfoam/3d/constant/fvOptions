@@ -1,4 +1,4 @@
-/* No volumetric source: the valve is a porous cyclic baffle. */
+/* No volumetric source: the valve is a variable-area cyclicACMI baffle. */
 FoamFile
 {
     version     2.0;

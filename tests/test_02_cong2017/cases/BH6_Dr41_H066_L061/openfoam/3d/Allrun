@@ -91,8 +91,7 @@ python3 valve_schedule.py \
     --opening-duration "$OPENING_DURATION" \
     --end-time "$END_TIME" \
     --samples "$VALVE_SAMPLES" \
-    --darcy-table constant/valveDarcyTable \
-    --inertial-table constant/valveInertialTable \
+    --area-table constant/valveAreaTable \
     --audit-json valve_schedule.runtime.json \
     > log.valveSchedule 2>&1
 createBaffles -overwrite > log.createBaffles 2>&1

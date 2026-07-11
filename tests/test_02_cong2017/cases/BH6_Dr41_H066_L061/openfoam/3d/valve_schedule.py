@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Write time-dependent porous-baffle coefficients for the B-H6 valve."""
+"""Write the time-dependent cyclic-ACMI area fraction for the B-H6 valve."""
 
 from __future__ import annotations
 
@@ -8,20 +8,13 @@ import json
 from pathlib import Path
 
 
-CLOSED_DARCY_M2 = 1.0e12
-MINIMUM_AREA_FRACTION = 0.01
-SEAL_RELEASE_FRACTION = 0.02
-VALVE_ZONE_LENGTH_M = 0.01
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--opening-start", type=float, required=True)
     parser.add_argument("--opening-duration", type=float, required=True)
     parser.add_argument("--end-time", type=float, required=True)
     parser.add_argument("--samples", type=int, default=40)
-    parser.add_argument("--darcy-table", type=Path, required=True)
-    parser.add_argument("--inertial-table", type=Path, required=True)
+    parser.add_argument("--area-table", type=Path, required=True)
     parser.add_argument("--audit-json", type=Path)
     return parser.parse_args()
 
@@ -33,17 +26,6 @@ def area_fraction(time_s: float, start_s: float, duration_s: float) -> float:
         return 1.0
     normalized = (time_s - start_s) / duration_s
     return normalized * normalized * (3.0 - 2.0 * normalized)
-
-
-def resistance(area: float) -> tuple[float, float]:
-    seal_weight = max(1.0 - area / SEAL_RELEASE_FRACTION, 0.0)
-    darcy = CLOSED_DARCY_M2 * seal_weight * seal_weight
-    if area >= 1.0:
-        return darcy, 0.0
-    effective_area = max(area, MINIMUM_AREA_FRACTION)
-    loss_coefficient = ((1.0 - area) / effective_area) ** 2
-    forchheimer = loss_coefficient / VALVE_ZONE_LENGTH_M
-    return darcy, forchheimer
 
 
 def write_table(path: Path, rows: list[tuple[float, float]]) -> None:
@@ -89,31 +71,21 @@ def main() -> None:
             args.opening_start,
             args.opening_duration,
         )
-        darcy, inertial = resistance(area)
         audit_rows.append(
             {
                 "time_s": time_s,
                 "area_fraction": area,
-                "darcy_m-2": darcy,
-                "inertial_m-1": inertial,
             }
         )
 
     write_table(
-        args.darcy_table,
-        [(row["time_s"], row["darcy_m-2"]) for row in audit_rows],
-    )
-    write_table(
-        args.inertial_table,
-        [(row["time_s"], row["inertial_m-1"]) for row in audit_rows],
+        args.area_table,
+        [(row["time_s"], row["area_fraction"]) for row in audit_rows],
     )
     audit = {
         "opening_start_s": args.opening_start,
         "opening_duration_s": args.opening_duration,
         "samples": args.samples,
-        "minimum_area_fraction": MINIMUM_AREA_FRACTION,
-        "seal_release_fraction": SEAL_RELEASE_FRACTION,
-        "valve_zone_length_m": VALVE_ZONE_LENGTH_M,
         "rows": audit_rows,
     }
     if args.audit_json:

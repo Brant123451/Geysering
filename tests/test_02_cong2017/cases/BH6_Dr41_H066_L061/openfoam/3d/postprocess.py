@@ -506,7 +506,7 @@ def main() -> None:
         "valve": {
             "opening_start_s": args.opening_start,
             "opening_duration_s": args.opening_duration,
-            "representation": "porous cyclic baffle",
+            "representation": "variable-area cyclicACMI baffle",
             "table_samples": 40,
             "passive_loss_only": True,
         },

@@ -1,5 +1,5 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-| OpenFOAM v2512: zero-thickness time-varying B-H6 valve             |
+| OpenFOAM v2512: variable-area zero-thickness B-H6 valve             |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
@@ -25,46 +25,67 @@ baffles
             master
             {
                 name            valve_half0;
-                type            cyclic;
+                type            cyclicACMI;
                 neighbourPatch  valve_half1;
-
-                patchFields
+                nonOverlapPatch valve_wall0;
+                scale
                 {
-                    p_rgh
-                    {
-                        type            porousBafflePressure;
-                        patchType       cyclic;
-                        D               tableFile;
-                        DCoeffs
-                        {
-                            file                "$FOAM_CASE/constant/valveDarcyTable";
-                            outOfBounds         clamp;
-                            interpolationScheme linear;
-                        }
-                        I               tableFile;
-                        ICoeffs
-                        {
-                            file                "$FOAM_CASE/constant/valveInertialTable";
-                            outOfBounds         clamp;
-                            interpolationScheme linear;
-                        }
-                        length          0.01;
-                        uniformJump     true;
-                        jump            uniform 0;
-                        value           uniform 101325;
-                    }
+                    type            table;
+                    values
+                    #include "$FOAM_CASE/constant/valveAreaTable"
+                    ;
                 }
             }
 
             slave
             {
                 name            valve_half1;
-                type            cyclic;
+                type            cyclicACMI;
                 neighbourPatch  valve_half0;
+                nonOverlapPatch valve_wall1;
+            }
 
+            master2
+            {
+                name            valve_wall0;
+                type            wall;
                 patchFields
                 {
-                    ${../../master/patchFields}
+                    U
+                    {
+                        type            noSlip;
+                    }
+                    p
+                    {
+                        type            calculated;
+                        value           uniform 101325;
+                    }
+                    p_rgh
+                    {
+                        type            fixedFluxPressure;
+                        value           uniform 101325;
+                    }
+                    alpha.water
+                    {
+                        type            constantAlphaContactAngle;
+                        theta0          90;
+                        limit           gradient;
+                        value           uniform 0;
+                    }
+                    T
+                    {
+                        type            zeroGradient;
+                    }
+                }
+            }
+
+            slave2
+            {
+                name            valve_wall1;
+                type            wall;
+                patchFields
+                {
+                    ${../../master2/patchFields}
                 }
             }
         }
