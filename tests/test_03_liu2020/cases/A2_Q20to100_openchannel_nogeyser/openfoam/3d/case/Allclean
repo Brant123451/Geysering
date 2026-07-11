@@ -9,4 +9,6 @@ if [[ -x "$OF_LAUNCH" ]]; then
 fi
 rm -rf -- -8 0 processor* postProcessing constant/polyMesh
 rm -f log.* mesh.profile system/riserProbeLocations
+rm -f constant/triSurface/geometry.stl
+rm -rf ../__pycache__ ../../../model/__pycache__
 echo "CLEAN_DONE"

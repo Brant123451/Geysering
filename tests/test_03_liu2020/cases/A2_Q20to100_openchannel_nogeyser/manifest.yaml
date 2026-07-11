@@ -7,7 +7,9 @@
   "self_contained": true,
   "entrypoints": [
     "scripts/caseA_digitize_and_compare.py",
+    "openfoam/3d/case/Allrun",
     "openfoam/3d/case/Allrun.mesh",
-    "openfoam/3d/case/Allrun.solve"
+    "openfoam/3d/case/Allrun.solve",
+    "openfoam/3d/postprocess_compare.py"
   ]
 }

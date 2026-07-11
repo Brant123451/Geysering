@@ -48,12 +48,12 @@ defaults to one Gmsh thread so the tetrahedral mesh is deterministic.
 From `openfoam/3d/case`:
 
 ```bash
-./Allclean
-./Allrun.mesh base
-./Allrun.solve smoke
-./Allrun.solve full
-python3 ../postprocess_compare.py --profile base
+./Allrun base
 ```
+
+This clean-clone entrypoint is equivalent to running `Allclean`,
+`Allrun.mesh base`, `Allrun.solve smoke`, `Allrun.solve full`, and the
+postprocessor in sequence.
 
 `Allrun.mesh` requires both the independent combined STL to pass
 `surfaceCheck` and the converted volume mesh to pass:
