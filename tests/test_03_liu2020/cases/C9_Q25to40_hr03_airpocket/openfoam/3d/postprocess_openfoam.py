@@ -387,24 +387,28 @@ def main() -> None:
         else np.empty(0)
     )
     boundary_names = ("inletFlux", "gateFlux", "atmosphereFlux")
-    phase_flux_names = ("inletPhaseMassFlux", "gatePhaseMassFlux", "atmospherePhaseMassFlux")
+    water_flux_names = ("inletWaterMassFlux", "gateWaterMassFlux", "atmosphereWaterMassFlux")
     total_flux = np.zeros(len(mass_t))
     water_flux = np.zeros(len(mass_t))
-    gas_flux = np.zeros(len(mass_t))
     flux_complete = bool(len(mass_t))
     for name in boundary_names:
         ft, values = first_column(post, name)
         if not len(ft):
             flux_complete = False
+            continue
         total_flux += interp_series(ft, values, mass_t)
-    for name in phase_flux_names:
-        ft, values, _ = parse_function(post, name)
-        if not len(ft) or values.shape[1] < 2:
+    for name in water_flux_names:
+        ft, values = first_column(post, name)
+        if not len(ft):
             flux_complete = False
             continue
-        water_flux += interp_series(ft, values[:, 0], mass_t)
-        gas_flux += interp_series(ft, values[:, 1], mass_t)
+        water_flux += interp_series(ft, values, mass_t)
     if len(mass_t) and flux_complete:
+        # compressibleInterFoam constructs rhoPhi as the sum of phase mass
+        # fluxes.  alphaPhi0.water is its conservative MULES water-volume
+        # flux; density-weighting it gives the water contribution, leaving the
+        # gas contribution by exact difference from rhoPhi.
+        gas_flux = total_flux - water_flux
         total_residual = total_mass - total_mass[0] + cumulative_trapezoid(mass_t, total_flux)
         gas_residual = gas_mass - gas_mass[0] + cumulative_trapezoid(mass_t, gas_flux)
         mass_error = float(np.nanmax(np.abs(total_residual)) / max(abs(total_mass[0]), 1e-12))
@@ -496,8 +500,8 @@ def main() -> None:
         "mass_conservation_relative_error": mass_error,
         "gas_mass_conservation_relative_error": gas_error,
         "gas_mass_method": (
-            "alpha.air-weighted thermo:rho.air inventory and summed "
-            "alphaRhoPhi.air boundary flux"
+            "alpha.air-weighted thermo:rho.air inventory; boundary gas flux is "
+            "rhoPhi minus density-weighted conservative alphaPhi0.water"
         ),
         "pre_ramp_upstream_air_mass_change_relative": pre_ramp_air_mass_change,
         "initial_air_volume_m3": float(upstream_air_volume[0]) if len(upstream_air_volume) else None,

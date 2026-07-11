@@ -417,14 +417,15 @@ functions
         writeFields     false;
     }}
 
-    inletPhaseMassFlux
+    inletWaterMassFlux
     {{
         type            surfaceFieldValue;
         libs            (fieldFunctionObjects);
         regionType      patch;
         name            inlet;
-        operation       sum;
-        fields          (alphaRhoPhi.water alphaRhoPhi.air);
+        operation       weightedSum;
+        weightField     thermo:rho.water;
+        fields          (alphaPhi0.water);
         writeControl    adjustableRunTime;
         writeInterval   0.01;
         writeFields     false;
@@ -443,14 +444,15 @@ functions
         writeFields     false;
     }}
 
-    gatePhaseMassFlux
+    gateWaterMassFlux
     {{
         type            surfaceFieldValue;
         libs            (fieldFunctionObjects);
         regionType      patch;
         name            gateOutlet;
-        operation       sum;
-        fields          (alphaRhoPhi.water alphaRhoPhi.air);
+        operation       weightedSum;
+        weightField     thermo:rho.water;
+        fields          (alphaPhi0.water);
         writeControl    adjustableRunTime;
         writeInterval   0.01;
         writeFields     false;
@@ -469,14 +471,15 @@ functions
         writeFields     false;
     }}
 
-    atmospherePhaseMassFlux
+    atmosphereWaterMassFlux
     {{
         type            surfaceFieldValue;
         libs            (fieldFunctionObjects);
         regionType      patch;
         name            atmosphere;
-        operation       sum;
-        fields          (alphaRhoPhi.water alphaRhoPhi.air);
+        operation       weightedSum;
+        weightField     thermo:rho.water;
+        fields          (alphaPhi0.water);
         writeControl    adjustableRunTime;
         writeInterval   0.01;
         writeFields     false;
