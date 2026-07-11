@@ -40,8 +40,8 @@ functions
         autowrite       false;
         expression      "1-alpha.water";
         dimensions      [0 0 0 0 0 0 0];
-        executeControl  timeStep;
-        executeInterval 1;
+        executeControl  adjustableRunTime;
+        executeInterval 0.005;
         writeControl    none;
     }
 
@@ -54,8 +54,8 @@ functions
         autowrite       false;
         expression      "4*alpha.water*(1-alpha.water)";
         dimensions      [0 0 0 0 0 0 0];
-        executeControl  timeStep;
-        executeInterval 1;
+        executeControl  adjustableRunTime;
+        executeInterval 0.005;
         writeControl    none;
     }
 
@@ -68,8 +68,8 @@ functions
         autowrite       false;
         expression      "(1-alpha.water)*p/(287.05*T)";
         dimensions      [1 -3 0 0 0 0 0];
-        executeControl  timeStep;
-        executeInterval 1;
+        executeControl  adjustableRunTime;
+        executeInterval 0.005;
         writeControl    none;
     }
 
@@ -82,8 +82,8 @@ functions
         autowrite       false;
         expression      "alpha.water*998";
         dimensions      [1 -3 0 0 0 0 0];
-        executeControl  timeStep;
-        executeInterval 1;
+        executeControl  adjustableRunTime;
+        executeInterval 0.005;
         writeControl    none;
     }
 
