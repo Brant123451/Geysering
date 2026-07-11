@@ -26,8 +26,9 @@ timePrecision   10;
 runTimeModifiable yes;
 
 adjustTimeStep  yes;
-maxCo           0.20;
-maxAlphaCo      0.15;
+// Match the v2512 depthCharge water-air reference time-step limits.
+maxCo           0.50;
+maxAlphaCo      0.50;
 maxDeltaT       0.0005;
 
 functions

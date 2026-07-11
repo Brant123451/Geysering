@@ -102,8 +102,8 @@
     "application": "compressibleInterFoam",
     "simulation_type": "laminar",
     "end_time_s": 13.0,
-    "max_Courant": 0.2,
-    "max_alpha_Courant": 0.15,
+    "max_Courant": 0.5,
+    "max_alpha_Courant": 0.5,
     "temperature_acceptance": {
       "bounds_K": [
         200.0,
