@@ -3,6 +3,12 @@
 工况参数：`Dt = 12.7 mm`（Dt/D = 0.135）、`Ha0 = 0.610 m`、`WL_init = 0.356 m`。
 对标论文数据：Fig.6（压头 H*，中心面板）与 Fig.8（Y*fs / Y*int，中心面板），均为 Dt*=0.135。
 
+> 当前权威审计与三维算例见
+> [`openfoam/3d/PAPER_AUDIT.md`](openfoam/3d/PAPER_AUDIT.md) 和
+> [`openfoam/3d/README.md`](openfoam/3d/README.md)。本文件后半部保留的
+> 一维快照历史记录不是三维验证结果；其中 crown-datum、Wallis 限速及
+> `T*=3.85` 界面点均存在审计限定，不能作为 CFD 调参依据。
+
 ## 文件夹自包含（代码冻结）
 
 本文件夹是该工况的**独立快照**，不依赖仓库根目录的代码：
@@ -48,28 +54,43 @@
 
 ## 复跑
 
-```powershell
-python caseB_digitize_and_compare.py   # 数字化 → 模型复跑 → 叠加图 → 指标 → report.html
-python caseB_make_frame_viewer.py      # 逐帧查看器素材（90 帧全局 1:1 + 竖管放大）
-python caseB_make_animation.py         # 整段 GIF 备份
-python caseB_fig11_compare.py          # Fig.11 工况复跑 + 原图叠画 + 同轴五联图
-python caseB_crop_paper_figs.py        # 从 PDF 裁出 Fig.3 / Fig.11 扫描图（已裁好，一般不用重跑）
+```bash
+python scripts/caseB_digitize_and_compare.py --check-paths
+python scripts/caseB_digitize_and_compare.py
+python scripts/caseB_make_frame_viewer.py
+python scripts/caseB_make_animation.py
+python scripts/caseB_crop_paper_figs.py
 ```
 
 主流水线会把已存在的查看器/Fig.11 产物自动嵌入 report.html（先跑辅助脚本再跑主流水线即可全量重建）。
 
+真实三维 OpenFOAM 工作流：
+
+```bash
+cd openfoam/3d
+CASEB_STAGE=mesh CASEB_MESH=base ./Allrun
+./Allclean
+CASEB_STAGE=full CASEB_MESH=base CASEB_END_TIME=10.5 ./Allrun
+# 中断后（保留 processor* 时）
+./Allrun.resume
+```
+
+只有 `outputs/openfoam_3d_metrics.json` 自报完整窗口、喷发、质量守恒以及
+base/refined 比较均完成后，才能称为三维复现完成。
+
 ## 产物
 
-- `report.html` — 本工况对比报告：论文相关图清单、扫描面板（Fig.6/8/3）、叠加图、
+- `outputs/report.html` — 一维快照对比报告：论文相关图清单、扫描面板（Fig.6/8/3）、叠加图、
   事件时刻表、**逐帧查看器**（滑块/播放/方向键，全局 1:1 + 竖管放大同步视图）、
   **Fig.11 对照**（红线直接叠画论文原图 + 同轴五联图并排）
-- `digitized/` — 数字化 CSV 与 debug 叠加图（可核对取点）
+- `data/digitized/` — 数字化 CSV 与 debug 叠加图（可核对取点）
 - `outputs/caseB_comparison_pressure.png` / `caseB_comparison_levels.png` — 叠加对比图
 - `outputs/caseB_comparison_metrics.json` / `caseB_model_series.csv` — 指标与模型无量纲序列
 - `outputs/frames/`、`outputs/riser_frames/`、`outputs/frames_index.json` — 查看器素材（90 帧）
 - `outputs/caseB_animation.gif` — 整段动画备份
 - `outputs/caseB_fig11_overlay.png` / `caseB_fig11_model_panels.png` / `caseB_fig11_metrics.json` — Fig.11 对照
-- `paper_scans/fig3_schematic.png` / `fig11_full.png` — 论文 Fig.3 / Fig.11 裁剪扫描
+- `reference/paper_scans/fig3_schematic.png` / `fig11_full.png` — 论文 Fig.3 / Fig.11 裁剪扫描
+- `outputs/openfoam_3d_*` — 新三维计算的紧凑序列、指标、三方对比图和网格敏感性
 
 ## 当前对齐状态（2026-07-08 更新：耗散气穴波速 C_GC=0.48）
 

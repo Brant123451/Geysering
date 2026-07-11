@@ -1,0 +1,34 @@
+// Deliberately incompressible-gas limiting case for sensitivity only.
+// Density is dry air at 101325 Pa and 293.15 K; this variant is not baseline.
+thermoType
+{
+    type            heRhoThermo;
+    mixture         pureMixture;
+    transport       const;
+    thermo          hConst;
+    equationOfState rhoConst;
+    specie          specie;
+    energy          sensibleInternalEnergy;
+}
+
+mixture
+{
+    specie
+    {
+        molWeight   28.965;
+    }
+    equationOfState
+    {
+        rho         1.204085;
+    }
+    thermodynamics
+    {
+        Cp          1005;
+        Hf          0;
+    }
+    transport
+    {
+        mu          1.81e-05;
+        Pr          0.71;
+    }
+}

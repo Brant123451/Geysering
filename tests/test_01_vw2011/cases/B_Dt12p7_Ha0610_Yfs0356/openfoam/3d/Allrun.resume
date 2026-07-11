@@ -1,0 +1,47 @@
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$0")"
+
+source /usr/share/modules/init/bash 2>/dev/null || true
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+
+if [[ ! -d processor0 ]]; then
+    echo "No decomposed solution exists; run ./Allrun first." >&2
+    exit 1
+fi
+if pgrep -f '[c]ompressibleInterFoam -parallel' >/dev/null; then
+    echo "compressibleInterFoam is already running." >&2
+    exit 1
+fi
+
+MANIFEST="outputs/runtime/run_manifest.json"
+if [[ -f "$MANIFEST" ]]; then
+    if [[ -z "${CASEB_VALVE_MODE:-}" ]]; then
+        CASEB_VALVE_MODE="$(python3 -c 'import json; print(json.load(open("outputs/runtime/run_manifest.json"))["valve_mode"])')"
+        export CASEB_VALVE_MODE
+    fi
+    if [[ -z "${CASEB_VALVE_OPEN_TIME:-}" ]]; then
+        CASEB_VALVE_OPEN_TIME="$(python3 -c 'import json; print(json.load(open("outputs/runtime/run_manifest.json"))["valve_open_time_s"])')"
+        export CASEB_VALVE_OPEN_TIME
+    fi
+    if [[ -z "${CASEB_GAS_EOS:-}" ]]; then
+        CASEB_GAS_EOS="$(python3 -c 'import json; print(json.load(open("outputs/runtime/run_manifest.json"))["gas_equation_of_state"])')"
+        export CASEB_GAS_EOS
+    fi
+fi
+export CASEB_VALVE_MODE="${CASEB_VALVE_MODE:-opening}"
+export CASEB_VALVE_OPEN_TIME="${CASEB_VALVE_OPEN_TIME:-0.25}"
+export CASEB_GAS_EOS="${CASEB_GAS_EOS:-perfectGas}"
+
+processors=(processor[0-9]*)
+NP="${#processors[@]}"
+OMPI_ALLOW_RUN_AS_ROOT=1 \
+OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
+mpirun -np "$NP" compressibleInterFoam -parallel \
+    >> log.compressibleInterFoam 2>&1
+
+if [[ "${CASEB_RECONSTRUCT:-0}" == "1" ]]; then
+    reconstructPar -latestTime > log.reconstructPar 2>&1
+fi
+python3 postprocess.py > log.postprocess 2>&1
+echo "CASE_B_3D_RESUME_DONE"

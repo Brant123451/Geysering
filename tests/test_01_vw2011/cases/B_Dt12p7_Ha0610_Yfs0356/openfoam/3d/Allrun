@@ -1,0 +1,78 @@
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$0")"
+
+source /usr/share/modules/init/bash 2>/dev/null || true
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+
+if [[ -d 0 || -d processor0 || -d constant/polyMesh ]]; then
+    echo "Existing runtime state detected; use ./Allrun.resume or ./Allclean." >&2
+    exit 1
+fi
+
+STAGE="${CASEB_STAGE:-full}"
+MESH="${CASEB_MESH:-base}"
+if [[ "$STAGE" != "mesh" && "$STAGE" != "hold" && "$STAGE" != "smoke" && "$STAGE" != "full" ]]; then
+    echo "CASEB_STAGE must be mesh, hold, smoke, or full" >&2
+    exit 2
+fi
+if [[ "$MESH" != "base" && "$MESH" != "refined" ]]; then
+    echo "CASEB_MESH must be base or refined" >&2
+    exit 2
+fi
+
+if [[ -z "${CASEB_VALVE_MODE:-}" ]]; then
+    if [[ "$STAGE" == "hold" ]]; then
+        export CASEB_VALVE_MODE=closed
+    else
+        export CASEB_VALVE_MODE=opening
+    fi
+fi
+export CASEB_VALVE_OPEN_TIME="${CASEB_VALVE_OPEN_TIME:-0.25}"
+export CASEB_GAS_EOS="${CASEB_GAS_EOS:-perfectGas}"
+
+python3 validate_case.py > log.preflight 2>&1
+python3 prepare_run.py > log.prepare 2>&1
+python3 make_mesh.py \
+    --preset "$MESH" \
+    --output caseB3d.msh \
+    --metadata "outputs/runtime/mesh_${MESH}.json" \
+    > log.gmsh 2>&1
+gmshToFoam caseB3d.msh > log.gmshToFoam 2>&1
+createPatch -overwrite > log.createPatch 2>&1
+topoSet > log.topoSet 2>&1
+checkMesh -allTopology -allGeometry > log.checkMesh 2>&1
+python3 postprocess.py --mesh-only > log.meshEvidence 2>&1
+
+cp -a 0.orig 0
+setFields -dict system/setFieldsDict.runtime > log.setFields 2>&1
+setExprFields -keepPatches -dict system/setExprFieldsDict.runtime \
+    > log.setExprFields 2>&1
+
+if [[ "$STAGE" == "mesh" ]]; then
+    echo "CASE_B_3D_MESH_DONE"
+    exit 0
+fi
+
+NP="${OPENFOAM_NP:-$(nproc)}"
+if (( NP > 4 )); then
+    NP=4
+elif (( NP < 1 )); then
+    NP=1
+fi
+cp system/decomposeParDict system/decomposeParDict.runtime
+foamDictionary system/decomposeParDict.runtime \
+    -entry numberOfSubdomains -set "$NP" >/dev/null
+decomposePar -decomposeParDict system/decomposeParDict.runtime \
+    > log.decomposePar 2>&1
+
+OMPI_ALLOW_RUN_AS_ROOT=1 \
+OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
+mpirun -np "$NP" compressibleInterFoam -parallel \
+    > log.compressibleInterFoam 2>&1
+
+if [[ "${CASEB_RECONSTRUCT:-0}" == "1" ]]; then
+    reconstructPar -latestTime > log.reconstructPar 2>&1
+fi
+python3 postprocess.py > log.postprocess 2>&1
+echo "CASE_B_3D_${STAGE^^}_DONE"

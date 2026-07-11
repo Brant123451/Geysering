@@ -1,0 +1,17 @@
+/0/
+/[1-9]*/
+/processor*/
+/postProcessing/
+/constant/polyMesh/
+/dynamicCode/
+/caseB3d.msh
+/log.*
+/constant/airThermo
+/system/decomposeParDict.runtime
+/system/runControl
+/system/runSettings
+/system/setFieldsDict.runtime
+/system/setExprFieldsDict.runtime
+/system/towerProbeLocations
+/system/plumeProbeLocations
+/outputs/runtime/

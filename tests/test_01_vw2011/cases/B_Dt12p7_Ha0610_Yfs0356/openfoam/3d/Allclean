@@ -1,0 +1,24 @@
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$0")"
+
+rm -rf 0 processor[0-9]* postProcessing constant/polyMesh dynamicCode
+for path in [0-9]*; do
+    if [[ -d "$path" && "$path" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+        rm -rf -- "$path"
+    fi
+done
+rm -f caseB3d.msh log.*
+rm -f constant/airThermo
+rm -f system/decomposeParDict.runtime system/runControl system/runSettings
+rm -f system/setFieldsDict.runtime
+rm -f system/setExprFieldsDict.runtime
+rm -f system/towerProbeLocations system/plumeProbeLocations
+rm -rf outputs/runtime
+
+if [[ "${CASEB_CLEAN_COMPACT_OUTPUTS:-0}" == "1" ]]; then
+    CASE_ROOT="$(cd ../.. && pwd)"
+    rm -f "$CASE_ROOT"/outputs/openfoam_3d_*
+fi
+
+echo "CASE_B_3D_CLEAN"

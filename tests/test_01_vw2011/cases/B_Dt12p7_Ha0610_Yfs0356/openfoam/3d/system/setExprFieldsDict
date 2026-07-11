@@ -1,0 +1,61 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setExprFieldsDict;
+}
+
+readFields (alpha.water p p_rgh T);
+
+expressions
+(
+    atmosphericAirPressure
+    {
+        field p;
+        dimensions [1 -1 -2 0 0 0 0];
+        fieldMask
+        #{
+            (alpha.water < 0.5) && (pos().x() > 0.546)
+        #};
+        expression #{ 101325 #};
+    }
+
+    pocketAirPressure
+    {
+        field p;
+        dimensions [1 -1 -2 0 0 0 0];
+        fieldMask #{ pos().x() <= 0.546 #};
+        expression #{ 107298.329 #};
+    }
+
+    hydrostaticWaterPressure
+    {
+        field p;
+        dimensions [1 -1 -2 0 0 0 0];
+        fieldMask #{ alpha.water >= 0.5 #};
+        expression
+        #{
+            101325 + 998.2*9.81*(0.403 - pos().y())
+        #};
+    }
+
+    reducedWaterPressure
+    {
+        field p_rgh;
+        dimensions [1 -1 -2 0 0 0 0];
+        fieldMask #{ alpha.water >= 0.5 #};
+        expression #{ p + 998.2*9.81*pos().y() #};
+    }
+
+    reducedAirPressure
+    {
+        field p_rgh;
+        dimensions [1 -1 -2 0 0 0 0];
+        fieldMask #{ alpha.water < 0.5 #};
+        expression
+        #{
+            p + (p/(287.058*293.15))*9.81*pos().y()
+        #};
+    }
+);

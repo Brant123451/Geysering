@@ -6,6 +6,8 @@
   "status": "validated_primary_case",
   "self_contained": true,
   "entrypoints": [
-    "scripts/caseB_digitize_and_compare.py"
+    "scripts/caseB_digitize_and_compare.py",
+    "openfoam/3d/Allrun",
+    "openfoam/3d/Allrun.resume"
   ]
 }

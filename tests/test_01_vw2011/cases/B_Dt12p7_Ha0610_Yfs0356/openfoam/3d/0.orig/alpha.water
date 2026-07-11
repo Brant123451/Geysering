@@ -1,0 +1,30 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      alpha.water;
+}
+
+dimensions      [0 0 0 0 0 0 0];
+internalField   uniform 1;
+
+boundaryField
+{
+    walls
+    {
+        // No measured acrylic wetting angle is available.  A neutral 90
+        // degree angle avoids introducing a fitted capillary preference.
+        type            constantAlphaContactAngle;
+        theta0          90;
+        limit           zeroGradient;
+        value           uniform 1;
+    }
+
+    atmosphere
+    {
+        type            inletOutlet;
+        inletValue      uniform 0;
+        value           uniform 0;
+    }
+}

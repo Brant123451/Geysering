@@ -1,0 +1,182 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+
+application     compressibleInterFoam;
+startFrom       latestTime;
+startTime       0;
+stopAt          endTime;
+#include "runControl"
+
+deltaT          1e-6;
+purgeWrite      0;
+writeFormat     binary;
+writePrecision  8;
+writeCompression off;
+timeFormat      general;
+timePrecision   10;
+runTimeModifiable yes;
+adjustTimeStep  yes;
+
+functions
+{
+    transducer
+    {
+        type            probes;
+        libs            (sampling);
+        fields          (p p_rgh alpha.water U);
+        probeLocations
+        (
+            // Longitudinal location is reported.  Vertical tap position is
+            // unresolved; this lower-wall coordinate follows the Case-A deck.
+            (1.616 -0.043 0)
+        );
+        writeControl    adjustableRunTime;
+        writeInterval   0.005;
+    }
+
+    towerProfiles
+    {
+        type            probes;
+        libs            (sampling);
+        fields          (alpha.water U p);
+        probeLocations
+        (
+            #include "towerProbeLocations"
+        );
+        writeControl    adjustableRunTime;
+        writeInterval   0.005;
+    }
+
+    plumeProfiles
+    {
+        type            probes;
+        libs            (sampling);
+        fields          (alpha.water U p);
+        probeLocations
+        (
+            #include "plumeProbeLocations"
+        );
+        writeControl    adjustableRunTime;
+        writeInterval   0.010;
+    }
+
+    phaseAccounting
+    {
+        type            coded;
+        libs            (utilityFunctionObjects);
+        name            caseBPhaseAccounting;
+        executeControl  adjustableRunTime;
+        executeInterval 0.010;
+        writeControl    writeTime;
+
+        codeInclude
+        #{
+            #include <cstdlib>
+            #include <string>
+        #};
+
+        codeExecute
+        #{
+            const fvMesh& fvmesh = mesh();
+            const volScalarField& alpha =
+                fvmesh.lookupObject<volScalarField>("alpha.water");
+            const volScalarField& pressure =
+                fvmesh.lookupObject<volScalarField>("p");
+            const volScalarField& temperature =
+                fvmesh.lookupObject<volScalarField>("T");
+            const surfaceScalarField& phi =
+                fvmesh.lookupObject<surfaceScalarField>("phi");
+            const volScalarField& mixtureDensity =
+                fvmesh.lookupObject<volScalarField>("rho");
+            const surfaceScalarField& mixtureMassFlux =
+                fvmesh.lookupObject<surfaceScalarField>("rhoPhi");
+            const scalarField& volume = fvmesh.V();
+            const vectorField& centres = fvmesh.C();
+            const char* gasEosText = std::getenv("CASEB_GAS_EOS");
+            const bool constantGas =
+                gasEosText && std::string(gasEosText) == "rhoConst";
+
+            scalar liquidMass = 0;
+            scalar gasMass = 0;
+            scalar liquidVolume = 0;
+            scalar totalMass = 0;
+            scalar waterAboveRim = 0;
+            scalar plumeTop = 0.657;
+            forAll(volume, cellI)
+            {
+                const scalar a = min(max(alpha[cellI], scalar(0)), scalar(1));
+                const scalar rhoWater =
+                    998.153943
+                  + pressure[cellI]/(7504.690432*temperature[cellI]);
+                const scalar rhoAir = constantGas
+                    ? 1.204085
+                    : pressure[cellI]/(287.058*temperature[cellI]);
+                liquidMass += a*rhoWater*volume[cellI];
+                gasMass += (1.0-a)*rhoAir*volume[cellI];
+                liquidVolume += a*volume[cellI];
+                totalMass += mixtureDensity[cellI]*volume[cellI];
+                if (centres[cellI].y() > 0.657)
+                {
+                    waterAboveRim += a*volume[cellI];
+                    if (a >= 0.05)
+                    {
+                        plumeTop = max(plumeTop, centres[cellI].y());
+                    }
+                }
+            }
+            liquidMass = returnReduce(liquidMass, sumOp<scalar>());
+            gasMass = returnReduce(gasMass, sumOp<scalar>());
+            liquidVolume = returnReduce(liquidVolume, sumOp<scalar>());
+            totalMass = returnReduce(totalMass, sumOp<scalar>());
+            waterAboveRim = returnReduce(waterAboveRim, sumOp<scalar>());
+            plumeTop = returnReduce(plumeTop, maxOp<scalar>());
+
+            scalar liquidFlux = 0;
+            scalar gasFlux = 0;
+            scalar totalMassFlux = 0;
+            const label patchI = fvmesh.boundaryMesh().findPatchID("atmosphere");
+            if (patchI >= 0)
+            {
+                const scalarField& ap = alpha.boundaryField()[patchI];
+                const scalarField& pp = pressure.boundaryField()[patchI];
+                const scalarField& tp = temperature.boundaryField()[patchI];
+                const scalarField& phip = phi.boundaryField()[patchI];
+                const scalarField& rhoPhip =
+                    mixtureMassFlux.boundaryField()[patchI];
+                forAll(phip, faceI)
+                {
+                    const scalar a =
+                        min(max(ap[faceI], scalar(0)), scalar(1));
+                    const scalar rhoWater =
+                        998.153943
+                      + pp[faceI]/(7504.690432*tp[faceI]);
+                    liquidFlux += a*rhoWater*phip[faceI];
+                    const scalar rhoAir = constantGas
+                        ? 1.204085
+                        : pp[faceI]/(287.058*tp[faceI]);
+                    gasFlux += (1.0-a)*rhoAir*phip[faceI];
+                    totalMassFlux += rhoPhip[faceI];
+                }
+            }
+            liquidFlux = returnReduce(liquidFlux, sumOp<scalar>());
+            gasFlux = returnReduce(gasFlux, sumOp<scalar>());
+            totalMassFlux = returnReduce(totalMassFlux, sumOp<scalar>());
+
+            if (Pstream::master())
+            {
+                Info<< "CASEB_ACCOUNTING "
+                    << fvmesh.time().value() << ' '
+                    << liquidMass << ' ' << gasMass << ' '
+                    << liquidVolume << ' ' << waterAboveRim << ' '
+                    << max(scalar(0), plumeTop - 0.657) << ' '
+                    << liquidFlux << ' ' << gasFlux << ' '
+                    << totalMass << ' ' << totalMassFlux << nl;
+            }
+        #};
+    }
+}

@@ -1,0 +1,63 @@
+/* VW2011 Test 1 Case B initial state.
+   Chamber x<=0.546 m: dry air at 0.610 m water gauge head.
+   Downstream apparatus: water filled.
+   Tower free surface: 0.356 m above crown (absolute y=0.403 m).
+   Exterior and tower headspace: atmospheric air at 293.15 K. */
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setFieldsDict;
+}
+
+defaultFieldValues
+(
+    volScalarFieldValue alpha.water 1
+    volScalarFieldValue p_rgh 105271.314
+    volScalarFieldValue p 105271.314
+    volScalarFieldValue T 293.15
+);
+
+regions
+(
+    boxToCell
+    {
+        box (-1 -1 -1) (0.546 1 1);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 0
+            volScalarFieldValue p_rgh 107298.329
+            volScalarFieldValue p 107298.329
+            volScalarFieldValue T 293.15
+        );
+    }
+
+    // Entire exterior plus tower headspace.  The tower water column below
+    // y=0.403 is restored by the following cylindrical selection.
+    boxToCell
+    {
+        box (3.396 0.257 -0.120) (3.636 1.858 0.120);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 0
+            volScalarFieldValue p_rgh 101333
+            volScalarFieldValue p 101325
+            volScalarFieldValue T 293.15
+        );
+    }
+
+    cylinderToCell
+    {
+        point1 (3.516 0.047 0);
+        point2 (3.516 0.403 0);
+        radius 0.00635;
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+            volScalarFieldValue p_rgh 105271.314
+            volScalarFieldValue p 105271.314
+            volScalarFieldValue T 293.15
+        );
+    }
+);
