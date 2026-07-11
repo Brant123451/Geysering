@@ -4,7 +4,9 @@ cd "$(dirname "$0")"
 source /usr/lib/openfoam/openfoam2512/etc/bashrc
 set -euo pipefail
 
-NP="${OPENFOAM_NP:-4}"
+AVAILABLE_NP="$(nproc)"
+NP="${OPENFOAM_NP:-$AVAILABLE_NP}"
+if (( NP > AVAILABLE_NP )); then NP="$AVAILABLE_NP"; fi
 if (( NP < 1 )); then NP=1; fi
 
 rm -rf processor* postProcessing

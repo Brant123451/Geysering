@@ -8,10 +8,21 @@ if [[ ! -d processor0 ]]; then
     echo "No decomposed run found; use ./Allrun.solve." >&2
     exit 1
 fi
+if [[ ! -f system/decomposeParDict.runtime ]]; then
+    echo "Missing runtime decomposition dictionary; use ./Allrun.solve." >&2
+    exit 1
+fi
 
-NP="${OPENFOAM_NP:-6}"
-if (( NP > 6 )); then NP=6; fi
-if (( NP < 1 )); then NP=1; fi
+NP="$(foamDictionary system/decomposeParDict.runtime \
+    -entry numberOfSubdomains -value)"
+if [[ -n "${OPENFOAM_NP:-}" && "$OPENFOAM_NP" != "$NP" ]]; then
+    echo "OPENFOAM_NP=$OPENFOAM_NP does not match the existing $NP-way decomposition." >&2
+    exit 1
+fi
+if (( NP > $(nproc) )); then
+    echo "Existing $NP-way decomposition exceeds the $(nproc) available MPI slots." >&2
+    exit 1
+fi
 
 mpirun -np "$NP" compressibleInterFoam -parallel \
     -decomposeParDict system/decomposeParDict.runtime \

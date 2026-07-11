@@ -4,8 +4,9 @@ cd "$(dirname "$0")"
 source /usr/lib/openfoam/openfoam2512/etc/bashrc
 set -euo pipefail
 
-NP="${OPENFOAM_NP:-6}"
-if (( NP > 6 )); then NP=6; fi
+AVAILABLE_NP="$(nproc)"
+NP="${OPENFOAM_NP:-$AVAILABLE_NP}"
+if (( NP > AVAILABLE_NP )); then NP="$AVAILABLE_NP"; fi
 if (( NP < 1 )); then NP=1; fi
 
 if [[ -d processor0 ]]; then

@@ -15,6 +15,7 @@ fi
 
 # Mesh conversion and patch typing must target constant/, never a stale
 # solution-time polyMesh left by a previous smoke run.
+foamListTimes -rm >/dev/null 2>&1 || true
 rm -rf 0 processor* postProcessing
 
 python3 ../make_mesh.py \
