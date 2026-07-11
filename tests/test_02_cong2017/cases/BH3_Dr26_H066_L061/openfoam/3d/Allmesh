@@ -23,6 +23,8 @@ if [[ -d constant/polyMesh ]]; then
     exit 1
 fi
 
+python3 make_runtime_config.py > log.runtimeConfig.mesh 2>&1
+
 python3 make_geometry.py \
     --riser-diameter 0.026 \
     --atmosphere-width "${ATMOSPHERE_WIDTH:-0.300}" \
