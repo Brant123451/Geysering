@@ -1,9 +1,10 @@
 #!/bin/bash
-set -euo pipefail
 cd "$(dirname "$0")"
 
 source /usr/share/modules/init/bash 2>/dev/null || true
+set +u
 source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
 
 if [[ ! -d processor0 ]]; then
     echo "No decomposed solution exists; run ./Allrun first." >&2
