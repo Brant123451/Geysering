@@ -484,7 +484,7 @@ def slope(x, y, mask) -> float | None:
 
 def write_csv(path: Path, header: list[str], columns: list[np.ndarray]) -> None:
     with path.open("w", newline="") as stream:
-        writer = csv.writer(stream)
+        writer = csv.writer(stream, lineterminator="\n")
         writer.writerow(header)
         for row in zip(*columns):
             writer.writerow(
@@ -575,7 +575,11 @@ def postprocess(manifest: dict, mesh: dict) -> dict:
         ["time_s", "Tstar", "Yfs_star", "Yint_star"],
         [level_time, level_tstar, yfs, yint],
     )
-    vint_inst = np.gradient(yint, level_tstar, edge_order=1)
+    vint_inst = (
+        np.gradient(yint, level_tstar, edge_order=1)
+        if len(level_tstar) >= 2
+        else np.full_like(yint, np.nan)
+    )
     write_csv(
         run_outputs / "openfoam_3d_gas_interface_series.csv",
         ["time_s", "Tstar", "Yint_star", "Vint_star_local"],
