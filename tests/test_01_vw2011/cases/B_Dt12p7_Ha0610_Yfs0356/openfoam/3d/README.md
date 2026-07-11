@@ -44,7 +44,10 @@ The initial state follows the paper:
 computes cut-cell volume fractions for the planar valve and tower interfaces.
 This avoids cell-centre stair stepping on the tetrahedral mesh.  Finally,
 `setExprFields` makes `p` and `p_rgh` hydrostatically consistent with the
-geometric phase field.
+geometric phase field.  In interface cells, `p_rgh` uses the same
+alpha-weighted perfect-gas/perfect-fluid density that
+`compressibleInterFoam` uses to reconstruct absolute pressure; a binary
+alpha=0.5 density switch would create a nonphysical startup impulse.
 
 The inferred initial chamber volume is 0.003789 m³.  The initial water volume
 from ideal geometry is 0.0240116 m³ in the downstream main pipe plus

@@ -17,6 +17,9 @@ from postprocess import (
 from resume_manifest import ENVIRONMENT_KEYS, read_manifest, shell_exports
 
 
+HERE = Path(__file__).resolve().parent
+
+
 def baseline_manifest(mesh: str = "base") -> dict:
     return {
         "stage": "full",
@@ -113,6 +116,15 @@ class ResumeManifestTests(unittest.TestCase):
             path.write_text(json.dumps(manifest))
             with self.assertRaisesRegex(ValueError, "missing controls"):
                 read_manifest(path)
+
+
+class InitialFieldPolicyTests(unittest.TestCase):
+    def test_cut_cells_use_mixture_density_for_reduced_pressure(self) -> None:
+        text = (HERE / "system" / "setExprFieldsDict").read_text()
+        self.assertIn("mixtureReducedPressure", text)
+        self.assertIn("(1 - alpha.water)*(p/(287.058*293.15))", text)
+        self.assertNotIn("reducedWaterPressure", text)
+        self.assertNotIn("reducedAirPressure", text)
 
 
 if __name__ == "__main__":
