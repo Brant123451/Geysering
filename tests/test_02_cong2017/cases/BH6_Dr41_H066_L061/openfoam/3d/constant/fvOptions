@@ -13,6 +13,8 @@ valveResistance
 {
     type            vectorCodedSource;
     active          true;
+    // v2512 reads the redirect name from the outer option dictionary.
+    name            timeVaryingBallValve;
 
     vectorCodedSourceCoeffs
     {
