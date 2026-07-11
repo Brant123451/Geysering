@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-set -euo pipefail
 cd "$(dirname "$0")"
 
 source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
 
 NP="${OPENFOAM_NP:-4}"
 if (( NP < 1 )); then NP=1; fi

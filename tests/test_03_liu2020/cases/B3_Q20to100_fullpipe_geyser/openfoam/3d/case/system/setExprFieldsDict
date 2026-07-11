@@ -23,7 +23,7 @@ expressions
         expression
         #{
             101325
-          + alpha.water * 998.2 * 9.81 * max(head - pos().z(), scalar(0))
+          + alpha.water * 998.2 * 9.81 * max(head - pos().z(), 0)
         #};
     }
 
