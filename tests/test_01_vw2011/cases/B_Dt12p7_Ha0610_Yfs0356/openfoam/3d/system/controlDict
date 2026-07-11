@@ -79,6 +79,8 @@ functions
             const fvMesh& fvmesh = mesh();
             const volScalarField& alpha =
                 fvmesh.lookupObject<volScalarField>("alpha.water");
+            const volVectorField& velocity =
+                fvmesh.lookupObject<volVectorField>("U");
             const volScalarField& waterDensity =
                 fvmesh.lookupObject<volScalarField>("thermo:rho.water");
             const volScalarField& airDensity =
@@ -100,15 +102,27 @@ functions
             scalar totalMass = 0;
             scalar waterAboveRim = 0;
             scalar plumeTop = 0.657;
+            scalar minAlpha = GREAT;
+            scalar maxAlpha = -GREAT;
+            scalar localMaxVelocity = -GREAT;
+            vector localMaxVelocityLocation = vector::zero;
             forAll(volume, cellI)
             {
                 // Preserve the transported alpha exactly so conservation
                 // diagnostics expose, rather than hide, any bound violation.
                 const scalar a = alpha[cellI];
+                const scalar speed = mag(velocity[cellI]);
                 liquidMass += a*waterDensity[cellI]*volume[cellI];
                 gasMass += (1.0-a)*airDensity[cellI]*volume[cellI];
                 liquidVolume += a*volume[cellI];
                 totalMass += mixtureDensity[cellI]*volume[cellI];
+                minAlpha = min(minAlpha, a);
+                maxAlpha = max(maxAlpha, a);
+                if (speed > localMaxVelocity)
+                {
+                    localMaxVelocity = speed;
+                    localMaxVelocityLocation = centres[cellI];
+                }
                 if (centres[cellI].y() > 0.657)
                 {
                     waterAboveRim += a*volume[cellI];
@@ -124,6 +138,22 @@ functions
             totalMass = returnReduce(totalMass, sumOp<scalar>());
             waterAboveRim = returnReduce(waterAboveRim, sumOp<scalar>());
             plumeTop = returnReduce(plumeTop, maxOp<scalar>());
+            minAlpha = returnReduce(minAlpha, minOp<scalar>());
+            maxAlpha = returnReduce(maxAlpha, maxOp<scalar>());
+            const scalar maxVelocity =
+                returnReduce(localMaxVelocity, maxOp<scalar>());
+            label maxVelocityProc =
+                localMaxVelocity == maxVelocity
+              ? Pstream::myProcNo()
+              : Pstream::nProcs();
+            maxVelocityProc =
+                returnReduce(maxVelocityProc, minOp<label>());
+            vector maxVelocityLocation =
+                Pstream::myProcNo() == maxVelocityProc
+              ? localMaxVelocityLocation
+              : vector::zero;
+            maxVelocityLocation =
+                returnReduce(maxVelocityLocation, sumOp<vector>());
 
             scalar liquidFlux = 0;
             scalar gasFlux = 0;
@@ -161,20 +191,12 @@ functions
                     << max(scalar(0), plumeTop - 0.657) << ' '
                     << liquidFlux << ' ' << gasFlux << ' '
                     << totalMass << ' ' << totalMassFlux << nl;
+                Info<< "CASEB_BOUNDS "
+                    << "Min(alpha.water) = " << minAlpha << ' '
+                    << "Max(alpha.water) = " << maxAlpha << ' '
+                    << "max(mag(U)) = " << maxVelocity
+                    << " at location " << maxVelocityLocation << nl;
             }
         #};
-    }
-
-    solverBounds
-    {
-        type            fieldMinMax;
-        libs            (fieldFunctionObjects);
-        fields          (alpha.water U);
-        mode            magnitude;
-        location        yes;
-        writeToFile     no;
-        log             yes;
-        writeControl    adjustableRunTime;
-        writeInterval   $caseBAccountingInterval;
     }
 }

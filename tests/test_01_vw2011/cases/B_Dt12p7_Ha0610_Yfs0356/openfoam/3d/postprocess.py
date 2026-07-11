@@ -631,6 +631,9 @@ def parse_solver_diagnostics(text: str) -> dict:
     alpha_max_minus_one = values(
         rf"Max\(alpha\.water\)\s*-\s*1\s*=\s*({NUMBER_PATTERN})"
     )
+    alpha_max_all = alpha_max + [
+        1.0 + overshoot for overshoot in alpha_max_minus_one
+    ]
     execution_time = values(
         rf"^ExecutionTime\s*=\s*({NUMBER_PATTERN})\s+s"
     )
@@ -661,15 +664,7 @@ def parse_solver_diagnostics(text: str) -> dict:
         ),
         "max_capillary_number": max(capillary) if capillary else None,
         "minimum_alpha_water": min(alpha_min) if alpha_min else None,
-        "maximum_alpha_water": (
-            max(alpha_max)
-            if alpha_max
-            else (
-                1.0 + max(alpha_max_minus_one)
-                if alpha_max_minus_one
-                else None
-            )
-        ),
+        "maximum_alpha_water": max(alpha_max_all) if alpha_max_all else None,
         "final_delta_t_s": delta_t[-1] if delta_t else None,
         "execution_time_s": execution_time[-1] if execution_time else None,
         "clock_time_s": clock_time[-1] if clock_time else None,

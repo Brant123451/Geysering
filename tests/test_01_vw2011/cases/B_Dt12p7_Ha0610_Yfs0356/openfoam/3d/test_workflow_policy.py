@@ -176,7 +176,9 @@ class TwoPhaseFlowDeckTests(unittest.TestCase):
         self.assertIn('"thermo:rho.water"', control)
         self.assertIn('"thermo:rho.air"', control)
         self.assertIn('"alphaPhi.water"', control)
+        self.assertIn("CASEB_BOUNDS", control)
         self.assertNotIn("min(max(alpha[cellI]", control)
+        self.assertNotIn("fieldFunctionObjects", control)
 
     def test_solver_diagnostics_capture_rdf_screening_fields(self) -> None:
         diagnostics = parse_solver_diagnostics(
@@ -189,8 +191,9 @@ class TwoPhaseFlowDeckTests(unittest.TestCase):
                     "Phase-1 volume fraction = 0.2  "
                     "Min(alpha.water) = -2e-09  "
                     "Max(alpha.water) - 1 = 3e-10",
-                    "    max(mag(U)) = 0.25 in cell 1 at location "
-                    "(3.516 0.403 0.0) on processor 0",
+                    "CASEB_BOUNDS Min(alpha.water) = -1e-10 "
+                    "Max(alpha.water) = 1 max(mag(U)) = 0.25 "
+                    "at location (3.516 0.403 0.0)",
                     "ExecutionTime = 12.5 s  ClockTime = 13 s",
                 )
             )
