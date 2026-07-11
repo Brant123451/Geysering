@@ -1065,7 +1065,7 @@ def main() -> None:
             "first_top_s",
             "geyser_count",
             "air_arrival_s",
-            "gas_transfer_onset_s",
+            "gas_transfer_20pct_s",
             "mass_error",
             "gas_mass_error",
         ],
@@ -1096,7 +1096,7 @@ def main() -> None:
                 first_top,
                 len(geyser_rows),
                 arrival_time,
-                gas_transfer_onset,
+                gas_transfer_20pct,
                 mass_error,
                 gas_error,
             ]
