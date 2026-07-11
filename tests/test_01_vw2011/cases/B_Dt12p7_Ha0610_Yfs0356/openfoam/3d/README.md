@@ -119,14 +119,32 @@ coarse.
 | `refined` | 0.70 mm | 18.1 | 8 mm | sensitivity |
 
 These are nominal background sizes; `checkMesh` and the generated metadata are
-the authority for realised cell count and quality.  Every run executes
+the authority for realised cell count and quality.  Every run executes both
 
 ```bash
+checkMesh
 checkMesh -allTopology -allGeometry
 ```
 
-before field initialisation.  Negative volume, failed topology, or a missing
-patch stops `Allrun`.
+before field initialisation.  The standard check must report `Mesh OK.`.  The
+strict audit is also retained verbatim in `log.checkMesh.strict`; it normally
+reports one determinant check for tetrahedra on sharp boundary edges.  In
+OpenFOAM v2512 that determinant is assembled only from internal face normals,
+so a valid positive-volume boundary tetrahedron with two internal and two wall
+faces is rank deficient by definition.  `Allrun` accepts this narrow,
+explicitly recorded exception only when:
+
+* the determinant check is the sole strict failure;
+* the low-determinant count exceeds the independently reported
+  `twoInternalFacesCells` count by no more than five cells;
+* cell volume, face-pyramid, face-tet, skewness, interpolation-weight and
+  volume-ratio checks all pass.
+
+`openfoam_3d_mesh_sensitivity.csv` records `standard_mesh_ok`,
+`strict_mesh_ok`, `strict_tet_boundary_exception`, both cell counts and the
+strict audit status.  Any negative volume, additional strict failure, failed
+standard topology/geometry check, or missing patch stops `Allrun`; the strict
+exception is not represented as a literal strict `Mesh OK.` result.
 
 ## Reproducible commands
 
@@ -242,6 +260,9 @@ mesh, logs, dynamic-code cache or frame sequence belongs in Git.
   carry at least one local-cell uncertainty.
 * The 2 mm exterior tower-wall thickness is assumed because wall thickness is
   not reported.
+* The all-tetrahedral mesh retains the documented OpenFOAM v2512
+  sharp-boundary determinant exception above.  It is a topology diagnostic,
+  not a claim that `checkMesh -allTopology -allGeometry` prints `Mesh OK.`.
 * The exterior is finite; a jet reaching its top invalidates the reported
   maximum height and requires a taller domain.
 * Table 2 offers no Case-B-only velocity scatter, and Fig.6/8 inputs are

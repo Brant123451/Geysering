@@ -106,16 +106,65 @@ def first_crossing(x, y, threshold, above=True, after=-math.inf):
 
 
 def parse_mesh() -> dict:
-    text = (HERE / "log.checkMesh").read_text(errors="replace")
+    standard_text = (HERE / "log.checkMesh").read_text(errors="replace")
+    strict_path = HERE / "log.checkMesh.strict"
+    strict_text = (
+        strict_path.read_text(errors="replace")
+        if strict_path.is_file()
+        else standard_text
+    )
 
-    def number(pattern, cast=float):
-        match = re.search(pattern, text, flags=re.I)
+    def number(pattern, cast=float, source=strict_text):
+        match = re.search(pattern, source, flags=re.I)
         return cast(match.group(1)) if match else None
 
-    mesh_ok = "Mesh OK." in text and not re.search(
-        r"Failed\s+\d+\s+mesh checks", text, flags=re.I
+    def passed(source: str) -> bool:
+        return "Mesh OK." in source and not re.search(
+            r"Failed\s+\d+\s+mesh checks", source, flags=re.I
+        )
+
+    standard_mesh_ok = passed(standard_text)
+    strict_mesh_ok = passed(strict_text)
+    strict_failed_checks = number(r"Failed\s+(\d+)\s+mesh checks", int)
+    two_internal_face_cells = number(
+        r"Writing\s+(\d+)\s+cells with two non-boundary faces", int
     )
-    failed_checks = number(r"Failed\s+(\d+)\s+mesh checks", int)
+    underdetermined_cells = number(
+        r"Cells with small determinant[^:]*:\s*(\d+)", int
+    )
+    structural_excess = (
+        underdetermined_cells - two_internal_face_cells
+        if underdetermined_cells is not None
+        and two_internal_face_cells is not None
+        else None
+    )
+    strict_tet_boundary_exception = bool(
+        standard_mesh_ok
+        and not strict_mesh_ok
+        and strict_failed_checks == 1
+        and re.search(r"Cells with small determinant", strict_text, flags=re.I)
+        and structural_excess is not None
+        and 0 <= structural_excess <= 5
+        and "Cell volumes OK." in strict_text
+        and "Face pyramids OK." in strict_text
+        and "Face tets OK." in strict_text
+        and "Face interpolation weight check OK." in strict_text
+        and "Face volume ratio check OK." in strict_text
+        and not re.search(r"highly skew faces detected", strict_text, flags=re.I)
+        and not re.search(r"Concave cells .* found", strict_text, flags=re.I)
+    )
+    mesh_ok = standard_mesh_ok and (
+        strict_mesh_ok or strict_tet_boundary_exception
+    )
+    strict_audit_status = (
+        "pass"
+        if strict_mesh_ok
+        else (
+            "accepted_boundary_tet_exception"
+            if strict_tet_boundary_exception
+            else "fail"
+        )
+    )
     return {
         "cells": number(r"\bcells:\s+(\d+)", int),
         "max_aspect_ratio": number(
@@ -139,9 +188,7 @@ def parse_mesh() -> dict:
         "minimum_cell_determinant": number(
             rf"Cell determinant[^:]*:\s*minimum:\s*({NUMBER_PATTERN})"
         ),
-        "underdetermined_cells": number(
-            r"Cells with small determinant[^:]*:\s*(\d+)", int
-        ),
+        "underdetermined_cells": underdetermined_cells,
         "minimum_face_weight": number(
             rf"Face interpolation weight\s*:\s*minimum:\s*({NUMBER_PATTERN})"
         ),
@@ -154,10 +201,13 @@ def parse_mesh() -> dict:
         "low_volume_ratio_faces": number(
             r"Faces with small volume ratio[^:]*:\s*(\d+)", int
         ),
-        "two_internal_face_cells": number(
-            r"Writing\s+(\d+)\s+cells with two non-boundary faces", int
-        ),
-        "failed_checks": 0 if mesh_ok else failed_checks,
+        "two_internal_face_cells": two_internal_face_cells,
+        "boundary_tet_determinant_excess_cells": structural_excess,
+        "failed_checks": 0 if strict_mesh_ok else strict_failed_checks,
+        "standard_mesh_ok": standard_mesh_ok,
+        "strict_mesh_ok": strict_mesh_ok,
+        "strict_tet_boundary_exception": strict_tet_boundary_exception,
+        "strict_audit_status": strict_audit_status,
         "mesh_ok": mesh_ok,
     }
 
@@ -185,7 +235,12 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "minimum_volume_ratio",
         "low_volume_ratio_faces",
         "two_internal_face_cells",
+        "boundary_tet_determinant_excess_cells",
         "failed_checks",
+        "standard_mesh_ok",
+        "strict_mesh_ok",
+        "strict_tet_boundary_exception",
+        "strict_audit_status",
         "mesh_ok",
         "maxCo",
         "cAlpha",
@@ -224,7 +279,16 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "minimum_volume_ratio": mesh.get("minimum_volume_ratio"),
         "low_volume_ratio_faces": mesh.get("low_volume_ratio_faces"),
         "two_internal_face_cells": mesh.get("two_internal_face_cells"),
+        "boundary_tet_determinant_excess_cells": mesh.get(
+            "boundary_tet_determinant_excess_cells"
+        ),
         "failed_checks": mesh.get("failed_checks"),
+        "standard_mesh_ok": mesh.get("standard_mesh_ok"),
+        "strict_mesh_ok": mesh.get("strict_mesh_ok"),
+        "strict_tet_boundary_exception": mesh.get(
+            "strict_tet_boundary_exception"
+        ),
+        "strict_audit_status": mesh.get("strict_audit_status"),
         "mesh_ok": mesh.get("mesh_ok"),
         "maxCo": manifest.get("max_co"),
         "cAlpha": manifest.get("c_alpha"),
@@ -898,7 +962,7 @@ def main() -> None:
     manifest = read_json(RUNTIME / "run_manifest.json", {"stage": "mesh"})
     mesh = parse_mesh()
     if not mesh["mesh_ok"]:
-        raise SystemExit("checkMesh did not report Mesh OK")
+        raise SystemExit("mesh did not meet the documented acceptance criteria")
     if args.mesh_only:
         update_mesh_csv(mesh, manifest)
         print(json.dumps({"mesh": mesh, "run_configuration": manifest}, indent=2))

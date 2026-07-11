@@ -42,7 +42,8 @@ python3 make_mesh.py \
 gmshToFoam caseB3d.msh > log.gmshToFoam 2>&1
 createPatch -overwrite > log.createPatch 2>&1
 topoSet > log.topoSet 2>&1
-checkMesh -allTopology -allGeometry > log.checkMesh 2>&1
+checkMesh > log.checkMesh 2>&1
+checkMesh -allTopology -allGeometry > log.checkMesh.strict 2>&1
 python3 postprocess.py --mesh-only > log.meshEvidence 2>&1
 
 cp -a 0.orig 0
