@@ -43,26 +43,20 @@ solvers
 
     p_rgh
     {
-        solver          GAMG;
+        solver          PCG;
+        preconditioner  DIC;
         tolerance       1e-7;
         relTol          0.01;
-        smoother        DICGaussSeidel;
-        cacheAgglomeration true;
-        agglomerator    faceAreaPair;
-        nCellsInCoarsestLevel 20;
-        mergeLevels     1;
+        maxIter         1000;
     }
 
     p_rghFinal
     {
-        solver          GAMG;
+        solver          PCG;
+        preconditioner  DIC;
         tolerance       1e-8;
         relTol          0;
-        smoother        DICGaussSeidel;
-        cacheAgglomeration true;
-        agglomerator    faceAreaPair;
-        nCellsInCoarsestLevel 20;
-        mergeLevels     1;
+        maxIter         1000;
     }
 
     "U.*"
