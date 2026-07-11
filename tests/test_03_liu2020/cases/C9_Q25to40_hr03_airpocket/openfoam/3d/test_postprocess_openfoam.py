@@ -92,6 +92,30 @@ class ProbeParsingTests(unittest.TestCase):
                     post_dir, "deep", "alpha.water"
                 )
 
+    def test_restart_header_rounding_is_accepted(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            post_dir = Path(directory)
+            first = post_dir / "deep" / "0" / "alpha.water"
+            restart = post_dir / "deep" / "0.25" / "alpha.water"
+            first.parent.mkdir(parents=True)
+            restart.parent.mkdir(parents=True)
+            first.write_text(
+                "# Probe 0 (0.15 0 2.54946)\n0.0 1.0\n",
+                encoding="utf-8",
+            )
+            restart.write_text(
+                "# Probe 0 (0.15 0 2.549455)\n0.25 0.8\n",
+                encoding="utf-8",
+            )
+
+            times, values, locations = post.parse_probe_scalar_with_locations(
+                post_dir, "deep", "alpha.water"
+            )
+
+        np.testing.assert_allclose(times, [0.0, 0.25])
+        np.testing.assert_allclose(values[:, 0], [1.0, 0.8])
+        self.assertAlmostEqual(locations[0, 2], 2.54946)
+
     def test_sustained_state_does_not_bridge_output_gap(self) -> None:
         time = np.array([0.00, 0.01, 0.02, 0.20, 0.21, 0.22])
         active = np.ones(len(time), dtype=bool)

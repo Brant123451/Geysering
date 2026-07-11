@@ -103,7 +103,12 @@ def parse_probe_scalar_with_locations(
             if locations is None:
                 locations = current_locations
             elif locations.shape != current_locations.shape or not np.allclose(
-                locations, current_locations, rtol=0.0, atol=1e-9
+                # OpenFOAM may change probe-header precision between stage
+                # restarts (for example 2.54946 versus 2.549455).
+                locations,
+                current_locations,
+                rtol=0.0,
+                atol=1e-5,
             ):
                 raise ValueError(f"{path}: probe locations changed across restarts")
         expected_width = len(locations) if locations is not None else None
