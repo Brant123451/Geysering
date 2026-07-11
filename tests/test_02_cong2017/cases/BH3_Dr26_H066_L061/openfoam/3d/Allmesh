@@ -39,7 +39,7 @@ python3 make_geometry.py \
     > log.geometry 2>&1
 
 gmshToFoam bh3.msh > log.gmshToFoam 2>&1
-createPatch -overwrite > log.createPatch 2>&1
+changeDictionary -constant -noZero > log.changeDictionary 2>&1
 topoSet -dict system/topoSetDict.regions > log.topoSet.regions 2>&1
 checkMesh -allGeometry -allTopology > log.checkMesh 2>&1
 
