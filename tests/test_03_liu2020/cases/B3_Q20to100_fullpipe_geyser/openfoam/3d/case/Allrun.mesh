@@ -13,6 +13,10 @@ if [[ -d constant/polyMesh || -f b3_3d.msh ]]; then
     rm -rf constant/polyMesh b3_3d.msh
 fi
 
+# Mesh conversion and patch typing must target constant/, never a stale
+# solution-time polyMesh left by a previous smoke run.
+rm -rf 0 processor* postProcessing
+
 python3 ../make_mesh.py \
     --profile "$PROFILE" \
     --output b3_3d.msh \
