@@ -16,7 +16,7 @@ solvers
         nAlphaCorr      2;
         nAlphaSubCycles 2;
         cAlpha          1;
-        nAlphaSmoothCurvature 1;
+        nAlphaSmoothCurvature 2;
         MULESCorr       no;
         nLimiterIter    5;
         solver          smoothSolver;
