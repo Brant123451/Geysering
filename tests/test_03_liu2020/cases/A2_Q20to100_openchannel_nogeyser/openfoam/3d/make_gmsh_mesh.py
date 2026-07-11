@@ -155,16 +155,20 @@ def main() -> None:
         gmsh.model.setPhysicalName(3, fluid_group, "fluid")
 
         if args.profile == "base":
-            size_max, size_chamber, size_riser, curvature = 0.050, 0.018, 0.009, 22
+            size_max, size_chamber, size_riser = 0.050, 0.018, 0.012
+            size_upstream, size_downstream = 0.028, 0.040
         else:
             # Uniform 15% reduction in the governing target sizes.  This is a
             # systematic resolution sensitivity while keeping the complete
             # 22.4 s two-phase transient tractable on four MPI ranks.
-            size_max, size_chamber, size_riser, curvature = 0.0425, 0.0153, 0.00765, 26
+            size_max, size_chamber, size_riser = 0.0425, 0.0153, 0.0102
+            size_upstream, size_downstream = 0.0238, 0.034
 
         gmsh.option.setNumber("Mesh.MeshSizeMin", size_riser * 0.75)
         gmsh.option.setNumber("Mesh.MeshSizeMax", size_max)
-        gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", curvature)
+        # Diameter-specific fields below retain ~22/26 circumferential cells
+        # on the reported pipes without over-refining the much smaller riser.
+        gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 0)
         gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 1)
         gmsh.option.setNumber("Mesh.Algorithm", 6)
         gmsh.option.setNumber("Mesh.Algorithm3D", 10)
@@ -195,8 +199,32 @@ def main() -> None:
         gmsh.model.mesh.field.setNumber(riser_box, "ZMin", 0.44)
         gmsh.model.mesh.field.setNumber(riser_box, "ZMax", 1.68)
 
+        upstream_box = gmsh.model.mesh.field.add("Box")
+        gmsh.model.mesh.field.setNumber(upstream_box, "VIn", size_upstream)
+        gmsh.model.mesh.field.setNumber(upstream_box, "VOut", size_max)
+        gmsh.model.mesh.field.setNumber(upstream_box, "XMin", -5.82)
+        gmsh.model.mesh.field.setNumber(upstream_box, "XMax", -0.19)
+        gmsh.model.mesh.field.setNumber(upstream_box, "YMin", -0.105)
+        gmsh.model.mesh.field.setNumber(upstream_box, "YMax", 0.105)
+        gmsh.model.mesh.field.setNumber(upstream_box, "ZMin", 0.07)
+        gmsh.model.mesh.field.setNumber(upstream_box, "ZMax", 0.46)
+
+        downstream_box = gmsh.model.mesh.field.add("Box")
+        gmsh.model.mesh.field.setNumber(downstream_box, "VIn", size_downstream)
+        gmsh.model.mesh.field.setNumber(downstream_box, "VOut", size_max)
+        gmsh.model.mesh.field.setNumber(downstream_box, "XMin", 0.49)
+        gmsh.model.mesh.field.setNumber(downstream_box, "XMax", 6.26)
+        gmsh.model.mesh.field.setNumber(downstream_box, "YMin", -0.145)
+        gmsh.model.mesh.field.setNumber(downstream_box, "YMax", 0.145)
+        gmsh.model.mesh.field.setNumber(downstream_box, "ZMin", -0.01)
+        gmsh.model.mesh.field.setNumber(downstream_box, "ZMax", 0.29)
+
         minimum = gmsh.model.mesh.field.add("Min")
-        gmsh.model.mesh.field.setNumbers(minimum, "FieldsList", [chamber_box, riser_box])
+        gmsh.model.mesh.field.setNumbers(
+            minimum,
+            "FieldsList",
+            [chamber_box, riser_box, upstream_box, downstream_box],
+        )
         gmsh.model.mesh.field.setAsBackgroundMesh(minimum)
 
         gmsh.model.mesh.generate(3)
