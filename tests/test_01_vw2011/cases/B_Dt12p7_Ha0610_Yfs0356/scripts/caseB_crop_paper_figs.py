@@ -13,11 +13,14 @@ def find_repo_root(start: Path) -> Path:
     raise RuntimeError("repository root not found")
 
 
-HERE = Path(__file__).resolve()
-CASE_ROOT = HERE.parent.parent
+CASE_ROOT = Path(__file__).resolve().parents[1]
+MODEL = CASE_ROOT / "model"
+DIGITIZED = CASE_ROOT / "data" / "digitized"
+SCANS = CASE_ROOT / "reference" / "paper_scans"
+OUTPUTS = CASE_ROOT / "outputs"
 REPO_ROOT = find_repo_root(CASE_ROOT)
 PDF = REPO_ROOT / "references" / "vasconcelos2011.pdf"
-OUT = CASE_ROOT / "reference" / "paper_scans"
+OUT = SCANS
 OUT.mkdir(parents=True, exist_ok=True)
 
 doc = fitz.open(PDF)

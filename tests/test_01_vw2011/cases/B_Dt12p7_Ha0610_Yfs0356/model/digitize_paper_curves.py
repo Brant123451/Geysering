@@ -23,9 +23,13 @@ import numpy as np
 from PIL import Image
 from scipy import ndimage
 
-HERE = Path(__file__).resolve().parent
-FIGS = HERE / "_paper_figs"
-OUT = HERE / "paper_reference" / "digitized"
+CASE_ROOT = Path(__file__).resolve().parents[1]
+MODEL = CASE_ROOT / "model"
+DIGITIZED = CASE_ROOT / "data" / "digitized"
+SCANS = CASE_ROOT / "reference" / "paper_scans"
+OUTPUTS = CASE_ROOT / "outputs"
+FIGS = SCANS
+OUT = DIGITIZED
 OUT.mkdir(parents=True, exist_ok=True)
 
 FIG6 = FIGS / "raw_p5_x101_2000x1457.png"   # pressure heads, Dt*=0.135

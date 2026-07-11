@@ -8,12 +8,16 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE / "model"))
+CASE_ROOT = Path(__file__).resolve().parents[1]
+MODEL = CASE_ROOT / "model"
+DIGITIZED = CASE_ROOT / "data" / "digitized"
+SCANS = CASE_ROOT / "reference" / "paper_scans"
+OUTPUTS = CASE_ROOT / "outputs"
+sys.path.insert(0, str(MODEL))
 
 from vw2011_network_twofluid import NetworkCase, run_network, make_case_gif
 
-OUT = HERE / "outputs"
+OUT = OUTPUTS
 OUT.mkdir(exist_ok=True)
 
 

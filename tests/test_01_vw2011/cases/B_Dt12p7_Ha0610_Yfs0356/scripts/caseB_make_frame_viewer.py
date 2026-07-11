@@ -17,12 +17,16 @@ from pathlib import Path
 
 import numpy as np
 
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE / "model"))
+CASE_ROOT = Path(__file__).resolve().parents[1]
+MODEL = CASE_ROOT / "model"
+DIGITIZED = CASE_ROOT / "data" / "digitized"
+SCANS = CASE_ROOT / "reference" / "paper_scans"
+OUTPUTS = CASE_ROOT / "outputs"
+sys.path.insert(0, str(MODEL))
 
 from vw2011_network_twofluid import NetworkCase, run_network
 
-OUT = HERE / "outputs"
+OUT = OUTPUTS
 FRAMES = OUT / "frames"
 RISER_FRAMES = OUT / "riser_frames"
 N_FRAMES = 90
@@ -134,8 +138,8 @@ def main():
         plt.close(fig)
 
         index.append(dict(
-            file=f"outputs/frames/frame_{n:04d}.png",
-            riserFile=f"outputs/riser_frames/riser_{n:04d}.png",
+            file=f"frames/frame_{n:04d}.png",
+            riserFile=f"riser_frames/riser_{n:04d}.png",
             time=round(t_k, 3),
             wtop=round(wtop, 3),
             itop=round(itop, 3),

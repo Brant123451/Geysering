@@ -7,10 +7,10 @@ Paper experimental data for this condition (CENTER panels of the 3x3 grids):
   * Fig. 6  -- normalized pressure head H*(T*),  axes T* = 0..5,  H* = 0..1.5
   * Fig. 8  -- normalized levels Y*fs / Y*int,   axes T* = 3..5,  Y* = 0..1
 
-This script digitizes both panels, runs the frozen per-case copy of the
-decoupled two-fluid network model, and produces overlay figures + metrics +
-a standalone report.html inside this folder.  The model code in ./model is a
-snapshot: later edits to the repository root will NOT change this case.
+This script reads (or, when scans are available, regenerates) both digitized
+panels, runs the frozen per-case network model, and writes comparisons below
+the case-root ``outputs`` directory.  The model code in ``model`` is a frozen
+snapshot: later edits elsewhere in the repository do not change this case.
 """
 from __future__ import annotations
 
@@ -22,22 +22,24 @@ from pathlib import Path
 
 import numpy as np
 
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE / "model"))     # frozen per-case copies of the solver + digitizer
+CASE_ROOT = Path(__file__).resolve().parents[1]
+MODEL = CASE_ROOT / "model"
+DIGITIZED = CASE_ROOT / "data" / "digitized"
+SCANS = CASE_ROOT / "reference" / "paper_scans"
+OUTPUTS = CASE_ROOT / "outputs"
+sys.path.insert(0, str(MODEL))
 
-from digitize_paper_curves import (load_gray, find_panels, draw_panel_debug,
-                                   label_boxes_in_panel, digitize_fig6, digitize_fig8)
 from vw2011_network_twofluid import G, NetworkCase, run_network
 from PIL import Image
 
-FIG6 = HERE / "paper_scans" / "raw_p5_x101_2000x1457.png"   # pressure heads, Dt*=0.135
-FIG8 = HERE / "paper_scans" / "raw_p7_x121_2145x1534.png"   # levels, Dt*=0.135
+FIG6 = SCANS / "raw_p5_x101_2000x1457.png"   # pressure heads, Dt*=0.135
+FIG8 = SCANS / "raw_p7_x121_2145x1534.png"   # levels, Dt*=0.135
 PANEL = (1, 1)                              # center: Ha=0.610 m, WL=0.356 m
 
-DIG = HERE / "digitized"
-OUT = HERE / "outputs"
-DIG.mkdir(exist_ok=True)
-OUT.mkdir(exist_ok=True)
+DIG = DIGITIZED
+OUT = OUTPUTS
+DIG.mkdir(parents=True, exist_ok=True)
+OUT.mkdir(parents=True, exist_ok=True)
 
 C_MODEL = "#d62728"
 C_MODEL2 = "#f59e0b"
@@ -49,6 +51,52 @@ C_INT = "#111827"
 CASE = dict(Dr=0.0127, air_head=0.610, init_water_level=0.356, L=0.610)
 
 
+def check_paths() -> None:
+    """Validate migrated paths without running either numerical model."""
+    required = [
+        MODEL / "digitize_paper_curves.py",
+        MODEL / "vw2011_network_twofluid.py",
+        DIGITIZED / "fig6_caseB_Hstar_band.csv",
+        DIGITIZED / "fig8_caseB_levels.csv",
+    ]
+    missing = [str(path) for path in required if not path.is_file()]
+    result = {
+        "case_root": str(CASE_ROOT),
+        "model": str(MODEL),
+        "digitized": str(DIGITIZED),
+        "scans": str(SCANS),
+        "outputs": str(OUTPUTS),
+        "required_files_ok": not missing,
+        "missing_required": missing,
+        "raw_scans_available": FIG6.is_file() and FIG8.is_file(),
+    }
+    print(json.dumps(result, indent=2))
+    if missing:
+        raise SystemExit(2)
+
+
+def load_digitized():
+    """Load the committed data when raw raster scans are not materialised."""
+    pressure = np.genfromtxt(
+        DIG / "fig6_caseB_Hstar_band.csv", delimiter=",", names=True
+    )
+    fig6d = {
+        "T": np.atleast_1d(pressure["Tstar"]),
+        "med": np.atleast_1d(pressure["Hstar_med"]),
+        "lo": np.atleast_1d(pressure["Hstar_min"]),
+        "hi": np.atleast_1d(pressure["Hstar_max"]),
+    }
+    levels = {"fs": [], "int": []}
+    with (DIG / "fig8_caseB_levels.csv").open(newline="", encoding="utf-8") as stream:
+        for row in csv.DictReader(stream):
+            levels[row["kind"]].append((float(row["Tstar"]), float(row["Ystar"])))
+    fig8d = {
+        kind: np.asarray(sorted(points), dtype=float).reshape((-1, 2))
+        for kind, points in levels.items()
+    }
+    return fig6d, fig8d
+
+
 def crop_panel(gray, box, dst: Path, margin: int = 70):
     x0, x1, y0, y1 = box
     H, W = gray.shape
@@ -58,6 +106,14 @@ def crop_panel(gray, box, dst: Path, margin: int = 70):
 
 
 def digitize():
+    from digitize_paper_curves import (
+        digitize_fig6,
+        digitize_fig8,
+        draw_panel_debug,
+        find_panels,
+        label_boxes_in_panel,
+        load_gray,
+    )
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -158,7 +214,11 @@ def main():
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    fig6d, fig8d = digitize()
+    if FIG6.is_file() and FIG8.is_file():
+        fig6d, fig8d = digitize()
+    else:
+        print("Raw paper scans are absent; using committed digitized CSV files.")
+        fig6d, fig8d = load_digitized()
     case, s = run_model()
     L = case.riser_height
     tsc = L / math.sqrt(G * case.Dr)
@@ -277,15 +337,17 @@ def main():
         if np.count_nonzero(seg) >= 3:
             Vfs_star = float(np.polyfit(Ts_m[seg], Yfs_m[seg], 1)[0])
     pocket_m = np.asarray(s["pocket"])
-    plateau_ref = float(np.nanmedian(pocket_m[(Ts_m > 1.0) & (Ts_m < 2.5)]))
-    collapse_T = first_crossing(Ts_m, pocket_m, 0.5 * plateau_ref, above=False,
-                                after=(liftoff or 2.0))
+    comparison_head = tr_avg - dcrown
+    collapse_T = first_crossing(
+        Ts_m, comparison_head, 0.3, above=False, after=(liftoff or 2.0)
+    )
+    audited_interface = int_pts[int_pts[:, 0] > 4.0] if int_pts.size else int_pts
     m = dict(
         case=dict(**CASE, Dt_over_D=CASE["Dr"] / 0.094),
         Tstar_scale_s=tsc,
-        datum_note=("model heads are recorded on the pipe INVERT; the crown-datum "
-                    "value (invert - D/L = invert - 0.154) is what compares with the "
-                    "paper's H* panel (transducer tap / tower base elevation)"),
+        datum_note=("The paper does not report the tap elevation. Both the raw "
+                    "one-dimensional head and the legacy -D/L hypothesis are retained; "
+                    "agreement after that shift does not establish the datum."),
         model=dict(
             geyser=bool(np.nanmax(Yfs_m) >= 0.98),
             geyser_Tstar=first_crossing(Ts_m, Yfs_m, 0.98, after=liftoff or 0.0),
@@ -304,7 +366,12 @@ def main():
             geyser=True,
             geyser_Tstar=first_crossing(fs_pts[:, 0], fs_pts[:, 1], 0.97) if fs_pts.size else None,
             int_liftoff_Tstar=float(int_pts[:, 0].min()) if int_pts.size else None,
-            int_top_Tstar=first_crossing(int_pts[:, 0], int_pts[:, 1], 0.85) if int_pts.size else None,
+            int_top_Tstar=first_crossing(
+                audited_interface[:, 0], audited_interface[:, 1], 0.85
+            ) if audited_interface.size else None,
+            int_top_Tstar_legacy_misclassified=first_crossing(
+                int_pts[:, 0], int_pts[:, 1], 0.85
+            ) if int_pts.size else None,
             Hstar_plateau=float(np.median(fig6d["med"][(fig6d["T"] > 1.0) & (fig6d["T"] < 4.0)])),
             Hstar_drop_Tstar=first_crossing(fig6d["T"], fig6d["med"], 0.3, above=False, after=2.0),
             Yfs_pre_arrival=float(np.median(fs_pts[fs_pts[:, 0] < 3.65][:, 1]))
@@ -327,7 +394,7 @@ def main():
     print(json.dumps(m, indent=2))
     print(f"-> {OUT / 'caseB_comparison_pressure.png'}")
     print(f"-> {OUT / 'caseB_comparison_levels.png'}")
-    print(f"-> {HERE / 'report.html'}")
+    print(f"-> {OUT / 'report.html'}")
 
 
 def build_report(m: dict):
@@ -345,7 +412,7 @@ def build_report(m: dict):
          ("是" if mo.get("geyser") else "否") + f"（水面最高 {_f(mo.get('Yfs_max'))}L）", ""),
         ("塔水位平台（气体进塔前）", _f(pa.get("Yfs_pre_arrival")), _f(mo.get("Yfs_plateau_pre_arrival")),
          "静水位=气囊准静态平衡"),
-        ("压头平台 H*（T*≈1–3 中位）", _f(pa.get("Hstar_plateau")),
+        ("压头平台 H*（1&lt;T*&lt;4 中位）", _f(pa.get("Hstar_plateau")),
          f"{_f(mo.get('Hstar_plateau_tr_crown'))}（管顶基准）/ {_f(mo.get('Hstar_plateau_tr'))}（管底）",
          "论文读数与管顶基准一致"),
         ("气水界面进入塔（Y*int 离底）", f"T*={_f(pa.get('int_liftoff_Tstar'))}（{_sec(pa.get('int_liftoff_Tstar'))}）",
@@ -410,11 +477,11 @@ p{{line-height:1.55;color:#374151}}
 <div class="panel">
   <h2 style="margin-top:0">论文原图（扫描面板）</h2>
   <div class="grid2">
-    <div><h3 style="margin:4px 0">Fig.6 本工况面板（压头）</h3><img src="digitized/fig6_caseB_panel.png"></div>
-    <div><h3 style="margin:4px 0">Fig.8 本工况面板（水面/界面）</h3><img src="digitized/fig8_caseB_panel.png"></div>
+    <div><h3 style="margin:4px 0">Fig.6 本工况面板（压头）</h3><img src="../data/digitized/fig6_caseB_panel.png"></div>
+    <div><h3 style="margin:4px 0">Fig.8 本工况面板（水面/界面）</h3><img src="../data/digitized/fig8_caseB_panel.png"></div>
   </div>
   <h3 style="margin:12px 0 4px 0">Fig.3 流动演化示意（论文机理图）</h3>
-  <img src="paper_scans/fig3_schematic.png">
+  <img src="../reference/paper_scans/fig3_schematic.png">
   <p class="muted">注意中间小图的标注："Water level oscillates after valve is opened, but amplitude
   reduces with time"——实验本身就有开阀释放振荡（论文正文第 4 条亦有描述），模型解析出的
   水柱-气囊弹簧振荡与之同源，差异只在衰减速率。</p>
@@ -422,16 +489,15 @@ p{{line-height:1.55;color:#374151}}
 __PUB_FIGS__
 <div class="panel">
   <h2 style="margin-top:0">叠加对比（工作版全量图）</h2>
-  <h3>压头 H*(T*)</h3><img src="outputs/caseB_comparison_pressure.png">
-  <h3>塔内水面与气水界面 Y*(T*)</h3><img src="outputs/caseB_comparison_levels.png">
+  <h3>压头 H*(T*)</h3><img src="caseB_comparison_pressure.png">
+  <h3>塔内水面与气水界面 Y*(T*)</h3><img src="caseB_comparison_levels.png">
   <h3>事件时刻与量值对照</h3>
   <table>
     <tr><th>指标</th><th>论文实验（数字化）</th><th>模型</th><th>备注</th></tr>
     {trs}
   </table>
-  <p class="muted"><b>基准面说明</b>：模型隧道压力记录在管底（invert）基准；通风塔物理上接在管顶（crown），
-  论文压头面板与"等温气囊 EOS + 实测塔水位 + 管顶基准"的静力学自洽（差 ~0.02 L），故叠加图以
-  管顶基准（-D/L=0.154）为主对比曲线，管底原始记录淡色保留。<br>
+  <p class="muted"><b>基准面说明</b>：论文未报告压力孔的周向高程。图中同时保留一维模型原始值及
+  历史 -D/L=0.154 假设；后者改善吻合不能反证测点基准，详见三维算例 PAPER_AUDIT.md。<br>
   <b>吻合点</b>：喷发分支（水面到顶）、气体进塔前塔水位平台（模型 ~0.85 vs 实验 ~0.82，
   即气囊准静态平衡位）、压头平台（管顶基准 ~0.78 vs 实验 0.76）、界面爬升-水面爬升-压头骤降的
   相对时序（进塔→喷发→贯通→骤降）。<br>
@@ -444,7 +510,7 @@ __EXTRA_SECTIONS__
 </div></body></html>"""
     html = html.replace("__EXTRA_SECTIONS__", build_extra_sections())
     html = html.replace("__PUB_FIGS__", build_pub_figs())
-    (HERE / "report.html").write_text(html, encoding="utf-8")
+    (OUT / "report.html").write_text(html, encoding="utf-8")
 
 
 def build_pub_figs() -> str:
@@ -461,7 +527,7 @@ def build_pub_figs() -> str:
     have = [(f, cap) for f, cap in pub_imgs if (OUT / f).exists()]
     if not have:
         return ""
-    imgs = "\n".join(f'  <h3>{cap}</h3><img src="outputs/{f}">' for f, cap in have)
+    imgs = "\n".join(f'  <h3>{cap}</h3><img src="{f}">' for f, cap in have)
     return f"""
 <div class="panel">
   <h2 style="margin-top:0">出版级重绘图（论文实际收录版本）</h2>
@@ -478,7 +544,20 @@ def build_extra_sections() -> str:
     parts = []
     frames_json = OUT / "frames_index.json"
     if frames_json.exists():
-        frames_data = frames_json.read_text(encoding="utf-8")
+        frames = json.loads(frames_json.read_text(encoding="utf-8"))
+        for frame in frames:
+            for key in ("file", "riserFile"):
+                if frame.get(key, "").startswith("outputs/"):
+                    frame[key] = frame[key][len("outputs/"):]
+        frame_assets_ok = bool(frames) and all(
+            (OUT / frame.get(key, "")).is_file()
+            for frame in frames
+            for key in ("file", "riserFile")
+        )
+        frames_data = json.dumps(frames, ensure_ascii=False)
+    else:
+        frame_assets_ok = False
+    if frame_assets_ok:
         parts.append("""
 <div class="panel">
   <h2 style="margin-top:0">两流体模拟逐帧查看器 — 水平管 + 通风塔全场演化</h2>
@@ -509,7 +588,7 @@ def build_extra_sections() -> str:
     <input id="vSlider" type="range" style="width:60%;vertical-align:middle">
     <button id="vNext" style="padding:8px 14px;margin:6px;border:1px solid #bbb;border-radius:8px;background:#fff;cursor:pointer">下一帧</button>
   </div>
-  <p class="muted">整段 GIF 备份：<a href="outputs/caseB_animation.gif">caseB_animation.gif</a></p>
+  <p class="muted">整段 GIF 备份：<a href="caseB_animation.gif">caseB_animation.gif</a></p>
 </div>
 <script>
 const vFrames=""" + frames_data + """;
@@ -545,9 +624,13 @@ vShow(0);
         parts.append("""
 <div class="panel">
   <h2 style="margin-top:0">两流体模拟动画 — 水平管 + 通风塔全场演化</h2>
-  <img src="outputs/caseB_animation.gif" style="max-width:900px">
+  <img src="caseB_animation.gif" style="max-width:900px">
 </div>""")
-    if (OUT / "caseB_fig11_overlay.png").exists():
+    if (
+        (OUT / "caseB_fig11_overlay.png").is_file()
+        and (OUT / "caseB_fig11_model_panels.png").is_file()
+        and (SCANS / "fig11_full.png").is_file()
+    ):
         parts.append("""
 <div class="panel">
   <h2 style="margin-top:0">Fig.11 对照 — 模型曲线直接叠画在论文原图上</h2>
@@ -556,19 +639,22 @@ vShow(0);
   把结果（<b style="color:#e11d48">红线</b>）按论文坐标系直接画进五个面板：黑粗线=论文 TPA 模型，
   散点/细线=实验三次重复。时间轴做了刚体平移对齐 Y*<sub>int</sub> 爬升中点（开阀时刻在实验中为
   手动，论文 T* 原点取法不同；平移量见图内标注）。</p>
-  <img src="outputs/caseB_fig11_overlay.png">
+  <img src="caseB_fig11_overlay.png">
   <p class="muted">读图：Y*<sub>int</sub> 爬升段红线斜率与论文模型/实验一致（V*int 拟合 ~1.6 vs
   实验散点 1–3 区间）；H* 平台（管顶基准 ~0.33 vs 论文 ~0.38–0.44）与骤降形态一致、模型骤降更陡；
   该工况初始超压余量为负（Ha0=0.305 &lt; WL 静压），我们的模型水面只抬升到 ~0.61L 即被排气打断，
   论文实验/模型在 T*≈4.1 冲顶——小超压喷发分支的判据差异是已知模型局限（与 caseB 主工况
   Ha0=0.610 的强驱动喷发不同源）。</p>
   <div class="grid2" style="margin-top:10px">
-    <div><h3 style="margin:4px 0">论文 Fig.11 原图</h3><img src="paper_scans/fig11_full.png"></div>
-    <div><h3 style="margin:4px 0">我们的模型（同轴五联图）</h3><img src="outputs/caseB_fig11_model_panels.png"></div>
+    <div><h3 style="margin:4px 0">论文 Fig.11 原图</h3><img src="../reference/paper_scans/fig11_full.png"></div>
+    <div><h3 style="margin:4px 0">我们的模型（同轴五联图）</h3><img src="caseB_fig11_model_panels.png"></div>
   </div>
 </div>""")
     return "".join(parts)
 
 
 if __name__ == "__main__":
-    main()
+    if "--check-paths" in sys.argv:
+        check_paths()
+    else:
+        main()

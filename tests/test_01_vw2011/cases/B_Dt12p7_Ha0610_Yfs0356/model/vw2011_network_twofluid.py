@@ -36,7 +36,11 @@ from pathlib import Path
 
 import numpy as np
 
-HERE = Path(__file__).resolve().parent
+CASE_ROOT = Path(__file__).resolve().parents[1]
+MODEL = CASE_ROOT / "model"
+DIGITIZED = CASE_ROOT / "data" / "digitized"
+SCANS = CASE_ROOT / "reference" / "paper_scans"
+OUTPUTS = CASE_ROOT / "outputs"
 G = 9.81
 RHO_L = 998.0
 P_ATM = 101325.0
@@ -1780,7 +1784,7 @@ def make_html_report(out_dir: Path, regen: bool = False):
     frames_js = json.dumps(frames, ensure_ascii=False)
 
     # ---- paper-comparison section (built by compare_selected_case_vs_paper.py)
-    dig = HERE / "paper_reference" / "digitized"
+    dig = DIGITIZED
     for src_name, dst_name in (("fig6_center_panel.png", "paper_fig6_center.png"),
                                ("fig8_center_panel.png", "paper_fig8_center.png")):
         src = dig / src_name
@@ -1947,7 +1951,7 @@ if __name__ == "__main__":
     ap.add_argument("--tend", type=float, default=8.0)
     ap.add_argument("--regen", action="store_true", help="regenerate GIFs when building the HTML report")
     args = ap.parse_args()
-    out = HERE / "outputs" / "vw2011_network"
+    out = OUTPUTS / "vw2011_network"
     if args.mode == "schematic":
         p = draw_apparatus_schematic(out)
         print(f"schematic -> {p}")

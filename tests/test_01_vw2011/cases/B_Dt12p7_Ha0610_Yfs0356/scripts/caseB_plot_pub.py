@@ -21,9 +21,13 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-HERE = Path(__file__).resolve().parent
-OUT = HERE / "outputs"
-DIG = HERE / "digitized"
+CASE_ROOT = Path(__file__).resolve().parents[1]
+MODEL = CASE_ROOT / "model"
+DIGITIZED = CASE_ROOT / "data" / "digitized"
+SCANS = CASE_ROOT / "reference" / "paper_scans"
+OUTPUTS = CASE_ROOT / "outputs"
+OUT = OUTPUTS
+DIG = DIGITIZED
 
 L = 0.61
 DCROWN = 0.094 / L          # invert -> crown datum shift [in H*/L units]
