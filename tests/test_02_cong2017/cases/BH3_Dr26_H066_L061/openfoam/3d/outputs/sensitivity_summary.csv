@@ -1,0 +1,2 @@
+run_id,run_mode,valve_opening,end_time_s,full_13s,geyser,Ta_s,Yfs_max_m,Yint_max_m,vfs_m_s,vint_m_s,rim_ejected_l,gas_mass_residual_fraction,total_mass_residual_fraction
+open_smoke,event,instant,0.02,0,0,,0.6499999999999997,,,,0.0,2.1871434747762673e-06,1.7514384320158395e-07

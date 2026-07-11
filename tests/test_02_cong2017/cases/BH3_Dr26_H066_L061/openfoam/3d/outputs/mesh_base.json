@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "case": "B-H3",
+  "profile": "base",
+  "checkMesh_allGeometry_allTopology": true,
+  "points": 39948,
+  "faces": 311614,
+  "internal_faces": 253250,
+  "cells": 141216,
+  "hexahedra": 0,
+  "prisms": 0,
+  "polyhedra": 0,
+  "max_aspect_ratio": 5.680833044,
+  "max_non_orthogonality_deg": 54.44658387,
+  "average_non_orthogonality_deg": 17.56692784,
+  "max_skewness": 0.7244525515,
+  "minimum_volume_m3": 6.832534669e-09,
+  "fluid_geometry_volume_m3": 0.117485050594,
+  "analytic_initial_pocket_m3": 0.00119773219918
+}

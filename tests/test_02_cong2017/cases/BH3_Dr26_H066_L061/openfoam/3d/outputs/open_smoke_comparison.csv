@@ -1,0 +1,6 @@
+metric,experiment,existing_1d,openfoam_3d,unit
+geyser,1,0,0,boolean
+Ta,8.18,9.56,,s
+vfs,0.657,0.4268,,m/s
+vint,0.916,1.2369,,m/s
+Yfs_max,,0.82,0.6499999999999997,m
