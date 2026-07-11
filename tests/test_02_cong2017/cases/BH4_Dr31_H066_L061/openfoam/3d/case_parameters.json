@@ -66,7 +66,7 @@
     "opening_law": "D=D_closed*(1-t/t_open)^4 for 0<=t<=t_open",
     "closed_darcy_coefficient_per_m2": 100000000000.0,
     "baffle_length_m": 0.02,
-    "pressure_jump_relaxation": 0.01,
+    "pressure_jump_relaxation": 0.1,
     "sensitivity_opening_times_s": [0.1, 0.3]
   },
   "experiment": {
