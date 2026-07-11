@@ -63,7 +63,7 @@ penalise the downstream air-pocket cells.  For the baseline manual opening:
 
 ```text
 beta(t) = beta_closed (1 - t/t_open)^4,  0 <= t <= t_open
-beta_closed = 1e8 kg/(m3 s)
+beta_closed = 1e10 kg/(m3 s)
 t_open = 0.20 s
 ```
 
@@ -103,7 +103,8 @@ BH4_VALVE_TIME=0.30 BH4_END_TIME=13 BH4_LABEL=base_topen0p30 ./Allrun
 
 Set `BH4_DRY_RUN=1` for the solver's one-step parser/smoke check.  Parallel
 runs use at most six ranks by default.  `Allrun.resume` continues an existing
-decomposed event.
+decomposed event.  `BH4_MAX_DELTA_T` can impose a stricter time-step cap for
+the closed-valve startup diagnostic without rewriting `controlDict`.
 
 `Allrun` always executes:
 

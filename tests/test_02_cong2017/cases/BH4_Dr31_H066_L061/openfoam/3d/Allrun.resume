@@ -12,14 +12,17 @@ fi
 
 NP="${BH4_NP:-$(compgen -G 'processor*' | wc -l)}"
 END_TIME="${BH4_END_TIME:-13.0}"
+MAX_DELTA_T="${BH4_MAX_DELTA_T:-0.0005}"
 LABEL="${BH4_LABEL:-base_topen0p20}"
 
-restore_baseline_end_time()
+restore_baseline_controls()
 {
     printf 'endTime 13.0;\n' > system/endTime.inc
+    printf 'maxDeltaT 0.0005;\n' > system/maxDeltaT.inc
 }
-trap restore_baseline_end_time EXIT
+trap restore_baseline_controls EXIT
 printf 'endTime %s;\n' "$END_TIME" > system/endTime.inc
+printf 'maxDeltaT %s;\n' "$MAX_DELTA_T" > system/maxDeltaT.inc
 
 OMPI_ALLOW_RUN_AS_ROOT=1 \
 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \

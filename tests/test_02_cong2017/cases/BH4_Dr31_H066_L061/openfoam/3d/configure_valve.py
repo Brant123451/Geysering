@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 # Positive SuSp is assembled on the momentum diagonal and therefore damps U.
-BETA_CLOSED = 1.0e8  # kg/(m3 s), verified by the closed-valve leakage gate
+BETA_CLOSED = 1.0e10  # kg/(m3 s); acceptance is set by the leakage gate
 
 
 def parse_args() -> argparse.Namespace:

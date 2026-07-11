@@ -25,6 +25,7 @@ PIPE_SIZE="${BH4_PIPE_SIZE:-0.00625}"
 RISER_SIZE="${BH4_RISER_SIZE:-0.003875}"
 ATMOSPHERE_SIZE="${BH4_ATMOSPHERE_SIZE:-0.025}"
 END_TIME="${BH4_END_TIME:-13.0}"
+MAX_DELTA_T="${BH4_MAX_DELTA_T:-0.0005}"
 VALVE_TIME="${BH4_VALVE_TIME:-0.20}"
 VALVE_MODE="${BH4_VALVE_MODE:-opening}"
 DRY_RUN="${BH4_DRY_RUN:-0}"
@@ -39,6 +40,7 @@ restore_baseline_controls()
 {
     python3 configure_valve.py --opening-time 0.20 >/dev/null
     printf 'endTime 13.0;\n' > system/endTime.inc
+    printf 'maxDeltaT 0.0005;\n' > system/maxDeltaT.inc
 }
 trap restore_baseline_controls EXIT
 
@@ -87,6 +89,7 @@ cp -a 0.orig 0
 setFields > log.setFields 2>&1
 setExprFields > log.setExprFields 2>&1
 printf 'endTime %s;\n' "$RUN_END_TIME" > system/endTime.inc
+printf 'maxDeltaT %s;\n' "$MAX_DELTA_T" > system/maxDeltaT.inc
 
 if (( NP == 1 )); then
     compressibleInterFoam > log.compressibleInterFoam 2>&1
