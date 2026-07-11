@@ -18,6 +18,7 @@ import json
 import math
 from pathlib import Path
 
+import mapbox_earcut
 import numpy as np
 
 
@@ -158,37 +159,39 @@ def rect_fan(plane_axis, plane_value, u0, u1, v0, v1, nseg):
 
 
 def rect_with_hole(plane_axis, plane_value, u0, u1, v0, v1, cu, cv, radius, nseg):
-    """Rectangle with a circular hole and a conformal rectangular perimeter."""
+    """Rectangle with a circular hole and a conformal rectangular perimeter.
+
+    The former one-to-one strip between uniformly parameterised rectangular
+    and circular loops produced crossed, near-zero-area triangles at the
+    downstream pipe/chamber junction.  Ear clipping preserves both exact
+    boundary loops while triangulating the multiply connected planar face.
+    """
     theta = angles(nseg)
-    circle = [(cu + radius * math.cos(a), cv + radius * math.sin(a)) for a in theta]
-    outer = rectangle_loop(u0, u1, v0, v1, nseg)
-    tris = []
-    for i in range(nseg):
-        c0, c1 = circle[i], circle[i + 1]
-        o0, o1 = outer[i], outer[i + 1]
-        tris += [
-            [
-                to3(plane_axis, plane_value, *c0),
-                to3(plane_axis, plane_value, *o0),
-                to3(plane_axis, plane_value, *o1),
-            ],
-            [
-                to3(plane_axis, plane_value, *c0),
-                to3(plane_axis, plane_value, *o1),
-                to3(plane_axis, plane_value, *c1),
-            ],
+    circle = [(cu + radius * math.cos(a), cv + radius * math.sin(a)) for a in theta[:-1]]
+    outer = rectangle_loop(u0, u1, v0, v1, nseg)[:-1]
+    vertices = np.asarray([*outer, *circle], dtype=np.float64)
+    ring_ends = np.asarray([len(outer), len(vertices)], dtype=np.uint32)
+    indices = mapbox_earcut.triangulate_float64(vertices, ring_ends).reshape((-1, 3))
+    return tri_block(
+        [
+            [to3(plane_axis, plane_value, *vertices[index]) for index in triangle]
+            for triangle in indices
         ]
-    return tri_block(tris)
+    )
 
 
 def write_stl(path, solid_name, triangles):
+    """Write non-degenerate triangles and return ``(written, skipped)``."""
     path.parent.mkdir(parents=True, exist_ok=True)
+    written = 0
+    skipped = 0
     with path.open("w", encoding="ascii") as stream:
         stream.write(f"solid {solid_name}\n")
         for tri in triangles:
             normal = np.cross(tri[1] - tri[0], tri[2] - tri[0])
             magnitude = np.linalg.norm(normal)
             if magnitude < 1e-16:
+                skipped += 1
                 continue
             normal /= magnitude
             stream.write(f" facet normal {normal[0]:.8e} {normal[1]:.8e} {normal[2]:.8e}\n")
@@ -196,7 +199,9 @@ def write_stl(path, solid_name, triangles):
             for point in tri:
                 stream.write(f"   vertex {point[0]:.8e} {point[1]:.8e} {point[2]:.8e}\n")
             stream.write("  endloop\n endfacet\n")
+            written += 1
         stream.write(f"endsolid {solid_name}\n")
+    return written, skipped
 
 
 def build(gate_area):
@@ -289,10 +294,16 @@ def build(gate_area):
     OUT.mkdir(parents=True, exist_ok=True)
     for stale in OUT.glob("*.stl"):
         stale.unlink()
+    written_counts = {}
+    skipped_counts = {}
     for name, triangles in pieces.items():
-        write_stl(OUT / f"{name}.stl", name, triangles)
+        written_counts[name], skipped_counts[name] = write_stl(
+            OUT / f"{name}.stl", name, triangles
+        )
     combined = np.concatenate(list(pieces.values()))
-    write_stl(OUT / "diagnosticCombined.stl", "diagnosticCombined", combined)
+    combined_written, combined_skipped = write_stl(
+        OUT / "diagnosticCombined.stl", "diagnosticCombined", combined
+    )
 
     metadata = {
         "source": "Liu et al. (2020), pp. 2-3, Fig. 2; plume and equivalent gate are model closures",
@@ -300,8 +311,14 @@ def build(gate_area):
         "gate_radius_m": gate_radius,
         "plume_top_z_m": plume_top,
         "riser_rim_z_m": z_rim,
-        "surface_triangle_counts": {name: int(len(triangles)) for name, triangles in pieces.items()},
-        "diagnostic_combined_triangle_count": int(len(combined)),
+        "surface_triangle_counts": written_counts,
+        "surface_candidate_triangle_counts": {
+            name: int(len(triangles)) for name, triangles in pieces.items()
+        },
+        "degenerate_triangles_skipped": skipped_counts,
+        "diagnostic_combined_triangle_count": combined_written,
+        "diagnostic_combined_candidate_triangle_count": int(len(combined)),
+        "diagnostic_degenerate_triangles_skipped": combined_skipped,
     }
     with (HERE / "case" / "generated_geometry.json").open("w", encoding="utf-8") as stream:
         json.dump(metadata, stream, indent=2)

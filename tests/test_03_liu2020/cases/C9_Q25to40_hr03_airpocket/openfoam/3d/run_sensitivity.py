@@ -37,6 +37,8 @@ VARIANTS = {
     "contact_angle_120": ["--contact-angle", "120"],
     "interface_compression_05": ["--c-alpha", "0.5"],
     "interface_compression_15": ["--c-alpha", "1.5"],
+    "velocity_limit_20": ["--velocity-limit", "20"],
+    "velocity_unlimited": ["--velocity-limit", "0"],
 }
 
 
@@ -87,6 +89,11 @@ def main():
             destination = RUNS / name
             if destination.exists() and args.fresh:
                 shutil.rmtree(destination)
+            elif destination.exists():
+                raise SystemExit(
+                    f"{destination} already exists; use --fresh to avoid mixing "
+                    "generated parameters or solver histories"
+                )
             if not destination.exists():
                 shutil.copytree(SOURCE_CASE, destination, ignore=source_ignore)
 
@@ -134,6 +141,7 @@ def main():
             generated = json.loads((destination / "generated_case.json").read_text())
             mesh = metrics.get("mesh", {})
             phase1 = metrics.get("phase_1", {})
+            numerics = metrics.get("numerics", {})
             rows.append(
                 {
                     "variant": name,
@@ -144,8 +152,15 @@ def main():
                     "mesh_profile": generated.get("mesh_profile"),
                     "cells": mesh.get("cells"),
                     "checkMesh_passed": mesh.get("checkMesh_passed"),
+                    "strict_check_passed": mesh.get("all_geometry_passed"),
                     "maxCo": generated.get("maxCo"),
                     "maxDeltaT_s": generated.get("maxDeltaT"),
+                    "velocity_limit_m_s": generated.get("velocity_limit_m_s"),
+                    "limiter_activated": numerics.get("velocity_limiter_activated"),
+                    "maximum_limited_cells": numerics.get("maximum_limited_cells"),
+                    "maximum_limited_cell_percent": numerics.get(
+                        "maximum_limited_cell_percent"
+                    ),
                     "pocket_profile": generated.get("pocket_profile"),
                     "analytic_pocket_volume_m3": generated.get("analytic_initial_air_volume_m3"),
                     "gate_area_m2": generated.get("gate_area_m2"),
@@ -157,6 +172,9 @@ def main():
                     "first_top_s": phase1.get("first_riser_top_s"),
                     "geyser_count": metrics.get("simulated_geyser_count"),
                     "air_arrival_s": metrics.get("simulated_air_pocket_arrival_s"),
+                    "gas_transfer_onset_s": metrics.get(
+                        "simulated_gas_transfer_onset_s"
+                    ),
                     "mass_error": metrics.get("mass_conservation_relative_error"),
                     "gas_mass_error": metrics.get("gas_mass_conservation_relative_error"),
                 }
@@ -174,8 +192,13 @@ def main():
         "mesh_profile",
         "cells",
         "checkMesh_passed",
+        "strict_check_passed",
         "maxCo",
         "maxDeltaT_s",
+        "velocity_limit_m_s",
+        "limiter_activated",
+        "maximum_limited_cells",
+        "maximum_limited_cell_percent",
         "pocket_profile",
         "analytic_pocket_volume_m3",
         "gate_area_m2",
@@ -187,6 +210,7 @@ def main():
         "first_top_s",
         "geyser_count",
         "air_arrival_s",
+        "gas_transfer_onset_s",
         "mass_error",
         "gas_mass_error",
     ]

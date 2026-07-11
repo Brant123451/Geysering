@@ -209,6 +209,7 @@ def make_control_dict(
     max_dt: float,
     paper: dict,
     model: dict,
+    pocket: dict,
 ) -> str:
     ramp = model["ramp_start_solver_s"]
     q0 = paper["initial_flow_m3_s"]
@@ -218,10 +219,15 @@ def make_control_dict(
     z_values = [0.46 + i * (top - 0.46) / 110.0 for i in range(111)]
     riser_points = "\n".join(f"            (0.15 0.0 {z:.6f})" for z in z_values)
     crown_points = []
+    deep_crown_points = []
+    main_body_probe_depth = pocket["thin_layer_m"] + 0.004
     for i in range(60):
         x = -5.75 + i * 5.70 / 59.0
         crown = 0.38 - 0.01 * x
         crown_points.append(f"            ({x:.6f} 0 {crown - 0.004:.6f})")
+        deep_crown_points.append(
+            f"            ({x:.6f} 0 {crown - main_body_probe_depth:.6f})"
+        )
 
     return (
         foam_header("dictionary", "controlDict")
@@ -286,6 +292,22 @@ functions
         probeLocations
         (
 {os.linesep.join(crown_points)}
+        );
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }}
+
+    upstreamCrownDeep
+    {{
+        // Four millimetres below the selected thin-layer prior.  Gas at this
+        // depth identifies the thick main pocket instead of the initially
+        // connected crown layer.
+        type            probes;
+        libs            (sampling);
+        fields          (alpha.water p);
+        probeLocations
+        (
+{os.linesep.join(deep_crown_points)}
         );
         writeControl    adjustableRunTime;
         writeInterval   0.01;
@@ -518,6 +540,7 @@ def generate(args: argparse.Namespace) -> dict:
     model["tailgate_geometric_area_m2"] = gate_area
     contact_angle = args.contact_angle if args.contact_angle is not None else model["contact_angle_deg"]
     c_alpha = args.c_alpha if args.c_alpha is not None else model["interface_compression"]
+    velocity_limit = args.velocity_limit
     application = (
         "compressibleInterIsoFoam"
         if args.interface_solver == "iso-advector"
@@ -554,6 +577,8 @@ def generate(args: argparse.Namespace) -> dict:
     z_top = geometry_meta["plume_top_z_m"]
     tail = pocket["tail_x_m"]
     nose = pocket["body_nose_x_m"]
+    pocket_interface = pocket["body_interface_z_m"]
+    thin_layer = pocket["thin_layer_m"]
     nx, ny, nz = mesh["background_cells"]
 
     write(
@@ -663,6 +688,21 @@ geometry
         min ({nose - 0.25:.6f} -0.12 0.32);
         max ({nose + 0.25:.6f} 0.12 0.47);
     }}
+    pocketInterface
+    {{
+        type searchableBox;
+        min ({tail - 0.08:.6f} -0.12 {pocket_interface - 0.015:.6f});
+        max ({nose + 0.08:.6f} 0.12 {pocket_interface + 0.015:.6f});
+    }}
+    thinLayerZone
+    {{
+        // The reported crown layer is only 8 mm in the base prior.  The old
+        // 10 mm cells represented it by one cell and generated a >12 m/s
+        // gas jet at the pocket nose.  Resolve it with at least three cells.
+        type searchableBox;
+        min ({nose - 0.08:.6f} -0.12 {0.38 - thin_layer - 0.012:.6f});
+        max (0.02 0.12 {0.38 - 0.01 * nose + 0.008:.6f});
+    }}
     riserFreeSurface
     {{
         type searchableCylinder;
@@ -703,6 +743,8 @@ castellatedMeshControls
         pocketZone       {{ mode inside; levels ((1e15 {mesh['pocket_level']})); }}
         pocketTail       {{ mode inside; levels ((1e15 {mesh['interface_level']})); }}
         pocketNose       {{ mode inside; levels ((1e15 {mesh['interface_level']})); }}
+        pocketInterface  {{ mode inside; levels ((1e15 {mesh['interface_level']})); }}
+        thinLayerZone    {{ mode inside; levels ((1e15 {mesh['thin_layer_level']})); }}
         riserFreeSurface {{ mode inside; levels ((1e15 {mesh['interface_level']})); }}
         gateZone         {{ mode inside; levels ((1e15 {mesh['gate_level']})); }}
     }}
@@ -712,13 +754,17 @@ castellatedMeshControls
 snapControls
 {{
     nSmoothPatch 5;
+    nSmoothInternal 3;
     tolerance 2.0;
     nSolveIter 80;
     nRelaxIter 8;
     nFeatureSnapIter 15;
+    nFaceSplitInterval 5;
+    concaveAngle 30;
     implicitFeatureSnap false;
     explicitFeatureSnap true;
     multiRegionFeatureSnap false;
+    strictRegionSnap true;
 }}
 addLayersControls
 {{
@@ -1142,19 +1188,20 @@ PIMPLE
 }}
 """
     )
-    write(
-        "system/fvOptions",
-        foam_header("dictionary", "fvOptions")
-        + """
+    fv_options = foam_header("dictionary", "fvOptions")
+    if velocity_limit > 0:
+        fv_options += f"""
 limitU
 {
     type limitVelocity;
     active yes;
     selectionMode all;
-    max 12.0;
+    max {velocity_limit:.8g};
 }
-""",
-    )
+"""
+    else:
+        fv_options += "\n// Velocity clipping disabled for the control case.\n"
+    write("system/fvOptions", fv_options)
     write(
         "system/decomposeParDict",
         foam_header("dictionary", "decomposeParDict")
@@ -1182,6 +1229,7 @@ method scotch;
                 args.max_dt,
                 paper,
                 model,
+                pocket,
             ),
         )
     write(
@@ -1195,6 +1243,7 @@ method scotch;
             args.max_dt,
             paper,
             model,
+            pocket,
         ),
     )
 
@@ -1217,6 +1266,10 @@ rg -q '^Surface is closed' log.surfaceCheck || {{
     echo "Combined C9 surface is not topologically closed; see log.surfaceCheck" >&2
     exit 2
 }}
+if rg -q '^Surface is self-intersecting' log.surfaceCheck; then
+    echo "Combined C9 surface self-intersects; see log.surfaceCheck" >&2
+    exit 2
+fi
 blockMesh > log.blockMesh 2>&1
 surfaceFeatureExtract > log.surfaceFeatureExtract 2>&1
 rm -rf 0
@@ -1228,6 +1281,14 @@ rm -rf processor*
 topoSet > log.topoSet 2>&1
 checkMesh > log.checkMesh 2>&1
 checkMesh -allGeometry -allTopology > log.checkMesh.all 2>&1
+rg -q 'Mesh OK\\.' log.checkMesh || {{
+    echo "C9 mesh failed the standard check; see log.checkMesh" >&2
+    exit 3
+}}
+rg -q 'Mesh OK\\.' log.checkMesh.all || {{
+    echo "C9 mesh failed the strict geometry/topology check; see log.checkMesh.all" >&2
+    exit 4
+}}
 echo MESH_DONE
 """,
         executable=True,
@@ -1354,6 +1415,7 @@ rm -f log.*
         "pocket": pocket,
         "analytic_initial_air_volume_m3": analytic_volume,
         "initial_air_gauge_pressure_Pa": pocket_gauge,
+        "main_body_probe_depth_below_crown_m": pocket["thin_layer_m"] + 0.004,
         "gate_area_m2": gate_area,
         "gate_area_kind": "resolved_geometric",
         "target_effective_discharge_area_m2": model["tailgate_effective_discharge_area_m2"],
@@ -1363,6 +1425,7 @@ rm -f log.*
         "interface_compression": c_alpha,
         "air_Cp_J_kg_K": model["air_Cp_J_kg_K"],
         "water_bulk_modulus_Pa": model["water_bulk_modulus_Pa"],
+        "velocity_limit_m_s": velocity_limit if velocity_limit > 0 else None,
         "maxCo": args.max_co,
         "maxAlphaCo": args.max_alpha_co,
         "maxDeltaT": args.max_dt,
@@ -1393,6 +1456,12 @@ def main() -> None:
     parser.add_argument("--gate-area", type=float)
     parser.add_argument("--contact-angle", type=float)
     parser.add_argument("--c-alpha", type=float)
+    parser.add_argument(
+        "--velocity-limit",
+        type=float,
+        default=12.0,
+        help="maximum |U| in m/s; use 0 to disable clipping for the control sensitivity",
+    )
     parser.add_argument("--max-co", type=float, default=0.35)
     parser.add_argument("--max-alpha-co", type=float, default=0.20)
     parser.add_argument("--max-dt", type=float, default=0.0005)

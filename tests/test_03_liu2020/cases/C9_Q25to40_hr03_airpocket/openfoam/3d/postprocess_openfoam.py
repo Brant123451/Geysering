@@ -177,6 +177,12 @@ def contiguous_events(times, active, minimum_duration=0.015):
     return events
 
 
+def first_sustained_time(times, active, minimum_duration):
+    """Return the start of the first sustained true interval."""
+    events = contiguous_events(times, active, minimum_duration=minimum_duration)
+    return float(times[events[0][0]]) if events else None
+
+
 def read_experiment(name: str) -> tuple[np.ndarray, np.ndarray]:
     path = DATA / f"fig9_{name}.csv"
     if not path.exists():
@@ -359,6 +365,40 @@ def main() -> None:
         zip(alpha_time, h50, h10, integral),
     )
 
+    deep_t_solver, deep_alpha = parse_probe_scalar(
+        post, "upstreamCrownDeep", "alpha.water"
+    )
+    deep_t = deep_t_solver - offset
+    if deep_alpha.size:
+        deep_x = np.linspace(-5.75, -0.05, deep_alpha.shape[1])
+        main_body_front = np.asarray(
+            [
+                float(np.max(deep_x[row <= 0.50]))
+                if np.any(np.isfinite(row) & (row <= 0.50))
+                else math.nan
+                for row in deep_alpha
+            ]
+        )
+        near_chamber_deep_gas = (
+            np.isfinite(deep_alpha[:, -1])
+            & (deep_alpha[:, -1] <= 0.50)
+            & (deep_t >= 0.0)
+        )
+        arrival_time = first_sustained_time(
+            deep_t, near_chamber_deep_gas, minimum_duration=0.05
+        )
+    else:
+        main_body_front = np.empty(0)
+        arrival_time = None
+    probe_depth = metadata.get("main_body_probe_depth_below_crown_m")
+    arrival_definition = (
+        "first nonnegative paper time at which alpha.air >= 0.50 persists "
+        "for at least 0.05 s at x=-0.05 m and "
+        f"{probe_depth if probe_depth is not None else 'unknown'} m below the "
+        "upstream-pipe crown; the probe is 4 mm below the selected initial "
+        "thin-layer thickness and operationally identifies the thick main pocket"
+    )
+
     uv_t_solver, upstream_water = first_column(post, "upstreamWaterVolume")
     uv_t = uv_t_solver - offset
     upstream_zone_volume = function_region_volume(
@@ -384,8 +424,8 @@ def main() -> None:
     )
     chamber_air = chamber_zone_volume - interp_series(cv_t, chamber_water, uv_t_solver)
 
-    arrival_time = None
-    arrival_definition = (
+    gas_transfer_onset = None
+    gas_transfer_definition = (
         "first nonnegative paper time with at least 20% upstream gas-mass loss "
         "and chamber gas-volume gain of at least max(1 L, 10% initial upstream volume)"
     )
@@ -400,11 +440,28 @@ def main() -> None:
             & (chamber_air - initial_chamber_air >= chamber_gain_threshold)
         )[0]
         if len(candidates):
-            arrival_time = float(uv_t[candidates[0]])
+            gas_transfer_onset = float(uv_t[candidates[0]])
+    body_front_at_inventory_times = (
+        interp_series(deep_t_solver, main_body_front, uv_t_solver)
+        if len(deep_t_solver)
+        else np.full(len(uv_t_solver), np.nan)
+    )
     write_csv(
         OUTPUTS / "openfoam_3d_air_pocket.csv",
-        ["time_s", "upstream_air_volume_m3", "upstream_air_mass_kg", "chamber_air_volume_m3"],
-        zip(uv_t, upstream_air_volume, upstream_air_mass, chamber_air),
+        [
+            "time_s",
+            "upstream_air_volume_m3",
+            "upstream_air_mass_kg",
+            "chamber_air_volume_m3",
+            "main_body_front_x_m",
+        ],
+        zip(
+            uv_t,
+            upstream_air_volume,
+            upstream_air_mass,
+            chamber_air,
+            body_front_at_inventory_times,
+        ),
     )
 
     # Eruption events follow the paper's definition: mixture crossing the rim.
@@ -452,6 +509,7 @@ def main() -> None:
         ],
         event_rows,
     )
+    geyser_rows = [row for row in event_rows if row[7] == "geyser"]
 
     # Total and gas conservation from volume and flux function objects.
     mass_t, total_mass = first_column(post, "totalMass")
@@ -513,18 +571,21 @@ def main() -> None:
             first_top = float(alpha_time[indices[0]])
     peaks = local_peaks(p_time, pressure[:, 1] if len(p_time) else np.empty(0))
     period = None
-    if sim_end is not None and sim_end >= 2.0 and len(peaks) >= 2:
-        period = float(peaks[1][0] - peaks[0][0])
+    if sim_end is not None and sim_end >= 6.5 and len(peaks) >= 3:
+        period = float(np.median(np.diff([peak[0] for peak in peaks])))
 
     finals = [None, None, None]
-    if sim_end is not None and sim_end >= 19.0:
+    if sim_end is not None and sim_end >= 19.999:
         final_window = p_time >= 19.0
         finals = [float(np.nanmean(pressure[final_window, index])) for index in (1, 2, 3)]
 
     phase1_complete = sim_end is not None and sim_end >= 6.5
-    phase2_complete = sim_end is not None and sim_end >= 19.0
-    phase2_events = sum(
-        1 for row in event_rows if arrival_time is not None and float(row[1]) >= arrival_time
+    phase2_complete = sim_end is not None and sim_end >= 19.999
+    phase1_geysers = sum(
+        1 for row in geyser_rows if float(row[1]) < PAPER["air_pocket_arrival_s"]
+    )
+    phase2_geysers = sum(
+        1 for row in geyser_rows if arrival_time is not None and float(row[1]) >= arrival_time
     )
     pre_ramp_air_mass_change = None
     if len(uv_t) > 1 and np.isfinite(upstream_air_mass[0]):
@@ -550,22 +611,29 @@ def main() -> None:
         "paper_time_offset_s": offset,
         "phase_1": {
             "window_complete": phase1_complete,
-            "reproduced": bool(phase1_complete and event_rows and p1m is not None),
+            "reproduced": bool(phase1_complete and phase1_geysers >= 2 and p1m is not None),
             "P1m_kPa": p1m,
             "P1m_time_s": t_p1m,
             "first_riser_top_s": first_top,
             "oscillation_period_s": period,
+            "geyser_count_before_experimental_phase2_boundary": phase1_geysers,
         },
         "phase_2": {
             "window_complete": phase2_complete,
-            "reproduced": bool(phase2_complete and phase2_events >= 2),
-            "events_after_simulated_pocket_arrival": phase2_events,
+            "reproduced": bool(
+                phase2_complete and len(geyser_rows) == 8 and phase2_geysers == 6
+            ),
+            "geysers_after_simulated_pocket_arrival": phase2_geysers,
             "note": "A phase-1 match is not counted as phase-2 reproduction.",
         },
-        "simulated_geyser_count": len(event_rows),
+        "simulated_rim_crossing_count": len(event_rows),
+        "simulated_geyser_count": len(geyser_rows),
         "experimental_geyser_count": PAPER["geyser_count"],
         "simulated_air_pocket_arrival_s": arrival_time,
         "air_pocket_arrival_definition": arrival_definition,
+        "main_body_probe_depth_below_crown_m": probe_depth,
+        "simulated_gas_transfer_onset_s": gas_transfer_onset,
+        "gas_transfer_onset_definition": gas_transfer_definition,
         "experimental_air_pocket_arrival_s": PAPER["air_pocket_arrival_s"],
         "air_pocket_arrival_error_percent": relative_error(arrival_time, PAPER["air_pocket_arrival_s"]),
         "major_pressure_peak_error_percent": relative_error(p1m, PAPER["P1m_kPa"]),
@@ -596,6 +664,11 @@ def main() -> None:
         "upstream_air_mass_retained_fraction": (
             float(upstream_air_mass[-1] / upstream_air_mass[0])
             if len(upstream_air_mass) and abs(upstream_air_mass[0]) > 1e-12
+            else None
+        ),
+        "end_main_body_front_x_m": (
+            float(main_body_front[-1])
+            if len(main_body_front) and np.isfinite(main_body_front[-1])
             else None
         ),
         "mesh": parse_mesh_quality(case),
@@ -643,10 +716,10 @@ def main() -> None:
     figure.savefig(OUTPUTS / "openfoam_3d_riser_comparison.png", dpi=180)
     plt.close(figure)
 
-    figure, left = plt.subplots(figsize=(10, 5))
+    figure, (left, front_axis) = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
     if len(uv_t):
         left.plot(uv_t, upstream_air_volume * 1000.0, color="#7c3aed", label="upstream air volume")
-    left.set(xlabel="paper time [s]", ylabel="upstream air volume [L]", xlim=(-0.5, 20))
+    left.set(ylabel="upstream air volume [L]", xlim=(-0.5, 20))
     left.grid(alpha=0.25)
     right = left.twinx()
     if len(uv_t):
@@ -655,6 +728,24 @@ def main() -> None:
     left.axvline(PAPER["air_pocket_arrival_s"], color="black", ls="--", lw=0.8)
     handles = left.get_lines() + right.get_lines()
     left.legend(handles, [line.get_label() for line in handles], frameon=False, fontsize=8)
+    if len(deep_t):
+        front_axis.plot(deep_t, main_body_front, color="#0369a1", label="deep-air front")
+    front_axis.axhline(0.0, color="black", ls="--", lw=0.8, label="chamber wall")
+    front_axis.axvline(
+        PAPER["air_pocket_arrival_s"],
+        color="#a855f7",
+        ls="--",
+        lw=0.8,
+        label="experiment 6.46 s",
+    )
+    front_axis.set(
+        xlabel="paper time [s]",
+        ylabel="main-body front x [m]",
+        xlim=(-0.5, 20),
+        ylim=(-5.8, 0.2),
+    )
+    front_axis.grid(alpha=0.25)
+    front_axis.legend(frameon=False, fontsize=8)
     figure.tight_layout()
     figure.savefig(OUTPUTS / "openfoam_3d_air_pocket_evolution.png", dpi=180)
     plt.close(figure)
@@ -669,8 +760,12 @@ def main() -> None:
             "solver",
             "interface_solver",
             "cells",
+            "strict_check_passed",
             "maxCo",
             "maxDeltaT_s",
+            "velocity_limit_m_s",
+            "limiter_activated",
+            "maximum_limited_cells",
             "pocket_profile",
             "gate_area_m2",
             "contact_angle_deg",
@@ -681,6 +776,7 @@ def main() -> None:
             "first_top_s",
             "geyser_count",
             "air_arrival_s",
+            "gas_transfer_onset_s",
             "mass_error",
             "gas_mass_error",
         ],
@@ -691,8 +787,12 @@ def main() -> None:
                 metadata.get("application"),
                 metadata.get("interface_solver"),
                 mesh.get("cells"),
+                mesh.get("all_geometry_passed"),
                 metadata.get("maxCo"),
                 metadata.get("maxDeltaT"),
+                metadata.get("velocity_limit_m_s"),
+                metrics["numerics"].get("velocity_limiter_activated"),
+                metrics["numerics"].get("maximum_limited_cells"),
                 metadata.get("pocket_profile"),
                 metadata.get("gate_area_m2"),
                 metadata.get("contact_angle_deg"),
@@ -701,8 +801,9 @@ def main() -> None:
                 metadata.get("water_bulk_modulus_Pa"),
                 p1m,
                 first_top,
-                len(event_rows),
+                len(geyser_rows),
                 arrival_time,
+                gas_transfer_onset,
                 mass_error,
                 gas_error,
             ]

@@ -79,7 +79,8 @@
       "chamber_level": 1,
       "riser_level": 2,
       "pocket_level": 2,
-      "interface_level": 2,
+      "interface_level": 3,
+      "thin_layer_level": 4,
       "gate_level": 2,
       "max_global_cells": 2000000
     },
@@ -88,8 +89,9 @@
       "surface_level": 1,
       "chamber_level": 2,
       "riser_level": 3,
-      "pocket_level": 2,
-      "interface_level": 3,
+      "pocket_level": 3,
+      "interface_level": 4,
+      "thin_layer_level": 5,
       "gate_level": 3,
       "max_global_cells": 8000000
     }

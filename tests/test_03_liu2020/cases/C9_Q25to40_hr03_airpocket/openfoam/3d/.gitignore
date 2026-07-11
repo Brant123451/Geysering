@@ -12,4 +12,5 @@ case/constant/triSurface/*.vtp
 case/log.*
 case/core
 case/*.foam
+case/VTK*/
 runs/
