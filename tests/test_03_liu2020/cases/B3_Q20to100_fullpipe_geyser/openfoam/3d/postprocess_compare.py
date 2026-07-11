@@ -210,15 +210,17 @@ def oscillation_periods(
     if len(tt) < 9:
         return []
     dt = float(np.median(np.diff(tt)))
-    half_window = max(1, int(round(0.01 / max(dt, 1e-9))))
+    # Match the established B3 comparison: about 50 ms total smoothing,
+    # positive peaks only, and at least 0.20 s between successive peaks.
+    half_window = max(1, int(round(0.025 / max(dt, 1e-9))))
     kernel = np.ones(2 * half_window + 1) / (2 * half_window + 1)
     smooth = np.convolve(yy, kernel, mode="same")
     candidates: list[int] = []
-    neighbourhood = max(2, int(round(0.04 / max(dt, 1e-9))))
-    minimum_separation = 0.18
+    neighbourhood = half_window
+    minimum_separation = 0.20
     for i in range(neighbourhood, len(smooth) - neighbourhood):
         window = smooth[i - neighbourhood : i + neighbourhood + 1]
-        if smooth[i] == np.max(window):
+        if smooth[i] == np.max(window) and smooth[i] > 3.0:
             if not candidates or tt[i] - tt[candidates[-1]] >= minimum_separation:
                 candidates.append(i)
             elif smooth[i] > smooth[candidates[-1]]:
@@ -233,12 +235,26 @@ def pressure_metrics(time: np.ndarray, pressure: dict[str, np.ndarray]) -> dict:
     event = (time >= 0.0) & (time <= 4.5)
     if not np.any(event):
         raise RuntimeError("OpenFOAM result does not cover the event window")
-    result: dict[str, dict[str, float | None]] = {}
+    event_indices = np.flatnonzero(event)
+    reference_peak_index = event_indices[
+        int(np.argmax(pressure["PT2"][event]))
+    ]
+    # Paper points D/E are the first rebound after point C, not the lowest
+    # value of every later oscillation.  A 0.62 s window includes the first
+    # trough while excluding the next trough for the reported 0.51/0.37 s
+    # oscillation periods.
+    rebound = (
+        (time >= time[reference_peak_index] + 0.02)
+        & (time <= time[reference_peak_index] + 0.62)
+        & (time <= 4.5)
+    )
+    if not np.any(rebound):
+        raise RuntimeError("OpenFOAM result does not cover the first rebound window")
+    rebound_indices = np.flatnonzero(rebound)
+    result: dict[str, dict[str, object]] = {}
     for sensor, values in pressure.items():
-        indices = np.flatnonzero(event)
-        peak_index = indices[int(np.argmax(values[event]))]
-        rebound = (time >= time[peak_index]) & (time <= 4.5)
-        minimum_index = np.flatnonzero(rebound)[int(np.argmin(values[rebound]))]
+        peak_index = event_indices[int(np.argmax(values[event]))]
+        minimum_index = rebound_indices[int(np.argmin(values[rebound]))]
         final = (time >= 10.0) & (time <= 14.4)
         result[sensor] = {
             "peak_kPa": float(values[peak_index]),
@@ -247,6 +263,10 @@ def pressure_metrics(time: np.ndarray, pressure: dict[str, np.ndarray]) -> dict:
             "minimum_time_s": float(time[minimum_index]),
             "final_mean_kPa": float(np.mean(values[final])) if np.any(final) else None,
             "final_std_kPa": float(np.std(values[final])) if np.any(final) else None,
+            "minimum_definition": (
+                "minimum from 0.02 to 0.62 s after the PT2 principal peak "
+                "(paper first-rebound window)"
+            ),
         }
     return result
 
@@ -301,17 +321,21 @@ def calculate_mass_balance(case: Path) -> dict:
         -0.5 * (inlet_flux[1:] + inlet_flux[:-1]) * np.diff(time)
     )
     reference = max(water_volume[0] + max(inlet_volume[-1], 0.0), 1e-12)
+    signed_percent = float(100 * residual[-1] / reference)
     return {
         "initial_water_volume_m3": float(water_volume[0]),
         "final_water_volume_m3": float(water_volume[-1]),
         "net_integrated_outward_water_flux_m3": float(integrated[-1]),
         "numerical_mass_error_m3": float(residual[-1]),
         "numerical_mass_error_L": float(1000 * residual[-1]),
-        "numerical_mass_error_percent": float(100 * residual[-1] / reference),
+        "numerical_mass_error_percent": abs(signed_percent),
+        "signed_numerical_mass_error_percent": signed_percent,
         "maximum_absolute_mass_error_L": float(1000 * np.max(np.abs(residual))),
         "method": (
-            "V(alpha.water) change plus trapezoidal integral of "
-            "alpha.water-weighted phi over inlet, submerged outlet and atmosphere"
+            "Liquid-volume closure: V(alpha.water) change plus trapezoidal "
+            "integral of alpha.water-weighted phi over inlet, submerged outlet "
+            "and atmosphere. Small physical volume changes from water "
+            "compressibility are included in this residual."
         ),
     }
 
@@ -550,10 +574,18 @@ def write_height_plot(
     )
     ax.plot(
         riser["time_after_ramp_s"],
-        riser["geyser_height_above_lid_m"],
+        riser["riser_column_height_m"],
         color="#111827",
         lw=1.2,
-        label="3-D highest wet centreline sample",
+        label="3-D riser column",
+    )
+    ax.plot(
+        riser["time_after_ramp_s"],
+        riser["geyser_height_above_lid_m"],
+        color="#c81e3c",
+        lw=1.0,
+        alpha=0.85,
+        label="3-D directly resolved wet height",
     )
     ax.axhline(RISER_LENGTH, color="#16a34a", ls=":", label="physical riser rim")
     for event, label in (
@@ -593,7 +625,7 @@ def write_height_plot(
         marker="s",
         s=55,
         color="#7c3aed",
-        label="existing 1-D",
+        label="existing 1-D ballistic estimate",
     )
     ax.scatter(
         of_pmax * 1000 / (RHO_WATER * G),
@@ -601,7 +633,7 @@ def write_height_plot(
         marker="^",
         s=70,
         color="#c81e3c",
-        label="3-D OpenFOAM",
+        label="3-D resolved wet height",
     )
     ax.axhline(RISER_LENGTH, color="#16a34a", ls=":", lw=1.0)
     ax.set_xlabel(r"$P_{max}/(\rho g)$ [m]")
@@ -687,7 +719,9 @@ def main() -> None:
 
     one_d = load_one_dimensional()
     experiment = {sensor: load_experiment(sensor) for sensor in ("PT1", "PT2", "PT3")}
-    pressure_metrics_ = pressure_metrics(report_time, pressure)
+    pressure_metrics_ = pressure_metrics(
+        report_time, {sensor: pressure[sensor] for sensor in ("PT1", "PT2", "PT3")}
+    )
     main_peak_index = int(
         np.nanargmax(np.where((report_time >= 0) & (report_time <= 4.5), pressure["PT2"], np.nan))
     )
@@ -761,6 +795,10 @@ def main() -> None:
             "PT3_min_kPa": float(np.min(one_pt3)),
             "peak_time_s": float(np.asarray(one_d["t"])[int(np.argmax(one_pt2))]),
             "maximum_geyser_height_m": float(one_d["h_jet"]),
+            "height_method": (
+                "ballistic estimate from the 1-D riser ejection velocity, "
+                "measured above the chamber lid"
+            ),
             "mass_error_L": float(one_d["mass_error"] * 1000),
         },
         "openfoam_3d": {
@@ -790,6 +828,9 @@ def main() -> None:
             "PT3_peak": relative_error(
                 pressure_metrics_["PT3"]["peak_kPa"], PAPER["PT3_peak_kPa"]
             ),
+            "PT3_peak_time": relative_error(
+                pressure_metrics_["PT3"]["peak_time_s"], PAPER["t_peak_s"]
+            ),
             "PT3_min": relative_error(
                 pressure_metrics_["PT3"]["minimum_kPa"], PAPER["PT3_min_kPa"]
             ),
@@ -800,7 +841,18 @@ def main() -> None:
             "maximum_geyser_height_vs_Fig7_regression": relative_error(
                 riser_metrics["maximum_geyser_height_above_lid_m"], paper_height
             ),
-            "PT1_final": None,
+            "oscillation_periods": [
+                relative_error(value, PAPER["osc_periods_s"][index])
+                for index, value in enumerate(periods[: len(PAPER["osc_periods_s"])])
+            ],
+            "PT1_final_absolute_error_kPa": (
+                abs(
+                    pressure_metrics_["PT1"]["final_mean_kPa"]
+                    - PAPER["PT1_final_kPa"]
+                )
+                if pressure_metrics_["PT1"]["final_mean_kPa"] is not None
+                else None
+            ),
             "PT2_final": relative_error(
                 pressure_metrics_["PT2"]["final_mean_kPa"]
                 if pressure_metrics_["PT2"]["final_mean_kPa"] is not None
