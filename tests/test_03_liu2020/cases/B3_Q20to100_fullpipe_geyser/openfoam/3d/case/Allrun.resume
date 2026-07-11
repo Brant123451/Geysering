@@ -24,9 +24,9 @@ if (( NP > $(nproc) )); then
     exit 1
 fi
 
-mpirun -np "$NP" compressibleInterFoam -parallel \
+mpirun -np "$NP" compressibleInterIsoFoam -parallel \
     -decomposeParDict system/decomposeParDict.runtime \
-    >> log.compressibleInterFoam 2>&1
+    >> log.compressibleInterIsoFoam 2>&1
 reconstructPar -latestTime > log.reconstructPar 2>&1
 
 echo "B3_3D_RESUME_DONE"

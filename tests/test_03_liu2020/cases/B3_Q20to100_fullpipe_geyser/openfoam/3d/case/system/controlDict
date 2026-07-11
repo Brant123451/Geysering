@@ -6,7 +6,7 @@ FoamFile
     object      controlDict;
 }
 
-application     compressibleInterFoam;
+application     compressibleInterIsoFoam;
 
 startFrom       startTime;
 startTime       0;

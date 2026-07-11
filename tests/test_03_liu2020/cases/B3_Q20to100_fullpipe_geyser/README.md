@@ -68,7 +68,8 @@
 
 源算例位于 `openfoam/3d/`，论文输入审计见
 `openfoam/3d/PAPER_AUDIT.md`。算例使用 OpenFOAM v2512
-`compressibleInterFoam`、真实圆管/交汇室/竖管三维几何、下游满管淹没压力边界，以及
+`compressibleInterIsoFoam`（可压缩两相热力学与几何 isoAdvector 界面输运）、真实圆管/
+交汇室/竖管三维几何、下游满管淹没压力边界，以及
 物理竖管口上方的外部大气域。后者允许水柱越过 1.22 m 竖管口，竖管口不是截断喷发的
 压力边界。
 

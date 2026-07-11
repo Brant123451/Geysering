@@ -8,10 +8,15 @@ level, or exact in-plane coordinates of every pressure tap.
 
 ## Solver choice
 
-The case uses OpenFOAM v2512 `compressibleInterFoam`, not incompressible
+The case uses OpenFOAM v2512 `compressibleInterIsoFoam`, not incompressible
 `interFoam`. B3's approximately 55 kPa slam and -20 kPa rebound are pressure
 wave/gas-compression observables. An incompressible VOF solver can reproduce
 free-surface displacement but cannot validate the water-hammer amplitude.
+`compressibleInterIsoFoam` retains the two-phase compressible thermodynamics
+but transports the interface with geometric isoAdvector reconstruction and
+explicit clipping. This was selected after `compressibleInterFoam` screening
+developed local negative-temperature failures at mixed tetrahedral interface
+cells.
 
 - Water is a `perfectFluid` with `rho0=998.2 kg/m3` and `R=2.2e6 m2/s2`
   (`c=sqrt(R)=1483 m/s`, bulk modulus about 2.2 GPa).

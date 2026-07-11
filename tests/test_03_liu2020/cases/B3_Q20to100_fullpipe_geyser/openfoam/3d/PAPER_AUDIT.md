@@ -154,7 +154,13 @@ gravity/riser oscillation scale. An incompressible `interFoam` calculation
 cannot establish the water-hammer amplitude and is therefore not used as the
 validation solver.
 
-The baseline uses OpenFOAM v2512 `compressibleInterFoam`:
+The baseline uses OpenFOAM v2512 `compressibleInterIsoFoam`. It solves the
+same two-compressible-phase pressure/energy system as
+`compressibleInterFoam`, while using geometric isoAdvector reconstruction,
+explicit phase-fraction bounds and clipping. Screening with
+`compressibleInterFoam` produced local negative-temperature failures at mixed
+tetrahedral free-surface cells, so its MULES interface transport was not used
+for the production case:
 
 - water: `perfectFluid`, `rho0=998.2 kg/m3`, `R=2.2e6 m2/s2`, giving
   `c=sqrt(R)~=1483 m/s` and a 2.2 GPa bulk modulus near atmospheric pressure;

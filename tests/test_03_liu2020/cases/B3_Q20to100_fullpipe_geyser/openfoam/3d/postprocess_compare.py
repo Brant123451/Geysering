@@ -308,9 +308,9 @@ def parse_check_mesh(case: Path) -> dict[str, float | int | str | None]:
 
 
 def parse_velocity_limiter(case: Path) -> dict[str, object]:
-    source = case / "log.compressibleInterFoam"
+    source = case / "log.compressibleInterIsoFoam"
     if not source.exists():
-        source = case / "log.compressibleInterFoam.smoke"
+        source = case / "log.compressibleInterIsoFoam.smoke"
     text = source.read_text(encoding="utf-8", errors="replace") if source.exists() else ""
     counts = [
         int(value)
@@ -542,7 +542,7 @@ def write_pressure_plot(
             pressure[sensor],
             color="#111827",
             lw=1.1,
-            label="3-D compressibleInterFoam",
+            label="3-D compressibleInterIsoFoam",
         )
         target_peak = PAPER.get(f"{sensor}_peak_kPa")
         target_min = PAPER[f"{sensor}_min_kPa"]
@@ -804,12 +804,13 @@ def main() -> None:
         "case": "Liu2020 B3 Q20to100 full-pipe single-shoot geyser",
         "time_origin": "t=0 at start of the inflow ramp (OpenFOAM solver t=2.0 s)",
         "solver": {
-            "name": "compressibleInterFoam",
+            "name": "compressibleInterIsoFoam",
             "version": "OpenFOAM-v2512",
             "reason": (
                 "Two compressible immiscible phases are required for the 55 kPa "
                 "slam and negative rebound; incompressible interFoam cannot validate "
-                "their water-hammer amplitude."
+                "their water-hammer amplitude. The geometric isoAdvector transport "
+                "keeps the sharp tetrahedral free surface explicitly bounded."
             ),
             "water_equation_of_state": "perfectFluid, rho0=998.2 kg/m3, R=2.2e6 m2/s2",
             "water_sound_speed_m_s": math.sqrt(2.2e6),
