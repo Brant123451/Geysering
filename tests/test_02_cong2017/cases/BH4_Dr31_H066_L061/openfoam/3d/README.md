@@ -50,15 +50,17 @@ At `t=0`:
 | `reservoir` | `pressureInletOutletVelocity` | fixed `p_rgh=107786.6508 Pa` (0.66 m head); `p` calculated | fixed 1 | fixed 296.15 K |
 | `walls` | no slip | `fixedFluxPressure`; `p` calculated | `constantAlphaContactAngle`, 90 deg | zero gradient |
 | `closedEnd` | no slip | `fixedFluxPressure`; `p` calculated | `constantAlphaContactAngle`, 90 deg | zero gradient |
-| `atmosphere` | `pressureInletOutletVelocity` | `prghTotalPressure`, `p0=101325 Pa`; `p` calculated | `inletOutlet`, air on inflow | `inletOutlet`, 296.15 K on inflow |
+| `atmosphere` | `pressureInletOutletVelocity` | `prghPressure`, static `p=101325 Pa`; `p` calculated | `inletOutlet`, air on inflow | `inletOutlet`, 296.15 K on inflow |
 | `valveCouple*` | `cyclicACMI` | `cyclicACMI`; `p` coupled | `cyclicACMI` | `cyclicACMI` |
 | `valveWall*` | no slip | `fixedFluxPressure`; `p` calculated | `constantAlphaContactAngle`, 90 deg | zero gradient |
 
 The paper gives acrylic walls but no contact angle.  The 90-degree value is a
 neutral documented numerical closure, not an experimental measurement.
-`prghTotalPressure` keeps the open external atmosphere hydrostatically
-consistent at every elevation; a plain `totalPressure` condition would impose
-an artificial pressure variation over the 3 m external domain.
+`prghPressure` keeps a static 101325 Pa far field hydrostatically consistent at
+every elevation.  A plain `totalPressure` lacks the gravity correction, while
+`prghTotalPressure` treats the far field as a total-pressure reservoir and was
+rejected because its velocity-head feedback generated a nonphysical side-wall
+air jet during the closed-valve hold.
 
 ## Ball-valve process
 

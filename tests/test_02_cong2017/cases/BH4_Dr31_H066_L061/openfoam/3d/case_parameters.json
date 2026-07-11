@@ -55,7 +55,7 @@
     },
     "atmosphere": {
       "U": "pressureInletOutletVelocity",
-      "p_rgh": "prghTotalPressure at 101325 Pa including hydrostatic correction",
+      "p_rgh": "prghPressure for 101325 Pa static far-field pressure including hydrostatic correction",
       "alpha.water": "inletOutlet with air inflow (alpha.water=0)",
       "T": "inletOutlet at 296.15 K"
     }

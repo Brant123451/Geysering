@@ -29,11 +29,9 @@ boundaryField
     }
     atmosphere
     {
-        // Atmospheric total pressure with the hydrostatic rho*g*h correction.
-        type            prghTotalPressure;
-        p0              uniform 101325;
-        U               U;
-        phi             phi;
+        // Static far-field pressure with the hydrostatic rho*g*h correction.
+        type            prghPressure;
+        p               uniform 101325;
         rho             rho;
         value           uniform 101325;
     }
