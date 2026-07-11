@@ -290,8 +290,42 @@ def parse_check_mesh(case: Path) -> dict[str, float | int | str | None]:
         ),
         "max_skewness": number(r"Max skewness\s*=\s*([0-9.eE+-]+)"),
         "min_cell_volume_m3": number(r"Min volume\s*=\s*([0-9.eE+-]+)"),
+        "underdetermined_tetrahedra": number(
+            r"Cells with small determinant \(< 0\.001\) found, number of cells:\s*(\d+)",
+            int,
+        ),
+        "low_interpolation_weight_faces": number(
+            r"Faces with small interpolation weight \(< 0\.05\) found, number of faces:\s*(\d+)",
+            int,
+        )
+        or 0,
+        "failed_checks": number(r"Failed\s+(\d+)\s+mesh checks", int) or 0,
         "check_mesh_ok": "Mesh OK." in text,
         "command": "checkMesh -allGeometry -allTopology",
+    }
+
+
+def parse_velocity_limiter(case: Path) -> dict[str, object]:
+    source = case / "log.compressibleInterFoam"
+    if not source.exists():
+        source = case / "log.compressibleInterFoam.smoke"
+    text = source.read_text(encoding="utf-8", errors="replace") if source.exists() else ""
+    counts = [
+        int(value)
+        for value in re.findall(
+            r"limitVelocity\s+\S+\s+Limited\s+(\d+)\s+\(", text
+        )
+    ]
+    return {
+        "velocity_limit_m_s": 50.0,
+        "limiter_calls": len(counts),
+        "calls_with_activation": sum(value > 0 for value in counts),
+        "maximum_cells_limited_in_one_correction": max(counts, default=0),
+        "activated": any(value > 0 for value in counts),
+        "interpretation": (
+            "The 50 m/s bound is outside the expected B3 state. Any activation "
+            "is reported as a numerical-quality warning, not a physical result."
+        ),
     }
 
 
@@ -656,6 +690,9 @@ def update_sensitivity(path: Path, row: dict[str, object]) -> None:
         "max_non_orthogonality_deg",
         "mean_non_orthogonality_deg",
         "max_skewness",
+        "underdetermined_tetrahedra",
+        "low_interpolation_weight_faces",
+        "failed_checks",
         "end_time_after_ramp_s",
         "full_14s_window",
         "PT2_peak_kPa",
@@ -665,6 +702,7 @@ def update_sensitivity(path: Path, row: dict[str, object]) -> None:
         "maximum_geyser_height_m",
         "geyser",
         "mass_error_percent",
+        "max_velocity_limited_cells",
     ]
     existing: list[dict[str, str]] = []
     if path.exists():
@@ -746,6 +784,7 @@ def main() -> None:
     mass = calculate_mass_balance(case)
     inlet = inlet_flow_check(case)
     mesh = parse_check_mesh(case)
+    limiter = parse_velocity_limiter(case)
 
     paper_height = (
         PAPER["fig7a_slope"]
@@ -811,6 +850,7 @@ def main() -> None:
             **riser_metrics,
             "mass_balance": mass,
             "inlet_flow": inlet,
+            "numerical_safeguards": limiter,
         },
         "relative_error_percent": {
             "PT1_min": relative_error(
@@ -888,6 +928,9 @@ def main() -> None:
         "maximum_geyser_height_m": riser_metrics["maximum_geyser_height_above_lid_m"],
         "geyser": riser_metrics["geyser"],
         "mass_error_percent": mass["numerical_mass_error_percent"],
+        "max_velocity_limited_cells": limiter[
+            "maximum_cells_limited_in_one_correction"
+        ],
     }
     update_sensitivity(OUT / "openfoam_3d_mesh_sensitivity.csv", sensitivity_row)
 
