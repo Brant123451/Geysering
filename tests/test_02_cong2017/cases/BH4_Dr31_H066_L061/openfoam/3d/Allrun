@@ -11,6 +11,10 @@ if [[ -d 0 || -d processor0 || -d constant/polyMesh || -d postProcessing ]]; the
 fi
 
 NP="${BH4_NP:-$(nproc)}"
+AVAILABLE_CPUS="$(nproc)"
+if (( NP > AVAILABLE_CPUS )); then
+    NP="$AVAILABLE_CPUS"
+fi
 if (( NP > 6 )); then
     NP=6
 elif (( NP < 1 )); then
