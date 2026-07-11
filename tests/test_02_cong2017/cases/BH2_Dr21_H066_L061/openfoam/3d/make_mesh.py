@@ -159,10 +159,10 @@ def main() -> None:
             )
 
         groups = {
-            "inlet": (11, inlet),
-            "downstreamCap": (12, cap),
-            "walls": (13, walls),
-            "atmosphere": (14, open_atmosphere),
+            "rawInlet": (11, inlet),
+            "rawDownstreamCap": (12, cap),
+            "rawWalls": (13, walls),
+            "rawAtmosphere": (14, open_atmosphere),
         }
         for name, (physical_id, tags) in groups.items():
             gmsh.model.addPhysicalGroup(2, tags, physical_id)

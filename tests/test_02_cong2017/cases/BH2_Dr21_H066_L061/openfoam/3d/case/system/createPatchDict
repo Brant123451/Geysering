@@ -12,24 +12,24 @@ patches
         name inlet;
         patchInfo { type patch; }
         constructFrom patches;
-        patches (inlet);
+        patches (rawInlet);
     }
     {
         name downstreamCap;
         patchInfo { type wall; }
         constructFrom patches;
-        patches (downstreamCap);
+        patches (rawDownstreamCap);
     }
     {
         name walls;
         patchInfo { type wall; }
         constructFrom patches;
-        patches (walls);
+        patches (rawWalls);
     }
     {
         name atmosphere;
         patchInfo { type patch; }
         constructFrom patches;
-        patches (atmosphere);
+        patches (rawAtmosphere);
     }
 );
