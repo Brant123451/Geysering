@@ -1,0 +1,42 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      volumeChecks;
+}
+
+application     postProcess;
+startFrom       startTime;
+startTime       0;
+stopAt          endTime;
+endTime         0;
+deltaT          1;
+writeControl    timeStep;
+writeInterval   1;
+
+functions
+{
+    chamberWaterFraction
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        fields          (alpha.water);
+        regionType      cellZone;
+        name            chamber;
+        operation       volAverage;
+        writeFields     false;
+        log             true;
+    }
+
+    domainWaterVolume
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        fields          (alpha.water);
+        regionType      all;
+        operation       volIntegrate;
+        writeFields     false;
+        log             true;
+    }
+}
