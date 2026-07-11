@@ -20,7 +20,8 @@ patches
         name atmosphere;
         patchInfo { type patch; }
         constructFrom patches;
-        patches (atmosphere);
+        // z=+/-0.15 background faces coincide with the open exterior sides.
+        patches (atmosphere backgroundBoundary);
     }
     {
         name walls;
