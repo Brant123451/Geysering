@@ -628,6 +628,19 @@ boundary
     pipe_radius = paper["upstream_diameter_m"] / 2.0
     thin_half_width = math.sqrt(max(0.0, 2.0 * pipe_radius * thin_layer - thin_layer**2))
     thin_refinement_width = min(2.0 * pipe_radius, 2.0 * thin_half_width + 0.012)
+    thin_lateral_size = mesh["cartesian_thin_layer_lateral_cell_size_m"]
+    thin_vertical_scale = mesh["cartesian_thin_layer_vertical_scale"]
+    thin_vertical_size = thin_lateral_size * thin_vertical_scale
+    if not math.isclose(
+        thin_vertical_size,
+        mesh["cartesian_thin_layer_cell_size_m"],
+        rel_tol=1e-9,
+        abs_tol=1e-12,
+    ):
+        raise ValueError(
+            "cartesian thin-layer lateral cell size times vertical scale "
+            "must equal cartesian_thin_layer_cell_size_m"
+        )
     for i in range(n_thin_refinement):
         x0 = nose + (0.0 - nose) * i / n_thin_refinement
         x1 = nose + (0.0 - nose) * (i + 1) / n_thin_refinement
@@ -639,13 +652,19 @@ boundary
             f"""    thinLayer{i:02d}
     {{
         type box;
-        cellSize {mesh['cartesian_thin_layer_cell_size_m']:.8g};
+        cellSize {thin_lateral_size:.8g};
         centre ({xm:.8g} 0 {crown - 0.5 * thin_layer:.8g});
         lengthX {x1 - x0 + 0.005:.8g};
         lengthY {thin_refinement_width:.8g};
         lengthZ {thin_layer + 0.004:.8g};
     }}"""
         )
+    thin_anisotropic_x = 0.5 * nose
+    thin_anisotropic_crown = (
+        paper["invert_drop_m"]
+        + paper["upstream_diameter_m"]
+        - paper["upstream_slope"] * thin_anisotropic_x
+    )
     write(
         "system/meshDict",
         foam_header("dictionary", "meshDict")
@@ -722,6 +741,26 @@ objectRefinements
         p1 ({lc + ld + 0.02:.8g} 0 {dd / 2:.8g});
         radius1 0.15;
     }}
+}}
+
+anisotropicSources
+{{
+    thinLayerVertical
+    {{
+        type box;
+        centre ({thin_anisotropic_x:.8g} 0 {thin_anisotropic_crown - 0.5 * thin_layer:.8g});
+        lengthX {-nose + 0.01:.8g};
+        lengthY {min(2.0 * pipe_radius, thin_refinement_width + 0.005):.8g};
+        lengthZ {thin_layer + 0.016:.8g};
+        scaleX 1;
+        scaleY 1;
+        scaleZ {thin_vertical_scale:.8g};
+    }}
+}}
+
+boundaryLayers
+{{
+    nLayers 0;
 }}
 
 renameBoundary
@@ -1547,11 +1586,17 @@ rm -f log.*
         "main_body_probe_depth_below_crown_m": pocket["thin_layer_m"] + 0.004,
         "thin_layer_refinement_segments": n_thin_refinement,
         "thin_layer_target_cells": (
-            pocket["thin_layer_m"] / mesh["cartesian_thin_layer_cell_size_m"]
+            pocket["thin_layer_m"] / thin_vertical_size
             if args.mesh_generator == "cartesian"
             else 2 ** mesh["thin_layer_level"]
             * pocket["thin_layer_m"]
             / ((2.72 - (-0.05)) / mesh["background_cells"][2])
+        ),
+        "cartesian_thin_layer_lateral_cell_size_m": (
+            thin_lateral_size if args.mesh_generator == "cartesian" else None
+        ),
+        "cartesian_thin_layer_vertical_scale": (
+            thin_vertical_scale if args.mesh_generator == "cartesian" else None
         ),
         "gate_area_m2": gate_area,
         "gate_area_kind": "resolved_geometric",

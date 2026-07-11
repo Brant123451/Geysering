@@ -20,6 +20,8 @@
   "main_body_probe_depth_below_crown_m": 0.012,
   "thin_layer_refinement_segments": 10,
   "thin_layer_target_cells": 3.2,
+  "cartesian_thin_layer_lateral_cell_size_m": 0.01,
+  "cartesian_thin_layer_vertical_scale": 0.25,
   "gate_area_m2": 0.01008,
   "gate_area_kind": "resolved_geometric",
   "target_effective_discharge_area_m2": 0.00823,

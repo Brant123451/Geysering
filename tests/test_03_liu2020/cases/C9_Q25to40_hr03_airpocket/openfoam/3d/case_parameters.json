@@ -90,6 +90,8 @@
       "cartesian_pocket_cell_size_m": 0.04,
       "cartesian_interface_cell_size_m": 0.04,
       "cartesian_thin_layer_cell_size_m": 0.0025,
+      "cartesian_thin_layer_lateral_cell_size_m": 0.01,
+      "cartesian_thin_layer_vertical_scale": 0.25,
       "cartesian_gate_cell_size_m": 0.04
     },
     "refined": {
@@ -109,6 +111,8 @@
       "cartesian_pocket_cell_size_m": 0.02,
       "cartesian_interface_cell_size_m": 0.005,
       "cartesian_thin_layer_cell_size_m": 0.00125,
+      "cartesian_thin_layer_lateral_cell_size_m": 0.005,
+      "cartesian_thin_layer_vertical_scale": 0.25,
       "cartesian_gate_cell_size_m": 0.01
     }
   }
