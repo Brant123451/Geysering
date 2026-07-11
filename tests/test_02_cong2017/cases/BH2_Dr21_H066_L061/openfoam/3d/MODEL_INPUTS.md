@@ -47,16 +47,14 @@ equal the analytic values by adjusting geometry or phase fraction.
 
 ## Temporal controls
 
-The solver uses adaptive time stepping with `maxCo=0.5`,
-`maxAlphaCo=0.5`, `maxDeltaT=5e-4 s`, and one geometric-alpha subcycle.
-An initial closed-valve-only test of the OpenFOAM tutorial limits
-(`maxCo=maxAlphaCo=0.5`, `maxDeltaT=1e-3 s`) destabilized the temperature
-equation at `t=1.636 s`, after the adaptive step grew to `8.33e-4 s`; no
-open-valve result existed at that point.  Capping the step at `5e-4 s`
-directly excludes that observed failure range while retaining the solver's
-standard Courant limits.  These controls are fixed for the accepted closed
-hold and every event/sensitivity run and were not selected using the known
-B-H2 classification.
+The solver uses adaptive time stepping with `maxCo=0.35`,
+`maxAlphaCo=0.35`, `maxDeltaT=5e-4 s`, and one geometric-alpha subcycle.
+Closed-valve-only tests of the OpenFOAM tutorial's 0.5 Courant limits failed
+at `t=1.636 s` with `maxDeltaT=1e-3 s` and at `t=1.9695 s` after capping
+`maxDeltaT=5e-4 s` (the reported maximum Courant number had reached 0.528).
+No open-valve classification result existed when these limits were selected.
+The accepted limits are the tested stable lower bound, fixed for the closed
+hold and every event/sensitivity run.
 
 ## Patch conditions
 
