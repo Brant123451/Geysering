@@ -236,6 +236,9 @@ def main() -> None:
 
         actual_volume = sum(occ.getMass(3, tag) for tag in volumes)
         print(f"mesh={args.output}")
+        print(f"gmsh_version={gmsh.__version__}")
+        print(f"core_size_m={args.core_size}")
+        print(f"plume_size_m={args.plume_size}")
         print(f"fluid_volume_m3={actual_volume:.9g}")
         print(f"cells_3d={len(gmsh.model.mesh.getElements(3)[1][0])}")
         print(f"pipe_diameter_m={PIPE_DIAMETER}")

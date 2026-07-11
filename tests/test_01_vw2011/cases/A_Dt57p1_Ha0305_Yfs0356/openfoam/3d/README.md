@@ -31,6 +31,14 @@ The tower opens into a `0.30 m x 0.30 m` external atmosphere volume extending
 separately as above-rim ejection. It is not removed at the rim by a pressure
 boundary.
 
+The audited initial absolute pressures are `104311.7 Pa` in the upstream air
+chamber and `105271.3 Pa` reduced pressure in the initially water-filled
+apparatus. The latter represents a hydrostatic free surface at absolute
+`y = 0.403 m`. The atmosphere patch uses constant reduced pressure
+`p_rgh = 101333 Pa`, corresponding to `101325 Pa` absolute pressure at the
+physical rim. Both horizontal ends and the apparatus walls are closed,
+no-slip walls.
+
 ## Run
 
 The cloud image needs OpenFOAM v2512, Gmsh, NumPy, and Matplotlib, all declared
@@ -43,14 +51,21 @@ chmod +x Allrun Allrun.resume
 
 The defaults use an `8 mm` nominal tetrahedron edge in the apparatus, a
 `20 mm` atmosphere far field, at most six local MPI ranks, and an end time of
-`9 s`. Override the mesh sizes for a grid study, or request the solver's
-single-step dry run for a smoke test:
+`9 s`. `Allrun` records both a standard `checkMesh` result and a stricter
+all-topology/all-geometry audit. Override the mesh sizes for a grid study, or
+request the solver's serial single-step setup check for a smoke test:
 
 ```bash
 CASEA_CORE_SIZE=0.012 CASEA_PLUME_SIZE=0.030 CASEA_DRY_RUN=1 ./Allrun
 ```
 
 Resume an interrupted decomposed run with `./Allrun.resume`.
+
+The full run logs an exact domain integral of
+`alpha.water*thermo:rho.water` every `0.005 s`. Post-processing converts those
+samples to `outputs/openfoam_3d_water_mass.csv` and reports final and maximum
+relative mass drift in `outputs/openfoam_3d_metrics.json`; raw logs and fields
+remain untracked.
 
 ## What “matched” means
 

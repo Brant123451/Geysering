@@ -74,6 +74,27 @@ functions
         writeControl    adjustableRunTime;
         writeInterval   0.005;
     }
+
+    // Integrate the compressible water-phase mass without writing another
+    // volume field.  The compact samples are parsed from the solver log.
+    waterMass
+    {
+        type            coded;
+        libs            (utilityFunctionObjects);
+        name            waterMass;
+        writeControl    adjustableRunTime;
+        writeInterval   0.005;
+        codeWrite
+        #{
+            const auto& alphaWater =
+                mesh().lookupObject<volScalarField>("alpha.water");
+            const auto& rhoWater =
+                mesh().lookupObject<volScalarField>("thermo:rho.water");
+            const scalar mass = gSum(alphaWater*rhoWater*mesh().V());
+            Info<< "CASEA_WATER_MASS_KG "
+                << mesh().time().value() << ' ' << mass << endl;
+        #};
+    }
 }
 
 // ************************************************************************* //

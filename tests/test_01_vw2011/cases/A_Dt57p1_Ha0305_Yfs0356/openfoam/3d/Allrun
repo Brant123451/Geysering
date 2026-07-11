@@ -28,29 +28,32 @@ python3 make_mesh.py \
     > log.gmsh 2>&1
 gmshToFoam caseA3d.msh > log.gmshToFoam 2>&1
 createPatch -overwrite > log.createPatch 2>&1
-checkMesh -allTopology -allGeometry > log.checkMesh 2>&1
+checkMesh > log.checkMesh 2>&1
+checkMesh -allTopology -allGeometry > log.checkMesh.strict 2>&1
+
+# gmshToFoam creates a cellZone for the single physical volume.  It is not
+# needed by the solver and triggers an OpenFOAM -dry-run simplified-mesh bug.
+rm -f constant/polyMesh/cellZones
 
 cp -a 0.orig 0
 setFields > log.setFields 2>&1
+
+if [[ "$DRY_RUN" == "1" ]]; then
+    compressibleInterFoam -dry-run > log.compressibleInterFoam 2>&1
+    echo "CASE_A_3D_DRY_RUN_DONE"
+    exit 0
+fi
 
 DECOMP_DICT="system/decomposeParDict.runtime"
 cp system/decomposeParDict "$DECOMP_DICT"
 foamDictionary "$DECOMP_DICT" \
     -entry numberOfSubdomains \
-    -set "$NP" >/dev/null
+    -set "$NP" >/dev/null 2>&1
 
 decomposePar -decomposeParDict "$DECOMP_DICT" > log.decomposePar 2>&1
-solver_args=(-parallel)
-if [[ "$DRY_RUN" == "1" ]]; then
-    solver_args+=(-dry-run)
-fi
 OMPI_ALLOW_RUN_AS_ROOT=1 \
 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
-mpirun -np "$NP" compressibleInterFoam "${solver_args[@]}" \
+mpirun -np "$NP" compressibleInterFoam -parallel \
     > log.compressibleInterFoam 2>&1
-if [[ "$DRY_RUN" == "1" ]]; then
-    echo "CASE_A_3D_DRY_RUN_DONE"
-    exit 0
-fi
 python3 postprocess_compare.py > log.postprocess 2>&1
 echo "CASE_A_3D_DONE"
