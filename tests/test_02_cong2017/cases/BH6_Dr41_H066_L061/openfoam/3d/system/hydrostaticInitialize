@@ -24,6 +24,18 @@ hydrostaticInitialize
             ),
             mesh()
         );
+        volScalarField reducedPressure
+        (
+            IOobject
+            (
+                "p_rgh",
+                mesh().time().timeName(),
+                mesh(),
+                IOobject::MUST_READ,
+                IOobject::AUTO_WRITE
+            ),
+            mesh()
+        );
         const volScalarField alpha
         (
             IOobject
@@ -36,19 +48,76 @@ hydrostaticInitialize
             ),
             mesh()
         );
+        const volScalarField temperatureField
+        (
+            IOobject
+            (
+                "T",
+                mesh().time().timeName(),
+                mesh(),
+                IOobject::MUST_READ,
+                IOobject::NO_WRITE
+            ),
+            mesh()
+        );
+        const scalar atmosphericPressure = 101325.0;
+        const scalar waterDensity = 998.0;
+        const scalar waterReducedPressure = 107541.3913;
+        const scalar gravityZ = -9.81;
+        const scalar Rair = 8314.46261815324/28.965;
         const vectorField& centres = mesh().C();
         forAll(pressure, cellI)
         {
-            pressure[cellI] =
-                alpha[cellI] > 0.5
-              ? 107541.3913 - 998.0*9.81*centres[cellI].z()
-              : 101325.0;
-        }
-        pressure.correctBoundaryConditions();
-        pressure.write();
+            const scalar aw = min(max(alpha[cellI], 0.0), 1.0);
+            const scalar rhoAir =
+                atmosphericPressure
+               /(Rair*max(temperatureField[cellI], 1.0));
+            const scalar rhoMixture =
+                aw*waterDensity + (1.0 - aw)*rhoAir;
+            const scalar pAbs =
+                aw > 0.5
+              ? waterReducedPressure
+                + waterDensity*gravityZ*centres[cellI].z()
+              : atmosphericPressure;
 
-        const scalar Rair = 8314.46261815324/28.965;
-        const scalar temperature = 296.15;
+            pressure[cellI] = pAbs;
+            reducedPressure[cellI] =
+                pAbs - rhoMixture*gravityZ*centres[cellI].z();
+        }
+
+        forAll(mesh().boundary(), patchI)
+        {
+            fvPatchScalarField& pressurePatch =
+                pressure.boundaryFieldRef()[patchI];
+            fvPatchScalarField& reducedPressurePatch =
+                reducedPressure.boundaryFieldRef()[patchI];
+            const fvPatch& patch = mesh().boundary()[patchI];
+            const labelUList& faceCells = patch.faceCells();
+            const vectorField& faceCentres = patch.Cf();
+
+            forAll(pressurePatch, faceI)
+            {
+                const label cellI = faceCells[faceI];
+                const scalar aw = min(max(alpha[cellI], 0.0), 1.0);
+                const scalar rhoAir =
+                    atmosphericPressure
+                   /(Rair*max(temperatureField[cellI], 1.0));
+                const scalar rhoMixture =
+                    aw*waterDensity + (1.0 - aw)*rhoAir;
+                const scalar pAbs =
+                    aw > 0.5
+                  ? waterReducedPressure
+                    + waterDensity*gravityZ*faceCentres[faceI].z()
+                  : atmosphericPressure;
+
+                pressurePatch[faceI] = pAbs;
+                reducedPressurePatch[faceI] =
+                    pAbs - rhoMixture*gravityZ*faceCentres[faceI].z();
+            }
+        }
+        pressure.write();
+        reducedPressure.write();
+
         const scalarField& volumes = mesh().V();
         scalar waterVolume = 0.0;
         scalar waterMass = 0.0;
@@ -67,7 +136,8 @@ hydrostaticInitialize
             const scalar aa = 1.0 - aw;
             const scalar cellVolume = volumes[cellI];
             const scalar pAbs = max(pressure[cellI], 1.0);
-            const scalar rhoAir = pAbs/(Rair*temperature);
+            const scalar rhoAir =
+                pAbs/(Rair*max(temperatureField[cellI], 1.0));
 
             waterVolume += aw*cellVolume;
             waterMass += aw*998.0*cellVolume;

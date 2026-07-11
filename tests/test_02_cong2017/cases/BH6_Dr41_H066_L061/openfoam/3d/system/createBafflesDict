@@ -113,7 +113,31 @@ baffles
                 type            wall;
                 patchFields
                 {
-                    ${../../master2/patchFields}
+                    U
+                    {
+                        type            noSlip;
+                    }
+                    p
+                    {
+                        type            calculated;
+                        value           uniform 101325;
+                    }
+                    p_rgh
+                    {
+                        type            fixedFluxPressure;
+                        value           uniform 101325;
+                    }
+                    alpha.water
+                    {
+                        type            constantAlphaContactAngle;
+                        theta0          90;
+                        limit           gradient;
+                        value           uniform 0;
+                    }
+                    T
+                    {
+                        type            zeroGradient;
+                    }
                 }
             }
         }
