@@ -140,7 +140,14 @@ def main() -> None:
         runtime = args.work_root / variant.run_id
         if runtime.exists():
             shutil.rmtree(runtime)
-        shutil.copytree(mesh_cache, runtime)
+        copy_source(runtime)
+        shutil.copytree(
+            mesh_cache / "constant" / "polyMesh",
+            runtime / "constant" / "polyMesh",
+        )
+        for mesh_product in (mesh_cache / "outputs").glob("mesh_*.json"):
+            (runtime / "outputs").mkdir(parents=True, exist_ok=True)
+            shutil.copy2(mesh_product, runtime / "outputs" / mesh_product.name)
 
         env = os.environ.copy()
         env.update(
