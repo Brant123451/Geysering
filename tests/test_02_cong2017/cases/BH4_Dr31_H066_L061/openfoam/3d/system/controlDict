@@ -96,8 +96,8 @@ functions
         location        yes;
         log             yes;
         writeToFile     false;
-        writeControl    timeStep;
-        writeInterval   1;
+        writeControl    adjustableRunTime;
+        writeInterval   0.02;
     }
 
     riserCentreline
