@@ -252,12 +252,48 @@ hydrostaticInitialize
             bodyForceFlux,
             rAUf
         );
+
+        label downstreamReferenceCell = -1;
+        scalar downstreamReferenceDistanceSqr = GREAT;
+        const vector downstreamReferencePoint(6.30, 0.0, 0.0);
+        forAll(centres, cellI)
+        {
+            if (centres[cellI].x() > 5.98 && alpha[cellI] < 0.5)
+            {
+                const scalar distanceSqr = magSqr
+                (
+                    centres[cellI] - downstreamReferencePoint
+                );
+                if (distanceSqr < downstreamReferenceDistanceSqr)
+                {
+                    downstreamReferenceDistanceSqr = distanceSqr;
+                    downstreamReferenceCell = cellI;
+                }
+            }
+        }
+        if (downstreamReferenceCell < 0)
+        {
+            FatalErrorInFunction
+                << "Unable to select the isolated downstream-air reference cell"
+                << exit(FatalError);
+        }
+        const scalar downstreamReferencePressure =
+            atmosphericPressure
+          - density[downstreamReferenceCell]
+           *gravityZ*centres[downstreamReferenceCell].z();
+
         for (label corrector = 0; corrector < 4; ++corrector)
         {
             fvScalarMatrix reducedPressureEqn
             (
                 fvc::div(bodyForceFlux)
               - fvm::laplacian(rAUf, reducedPressure)
+            );
+            reducedPressureEqn.setReference
+            (
+                downstreamReferenceCell,
+                downstreamReferencePressure,
+                true
             );
             reducedPressureEqn.solve();
         }
