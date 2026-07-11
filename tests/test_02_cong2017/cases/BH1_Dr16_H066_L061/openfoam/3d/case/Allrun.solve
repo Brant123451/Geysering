@@ -61,6 +61,8 @@ fi
 source /usr/lib/openfoam/openfoam2512/etc/bashrc
 set -euo pipefail
 mkdir -p "$OUTPUT_DIR"
+"$MODEL_DIR/solver/Allwmake" > "$RUN_DIR/log.wmake" 2>&1
+SOLVER="$FOAM_USER_APPBIN/bh1CompressibleInterFoam"
 cd "$RUN_DIR"
 
 cp -a 0.orig 0
@@ -108,8 +110,8 @@ decomposePar -decomposeParDict system/decomposeParDict.runtime \
 
 OMPI_ALLOW_RUN_AS_ROOT=1 \
 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
-mpirun -np "$NP" compressibleInterFoam -parallel \
-    > log.compressibleInterFoam 2>&1
+mpirun -np "$NP" "$SOLVER" -parallel \
+    > log.bh1CompressibleInterFoam 2>&1
 
 python3 "$MODEL_DIR/postprocess_openfoam.py" \
     --run-dir "$RUN_DIR" \

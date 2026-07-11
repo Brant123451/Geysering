@@ -99,7 +99,10 @@
   },
   "solver": {
     "openfoam_release": "OpenCFD v2512",
-    "application": "compressibleInterFoam",
+    "application": "bh1CompressibleInterFoam",
+    "base_solver": "compressibleInterFoam",
+    "energy_formulation": "phase internal energy with p*div(U) pressure work; explicit kinetic-energy transport source excluded",
+    "energy_formulation_reference": "OpenFOAM Foundation commit 12dc41d0 totalInternalEnergy=false",
     "simulation_type": "laminar",
     "end_time_s": 13.0,
     "max_Courant": 0.5,

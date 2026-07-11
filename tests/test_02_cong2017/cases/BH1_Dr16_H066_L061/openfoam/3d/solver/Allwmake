@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [[ -z "${WM_PROJECT_DIR:-}" ]]; then
+    if [[ ! -f /usr/lib/openfoam/openfoam2512/etc/bashrc ]]; then
+        echo "OpenFOAM v2512 is required at /usr/lib/openfoam/openfoam2512" >&2
+        exit 3
+    fi
+    source /usr/lib/openfoam/openfoam2512/etc/bashrc
+fi
+
+cd "$SCRIPT_DIR"
+wmake

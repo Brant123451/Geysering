@@ -397,7 +397,7 @@ def main() -> None:
     metrics = {
         "run": run_name,
         "mode": args.mode,
-        "solver": "compressibleInterFoam",
+        "solver": "bh1CompressibleInterFoam",
         "valve_duration_s": args.valve_duration,
         "reached_time_s": reached_end,
         "observed_3d_geyser": bool(np.nanmax(yfs) >= 0.98 * RIM_HEIGHT),
