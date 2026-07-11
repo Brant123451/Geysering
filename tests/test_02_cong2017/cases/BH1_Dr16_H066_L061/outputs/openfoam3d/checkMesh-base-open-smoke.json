@@ -2,21 +2,21 @@
   "cad_volume_m3": 0.12141083310319492,
   "case": "Cong2017_B-H1",
   "check_log": "log.checkMesh",
-  "concave_cell_fraction": 0.005866156453500512,
-  "concave_cells": 1208,
-  "faces": 668376,
-  "max_aspect_ratio": 19.414657,
-  "max_non_orthogonality_deg": 66.813634,
-  "max_skewness": 3.0398091,
+  "concave_cell_fraction": 0.005937481463906519,
+  "concave_cells": 1001,
+  "faces": 550553,
+  "max_aspect_ratio": 5.6542084,
+  "max_non_orthogonality_deg": 48.998247,
+  "max_skewness": 2.5979745,
   "mesh_level": "base",
-  "min_cell_determinant": 0.0004835146,
+  "min_cell_determinant": 0.020842166,
   "nominal_volume_sizes_m": {
     "pipe": 0.00625,
     "plume": 0.0125,
     "riser": 0.0015625
   },
-  "openfoam_cells": 205927,
-  "points": 259041,
+  "openfoam_cells": 168590,
+  "points": 215846,
   "production_acceptance": {
     "extended_diagnostics_accepted": true,
     "pass": true,
@@ -32,14 +32,14 @@
   ],
   "standard_check_pass": true,
   "strict_check_pass": false,
-  "strict_failed_checks": 2,
+  "strict_failed_checks": 1,
   "surface_triangles": {
     "atmosphere": 16040,
     "inlet": 304,
     "riserWall": 210524,
     "walls": 153286
   },
-  "underdetermined_cells": 2,
+  "underdetermined_cells": 0,
   "valve_representation": "unobstructed fluid mesh",
   "valve_state": "open"
 }
