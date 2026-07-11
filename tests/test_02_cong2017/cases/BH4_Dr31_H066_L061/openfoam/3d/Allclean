@@ -1,11 +1,12 @@
 #!/bin/bash
 cd "$(dirname "$0")"
-set -euo pipefail
 
 if [[ -f /usr/lib/openfoam/openfoam2512/etc/bashrc ]]; then
     source /usr/lib/openfoam/openfoam2512/etc/bashrc
-    foamListTimes -rm 2>/dev/null || true
 fi
+set -euo pipefail
+
+foamListTimes -rm 2>/dev/null || true
 
 rm -rf \
     0 \
