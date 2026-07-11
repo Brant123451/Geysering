@@ -251,7 +251,7 @@ def main() -> None:
             "variant": cli.variant,
             "mesh_file": str(cli.output),
             "cells_3d": cell_count,
-            "element_types": element_types,
+            "element_types": [int(value) for value in element_types],
             "cad_fluid_volume_m3": fluid_volume,
             "pipe_area_m2": math.pi * R**2,
             "riser_area_m2": math.pi * RR**2,
