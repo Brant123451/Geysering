@@ -33,7 +33,7 @@ Two numerical details are not apparatus measurements:
    a pressurized tank; it does not report that tank's dimensions.
 2. The mathematically tangent chamber-floor/downstream-pipe contact produces
    zero-angle tetrahedra. The OCC mesh volume therefore has a local
-   20 × 80 × 4 mm recess under the outlet mouth (6.4 mL, about 0.00094% of the
+   20 × 80 × 8 mm recess under the outlet mouth (12.8 mL, about 0.0019% of the
    computational volume). The reported chamber dimensions remain unchanged
    elsewhere. This regularization is included in the geometric uncertainty.
 

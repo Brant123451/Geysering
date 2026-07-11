@@ -3,7 +3,7 @@
 
 The OpenCASCADE Boolean union removes the overlapping/STL-junction ambiguity
 of the original pilot.  The reported rig is represented with a clearly
-identified numerical upstream reservoir extension and a 6.4 mL local
+identified numerical upstream reservoir extension and a 12.8 mL local
 tetrahedral regularization.  Unreported tank/weir dimensions are not invented:
 the reported hd/Dd condition is imposed at the end of the 5.95 m pipe.
 """
@@ -56,11 +56,13 @@ def main() -> None:
         )
         chamber = occ.addBox(0.0, -wc / 2.0, 0.0, lc, wc, hc)
         # The exact tangent between the circular downstream invert and chamber
-        # floor is a zero-angle tetrahedral singularity.  A 20 x 80 x 4 mm
+        # floor is a zero-angle tetrahedral singularity.  A 20 x 80 x 8 mm
         # local recess under the outlet mouth regularises that one point while
         # preserving the reported 0.30 x 0.30 x 0.45 m chamber everywhere else.
-        # Added volume: 6.4 mL (0.00094% of the full fluid domain).
-        tangent_recess = occ.addBox(lc - 0.020, -0.040, -0.004, 0.020, 0.080, 0.004)
+        # Added volume: 12.8 mL (0.0019% of the full fluid domain).  Its 8 mm
+        # depth also keeps this numerical regularization from setting the
+        # global transient time step.
+        tangent_recess = occ.addBox(lc - 0.020, -0.040, -0.008, 0.020, 0.080, 0.008)
 
         overlap = 0.002
         x0u, x1u = -lu - overlap, overlap
