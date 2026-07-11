@@ -1,0 +1,43 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p_rgh;
+}
+
+dimensions      [1 -1 -2 0 0 0 0];
+internalField   uniform 101325;
+
+boundaryField
+{
+    inlet
+    {
+        type            fixedFluxPressure;
+        value           uniform 101325;
+    }
+
+    outlet
+    {
+        // p_rgh = p_atm + rho_water*g*H_tail, H_tail = Dd = 0.28 m.
+        // This imposes a hydrostatic submerged reservoir without inventing a
+        // tail-gate opening (which the paper does not report).
+        type            fixedValue;
+        value           uniform 104066.86;
+    }
+
+    atmosphere
+    {
+        // Constant absolute atmospheric pressure on the headbox and on every
+        // external plume face; prghPressure applies the local hydrostatic term.
+        type            prghPressure;
+        p               uniform 101325;
+        value           uniform 101325;
+    }
+
+    walls
+    {
+        type            fixedFluxPressure;
+        value           uniform 101325;
+    }
+}

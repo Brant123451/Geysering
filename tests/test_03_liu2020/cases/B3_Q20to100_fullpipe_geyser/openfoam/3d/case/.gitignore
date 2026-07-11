@@ -1,0 +1,9 @@
+/0/
+/[1-9]*/
+/processor*/
+/postProcessing/
+/constant/polyMesh/
+/*.msh
+/log.*
+/mesh-metadata.txt
+/system/decomposeParDict.runtime

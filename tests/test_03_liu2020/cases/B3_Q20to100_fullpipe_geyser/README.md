@@ -60,4 +60,23 @@
 
 ## 文件夹约定
 
-`model/` 冻结副本；`paper_scans/` 已生成；`digitized/`；`outputs/`。
+`model/` 冻结一维副本；`data/digitized/` 为已有 Fig.5(b) 曲线；
+`reference/paper_scans/` 在当前底座提交中为空（迁移清单记录过原文件，但 blob 缺失）；
+`outputs/` 为紧凑结果。
+
+## 三维 OpenFOAM 验证
+
+源算例位于 `openfoam/3d/`，论文输入审计见
+`openfoam/3d/PAPER_AUDIT.md`。算例使用 OpenFOAM v2512
+`compressibleInterFoam`、真实圆管/交汇室/竖管三维几何、下游满管淹没压力边界，以及
+物理竖管口上方的外部大气域。后者允许水柱越过 1.22 m 竖管口，竖管口不是截断喷发的
+压力边界。
+
+不可压 `interFoam` 不用于 B3 压力峰验证：55 kPa 主峰和约 -20 kPa 回弹涉及水体与
+气体可压缩性。水相采用 2.2 GPa 体积模量，气相采用理想气体；没有为匹配压力而降低
+声速或增加封闭空气体积。尾门开度、接收水箱水位和 B3 初始室水位并未由论文给出，
+其可复现边界实现及不确定性均在审计中单列。
+
+复跑、网格加密和后处理命令见 `openfoam/3d/README.md`。三维后处理同时叠加论文
+数字化曲线、现有一维模型和 OpenFOAM，并输出规定的压力、竖管、网格敏感性和守恒
+指标。

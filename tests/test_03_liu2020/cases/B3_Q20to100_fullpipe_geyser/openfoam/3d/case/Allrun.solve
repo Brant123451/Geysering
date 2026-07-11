@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+
+NP="${OPENFOAM_NP:-6}"
+if (( NP > 6 )); then NP=6; fi
+if (( NP < 1 )); then NP=1; fi
+
+if [[ -d processor0 ]]; then
+    echo "Decomposed solution exists; use ./Allrun.resume or ./Allclean." >&2
+    exit 1
+fi
+
+foamListTimes -rm >/dev/null 2>&1 || true
+rm -rf postProcessing
+./Allrun.init
+
+restore_control()
+{
+    if [[ -f system/controlDict.full-run ]]; then
+        mv system/controlDict.full-run system/controlDict
+    fi
+}
+
+if [[ -n "${B3_END_TIME:-}" ]]; then
+    cp system/controlDict system/controlDict.full-run
+    trap restore_control EXIT
+    foamDictionary system/controlDict -entry endTime -set "$B3_END_TIME" >/dev/null
+fi
+
+cp system/decomposeParDict system/decomposeParDict.runtime
+foamDictionary system/decomposeParDict.runtime \
+    -entry numberOfSubdomains -set "$NP" >/dev/null
+decomposePar -force -decomposeParDict system/decomposeParDict.runtime \
+    > log.decomposePar 2>&1
+
+mpirun -np "$NP" compressibleInterFoam -parallel \
+    > log.compressibleInterFoam 2>&1
+
+reconstructPar -latestTime > log.reconstructPar 2>&1
+restore_control
+trap - EXIT
+
+echo "B3_3D_SOLVE_DONE"

@@ -1,0 +1,38 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setExprFieldsDict;
+}
+
+// Hydrostatic pressure seed only.  The Q0 settling run establishes the actual
+// flowing equilibrium before the reported ramp begins.
+expressions
+(
+    pressure
+    {
+        field       p;
+        dimensions  [1 -1 -2 0 0 0 0];
+        variables
+        (
+            "head = (pos().x() < -5.80 ? 0.42 : (pos().x() < 0 ? 0.28 - 0.01*pos().x() : (pos().x() < 0.30 ? 0.30 : 0.28)))"
+        );
+        expression
+        #{
+            101325
+          + alpha.water * 998.2 * 9.81 * max(head - pos().z(), scalar(0))
+        #};
+    }
+
+    pressureRgh
+    {
+        field       p_rgh;
+        dimensions  [1 -1 -2 0 0 0 0];
+        expression
+        #{
+            p
+          + (alpha.water*998.2 + (1-alpha.water)*1.204) * 9.81 * pos().z()
+        #};
+    }
+);

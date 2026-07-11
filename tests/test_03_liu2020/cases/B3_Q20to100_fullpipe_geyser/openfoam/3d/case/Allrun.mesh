@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+
+PROFILE="${B3_MESH_PROFILE:-baseline}"
+if [[ -d constant/polyMesh || -f b3_3d.msh ]]; then
+    if [[ "${B3_OVERWRITE:-0}" != "1" ]]; then
+        echo "Existing generated mesh found; run ./Allclean or set B3_OVERWRITE=1." >&2
+        exit 1
+    fi
+    rm -rf constant/polyMesh b3_3d.msh
+fi
+
+python3 ../make_mesh.py \
+    --profile "$PROFILE" \
+    --output b3_3d.msh \
+    > log.gmsh 2>&1
+
+gmshToFoam b3_3d.msh > log.gmshToFoam 2>&1
+checkMesh -allGeometry -allTopology > log.checkMesh 2>&1
+
+{
+    printf 'profile=%s\n' "$PROFILE"
+    foamDictionary constant/polyMesh/boundary -keywords
+    checkMesh -allGeometry -allTopology
+} > mesh-metadata.txt 2>&1
+
+echo "B3_3D_MESH_DONE profile=$PROFILE"

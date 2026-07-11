@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+
+if [[ ! -d processor0 ]]; then
+    echo "No decomposed run found; use ./Allrun.solve." >&2
+    exit 1
+fi
+
+NP="${OPENFOAM_NP:-6}"
+if (( NP > 6 )); then NP=6; fi
+if (( NP < 1 )); then NP=1; fi
+
+mpirun -np "$NP" compressibleInterFoam -parallel \
+    >> log.compressibleInterFoam 2>&1
+reconstructPar -latestTime > log.reconstructPar 2>&1
+
+echo "B3_3D_RESUME_DONE"
