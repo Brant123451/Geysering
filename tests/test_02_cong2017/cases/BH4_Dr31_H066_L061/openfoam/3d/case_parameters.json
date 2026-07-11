@@ -64,7 +64,7 @@
     "representation": "Brinkman momentum resistance in a 0.02 m cell zone; sink only",
     "baseline_opening_time_s": 0.2,
     "opening_law": "beta=beta_closed*(1-t/t_open)^4 for 0<=t<=t_open",
-    "closed_resistance_kg_per_m3_s": 10000000000.0,
+    "closed_resistance_kg_per_m3_s": 100000000.0,
     "sensitivity_opening_times_s": [0.1, 0.3]
   },
   "experiment": {

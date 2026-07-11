@@ -59,7 +59,7 @@ cell zone centred at `x=5.98 m`.  For the baseline manual opening:
 
 ```text
 beta(t) = beta_closed (1 - t/t_open)^4,  0 <= t <= t_open
-beta_closed = 1e10 kg/(m3 s)
+beta_closed = 1e8 kg/(m3 s)
 t_open = 0.20 s
 ```
 
