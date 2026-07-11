@@ -42,9 +42,11 @@ Surface tension is `0.072 N/m`.  There is no pressure, velocity, or eruption
 forcing and no outcome-dependent source.
 
 The passive valve model is the only momentum sink.  A `10 mm` cell zone at the
-measured valve plane represents a quarter-turn valve.  Its loss decreases
-monotonically with a smooth opening fraction over the reported `0.20 s`.
-Resistance is zero after opening.  The same law is used for the `0.10 s` and
+measured valve plane represents a quarter-turn valve.  A Darcy sealing term
+prevents numerical leakage while the smoothstep area fraction is below `0.02`;
+it then vanishes.  During opening, the contraction loss follows
+`K=((1-A)/A)^2`, with `A` bounded only while the valve is nominally closed.
+Both terms are zero after opening.  The same law is used for the `0.10 s` and
 `0.40 s` sensitivity runs; no coefficient is fitted to B-H6 observations.
 
 ## Initial and boundary conditions

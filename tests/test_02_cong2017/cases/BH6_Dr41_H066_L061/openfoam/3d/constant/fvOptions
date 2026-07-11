@@ -23,10 +23,13 @@ valveResistance
         fields              (U);
         name                timeVaryingBallValve;
 
-        openingStart        0.0;
-        openingDuration     0.20;
-        lossRate            500.0;
-        minimumAreaFraction 0.025;
+        openingStart           0.0;
+        openingDuration        0.20;
+        linearLossRate         500.0;
+        minimumAreaFraction    0.01;
+        sealDarcyCoefficient   1e12;
+        sealReleaseFraction    0.02;
+        valveZoneLength        0.01;
 
         codeInclude
         #{
@@ -52,15 +55,38 @@ valveResistance
                 coeffs().getOrDefault<scalar>("openingDuration", 0.20),
                 SMALL
             );
-            const scalar lossRate =
-                coeffs().getOrDefault<scalar>("lossRate", 500.0);
+            const scalar linearLossRate =
+                coeffs().getOrDefault<scalar>("linearLossRate", 500.0);
             const scalar minArea = max
             (
                 coeffs().getOrDefault<scalar>
                 (
                     "minimumAreaFraction",
-                    0.025
+                    0.01
                 ),
+                SMALL
+            );
+            const scalar sealDarcy = max
+            (
+                coeffs().getOrDefault<scalar>
+                (
+                    "sealDarcyCoefficient",
+                    1e12
+                ),
+                0.0
+            );
+            const scalar sealRelease = max
+            (
+                coeffs().getOrDefault<scalar>
+                (
+                    "sealReleaseFraction",
+                    0.02
+                ),
+                SMALL
+            );
+            const scalar valveLength = max
+            (
+                coeffs().getOrDefault<scalar>("valveZoneLength", 0.01),
                 SMALL
             );
 
@@ -75,22 +101,40 @@ valveResistance
                 openFraction = s*s*(3.0 - 2.0*s);
             }
 
-            scalar resistance = 0.0;
+            scalar lossCoefficient = 0.0;
             if (openFraction < 1.0 - SMALL)
             {
                 const scalar effectiveArea = max(openFraction, minArea);
-                resistance =
-                    lossRate*sqr((1.0 - openFraction)/effectiveArea);
+                lossCoefficient =
+                    sqr((1.0 - openFraction)/effectiveArea);
             }
+            const scalar sealWeight =
+                max(1.0 - openFraction/sealRelease, 0.0);
 
             scalarField& diagonal = eqn.diag();
             const scalarField& volume = mesh().V();
             const scalarField& density = rho.primitiveField();
+            const vectorField& velocity = eqn.psi().primitiveField();
+            const volScalarField& alpha =
+                mesh().lookupObject<volScalarField>("alpha.water");
             forAll(cells_, selectedI)
             {
                 const label cellI = cells_[selectedI];
+                const scalar waterFraction =
+                    min(max(alpha[cellI], 0.0), 1.0);
+                const scalar dynamicViscosity =
+                    waterFraction*9.32e-4
+                  + (1.0 - waterFraction)*1.846e-5;
+                const scalar axialSpeed = mag(velocity[cellI].x());
+                const scalar resistance =
+                    dynamicViscosity*sealDarcy*sqr(sealWeight)
+                  + density[cellI]*lossCoefficient
+                   *(
+                        linearLossRate
+                      + 0.5*axialSpeed/valveLength
+                    );
                 diagonal[cellI] +=
-                    density[cellI]*resistance*volume[cellI];
+                    resistance*volume[cellI];
             }
         #};
 

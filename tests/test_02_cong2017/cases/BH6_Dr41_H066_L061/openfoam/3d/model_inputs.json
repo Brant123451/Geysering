@@ -87,7 +87,7 @@
     }
   },
   "valve": {
-    "type": "passive time-varying linearised loss in a 0.010 m cellZone",
+    "type": "passive time-varying Darcy seal plus contraction loss in a 0.010 m cellZone",
     "opening_law": "smoothstep monotone area fraction",
     "base_opening_duration_s": 0.2,
     "sensitivity_opening_durations_s": [
@@ -95,8 +95,11 @@
       0.4
     ],
     "closed_hold_opening_start_s": 1000.0,
-    "loss_rate_s-1": 500.0,
-    "minimum_area_fraction": 0.025,
+    "linear_loss_rate_s-1": 500.0,
+    "minimum_area_fraction": 0.01,
+    "seal_darcy_coefficient_m-2": 1000000000000.0,
+    "seal_release_area_fraction": 0.02,
+    "contraction_loss_coefficient": "((1-A)/max(A,0.01))^2",
     "fully_open_resistance": 0.0,
     "pressure_or_velocity_forcing": false
   },
