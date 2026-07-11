@@ -32,6 +32,7 @@ CHAMBER_VOLUME = 0.30 * 0.30 * 0.45
 UPSTREAM_VOLUME = math.pi * 0.20**2 / 4.0 * 5.80
 
 PAPER = {
+    "initial_PT2_kPa": 2.97,
     "P1m_kPa": 10.69,
     "t_P1m_s": 0.50,
     "t_first_top_s": 0.73,
@@ -353,8 +354,12 @@ def parse_mesh_quality(case: Path) -> dict:
     return result
 
 
-def parse_numerics(case: Path, paper_time_offset: float = RAMP_OFFSET) -> dict:
-    """Summarize stability controls from all completed stage logs."""
+def parse_numerics(
+    case: Path,
+    paper_time_offset: float = RAMP_OFFSET,
+    maximum_solver_time: float | None = None,
+) -> dict:
+    """Summarize stability controls within the available field-history window."""
     result = {
         "logs": [],
         "max_courant_number": None,
@@ -389,8 +394,21 @@ def parse_numerics(case: Path, paper_time_offset: float = RAMP_OFFSET) -> dict:
         path = case / f"log.{stage}"
         if not path.exists():
             continue
+        lines = path.read_text(errors="replace").splitlines()
+        logged_times = [
+            float(match.group(1))
+            for line in lines
+            if (match := time_line.match(line.strip()))
+        ]
+        if maximum_solver_time is not None and not any(
+            time <= maximum_solver_time + 1e-9 for time in logged_times
+        ):
+            continue
         result["logs"].append(path.name)
         current_time = None
+        within_history = maximum_solver_time is None or (
+            bool(logged_times) and logged_times[0] <= maximum_solver_time + 1e-9
+        )
         stage_result = {
             "first_activation_solver_time_s": None,
             "first_activation_paper_time_s": None,
@@ -401,71 +419,76 @@ def parse_numerics(case: Path, paper_time_offset: float = RAMP_OFFSET) -> dict:
             "maximum_activation_solver_time_s": None,
             "maximum_activation_paper_time_s": None,
         }
-        with path.open(errors="replace") as stream:
-            for line in stream:
-                match = time_line.match(line.strip())
-                if match:
-                    current_time = float(match.group(1))
-                match = courant.search(line)
-                if match:
-                    value = float(match.group(1))
-                    max_co = value if max_co is None else max(max_co, value)
-                match = alpha_courant.search(line)
-                if match:
-                    value = float(match.group(1))
-                    max_alpha_co = value if max_alpha_co is None else max(max_alpha_co, value)
-                match = delta_t.search(line)
-                if match:
-                    value = float(match.group(1))
-                    min_delta_t = value if min_delta_t is None else min(min_delta_t, value)
-                match = velocity.search(line)
-                if match:
-                    value = float(match.group(1))
-                    max_velocity = value if max_velocity is None else max(max_velocity, value)
-                match = limited.search(line)
-                if match:
-                    cells = int(match.group(1))
-                    cell_percent = float(match.group(2))
-                    faces = int(match.group(3))
-                    face_percent = float(match.group(4))
-                    if cells > 0 and stage_result["first_activation_solver_time_s"] is None:
-                        stage_result["first_activation_solver_time_s"] = current_time
-                        stage_result["first_activation_paper_time_s"] = (
-                            current_time - paper_time_offset
-                            if current_time is not None
-                            else None
-                        )
-                    if cells > stage_result["maximum_limited_cells"]:
-                        stage_result["maximum_limited_cells"] = cells
-                        stage_result["maximum_limited_cell_percent"] = cell_percent
-                        stage_result["maximum_activation_solver_time_s"] = current_time
-                        stage_result["maximum_activation_paper_time_s"] = (
-                            current_time - paper_time_offset
-                            if current_time is not None
-                            else None
-                        )
-                    stage_result["maximum_limited_faces"] = max(
-                        stage_result["maximum_limited_faces"], faces
+        for line in lines:
+            match = time_line.match(line.strip())
+            if match:
+                current_time = float(match.group(1))
+                within_history = (
+                    maximum_solver_time is None
+                    or current_time <= maximum_solver_time + 1e-9
+                )
+            if not within_history:
+                continue
+            match = courant.search(line)
+            if match:
+                value = float(match.group(1))
+                max_co = value if max_co is None else max(max_co, value)
+            match = alpha_courant.search(line)
+            if match:
+                value = float(match.group(1))
+                max_alpha_co = value if max_alpha_co is None else max(max_alpha_co, value)
+            match = delta_t.search(line)
+            if match:
+                value = float(match.group(1))
+                min_delta_t = value if min_delta_t is None else min(min_delta_t, value)
+            match = velocity.search(line)
+            if match:
+                value = float(match.group(1))
+                max_velocity = value if max_velocity is None else max(max_velocity, value)
+            match = limited.search(line)
+            if match:
+                cells = int(match.group(1))
+                cell_percent = float(match.group(2))
+                faces = int(match.group(3))
+                face_percent = float(match.group(4))
+                if cells > 0 and stage_result["first_activation_solver_time_s"] is None:
+                    stage_result["first_activation_solver_time_s"] = current_time
+                    stage_result["first_activation_paper_time_s"] = (
+                        current_time - paper_time_offset
+                        if current_time is not None
+                        else None
                     )
-                    stage_result["maximum_limited_face_percent"] = max(
-                        stage_result["maximum_limited_face_percent"], face_percent
+                if cells > stage_result["maximum_limited_cells"]:
+                    stage_result["maximum_limited_cells"] = cells
+                    stage_result["maximum_limited_cell_percent"] = cell_percent
+                    stage_result["maximum_activation_solver_time_s"] = current_time
+                    stage_result["maximum_activation_paper_time_s"] = (
+                        current_time - paper_time_offset
+                        if current_time is not None
+                        else None
                     )
-                    if cells > result["maximum_limited_cells"]:
-                        result["maximum_limited_cells"] = cells
-                        result["maximum_limited_cell_percent"] = cell_percent
-                        result["maximum_limited_stage"] = stage
-                        result["maximum_limited_solver_time_s"] = current_time
-                        result["maximum_limited_paper_time_s"] = (
-                            current_time - paper_time_offset
-                            if current_time is not None
-                            else None
-                        )
-                    result["maximum_limited_faces"] = max(
-                        result["maximum_limited_faces"], faces
+                stage_result["maximum_limited_faces"] = max(
+                    stage_result["maximum_limited_faces"], faces
+                )
+                stage_result["maximum_limited_face_percent"] = max(
+                    stage_result["maximum_limited_face_percent"], face_percent
+                )
+                if cells > result["maximum_limited_cells"]:
+                    result["maximum_limited_cells"] = cells
+                    result["maximum_limited_cell_percent"] = cell_percent
+                    result["maximum_limited_stage"] = stage
+                    result["maximum_limited_solver_time_s"] = current_time
+                    result["maximum_limited_paper_time_s"] = (
+                        current_time - paper_time_offset
+                        if current_time is not None
+                        else None
                     )
-                    result["maximum_limited_face_percent"] = max(
-                        result["maximum_limited_face_percent"], face_percent
-                    )
+                result["maximum_limited_faces"] = max(
+                    result["maximum_limited_faces"], faces
+                )
+                result["maximum_limited_face_percent"] = max(
+                    result["maximum_limited_face_percent"], face_percent
+                )
         result["limiter_by_stage"][stage] = stage_result
     result["max_courant_number"] = max_co
     result["max_interface_courant_number"] = max_alpha_co
@@ -793,7 +816,7 @@ def main() -> None:
 
     sim_end = float(np.nanmax(p_time)) if len(p_time) else None
     p1m = t_p1m = None
-    if len(p_time):
+    if len(p_time) and sim_end is not None and sim_end > 0.0:
         window = (p_time >= 0.0) & (p_time <= min(1.5, p_time.max()))
         if np.any(window):
             indices = np.where(window)[0]
@@ -825,6 +848,11 @@ def main() -> None:
     smoke_complete = sim_end is not None and sim_end >= 1.0
     phase1_complete = sim_end is not None and sim_end >= 6.5
     phase2_complete = sim_end is not None and sim_end >= 19.999
+    initial_pt2 = None
+    if initialization_complete and len(p_time):
+        initial_index = int(np.nanargmin(np.abs(p_time)))
+        if abs(float(p_time[initial_index])) <= 0.011:
+            initial_pt2 = float(pressure[initial_index, 1])
     phase1_geysers = sum(
         1 for row in geyser_rows if float(row[1]) < PAPER["air_pocket_arrival_s"]
     )
@@ -860,6 +888,10 @@ def main() -> None:
         "paper_time_offset_s": offset,
         "initialization": {
             "window_complete": initialization_complete,
+            "PT2_gauge_kPa": initial_pt2,
+            "PT2_error_percent": relative_error(
+                initial_pt2, PAPER["initial_PT2_kPa"]
+            ),
         },
         "smoke": {
             "window_complete": smoke_complete,
@@ -957,7 +989,11 @@ def main() -> None:
             else None
         ),
         "mesh": parse_mesh_quality(case),
-        "numerics": parse_numerics(case, offset),
+        "numerics": parse_numerics(
+            case,
+            offset,
+            maximum_solver_time=sim_end + offset if sim_end is not None else None,
+        ),
         "source_parameter_status": {
             "air_pocket_size": "uncertain sensitivity parameter, not reported by paper",
             "tailgate_opening": "derived boundary parameter, not reported by paper",

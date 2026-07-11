@@ -196,6 +196,41 @@ class LogParsingTests(unittest.TestCase):
             0.15,
         )
 
+    def test_stale_stage_beyond_field_history_is_ignored(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            case = Path(directory)
+            (case / "log.initialize").write_text(
+                "\n".join(
+                    [
+                        "Time = 0.25",
+                        "    max(mag(U)) = 4.5 in cell 1",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (case / "log.smoke").write_text(
+                "\n".join(
+                    [
+                        "Time = 0.4",
+                        "    max(mag(U)) = 12 in cell 2",
+                        "limitVelocity limitU Limited 50 (5%) of cells, "
+                        "10 (2%) of faces, with max limit 12",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            numerics = post.parse_numerics(
+                case,
+                paper_time_offset=0.25,
+                maximum_solver_time=0.25,
+            )
+
+        self.assertEqual(numerics["logs"], ["log.initialize"])
+        self.assertEqual(numerics["maximum_velocity_m_s"], 4.5)
+        self.assertFalse(numerics["velocity_limiter_activated"])
+        self.assertNotIn("smoke", numerics["limiter_by_stage"])
+
 
 if __name__ == "__main__":
     unittest.main()

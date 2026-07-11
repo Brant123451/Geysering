@@ -1596,6 +1596,7 @@ echo MESH_DONE
         "Allrun.initialize",
         bash_prefix
         + f"""rm -rf processor* postProcessing
+rm -f log.smoke log.phase1 log.full
 foamListTimes -rm >/dev/null 2>&1 || true
 rm -rf 0
 cp -r 0.orig 0

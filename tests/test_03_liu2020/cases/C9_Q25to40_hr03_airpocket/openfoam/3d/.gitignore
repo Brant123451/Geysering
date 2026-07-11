@@ -13,4 +13,5 @@ case/log.*
 case/core
 case/*.foam
 case/VTK*/
+case/results-*/
 runs/
