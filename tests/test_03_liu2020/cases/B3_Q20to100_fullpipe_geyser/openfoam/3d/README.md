@@ -33,6 +33,8 @@ cells.
 - Adaptive stepping limits bulk-flow Courant number to 0.50 (the v2512
   isoAdvector tutorial value), interface Courant number to the stricter 0.15,
   and `deltaT` to 1 ms.
+- Each step uses the v2512 reference solver's single PIMPLE outer loop, with
+  three pressure correctors and one non-orthogonal correction.
 
 ## Geometry and boundary mapping
 

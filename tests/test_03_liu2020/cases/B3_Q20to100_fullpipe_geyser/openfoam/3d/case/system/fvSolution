@@ -90,7 +90,9 @@ PIMPLE
 {
     momentumPredictor          yes;
     transonic                  no;
-    nOuterCorrectors           2;
+    // One outer loop follows the v2512 compressibleInterIsoFoam reference;
+    // three pressure correctors and one non-orthogonal pass retain coupling.
+    nOuterCorrectors           1;
     nCorrectors                3;
     nNonOrthogonalCorrectors   1;
 }
