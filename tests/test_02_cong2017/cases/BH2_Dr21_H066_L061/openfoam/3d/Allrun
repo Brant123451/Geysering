@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+
+ACTION="${1:-}"
+MESH="${2:-base}"
+VALVE="${3:-baseline}"
+
+case "$MESH" in
+    base|refined) ;;
+    *) echo "mesh must be base or refined" >&2; exit 2 ;;
+esac
+case "$VALVE" in
+    baseline|instant|closed) ;;
+    *) echo "valve must be baseline, instant, or closed" >&2; exit 2 ;;
+esac
+
+OF_ROOT="${WM_PROJECT_DIR:-/usr/lib/openfoam/openfoam2512}"
+OF_PLATFORM="${OF_ROOT}/platforms/linux64GccDPInt32Opt"
+export WM_PROJECT_DIR="$OF_ROOT"
+export WM_PROJECT_VERSION=v2512
+export FOAM_API=2512
+export FOAM_APPBIN="${OF_PLATFORM}/bin"
+export FOAM_LIBBIN="${OF_PLATFORM}/lib"
+export PATH="${FOAM_APPBIN}:${OF_ROOT}/bin:${PATH}"
+export LD_LIBRARY_PATH="${FOAM_LIBBIN}:${FOAM_LIBBIN}/sys-openmpi:/usr/lib/x86_64-linux-gnu/openmpi/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+
+for command_name in gmshToFoam createPatch setFields setExprFields topoSet createBaffles checkMesh compressibleInterFoam; do
+    command -v "$command_name" >/dev/null || {
+        echo "Missing OpenFOAM v2512 command: $command_name" >&2
+        exit 1
+    }
+done
+
+RUN_ID="${MESH}_${VALVE}"
+RUN_DIR="$PWD/runs/$RUN_ID"
+
+prepare_case()
+{
+    python3 - "$RUN_DIR" <<'PY'
+from pathlib import Path
+import shutil
+import sys
+
+run = Path(sys.argv[1])
+if run.exists():
+    shutil.rmtree(run)
+run.mkdir(parents=True)
+shutil.copytree("case", run, dirs_exist_ok=True)
+PY
+
+    python3 make_mesh.py \
+        --variant "$MESH" \
+        --output "$RUN_DIR/bh2.msh" \
+        --stats "$RUN_DIR/mesh_stats.json" \
+        > "$RUN_DIR/log.gmsh" 2>&1
+
+    (
+        cd "$RUN_DIR"
+        gmshToFoam bh2.msh > log.gmshToFoam 2>&1
+        createPatch -overwrite > log.createPatch 2>&1
+        cp -a 0.orig 0
+        setFields > log.setFields 2>&1
+        setExprFields > log.setExprFields 2>&1
+        topoSet > log.topoSet 2>&1
+        createBaffles \
+            -dict "system/createBafflesDict.${VALVE}" \
+            -overwrite > log.createBaffles 2>&1
+        checkMesh -allGeometry -allTopology > log.checkMesh 2>&1
+    )
+
+    python3 audit_initial.py "$RUN_DIR" \
+        --output "$RUN_DIR/initial_audit.json"
+    echo "PREPARED $RUN_DIR"
+}
+
+run_parallel()
+{
+    local end_time="$1"
+    local log_name="$2"
+    local np="${BH2_NP:-$(nproc)}"
+    if (( np > 8 )); then np=8; fi
+    if (( np < 1 )); then np=1; fi
+
+    (
+        cd "$RUN_DIR"
+        foamDictionary system/controlDict -entry endTime -set "$end_time" >/dev/null
+        foamDictionary system/decomposeParDict \
+            -entry numberOfSubdomains -set "$np" >/dev/null
+        decomposePar > log.decomposePar 2>&1
+        mpirun --oversubscribe -np "$np" \
+            compressibleInterFoam -parallel > "$log_name" 2>&1
+    )
+}
+
+case "$ACTION" in
+    prepare)
+        prepare_case
+        ;;
+    smoke)
+        if [[ "$VALVE" == "closed" ]]; then
+            echo "smoke requires baseline or instant valve" >&2
+            exit 2
+        fi
+        prepare_case
+        (
+            cd "$RUN_DIR"
+            compressibleInterFoam -dry-run > log.smoke 2>&1
+        )
+        echo "SMOKE_OK $RUN_DIR"
+        ;;
+    closed)
+        VALVE=closed
+        RUN_ID="${MESH}_${VALVE}"
+        RUN_DIR="$PWD/runs/$RUN_ID"
+        prepare_case
+        run_parallel 2.0 log.closed
+        python3 postprocess.py --run "$RUN_ID"
+        echo "CLOSED_HOLD_DONE $RUN_DIR"
+        ;;
+    solve)
+        if [[ "$VALVE" == "closed" ]]; then
+            echo "use the closed action for the wall-baffle hold" >&2
+            exit 2
+        fi
+        prepare_case
+        run_parallel 13.0 log.solve
+        python3 postprocess.py --run "$RUN_ID"
+        echo "EVENT_DONE $RUN_DIR"
+        ;;
+    *)
+        echo "usage: ./Allrun {prepare|smoke|closed|solve} {base|refined} {baseline|instant}" >&2
+        exit 2
+        ;;
+esac

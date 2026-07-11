@@ -1,0 +1,51 @@
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      createBafflesDict;
+}
+internalFacesOnly true;
+
+baffles
+{
+    ballValve
+    {
+        type        faceZone;
+        zoneName    valveFaces;
+        patches
+        {
+            master
+            {
+                name            valveCouple0;
+                type            cyclicACMI;
+                neighbourPatch  valveCouple1;
+                nonOverlapPatch valveWall0;
+                transform       noOrdering;
+                scale           table
+                (
+                    (0     0)
+                    (0.2   1)
+                    (100   1)
+                );
+            }
+            slave
+            {
+                name            valveCouple1;
+                type            cyclicACMI;
+                neighbourPatch  valveCouple0;
+                nonOverlapPatch valveWall1;
+                transform       noOrdering;
+            }
+            master2
+            {
+                name            valveWall0;
+                type            wall;
+            }
+            slave2
+            {
+                name            valveWall1;
+                type            wall;
+            }
+        }
+    }
+}

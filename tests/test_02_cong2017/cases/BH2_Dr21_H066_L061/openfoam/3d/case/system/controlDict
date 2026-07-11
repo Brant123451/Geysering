@@ -1,0 +1,215 @@
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+
+application         compressibleInterFoam;
+startFrom           startTime;
+startTime           0;
+stopAt              endTime;
+endTime             13;
+deltaT              1e-5;
+
+writeControl        adjustableRunTime;
+writeInterval       0.10;
+purgeWrite          0;
+writeFormat         binary;
+writePrecision      8;
+writeCompression    off;
+timeFormat          general;
+timePrecision       10;
+runTimeModifiable   yes;
+
+adjustTimeStep      yes;
+maxCo               0.35;
+maxAlphaCo          0.20;
+maxDeltaT           0.001;
+
+functions
+{
+    fieldExtrema
+    {
+        type                fieldMinMax;
+        libs                (fieldFunctionObjects);
+        fields              (U p alpha.water);
+        mode                magnitude;
+        location            true;
+        writeControl        adjustableRunTime;
+        writeInterval       0.01;
+    }
+
+    pressureProbes
+    {
+        type                probes;
+        libs                (sampling);
+        fields              (p p_rgh alpha.water);
+        probeLocations
+        (
+            (6.585 0 0.024)
+            (3.470 0 -0.024)
+        );
+        interpolationScheme cell;
+        writeControl        adjustableRunTime;
+        writeInterval       0.01;
+    }
+
+    plumeProbes
+    {
+        type                probes;
+        libs                (sampling);
+        fields              (alpha.water U p);
+        probeLocations
+        (
+            (3.470 0 1.850)
+            (3.470 0 2.000)
+            (3.470 0 2.200)
+        );
+        interpolationScheme cell;
+        writeControl        adjustableRunTime;
+        writeInterval       0.01;
+    }
+
+    riserLine
+    {
+        type                sets;
+        libs                (sampling);
+        interpolationScheme cellPoint;
+        setFormat           raw;
+        fixedLocations      true;
+        fields              (alpha.water U p);
+        writeControl        adjustableRunTime;
+        writeInterval       0.02;
+        sets
+        {
+            centreline
+            {
+                type        uniform;
+                axis        distance;
+                start       (3.470 0 0.026);
+                end         (3.470 0 1.824);
+                nPoints     181;
+            }
+        }
+    }
+
+    totalMass
+    {
+        type                volFieldValue;
+        libs                (fieldFunctionObjects);
+        regionType          all;
+        operation           volIntegrate;
+        fields              (rho alpha.water);
+        writeFields         false;
+        writeControl        adjustableRunTime;
+        writeInterval       0.01;
+    }
+
+    pocketIntegrals
+    {
+        type                volFieldValue;
+        libs                (fieldFunctionObjects);
+        regionType          cellZone;
+        name                pocketCells;
+        operation           volIntegrate;
+        fields              (rho alpha.water);
+        writeFields         false;
+        writeControl        adjustableRunTime;
+        writeInterval       0.01;
+    }
+
+    pocketPressure
+    {
+        type                volFieldValue;
+        libs                (fieldFunctionObjects);
+        regionType          cellZone;
+        name                pocketCells;
+        operation           weightedVolAverage;
+        weightField         alpha.air;
+        fields              (p);
+        writeFields         false;
+        writeControl        adjustableRunTime;
+        writeInterval       0.01;
+    }
+
+    riserIntegrals
+    {
+        type                volFieldValue;
+        libs                (fieldFunctionObjects);
+        regionType          cellZone;
+        name                riserCells;
+        operation           volIntegrate;
+        fields              (rho alpha.water);
+        writeFields         false;
+        writeControl        adjustableRunTime;
+        writeInterval       0.01;
+    }
+
+    externalWater
+    {
+        type                volFieldValue;
+        libs                (fieldFunctionObjects);
+        regionType          cellZone;
+        name                externalCells;
+        operation           volIntegrate;
+        fields              (alpha.water);
+        writeFields         false;
+        writeControl        adjustableRunTime;
+        writeInterval       0.01;
+    }
+
+    inletFlux
+    {
+        type                surfaceFieldValue;
+        libs                (fieldFunctionObjects);
+        regionType          patch;
+        name                inlet;
+        operation           sum;
+        fields              (phi rhoPhi);
+        writeFields         false;
+        writeControl        adjustableRunTime;
+        writeInterval       0.01;
+    }
+
+    inletWaterFlux
+    {
+        type                surfaceFieldValue;
+        libs                (fieldFunctionObjects);
+        regionType          patch;
+        name                inlet;
+        operation           weightedSum;
+        weightField         phi;
+        fields              (alpha.water);
+        writeFields         false;
+        writeControl        adjustableRunTime;
+        writeInterval       0.01;
+    }
+
+    atmosphereFlux
+    {
+        type                surfaceFieldValue;
+        libs                (fieldFunctionObjects);
+        regionType          patch;
+        name                atmosphere;
+        operation           sum;
+        fields              (phi rhoPhi);
+        writeFields         false;
+        writeControl        adjustableRunTime;
+        writeInterval       0.01;
+    }
+
+    atmosphereWaterFlux
+    {
+        type                surfaceFieldValue;
+        libs                (fieldFunctionObjects);
+        regionType          patch;
+        name                atmosphere;
+        operation           weightedSum;
+        weightField         phi;
+        fields              (alpha.water);
+        writeFields         false;
+        writeControl        adjustableRunTime;
+        writeInterval       0.01;
+    }
+}

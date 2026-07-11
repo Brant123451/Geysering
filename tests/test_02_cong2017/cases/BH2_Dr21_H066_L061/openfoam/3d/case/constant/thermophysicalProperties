@@ -1,0 +1,17 @@
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      thermophysicalProperties;
+}
+
+phases          (water air);
+
+// Absolute-pressure floor for numerical protection, far below expected values.
+pMin            10000;
+
+sigma
+{
+    type        constant;
+    sigma       0.072;
+}

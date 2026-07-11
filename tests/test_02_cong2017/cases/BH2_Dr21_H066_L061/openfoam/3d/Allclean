@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+
+python3 - <<'PY'
+from pathlib import Path
+import shutil
+
+for relative in ("runs", "results/raw", "__pycache__"):
+    path = Path(relative)
+    if path.exists():
+        shutil.rmtree(path)
+PY
+
+echo "Removed generated meshes, fields, logs, and raw post-processing."
