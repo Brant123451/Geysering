@@ -21,10 +21,10 @@ free-surface displacement but cannot validate the water-hammer amplitude.
 - The PVC walls are rigid because wall thickness and modulus are not reported.
   Wall compliance and unresolved dispersed air are therefore uncertainty
   sources, not tunable effective wave speeds.
-- `fvOptions` bounds numerical overshoots to `250 <= T <= 400 K` and
-  `|U| <= 50 m/s`. Both limits are well outside the expected B3 state and are
-  monitored by the `extrema` function object; they are solver safeguards, not
-  fitted physical parameters.
+- `fvOptions` bounds numerical velocity overshoots to `|U| <= 50 m/s`, far
+  outside the expected B3 state. Velocity and temperature are monitored by the
+  `extrema` function object; the velocity bound is a solver safeguard, not a
+  fitted physical parameter.
 
 ## Geometry and boundary mapping
 

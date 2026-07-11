@@ -167,10 +167,10 @@ wall is rigid because its thickness and elastic modulus are not reported.
 Thus pipe-wall compliance, dissolved/dispersed air below the mesh scale,
 cavitation, and phase change remain unresolved uncertainty sources.
 
-The production case applies broad numerical safeguards of `250--400 K` and
-`|U| <= 50 m/s`. These limits are outside the expected experimental state and
-exist only to stop isolated VOF/tetrahedral overshoots from corrupting the
-thermodynamic update; any activation must be reported from the stored extrema.
+The production case bounds `|U| <= 50 m/s`, outside the expected experimental
+state, only to stop isolated VOF/tetrahedral overshoots from corrupting the
+thermodynamic update. Velocity and temperature extrema are stored so any
+activation or thermal instability can be reported.
 
 ## Initialisation and non-paper assumptions
 
