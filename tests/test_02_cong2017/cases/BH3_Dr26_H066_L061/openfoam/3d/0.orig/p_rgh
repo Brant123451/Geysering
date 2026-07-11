@@ -33,8 +33,11 @@ boundaryField
     }
     atmosphere
     {
-        type            prghTotalPressure;
-        p0              uniform 101325;
+        // Isothermal hydrostatic ambient pressure, referenced to 101325 Pa
+        // at the initial free-surface elevation.  A height-independent p0
+        // would put the external air column into gravitational free fall.
+        type            exprFixedValue;
+        valueExpr       "101325*exp(-9.81*(pos().z()-0.66)/(287.0421396863*296.15))*(1+9.81*pos().z()/(287.0421396863*296.15))";
         value           uniform 101325;
     }
 }

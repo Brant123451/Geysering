@@ -25,6 +25,8 @@
       "upstream_head_from_invert_m": 0.66,
       "initial_riser_free_surface_from_invert_m": 0.66,
       "ambient_absolute_pressure_pa": 101325.0,
+      "ambient_pressure_reference_elevation_m": 0.66,
+      "open_air_vertical_pressure_profile": "isothermal perfect-gas hydrostatic",
       "initial_temperature_k": 296.15,
       "initial_velocity_m_per_s": [0.0, 0.0, 0.0],
       "initial_air_pocket_gauge_pressure_pa": 0.0,

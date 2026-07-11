@@ -46,19 +46,21 @@ compressible initial air pocket.
 | Region | `U` | `p_rgh` / absolute `p` | `alpha.water` | `T` |
 |---|---|---|---:|---:|
 | Water-filled pipe and riser below `z=0.66 m` | `(0 0 0)` | hydrostatic from `H0=0.66 m` | 1 | 296.15 K |
-| Pocket `5.98<=x<=6.59 m` | `(0 0 0)` | atmospheric | 0 | 296.15 K |
-| Riser headspace and external atmosphere | `(0 0 0)` | atmospheric | 0 | 296.15 K |
+| Pocket `5.98<=x<=6.59 m` | `(0 0 0)` | isothermal hydrostatic air, `101325 Pa` at pipe centreline | 0 | 296.15 K |
+| Riser headspace and external atmosphere | `(0 0 0)` | isothermal hydrostatic air, `101325 Pa` at `H0` | 0 | 296.15 K |
 
 After `setFields`, `setExprFields` imposes
-`p=101325+alpha.water*rhoWater*g*max(H0-z,0)` and then
-`p_rgh=p-rhoMix*(g dot x)`. This makes the absolute pressure used to
-initialize both equations of state consistent with the reduced hydrostatic
-pressure before the first PIMPLE iteration. `setExprBoundaryFields` applies
-the same phase, `p`, and `p_rgh` state to every wall face, including the
-water/air transitions along the riser wall and downstream pocket.
+the exact isothermal hydrostatic `p(z)` for the configured `perfectFluid`
+water and `perfectGas` air equations of state, followed by
+`p_rgh=p-rhoMix*(g dot x)`. The open air column is referenced to `101325 Pa`
+at `H0=0.66 m`; the initially isolated pocket is referenced to the same
+pressure at the pipe centreline. This avoids the gravitational free fall that
+would result from a height-independent gas pressure. `setExprBoundaryFields`
+applies the same phase, `p`, and `p_rgh` state to every wall face, including
+the water/air transitions along the riser wall and downstream pocket.
 
 Analytic pocket target: `1.1977322 L`; ideal-gas mass target at the stated
-pressure and temperature: `1.427602 g`.
+pressure and temperature: `1.427641 g`.
 
 ## Patch contract
 
@@ -68,7 +70,7 @@ pressure and temperature: `1.427602 g`.
 | `closedEnd` | no slip | `fixedFluxPressure`; `p` calculated | zero gradient | zero gradient | Permanently capped downstream end |
 | `walls` | no slip | `fixedFluxPressure`; `p` calculated | static 90 deg | zero gradient | Circular pipe and external floor |
 | `riserWall` | no slip | `fixedFluxPressure`; `p` calculated | static 90 deg | zero gradient | Circular physical riser |
-| `atmosphere` | `pressureInletOutletVelocity` | `prghTotalPressure`, absolute `p0=101325 Pa`; `p` calculated | `inletOutlet`, inflow 0 | `inletOutlet`, inflow 296.15 K | Open sides/top of external air domain |
+| `atmosphere` | `pressureInletOutletVelocity` | expression-fixed isothermal ambient `p_rgh`, equivalent to `p=101325 Pa` at `z=0.66 m`; `p` calculated | `inletOutlet`, inflow 0 | `inletOutlet`, inflow 296.15 K | Open sides/top of external air domain |
 | Valve baffle | coupled cyclic; wall for closed-hold test | zero-jump for instantaneous baseline or time-varying porous pressure loss | coupled | coupled | Published instantaneous opening; 0.2/0.5 s sensitivities |
 
 ## Mesh profiles

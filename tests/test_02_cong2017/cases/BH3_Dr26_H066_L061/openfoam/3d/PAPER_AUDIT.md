@@ -83,7 +83,7 @@ These are pre-mesh analytic targets, not mesh-integrated audit results.
 | Laboratory temperature | measured in paper | `23 °C` = `296.15 K` |
 | Water density | measured-temperature value in paper | `998 kg/m³` |
 | Surface tension | stated in paper | `0.072 N/m` |
-| Reference ideal-gas air mass | `pV/(Rair T)`, using `101325 Pa` and `Rair=287.05 J/(kg K)` | `0.001427602 kg` |
+| Reference ideal-gas air mass | `pV/(Rair T)`, using `101325 Pa` and OpenFOAM `Rair=8314.46261815324/28.966 J/(kg K)` | `0.001427641 kg` |
 
 The paired CFD paper defines the operating/atmospheric pressure as
 `101.325 kPa`, so the reference air mass is released as the numerical target.
@@ -96,7 +96,7 @@ The paired CFD paper defines the operating/atmospheric pressure as
 | Valve process | Published paired-CFD baseline is instantaneous. Sensitivities use `0.2 s` (2017 experiment) and `0.5 s` (2018 paper statement) porous-baffle ramps; their smooth aperture law is explicitly numerical. | `RESOLVED` by sensitivity, with no claim that the ramp reconstructs the hand motion. |
 | Wall contact angle | Neither paper enables or reports a wall-adhesion law. Reproduction therefore uses a neutral static `90 deg` condition (equivalent to no preferential wetting) and records it explicitly. | `RESOLVED` as a non-calibrated numerical control. |
 | External air domain | Physical rim stays at `z=1.850 m`; expanded atmosphere reaches the paired CFD total height `z=3.0 m`. Width is parameterized for domain-independence checks. | `RESOLVED` as a numerical-domain control. |
-| Absolute ambient pressure | Paired CFD operating pressure `101.325 kPa`. | `RESOLVED`. |
+| Absolute ambient pressure | Paired CFD operating pressure `101.325 kPa`, applied at `z=H0`; the connected open-air column follows the isothermal ideal-gas hydrostatic profile implied by gravity and the selected EOS. | `RESOLVED`; the vertical correction prevents an initially uniform-pressure gas column from entering gravitational free fall. |
 | PT1/PT2 | Paired CFD Point A at downstream-end soffit; Point B at invert beneath riser. | `RESOLVED`. |
 | Wall roughness | Paired CFD assumes smooth wall with roughness length `10^-3 mm`. | `RESOLVED`. |
 | Initial temperature | Main experiment measured `296.15 K`; paired CFD used `300 K`. Experimental value is retained and the difference documented. | `RESOLVED`. |

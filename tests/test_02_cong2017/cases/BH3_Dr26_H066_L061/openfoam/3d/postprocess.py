@@ -16,7 +16,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-R_AIR = 287.05
+# OpenFOAM perfectGas uses the universal gas constant divided by molWeight.
+R_AIR = 8314.46261815324 / 28.966
 RHO_WATER = 998.0
 GRAVITY = 9.81
 RIM_Z = 1.850
