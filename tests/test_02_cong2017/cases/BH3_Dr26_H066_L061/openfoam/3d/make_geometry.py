@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate watertight STL patches for the Cong2017 B-H3 fluid domain.
+"""Generate the boundary-fitted Cong2017 B-H3 volume mesh and review surfaces.
 
 The geometry is a Boolean union, not intersecting shell approximations:
 
@@ -7,8 +7,9 @@ The geometry is a Boolean union, not intersecting shell approximations:
 * circular 26 mm vertical riser and true three-dimensional tee opening;
 * expanded external atmosphere above the physical 1.8 m riser.
 
-All patch STL files are exported from one surface mesh, so their common edges
-are bit-for-bit conformal for snappyHexMesh.
+The initial horizontal free surface is embedded as a conformal internal mesh
+plane.  This prevents a cell-centre stair-step interface from seeding capillary
+currents in the closed-valve hold.
 """
 from __future__ import annotations
 
@@ -28,6 +29,7 @@ TEE_X = 3.470
 PHYSICAL_RISER_HEIGHT = 1.800
 PHYSICAL_RIM_Z = PIPE_INVERT_Z + PIPE_DIAMETER + PHYSICAL_RISER_HEIGHT
 COMPUTATIONAL_TOP_Z = 3.000
+INITIAL_FREE_SURFACE_Z = 0.660
 BOOLEAN_OVERLAP = 0.001
 
 
@@ -116,12 +118,27 @@ def main() -> None:
         )
 
         apparatus, _ = occ.fuse([(3, pipe)], [(3, riser)])
-        fluid, _ = occ.fuse(apparatus, [(3, atmosphere)])
+        fused_fluid, _ = occ.fuse(apparatus, [(3, atmosphere)])
+        free_surface = occ.addRectangle(
+            TEE_X - args.atmosphere_width / 2.0,
+            -args.atmosphere_width / 2.0,
+            INITIAL_FREE_SURFACE_Z,
+            args.atmosphere_width,
+            args.atmosphere_width,
+        )
+        fluid, _ = occ.fragment(
+            fused_fluid,
+            [(2, free_surface)],
+            removeObject=True,
+            removeTool=True,
+        )
         occ.synchronize()
 
         volumes = [tag for dim, tag in fluid if dim == 3]
-        if len(volumes) != 1:
-            raise RuntimeError(f"Expected one connected fluid volume, got {volumes}")
+        if len(volumes) < 2:
+            raise RuntimeError(
+                "Initial free-surface fragmentation did not partition the fluid"
+            )
 
         patches: dict[str, list[int]] = {
             "inlet": [],
@@ -131,7 +148,7 @@ def main() -> None:
             "atmosphere": [],
         }
         boundaries = gmsh.model.getBoundary(
-            [(3, volumes[0])],
+            [(3, tag) for tag in volumes],
             combined=True,
             oriented=False,
             recursive=False,
@@ -250,7 +267,7 @@ def main() -> None:
         for name, surfaces in patches.items():
             export_patch(output, name, surfaces)
 
-        fluid_volume = occ.getMass(3, volumes[0])
+        fluid_volume = sum(occ.getMass(3, tag) for tag in volumes)
         analytic_pocket = math.pi * PIPE_DIAMETER**2 * 0.61 / 4.0
         print(f"output_dir={output}")
         print(f"mesh_output={args.mesh_output.resolve()}")
@@ -261,6 +278,8 @@ def main() -> None:
         print(f"circular_area_ratio={(args.riser_diameter / PIPE_DIAMETER) ** 2:.9g}")
         print(f"physical_rim_z_m={PHYSICAL_RIM_Z}")
         print(f"computational_top_z_m={COMPUTATIONAL_TOP_Z}")
+        print(f"conformal_initial_free_surface_z_m={INITIAL_FREE_SURFACE_Z}")
+        print(f"fluid_partitions={len(volumes)}")
         element_blocks = gmsh.model.mesh.getElements(3)[1]
         print(f"cells_3d={sum(len(block) for block in element_blocks)}")
         print(f"pipe_size_m={args.pipe_size}")
