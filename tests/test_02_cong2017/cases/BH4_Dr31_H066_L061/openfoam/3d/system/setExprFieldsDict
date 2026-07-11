@@ -6,12 +6,15 @@ FoamFile
     object      setExprFieldsDict;
 }
 
+readFields (alpha.water);
+
 expressions
 (
     atmosphericAbsolutePressure
     {
         field       p;
         dimensions  [1 -1 -2 0 0 0 0];
+        keepPatches true;
         expression  #{ 101325 #};
     }
 
@@ -19,6 +22,7 @@ expressions
     {
         field       p;
         dimensions  [1 -1 -2 0 0 0 0];
+        keepPatches true;
         fieldMask   #{ alpha.water > 0.5 #};
         expression  #{ 101325 + 997.954035295*9.81*(0.660 - pos().z()) #};
     }
@@ -27,6 +31,7 @@ expressions
     {
         field       p_rgh;
         dimensions  [1 -1 -2 0 0 0 0];
+        keepPatches true;
         expression  #{ 101325 + 1.191920596*9.81*pos().z() #};
     }
 
@@ -34,6 +39,7 @@ expressions
     {
         field       p_rgh;
         dimensions  [1 -1 -2 0 0 0 0];
+        keepPatches true;
         fieldMask   #{ alpha.water > 0.5 #};
         expression  #{ 101325 + 997.954035295*9.81*0.660 #};
     }
