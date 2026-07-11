@@ -21,9 +21,11 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-HERE = Path(__file__).resolve().parent
-OUT = HERE / "outputs"
-DIG = HERE / "digitized"
+CASE_ROOT = Path(__file__).resolve().parents[1]
+MODEL = CASE_ROOT / "model"
+DIGITIZED = CASE_ROOT / "data" / "digitized"
+SCANS = CASE_ROOT / "reference" / "paper_scans"
+OUTPUTS = CASE_ROOT / "outputs"
 
 L = 0.61
 DCROWN = 0.094 / L          # invert -> crown datum shift [in H*/L units]
@@ -31,12 +33,12 @@ SHIFT = 0.24                # rigid gas-sequence shift (mean entry/eruption offs
 
 # ---- digitized experiment ----
 T6, lo6, hi6, med6 = [], [], [], []
-with open(DIG / "fig6_caseB_Hstar_band.csv", encoding="utf-8") as f:
+with open(DIGITIZED / "fig6_caseB_Hstar_band.csv", encoding="utf-8") as f:
     for r in csv.DictReader(f):
         T6.append(float(r["Tstar"])); med6.append(float(r["Hstar_med"]))
         lo6.append(float(r["Hstar_min"])); hi6.append(float(r["Hstar_max"]))
 fs_x, fs_y, int_x, int_y = [], [], [], []
-with open(DIG / "fig8_caseB_levels.csv", encoding="utf-8") as f:
+with open(DIGITIZED / "fig8_caseB_levels.csv", encoding="utf-8") as f:
     for r in csv.DictReader(f):
         if r["kind"] == "fs":
             fs_x.append(float(r["Tstar"])); fs_y.append(float(r["Ystar"]))
@@ -45,7 +47,7 @@ with open(DIG / "fig8_caseB_levels.csv", encoding="utf-8") as f:
 
 # ---- model series ----
 t, Ts, yfs, yint, tr = [], [], [], [], []
-with open(OUT / "caseB_model_series.csv", encoding="utf-8") as f:
+with open(OUTPUTS / "caseB_model_series.csv", encoding="utf-8") as f:
     for r in csv.DictReader(f):
         t.append(float(r["t_s"])); Ts.append(float(r["Tstar"]))
         yfs.append(float(r["Yfs_star"])); yint.append(float(r["Yint_star"]))
@@ -82,8 +84,8 @@ ax.set_ylabel(r"$H^{*} = H/L$")
 ax.grid(alpha=0.3, lw=0.5)
 ax.legend(frameon=False, fontsize=9, loc="lower left")
 fig.tight_layout()
-fig.savefig(OUT / "caseB_pressure_pub.png", dpi=300)
-fig.savefig(OUT / "caseB_pressure_pub.pdf")
+fig.savefig(OUTPUTS / "caseB_pressure_pub.png", dpi=300)
+fig.savefig(OUTPUTS / "caseB_pressure_pub.pdf")
 
 # ================= levels =================
 # Model curves are shown only over the experimental coverage of Fig. 8
@@ -119,6 +121,11 @@ ax.set_ylabel(r"$Y^{*} = Y/L$")
 ax.grid(alpha=0.3, lw=0.5)
 ax.legend(frameon=False, fontsize=8.6, loc="lower right", ncol=1)
 fig.tight_layout()
-fig.savefig(OUT / "caseB_levels_pub.png", dpi=300)
-fig.savefig(OUT / "caseB_levels_pub.pdf")
-print("written:", OUT / "caseB_pressure_pub.pdf", "and", OUT / "caseB_levels_pub.pdf")
+fig.savefig(OUTPUTS / "caseB_levels_pub.png", dpi=300)
+fig.savefig(OUTPUTS / "caseB_levels_pub.pdf")
+print(
+    "written:",
+    OUTPUTS / "caseB_pressure_pub.pdf",
+    "and",
+    OUTPUTS / "caseB_levels_pub.pdf",
+)
