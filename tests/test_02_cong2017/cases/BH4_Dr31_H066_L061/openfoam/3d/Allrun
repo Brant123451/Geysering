@@ -99,6 +99,7 @@ else
     OMPI_ALLOW_RUN_AS_ROOT=1 \
     OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
     mpirun -np "$NP" compressibleInterFoam -parallel \
+        -decomposeParDict system/decomposeParDict.runtime \
         > log.compressibleInterFoam 2>&1
 fi
 
