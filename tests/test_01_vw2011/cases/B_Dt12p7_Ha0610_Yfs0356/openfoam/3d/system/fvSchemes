@@ -14,6 +14,10 @@ ddtSchemes
 gradSchemes
 {
     default         Gauss linear;
+    // interfaceProperties requests this scheme by the literal name "nHat".
+    // Least squares is evaluated as a curvature-noise diagnostic on the
+    // skewed tetrahedral cut-cell interface.
+    nHat            leastSquares;
 }
 
 divSchemes
