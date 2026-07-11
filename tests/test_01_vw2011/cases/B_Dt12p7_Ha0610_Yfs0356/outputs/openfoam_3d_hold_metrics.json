@@ -1,0 +1,150 @@
+{
+  "case": {
+    "tower_diameter_m": 0.0127,
+    "main_pipe_diameter_m": 0.094,
+    "tower_height_m": 0.61,
+    "initial_air_head_m": 0.61,
+    "initial_tower_level_m": 0.356,
+    "time_scale_s": 1.7281978911310492
+  },
+  "solver": {
+    "name": "compressibleInterFoam",
+    "openfoam_version": "v2512",
+    "gas_equation_of_state": "perfectGas",
+    "water_equation_of_state": "perfectFluid rho=998.153943+p/(7504.690432*T)"
+  },
+  "run_configuration": {
+    "stage": "hold",
+    "end_time_s": 0.001,
+    "mesh_preset": "base",
+    "valve_mode": "closed",
+    "valve_open_time_s": 0.25,
+    "initial_air_head_m": 0.61,
+    "initial_air_absolute_pressure_Pa": 107298.32862,
+    "gas_equation_of_state": "perfectGas",
+    "max_co": 0.3,
+    "max_alpha_co": 0.2,
+    "max_delta_t_s": 0.00025,
+    "field_write_interval_s": 0.001,
+    "probe_write_interval_s": 0.001,
+    "plume_write_interval_s": 0.001,
+    "accounting_interval_s": 0.001,
+    "c_alpha": 1.0,
+    "tower_probe_lines": 5,
+    "tower_probe_spacing_m": 0.005,
+    "plume_probe_lines": 5,
+    "plume_probe_spacing_m": 0.01
+  },
+  "mesh": {
+    "cells": 1904269,
+    "max_aspect_ratio": 8.5626597,
+    "max_non_orthogonality_deg": 70.259611,
+    "severe_non_orthogonal_faces": 2,
+    "max_skewness": 1.1037194,
+    "highly_skew_faces": 0,
+    "minimum_cell_volume_m3": 6.0049405e-11,
+    "minimum_cell_determinant": 0.0,
+    "underdetermined_cells": 448,
+    "minimum_face_weight": 0.096809018,
+    "low_weight_faces": 0,
+    "minimum_volume_ratio": 0.10718554,
+    "low_volume_ratio_faces": 0,
+    "two_internal_face_cells": 446,
+    "boundary_tet_determinant_excess_cells": 2,
+    "failed_checks": 1,
+    "standard_mesh_ok": true,
+    "strict_mesh_ok": false,
+    "strict_tet_boundary_exception": true,
+    "strict_audit_status": "accepted_boundary_tet_exception",
+    "mesh_ok": true
+  },
+  "experiment": {
+    "geyser": true,
+    "Hstar_plateau": 0.7575566751,
+    "Hstar_plateau_window_Tstar": [
+      1.0,
+      4.0
+    ],
+    "Yfs_star_plateau": 0.8225,
+    "gas_entry_Tstar_range": [
+      3.648,
+      3.742
+    ],
+    "free_surface_top_Tstar_range": [
+      3.9,
+      3.981
+    ],
+    "pressure_drop_Tstar": 4.048,
+    "interface_0p85L_Tstar_legacy_csv": 3.846875,
+    "interface_0p85L_Tstar_audited_range": [
+      4.091,
+      4.169
+    ],
+    "Vint_star_table2_diameter_average": 1.43,
+    "Vfs_star_table2_diameter_average": 0.44
+  },
+  "openfoam_3d": {
+    "completion_status": "incomplete",
+    "end_Tstar": 0.000578637437953088,
+    "stream_end_Tstar": {
+      "pressure": 0.000578637437953088,
+      "levels": 0.000578637437953088,
+      "accounting": 0.000578637437953088
+    },
+    "geyser": false,
+    "geyser_criterion": {
+      "free_surface_before_gas_breakthrough": false,
+      "Yint_star_at_free_surface_top": null,
+      "minimum_sustained_above_rim_volume_m3": 1.2667686977437443e-07,
+      "samples_above_threshold": 0
+    },
+    "gas_entry_Tstar": null,
+    "interface_0p85L_Tstar": null,
+    "free_surface_top_Tstar": null,
+    "pressure_drop_Tstar": null,
+    "Hstar_plateau": null,
+    "Yfs_star_plateau": null,
+    "Vint_star": null,
+    "Vfs_star": null,
+    "max_geyser_height_m": 0.0,
+    "geyser_height_censored_by_domain": false,
+    "overflow_volume_m3": 0.0,
+    "overflow_volume_method": "maximum liquid inventory above physical rim",
+    "liquid_mass_error_pct_final": 0.0,
+    "liquid_mass_error_pct_max_abs": 0.0,
+    "gas_mass_error_pct_final": 0.0,
+    "gas_mass_error_pct_max_abs": 0.0,
+    "total_mass_error_pct_final": 0.0,
+    "total_mass_error_pct_max_abs": 0.0,
+    "mass_balance_method": {
+      "total": "solver rho and rhoPhi (signed atmosphere flux)",
+      "phases": "EOS phase density with alpha*phi boundary split; diagnostic approximation because subcycled alphaPhi is not exposed"
+    }
+  },
+  "experimental_error": {
+    "Hstar_plateau_percent": null,
+    "Yfs_star_plateau_percent": null,
+    "pressure_drop_Tstar_percent": null,
+    "Vint_star_percent": null,
+    "Vfs_star_percent": null
+  },
+  "audit_notes": [
+    "Table 2 velocities are diameter-level averages, not Case-B-only values.",
+    "The legacy T*=3.846875 interface marker is probably misclassified; see PAPER_AUDIT.md.",
+    "Pressure tap vertical datum is unresolved; 3-D uses direct gauge pressure without \u2212D/L correction."
+  ],
+  "mesh_sensitivity": {
+    "available": false,
+    "reason": "This run is not the declared baseline configuration"
+  },
+  "hold_test": {
+    "duration_s": 0.001,
+    "Hstar_peak_to_peak": 0.0,
+    "Yfs_star_max_drift": 0.0024590163934427034,
+    "max_water_above_rim_m3": 0.0,
+    "gas_entry_detected": false,
+    "liquid_mass_error_pct_max_abs": 0.0,
+    "gas_mass_error_pct_max_abs": 0.0,
+    "passed": false
+  }
+}

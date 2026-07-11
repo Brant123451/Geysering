@@ -34,26 +34,26 @@ rerun solver stages.  Do not use or merge the old 2-D branch
    checks pass.  The source records this as
    `accepted_boundary_tet_exception`, not as a strict `Mesh OK.` result.
 6. `setFields` and hydrostatic `setExprFields` initialization complete.
-7. A four-rank closed-valve startup reached 0.001 s without a solver crash.
-   Dynamic compilation of the phase-accounting function and valve source
-   succeeded.  Its first postprocess attempt had no probe files because the
-   requested run ended before the original 0.005 s probe interval; commit
-   `71d014d` clamps diagnostic intervals for short stages.
+7. A four-rank closed-valve startup reached and postprocessed 0.001 s without
+   a solver crash.  Dynamic compilation of the phase-accounting function and
+   valve source succeeded.  Commits `71d014d` and `2740253` make short-stage
+   intervals and single-sample derivatives robust.  The committed smoke
+   evidence is correctly marked incomplete: no overflow or gas entry, zero
+   one-sample mass-balance error, and 0.00246 dimensionless free-surface drift.
 
 ## Still required
 
 The scientific reproduction is **not complete**.  Continue in this order:
 
-1. Confirm the short closed-valve run now writes probes and postprocesses.
-2. Run the full 1.0 s closed-valve hold and assess leakage, interface drift,
+1. Run the full 1.0 s closed-valve hold and assess leakage, interface drift,
    pressure drift, and mass balance.
-3. Run the opened-valve 0.5 s smoke case.
-4. Run the 10.5 s base case through \(T^*\ge6\).
-5. Run the refined grid and required timestep/valve/compressibility
+2. Run the opened-valve 0.5 s smoke case.
+3. Run the 10.5 s base case through \(T^*\ge6\).
+4. Run the refined grid and required timestep/valve/compressibility
    sensitivities.
-6. Commit only compact CSV/JSON/plots; never commit meshes, time directories,
+5. Commit only compact CSV/JSON/plots; never commit meshes, time directories,
    `processor*`, `postProcessing`, logs, or dynamic-code output.
-7. Update the PR without claiming a completed experiment until the acceptance
+6. Update the PR without claiming a completed experiment until the acceptance
    fields in `outputs/openfoam_3d_metrics.json` pass.
 
 The initial 0.001 s hold needed about 6.5 minutes on four ranks.  Its maximum
