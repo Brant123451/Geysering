@@ -121,6 +121,12 @@ measurements exist:
    bulk-modulus ratio directly as `R`. The energy equation remains active and
    temperature extrema are recorded; a non-positive temperature invalidates a
    run rather than being hidden by clipping.
+7. **Atmospheric datum:** `101325 Pa` absolute is referenced at the measured
+   initial free-surface elevation (`y=0.635 m`). The riser headspace and open
+   exterior use the corresponding constant hydrostatic
+   `p_rgh=101332.42484 Pa`; the isolated end pocket remains `101325 Pa` on the
+   pipe axis. This removes an artificial exterior-air pressure gradient and
+   does not pressurize the selected pocket.
 
 With these declarations, all model-affecting paper conflicts are either
 resolved by primary evidence or isolated as named numerical sensitivities.

@@ -30,14 +30,16 @@ regions
         );
     }
 
-    // Riser headspace and the explicitly modelled exterior atmosphere.
+    // Riser headspace and exterior atmosphere are hydrostatic, referenced to
+    // 101325 Pa absolute at the y=0.635 m free surface.  For rho_air =
+    // 1.191912 kg/m3 this corresponds to constant p_rgh=101332.42484 Pa.
     boxToCell
     {
         box (3.319 0.635 -0.151) (3.621 3.026 0.151);
         fieldValues
         (
             volScalarFieldValue alpha.water 0
-            volScalarFieldValue p_rgh 101325
+            volScalarFieldValue p_rgh 101332.42484
             volScalarFieldValue p 101325
         );
     }

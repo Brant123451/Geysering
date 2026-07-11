@@ -38,7 +38,9 @@
     "free_surface_height_above_crown_m": 0.61,
     "pocket_length_m": 0.61,
     "pocket_pressure_absolute_Pa": 101325.0,
-    "atmosphere_pressure_absolute_Pa": 101325.0,
+    "atmosphere_reference_pressure_absolute_Pa": 101325.0,
+    "atmosphere_reference_y_m": 0.635,
+    "headspace_p_rgh_Pa": 101332.42484,
     "temperature_K": 296.15,
     "analytic_pocket_volume_m3": 0.0011977322,
     "analytic_pocket_air_mass_kg": 0.0014276
@@ -57,7 +59,7 @@
   },
   "boundaries": {
     "inlet": "pressure-driven constant reservoir head H0=0.66 m",
-    "atmosphere": "101325 Pa on exterior-box sides and top",
+    "atmosphere": "hydrostatic p_rgh=101332.42484 Pa, referenced to 101325 Pa absolute at y=0.635 m",
     "walls": "smooth no-slip acrylic; alpha.water zeroGradient",
     "cap": "part of walls, closed",
     "contact_angle": "not prescribed; no fitted value is available"

@@ -37,15 +37,17 @@ rim; it is not a confined `3.0 m` riser.
   the initial free surface is `y=0.635 m`, or `Y=0.610 m` above the crown.
 - The main is water-filled except for the final `L0=0.61 m`.
 - The isolated pocket target is `1.1977322e-3 m3` and `1.4276e-3 kg` of air.
-- Pocket and riser/exterior air start at `101325 Pa` absolute and `296.15 K`.
+- The isolated pocket starts at `101325 Pa` absolute on the pipe axis.
+  Riser/exterior air is hydrostatic from `101325 Pa` at the initial free
+  surface (`p_rgh=101332.42484 Pa`). All phases start at `296.15 K`.
 - Water starts at `296.15 K`, `rho0=998.2 kg/m3`, with physical bulk modulus
   `2.2 GPa`; air uses `perfectGas`.
 - The energy equation is active and `fieldMinMax` records temperature
   extrema. A non-positive temperature invalidates the run; temperature is not
   clipped to conceal a failed thermo inversion.
 - Hydrostatic water has `p_rgh=107543.13717 Pa` for the chosen coordinate
-  origin. `setFieldsDict` assigns atmospheric `p/p_rgh` to the pocket and
-  headspace.
+  origin. The pocket keeps `p_rgh=101325 Pa`; the disconnected headspace uses
+  its hydrostatic value above.
 
 The exact mesh-integrated inventory is emitted for every run. The tunnel-gas
 volume is checked against the analytic pocket before an event result is used.
@@ -56,7 +58,7 @@ volume is checked against the analytic pocket before an event result is used.
 |---|---|---|---|---|
 | `inlet` | `pressureInletOutletVelocity` | fixed hydrostatic `p_rgh=107543.13717 Pa`; `p` calculated | fixed water `1` | `inletOutlet`, `296.15 K` inflow |
 | `walls` (acrylic, floor, cap, static-check valve disk) | `noSlip` | `fixedFluxPressure`; `p` calculated | `zeroGradient` | adiabatic `zeroGradient` |
-| `atmosphere` (external sides/top) | `pressureInletOutletVelocity` | `prghTotalPressure`, `p0=101325 Pa`; `p` calculated | `inletOutlet`, air on inflow | `inletOutlet`, `296.15 K` inflow |
+| `atmosphere` (external sides/top) | `pressureInletOutletVelocity` | fixed hydrostatic `p_rgh=101332.42484 Pa`, referenced to `101325 Pa` at `y=0.635 m`; `p` calculated | `inletOutlet`, air on inflow | `inletOutlet`, `296.15 K` inflow |
 | equivalent-valve cyclic pair | cyclic | time-varying `porousBafflePressure`; `p` cyclic | cyclic | cyclic |
 
 The papers report no static, advancing, or receding acrylic contact angle.

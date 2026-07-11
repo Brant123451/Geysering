@@ -23,9 +23,10 @@ boundaryField
     }
     atmosphere
     {
-        type            prghTotalPressure;
-        p0              uniform 101325;
-        value           uniform 101325;
+        // Hydrostatic air referenced to 101325 Pa absolute at y=0.635 m.
+        // A constant p_rgh avoids an artificial vertical-boundary circulation.
+        type            fixedValue;
+        value           uniform 101332.42484;
     }
     walls
     {
