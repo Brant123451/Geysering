@@ -62,18 +62,64 @@ def configuration_id(manifest: dict) -> str:
     return f"{manifest.get('mesh_preset', 'mesh')}-{digest}"
 
 
-def is_baseline_full(manifest: dict) -> bool:
+def is_baseline_full_physics(manifest: dict) -> bool:
     return (
         manifest.get("stage") == "full"
         and manifest.get("valve_mode") == "opening"
         and math.isclose(float(manifest.get("valve_open_time_s", -1)), 0.25)
+        and math.isclose(
+            float(manifest.get("valve_seal_speed_m_per_s", -1)), 1.0
+        )
         and math.isclose(float(manifest.get("initial_air_head_m", -1)), 0.610)
         and manifest.get("gas_equation_of_state") == "perfectGas"
         and math.isclose(float(manifest.get("max_co", -1)), 0.30)
         and math.isclose(float(manifest.get("max_alpha_co", -1)), 0.20)
+        and math.isclose(float(manifest.get("max_delta_t_s", -1)), 0.00025)
         and math.isclose(float(manifest.get("c_alpha", -1)), 1.0)
         and float(manifest.get("end_time_s", 0)) >= 6 * TIME_SCALE
     )
+
+
+def is_baseline_full(manifest: dict) -> bool:
+    """Return whether this is the canonical base-mesh full run."""
+    return (
+        manifest.get("mesh_preset") == "base"
+        and is_baseline_full_physics(manifest)
+    )
+
+
+def is_canonical_hold(manifest: dict) -> bool:
+    """Return whether a hold belongs to the canonical acceptance deck."""
+    return (
+        manifest.get("stage") == "hold"
+        and manifest.get("mesh_preset") == "base"
+        and manifest.get("valve_mode") == "closed"
+        and math.isclose(float(manifest.get("valve_open_time_s", -1)), 0.25)
+        and math.isclose(
+            float(manifest.get("valve_seal_speed_m_per_s", -1)), 1.0
+        )
+        and math.isclose(float(manifest.get("initial_air_head_m", -1)), 0.610)
+        and manifest.get("gas_equation_of_state") == "perfectGas"
+        and math.isclose(float(manifest.get("max_co", -1)), 0.30)
+        and math.isclose(float(manifest.get("max_alpha_co", -1)), 0.20)
+        and math.isclose(float(manifest.get("max_delta_t_s", -1)), 0.00025)
+        and math.isclose(float(manifest.get("c_alpha", -1)), 1.0)
+    )
+
+
+def should_update_hold_evidence(existing: dict, candidate: dict) -> bool:
+    """Keep the strongest canonical hold instead of the most recent short run."""
+    old = existing.get("hold_test", {})
+    new = candidate.get("hold_test", {})
+    if not old:
+        return True
+    old_passed = bool(old.get("passed"))
+    new_passed = bool(new.get("passed"))
+    if old_passed != new_passed:
+        return new_passed
+    old_duration = float(old.get("duration_s", -1))
+    new_duration = float(new.get("duration_s", -1))
+    return new_duration >= old_duration
 
 
 def mesh_pair_compatible(first: dict, second: dict) -> bool:
@@ -520,7 +566,77 @@ def percent_error(value, target):
     return 100.0 * (value - target) / target
 
 
+def compare_mesh_metrics(base: dict, refined: dict) -> dict:
+    differences = {}
+    for key in (
+        "Hstar_plateau",
+        "Yfs_star_plateau",
+        "gas_entry_Tstar",
+        "interface_0p85L_Tstar",
+        "free_surface_top_Tstar",
+        "pressure_drop_Tstar",
+        "Vint_star",
+        "Vfs_star",
+        "max_geyser_height_m",
+        "overflow_volume_m3",
+    ):
+        base_value = base.get("openfoam_3d", {}).get(key)
+        refined_value = refined.get("openfoam_3d", {}).get(key)
+        if (
+            isinstance(base_value, (int, float))
+            and isinstance(refined_value, (int, float))
+            and np.isfinite(base_value)
+            and np.isfinite(refined_value)
+        ):
+            differences[key] = {
+                "base": base_value,
+                "refined": refined_value,
+                "refined_minus_base": refined_value - base_value,
+                "relative_to_refined_percent": (
+                    100.0 * (base_value - refined_value) / refined_value
+                    if refined_value != 0
+                    else None
+                ),
+            }
+    return {
+        "available": True,
+        "compatible_non_mesh_controls": True,
+        "base_cells": base.get("mesh", {}).get("cells"),
+        "refined_cells": refined.get("mesh", {}).get("cells"),
+        "differences": differences,
+    }
+
+
+def apply_acceptance(metrics: dict, hold_passed: bool) -> None:
+    """Recompute acceptance after hold or mesh-pair evidence changes."""
+    run = metrics["openfoam_3d"]
+    conservation_passed = (
+        run["liquid_mass_error_pct_max_abs"] <= 1.0
+        and run["gas_mass_error_pct_max_abs"] <= 1.0
+    )
+    acceptance = {
+        "all_streams_reach_Tstar_6": run["end_Tstar"] >= 6.0,
+        "geyser_resolved": bool(run["geyser"]),
+        "phase_balance_within_1_percent": conservation_passed,
+        "plume_not_domain_censored": not bool(
+            run["geyser_height_censored_by_domain"]
+        ),
+        "closed_valve_hold_passed": bool(hold_passed),
+        "compatible_base_refined_pair": bool(
+            metrics["mesh_sensitivity"].get("available")
+        ),
+    }
+    run["acceptance"] = acceptance
+    run["completion_status"] = (
+        "complete"
+        if is_baseline_full(metrics["run_configuration"])
+        and all(acceptance.values())
+        else "incomplete"
+    )
+
+
 def postprocess(manifest: dict, mesh: dict) -> dict:
+    baseline_physics = is_baseline_full_physics(manifest)
     canonical_baseline = is_baseline_full(manifest)
     run_outputs = OUTPUTS if canonical_baseline else RUNTIME
     run_outputs.mkdir(parents=True, exist_ok=True)
@@ -854,7 +970,8 @@ def postprocess(manifest: dict, mesh: dict) -> dict:
     preset = manifest.get("mesh_preset", "base")
     other_preset = "refined" if preset == "base" else "base"
     other_path = OUTPUTS / f"openfoam_3d_metrics_{other_preset}.json"
-    if canonical_baseline and other_path.is_file():
+    paired_other = None
+    if baseline_physics and other_path.is_file():
         other = read_json(other_path, {})
         compatible = mesh_pair_compatible(
             manifest, other.get("run_configuration", {})
@@ -862,44 +979,10 @@ def postprocess(manifest: dict, mesh: dict) -> dict:
         if compatible:
             base = metrics if preset == "base" else other
             refined = metrics if preset == "refined" else other
-            differences = {}
-            for key in (
-                "Hstar_plateau",
-                "Yfs_star_plateau",
-                "gas_entry_Tstar",
-                "interface_0p85L_Tstar",
-                "free_surface_top_Tstar",
-                "pressure_drop_Tstar",
-                "Vint_star",
-                "Vfs_star",
-                "max_geyser_height_m",
-                "overflow_volume_m3",
-            ):
-                base_value = base.get("openfoam_3d", {}).get(key)
-                refined_value = refined.get("openfoam_3d", {}).get(key)
-                if (
-                    isinstance(base_value, (int, float))
-                    and isinstance(refined_value, (int, float))
-                    and np.isfinite(base_value)
-                    and np.isfinite(refined_value)
-                ):
-                    differences[key] = {
-                        "base": base_value,
-                        "refined": refined_value,
-                        "refined_minus_base": refined_value - base_value,
-                        "relative_to_refined_percent": (
-                            100.0 * (base_value - refined_value) / refined_value
-                            if refined_value != 0
-                            else None
-                        ),
-                    }
-            metrics["mesh_sensitivity"] = {
-                "available": True,
-                "compatible_non_mesh_controls": True,
-                "base_cells": base.get("mesh", {}).get("cells"),
-                "refined_cells": refined.get("mesh", {}).get("cells"),
-                "differences": differences,
-            }
+            mesh_comparison = compare_mesh_metrics(base, refined)
+            metrics["mesh_sensitivity"] = mesh_comparison
+            other["mesh_sensitivity"] = mesh_comparison
+            paired_other = other
         else:
             metrics["mesh_sensitivity"] = {
                 "available": False,
@@ -911,15 +994,25 @@ def postprocess(manifest: dict, mesh: dict) -> dict:
             "available": False,
             "reason": (
                 f"No compatible baseline full {other_preset} metrics file is available"
-                if canonical_baseline
+                if baseline_physics
                 else "This run is not the declared baseline configuration"
             ),
         }
 
+    hold_path = OUTPUTS / "openfoam_3d_hold_metrics.json"
+    existing_hold = read_json(hold_path, {})
+    write_canonical_hold = False
     if manifest.get("stage") == "hold":
         initial_yfs = 0.356 / L
         hold = {
-            "duration_s": float(level_time[-1]),
+            "duration_s": float(
+                min(
+                    pressure_time[-1],
+                    level_time[-1],
+                    accounting["time"][-1],
+                )
+            ),
+            "requested_duration_s": float(manifest.get("end_time_s", 0)),
             "Hstar_peak_to_peak": float(np.nanmax(hstar) - np.nanmin(hstar)),
             "Yfs_star_max_drift": float(np.nanmax(np.abs(yfs - initial_yfs))),
             "max_water_above_rim_m3": max_above,
@@ -939,32 +1032,21 @@ def postprocess(manifest: dict, mesh: dict) -> dict:
             and hold["gas_mass_error_pct_max_abs"] <= 1.0
         )
         metrics["hold_test"] = hold
-        (OUTPUTS / "openfoam_3d_hold_metrics.json").write_text(
-            json.dumps(metrics, indent=2) + "\n"
+        write_canonical_hold = (
+            is_canonical_hold(manifest)
+            and should_update_hold_evidence(existing_hold, metrics)
         )
 
-    hold_metrics = read_json(OUTPUTS / "openfoam_3d_hold_metrics.json", {})
-    hold_passed = bool(hold_metrics.get("hold_test", {}).get("passed"))
-    conservation_passed = (
-        run["liquid_mass_error_pct_max_abs"] <= 1.0
-        and run["gas_mass_error_pct_max_abs"] <= 1.0
+    hold_passed = bool(
+        (
+            metrics
+            if write_canonical_hold
+            else existing_hold
+        ).get("hold_test", {}).get("passed")
     )
-    acceptance = {
-        "all_streams_reach_Tstar_6": end_tstar >= 6.0,
-        "geyser_resolved": geyser,
-        "phase_balance_within_1_percent": conservation_passed,
-        "plume_not_domain_censored": not plume_censored,
-        "closed_valve_hold_passed": hold_passed,
-        "compatible_base_refined_pair": bool(
-            metrics["mesh_sensitivity"].get("available")
-        ),
-    }
-    run["acceptance"] = acceptance
-    run["completion_status"] = (
-        "complete"
-        if canonical_baseline and all(acceptance.values())
-        else "incomplete"
-    )
+    apply_acceptance(metrics, hold_passed)
+    if paired_other is not None:
+        apply_acceptance(paired_other, hold_passed)
 
     RUNTIME.mkdir(parents=True, exist_ok=True)
     config_id = configuration_id(manifest)
@@ -974,13 +1056,34 @@ def postprocess(manifest: dict, mesh: dict) -> dict:
         (OUTPUTS / f"openfoam_3d_metrics_{config_id}.json").write_text(
             json.dumps(metrics, indent=2) + "\n"
         )
-    if canonical_baseline:
+    if baseline_physics:
         (OUTPUTS / f"openfoam_3d_metrics_{preset}.json").write_text(
             json.dumps(metrics, indent=2) + "\n"
         )
-        (OUTPUTS / "openfoam_3d_metrics.json").write_text(
-            json.dumps(metrics, indent=2) + "\n"
+    if paired_other is not None:
+        other_manifest = paired_other.get("run_configuration", {})
+        other_config_id = configuration_id(other_manifest)
+        other_path.write_text(json.dumps(paired_other, indent=2) + "\n")
+        (OUTPUTS / f"openfoam_3d_metrics_{other_config_id}.json").write_text(
+            json.dumps(paired_other, indent=2) + "\n"
         )
+    canonical_metrics = (
+        metrics
+        if canonical_baseline
+        else (
+            paired_other
+            if paired_other is not None
+            and paired_other.get("run_configuration", {}).get("mesh_preset")
+            == "base"
+            else None
+        )
+    )
+    if canonical_metrics is not None:
+        (OUTPUTS / "openfoam_3d_metrics.json").write_text(
+            json.dumps(canonical_metrics, indent=2) + "\n"
+        )
+    if write_canonical_hold:
+        hold_path.write_text(json.dumps(metrics, indent=2) + "\n")
     update_mesh_csv(mesh, manifest, run)
     return metrics
 

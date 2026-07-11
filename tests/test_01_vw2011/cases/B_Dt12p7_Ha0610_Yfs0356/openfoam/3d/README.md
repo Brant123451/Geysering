@@ -199,8 +199,11 @@ Resume an interrupted decomposed run without remeshing:
 ./Allrun.resume
 ```
 
-`Allrun.resume` restores the valve settings from
-`outputs/runtime/run_manifest.json`.  Do not run it after `Allclean`.
+`Allrun.resume` restores every materialised run control from
+`outputs/runtime/run_manifest.json`, ignores ambient `CASEB_*` overrides, and
+refuses to run when the manifest is absent or incomplete.  A resume therefore
+continues the same numerical experiment; change controls by preparing a new
+run, not by mutating an interrupted one.  Do not run it after `Allclean`.
 
 Refined-grid full run:
 
@@ -256,6 +259,13 @@ phase flux to the function object.
 digitized experiment, frozen 1-D model, and 3-D CFD.  The “overflow volume” is
 reported conservatively as the maximum liquid inventory above the rim; it is
 not presented as an experimentally measured cumulative discharge.
+
+Only the base-mesh full run with all baseline physical and numerical controls
+writes the canonical plots and `openfoam_3d_metrics.json`.  A compatible
+refined run writes its own preset metrics and updates the base result's mesh
+comparison without replacing that canonical result.  Closed-valve evidence is
+also monotonic: a shorter or failed diagnostic cannot overwrite an already
+passed hold, and non-baseline hold controls remain runtime-only.
 
 No `processor*`, `postProcessing`, `constant/polyMesh`, time directories,
 mesh, logs, dynamic-code cache or frame sequence belongs in Git.
