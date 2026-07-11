@@ -7,19 +7,7 @@ hydrostaticInitialize
     codeInclude
     #{
         #include "fvCFD.H"
-        #include "constrainPressure.H"
-        #include "interfaceProperties.H"
         #include "PstreamReduceOps.H"
-    #};
-
-    codeOptions
-    #{
-        -I$(LIB_SRC)/transportModels/interfaceProperties/lnInclude
-    #};
-
-    codeLibs
-    #{
-        -linterfaceProperties
     #};
 
     codeExecute
@@ -72,31 +60,6 @@ hydrostaticInitialize
             ),
             mesh()
         );
-        const volVectorField velocity
-        (
-            IOobject
-            (
-                "U",
-                mesh().time().timeName(),
-                mesh(),
-                IOobject::MUST_READ,
-                IOobject::NO_WRITE
-            ),
-            mesh()
-        );
-        volScalarField density
-        (
-            IOobject
-            (
-                "rho",
-                mesh().time().timeName(),
-                mesh(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-            mesh(),
-            dimensionedScalar("rho", dimDensity, 0.0)
-        );
         const scalar atmosphericPressure = 101325.0;
         const scalar waterDensity = 998.0;
         const scalar waterReducedPressure = 107541.3913;
@@ -118,7 +81,6 @@ hydrostaticInitialize
               : atmosphericPressure;
 
             pressure[cellI] = pAbs;
-            density[cellI] = rhoMixture;
             reducedPressure[cellI] =
                 pAbs - rhoMixture*gravityZ*centres[cellI].z();
         }
@@ -129,8 +91,6 @@ hydrostaticInitialize
                 pressure.boundaryFieldRef()[patchI];
             fvPatchScalarField& reducedPressurePatch =
                 reducedPressure.boundaryFieldRef()[patchI];
-            fvPatchScalarField& densityPatch =
-                density.boundaryFieldRef()[patchI];
             const fvPatch& patch = mesh().boundary()[patchI];
             const labelUList& faceCells = patch.faceCells();
             const vectorField& faceCentres = patch.Cf();
@@ -151,159 +111,10 @@ hydrostaticInitialize
                   : atmosphericPressure;
 
                 pressurePatch[faceI] = pAbs;
-                densityPatch[faceI] = rhoMixture;
                 reducedPressurePatch[faceI] =
                     pAbs - rhoMixture*gravityZ*faceCentres[faceI].z();
             }
         }
-
-        const dimensionedVector gravity
-        (
-            "g",
-            dimAcceleration,
-            vector(0.0, 0.0, gravityZ)
-        );
-        const uniformDimensionedScalarField hRef
-        (
-            IOobject
-            (
-                "hRef",
-                mesh().time().constant(),
-                mesh(),
-                IOobject::READ_IF_PRESENT,
-                IOobject::NO_WRITE
-            ),
-            dimensionedScalar(word::null, dimLength, Zero)
-        );
-        const volScalarField gh
-        (
-            IOobject
-            (
-                "ghHydrostatic",
-                mesh().time().timeName(),
-                mesh(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-            gravity & mesh().C()
-        );
-        const surfaceScalarField ghf
-        (
-            IOobject
-            (
-                "ghfHydrostatic",
-                mesh().time().timeName(),
-                mesh(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-            gravity & mesh().Cf()
-        );
-        const surfaceScalarField rAUf
-        (
-            IOobject
-            (
-                "rAUfHydrostatic",
-                mesh().time().timeName(),
-                mesh(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-            mesh(),
-            dimensionedScalar("rAUf", dimTime/dimDensity, 1.0)
-        );
-        const IOdictionary transportProperties
-        (
-            IOobject
-            (
-                "thermophysicalProperties",
-                mesh().time().constant(),
-                mesh(),
-                IOobject::MUST_READ,
-                IOobject::NO_WRITE
-            )
-        );
-        interfaceProperties interface
-        (
-            alpha,
-            velocity,
-            transportProperties
-        );
-        const surfaceScalarField bodyForceFlux
-        (
-            IOobject
-            (
-                "bodyForceFluxHydrostatic",
-                mesh().time().timeName(),
-                mesh(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-            (
-                interface.surfaceTensionForce()
-              - ghf*fvc::snGrad(density)
-            )*rAUf*mesh().magSf()
-        );
-
-        constrainPressure
-        (
-            reducedPressure,
-            velocity,
-            bodyForceFlux,
-            rAUf
-        );
-
-        label downstreamReferenceCell = -1;
-        scalar downstreamReferenceDistanceSqr = GREAT;
-        const vector downstreamReferencePoint(6.30, 0.0, 0.0);
-        forAll(centres, cellI)
-        {
-            if (centres[cellI].x() > 5.98 && alpha[cellI] < 0.5)
-            {
-                const scalar distanceSqr = magSqr
-                (
-                    centres[cellI] - downstreamReferencePoint
-                );
-                if (distanceSqr < downstreamReferenceDistanceSqr)
-                {
-                    downstreamReferenceDistanceSqr = distanceSqr;
-                    downstreamReferenceCell = cellI;
-                }
-            }
-        }
-        if (downstreamReferenceCell < 0)
-        {
-            FatalErrorInFunction
-                << "Unable to select the isolated downstream-air reference cell"
-                << exit(FatalError);
-        }
-        const scalar downstreamReferencePressure =
-            atmosphericPressure
-          - density[downstreamReferenceCell]
-           *gravityZ*centres[downstreamReferenceCell].z();
-
-        for (label corrector = 0; corrector < 4; ++corrector)
-        {
-            fvScalarMatrix reducedPressureEqn
-            (
-                fvc::div(bodyForceFlux)
-              - fvm::laplacian(rAUf, reducedPressure)
-            );
-            reducedPressureEqn.setReference
-            (
-                downstreamReferenceCell,
-                downstreamReferencePressure,
-                true
-            );
-            reducedPressureEqn.solve();
-        }
-
-        pressure = max
-        (
-            reducedPressure + density*gh,
-            dimensionedScalar("pMin", dimPressure, 50000.0)
-        );
-        pressure.correctBoundaryConditions();
         pressure.write();
         reducedPressure.write();
 
