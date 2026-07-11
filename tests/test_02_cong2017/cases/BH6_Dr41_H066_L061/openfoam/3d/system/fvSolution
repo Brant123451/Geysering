@@ -81,7 +81,7 @@ solvers
 
 PIMPLE
 {
-    momentumPredictor          yes;
+    momentumPredictor          no;
     transonic                  no;
     nOuterCorrectors           2;
     nCorrectors                2;
