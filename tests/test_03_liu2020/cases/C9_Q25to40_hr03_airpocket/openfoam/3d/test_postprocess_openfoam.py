@@ -15,12 +15,12 @@ import postprocess_openfoam as post
 class DominantGasComponentTests(unittest.TestCase):
     def test_detached_downstream_gas_is_not_the_main_body_front(self) -> None:
         x = np.arange(-5.0, 1.0)
-        alpha_water = np.array([1.0, 0.0, 0.0, 0.0, 0.0, 1.0])
+        alpha_water = np.array([1.0, 0.0, 0.0, 0.0, 1.0, 0.0])
 
         front, span, furthest = post.dominant_gas_component(x, alpha_water)
 
-        self.assertEqual(front, -1.0)
-        self.assertEqual(span, 3.0)
+        self.assertEqual(front, -2.0)
+        self.assertEqual(span, 2.0)
         self.assertEqual(furthest, 0.0)
 
     def test_contiguous_main_body_can_reach_the_last_probe(self) -> None:
