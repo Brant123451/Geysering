@@ -13,6 +13,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("log", type=Path)
     parser.add_argument("metadata", type=Path)
+    parser.add_argument("--acmi-log", type=Path)
     return parser.parse_args()
 
 
@@ -54,9 +55,31 @@ def main() -> None:
         )
     ][-12:]
     metadata["checkMesh"] = summary
+
+    if args.acmi_log is not None:
+        acmi_text = args.acmi_log.read_text(errors="replace")
+        region_match = re.search(
+            r"Number of regions:\s*(\d+)", acmi_text
+        )
+        metadata["checkMesh_acmi"] = {
+            "command": "checkMesh",
+            "passed": "Mesh OK" in acmi_text,
+            "face_connected_regions": (
+                int(region_match.group(1)) if region_match else None
+            ),
+            "note": (
+                "The closed ACMI baffle deliberately separates the pocket "
+                "from the upstream face graph; cyclicACMI supplies runtime "
+                "coupling over the prescribed open-area fraction."
+            ),
+        }
+
     args.metadata.write_text(json.dumps(metadata, indent=2) + "\n")
     print(json.dumps(summary, indent=2))
-    if not summary["passed"]:
+    if not summary["passed"] or (
+        args.acmi_log is not None
+        and not metadata["checkMesh_acmi"]["passed"]
+    ):
         raise SystemExit("checkMesh did not pass")
 
 

@@ -121,10 +121,18 @@ the closed-valve startup diagnostic without rewriting `controlDict`.
 
 ```text
 Gmsh OCC multi-solid STL -> cartesianMesh -> topoSet
-                         -> setFields -> setExprFields -> createBaffles
                          -> checkMesh -allGeometry -allTopology
+                         -> setFields -> setExprFields -> createBaffles
+                         -> checkMesh
                          -> compressibleInterFoam
 ```
+
+The complete geometry/topology check is performed before ACMI creation.
+OpenFOAM represents the closed fraction by scaling coincident coupled/wall
+face-area vectors, so `-allGeometry` intentionally flags those runtime masks as
+warped faces even though the underlying cell geometry is unchanged.  A second
+basic `checkMesh` after baffle creation must still report `Mesh OK`; both stages
+are recorded in `mesh_metadata.json`.
 
 ## Diagnostics and compact outputs
 

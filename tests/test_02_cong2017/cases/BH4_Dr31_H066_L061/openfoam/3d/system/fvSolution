@@ -70,11 +70,11 @@ solvers
 
     "(T|k|B|nuTilda).*"
     {
-        solver          smoothSolver;
-        smoother        symGaussSeidel;
+        solver          PBiCGStab;
+        preconditioner  DILU;
         tolerance       1e-8;
-        relTol          0;
-        maxIter         1000;
+        relTol          0.01;
+        maxIter         200;
     }
 }
 
