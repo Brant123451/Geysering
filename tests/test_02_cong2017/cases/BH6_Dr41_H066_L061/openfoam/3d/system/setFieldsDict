@@ -26,7 +26,7 @@ regions
         fieldValues
         (
             volScalarFieldValue alpha.water 1
-            volScalarFieldValue p_rgh       107541.89
+            volScalarFieldValue p_rgh       101325
             volScalarFieldValue p           107541.89
             volScalarFieldValue T           296.15
         );
@@ -41,7 +41,7 @@ regions
         fieldValues
         (
             volScalarFieldValue alpha.water 1
-            volScalarFieldValue p_rgh       107541.89
+            volScalarFieldValue p_rgh       101325
             volScalarFieldValue p           107541.89
             volScalarFieldValue T           296.15
         );

@@ -16,9 +16,9 @@ boundaryField
 {
     reservoir
     {
-        // p_atm + rho_w*g*(H0 - D/2), constant reduced pressure.
+        // hRef is the initial free surface, so p_rgh equals p_atm in water.
         type            fixedValue;
-        value           uniform 107541.89;
+        value           uniform 101325;
     }
     walls
     {
