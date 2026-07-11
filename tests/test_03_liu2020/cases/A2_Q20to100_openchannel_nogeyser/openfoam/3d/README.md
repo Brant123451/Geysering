@@ -19,7 +19,8 @@ are intentionally not versioned.
   0.020 m³/s until `t=0`, linear to 0.100 m³/s by `t=0.4 s`.
 * Initialization: approximate steady `Q0` velocities, 0.08 m upstream depth,
   chamber surface `z=0.12 m` inferred from PT3=0.99 kPa, and downstream
-  `hd=Dd/4=0.070 m`. The simulation first stabilizes from `t=-8` to `0 s`.
+  `hd=Dd/4=0.070 m`. The simulation first stabilizes from `t=-4` to `0 s`,
+  longer than one measured-depth Q0 pipe-flow transit.
 * Downstream: fixed-stage equivalent at `hd=0.070 m`, split into hydrostatic
   water and atmospheric-air portions at the reported pipe end. This does not
   invent the unreported tank/weir dimensions or rating curve.
@@ -63,7 +64,7 @@ checkMesh -allGeometry -allTopology
 ```
 
 The smoke run is a fresh 0.2 s `Q0` run. `Allrun.solve full` deliberately
-starts fresh afterward, performs the complete `-8…14.4 s` run, and keeps only
+starts fresh afterward, performs the complete `-4…14.4 s` run, and keeps only
 three field checkpoints while retaining high-frequency compact function
 outputs.
 

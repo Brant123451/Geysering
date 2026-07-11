@@ -10,7 +10,7 @@ FoamFile
 //   upstream depth ~0.08 m (p. 04019055-3);
 //   chamber free surface z=0.12 m, inferred from PT3=0.99 kPa at z=0.02 m;
 //   downstream depth hd=Dd/4=0.070 m (Table 1).
-// Six boxes approximate the upstream 1:100 free surface; the -8..0 s Q0
+// Six boxes approximate the upstream 1:100 free surface; the -4..0 s Q0
 // stabilization removes this small staircase perturbation before the ramp.
 
 defaultFieldValues

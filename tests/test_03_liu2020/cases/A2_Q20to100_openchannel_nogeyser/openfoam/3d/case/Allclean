@@ -7,7 +7,7 @@ OF_LAUNCH="${OPENFOAM_LAUNCH:-/usr/bin/openfoam2512}"
 if [[ -x "$OF_LAUNCH" ]]; then
     "$OF_LAUNCH" -- foamListTimes -rm >/dev/null 2>&1 || true
 fi
-rm -rf -- -8 0 processor* postProcessing constant/polyMesh
+rm -rf -- -8 -4 0 processor* postProcessing constant/polyMesh
 rm -f log.* mesh.profile system/riserProbeLocations
 rm -f constant/triSurface/geometry.stl
 rm -rf ../__pycache__ ../../../model/__pycache__
