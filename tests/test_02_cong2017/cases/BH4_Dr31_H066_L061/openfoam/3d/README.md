@@ -70,6 +70,10 @@ L = 0.02 m
 t_open = 0.20 s
 ```
 
+The loss is evaluated face by face so opposite local fluxes cannot cancel into
+an artificially open valve; for one-directional pipe flow this reduces to the
+same Darcy relation over the full section.
+
 The coefficient is selected by the independent closed-valve leakage test, not
 by geyser classification.  The required duration study uses 0.10, 0.20, and
 0.30 s with every other input unchanged.

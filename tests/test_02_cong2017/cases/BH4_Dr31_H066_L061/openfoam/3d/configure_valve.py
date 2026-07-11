@@ -87,7 +87,7 @@ baffles
                         );
                         I               0;
                         length          {VALVE_LENGTH:.9g};
-                        uniformJump     true;
+                        uniformJump     false;
                         relax           0.1;
                         jump            uniform 0;
                         jump0           uniform 0;
