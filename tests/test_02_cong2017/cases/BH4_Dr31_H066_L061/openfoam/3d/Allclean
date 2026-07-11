@@ -13,6 +13,8 @@ rm -rf \
     processor* \
     constant/polyMesh \
     postProcessing \
+    badFacesVTK \
+    core \
     bh4-3d.msh \
     bh4-*.stl \
     mesh_metadata.json \
