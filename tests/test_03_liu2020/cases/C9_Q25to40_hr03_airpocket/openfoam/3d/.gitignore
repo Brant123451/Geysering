@@ -1,6 +1,8 @@
 __pycache__/
 *.pyc
 case/[0-9]*/
+!case/0.orig/
+!case/0.orig/**
 case/processor*/
 case/postProcessing/
 case/constant/polyMesh/
