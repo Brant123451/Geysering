@@ -193,6 +193,16 @@ def generate_initial_field_correction(
     x_gate = paper["chamber_length_m"] + paper["downstream_length_m"]
     x_transition = x_gate - paper["downstream_diameter_m"]
     z_axis = downstream_radius
+    upstream_p_rgh = (
+        paper["atmospheric_pressure_Pa"]
+        + model["water_density_kg_m3"]
+        * 9.81
+        * (paper["chamber_height_m"] + paper["initial_riser_column_m"])
+    )
+    tailwater_p_rgh = (
+        paper["atmospheric_pressure_Pa"]
+        + model["water_density_kg_m3"] * 9.81 * model["tailwater_level_m"]
+    )
     rho_air = (
         paper["atmospheric_pressure_Pa"]
         + model["water_density_kg_m3"]
@@ -210,14 +220,34 @@ def generate_initial_field_correction(
         foam_header("dictionary", "setExprFieldsDict")
         + f"""
 // setFields supplies phase topology and piecewise hydraulic estimates.
-// These expressions then enforce p = p_rgh + rho*g.z and replace the
-// discontinuous gate-cylinder velocity with an axisymmetric, constant-Q
-// contraction over one downstream-pipe diameter.  The correction changes no
-// pocket coordinate, volume prior, gate area, or paper-time forcing.
+// These expressions then ramp p_rgh to the tailwater boundary, enforce
+// p = p_rgh + rho*g.z, and replace the discontinuous gate-cylinder velocity
+// with an axisymmetric, constant-Q contraction over one downstream-pipe
+// diameter.  The correction changes no pocket coordinate, volume prior, gate
+// area, or paper-time forcing.
 readFields (alpha.water p_rgh U);
 
 expressions
 (
+    gatePressureRamp
+    {{
+        field p_rgh;
+        dimensions [1 -1 -2 0 0 0 0];
+        variables
+        (
+            "x0 = {x_transition:.12g}"
+            "x1 = {x_gate:.12g}"
+            "xi = min(max((pos().x() - x0)/(x1 - x0), 0), 1)"
+            "smooth = 3*sqr(xi) - 2*xi*sqr(xi)"
+        );
+        fieldMask "pos().x() >= x0";
+        expression
+        #{{
+            {upstream_p_rgh:.12g}
+          + ({tailwater_p_rgh:.12g} - {upstream_p_rgh:.12g})*smooth
+        #}};
+    }}
+
     hydrostaticPressure
     {{
         field p;
@@ -1661,7 +1691,10 @@ rm -f log.*
         "air_Cp_J_kg_K": model["air_Cp_J_kg_K"],
         "water_bulk_modulus_Pa": model["water_bulk_modulus_Pa"],
         "initial_field_correction": {
-            "pressure": "p = p_rgh + rho_mixture*g.z",
+            "pressure": (
+                "smooth p_rgh ramp to the static tailwater boundary, then "
+                "p = p_rgh + rho_mixture*g.z"
+            ),
             "gate_velocity": (
                 "axisymmetric constant-Q smooth contraction over one "
                 "downstream-pipe diameter"
