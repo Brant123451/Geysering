@@ -63,19 +63,20 @@ The Gmsh HXT tetrahedral profiles are defined in `make_mesh.py`:
 
 | profile | pipe | chamber/junctions | riser | free surface | jet core | far atmosphere |
 |---|---:|---:|---:|---:|---:|---:|
-| `smoke` | 50 mm | 24 mm | 13 mm | 35 mm | 50 mm | 120 mm |
-| `baseline` | 45 mm | 20 mm | 11.5 mm | 30 mm | 45 mm | 110 mm |
-| `refined` | 40 mm | 18 mm | 10 mm | 27 mm | 38 mm | 100 mm |
+| `smoke` | 65 mm | 32 mm | 17 mm | 45 mm | 65 mm | 160 mm |
+| `baseline` | 50 mm | 24 mm | 13 mm | 35 mm | 50 mm | 120 mm |
+| `refined` | 45 mm | 20 mm | 11.5 mm | 30 mm | 45 mm | 110 mm |
 
 The sensitivity profile refines all required critical regions: chamber,
 upstream/downstream junctions, riser connection, free surface, physical nozzle,
 and plume core. `Allrun.mesh` always runs
 `checkMesh -allGeometry -allTopology`.
 
-The baseline was selected by mesh quality and runtime stability, not cell count
-alone. A more aggressive 292,187-tetrahedron candidate introduced a
-low-interpolation-weight face and failed its Q0 smoke solve; it is therefore
-not used as evidence of convergence.
+The baseline/refined pair was selected by mesh quality and runtime stability,
+not cell count alone. They contain approximately 98k and 152k tetrahedra.
+More aggressive 209k and 292k candidates failed their Q0 smoke solves through
+localized thermodynamic instability; they are therefore not presented as
+evidence of convergence.
 
 ## Run
 
