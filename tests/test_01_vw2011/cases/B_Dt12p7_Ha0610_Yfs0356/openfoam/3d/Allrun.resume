@@ -25,6 +25,10 @@ if [[ -f "$MANIFEST" ]]; then
         CASEB_VALVE_OPEN_TIME="$(python3 -c 'import json; print(json.load(open("outputs/runtime/run_manifest.json"))["valve_open_time_s"])')"
         export CASEB_VALVE_OPEN_TIME
     fi
+    if [[ -z "${CASEB_VALVE_SEAL_SPEED:-}" ]]; then
+        CASEB_VALVE_SEAL_SPEED="$(python3 -c 'import json; print(json.load(open("outputs/runtime/run_manifest.json")).get("valve_seal_speed_m_per_s", 1.0))')"
+        export CASEB_VALVE_SEAL_SPEED
+    fi
     if [[ -z "${CASEB_GAS_EOS:-}" ]]; then
         CASEB_GAS_EOS="$(python3 -c 'import json; print(json.load(open("outputs/runtime/run_manifest.json"))["gas_equation_of_state"])')"
         export CASEB_GAS_EOS
@@ -32,6 +36,7 @@ if [[ -f "$MANIFEST" ]]; then
 fi
 export CASEB_VALVE_MODE="${CASEB_VALVE_MODE:-opening}"
 export CASEB_VALVE_OPEN_TIME="${CASEB_VALVE_OPEN_TIME:-0.25}"
+export CASEB_VALVE_SEAL_SPEED="${CASEB_VALVE_SEAL_SPEED:-1.0}"
 export CASEB_GAS_EOS="${CASEB_GAS_EOS:-perfectGas}"
 
 processors=(processor[0-9]*)

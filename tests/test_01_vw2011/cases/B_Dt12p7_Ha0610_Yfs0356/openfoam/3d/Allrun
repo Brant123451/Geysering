@@ -30,6 +30,7 @@ if [[ -z "${CASEB_VALVE_MODE:-}" ]]; then
     fi
 fi
 export CASEB_VALVE_OPEN_TIME="${CASEB_VALVE_OPEN_TIME:-0.25}"
+export CASEB_VALVE_SEAL_SPEED="${CASEB_VALVE_SEAL_SPEED:-1.0}"
 export CASEB_GAS_EOS="${CASEB_GAS_EOS:-perfectGas}"
 
 python3 validate_case.py > log.preflight 2>&1

@@ -95,8 +95,14 @@ sensitivity runs.  `CASEB_VALVE_MODE=instant` supplies the paper-model
 instantaneous-connection limit, while `closed` is used for the hold test.
 
 The numerical closed-state cap \(K\le10^8\) is an impermeability device, not a
-geyser calibration.  Its adequacy must be judged from the static-hold leakage
-and drift, which are not optional completion evidence.
+geyser calibration.  A quadratic loss has a zero Jacobian at zero velocity and
+cannot numerically support the finite static pressure jump across a closed
+valve.  The same dissipative loss is therefore linearised with a 1.0 m/s
+seal-speed floor at fully closed state; the floor decreases smoothly to zero
+as the valve opens and never prescribes pressure, velocity, or mass.
+`CASEB_VALVE_SEAL_SPEED` exposes this numerical penalty for diagnostics.  Its
+adequacy must be judged from the static-hold leakage and drift, which are not
+optional completion evidence.
 
 ## Mesh
 

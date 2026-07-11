@@ -12,6 +12,7 @@ FoamFile
 // Environment:
 //   CASEB_VALVE_MODE=opening (default), closed, or instant
 //   CASEB_VALVE_OPEN_TIME=<seconds> (default 0.25)
+//   CASEB_VALVE_SEAL_SPEED=<m/s> (default 1.0)
 valveResistance
 {
     type            vectorCodedSource;
@@ -43,6 +44,13 @@ valveResistance
             const char* durationText = std::getenv("CASEB_VALVE_OPEN_TIME");
             const scalar openingTime =
                 durationText ? std::atof(durationText) : 0.25;
+            const char* sealSpeedText =
+                std::getenv("CASEB_VALVE_SEAL_SPEED");
+            const scalar sealSpeed = max
+            (
+                sealSpeedText ? scalar(std::atof(sealSpeedText)) : scalar(1.0),
+                SMALL
+            );
 
             scalar fraction = 0.0;
             if (mode == "instant" || (mode == "opening" && openingTime <= SMALL))
@@ -67,6 +75,14 @@ valveResistance
             );
             const scalar valveThickness = 0.012;
             const scalar minLinearisationSpeed = 1e-4;
+            // A quadratic loss alone cannot support the finite pressure jump
+            // across a stationary closed valve: its Jacobian vanishes at
+            // U=0.  Retain the same capped, purely dissipative K law but
+            // linearise it with a seal-speed floor that smoothly disappears
+            // as the valve opens.  This is a Brinkman-style impermeability
+            // penalty; it never prescribes pressure, velocity, or mass.
+            const scalar sealLinearisationSpeed =
+                (1.0 - fraction)*sealSpeed;
             const scalarField& volumes = mesh_.V();
             const vectorField& velocity = eqn.psi().primitiveField();
             scalarField& diagonal = eqn.diag();
@@ -77,7 +93,7 @@ valveResistance
                 const scalar speed = max
                 (
                     mag(velocity[cellI]),
-                    minLinearisationSpeed
+                    max(minLinearisationSpeed, sealLinearisationSpeed)
                 );
                 // Equivalent to grad(p)=-K*rho*|U|U/(2*thickness).
                 // fvOptions appears on the right-hand side of UEqn.  A

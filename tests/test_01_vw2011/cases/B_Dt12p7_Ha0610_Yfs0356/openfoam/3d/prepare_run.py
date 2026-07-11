@@ -46,6 +46,7 @@ def main() -> None:
         "CASEB_VALVE_MODE", "closed" if stage == "hold" else "opening"
     )
     valve_open_time = env_float("CASEB_VALVE_OPEN_TIME", 0.25)
+    valve_seal_speed = env_float("CASEB_VALVE_SEAL_SPEED", 1.0)
     if valve_mode not in {"opening", "closed", "instant"}:
         raise SystemExit("CASEB_VALVE_MODE must be opening, closed, or instant")
     if stage == "hold" and valve_mode != "closed":
@@ -61,12 +62,22 @@ def main() -> None:
         write_interval,
         c_alpha,
         initial_air_head,
+        valve_seal_speed,
     )
     if not all(math.isfinite(value) for value in (*values, valve_open_time)):
         raise SystemExit("Runtime controls must be finite")
-    positive = (max_co, max_alpha_co, max_delta_t, write_interval, c_alpha)
+    positive = (
+        max_co,
+        max_alpha_co,
+        max_delta_t,
+        write_interval,
+        c_alpha,
+        valve_seal_speed,
+    )
     if any(value <= 0 for value in positive) or initial_air_head <= 0:
-        raise SystemExit("Courant, timestep, output, cAlpha and head must be positive")
+        raise SystemExit(
+            "Courant, timestep, output, cAlpha, seal speed and head must be positive"
+        )
     if end_time < 0 or (stage != "mesh" and end_time <= 0):
         raise SystemExit("endTime must be positive for solver stages")
     if valve_open_time < 0:
@@ -128,6 +139,7 @@ def main() -> None:
         "mesh_preset": os.environ.get("CASEB_MESH", "base"),
         "valve_mode": valve_mode,
         "valve_open_time_s": valve_open_time,
+        "valve_seal_speed_m_per_s": valve_seal_speed,
         "initial_air_head_m": initial_air_head,
         "initial_air_absolute_pressure_Pa": initial_air_pressure,
         "gas_equation_of_state": gas_eos,
