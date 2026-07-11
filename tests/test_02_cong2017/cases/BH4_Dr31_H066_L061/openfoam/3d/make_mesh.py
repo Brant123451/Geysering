@@ -86,7 +86,7 @@ def write_mesh_dict(path: Path, pipe: float, riser: float, atmosphere: float) ->
 
 surfaceFile     "bh4-physical.stl";
 maxCellSize     {atmosphere_request:.10g};
-minCellSize     {min(pipe_request, riser_request, tee_request):.10g};
+minCellSize     {min(pipe_request, riser_request):.10g};
 boundaryCellSize {atmosphere_request:.10g};
 
 localRefinement
