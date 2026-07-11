@@ -32,6 +32,7 @@ NUMBER = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?")
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--case", type=Path, default=Path("."))
+    parser.add_argument("--reference-root", type=Path, default=Path("../.."))
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--run-mode", choices=("event", "closed"), required=True)
     parser.add_argument("--valve-opening", required=True)
@@ -179,7 +180,7 @@ def main() -> None:
     output = (case / args.output).resolve() if not args.output.is_absolute() else args.output
     output.mkdir(parents=True, exist_ok=True)
     prefix = output / args.run_id
-    case_root = case.parents[1]
+    reference_root = args.reference_root.resolve()
 
     pressure = read_probe(case, "pressureProbes", "p")
     riser_alpha = read_probe(case, "riserCentreline", "alpha.water")
@@ -257,7 +258,7 @@ def main() -> None:
         else None
     )
 
-    measured, model_1d = load_reference(case_root)
+    measured, model_1d = load_reference(reference_root)
     initial_pocket_mesh = float(scalar_from_file(pocket_volume_table)[0])
     initial_riser_mesh = float(scalar_from_file(riser_volume_table)[0])
     fs_drift = float(np.nanmax(np.abs(y_fs - y_fs[0])))

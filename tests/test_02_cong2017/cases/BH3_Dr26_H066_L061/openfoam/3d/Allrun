@@ -76,6 +76,7 @@ fi
 
 python3 postprocess.py \
     --case . \
+    --reference-root "${REFERENCE_ROOT:-../..}" \
     --run-id "$RUN_ID" \
     --run-mode "$RUN_MODE" \
     --valve-opening "$VALVE_OPENING" \

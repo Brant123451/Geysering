@@ -154,6 +154,7 @@ def main() -> None:
                 "MAX_ALPHA_CO": str(variant.max_alpha_co),
                 "MAX_DELTA_T": str(variant.max_delta_t),
                 "OPENFOAM_NP": str(args.np),
+                "REFERENCE_ROOT": str(HERE.parents[1]),
             }
         )
         run(["bash", "./Allrun"], runtime, env)
