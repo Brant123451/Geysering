@@ -28,6 +28,7 @@ OpenFOAM v2512 must be installed at `/usr/lib/openfoam/openfoam2512`.
 
 ```bash
 cd tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket/openfoam/3d
+python3 -m pip install -r requirements.txt
 python3 prepare_case.py
 cd case
 ./Allrun.mesh

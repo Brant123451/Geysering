@@ -266,7 +266,7 @@ def main() -> None:
             h50.append(max(0.0, (wet50.max() if len(wet50) else 0.45) - 0.45))
             h10.append(max(0.0, (wet10.max() if len(wet10) else 0.45) - 0.45))
             inside = z <= 1.67
-            integral.append(float(np.trapz(np.clip(row[inside], 0, 1), z[inside])))
+            integral.append(float(np.trapezoid(np.clip(row[inside], 0, 1), z[inside])))
         h50 = np.asarray(h50)
         h10 = np.asarray(h10)
         integral = np.asarray(integral)
