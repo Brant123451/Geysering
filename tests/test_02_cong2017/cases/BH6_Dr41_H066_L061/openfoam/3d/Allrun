@@ -105,13 +105,11 @@ foamDictionary system/controlDict \
 foamDictionary system/controlDict \
     -entry writeInterval -set "$WRITE_INTERVAL" >/dev/null
 
-DECOMP_DICT="system/decomposeParDict.runtime"
-cp system/decomposeParDict "$DECOMP_DICT"
-foamDictionary "$DECOMP_DICT" \
+foamDictionary system/decomposeParDict \
     -entry numberOfSubdomains -set "$NP" >/dev/null
 
 if (( NP != 1 )); then
-    decomposePar -decomposeParDict "$DECOMP_DICT" > log.decomposePar 2>&1
+    decomposePar > log.decomposePar 2>&1
 fi
 
 if (( NP == 1 )); then

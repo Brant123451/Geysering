@@ -14,7 +14,6 @@ rm -rf \
     geometry_audit.runtime.json \
     valve_schedule.runtime.json \
     constant/valveAreaTable \
-    system/decomposeParDict.runtime \
     log.*
 
 rm -f constant/polyMesh.gz

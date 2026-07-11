@@ -8,5 +8,4 @@
 /geometry_audit.runtime.json
 /valve_schedule.runtime.json
 /constant/valveAreaTable
-/system/decomposeParDict.runtime
 /log.*
