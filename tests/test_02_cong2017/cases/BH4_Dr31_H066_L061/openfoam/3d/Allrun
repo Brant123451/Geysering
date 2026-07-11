@@ -25,12 +25,18 @@ VALVE_TIME="${BH4_VALVE_TIME:-0.20}"
 VALVE_MODE="${BH4_VALVE_MODE:-opening}"
 DRY_RUN="${BH4_DRY_RUN:-0}"
 LABEL="${BH4_LABEL:-base_topen0p20}"
+RUN_END_TIME="$END_TIME"
+if [[ "$DRY_RUN" == "1" ]]; then
+    RUN_END_TIME="0.000001"
+    NP=1
+fi
 
-restore_baseline_valve()
+restore_baseline_controls()
 {
     python3 configure_valve.py --opening-time 0.20 >/dev/null
+    foamDictionary system/controlDict -entry endTime -set 13.0 >/dev/null
 }
-trap restore_baseline_valve EXIT
+trap restore_baseline_controls EXIT
 
 python3 make_probe_locations.py > log.probes 2>&1
 if [[ "$VALVE_MODE" == "closed" ]]; then
@@ -76,15 +82,10 @@ python3 summarize_checkmesh.py log.checkMesh mesh_metadata.json \
 cp -a 0.orig 0
 setFields > log.setFields 2>&1
 setExprFields > log.setExprFields 2>&1
-foamDictionary system/controlDict -entry endTime -set "$END_TIME" >/dev/null
-
-solver_args=()
-if [[ "$DRY_RUN" == "1" ]]; then
-    solver_args+=(-dry-run)
-fi
+foamDictionary system/controlDict -entry endTime -set "$RUN_END_TIME" >/dev/null
 
 if (( NP == 1 )); then
-    compressibleInterFoam "${solver_args[@]}" > log.compressibleInterFoam 2>&1
+    compressibleInterFoam > log.compressibleInterFoam 2>&1
 else
     cp system/decomposeParDict system/decomposeParDict.runtime
     foamDictionary system/decomposeParDict.runtime \
@@ -93,7 +94,7 @@ else
         > log.decomposePar 2>&1
     OMPI_ALLOW_RUN_AS_ROOT=1 \
     OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
-    mpirun -np "$NP" compressibleInterFoam -parallel "${solver_args[@]}" \
+    mpirun -np "$NP" compressibleInterFoam -parallel \
         > log.compressibleInterFoam 2>&1
 fi
 
