@@ -10,14 +10,14 @@ import numpy as np
 
 
 HERE = Path(__file__).resolve().parent
-CASE_A = HERE.parent
+CASE_A = HERE.parents[1]
 OUT = HERE / "outputs"
 TOWER_RIM_Y = 0.657
 PLUME_Y = np.arange(0.672, 1.853, 0.020)
 
 
 def load_common_postprocessor():
-    source = HERE.parent / "openfoam_2d_caseA" / "postprocess_compare.py"
+    source = HERE.parent / "2d" / "postprocess_compare.py"
     spec = importlib.util.spec_from_file_location("case_a_common_postprocess", source)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Unable to load shared postprocessor from {source}")

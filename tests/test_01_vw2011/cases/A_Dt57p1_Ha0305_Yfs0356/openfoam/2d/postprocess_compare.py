@@ -14,7 +14,7 @@ import numpy as np
 
 
 HERE = Path(__file__).resolve().parent
-CASE_A = HERE.parent
+CASE_A = HERE.parents[1]
 OUT = HERE / "outputs"
 OUT.mkdir(exist_ok=True)
 
@@ -144,12 +144,12 @@ def main() -> None:
     yint, yfs = extract_levels(alpha)
 
     pressure_exp = np.genfromtxt(
-        CASE_A / "digitized" / "fig5_caseA_Hstar_band.csv",
+        CASE_A / "data" / "digitized" / "fig5_caseA_Hstar_band.csv",
         delimiter=",",
         names=True,
     )
     levels_exp = np.genfromtxt(
-        CASE_A / "digitized" / "fig7_caseA_levels.csv",
+        CASE_A / "data" / "digitized" / "fig7_caseA_levels.csv",
         delimiter=",",
         names=True,
         dtype=None,

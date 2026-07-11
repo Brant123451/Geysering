@@ -1,7 +1,7 @@
 # OpenFOAM 3-D Case A fidelity model
 
 This is the geometry-faithful model for Vasconcelos and Wright (2011), Case A.
-It replaces the planar pilot in `../openfoam_2d_caseA`, which cannot preserve
+It replaces the planar pilot in `../2d`, which cannot preserve
 the circular pipe/tower area ratio and terminates at the tower rim.
 
 ## Experiment mapping

@@ -49,5 +49,5 @@ at the same time. Its area ratio is `Dt/D = 0.607`, whereas the physical
 circular ratio is `(Dt/D)^2 = 0.369`. It also cannot resolve the annular
 three-dimensional wall film, and its pressure outlet at the tower rim removes
 any above-rim jet from the domain. Consequently this run is a morphology and
-time-history diagnostic, not a geometry-exact substitute. Use
-`../openfoam_3d_caseA` for the circular T-junction and above-rim atmosphere.
+time-history diagnostic, not a geometry-exact substitute. Use `../3d` for the
+circular T-junction and above-rim atmosphere.
