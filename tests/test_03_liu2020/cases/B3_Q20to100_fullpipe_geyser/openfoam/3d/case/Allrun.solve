@@ -37,6 +37,7 @@ decomposePar -force -decomposeParDict system/decomposeParDict.runtime \
     > log.decomposePar 2>&1
 
 mpirun -np "$NP" compressibleInterFoam -parallel \
+    -decomposeParDict system/decomposeParDict.runtime \
     > log.compressibleInterFoam 2>&1
 
 reconstructPar -latestTime > log.reconstructPar 2>&1

@@ -14,6 +14,7 @@ if (( NP > 6 )); then NP=6; fi
 if (( NP < 1 )); then NP=1; fi
 
 mpirun -np "$NP" compressibleInterFoam -parallel \
+    -decomposeParDict system/decomposeParDict.runtime \
     >> log.compressibleInterFoam 2>&1
 reconstructPar -latestTime > log.reconstructPar 2>&1
 
