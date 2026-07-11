@@ -266,7 +266,7 @@ def parse_check_mesh(case: Path) -> dict[str, float | int | str | None]:
             r"Mesh non-orthogonality Max:\s*([0-9.eE+-]+)"
         ),
         "mean_non_orthogonality_deg": number(
-            r"average:\s*([0-9.eE+-]+)"
+            r"Mesh non-orthogonality Max:\s*[0-9.eE+-]+\s+average:\s*([0-9.eE+-]+)"
         ),
         "max_skewness": number(r"Max skewness\s*=\s*([0-9.eE+-]+)"),
         "min_cell_volume_m3": number(r"Min volume\s*=\s*([0-9.eE+-]+)"),

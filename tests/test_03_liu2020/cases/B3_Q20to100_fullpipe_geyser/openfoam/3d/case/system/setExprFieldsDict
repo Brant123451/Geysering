@@ -8,6 +8,8 @@ FoamFile
 
 // Hydrostatic pressure seed only.  The Q0 settling run establishes the actual
 // flowing equilibrium before the reported ramp begins.
+readFields (alpha.water p);
+
 expressions
 (
     pressure

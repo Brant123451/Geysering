@@ -65,7 +65,9 @@ regions
     // Series-B defining initial condition: downstream circular pipe is full.
     boxToCell
     {
-        box (0.29 -1 -1) (6.26 1 1);
+        // Start at the chamber wall so this region cannot overwrite the
+        // chamber air space above its declared 0.30 m water level.
+        box (0.30 -1 -1) (6.26 1 1);
         fieldValues (volScalarFieldValue alpha.water 1);
     }
 );
