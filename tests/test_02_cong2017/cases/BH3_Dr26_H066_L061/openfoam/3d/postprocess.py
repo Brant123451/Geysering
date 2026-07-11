@@ -74,7 +74,7 @@ def read_probe(case: Path, name: str, field: str) -> np.ndarray:
     return read_function(case, name, field)
 
 
-def interpolate(table: np.ndarray, time: np.ndarray, column: int = 1) -> np.ndarray:
+def interpolate(table: np.ndarray, time: np.ndarray, column: int = -1) -> np.ndarray:
     return np.interp(time, table[:, 0], table[:, column], left=np.nan, right=np.nan)
 
 
@@ -153,7 +153,7 @@ def trajectory_slope(
 def scalar_from_file(table: np.ndarray) -> np.ndarray:
     if table.shape[1] < 2:
         raise RuntimeError("Function table has no value column")
-    return table[:, 1]
+    return table[:, -1]
 
 
 def load_reference(case_root: Path) -> tuple[dict[str, object], dict[str, object]]:
