@@ -45,6 +45,15 @@ mair,pocket = 1.427591483e-3 kg
 Mesh-discrete volume and mass are recorded separately; they are not forced to
 equal the analytic values by adjusting geometry or phase fraction.
 
+## Temporal controls
+
+The solver uses adaptive time stepping with `maxCo=0.5`,
+`maxAlphaCo=0.5`, `maxDeltaT=1e-3 s`, and one geometric-alpha subcycle.
+These are the standard conservative controls used by the OpenFOAM v2512
+`compressibleInterIsoFoam` 3-D depth-charge tutorial.  They are fixed for the
+closed hold and every event/sensitivity run and were not selected using the
+known B-H2 classification.
+
 ## Patch conditions
 
 | Patch | Physical meaning | `U` | `p_rgh` | `p` | `alpha.water` | `T` | `k/epsilon/alphat` |

@@ -10,7 +10,7 @@ solvers
     "alpha.water.*"
     {
         nAlphaCorr          1;
-        nAlphaSubCycles     2;
+        nAlphaSubCycles     1;
         cAlpha              1;
         reconstructionScheme gradAlpha;
         isoFaceTol          1e-8;
