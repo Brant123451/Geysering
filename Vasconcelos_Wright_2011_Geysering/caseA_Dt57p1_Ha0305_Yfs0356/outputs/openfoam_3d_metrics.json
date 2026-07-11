@@ -1,0 +1,25 @@
+{
+  "simulation_end_s": 9.0,
+  "simulation_end_Tstar": 11.042444680426986,
+  "pressure_plateau_Hstar_mean_T1to7": 0.6981633844362252,
+  "pressure_RMSE_Hstar_no_shift": 0.14818024889792536,
+  "free_surface_max_Ystar": 0.6507980416552166,
+  "free_surface_RMSE_Ystar_no_shift": 0.031909296179452276,
+  "interface_RMSE_Ystar_no_shift": 0.2073477808118953,
+  "interface_liftoff_Tstar": 7.447515467799089,
+  "interface_catch_Tstar": 8.337045733722373,
+  "geysering": false,
+  "comparison_targets": {
+    "pressure_plateau_Hstar": 0.54,
+    "free_surface_max_Ystar": 0.63,
+    "interface_liftoff_Tstar_repetitions": [
+      7.3,
+      7.8,
+      7.9
+    ],
+    "interface_catch_Tstar": 8.4,
+    "observed_geysering": false
+  },
+  "rmse_window": "No event-time shift; each RMSE uses finite experimental samples within the finite model-time range.",
+  "caveat": "Circular 3-D pipe and tower preserve the physical area ratio (Dt/D)^2=0.369. No event-time shift was applied."
+}

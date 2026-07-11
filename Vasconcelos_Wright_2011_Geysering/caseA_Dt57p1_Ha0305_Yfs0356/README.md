@@ -83,20 +83,27 @@ capped at six. To continue an interrupted 3-D simulation or start over:
 The original `validate.sh`, `run.sh`, `resume.sh`, and `clean.sh` commands
 operate on the legacy planar model.
 
-## Validated planar result
+## Validated results
 
-The tracked outputs are from a completed 9 s OpenFOAM v2512 run:
+Both tracked models completed 9 s OpenFOAM v2512 runs on four MPI ranks:
 
-| Quantity | Model | Experimental target |
-| --- | ---: | ---: |
-| Mean pressure plateau, `H*` (`1 <= T* <= 7`) | 0.710 | 0.54 |
-| Maximum free-surface level, `Y*` | 0.628 | 0.63 |
-| Interface lift-off, `T*` | 8.03 | 7.3, 7.8, 7.9 |
-| Geysering | false | false |
+| Quantity | Circular 3-D | Planar 2-D | Experimental target |
+| --- | ---: | ---: | ---: |
+| Mean pressure plateau, `H*` (`1 <= T* <= 7`) | 0.698 | 0.710 | 0.54 |
+| Pressure RMSE, `H*` | 0.148 | 0.206 | — |
+| Maximum free-surface level, `Y*` | 0.651 | 0.628 | 0.63 |
+| Free-surface RMSE, `Y*` | 0.0319 | 0.0122 | — |
+| Interface RMSE, `Y*` | 0.207 | 0.347 | — |
+| Interface lift-off, `T*` | 7.45 | 8.03 | 7.3, 7.8, 7.9 |
+| Interface catches free surface, `T*` | 8.34 | not captured | 8.4 |
+| Geysering | false | false | false |
 
-The free-surface maximum and no-geyser outcome agree closely, while pressure
-and interface timing retain substantial model discrepancy. Detailed RMSE
-values are in `outputs/openfoam_2d_metrics.json`.
+The circular model materially improves pressure RMSE and interface timing, and
+it captures the observed interface/free-surface catch. It does not eliminate
+the discrepancy: its mean pressure plateau remains 29% above the experimental
+target, and its free-surface RMSE is larger than the planar result. Level RMSE
+uses only the finite model/experiment overlap before the centreline water slug
+disappears. Detailed values are in `outputs/openfoam_3d_metrics.json`.
 
 ## Why the 3-D model is needed
 
