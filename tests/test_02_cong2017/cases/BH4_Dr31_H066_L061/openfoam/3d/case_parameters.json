@@ -77,14 +77,16 @@
   "simulation": {
     "event_end_time_s": 13.0,
     "base_mesh_m": {
-      "pipe": 0.01,
-      "riser": 0.006,
-      "atmosphere": 0.02
+      "pipe": 0.00625,
+      "riser": 0.003875,
+      "atmosphere": 0.025,
+      "nominal_cells_across_each_diameter": 8
     },
     "refined_mesh_m": {
-      "pipe": 0.0075,
-      "riser": 0.0045,
-      "atmosphere": 0.015
+      "pipe": 0.004166667,
+      "riser": 0.002583333,
+      "atmosphere": 0.01875,
+      "nominal_cells_across_each_diameter": 12
     }
   }
 }

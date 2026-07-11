@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the paper-faithful B-H4 three-dimensional fluid domain with Gmsh."""
+"""Build the exact B-H4 surface and cfMesh controls for a 3-D fluid mesh."""
 
 from __future__ import annotations
 
@@ -29,11 +29,12 @@ GEOMETRY_TOL = 2.0e-5
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--output", type=Path, default=Path("bh4-3d.msh"))
+    parser.add_argument("--output", type=Path, default=Path("bh4-physical.stl"))
     parser.add_argument("--metadata", type=Path, default=Path("mesh_metadata.json"))
-    parser.add_argument("--pipe-size", type=float, default=0.010)
-    parser.add_argument("--riser-size", type=float, default=0.006)
-    parser.add_argument("--atmosphere-size", type=float, default=0.020)
+    parser.add_argument("--mesh-dict", type=Path, default=Path("system/meshDict"))
+    parser.add_argument("--pipe-size", type=float, default=0.00625)
+    parser.add_argument("--riser-size", type=float, default=0.003875)
+    parser.add_argument("--atmosphere-size", type=float, default=0.025)
     return parser.parse_args()
 
 
@@ -52,18 +53,121 @@ def add_box_field(
     outside: float,
 ) -> int:
     field = gmsh.model.mesh.field.add("Box")
-    for key, value in (
-        ("XMin", xmin),
-        ("XMax", xmax),
-        ("YMin", ymin),
-        ("YMax", ymax),
-        ("ZMin", zmin),
-        ("ZMax", zmax),
-        ("VIn", inside),
-        ("VOut", outside),
+    for key, value in zip(
+        ("XMin", "XMax", "YMin", "YMax", "ZMin", "ZMax"),
+        (xmin, xmax, ymin, ymax, zmin, zmax),
+        strict=True,
     ):
         gmsh.model.mesh.field.setNumber(field, key, value)
+    gmsh.model.mesh.field.setNumber(field, "VIn", inside)
+    gmsh.model.mesh.field.setNumber(field, "VOut", outside)
     return field
+
+
+def write_mesh_dict(path: Path, pipe: float, riser: float, atmosphere: float) -> None:
+    """Write cfMesh controls with independent pipe/riser volume resolution."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        f"""FoamFile
+{{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      meshDict;
+}}
+
+surfaceFile     "bh4-physical.stl";
+maxCellSize     {atmosphere:.10g};
+minCellSize     {min(pipe, riser):.10g};
+boundaryCellSize {atmosphere:.10g};
+
+localRefinement
+{{
+    pipeWall
+    {{
+        cellSize {pipe:.10g};
+        refinementThickness {2.0 * pipe:.10g};
+    }}
+    riserWall
+    {{
+        cellSize {riser:.10g};
+        refinementThickness {2.0 * riser:.10g};
+    }}
+    "(reservoir|closedEnd)"
+    {{
+        cellSize {pipe:.10g};
+    }}
+    deck
+    {{
+        cellSize {atmosphere:.10g};
+    }}
+}}
+
+objectRefinements
+{{
+    mainPipe
+    {{
+        type box;
+        centre ({PIPE_LENGTH / 2:.10g} 0 {R:.10g});
+        lengthX {PIPE_LENGTH + 0.02:.10g};
+        lengthY {D + 0.02:.10g};
+        lengthZ {D + 0.02:.10g};
+        cellSize {pipe:.10g};
+    }}
+    riser
+    {{
+        type cone;
+        p0 ({TEE_X:.10g} 0 {R:.10g});
+        radius0 {RR + 0.012:.10g};
+        p1 ({TEE_X:.10g} 0 {RISER_RIM_Z + 0.02:.10g});
+        radius1 {RR + 0.012:.10g};
+        cellSize {riser:.10g};
+    }}
+    tee
+    {{
+        type sphere;
+        centre ({TEE_X:.10g} 0 {R:.10g});
+        radius 0.075;
+        cellSize {min(pipe, riser):.10g};
+    }}
+    valve
+    {{
+        type box;
+        centre ({VALVE_X:.10g} 0 {R:.10g});
+        lengthX 0.08;
+        lengthY 0.07;
+        lengthZ 0.07;
+        cellSize {min(pipe, 1.25 * riser):.10g};
+    }}
+    plume
+    {{
+        type box;
+        centre ({TEE_X:.10g} 0 {(RISER_RIM_Z + ATMOSPHERE_TOP_Z) / 2:.10g});
+        lengthX 0.14;
+        lengthY 0.14;
+        lengthZ {ATMOSPHERE_TOP_Z - RISER_RIM_Z:.10g};
+        cellSize {min(atmosphere, 1.5 * riser):.10g};
+    }}
+}}
+
+renameBoundary
+{{
+    defaultName     walls;
+    defaultType     wall;
+    newPatchNames
+    {{
+        atmosphere {{ newName atmosphere; type patch; }}
+        reservoir  {{ newName reservoir;  type patch; }}
+        closedEnd  {{ newName closedEnd;  type wall; }}
+        "(pipeWall|riserWall|deck)"
+        {{
+            newName walls;
+            type wall;
+        }}
+    }}
+}}
+"""
+    )
 
 
 def main() -> None:
@@ -78,6 +182,7 @@ def main() -> None:
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.metadata.parent.mkdir(parents=True, exist_ok=True)
+    args.mesh_dict.parent.mkdir(parents=True, exist_ok=True)
 
     gmsh.initialize()
     try:
@@ -124,7 +229,9 @@ def main() -> None:
         reservoir: list[int] = []
         closed_end: list[int] = []
         atmosphere_surfaces: list[int] = []
-        walls: list[int] = []
+        pipe_wall: list[int] = []
+        riser_wall: list[int] = []
+        deck: list[int] = []
         atmosphere_max_x = atmosphere_min_x + ATMOSPHERE_WIDTH
         atmosphere_max_y = atmosphere_min_y + ATMOSPHERE_WIDTH
 
@@ -156,14 +263,24 @@ def main() -> None:
             )
             if top or (in_external and (side_x or side_y)):
                 atmosphere_surfaces.append(tag)
+            elif zmax <= D + GEOMETRY_TOL:
+                pipe_wall.append(tag)
+            elif (
+                zmax <= RISER_RIM_Z + GEOMETRY_TOL
+                and xmin >= TEE_X - RR - GEOMETRY_TOL
+                and xmax <= TEE_X + RR + GEOMETRY_TOL
+            ):
+                riser_wall.append(tag)
             else:
-                walls.append(tag)
+                deck.append(tag)
 
         groups = {
             "reservoir": reservoir,
             "closedEnd": closed_end,
             "atmosphere": atmosphere_surfaces,
-            "walls": walls,
+            "pipeWall": pipe_wall,
+            "riserWall": riser_wall,
+            "deck": deck,
         }
         if any(not tags for tags in groups.values()):
             raise RuntimeError(f"Boundary classification failed: {groups}")
@@ -235,26 +352,33 @@ def main() -> None:
         gmsh.option.setNumber("Mesh.MeshSizeMax", max(sizes))
         gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
         gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
-        gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 18)
-        gmsh.option.setNumber("Mesh.Algorithm3D", 10)  # HXT
+        gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 24)
         gmsh.option.setNumber("Mesh.Optimize", 1)
-        gmsh.option.setNumber("Mesh.OptimizeNetgen", 1)
-        gmsh.option.setNumber("Mesh.MshFileVersion", 2.2)
-        gmsh.option.setNumber("Mesh.Binary", 0)
+        gmsh.option.setNumber("Mesh.StlOneSolidPerSurface", 2)
 
-        gmsh.model.mesh.generate(3)
+        # Gmsh preserves the exact OCC Boolean geometry in a multi-solid
+        # triangulation.  cfMesh then creates solver-grade Cartesian/poly cells;
+        # this avoids the under-determined boundary tetrahedra produced by a
+        # direct gmshToFoam conversion under checkMesh -allGeometry.
+        gmsh.model.mesh.generate(2)
         gmsh.write(str(args.output))
 
-        element_count = sum(
-            len(tags)
-            for tags in gmsh.model.mesh.getElements(3)[1]
+        surface_element_count = sum(
+            len(tags) for tags in gmsh.model.mesh.getElements(2)[1]
+        )
+        write_mesh_dict(
+            args.mesh_dict,
+            args.pipe_size,
+            args.riser_size,
+            args.atmosphere_size,
         )
         actual_volume = occ.getMass(3, volumes[0])
         analytic_pipe = math.pi * R * R * PIPE_LENGTH
         metadata = {
             "case": "B-H4",
-            "mesh_file": str(args.output),
-            "cells_3d": element_count,
+            "geometry_file": str(args.output),
+            "mesh_engine": "cfMesh cartesianMesh from Gmsh OCC multi-solid STL",
+            "surface_triangles": surface_element_count,
             "fluid_volume_m3": actual_volume,
             "main_pipe_analytic_volume_m3": analytic_pipe,
             "pipe_size_m": args.pipe_size,

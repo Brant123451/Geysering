@@ -17,8 +17,12 @@ case record.
   `z=3.05 m`.  Its sides and top are open.  The riser rim is not a pressure
   outlet, so a computed jet must enter the external domain.
 
-The mesh is generated directly from circular Gmsh OCC cylinders.  It is not a
-2-D, wedge, thin-layer, or rectangular-area model.
+Gmsh OCC constructs and Boolean-unions the exact cylinders, then exports a
+multi-solid triangulation to OpenFOAM's `cartesianMesh` (cfMesh).  This retains
+the circular geometry while producing solver-grade Cartesian/polyhedral cells
+that pass the complete topology/geometry checks.  It is not a 2-D, wedge,
+thin-layer, or rectangular-area model.  The base mesh resolves both diameters
+with at least eight nominal cells; the refined mesh uses at least twelve.
 
 ## Solver and initial state
 
@@ -82,8 +86,8 @@ BH4_END_TIME=13 BH4_LABEL=base_topen0p20 ./Allrun
 
 # Refined mesh
 ./Allclean
-BH4_PIPE_SIZE=0.0075 BH4_RISER_SIZE=0.0045 \
-BH4_ATMOSPHERE_SIZE=0.015 BH4_END_TIME=13 \
+BH4_PIPE_SIZE=0.004166667 BH4_RISER_SIZE=0.002583333 \
+BH4_ATMOSPHERE_SIZE=0.01875 BH4_END_TIME=13 \
 BH4_LABEL=refined_topen0p20 ./Allrun
 
 # Opening-time sensitivity (base mesh)
@@ -100,9 +104,10 @@ decomposed event.
 `Allrun` always executes:
 
 ```text
-gmsh -> gmshToFoam -> createPatch -> topoSet
-      -> checkMesh -allGeometry -allTopology
-      -> setFields -> setExprFields -> compressibleInterFoam
+Gmsh OCC multi-solid STL -> cartesianMesh -> topoSet
+                         -> checkMesh -allGeometry -allTopology
+                         -> setFields -> setExprFields
+                         -> compressibleInterFoam
 ```
 
 ## Diagnostics and compact outputs

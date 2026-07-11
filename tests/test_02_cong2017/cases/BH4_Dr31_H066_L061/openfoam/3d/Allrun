@@ -17,9 +17,9 @@ elif (( NP < 1 )); then
     NP=1
 fi
 
-PIPE_SIZE="${BH4_PIPE_SIZE:-0.010}"
-RISER_SIZE="${BH4_RISER_SIZE:-0.006}"
-ATMOSPHERE_SIZE="${BH4_ATMOSPHERE_SIZE:-0.020}"
+PIPE_SIZE="${BH4_PIPE_SIZE:-0.00625}"
+RISER_SIZE="${BH4_RISER_SIZE:-0.003875}"
+ATMOSPHERE_SIZE="${BH4_ATMOSPHERE_SIZE:-0.025}"
 END_TIME="${BH4_END_TIME:-13.0}"
 VALVE_TIME="${BH4_VALVE_TIME:-0.20}"
 VALVE_MODE="${BH4_VALVE_MODE:-opening}"
@@ -43,15 +43,15 @@ else
 fi
 
 python3 make_mesh.py \
-    --output bh4-3d.msh \
+    --output bh4-physical.stl \
     --metadata mesh_metadata.json \
+    --mesh-dict system/meshDict \
     --pipe-size "$PIPE_SIZE" \
     --riser-size "$RISER_SIZE" \
     --atmosphere-size "$ATMOSPHERE_SIZE" \
     > log.gmsh 2>&1
 
-gmshToFoam bh4-3d.msh > log.gmshToFoam 2>&1
-createPatch -overwrite > log.createPatch 2>&1
+cartesianMesh > log.cartesianMesh 2>&1
 topoSet > log.topoSet 2>&1
 checkMesh -allGeometry -allTopology > log.checkMesh 2>&1
 if ! rg -q "Mesh OK" log.checkMesh; then

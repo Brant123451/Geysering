@@ -14,8 +14,14 @@ rm -rf \
     constant/polyMesh \
     postProcessing \
     bh4-3d.msh \
+    bh4-*.stl \
     mesh_metadata.json \
+    featureFaces.obj \
+    featureEdges.obj \
+    singleCellFeaturePoints.obj \
+    multiCellFeaturePoints.obj \
     log.* \
+    system/meshDict \
     system/decomposeParDict.runtime \
     system/riserProbeLocations \
     system/horizontalProbeLocations
