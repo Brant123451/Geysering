@@ -165,14 +165,22 @@ def riser_measures(alpha_samples: np.ndarray) -> dict[str, np.ndarray]:
 
 def parse_run_metadata(case: Path) -> dict[str, object]:
     logs = sorted(case.glob("log.interFoam.full")) + sorted(case.glob("log.interFoam.resume.*"))
-    text = "\n".join(path.read_text(errors="replace") for path in logs if path.exists())
-    co = [float(value) for value in re.findall(r"Courant Number mean: \S+ max: (\S+)", text)]
+    log_texts = [path.read_text(errors="replace") for path in logs if path.exists()]
+    text = "\n".join(log_texts)
+    co = [
+        float(value)
+        for value in re.findall(r"(?m)^Courant Number mean: \S+ max: (\S+)", text)
+    ]
     alpha_co = [
         float(value)
         for value in re.findall(r"Interface Courant Number mean: \S+ max: (\S+)", text)
     ]
     delta_t = [float(value) for value in re.findall(r"deltaT = (\S+)", text)]
-    clock = [float(value) for value in re.findall(r"ClockTime = (\S+) s", text)]
+    clock = []
+    for one_log in log_texts:
+        values = re.findall(r"ClockTime = (\S+) s", one_log)
+        if values:
+            clock.append(float(values[-1]))
     build = re.search(r"Build\s+:\s+(.+)", text)
 
     check_text = (case / "log.checkMesh").read_text(errors="replace")
@@ -229,6 +237,50 @@ def json_safe(value):
     if isinstance(value, np.integer):
         return int(value)
     return value
+
+
+def grid_sensitivity(base: dict, refined: dict) -> dict[str, object]:
+    def get(document: dict, *keys: str) -> float | None:
+        value = document
+        for key in keys:
+            value = value.get(key) if isinstance(value, dict) else None
+        return float(value) if value is not None else None
+
+    quantities = {
+        "PT2_paper_window_kPa": ("openfoam_3d", "PT2_paper_window_kPa"),
+        "PT3_paper_window_kPa": ("openfoam_3d", "PT3_paper_window_kPa"),
+        "bore_arrival_ramp_clock_s": ("openfoam_3d", "bore_arrival_ramp_clock_s"),
+        "first_contiguous_mixture_column_m": (
+            "openfoam_3d",
+            "first_contiguous_mixture_column_m",
+        ),
+        "maximum_contiguous_mixture_column_m": (
+            "openfoam_3d",
+            "maximum_contiguous_mixture_column_m",
+        ),
+        "maximum_mixture_front_m": ("openfoam_3d", "maximum_mixture_front_m"),
+    }
+    comparisons = {}
+    for name, path in quantities.items():
+        base_value = get(base, *path)
+        refined_value = get(refined, *path)
+        if base_value is None or refined_value is None:
+            comparisons[name] = None
+            continue
+        delta = refined_value - base_value
+        comparisons[name] = {
+            "base": base_value,
+            "refined": refined_value,
+            "refined_minus_base": delta,
+            "absolute_relative_change_percent": (
+                100.0 * abs(delta) / max(abs(refined_value), 1.0e-12)
+            ),
+        }
+    return {
+        "base_cells": get(base, "openfoam_3d", "cells"),
+        "refined_cells": get(refined, "openfoam_3d", "cells"),
+        "quantities": comparisons,
+    }
 
 
 def main() -> None:
@@ -457,6 +509,14 @@ def main() -> None:
         ],
     }
 
+    other_profile = "refined" if profile == "base" else "base"
+    other_path = OUT / f"openfoam_3d_{other_profile}_metrics.json"
+    if other_path.exists():
+        other_metrics = json.loads(other_path.read_text())
+        base_metrics = metrics if profile == "base" else other_metrics
+        refined_metrics = metrics if profile == "refined" else other_metrics
+        metrics["grid_sensitivity"] = grid_sensitivity(base_metrics, refined_metrics)
+
     metrics = json_safe(metrics)
     profile_metrics = OUT / f"openfoam_3d_{profile}_metrics.json"
     profile_metrics.write_text(json.dumps(metrics, indent=2, allow_nan=False) + "\n")
@@ -510,6 +570,15 @@ def main() -> None:
         fig.tight_layout()
         fig.savefig(OUT / "openfoam_3d_riser_comparison.png", dpi=160)
         plt.close(fig)
+
+    elif "grid_sensitivity" in metrics:
+        primary_metrics = OUT / "openfoam_3d_metrics.json"
+        if primary_metrics.exists():
+            primary_document = json.loads(primary_metrics.read_text())
+            primary_document["grid_sensitivity"] = metrics["grid_sensitivity"]
+            primary_metrics.write_text(
+                json.dumps(primary_document, indent=2, allow_nan=False) + "\n"
+            )
 
     print(json.dumps(metrics, indent=2, allow_nan=False))
     print(f"wrote profile={profile} primary={args.primary} to {OUT}")

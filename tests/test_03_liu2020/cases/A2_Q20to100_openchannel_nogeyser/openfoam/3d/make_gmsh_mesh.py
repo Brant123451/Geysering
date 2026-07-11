@@ -155,7 +155,10 @@ def main() -> None:
         if args.profile == "base":
             size_max, size_chamber, size_riser, curvature = 0.050, 0.018, 0.009, 22
         else:
-            size_max, size_chamber, size_riser, curvature = 0.036, 0.013, 0.0065, 30
+            # Uniform 15% reduction in the governing target sizes.  This is a
+            # systematic resolution sensitivity while keeping the complete
+            # 22.4 s two-phase transient tractable on four MPI ranks.
+            size_max, size_chamber, size_riser, curvature = 0.0425, 0.0153, 0.00765, 26
 
         gmsh.option.setNumber("Mesh.MeshSizeMin", size_riser * 0.75)
         gmsh.option.setNumber("Mesh.MeshSizeMax", size_max)
