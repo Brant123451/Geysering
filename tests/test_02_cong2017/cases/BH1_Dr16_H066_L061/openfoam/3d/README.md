@@ -43,8 +43,8 @@ rim; it is not a confined `3.0 m` riser.
 - Water starts at `296.15 K`, `rho0=998.2 kg/m3`, with physical bulk modulus
   `2.2 GPa`; air uses `perfectGas`.
 - The energy equation is active and `fieldMinMax` records temperature
-  extrema. A non-positive temperature invalidates the run; temperature is not
-  clipped to conceal a failed thermo inversion.
+  extrema. Leaving the broad `200--600 K` validity interval invalidates the
+  run; temperature is not clipped to conceal a failed thermo inversion.
 - Hydrostatic water has `p_rgh=107543.13717 Pa` for the chosen coordinate
   origin. The pocket keeps `p_rgh=101325 Pa`; the disconnected headspace uses
   its hydrostatic value above.
@@ -91,6 +91,9 @@ The declared nominal sizes are:
 | base | `6.25 mm` | `1.5625 mm` | `12.5 mm` plume |
 | refined | `3.125 mm` | `0.78125 mm` | `6.25 mm` plume |
 
+Riser-resolution cells continue `50 mm` above the physical rim so that its
+sharp edge is not colocated with a three-level refinement transition.
+
 Every mesh runs both standard `checkMesh` and
 `checkMesh -allGeometry -allTopology`. Standard checks must report `Mesh OK`.
 The extended report is retained even when it flags the small population of
@@ -108,6 +111,9 @@ unchanged for all meshes and valve cases.
 
 Each run is created under ignored `runs/`; source templates remain clean.
 OpenFOAM v2512, Gmsh, NumPy, and Matplotlib are required.
+Install the Python tools with
+`python3 -m pip install --upgrade -r openfoam/3d/requirements.txt`;
+Matplotlib 3.9 or newer is required when the environment supplies NumPy 2.
 
 ```bash
 cd openfoam/3d/case

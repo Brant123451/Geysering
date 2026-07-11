@@ -85,6 +85,7 @@
       "riser_size_m": 0.00078125,
       "plume_size_m": 0.00625
     },
+    "riser_refinement_extension_above_rim_m": 0.05,
     "quality_acceptance": {
       "standard_checkMesh_must_pass": true,
       "extended_check_is_always_recorded": true,
@@ -103,7 +104,14 @@
     "end_time_s": 13.0,
     "max_Courant": 0.2,
     "max_alpha_Courant": 0.15,
-    "temperature_acceptance": "minimum temperature must remain positive; no clipping",
+    "temperature_acceptance": {
+      "bounds_K": [
+        200.0,
+        600.0
+      ],
+      "clipping": false,
+      "criterion": "all recorded extrema must remain within bounds"
+    },
     "bounded_startup_numerics": {
       "reference": "OpenFOAM v2512 compressibleInterFoam depthCharge3D",
       "momentum_divergence": "Gauss upwind",

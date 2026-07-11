@@ -93,6 +93,28 @@ def parse_scalar_probes(path: Path | None) -> np.ndarray:
     return np.asarray([row[:width] for row in rows], dtype=float)
 
 
+def field_extrema(
+    path: Path | None, field_name: str
+) -> tuple[float | None, float | None]:
+    if path is None or not path.exists():
+        return None, None
+    minima: list[float] = []
+    maxima: list[float] = []
+    pattern = re.compile(
+        rf"^\s*[0-9.eE+-]+\s+{re.escape(field_name)}\s+"
+        r"([0-9.eE+-]+)\s+\([^)]*\)\s+\d+\s+"
+        r"([0-9.eE+-]+)\s+\([^)]*\)\s+\d+\s*$"
+    )
+    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        match = pattern.match(raw)
+        if match:
+            minima.append(float(match.group(1)))
+            maxima.append(float(match.group(2)))
+    if not minima:
+        return None, None
+    return min(minima), max(maxima)
+
+
 def column(header: list[str], data: np.ndarray, needle: str) -> np.ndarray:
     for index, name in enumerate(header):
         if needle in name:
@@ -363,6 +385,15 @@ def main() -> None:
     initial_tunnel_gas = float(series["tunnel_gas_volume"][0])
     pocket_volume_error = initial_tunnel_gas - POCKET_VOLUME_TARGET
     reached_end = float(time[-1])
+    temperature_min, temperature_max = field_extrema(
+        newest_data_file(args.run_dir, "extrema", "fieldMinMax.dat"), "T"
+    )
+    thermal_pass = bool(
+        temperature_min is not None
+        and temperature_max is not None
+        and temperature_min >= 200.0
+        and temperature_max <= 600.0
+    )
     metrics = {
         "run": run_name,
         "mode": args.mode,
@@ -385,6 +416,13 @@ def main() -> None:
         "atmosphere_water_outflow_peak_m3_s": float(
             np.nanmax(boundary_flux["atmosphere_water_phi"])
         ),
+        "temperature_validity": {
+            "minimum_K": temperature_min,
+            "maximum_K": temperature_max,
+            "acceptance_bounds_K": [200.0, 600.0],
+            "clipping_applied": False,
+            "pass": thermal_pass,
+        },
         "initial_inventory": {
             "water_volume_m3": float(series["water_volume"][0]),
             "total_gas_volume_m3": float(series["gas_volume"][0]),
@@ -440,6 +478,7 @@ def main() -> None:
                 and abs(water_rel) <= 1e-3
                 and gas_rel is not None
                 and abs(gas_rel) <= 1e-3
+                and thermal_pass
             ),
         }
     elif args.mode == "smoke":
@@ -450,6 +489,7 @@ def main() -> None:
                 and abs(water_rel) <= 1e-2
                 and gas_rel is not None
                 and abs(gas_rel) <= 1e-2
+                and thermal_pass
             )
         }
 
@@ -518,6 +558,8 @@ def main() -> None:
         raise SystemExit("Closed-valve static-hold acceptance criteria failed")
     if args.mode == "smoke" and not metrics["smoke"]["pass"]:
         raise SystemExit("Open-valve smoke acceptance criteria failed")
+    if not thermal_pass:
+        raise SystemExit("Temperature validity acceptance failed")
 
 
 if __name__ == "__main__":

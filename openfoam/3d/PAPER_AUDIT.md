@@ -119,8 +119,8 @@ measurements exist:
    bulk compressibility; the OpenFOAM `perfectFluid` coefficients are computed
    from its `rho=rho0+p/(R*T)` equation at `296.15 K`, not by inserting the
    bulk-modulus ratio directly as `R`. The energy equation remains active and
-   temperature extrema are recorded; a non-positive temperature invalidates a
-   run rather than being hidden by clipping.
+   temperature extrema are recorded; leaving the broad `200--600 K` validity
+   interval invalidates a run rather than being hidden by clipping.
 7. **Atmospheric datum:** `101325 Pa` absolute is referenced at the measured
    initial free-surface elevation (`y=0.635 m`). The riser headspace and open
    exterior use the corresponding constant hydrostatic
