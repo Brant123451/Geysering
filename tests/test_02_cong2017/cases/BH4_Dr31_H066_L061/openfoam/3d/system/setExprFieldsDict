@@ -8,27 +8,33 @@ FoamFile
 
 expressions
 (
+    atmosphericAbsolutePressure
+    {
+        field       p;
+        dimensions  [1 -1 -2 0 0 0 0];
+        expression  #{ 101325 #};
+    }
+
     hydrostaticAbsolutePressure
     {
         field       p;
         dimensions  [1 -1 -2 0 0 0 0];
-        expression
-        #{
-            alpha.water
-           *(101325 + 998*9.81*(0.660 - pos().z()))
-          + (1 - alpha.water)*101325
-        #};
+        fieldMask   #{ alpha.water > 0.5 #};
+        expression  #{ 101325 + 997.954035295*9.81*(0.660 - pos().z()) #};
+    }
+
+    atmosphericReducedPressure
+    {
+        field       p_rgh;
+        dimensions  [1 -1 -2 0 0 0 0];
+        expression  #{ 101325 + 1.191920596*9.81*pos().z() #};
     }
 
     hydrostaticReducedPressure
     {
         field       p_rgh;
         dimensions  [1 -1 -2 0 0 0 0];
-        expression
-        #{
-            alpha.water*107786.6508
-          + (1 - alpha.water)
-           *(101325 + 1.191920596*9.81*pos().z())
-        #};
+        fieldMask   #{ alpha.water > 0.5 #};
+        expression  #{ 101325 + 997.954035295*9.81*0.660 #};
     }
 );
