@@ -1,0 +1,82 @@
+{
+  "case": "Liu2020 A2 Q20to100 open-channel no-geyser",
+  "profile": "base",
+  "time_origin": {
+    "simulation_and_1d": "t=0 at inflow-ramp start",
+    "paper_and_digitized_figure": "t=0 when valve fully open",
+    "experimental_shift_applied_s": 0.4
+  },
+  "paper": {
+    "PT3_initial_kPa": 0.99,
+    "PT2_final_kPa": 2.15,
+    "PT3_final_kPa": 4.99,
+    "bore_reach_paper_clock_s": 1.2,
+    "bore_reach_ramp_clock_s": 1.6,
+    "first_mixture_column_m": 0.13,
+    "bernoulli_estimate_m": 0.33,
+    "geyser": false
+  },
+  "openfoam_3d": {
+    "solver": "interFoam",
+    "openfoam_build": "_bd2b6720-20260127 OPENFOAM=2512 version=2512",
+    "cells": 118321,
+    "mesh_ok": true,
+    "max_non_orthogonality": 54.63712,
+    "max_skewness": 0.7115503,
+    "min_cell_determinant": 0.004122784,
+    "minimum_delta_t_s": 6.110588e-05,
+    "maximum_courant_number": 0.5057726,
+    "maximum_interface_courant_number": 0.4706107,
+    "clock_time_s": 29420.0,
+    "simulation_start_s": -3.999107,
+    "simulation_end_s": 14.39932,
+    "PT1_initial_kPa": -0.02052637693877551,
+    "PT2_initial_kPa": -0.013421144063886423,
+    "PT3_initial_kPa": 0.6218700714285715,
+    "PT2_paper_window_kPa": -0.034072420432899576,
+    "PT3_paper_window_kPa": 1.6432391985738337,
+    "bore_arrival_ramp_clock_s": 2.805441,
+    "first_contiguous_mixture_column_m": 0.0,
+    "maximum_contiguous_mixture_column_m": 0.02,
+    "maximum_mixture_front_m": 0.02,
+    "maximum_water_equivalent_riser_height_m": 0.005052701544314431,
+    "reached_riser_top": false,
+    "riser_water_discharge_m3": 1.1874440577609481e-35,
+    "geyser": false
+  },
+  "model_1d": {
+    "PT2_paper_window_kPa": 0.09385995109106401,
+    "PT3_paper_window_kPa": 5.090849174355916,
+    "maximum_riser_height_m": 0.41297588140167374,
+    "bore_arrival_ramp_clock_s": 1.4101668270476129,
+    "mass_error_L": 8.215650382226158e-12,
+    "geyser": false
+  },
+  "mass_conservation": {
+    "initial_water_volume_m3": 0.16233654,
+    "final_water_volume_m3": 0.51537235,
+    "final_balance_residual_m3": 2.2690986240025968e-05,
+    "maximum_abs_balance_residual_m3": 2.385947811911482e-05,
+    "final_residual_percent_of_inflow": 0.0015090187721600945,
+    "pre_ramp_inlet_m3s": 0.02,
+    "pre_ramp_outlet_m3s": 0.022051310562980694,
+    "pre_ramp_volume_slope_m3s": -0.001934377203356166,
+    "transient_samples": 4996
+  },
+  "errors": {
+    "PT3_initial_minus_paper_kPa": -0.36812992857142846,
+    "PT2_steady_minus_paper_kPa": -2.1840724204328996,
+    "PT3_steady_minus_paper_kPa": -3.3467608014261665,
+    "first_column_minus_paper_m": -0.13,
+    "PT1_RMSE_vs_digitized_kPa": 0.14915947913764893,
+    "PT2_RMSE_vs_digitized_kPa": 2.0681587965751027,
+    "PT3_RMSE_vs_digitized_kPa": 2.864596688533636,
+    "PT3_1d_RMSE_vs_digitized_kPa": 1.4779633319552912
+  },
+  "limitations": [
+    "Unreported downstream tank/weir geometry is replaced by a fixed-stage hd=0.070 m boundary.",
+    "Probe circumferential/in-plane coordinates are not reported by Liu et al.",
+    "interFoam omits acoustic water hammer, air compressibility, bubble slip, breakup and coalescence.",
+    "The experimental 0.13 m riser datum is a digitized first-column scalar, not a time series."
+  ]
+}
