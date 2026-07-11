@@ -165,6 +165,27 @@ def parse_mesh() -> dict:
             else "fail"
         )
     )
+    highly_skew_faces = number(r",\s*(\d+)\s+highly skew faces", int)
+    if highly_skew_faces is None and re.search(
+        r"Max skewness\s*=.*\bOK\.", strict_text, flags=re.I
+    ):
+        highly_skew_faces = 0
+    low_weight_faces = number(
+        r"Faces with small interpolation weight[^:]*:\s*(\d+)", int
+    )
+    if (
+        low_weight_faces is None
+        and "Face interpolation weight check OK." in strict_text
+    ):
+        low_weight_faces = 0
+    low_volume_ratio_faces = number(
+        r"Faces with small volume ratio[^:]*:\s*(\d+)", int
+    )
+    if (
+        low_volume_ratio_faces is None
+        and "Face volume ratio check OK." in strict_text
+    ):
+        low_volume_ratio_faces = 0
     return {
         "cells": number(r"\bcells:\s+(\d+)", int),
         "max_aspect_ratio": number(
@@ -179,9 +200,7 @@ def parse_mesh() -> dict:
         "max_skewness": number(
             rf"Max skewness\s*=\s*({NUMBER_PATTERN})"
         ),
-        "highly_skew_faces": number(
-            r",\s*(\d+)\s+highly skew faces", int
-        ),
+        "highly_skew_faces": highly_skew_faces,
         "minimum_cell_volume_m3": number(
             rf"Min volume\s*=\s*({NUMBER_PATTERN})"
         ),
@@ -192,15 +211,11 @@ def parse_mesh() -> dict:
         "minimum_face_weight": number(
             rf"Face interpolation weight\s*:\s*minimum:\s*({NUMBER_PATTERN})"
         ),
-        "low_weight_faces": number(
-            r"Faces with small interpolation weight[^:]*:\s*(\d+)", int
-        ),
+        "low_weight_faces": low_weight_faces,
         "minimum_volume_ratio": number(
             rf"Face volume ratio\s*:\s*minimum:\s*({NUMBER_PATTERN})"
         ),
-        "low_volume_ratio_faces": number(
-            r"Faces with small volume ratio[^:]*:\s*(\d+)", int
-        ),
+        "low_volume_ratio_faces": low_volume_ratio_faces,
         "two_internal_face_cells": two_internal_face_cells,
         "boundary_tet_determinant_excess_cells": structural_excess,
         "failed_checks": 0 if strict_mesh_ok else strict_failed_checks,
@@ -221,6 +236,10 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "gas_eos",
         "initial_air_head_m",
         "valve_open_time_s",
+        "gmsh_version",
+        "algorithm",
+        "optimizer",
+        "box_transition_thickness_m",
         "cells",
         "nominal_cells_across_tower",
         "max_non_orthogonality_deg",
@@ -261,6 +280,12 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "gas_eos": manifest.get("gas_equation_of_state"),
         "initial_air_head_m": manifest.get("initial_air_head_m"),
         "valve_open_time_s": manifest.get("valve_open_time_s"),
+        "gmsh_version": metadata.get("gmsh_version"),
+        "algorithm": metadata.get("algorithm"),
+        "optimizer": metadata.get("optimizer"),
+        "box_transition_thickness_m": metadata.get(
+            "box_transition_thickness_m"
+        ),
         "cells": mesh.get("cells"),
         "nominal_cells_across_tower": metadata.get(
             "nominal_cells_across_tower"
