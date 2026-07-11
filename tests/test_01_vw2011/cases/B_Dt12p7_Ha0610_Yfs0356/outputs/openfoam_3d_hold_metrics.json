@@ -31,7 +31,7 @@
     "plume_write_interval_s": 0.001,
     "accounting_interval_s": 0.001,
     "c_alpha": 1.0,
-    "alpha_smooth_curvature_iterations": 2,
+    "alpha_smooth_curvature_iterations": 0,
     "tower_probe_lines": 5,
     "tower_probe_spacing_m": 0.005,
     "plume_probe_lines": 5,

@@ -48,5 +48,42 @@
       "interpretation": "The stock cell-centred-alpha CSF curvature did not benefit from the conformal disk. The disk increased the free-surface velocity maximum and alpha undershoot, so the source deck was restored to geometric cut-cell initialisation."
     },
     "completion_claim": "This is a rejected short numerical diagnostic, not a hold, smoke, or completed experiment."
+  },
+  "least_squares_interface_normal": {
+    "status": "screening_passed_pending_0p006_s",
+    "source_commit": "a56d784",
+    "purpose": "Change only the interfaceProperties nHat gradient from Gauss linear to leastSquares on the original geometric cut-cell mesh.",
+    "unchanged_physics": {
+      "solver": "compressibleInterFoam v2512",
+      "surface_tension_N_per_m": 0.072,
+      "contact_angle_deg": 90.0,
+      "valve_mode": "closed",
+      "valve_seal_speed_m_per_s": 1.0,
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "alpha_smooth_curvature_iterations": 0
+    },
+    "startup_result_0p001_s": {
+      "cells": 1904269,
+      "execution_time_s": 230.05,
+      "clock_time_s": 240,
+      "delta_t_before_written_time_s": 5.7005381e-05,
+      "courant_max_before_written_time": 0.30007104,
+      "interface_courant_max_before_written_time": 0.18050291,
+      "alpha_water_min": -7.9743722e-11,
+      "alpha_water_max": 1.0,
+      "max_velocity_m_per_s": 2.0177641,
+      "max_velocity_location_m": [
+        3.5124458,
+        0.40377959,
+        -0.0025148316
+      ]
+    },
+    "comparison": {
+      "gauss_linear_max_velocity_at_0p001_s_m_per_s": 3.207,
+      "least_squares_to_gauss_max_velocity_ratio": 0.6291762082943559,
+      "interpretation": "The 0.001 s screen reduced the free-surface maximum velocity by 37.1% while preserving alpha bounds. It must still pass the 0.006 s sustained screen because earlier curvature smoothing improved only the first sample."
+    },
+    "completion_claim": "This is a promising short numerical diagnostic, not a hold, smoke, or completed experiment."
   }
 }
