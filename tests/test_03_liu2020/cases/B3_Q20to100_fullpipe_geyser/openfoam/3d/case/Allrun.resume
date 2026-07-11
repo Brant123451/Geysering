@@ -24,9 +24,28 @@ if (( NP > $(nproc) )); then
     exit 1
 fi
 
+if [[ -f system/controlDict.full-run ]]; then
+    echo "Stale system/controlDict.full-run found; restore or remove it first." >&2
+    exit 1
+fi
+cp system/controlDict system/controlDict.full-run
+restore_control()
+{
+    if [[ -f system/controlDict.full-run ]]; then
+        mv system/controlDict.full-run system/controlDict
+    fi
+}
+trap restore_control EXIT
+foamDictionary system/controlDict -entry startFrom -set latestTime >/dev/null
+if [[ -n "${B3_END_TIME:-}" ]]; then
+    foamDictionary system/controlDict -entry endTime -set "$B3_END_TIME" >/dev/null
+fi
+
 mpirun -np "$NP" compressibleInterIsoFoam -parallel \
     -decomposeParDict system/decomposeParDict.runtime \
     >> log.compressibleInterIsoFoam 2>&1
 reconstructPar -latestTime > log.reconstructPar 2>&1
+restore_control
+trap - EXIT
 
 echo "B3_3D_RESUME_DONE"

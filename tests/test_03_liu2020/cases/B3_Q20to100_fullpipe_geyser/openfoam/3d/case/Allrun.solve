@@ -26,6 +26,10 @@ restore_control()
 }
 
 if [[ -n "${B3_END_TIME:-}" ]]; then
+    if [[ -f system/controlDict.full-run ]]; then
+        echo "Stale system/controlDict.full-run found; restore or remove it first." >&2
+        exit 1
+    fi
     cp system/controlDict system/controlDict.full-run
     trap restore_control EXIT
     foamDictionary system/controlDict -entry endTime -set "$B3_END_TIME" >/dev/null

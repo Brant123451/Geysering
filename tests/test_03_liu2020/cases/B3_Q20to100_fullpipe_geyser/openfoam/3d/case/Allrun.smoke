@@ -12,6 +12,10 @@ if (( NP < 1 )); then NP=1; fi
 rm -rf processor* postProcessing
 ./Allrun.init
 
+if [[ -f system/controlDict.full-run ]]; then
+    echo "Stale system/controlDict.full-run found; restore or remove it first." >&2
+    exit 1
+fi
 cp system/controlDict system/controlDict.full-run
 restore_control()
 {

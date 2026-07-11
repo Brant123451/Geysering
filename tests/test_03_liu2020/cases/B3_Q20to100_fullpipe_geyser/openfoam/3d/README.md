@@ -30,6 +30,9 @@ cells.
   outside the expected B3 state. Velocity and temperature are monitored by the
   `extrema` function object; the velocity bound is a solver safeguard, not a
   fitted physical parameter.
+- Adaptive stepping limits bulk-flow Courant number to 0.50 (the v2512
+  isoAdvector tutorial value), interface Courant number to the stricter 0.15,
+  and `deltaT` to 1 ms.
 
 ## Geometry and boundary mapping
 
@@ -116,9 +119,11 @@ python3 /path/to/B3/openfoam/3d/postprocess_compare.py \
   --case . --mesh-label refined
 ```
 
-`Allrun.resume` continues an interrupted decomposed solve. `Allclean` removes
-all generated fields, meshes, processor directories, function-object output,
-and logs.
+`Allrun.resume` switches the decomposed case to `startFrom latestTime` and
+continues an interrupted solve; `B3_END_TIME` can be supplied again when
+resuming a deliberately shortened/refined run. `Allclean` removes all
+generated fields, meshes, processor directories, function-object output, and
+logs.
 
 ## Committed outputs
 
