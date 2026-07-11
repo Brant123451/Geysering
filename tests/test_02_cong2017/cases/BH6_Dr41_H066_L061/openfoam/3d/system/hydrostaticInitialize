@@ -70,9 +70,19 @@ hydrostaticInitialize
         forAll(pressure, cellI)
         {
             const scalar aw = min(max(alpha[cellI], 0.0), 1.0);
+            const scalar gasReferenceHeight =
+                centres[cellI].x() > 5.98
+              ? 0.0
+              : gravityReferenceHeight;
+            const scalar gasPressure =
+                atmosphericPressure*exp
+                (
+                    gravityZ
+                   *(centres[cellI].z() - gasReferenceHeight)
+                   /(Rair*max(temperatureField[cellI], 1.0))
+                );
             const scalar rhoAir =
-                atmosphericPressure
-               /(Rair*max(temperatureField[cellI], 1.0));
+                gasPressure/(Rair*max(temperatureField[cellI], 1.0));
             const scalar rhoMixture =
                 aw*waterDensity + (1.0 - aw)*rhoAir;
             const scalar pAbs =
@@ -80,7 +90,7 @@ hydrostaticInitialize
               ? waterReducedPressure
                 + waterDensity*gravityZ
                  *(centres[cellI].z() - gravityReferenceHeight)
-              : atmosphericPressure;
+              : gasPressure;
 
             pressure[cellI] = pAbs;
             reducedPressure[cellI] =
@@ -103,9 +113,19 @@ hydrostaticInitialize
             {
                 const label cellI = faceCells[faceI];
                 const scalar aw = min(max(alpha[cellI], 0.0), 1.0);
+                const scalar gasReferenceHeight =
+                    centres[cellI].x() > 5.98
+                  ? 0.0
+                  : gravityReferenceHeight;
+                const scalar gasPressure =
+                    atmosphericPressure*exp
+                    (
+                        gravityZ
+                       *(faceCentres[faceI].z() - gasReferenceHeight)
+                       /(Rair*max(temperatureField[cellI], 1.0))
+                    );
                 const scalar rhoAir =
-                    atmosphericPressure
-                   /(Rair*max(temperatureField[cellI], 1.0));
+                    gasPressure/(Rair*max(temperatureField[cellI], 1.0));
                 const scalar rhoMixture =
                     aw*waterDensity + (1.0 - aw)*rhoAir;
                 const scalar pAbs =
@@ -113,7 +133,7 @@ hydrostaticInitialize
                   ? waterReducedPressure
                     + waterDensity*gravityZ
                      *(faceCentres[faceI].z() - gravityReferenceHeight)
-                  : atmosphericPressure;
+                  : gasPressure;
 
                 pressurePatch[faceI] = pAbs;
                 reducedPressurePatch[faceI] =

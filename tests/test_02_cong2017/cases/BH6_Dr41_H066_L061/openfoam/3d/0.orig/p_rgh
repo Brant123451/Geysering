@@ -27,9 +27,8 @@ boundaryField
     }
     atmosphere
     {
-        // Imposes absolute atmospheric pressure despite varying elevation.
-        type            prghPressure;
-        p               uniform 101325;
+        // Constant reduced pressure gives hydrostatic ambient absolute pressure.
+        type            fixedValue;
         value           uniform 101325;
     }
 }
