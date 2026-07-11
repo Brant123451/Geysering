@@ -1,8 +1,9 @@
 # Vasconcelos-Wright 2011 geysering: Case A
 
 This self-contained Case reproduces Case A from Vasconcelos and Wright (2011)
-with a planar, compressible air-water OpenFOAM model. See `manifest.yaml` for
-the machine-readable inventory and `reference/README.md` for the citation.
+with a circular 3-D compressible air-water OpenFOAM model. The validated planar
+model is retained as a legacy comparison. See `manifest.yaml` for the
+machine-readable inventory and `reference/README.md` for the citation.
 
 ## Contents
 
@@ -47,7 +48,10 @@ second.
 - Laminar, isothermal-start air-water VOF.
 - Ideal-gas air and weakly compressible water (`rho0 = 998.2 kg/m3`,
   `c = sqrt(2.2e6) = 1483 m/s`).
-- Approximately `4 mm` in-plane resolution, 26,128 cells.
+- Primary model: circular 3-D pipe and tower, approximately `6 mm` core
+  resolution and 138,292 cells.
+- Legacy model: vertical-plane geometry, approximately `4 mm` in-plane
+  resolution and 26,128 cells.
 - Serial or automatic Scotch decomposition, capped at six MPI ranks.
 
 ## Reproduce
@@ -57,26 +61,29 @@ environment or discover the packaged `openfoam2512` launcher; for other
 installations, set `OPENFOAM_BASHRC` to the installation's `etc/bashrc`.
 Python 3, NumPy, and Matplotlib are required for plots.
 
-From this directory:
+To validate and run the circular 3-D model from this directory:
 
 ```bash
-./scripts/validate.sh
-./scripts/run.sh
+./scripts/validate_3d.sh
+./scripts/run_3d.sh
 ```
 
-`validate.sh` builds the mesh and runs a short solver start-up in a temporary
-directory. `run.sh` performs the full 9 s simulation and regenerates
-`outputs/`. It automatically uses the available processors, capped at six;
-set `OPENFOAM_NP=4` to reproduce the tracked run or `OPENFOAM_NP=1` for a
-serial run. To continue an interrupted simulation or start over:
+`validate_3d.sh` checks the watertight surface, builds the mesh, verifies the
+physical chamber volume, and runs a short solver start-up in a temporary
+directory. `run_3d.sh` performs the full 9 s simulation and regenerates the
+3-D files in `outputs/`. It automatically uses the available processors,
+capped at six. To continue an interrupted 3-D simulation or start over:
 
 ```bash
-./scripts/resume.sh
-./scripts/clean.sh
-./scripts/run.sh
+./scripts/resume_3d.sh
+./scripts/clean_3d.sh
+./scripts/run_3d.sh
 ```
 
-## Validated result
+The original `validate.sh`, `run.sh`, `resume.sh`, and `clean.sh` commands
+operate on the legacy planar model.
+
+## Validated planar result
 
 The tracked outputs are from a completed 9 s OpenFOAM v2512 run:
 
@@ -91,7 +98,7 @@ The free-surface maximum and no-geyser outcome agree closely, while pressure
 and interface timing retain substantial model discrepancy. Detailed RMSE
 values are in `outputs/openfoam_2d_metrics.json`.
 
-## Important 2-D limitation
+## Why the 3-D model is needed
 
 The vertical-plane geometry preserves the published lengths and diameters but
 cannot preserve the circular pipe/tower area ratio. Its ratio is
@@ -100,7 +107,9 @@ cannot preserve the circular pipe/tower area ratio. Its ratio is
 literal volume in the planar mesh. The model also cannot resolve the
 three-dimensional annular wall film. This run is therefore a morphology and
 time-history diagnostic, not a geometry-exact substitute for a circular 3-D
-T-junction simulation.
+T-junction simulation. The primary 3-D model uses the physical circular ratio
+`(Dt/D)^2 = 0.369`, gives a discrete initial chamber volume of `3.769 L`
+versus the paper's `3.789 L` (0.53% mesh error), and resolves azimuthal flow.
 
 OpenFOAM time directories, `processor*`, raw probes, and logs are deliberately
-excluded. Recreate all of them with `./scripts/run.sh`.
+excluded. Recreate the 3-D run with `./scripts/run_3d.sh`.

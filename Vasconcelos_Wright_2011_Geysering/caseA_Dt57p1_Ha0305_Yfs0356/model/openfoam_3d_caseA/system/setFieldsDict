@@ -1,0 +1,42 @@
+/* Initial state from V&W2011 Case A.
+   p_air = p_atm + rho*g*0.305; tower free surface is 0.356 m above crown. */
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setFieldsDict;
+}
+
+defaultFieldValues
+(
+    volScalarFieldValue alpha.water 1
+    volScalarFieldValue p_rgh 105271.3
+    volScalarFieldValue p 105271.3
+    volScalarFieldValue T 293.15
+);
+
+regions
+(
+    boxToCell
+    {
+        box (-0.001 -0.05 -0.05) (0.546 0.05 0.05);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 0
+            volScalarFieldValue p_rgh 104311.7
+            volScalarFieldValue p 104311.7
+        );
+    }
+
+    boxToCell
+    {
+        box (3.48745 0.403 -0.02855) (3.54455 0.658 0.02855);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 0
+            volScalarFieldValue p_rgh 101330
+            volScalarFieldValue p 101325
+        );
+    }
+);

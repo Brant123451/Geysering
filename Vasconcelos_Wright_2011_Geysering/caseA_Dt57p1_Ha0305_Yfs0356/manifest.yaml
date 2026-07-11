@@ -1,6 +1,6 @@
 schema_version: 1
 case_id: caseA_Dt57p1_Ha0305_Yfs0356
-title: Vasconcelos-Wright 2011 Case A planar VOF reproduction
+title: Vasconcelos-Wright 2011 Case A circular 3-D VOF reproduction
 case_root: .
 
 source:
@@ -16,7 +16,9 @@ contents:
   experimental_data:
     - data/fig5_caseA_Hstar_band.csv
     - data/fig7_caseA_levels.csv
-  model: model/openfoam_2d_caseA
+  models:
+    primary_3d: model/openfoam_3d_caseA
+    legacy_planar_2d: model/openfoam_2d_caseA
   scripts: scripts
   reference: reference
   outputs: outputs
@@ -29,13 +31,15 @@ runtime:
     - matplotlib
     - numpy
   commands:
-    validate: ./scripts/validate.sh
-    run: ./scripts/run.sh
-    resume: ./scripts/resume.sh
-    clean: ./scripts/clean.sh
-    postprocess: python3 scripts/postprocess_compare.py
+    validate_3d: ./scripts/validate_3d.sh
+    run_3d: ./scripts/run_3d.sh
+    resume_3d: ./scripts/resume_3d.sh
+    clean_3d: ./scripts/clean_3d.sh
+    postprocess_3d: python3 scripts/postprocess_compare.py --model 3d
+    validate_2d: ./scripts/validate.sh
+    run_2d: ./scripts/run.sh
 
-validated_run:
+validated_planar_run:
   model_commit: a808bef573a4da09a5ded833ed1d2dc9495a1232
   output_commit: d29865b3ec3aaa1b9c7a38be6bf8d12d7c63dc77
   simulation_end_s: 9.0
@@ -47,8 +51,13 @@ validated_run:
     - outputs/openfoam_2d_levels_comparison.png
 
 excluded_generated_artifacts:
+  - model/openfoam_3d_caseA/[time directories]
+  - model/openfoam_3d_caseA/constant/polyMesh
+  - model/openfoam_3d_caseA/processor*
+  - model/openfoam_3d_caseA/postProcessing
+  - model/openfoam_3d_caseA/log.*
   - model/openfoam_2d_caseA/[time directories]
   - model/openfoam_2d_caseA/processor*
   - model/openfoam_2d_caseA/postProcessing
   - model/openfoam_2d_caseA/log.*
-restore_command: ./scripts/run.sh
+restore_command: ./scripts/run_3d.sh

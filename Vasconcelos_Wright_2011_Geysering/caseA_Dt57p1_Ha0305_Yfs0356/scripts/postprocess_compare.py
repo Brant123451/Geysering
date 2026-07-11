@@ -1,6 +1,7 @@
 """Extract OpenFOAM probe histories and compare them with V&W2011 Case A."""
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import math
@@ -15,7 +16,6 @@ import numpy as np
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 CASE_ROOT = SCRIPT_DIR.parent
-MODEL_DIR = CASE_ROOT / "model" / "openfoam_2d_caseA"
 DATA_DIR = CASE_ROOT / "data"
 OUT = CASE_ROOT / "outputs"
 OUT.mkdir(parents=True, exist_ok=True)
@@ -30,8 +30,8 @@ TIME_SCALE = math.sqrt(G * DT) / L_TOWER
 PROBE_Y = np.arange(0.052, 0.653, 0.010)
 
 
-def probe_files(name: str, field: str) -> list[Path]:
-    root = MODEL_DIR / "postProcessing" / name
+def probe_files(model_dir: Path, name: str, field: str) -> list[Path]:
+    root = model_dir / "postProcessing" / name
     if not root.exists():
         raise FileNotFoundError(root)
     return sorted(
@@ -40,9 +40,9 @@ def probe_files(name: str, field: str) -> list[Path]:
     )
 
 
-def read_probe(name: str, field: str) -> np.ndarray:
+def read_probe(model_dir: Path, name: str, field: str) -> np.ndarray:
     chunks = []
-    for path in probe_files(name, field):
+    for path in probe_files(model_dir, name, field):
         data = np.loadtxt(path, comments="#", ndmin=2)
         if data.size:
             chunks.append(data)
@@ -134,8 +134,19 @@ def json_number(value: float) -> float | None:
 
 
 def main() -> None:
-    transducer = read_probe("transducer", "p")
-    tower = read_probe("towerCentreline", "alpha.water")
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--model",
+        choices=("2d", "3d"),
+        default="2d",
+        help="OpenFOAM model dimensionality to process (default: 2d)",
+    )
+    args = parser.parse_args()
+    model_dir = CASE_ROOT / "model" / f"openfoam_{args.model}_caseA"
+    output_prefix = f"openfoam_{args.model}"
+
+    transducer = read_probe(model_dir, "transducer", "p")
+    tower = read_probe(model_dir, "towerCentreline", "alpha.water")
 
     time = transducer[:, 0]
     p = transducer[:, 1]
@@ -210,18 +221,25 @@ def main() -> None:
         "caveat": (
             "Planar 2-D area ratio Dt/D=0.607; physical circular area ratio "
             "(Dt/D)^2=0.369. No event-time shift was applied."
+            if args.model == "2d"
+            else "Circular 3-D pipe and tower preserve the physical area ratio "
+            "(Dt/D)^2=0.369. No event-time shift was applied."
         ),
     }
 
-    with (OUT / "openfoam_2d_series.csv").open("w", newline="", encoding="utf-8") as stream:
+    with (OUT / f"{output_prefix}_series.csv").open(
+        "w", newline="", encoding="utf-8"
+    ) as stream:
         writer = csv.writer(stream, lineterminator="\n")
         writer.writerow(["time_s", "Tstar", "Hstar_raw", "Hstar_smooth"])
         writer.writerows(zip(time, tstar, hstar_raw, hstar))
-    with (OUT / "openfoam_2d_levels.csv").open("w", newline="", encoding="utf-8") as stream:
+    with (OUT / f"{output_prefix}_levels.csv").open(
+        "w", newline="", encoding="utf-8"
+    ) as stream:
         writer = csv.writer(stream, lineterminator="\n")
         writer.writerow(["time_s", "Tstar", "Yint_star", "Yfs_star"])
         writer.writerows(zip(t_tower, tstar_tower, yint, yfs))
-    (OUT / "openfoam_2d_metrics.json").write_text(
+    (OUT / f"{output_prefix}_metrics.json").write_text(
         json.dumps(metrics, indent=2, allow_nan=False) + "\n",
         encoding="utf-8",
     )
@@ -248,9 +266,9 @@ def main() -> None:
     ax.grid(alpha=0.25)
     ax.legend(frameon=False, fontsize=8)
     fig.tight_layout()
-    fig.savefig(OUT / "openfoam_2d_pressure_comparison.png", dpi=300)
+    fig.savefig(OUT / f"{output_prefix}_pressure_comparison.png", dpi=300)
     fig.savefig(
-        OUT / "openfoam_2d_pressure_comparison.pdf",
+        OUT / f"{output_prefix}_pressure_comparison.pdf",
         metadata={"CreationDate": None, "ModDate": None},
     )
     plt.close(fig)
@@ -287,9 +305,9 @@ def main() -> None:
     ax.grid(alpha=0.25)
     ax.legend(frameon=False, fontsize=8, ncol=2)
     fig.tight_layout()
-    fig.savefig(OUT / "openfoam_2d_levels_comparison.png", dpi=300)
+    fig.savefig(OUT / f"{output_prefix}_levels_comparison.png", dpi=300)
     fig.savefig(
-        OUT / "openfoam_2d_levels_comparison.pdf",
+        OUT / f"{output_prefix}_levels_comparison.pdf",
         metadata={"CreationDate": None, "ModDate": None},
     )
     plt.close(fig)

@@ -1,5 +1,5 @@
 case_id: caseA_Dt57p1_Ha0305_Yfs0356
-description: Vasconcelos and Wright (2011) Case A, planar OpenFOAM model
+description: Vasconcelos and Wright (2011) Case A, circular 3-D OpenFOAM model
 
 geometry_m:
   horizontal_pipe_diameter: 0.094
@@ -23,19 +23,29 @@ numerics:
   software: OpenFOAM
   version: v2512
   solver: compressibleInterFoam
-  dimensions: 2
   turbulence_model: laminar
-  nominal_in_plane_cell_size_m: 0.004
-  expected_cells: 26128
   simulation_end_s: 9.0
   maximum_mpi_ranks: 6
+  circular_3d:
+    dimensions: 3
+    nominal_core_cell_size_m: 0.006
+    expected_cells: 138292
+    mesher: blockMesh + snappyHexMesh
+    exact_area_ratio: 0.3691
+  legacy_planar_2d:
+    dimensions: 2
+    nominal_in_plane_cell_size_m: 0.004
+    expected_cells: 26128
 
 paths:
-  model: ../model/openfoam_2d_caseA
+  primary_model: ../model/openfoam_3d_caseA
+  legacy_planar_model: ../model/openfoam_2d_caseA
   pressure_reference_data: ../data/fig5_caseA_Hstar_band.csv
   level_reference_data: ../data/fig7_caseA_levels.csv
   outputs: ../outputs
 
 notes:
   - OpenFOAM dictionaries are the executable source of truth.
-  - The planar tower-to-pipe area ratio is 0.607; the physical circular ratio is 0.369.
+  - The 3-D pipe and tower are circular and preserve the physical area ratio.
+  - The tracked STL is a watertight Boolean union generated at 128 sections per circle.
+  - The legacy planar model remains available for comparison.
