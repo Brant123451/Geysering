@@ -50,6 +50,19 @@ validated_planar_run:
     - outputs/openfoam_2d_pressure_comparison.png
     - outputs/openfoam_2d_levels_comparison.png
 
+validated_circular_3d_run:
+  model_commit: caf56107454d826535b652ac281d2ed5c1f24370
+  postprocess_commit: a8af61fee65f83ca70b21f825d0f62db46965527
+  output_commit: b0deae68fc4c71cf61254fe21872723bd049a31b
+  simulation_end_s: 9.0
+  mpi_ranks: 4
+  mesh_cells: 138292
+  initial_chamber_volume_m3: 0.00376901825
+  metrics: outputs/openfoam_3d_metrics.json
+  figures:
+    - outputs/openfoam_3d_pressure_comparison.png
+    - outputs/openfoam_3d_levels_comparison.png
+
 excluded_generated_artifacts:
   - model/openfoam_3d_caseA/[time directories]
   - model/openfoam_3d_caseA/constant/polyMesh

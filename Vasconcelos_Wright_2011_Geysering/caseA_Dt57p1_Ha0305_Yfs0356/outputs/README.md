@@ -3,7 +3,8 @@
 The `openfoam_2d_*` files come from the 9 s OpenFOAM v2512 planar run recorded
 by repository commit `d29865b`; its executable model revision is `a808bef`.
 The `openfoam_3d_*` files come from the 9 s circular run based on executable
-model revision `caf5610`. Both solvers used four MPI ranks.
+model revision `caf5610` and are recorded by result commit `b0deae6`. Both
+solvers used four MPI ranks.
 
 - `openfoam_{2d,3d}_metrics.json`: scalar comparison metrics.
 - `openfoam_{2d,3d}_series.csv`: pressure-head time histories.
