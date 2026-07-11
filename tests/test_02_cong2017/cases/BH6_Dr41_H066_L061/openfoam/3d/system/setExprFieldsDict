@@ -15,11 +15,13 @@ expressions
     {
         field       p;
         dimensions  [1 -1 -2 0 0 0 0];
+        fieldMask
+        #{
+            alpha.water > 0.5
+        #};
         expression
         #{
-            101325
-          + alpha.water
-           *(6216.3913 - 998*9.81*pos().z())
+            107541.3913 - 998*9.81*pos().z()
         #};
     }
 );
