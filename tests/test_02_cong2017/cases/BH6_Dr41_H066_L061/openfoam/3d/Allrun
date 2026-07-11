@@ -86,6 +86,8 @@ checkMesh -allGeometry -allTopology > log.checkMesh 2>&1
 
 cp -a 0.orig 0
 setFields > log.setFields 2>&1
+postProcess -func hydrostaticInitialize -time 0 \
+    > log.hydrostaticInitialize 2>&1
 
 foamDictionary system/controlDict \
     -entry endTime -set "$END_TIME" >/dev/null

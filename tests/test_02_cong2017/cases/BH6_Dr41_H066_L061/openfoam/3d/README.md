@@ -53,9 +53,9 @@ so pipe invert is `z=-0.025 m`, initial free surface is `z=0.635 m`, and the
 water-side reduced pressure is
 `p_rgh = p_atm + rho_w g (0.635 m)`.
 `p_rgh` is the solved pressure and exactly encodes that hydrostatic state.
-The thermodynamic `p` seed is piecewise atmospheric/water-side pressure at the
-pipe centreline; `compressibleInterFoam` reconstructs its elevation variation
-from `p_rgh + rho gh` in the first pressure correction.
+Before decomposition, the `hydrostaticInitialize` function writes the
+thermodynamic `p` field as `p_rgh + rho gh` in water and `p_atm` in air.  This
+avoids using the first transient pressure correction as an initializer.
 
 | Region / patch | `U` | `p` / `p_rgh` | `alpha.water` | `T` |
 |---|---|---|---|---|

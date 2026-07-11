@@ -1,0 +1,50 @@
+hydrostaticInitialize
+{
+    type            coded;
+    libs            (utilityFunctionObjects);
+    name            bh6HydrostaticInitializer;
+
+    codeInclude
+    #{
+        #include "fvCFD.H"
+    #};
+
+    codeExecute
+    #{
+        volScalarField pressure
+        (
+            IOobject
+            (
+                "p",
+                mesh().time().timeName(),
+                mesh(),
+                IOobject::MUST_READ,
+                IOobject::AUTO_WRITE
+            ),
+            mesh()
+        );
+        const volScalarField alpha
+        (
+            IOobject
+            (
+                "alpha.water",
+                mesh().time().timeName(),
+                mesh(),
+                IOobject::MUST_READ,
+                IOobject::NO_WRITE
+            ),
+            mesh()
+        );
+        const vectorField& centres = mesh().C();
+        forAll(pressure, cellI)
+        {
+            pressure[cellI] =
+                alpha[cellI] > 0.5
+              ? 107541.3913 - 998.0*9.81*centres[cellI].z()
+              : 101325.0;
+        }
+        pressure.correctBoundaryConditions();
+        pressure.write();
+        Info<< "BH6_HYDROSTATIC_P_INITIALIZED" << nl;
+    #};
+}
