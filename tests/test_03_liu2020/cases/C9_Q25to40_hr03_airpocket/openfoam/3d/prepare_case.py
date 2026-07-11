@@ -531,6 +531,13 @@ def generate(args: argparse.Namespace) -> dict:
     model = raw["model"].copy()
     mesh = raw["mesh_profiles"][args.mesh_profile]
     pocket = model["pocket_profiles"][args.pocket_profile].copy()
+    thin_layer_cell_size = (
+        args.thin_layer_cell_size
+        if args.thin_layer_cell_size is not None
+        else mesh["cartesian_thin_layer_cell_size_m"]
+    )
+    if thin_layer_cell_size <= 0:
+        raise ValueError("cartesian thin-layer cell size must be positive")
     if args.air_cp is not None:
         model["air_Cp_J_kg_K"] = args.air_cp
     if args.water_bulk_modulus is not None:
@@ -639,7 +646,7 @@ boundary
             f"""    thinLayer{i:02d}
     {{
         type box;
-        cellSize {mesh['cartesian_thin_layer_cell_size_m']:.8g};
+        cellSize {thin_layer_cell_size:.8g};
         centre ({xm:.8g} 0 {crown - 0.5 * thin_layer:.8g});
         lengthX {x1 - x0 + 0.005:.8g};
         lengthY {thin_refinement_width:.8g};
@@ -1552,11 +1559,14 @@ rm -f log.*
         "main_body_probe_depth_below_crown_m": pocket["thin_layer_m"] + 0.004,
         "thin_layer_refinement_segments": n_thin_refinement,
         "thin_layer_target_cells": (
-            pocket["thin_layer_m"] / mesh["cartesian_thin_layer_cell_size_m"]
+            pocket["thin_layer_m"] / thin_layer_cell_size
             if args.mesh_generator == "cartesian"
             else 2 ** mesh["thin_layer_level"]
             * pocket["thin_layer_m"]
             / ((2.72 - (-0.05)) / mesh["background_cells"][2])
+        ),
+        "cartesian_thin_layer_cell_size_m": (
+            thin_layer_cell_size if args.mesh_generator == "cartesian" else None
         ),
         "gate_area_m2": gate_area,
         "gate_area_kind": "resolved_geometric",
@@ -1605,10 +1615,21 @@ def main() -> None:
     parser.add_argument("--contact-angle", type=float)
     parser.add_argument("--c-alpha", type=float)
     parser.add_argument(
+        "--thin-layer-cell-size",
+        type=float,
+        help=(
+            "override only the cfMesh crown-layer cell size; used to isolate "
+            "thin-layer resolution from the full refined-mesh profile"
+        ),
+    )
+    parser.add_argument(
         "--velocity-limit",
         type=float,
-        default=12.0,
-        help="maximum |U| in m/s; use 0 to disable clipping for the control sensitivity",
+        default=0.0,
+        help=(
+            "optional diagnostic maximum |U| in m/s; 0 keeps the production "
+            "case free of velocity clipping"
+        ),
     )
     parser.add_argument("--max-co", type=float, default=0.35)
     parser.add_argument("--max-alpha-co", type=float, default=0.20)

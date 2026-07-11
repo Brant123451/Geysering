@@ -7,10 +7,4 @@ FoamFile
     object      fvOptions;
 }
 
-limitU
-{
-    type limitVelocity;
-    active yes;
-    selectionMode all;
-    max 12;
-}
+// Velocity clipping disabled for the control case.

@@ -24,6 +24,7 @@ OUTPUT = HERE.parents[1] / "outputs" / "openfoam_3d_mesh_sensitivity.csv"
 VARIANTS = {
     "base": [],
     "mesh_refined": ["--mesh-profile", "refined"],
+    "thin_layer_refined": ["--thin-layer-cell-size", "0.0025"],
     "mesh_snappy": ["--mesh-generator", "snappy"],
     "time_tight": ["--max-co", "0.20", "--max-alpha-co", "0.10", "--max-dt", "0.00025"],
     "pocket_small": ["--pocket-profile", "pocket_small"],
@@ -38,6 +39,7 @@ VARIANTS = {
     "contact_angle_120": ["--contact-angle", "120"],
     "interface_compression_05": ["--c-alpha", "0.5"],
     "interface_compression_15": ["--c-alpha", "1.5"],
+    "velocity_limit_12": ["--velocity-limit", "12"],
     "velocity_limit_20": ["--velocity-limit", "20"],
     "velocity_unlimited": ["--velocity-limit", "0"],
 }
@@ -152,6 +154,10 @@ def main():
                     "interface_solver": generated.get("interface_solver"),
                     "mesh_generator": generated.get("mesh_generator"),
                     "mesh_profile": generated.get("mesh_profile"),
+                    "thin_layer_cell_size_m": generated.get(
+                        "cartesian_thin_layer_cell_size_m"
+                    ),
+                    "thin_layer_target_cells": generated.get("thin_layer_target_cells"),
                     "cells": mesh.get("cells"),
                     "checkMesh_passed": mesh.get("checkMesh_passed"),
                     "strict_check_passed": mesh.get("all_geometry_passed"),
@@ -193,6 +199,8 @@ def main():
         "interface_solver",
         "mesh_generator",
         "mesh_profile",
+        "thin_layer_cell_size_m",
+        "thin_layer_target_cells",
         "cells",
         "checkMesh_passed",
         "strict_check_passed",
