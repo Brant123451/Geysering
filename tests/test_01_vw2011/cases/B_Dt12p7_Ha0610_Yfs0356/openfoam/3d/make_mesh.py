@@ -39,6 +39,9 @@ ATMOSPHERE_HEIGHT = 1.200
 EXTERIOR_DROP_BELOW_RIM = 0.400
 ASSUMED_TOWER_WALL_THICKNESS = 0.002
 BOOLEAN_OVERLAP = 1e-5
+BOX_TRANSITION = 0.040
+OPTIMIZE_THRESHOLD = 0.35
+ALGORITHMS = {"hxt": 10, "delaunay": 1}
 
 PRESETS = {
     "base": {
@@ -65,6 +68,19 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", type=Path, default=Path("caseB3d.msh"))
     parser.add_argument("--metadata", type=Path)
     parser.add_argument("--preset", choices=sorted(PRESETS), default="base")
+    parser.add_argument("--algorithm", choices=sorted(ALGORITHMS), default="hxt")
+    parser.add_argument(
+        "--optimizer",
+        choices=("none", "gmsh", "netgen", "relocate"),
+        default="netgen",
+        help="Explicit post-generation tetrahedron optimization sequence",
+    )
+    parser.add_argument(
+        "--transition-thickness",
+        type=float,
+        default=BOX_TRANSITION,
+        help="Linear transition thickness outside refinement boxes in metres",
+    )
     for key in PRESETS["base"]:
         parser.add_argument(
             "--" + key.replace("_", "-"),
@@ -84,6 +100,7 @@ def box_field(
     ymax: float,
     zmin: float,
     zmax: float,
+    thickness: float,
 ) -> int:
     tag = gmsh.model.mesh.field.add("Box")
     for name, value in (
@@ -95,6 +112,7 @@ def box_field(
         ("YMax", ymax),
         ("ZMin", zmin),
         ("ZMax", zmax),
+        ("Thickness", thickness),
     ):
         gmsh.model.mesh.field.setNumber(tag, name, value)
     return tag
@@ -113,6 +131,8 @@ def main() -> None:
             sizes[key] = override
     if any(value <= 0 for value in sizes.values()):
         raise ValueError("All mesh sizes must be positive")
+    if args.transition_thickness < 0:
+        raise ValueError("Transition thickness cannot be negative")
     if sizes["tower_size"] > TOWER_DIAMETER / 10:
         raise ValueError("Tower size would provide fewer than ten nominal cells across")
 
@@ -227,6 +247,7 @@ def main() -> None:
                 PIPE_RADIUS + 0.01,
                 -PIPE_RADIUS - 0.01,
                 PIPE_RADIUS + 0.01,
+                args.transition_thickness,
             ),
             # Initial pocket nose and finite-resistance butterfly-valve zone.
             box_field(
@@ -238,6 +259,7 @@ def main() -> None:
                 PIPE_RADIUS + 0.004,
                 -PIPE_RADIUS - 0.004,
                 PIPE_RADIUS + 0.004,
+                args.transition_thickness,
             ),
             # Entire small tower, including its initial free surface.
             box_field(
@@ -249,6 +271,7 @@ def main() -> None:
                 TOWER_RIM_Y + 0.025,
                 -TOWER_RADIUS - 0.003,
                 TOWER_RADIUS + 0.003,
+                args.transition_thickness,
             ),
             # Circular tee junction, where both curvature and phase topology
             # change rapidly.
@@ -261,6 +284,7 @@ def main() -> None:
                 PIPE_RADIUS + 0.040,
                 -TOWER_RADIUS - 0.006,
                 TOWER_RADIUS + 0.006,
+                args.transition_thickness,
             ),
             # Resolved near-rim jet.
             box_field(
@@ -272,17 +296,22 @@ def main() -> None:
                 TOWER_RIM_Y + 0.250,
                 -0.018,
                 0.018,
+                args.transition_thickness,
             ),
-            # Coarser plume corridor through the full exterior height.
+            # A 4 mm buffer surrounds the full exterior casing before the
+            # field grades to the far-atmosphere size.  Without this lower
+            # extension, 1.05 mm casing faces connected directly to 25 mm
+            # exterior cells and produced severe OpenFOAM quality failures.
             box_field(
                 sizes["jet_size"],
                 far,
                 TOWER_CENTRE_X - 0.040,
                 TOWER_CENTRE_X + 0.040,
-                TOWER_RIM_Y - 0.020,
+                atmosphere_min_y,
                 atmosphere_top_y,
                 -0.040,
                 0.040,
+                args.transition_thickness,
             ),
         ]
         minimum = gmsh.model.mesh.field.add("Min")
@@ -293,14 +322,25 @@ def main() -> None:
         gmsh.option.setNumber("Mesh.MeshSizeMax", far)
         gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
         gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
-        gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 24)
-        gmsh.option.setNumber("Mesh.Algorithm3D", 10)  # HXT tetrahedral
-        gmsh.option.setNumber("Mesh.Optimize", 1)
-        gmsh.option.setNumber("Mesh.OptimizeNetgen", 1)
+        gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 0)
+        gmsh.option.setNumber("Mesh.Algorithm3D", ALGORITHMS[args.algorithm])
+        gmsh.option.setNumber("Mesh.OptimizeThreshold", OPTIMIZE_THRESHOLD)
+        # HXT performs its own internal improvement, but does not honor the
+        # normal automatic Netgen pass.  Run explicit, auditable optimization
+        # below for both algorithms instead of relying on these toggles.
+        gmsh.option.setNumber("Mesh.Optimize", 0)
+        gmsh.option.setNumber("Mesh.OptimizeNetgen", 0)
         gmsh.option.setNumber("Mesh.MshFileVersion", 2.2)
         gmsh.option.setNumber("Mesh.Binary", 0)
 
         gmsh.model.mesh.generate(3)
+        if args.optimizer != "none":
+            gmsh.model.mesh.optimize("", niter=2)
+        if args.optimizer == "netgen":
+            gmsh.model.mesh.optimize("Netgen", niter=1)
+        elif args.optimizer == "relocate":
+            gmsh.model.mesh.optimize("Relocate3D", niter=5)
+            gmsh.model.mesh.optimize("", niter=1)
         gmsh.write(str(args.output))
 
         element_tags = gmsh.model.mesh.getElements(3)[1]
@@ -312,6 +352,13 @@ def main() -> None:
             "case": "VW2011 Test 1 Case B",
             "preset": args.preset,
             "mesh_file": str(args.output),
+            "gmsh_version": gmsh.__version__,
+            "algorithm": args.algorithm,
+            "algorithm_code": ALGORITHMS[args.algorithm],
+            "optimizer": args.optimizer,
+            "optimize_threshold": OPTIMIZE_THRESHOLD,
+            "box_transition_thickness_m": args.transition_thickness,
+            "mesh_size_from_curvature": 0,
             "cells_gmsh_3d": n_cells,
             "fluid_volume_m3": actual_volume,
             "pipe_diameter_m": PIPE_DIAMETER,

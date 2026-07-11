@@ -103,7 +103,12 @@ and drift, which are not optional completion evidence.
 Gmsh OpenCASCADE fuses the three circular/exterior volumes and HXT creates
 unstructured tetrahedra.  Refinement boxes target the tower, circular tee,
 valve and initial pocket nose, initial free surface, near-rim jet and plume
-corridor.  The long main pipe and far atmosphere remain coarse.
+corridor.  A 40 mm linear transition surrounds each box, and a 4 mm corridor
+extends around the full exterior tower casing; this prevents fine casing
+triangles from connecting directly to far-atmosphere cells.  HXT is followed
+by explicit Gmsh and Netgen tetrahedron optimization.  The selected algorithm,
+optimizer, transition thickness and Gmsh version are written to the mesh
+metadata.  The long main pipe and far atmosphere remain coarse.
 
 | preset | nominal tower edge | nominal edges across \(D_t\) | pipe edge | purpose |
 |---|---:|---:|---:|---|
