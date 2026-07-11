@@ -198,7 +198,9 @@ functions
         regionType      faceZone;
         name            riserMouth;
         fields          (phi alphaPhi0.water airPhi rhoPhi);
-        operation       orientedSum;
+        // Face-zone flipMap supplies a common upward orientation for oriented
+        // surface fields; "sum" is the valid v2512 scalar-flux operation.
+        operation       sum;
         writeControl    adjustableRunTime;
         writeInterval   0.01;
     }

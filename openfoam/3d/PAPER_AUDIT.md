@@ -102,8 +102,10 @@ measurements exist:
    end-pocket gas-pressure volume average. The repository's unsupported
    `x=5.85 m` is not used for the 3-D probe.
 4. **Valve:** the companion CFD baseline is an instantaneous fully open
-   internal connection at `t=0`; a separate closed-disk mesh is used only for
-   the static-hold check. Opening-time sensitivity uses the same monotone,
+   internal connection at `t=0`; the static-hold check converts the
+   `x=5.99 m` face zone to a zero-thickness impermeable wall baffle. This is a
+   numerical closed-disk representation used only for that check. Opening-time
+   sensitivity uses the same monotone,
    non-fitted normalized effective-area law for `0.2 s` and `0.5 s`. It is
    labelled an equivalent-valve uncertainty study, not a measured ball-angle
    history. No pressure or velocity source may be used.

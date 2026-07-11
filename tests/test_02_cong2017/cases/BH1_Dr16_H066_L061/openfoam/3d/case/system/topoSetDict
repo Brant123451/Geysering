@@ -42,4 +42,22 @@ actions
         source          boxToCell;
         box             (3.319 1.824 -0.151) (3.621 3.026 0.151);
     }
+    {
+        name            valvePlane;
+        type            faceZoneSet;
+        action          new;
+        source          planeToFaceZone;
+        point           (5.99 0 0);
+        normal          (1 0 0);
+        option          closest;
+    }
+    {
+        name            riserMouth;
+        type            faceZoneSet;
+        action          new;
+        source          planeToFaceZone;
+        point           (3.47 1.82 0);
+        normal          (0 1 0);
+        option          closest;
+    }
 );

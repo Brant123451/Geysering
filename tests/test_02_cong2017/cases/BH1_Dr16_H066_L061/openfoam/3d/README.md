@@ -25,9 +25,10 @@ is upward, and `z` is transverse. The main axis is `y=z=0`.
 | Physical rim above pipe crown | `1.800 m` |
 | External atmosphere | `0.30 x 0.30 x 1.20 m` above the rim |
 
-`make_mesh.py` uses OpenCASCADE Boolean unions, so the circular main and riser
-form one conformal three-dimensional T-junction. The external box begins only
-at the physical rim; it is not a confined `3.0 m` riser.
+`make_geometry.py` uses OpenCASCADE Boolean unions and exports a watertight CAD
+boundary for `snappyHexMesh`, so the circular main and riser form one conformal
+three-dimensional T-junction. The external box begins only at the physical
+rim; it is not a confined `3.0 m` riser.
 
 ## Initial state
 
@@ -51,7 +52,7 @@ volume is checked against the analytic pocket before an event result is used.
 | Patch | `U` | `p_rgh` / `p` | `alpha.water` | `T` |
 |---|---|---|---|---|
 | `inlet` | `pressureInletOutletVelocity` | fixed hydrostatic `p_rgh=107543.13717 Pa`; `p` calculated | fixed water `1` | `inletOutlet`, `296.15 K` inflow |
-| `walls` (acrylic, floor, cap, closed disk) | `noSlip` | `fixedFluxPressure`; `p` calculated | `zeroGradient` | adiabatic `zeroGradient` |
+| `walls` (acrylic, floor, cap, static-check valve disk) | `noSlip` | `fixedFluxPressure`; `p` calculated | `zeroGradient` | adiabatic `zeroGradient` |
 | `atmosphere` (external sides/top) | `pressureInletOutletVelocity` | `prghTotalPressure`, `p0=101325 Pa`; `p` calculated | `inletOutlet`, air on inflow | `inletOutlet`, `296.15 K` inflow |
 | equivalent-valve cyclic pair | cyclic | time-varying `porousBafflePressure`; `p` cyclic | cyclic | cyclic |
 
@@ -64,8 +65,9 @@ described as a measured `90 deg` contact angle.
 
 1. The event baseline is fully open at `t=0`, matching the instantaneous
    opening used by Chan et al. (2018).
-2. The closed-valve static check uses a separate mesh with a physical `1 mm`
-   solid disk. It is not continued into the event run.
+2. The closed-valve static check converts the `x=5.99 m` face zone into a
+   zero-thickness impermeable no-slip wall baffle. This is a numerical
+   closed-disk representation and is not continued into the event run.
 3. The `0.2 s` and `0.5 s` sensitivities use a zero-thickness cyclic pressure
    jump. Its declared effective area is
    `A/A0=sin(pi*t/(2*tau))^2`; the loss is `K=(A0/A)^2-1`.
@@ -80,8 +82,8 @@ The declared nominal sizes are:
 
 | Mesh | Main | 16 mm riser | Exterior far field |
 |---|---:|---:|---:|
-| base | `6.25 mm` | `2.00 mm` | `20 mm` |
-| refined | `4.50 mm` | `1.40 mm` | `14 mm` |
+| base | `6.25 mm` | `1.5625 mm` | `12.5 mm` plume |
+| refined | `3.125 mm` | `0.78125 mm` | `6.25 mm` plume |
 
 Each run is created under ignored `runs/`; source templates remain clean.
 OpenFOAM v2512, Gmsh, NumPy, and Matplotlib are required.
@@ -129,7 +131,9 @@ Gas and water conservation use
 `final inventory + integrated outward boundary flux - initial inventory`.
 
 The external atmosphere is open, so raw gas inventory alone is not a
-conservation test. The compact metrics include the boundary-flux budget.
+conservation test. The gas boundary budget uses the solver's compressible
+`rhoPhi` minus the water-volume flux times `998.2 kg/m3`; it does not assume
+that expelled or ingested air remains at atmospheric density.
 
 Generated `processor*`, `polyMesh`, time directories, `postProcessing`, logs,
 and `.msh` files are ignored and must never be committed.

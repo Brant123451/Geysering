@@ -221,6 +221,11 @@ def main() -> None:
             "volFieldValue.dat",
             "alpha.water",
         ),
+        "riser_water": (
+            "riserWaterVolume",
+            "volFieldValue.dat",
+            "alpha.water",
+        ),
     }
     series: dict[str, np.ndarray] = {}
     for key, (function_name, filename, needle) in function_specs.items():
@@ -270,14 +275,19 @@ def main() -> None:
                 else np.full(time.shape, np.nan)
             )
 
-    net_water_out = (
+    net_water_volume_out = (
         boundary_flux["atmosphere_water_phi"] + boundary_flux["inlet_water_phi"]
     )
-    net_air_out = (
-        boundary_flux["atmosphere_air_phi"] + boundary_flux["inlet_air_phi"]
+    net_total_mass_out = (
+        boundary_flux["atmosphere_mass_phi"] + boundary_flux["inlet_mass_phi"]
     )
-    cumulative_water_out_mass = trapz_flux(time, net_water_out) * RHO_WATER
-    cumulative_air_out_mass = trapz_flux(time, net_air_out) * RHO_AIR_ATM
+    # rhoPhi is the solver's compressible mixture mass flux.  Subtracting the
+    # nearly incompressible water contribution preserves the varying air
+    # density instead of multiplying air volume flux by atmospheric density.
+    net_water_mass_out = net_water_volume_out * RHO_WATER
+    net_air_mass_out = net_total_mass_out - net_water_mass_out
+    cumulative_water_out_mass = trapz_flux(time, net_water_mass_out)
+    cumulative_air_out_mass = trapz_flux(time, net_air_mass_out)
 
     water_mass = series["water_mass"]
     gas_mass = series["gas_mass"]
@@ -303,10 +313,14 @@ def main() -> None:
         "PT2_head_m",
         "pocket_head_m",
         "tunnel_gas_volume_m3",
+        "riser_water_volume_m3",
         "exterior_water_volume_m3",
         "rim_water_flow_m3_s",
         "atmosphere_water_flow_m3_s",
         "atmosphere_air_flow_m3_s",
+        "atmosphere_total_mass_flow_kg_s",
+        "inlet_total_mass_flow_kg_s",
+        "net_air_mass_flow_kg_s",
         "water_mass_kg",
         "gas_mass_kg",
         "water_mass_budget_kg",
@@ -321,10 +335,14 @@ def main() -> None:
             pt2_head,
             pocket_head,
             series["tunnel_gas_volume"],
+            series["riser_water"],
             series["ejected_water"],
             boundary_flux["rim_water_phi"],
             boundary_flux["atmosphere_water_phi"],
             boundary_flux["atmosphere_air_phi"],
+            boundary_flux["atmosphere_mass_phi"],
+            boundary_flux["inlet_mass_phi"],
+            net_air_mass_out,
             water_mass,
             gas_mass,
             water_budget,
@@ -361,6 +379,12 @@ def main() -> None:
         "PT1_peak_over_H0": float(np.nanmax(pt1_head / H0)),
         "pocket_peak_over_H0": float(np.nanmax(pocket_head / H0)),
         "ejected_water_max_m3": float(np.nanmax(series["ejected_water"])),
+        "rim_water_flow_peak_m3_s": float(
+            np.nanmax(np.abs(boundary_flux["rim_water_phi"]))
+        ),
+        "atmosphere_water_outflow_peak_m3_s": float(
+            np.nanmax(boundary_flux["atmosphere_water_phi"])
+        ),
         "initial_inventory": {
             "water_volume_m3": float(series["water_volume"][0]),
             "total_gas_volume_m3": float(series["gas_volume"][0]),
@@ -382,6 +406,9 @@ def main() -> None:
                 gas_budget_error, float(gas_budget[0])
             ),
             "budget_definition": "final inventory + integrated outward boundary flux - initial inventory",
+            "gas_flux_definition": (
+                "solver rhoPhi minus alphaPhi0.water times 998.2 kg/m3"
+            ),
         },
         "experimental_targets": {
             "classification": "GEYSER",
@@ -455,6 +482,15 @@ def main() -> None:
     axes[1].plot(time, pocket_head / H0, label="3-D pocket average", color="#ff7f0e")
     if one_d:
         axes[1].plot(one_d["t_s"], one_d["pocket_head_m"] / H0, "--", color="0.35", label="1-D pocket")
+        if "tr_head_m" in one_d:
+            axes[1].plot(
+                one_d["t_s"],
+                one_d["tr_head_m"] / H0,
+                ":",
+                color="#9467bd",
+                alpha=0.65,
+                label="1-D PT1 (different operator)",
+            )
     if exp_pressure:
         axes[1].fill_between(
             exp_pressure["t_s"],

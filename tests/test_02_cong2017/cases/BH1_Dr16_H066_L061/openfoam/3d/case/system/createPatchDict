@@ -26,6 +26,6 @@ patches
         name walls;
         patchInfo { type wall; }
         constructFrom patches;
-        patches (walls);
+        patches (walls riserWall);
     }
 );

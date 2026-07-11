@@ -62,7 +62,7 @@
   },
   "valve": {
     "baseline": "instantaneously fully open at t=0, matching Chan et al. (2018)",
-    "static_hold": "separate 1 mm solid disk at x=5.99 m",
+    "static_hold": "zero-thickness impermeable no-slip wall baffle at x=5.99 m",
     "sensitivity_durations_s": [
       0.2,
       0.5
@@ -73,13 +73,13 @@
   "meshes": {
     "base": {
       "pipe_size_m": 0.00625,
-      "riser_size_m": 0.002,
-      "plume_size_m": 0.02
+      "riser_size_m": 0.0015625,
+      "plume_size_m": 0.0125
     },
     "refined": {
-      "pipe_size_m": 0.0045,
-      "riser_size_m": 0.0014,
-      "plume_size_m": 0.014
+      "pipe_size_m": 0.003125,
+      "riser_size_m": 0.00078125,
+      "plume_size_m": 0.00625
     }
   },
   "solver": {

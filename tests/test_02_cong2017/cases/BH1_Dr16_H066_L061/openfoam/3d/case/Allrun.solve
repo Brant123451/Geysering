@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MODEL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -9,6 +8,8 @@ OUTPUT_DIR="$CASE_ROOT/outputs/openfoam3d"
 RUN_NAME="${BH1_RUN_NAME:-base-open}"
 RUN_DIR="$MODEL_DIR/runs/$RUN_NAME"
 MODE="${BH1_MODE:-full}"
+MESH_LEVEL="${BH1_MESH_LEVEL:-base}"
+VALVE_STATE="${BH1_VALVE_STATE:-open}"
 VALVE_DURATION="${BH1_VALVE_DURATION:-0}"
 NP="${OPENFOAM_NP:-$(nproc)}"
 
@@ -30,6 +31,14 @@ case "$MODE" in
         exit 2
         ;;
 esac
+if [[ "$MODE" == "static" && "$VALVE_STATE" != "closed" ]]; then
+    echo "Static mode requires BH1_VALVE_STATE=closed" >&2
+    exit 2
+fi
+if [[ "$MODE" != "static" && "$VALVE_STATE" != "open" ]]; then
+    echo "Event modes require BH1_VALVE_STATE=open" >&2
+    exit 2
+fi
 
 if [[ ! -f /usr/lib/openfoam/openfoam2512/etc/bashrc ]]; then
     echo "OpenFOAM v2512 is required at /usr/lib/openfoam/openfoam2512" >&2
@@ -50,6 +59,7 @@ elif (( NP < 1 )); then
 fi
 
 source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
 mkdir -p "$OUTPUT_DIR"
 cd "$RUN_DIR"
 
@@ -58,11 +68,19 @@ python3 "$MODEL_DIR/generate_probes.py" \
     --output system/riserProbeLocations.runtime
 setFields > log.setFields 2>&1
 
-if [[ "$VALVE_DURATION" != "0" && "$VALVE_DURATION" != "0.0" ]]; then
-    if [[ "$MODE" == "static" ]]; then
-        echo "The static check uses the solid closed-valve mesh, not a baffle" >&2
-        exit 6
-    fi
+if [[ "$MODE" == "static" ]]; then
+    createBaffles \
+        -dict system/createBafflesDict.closed \
+        -overwrite > log.createBaffles.closed 2>&1
+    checkMesh -allGeometry -allTopology > log.checkMesh.afterBaffle 2>&1
+    python3 "$MODEL_DIR/audit_mesh.py" \
+        --run-dir "$RUN_DIR" \
+        --geometry "$OUTPUT_DIR/mesh-${RUN_NAME}.json" \
+        --output "$OUTPUT_DIR/checkMesh-${RUN_NAME}-afterBaffle.json" \
+        --mesh-level "$MESH_LEVEL" \
+        --valve-state closed \
+        --log-name log.checkMesh.afterBaffle
+elif [[ "$VALVE_DURATION" != "0" && "$VALVE_DURATION" != "0.0" ]]; then
     python3 "$MODEL_DIR/configure_valve.py" \
         --duration "$VALVE_DURATION" \
         --output system/createBafflesDict.runtime
