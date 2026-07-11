@@ -1,0 +1,75 @@
+{
+  "case": "Vasconcelos_Wright_2011_Case_B_Dt12p7_Ha0610_Yfs0356",
+  "openfoam_version": "v2512",
+  "solver": "compressibleInterFoam",
+  "mesh_cells": 51984,
+  "simulation_end_s": 9.0,
+  "simulation_end_Tstar": 5.207736941577791,
+  "sample_counts": {
+    "model_pressure": 1800,
+    "model_tower_profiles": 1800,
+    "tower_probes_per_profile": 122,
+    "experimental_pressure_trace": 217,
+    "experimental_free_surface": 10,
+    "experimental_interface": 36
+  },
+  "definitions": {
+    "Tstar": "t*sqrt(g*Dt)/L",
+    "Hstar": "(p-p_atm)/(rho_w*g*L)",
+    "Ystar": "(y-pipe_crown_y)/L",
+    "time_shift_applied": false,
+    "pressure_smoothing_s": 0.1,
+    "level_extraction": "alpha.water=0.5 crossings around the largest contiguous water segment on the tower centreline"
+  },
+  "pressure": {
+    "experimental_plateau_Hstar_mean_T1to3p5": 0.7655026908023483,
+    "model_plateau_Hstar_mean_T1to3p5": 0.8107529715176317,
+    "plateau_bias_Hstar": 0.045250280715283364,
+    "RMSE_Hstar_no_shift": 0.2680665030350967,
+    "experimental_release_Tstar_at_Hstar_0p4": 4.01490728396558,
+    "model_release_Tstar_at_Hstar_0p4": null,
+    "model_release_observed": false,
+    "release_timing_error_Tstar": null,
+    "release_timing_error_s": null,
+    "release_delay_lower_bound_Tstar_if_censored": 1.1928296576122115,
+    "release_delay_lower_bound_s_if_censored": 2.0614456987639955
+  },
+  "levels": {
+    "experimental_geyser_onset_Tstar_at_Yfs_0p99": 3.9361006289308174,
+    "model_geyser_onset_Tstar_at_Yfs_0p99": null,
+    "model_geyser_onset_observed": false,
+    "geyser_onset_timing_error_Tstar": null,
+    "geyser_onset_timing_error_s": null,
+    "geyser_delay_lower_bound_Tstar_if_censored": 1.271636312646974,
+    "geyser_delay_lower_bound_s_if_censored": 2.197639193802164,
+    "experimental_interface_Tstar_at_Yint_0p85_median": 4.139622641509434,
+    "model_interface_Tstar_at_Yint_0p85": null,
+    "model_interface_0p85_observed": false,
+    "interface_0p85_timing_error_Tstar": null,
+    "interface_0p85_timing_error_s": null,
+    "interface_0p85_delay_lower_bound_Tstar_if_censored": 1.0681143000683573,
+    "interface_0p85_delay_lower_bound_s_if_censored": 1.8459128808650518,
+    "model_interface_max_Ystar": 0.5647761919478744,
+    "model_free_surface_max_Ystar": 0.842909101144237,
+    "free_surface_RMSE_Ystar_no_shift": 0.19758315864311626,
+    "interface_RMSE_Ystar_no_shift": 0.34366063723091766,
+    "experimental_geysering": true,
+    "model_geysering": false,
+    "model_geysering_criterion": "tower free surface reaches Ystar>=0.99"
+  },
+  "geometry_ratios": {
+    "planar_2d_Dt_over_D": 0.1351063829787234,
+    "physical_circular_area_ratio": 0.01825373472159348
+  },
+  "digitization_uncertainty": {
+    "figure8_Tstar": 0.018867924528301886,
+    "figure8_Ystar": 0.015037593984962405,
+    "note": "Approximate +/-2 pixel marker-centre uncertainty."
+  },
+  "limitations": [
+    "A constant-depth planar model preserves diameters but not the circular pipe/tower area ratio.",
+    "The open tower ends at the rim, so an above-rim jet is not represented.",
+    "The laminar 2-D VOF model cannot resolve the experimental three-dimensional annular wall film.",
+    "No parameter was tuned and no event-time shift was applied."
+  ]
+}
