@@ -14,6 +14,7 @@ model/       executable OpenFOAM initial fields and dictionaries
 scripts/     validation, run, resume, clean, and post-processing entry points
 reference/   source citation and data provenance
 outputs/     compact validated metrics, series, and comparison figures
+HANDOFF.md   copy-ready prompt for a replacement Cursor Cloud Agent
 ```
 
 Every repository path used by the scripts is resolved relative to this Case,
