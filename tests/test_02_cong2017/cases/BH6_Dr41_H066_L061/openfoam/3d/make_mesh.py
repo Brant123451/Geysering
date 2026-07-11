@@ -24,7 +24,7 @@ RIM_Z = SOFFIT_Z + 1.800
 FREE_SURFACE_Z = -PIPE_RADIUS + 0.660
 ATMOSPHERE_TOP_Z = SOFFIT_Z + 3.000
 ATMOSPHERE_WIDTH = 0.240
-BOOLEAN_OVERLAP = 0.001
+BOOLEAN_OVERLAP = 0.0
 
 
 def parse_args() -> argparse.Namespace:
@@ -151,6 +151,9 @@ def main() -> None:
         half_width = ATMOSPHERE_WIDTH / 2.0
         atmosphere_min_x = TEE_X - half_width
         atmosphere_min_y = -half_width
+        # Join the external box exactly at the physical rim.  A former
+        # millimetre-scale Boolean overlap generated sliver tetrahedra on both
+        # sides of the retained rim partition.
         atmosphere_min_z = RIM_Z - BOOLEAN_OVERLAP
         atmosphere = occ.addBox(
             atmosphere_min_x,
