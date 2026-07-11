@@ -96,7 +96,7 @@
     ],
     "closed_hold_opening_start_s": 1000.0,
     "loss_rate_s-1": 500.0,
-    "minimum_area_fraction": 0.01,
+    "minimum_area_fraction": 0.025,
     "fully_open_resistance": 0.0,
     "pressure_or_velocity_forcing": false
   },
