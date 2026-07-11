@@ -35,6 +35,20 @@ baffles
                     #include "$FOAM_CASE/constant/valveAreaTable"
                     ;
                 }
+
+                patchFields
+                {
+                    alpha.water
+                    {
+                        type            cyclicACMI;
+                        value           uniform 1;
+                    }
+                    T
+                    {
+                        type            cyclicACMI;
+                        value           uniform 296.15;
+                    }
+                }
             }
 
             slave
@@ -43,6 +57,20 @@ baffles
                 type            cyclicACMI;
                 neighbourPatch  valve_half0;
                 nonOverlapPatch valve_wall1;
+
+                patchFields
+                {
+                    alpha.water
+                    {
+                        type            cyclicACMI;
+                        value           uniform 0;
+                    }
+                    T
+                    {
+                        type            cyclicACMI;
+                        value           uniform 296.15;
+                    }
+                }
             }
 
             master2
@@ -70,7 +98,7 @@ baffles
                         type            constantAlphaContactAngle;
                         theta0          90;
                         limit           gradient;
-                        value           uniform 0;
+                        value           uniform 1;
                     }
                     T
                     {
