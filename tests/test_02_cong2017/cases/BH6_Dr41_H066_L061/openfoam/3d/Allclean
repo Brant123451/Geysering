@@ -1,0 +1,22 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+set -euo pipefail
+
+rm -rf \
+    0 \
+    [1-9]* \
+    processor* \
+    postProcessing \
+    dynamicCode \
+    constant/polyMesh \
+    constant/cellToRegion \
+    bh6-3d.msh \
+    geometry_audit.runtime.json \
+    checkMesh.runtime.json \
+    initial_audit.runtime.json \
+    system/decomposeParDict.runtime \
+    log.*
+
+rm -f constant/polyMesh.gz
+
+echo "BH6_3D_CLEAN"

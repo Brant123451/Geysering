@@ -1,0 +1,17 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| OpenFOAM v2512                                                        |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      turbulenceProperties;
+}
+
+// No turbulence coefficient is fitted to the known NO-GEYSER outcome.
+// Mesh sensitivity is reported explicitly; unresolved turbulence is a stated
+// model limitation shared with the B-H1 counterpart.
+simulationType  laminar;
+
+// ************************************************************************* //

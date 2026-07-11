@@ -1,0 +1,265 @@
+/* Paper-audited three-dimensional Cong2017 B-H6 VOF run. */
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+
+application     compressibleInterFoam;
+
+startFrom       latestTime;
+startTime       0;
+stopAt          endTime;
+endTime         13.0;
+
+deltaT          1e-6;
+
+writeControl    adjustableRunTime;
+writeInterval   0.10;
+purgeWrite      3;
+writeFormat     binary;
+writePrecision  8;
+writeCompression off;
+
+timeFormat      general;
+timePrecision   10;
+runTimeModifiable yes;
+
+adjustTimeStep  yes;
+maxCo           0.25;
+maxAlphaCo      0.15;
+maxDeltaT       0.001;
+
+functions
+{
+    PT1
+    {
+        type                probes;
+        libs                (sampling);
+        fields              (p p_rgh alpha.water U T);
+        interpolationScheme cellPoint;
+        probeLocations
+        (
+            // Paper: pipe crown near capped downstream end.
+            (6.56 0 0.022)
+        );
+        writeControl        adjustableRunTime;
+        writeInterval       0.01;
+    }
+
+    PT2
+    {
+        type                probes;
+        libs                (sampling);
+        fields              (p p_rgh alpha.water U T);
+        interpolationScheme cellPoint;
+        probeLocations
+        (
+            // Paper: pipe invert immediately beneath riser axis.
+            (3.47 0 -0.022)
+        );
+        writeControl        adjustableRunTime;
+        writeInterval       0.01;
+    }
+
+    riserCentreline
+    {
+        type                probes;
+        libs                (sampling);
+        fields              (alpha.water U p);
+        interpolationScheme cellPoint;
+        probeLocations
+        (
+            #include "riserProbeLocations"
+        );
+        writeControl        adjustableRunTime;
+        writeInterval       0.01;
+    }
+
+    plumeCentreline
+    {
+        type                probes;
+        libs                (sampling);
+        fields              (alpha.water U p);
+        interpolationScheme cellPoint;
+        probeLocations
+        (
+            #include "plumeProbeLocations"
+        );
+        writeControl        adjustableRunTime;
+        writeInterval       0.02;
+    }
+
+    conservationAudit
+    {
+        type                coded;
+        libs                (utilityFunctionObjects);
+        name                bh6ConservationAudit;
+        executeControl      adjustableRunTime;
+        executeInterval     0.01;
+        writeControl        none;
+
+        codeInclude
+        #{
+            #include "fvCFD.H"
+            #include "PstreamReduceOps.H"
+        #};
+
+        codeExecute
+        #{
+            const volScalarField& alpha =
+                mesh().lookupObject<volScalarField>("alpha.water");
+            const volScalarField& pressure =
+                mesh().lookupObject<volScalarField>("p");
+            const volScalarField& temperature =
+                mesh().lookupObject<volScalarField>("T");
+            const volVectorField& velocity =
+                mesh().lookupObject<volVectorField>("U");
+            const surfaceScalarField& phi =
+                mesh().lookupObject<surfaceScalarField>("phi");
+            const surfaceScalarField& alphaPhi =
+                mesh().lookupObject<surfaceScalarField>("alphaPhi0.water");
+
+            const scalar Rair = 8314.46261815324/28.965;
+            const scalar Rwater = 7430.0;
+            const scalar rho0water = 997.954;
+            const vectorField& centres = mesh().C();
+            const scalarField& volumes = mesh().V();
+
+            scalar waterVolume = 0.0;
+            scalar waterMass = 0.0;
+            scalar airVolume = 0.0;
+            scalar airMass = 0.0;
+            scalar apparatusAirVolume = 0.0;
+            scalar downstreamAirVolume = 0.0;
+            scalar externalWaterVolume = 0.0;
+            scalar maxSpeed = 0.0;
+            scalar minPressure = GREAT;
+            scalar maxPressure = -GREAT;
+
+            forAll(volumes, cellI)
+            {
+                const scalar aw = min(max(alpha[cellI], 0.0), 1.0);
+                const scalar aa = 1.0 - aw;
+                const scalar temp = max(temperature[cellI], 200.0);
+                const scalar pAbs = max(pressure[cellI], 1.0);
+                const scalar rhoAir = pAbs/(Rair*temp);
+                const scalar rhoWater =
+                    rho0water + pAbs/(Rwater*temp);
+                const scalar cellVolume = volumes[cellI];
+
+                waterVolume += aw*cellVolume;
+                waterMass += aw*rhoWater*cellVolume;
+                airVolume += aa*cellVolume;
+                airMass += aa*rhoAir*cellVolume;
+                if (centres[cellI].z() < 1.825)
+                {
+                    apparatusAirVolume += aa*cellVolume;
+                }
+                if
+                (
+                    centres[cellI].x() >= 5.98
+                 && mag(centres[cellI].y()) <= 0.025
+                 && mag(centres[cellI].z()) <= 0.025
+                )
+                {
+                    downstreamAirVolume += aa*cellVolume;
+                }
+                if (centres[cellI].z() > 1.825)
+                {
+                    externalWaterVolume += aw*cellVolume;
+                }
+                maxSpeed = max(maxSpeed, mag(velocity[cellI]));
+                minPressure = min(minPressure, pressure[cellI]);
+                maxPressure = max(maxPressure, pressure[cellI]);
+            }
+
+            reduce(waterVolume, sumOp<scalar>());
+            reduce(waterMass, sumOp<scalar>());
+            reduce(airVolume, sumOp<scalar>());
+            reduce(airMass, sumOp<scalar>());
+            reduce(apparatusAirVolume, sumOp<scalar>());
+            reduce(downstreamAirVolume, sumOp<scalar>());
+            reduce(externalWaterVolume, sumOp<scalar>());
+            reduce(maxSpeed, maxOp<scalar>());
+            reduce(minPressure, minOp<scalar>());
+            reduce(maxPressure, maxOp<scalar>());
+
+            scalar reservoirWaterFlux = 0.0;
+            scalar atmosphereWaterFlux = 0.0;
+            scalar reservoirAirMassFlux = 0.0;
+            scalar atmosphereAirMassFlux = 0.0;
+
+            const label reservoirPatch =
+                mesh().boundaryMesh().findPatchID("reservoir");
+            const label atmospherePatch =
+                mesh().boundaryMesh().findPatchID("atmosphere");
+
+            const label patches[2] = {reservoirPatch, atmospherePatch};
+            for (label selectedPatch = 0; selectedPatch < 2; ++selectedPatch)
+            {
+                const label patchI = patches[selectedPatch];
+                scalar waterFlux = 0.0;
+                scalar gasMassFlux = 0.0;
+                if (patchI >= 0)
+                {
+                    const scalarField& phaseFlux =
+                        alphaPhi.boundaryField()[patchI];
+                    const scalarField& mixtureFlux =
+                        phi.boundaryField()[patchI];
+                    const scalarField& patchPressure =
+                        pressure.boundaryField()[patchI];
+                    const scalarField& patchTemperature =
+                        temperature.boundaryField()[patchI];
+                    forAll(phaseFlux, faceI)
+                    {
+                        waterFlux += phaseFlux[faceI];
+                        const scalar gasVolumeFlux =
+                            mixtureFlux[faceI] - phaseFlux[faceI];
+                        const scalar rhoAir =
+                            max(patchPressure[faceI], 1.0)
+                           /(Rair*max(patchTemperature[faceI], 200.0));
+                        gasMassFlux += gasVolumeFlux*rhoAir;
+                    }
+                }
+                reduce(waterFlux, sumOp<scalar>());
+                reduce(gasMassFlux, sumOp<scalar>());
+                if (selectedPatch == 0)
+                {
+                    reservoirWaterFlux = waterFlux;
+                    reservoirAirMassFlux = gasMassFlux;
+                }
+                else
+                {
+                    atmosphereWaterFlux = waterFlux;
+                    atmosphereAirMassFlux = gasMassFlux;
+                }
+            }
+
+            if (Pstream::master())
+            {
+                Info<< "BH6_AUDIT "
+                    << setprecision(12)
+                    << mesh().time().value() << ' '
+                    << waterVolume << ' '
+                    << waterMass << ' '
+                    << airVolume << ' '
+                    << airMass << ' '
+                    << apparatusAirVolume << ' '
+                    << downstreamAirVolume << ' '
+                    << externalWaterVolume << ' '
+                    << reservoirWaterFlux << ' '
+                    << atmosphereWaterFlux << ' '
+                    << reservoirAirMassFlux << ' '
+                    << atmosphereAirMassFlux << ' '
+                    << maxSpeed << ' '
+                    << minPressure << ' '
+                    << maxPressure << nl;
+            }
+        #};
+    }
+}
+
+// ************************************************************************* //

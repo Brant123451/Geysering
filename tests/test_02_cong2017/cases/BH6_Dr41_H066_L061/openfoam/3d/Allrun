@@ -1,0 +1,127 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+source /usr/share/modules/init/bash 2>/dev/null || true
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
+
+if [[ -d 0 || -d processor0 || -d constant/polyMesh ]]; then
+    echo "Generated mesh/solution exists; run ./Allclean first." >&2
+    exit 1
+fi
+
+PROFILE="${BH6_PROFILE:-base}"
+PIPE_SIZE=0.012
+RISER_SIZE=0.007
+JET_SIZE=0.012
+EXTERNAL_SIZE=0.035
+END_TIME=13.0
+OPENING_START=0.0
+OPENING_DURATION=0.20
+WRITE_INTERVAL=0.10
+
+case "$PROFILE" in
+    static)
+        END_TIME=1.0
+        OPENING_START=1000.0
+        WRITE_INTERVAL=0.05
+        ;;
+    smoke)
+        END_TIME=0.30
+        WRITE_INTERVAL=0.01
+        ;;
+    base)
+        ;;
+    refined)
+        PIPE_SIZE=0.009
+        RISER_SIZE=0.005
+        JET_SIZE=0.009
+        EXTERNAL_SIZE=0.025
+        ;;
+    valve-fast)
+        OPENING_DURATION=0.10
+        ;;
+    valve-slow)
+        OPENING_DURATION=0.40
+        ;;
+    custom)
+        ;;
+    *)
+        echo "Unknown BH6_PROFILE: $PROFILE" >&2
+        exit 2
+        ;;
+esac
+
+PIPE_SIZE="${BH6_PIPE_SIZE:-$PIPE_SIZE}"
+RISER_SIZE="${BH6_RISER_SIZE:-$RISER_SIZE}"
+JET_SIZE="${BH6_JET_SIZE:-$JET_SIZE}"
+EXTERNAL_SIZE="${BH6_EXTERNAL_SIZE:-$EXTERNAL_SIZE}"
+END_TIME="${BH6_END_TIME:-$END_TIME}"
+OPENING_START="${BH6_OPENING_START:-$OPENING_START}"
+OPENING_DURATION="${BH6_OPENING_DURATION:-$OPENING_DURATION}"
+WRITE_INTERVAL="${BH6_WRITE_INTERVAL:-$WRITE_INTERVAL}"
+RESULTS_DIR="${BH6_RESULTS_DIR:-$PWD/results/$PROFILE}"
+REFERENCE_CASE_ROOT="${BH6_REFERENCE_CASE_ROOT:-$(cd ../.. && pwd)}"
+
+NP="${OPENFOAM_NP:-$(nproc)}"
+if (( NP > 6 )); then
+    NP=6
+elif (( NP < 1 )); then
+    NP=1
+fi
+
+python3 make_mesh.py \
+    --output bh6-3d.msh \
+    --audit-json geometry_audit.runtime.json \
+    --pipe-size "$PIPE_SIZE" \
+    --riser-size "$RISER_SIZE" \
+    --jet-size "$JET_SIZE" \
+    --external-size "$EXTERNAL_SIZE" \
+    > log.gmsh 2>&1
+
+gmshToFoam bh6-3d.msh > log.gmshToFoam 2>&1
+createPatch -overwrite > log.createPatch 2>&1
+topoSet > log.topoSet 2>&1
+checkMesh -allGeometry -allTopology > log.checkMesh 2>&1
+
+cp -a 0.orig 0
+setFields > log.setFields 2>&1
+setExprFields > log.setExprFields 2>&1
+
+foamDictionary system/controlDict \
+    -entry endTime -set "$END_TIME" >/dev/null
+foamDictionary system/controlDict \
+    -entry writeInterval -set "$WRITE_INTERVAL" >/dev/null
+foamDictionary constant/fvOptions \
+    -entry valveResistance.vectorCodedSourceCoeffs.openingStart \
+    -set "$OPENING_START" >/dev/null
+foamDictionary constant/fvOptions \
+    -entry valveResistance.vectorCodedSourceCoeffs.openingDuration \
+    -set "$OPENING_DURATION" >/dev/null
+
+DECOMP_DICT="system/decomposeParDict.runtime"
+cp system/decomposeParDict "$DECOMP_DICT"
+foamDictionary "$DECOMP_DICT" \
+    -entry numberOfSubdomains -set "$NP" >/dev/null
+
+if (( NP == 1 )); then
+    compressibleInterFoam > log.compressibleInterFoam 2>&1
+else
+    decomposePar -decomposeParDict "$DECOMP_DICT" > log.decomposePar 2>&1
+    OMPI_ALLOW_RUN_AS_ROOT=1 \
+    OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
+    mpirun --oversubscribe -np "$NP" \
+        compressibleInterFoam -parallel \
+        > log.compressibleInterFoam 2>&1
+fi
+
+python3 postprocess.py \
+    --case "$PWD" \
+    --reference-case-root "$REFERENCE_CASE_ROOT" \
+    --profile "$PROFILE" \
+    --opening-start "$OPENING_START" \
+    --opening-duration "$OPENING_DURATION" \
+    --results-dir "$RESULTS_DIR" \
+    > log.postprocess 2>&1
+
+echo "BH6_3D_${PROFILE}_DONE"

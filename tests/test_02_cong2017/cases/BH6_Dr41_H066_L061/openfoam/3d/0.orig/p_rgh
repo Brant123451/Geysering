@@ -1,0 +1,37 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| OpenFOAM v2512: Cong2017 B-H6                                      |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p_rgh;
+}
+
+dimensions      [1 -1 -2 0 0 0 0];
+internalField   uniform 101325;
+
+boundaryField
+{
+    reservoir
+    {
+        // p_atm + rho_w*g*(H0 - D/2), constant reduced pressure.
+        type            fixedValue;
+        value           uniform 107541.39;
+    }
+    walls
+    {
+        type            fixedFluxPressure;
+        value           uniform 101325;
+    }
+    atmosphere
+    {
+        // Imposes absolute atmospheric pressure despite varying elevation.
+        type            prghPressure;
+        p               uniform 101325;
+        value           uniform 101325;
+    }
+}
+
+// ************************************************************************* //

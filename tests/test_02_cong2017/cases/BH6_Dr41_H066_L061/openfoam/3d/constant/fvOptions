@@ -1,0 +1,101 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| OpenFOAM v2512: passive B-H6 ball-valve loss                       |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvOptions;
+}
+
+valveResistance
+{
+    type            vectorCodedSource;
+    active          true;
+
+    vectorCodedSourceCoeffs
+    {
+        selectionMode       cellZone;
+        cellZone            valveZone;
+        fields              (U);
+        name                timeVaryingBallValve;
+
+        openingStart        0.0;
+        openingDuration     0.20;
+        lossRate            500.0;
+        minimumAreaFraction 0.001;
+
+        codeInclude
+        #{
+            #include "fvCFD.H"
+        #};
+
+        codeCorrect
+        #{
+        #};
+
+        codeAddSup
+        #{
+            // compressibleInterFoam calls the rho-aware overload below.
+        #};
+
+        codeAddSupRho
+        #{
+            const scalar now = mesh().time().value();
+            const scalar start =
+                coeffs().getOrDefault<scalar>("openingStart", 0.0);
+            const scalar duration = max
+            (
+                coeffs().getOrDefault<scalar>("openingDuration", 0.20),
+                SMALL
+            );
+            const scalar lossRate =
+                coeffs().getOrDefault<scalar>("lossRate", 500.0);
+            const scalar minArea = max
+            (
+                coeffs().getOrDefault<scalar>
+                (
+                    "minimumAreaFraction",
+                    0.001
+                ),
+                SMALL
+            );
+
+            scalar openFraction = 0.0;
+            if (now >= start + duration)
+            {
+                openFraction = 1.0;
+            }
+            else if (now > start)
+            {
+                const scalar s = (now - start)/duration;
+                openFraction = s*s*(3.0 - 2.0*s);
+            }
+
+            scalar resistance = 0.0;
+            if (openFraction < 1.0 - SMALL)
+            {
+                const scalar effectiveArea = max(openFraction, minArea);
+                resistance =
+                    lossRate*sqr((1.0 - openFraction)/effectiveArea);
+            }
+
+            scalarField& diagonal = eqn.diag();
+            const scalarField& volume = mesh().V();
+            const scalarField& density = rho.primitiveField();
+            forAll(cells_, selectedI)
+            {
+                const label cellI = cells_[selectedI];
+                diagonal[cellI] +=
+                    density[cellI]*resistance*volume[cellI];
+            }
+        #};
+
+        codeConstrain
+        #{
+        #};
+    }
+}
+
+// ************************************************************************* //

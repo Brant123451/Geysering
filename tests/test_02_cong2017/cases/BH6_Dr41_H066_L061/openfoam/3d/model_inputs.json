@@ -1,0 +1,111 @@
+{
+  "case": "BH6_Dr41_H066_L061",
+  "run": "B-H6",
+  "source": "Cong, Chan & Lee (2017), JHE 143(9):04017039",
+  "solver": "compressibleInterFoam",
+  "openfoam_version": "v2512",
+  "coordinates": {
+    "pipe_axis": "x",
+    "vertical_axis": "z",
+    "pipe_centreline_z_m": 0.0,
+    "head_datum": "horizontal-pipe invert",
+    "pipe_invert_z_m": -0.025,
+    "pipe_soffit_z_m": 0.025
+  },
+  "geometry": {
+    "main_pipe_inside_diameter_m": 0.05,
+    "main_pipe_length_m": 6.59,
+    "tee_axis_x_m": 3.47,
+    "ball_valve_x_m": 5.98,
+    "closed_cap_x_m": 6.59,
+    "riser_inside_diameter_m": 0.041,
+    "riser_to_pipe_diameter_ratio": 0.82,
+    "physical_riser_height_above_soffit_m": 1.8,
+    "physical_rim_z_m": 1.825,
+    "external_air_top_above_soffit_m": 3.0,
+    "external_air_top_z_m": 3.025,
+    "external_air_width_m": 0.24
+  },
+  "initial_conditions": {
+    "temperature_K": 296.15,
+    "atmospheric_absolute_pressure_Pa": 101325.0,
+    "water_density_kg_m3": 998.0,
+    "upstream_head_above_invert_m": 0.66,
+    "riser_water_level_above_invert_m": 0.66,
+    "free_surface_z_m": 0.635,
+    "pocket_length_m": 0.61,
+    "pocket_x_range_m": [
+      5.98,
+      6.59
+    ],
+    "nominal_pocket_volume_m3": 0.001197732,
+    "nominal_pocket_pressure_Pa": 101325.0,
+    "nominal_pocket_air_mass_kg": 0.001427,
+    "water_velocity_m_s": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "air_velocity_m_s": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "alpha_water_in_water": 1.0,
+    "alpha_water_in_air": 0.0
+  },
+  "patches": {
+    "reservoir": {
+      "role": "upstream constant-head tank",
+      "U": "pressureInletOutletVelocity",
+      "p": "calculated",
+      "p_rgh": "fixedValue matching 0.66 m head above invert",
+      "alpha.water": "inletOutlet; inletValue 1",
+      "T": "inletOutlet; inletValue 296.15 K"
+    },
+    "walls": {
+      "role": "acrylic walls, external floor, and closed downstream cap",
+      "U": "noSlip",
+      "p": "calculated",
+      "p_rgh": "fixedFluxPressure",
+      "alpha.water": "constantAlphaContactAngle; theta0 90 deg",
+      "T": "zeroGradient"
+    },
+    "atmosphere": {
+      "role": "external-domain top and sides",
+      "U": "pressureInletOutletVelocity",
+      "p": "calculated",
+      "p_rgh": "prghPressure; p=101325 Pa absolute",
+      "alpha.water": "inletOutlet; inletValue 0",
+      "T": "inletOutlet; inletValue 296.15 K"
+    }
+  },
+  "valve": {
+    "type": "passive time-varying linearised loss in a 0.010 m cellZone",
+    "opening_law": "smoothstep monotone area fraction",
+    "base_opening_duration_s": 0.2,
+    "sensitivity_opening_durations_s": [
+      0.1,
+      0.4
+    ],
+    "closed_hold_opening_start_s": 1000.0,
+    "fully_open_resistance": 0.0,
+    "pressure_or_velocity_forcing": false
+  },
+  "wetting": {
+    "surface_tension_N_m": 0.072,
+    "static_contact_angle_deg": 90.0,
+    "paper_measured_contact_angle_available": false,
+    "calibrated_to_outcome": false
+  },
+  "experimental_targets": {
+    "geyser": false,
+    "air_arrival_time_s": 8.1,
+    "free_surface_velocity_m_s": 0.246,
+    "interface_velocity_m_s": 0.476,
+    "interface_catch_time_s": 10.5,
+    "free_surface_initial_m": 0.58,
+    "free_surface_peak_m": 1.21,
+    "post_arrival_PT1_peak_H_over_H0": 1.4
+  }
+}

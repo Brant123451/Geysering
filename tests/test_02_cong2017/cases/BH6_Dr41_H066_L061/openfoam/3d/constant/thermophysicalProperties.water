@@ -1,0 +1,48 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| OpenFOAM v2512                                                        |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      thermophysicalProperties;
+}
+
+thermoType
+{
+    type            heRhoThermo;
+    mixture         pureMixture;
+    transport       const;
+    thermo          hConst;
+    equationOfState perfectFluid;
+    specie          specie;
+    energy          sensibleInternalEnergy;
+}
+
+mixture
+{
+    specie
+    {
+        molWeight   18.01528;
+    }
+    equationOfState
+    {
+        // R*T ~= 2.20e6 m2/s2 at 296.15 K, giving c ~= 1483 m/s.
+        // rho0 is offset so rho(101325 Pa, 296.15 K) is 998 kg/m3.
+        R           7430;
+        rho0        997.954;
+    }
+    thermodynamics
+    {
+        Cp          4182;
+        Hf          0;
+    }
+    transport
+    {
+        mu          9.32e-4;
+        Pr          6.5;
+    }
+}
+
+// ************************************************************************* //

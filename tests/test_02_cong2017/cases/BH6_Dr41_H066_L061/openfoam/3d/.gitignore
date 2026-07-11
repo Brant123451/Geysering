@@ -1,0 +1,10 @@
+/0/
+/[1-9]*/
+/processor*/
+/postProcessing/
+/dynamicCode/
+/constant/polyMesh/
+/bh6-3d.msh
+/geometry_audit.runtime.json
+/system/decomposeParDict.runtime
+/log.*
