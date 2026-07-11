@@ -62,7 +62,7 @@ hydrostaticInitialize
         );
         const scalar atmosphericPressure = 101325.0;
         const scalar waterDensity = 998.0;
-        const scalar waterReducedPressure = 107541.3913;
+        const scalar waterReducedPressure = 107541.8913;
         const scalar gravityZ = -9.81;
         const scalar Rair = 8314.46261815324/28.965;
         const vectorField& centres = mesh().C();

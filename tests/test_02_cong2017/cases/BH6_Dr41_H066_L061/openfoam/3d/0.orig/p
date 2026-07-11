@@ -17,7 +17,7 @@ boundaryField
     reservoir
     {
         type            calculated;
-        value           uniform 107541.39;
+        value           uniform 107541.89;
     }
     walls
     {

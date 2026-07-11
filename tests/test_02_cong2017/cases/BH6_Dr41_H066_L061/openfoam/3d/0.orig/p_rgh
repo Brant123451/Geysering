@@ -18,7 +18,7 @@ boundaryField
     {
         // p_atm + rho_w*g*(H0 - D/2), constant reduced pressure.
         type            fixedValue;
-        value           uniform 107541.39;
+        value           uniform 107541.89;
     }
     walls
     {
