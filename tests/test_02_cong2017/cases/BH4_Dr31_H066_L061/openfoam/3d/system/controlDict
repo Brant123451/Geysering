@@ -1,0 +1,271 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+
+application     compressibleInterFoam;
+startFrom       latestTime;
+startTime       0;
+stopAt          endTime;
+endTime         13.0;
+deltaT          1e-6;
+
+writeControl    adjustableRunTime;
+writeInterval   0.50;
+purgeWrite      3;
+writeFormat     binary;
+writePrecision  8;
+writeCompression off;
+
+timeFormat      general;
+timePrecision   10;
+runTimeModifiable yes;
+
+adjustTimeStep  yes;
+maxCo           0.25;
+maxAlphaCo      0.15;
+maxDeltaT       0.0005;
+
+functions
+{
+    alphaGasProxy
+    {
+        type            exprField;
+        libs            (fieldFunctionObjects);
+        field           alpha.gasProxy;
+        useNamePrefix   false;
+        autowrite       false;
+        expression      "1-alpha.water";
+        dimensions      [0 0 0 0 0 0 0];
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    none;
+    }
+
+    mixednessField
+    {
+        type            exprField;
+        libs            (fieldFunctionObjects);
+        field           interfaceMixedness;
+        useNamePrefix   false;
+        autowrite       false;
+        expression      "4*alpha.water*(1-alpha.water)";
+        dimensions      [0 0 0 0 0 0 0];
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    none;
+    }
+
+    gasMassDensityField
+    {
+        type            exprField;
+        libs            (fieldFunctionObjects);
+        field           gasMassDensity;
+        useNamePrefix   false;
+        autowrite       false;
+        expression      "(1-alpha.water)*p/(287.05*T)";
+        dimensions      [1 -3 0 0 0 0 0];
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    none;
+    }
+
+    waterMassDensityField
+    {
+        type            exprField;
+        libs            (fieldFunctionObjects);
+        field           waterMassDensity;
+        useNamePrefix   false;
+        autowrite       false;
+        expression
+            "alpha.water*(997.954035295+p/(7443.55501481*T))";
+        dimensions      [1 -3 0 0 0 0 0];
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    none;
+    }
+
+    riserCentreline
+    {
+        type            probes;
+        libs            (sampling);
+        fields          (alpha.water U p p_rgh);
+        probeLocations
+        (
+            #include "riserProbeLocations"
+        );
+        writeControl    adjustableRunTime;
+        writeInterval   0.02;
+    }
+
+    horizontalCrown
+    {
+        type            probes;
+        libs            (sampling);
+        fields          (alpha.water p U);
+        probeLocations
+        (
+            #include "horizontalProbeLocations"
+        );
+        writeControl    adjustableRunTime;
+        writeInterval   0.02;
+    }
+
+    pt2Probe
+    {
+        type            probes;
+        libs            (sampling);
+        fields          (p p_rgh alpha.water U);
+        probeLocations  ((3.470 0 0.004));
+        writeControl    adjustableRunTime;
+        writeInterval   0.005;
+    }
+
+    phaseVolumes
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      all;
+        operation       volIntegrate;
+        fields          (alpha.water alpha.gasProxy);
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.02;
+    }
+
+    phaseMasses
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      all;
+        operation       volIntegrate;
+        fields          (waterMassDensity gasMassDensity);
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.02;
+    }
+
+    interfaceMixedVolume
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      cellZone;
+        name            riserZone;
+        operation       volIntegrate;
+        fields          (interfaceMixedness);
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.02;
+    }
+
+    pocketGasVolume
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      cellZone;
+        name            pocketZone;
+        operation       volIntegrate;
+        fields          (alpha.gasProxy);
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }
+
+    pocketGasMass
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      cellZone;
+        name            pocketZone;
+        operation       volIntegrate;
+        fields          (gasMassDensity);
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }
+
+    pocketPressure
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      cellZone;
+        name            pocketZone;
+        operation       weightedVolAverage;
+        weightField     alpha.gasProxy;
+        fields          (p);
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.005;
+    }
+
+    pt2Pressure
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      cellZone;
+        name            pt2Zone;
+        operation       volAverage;
+        fields          (p);
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.005;
+    }
+
+    externalWaterVolume
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      cellZone;
+        name            externalZone;
+        operation       volIntegrate;
+        fields          (alpha.water);
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.02;
+    }
+
+    atmosphereWaterVolumeFlux
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            atmosphere;
+        operation       weightedSum;
+        weightField     alpha.water;
+        fields          (phi);
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }
+
+    reservoirWaterVolumeFlux
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            reservoir;
+        operation       weightedSum;
+        weightField     alpha.water;
+        fields          (phi);
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }
+
+    atmosphereGasMassFlux
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            atmosphere;
+        operation       weightedSum;
+        weightField     alpha.gasProxy;
+        fields          (rhoPhi);
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }
+}

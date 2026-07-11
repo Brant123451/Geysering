@@ -1,0 +1,42 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      thermophysicalProperties;
+}
+
+thermoType
+{
+    type            heRhoThermo;
+    mixture         pureMixture;
+    transport       const;
+    thermo          hConst;
+    equationOfState perfectFluid;
+    specie          specie;
+    energy          sensibleInternalEnergy;
+}
+
+mixture
+{
+    specie
+    {
+        molWeight   18.01528;
+    }
+    equationOfState
+    {
+        // Gives rho=998 kg/m3 at 101325 Pa and 296.15 K, K=2.2 GPa.
+        R           7443.55501481;
+        rho0        997.954035295;
+    }
+    thermodynamics
+    {
+        Cp          4182;
+        Hf          0;
+    }
+    transport
+    {
+        mu          9.32e-4;
+        Pr          6.50;
+    }
+}

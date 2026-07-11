@@ -1,0 +1,28 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+source /usr/share/modules/init/bash 2>/dev/null || true
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
+
+if [[ ! -d processor0 ]]; then
+    echo "No decomposed run is available to resume." >&2
+    exit 1
+fi
+
+NP="${BH4_NP:-$(compgen -G 'processor*' | wc -l)}"
+END_TIME="${BH4_END_TIME:-13.0}"
+LABEL="${BH4_LABEL:-base_topen0p20}"
+foamDictionary system/controlDict -entry endTime -set "$END_TIME" >/dev/null
+
+OMPI_ALLOW_RUN_AS_ROOT=1 \
+OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
+mpirun -np "$NP" compressibleInterFoam -parallel \
+    >> log.compressibleInterFoam 2>&1
+
+python3 postprocess_compare.py \
+    --case-dir . \
+    --label "$LABEL" \
+    --mesh-metadata mesh_metadata.json \
+    > log.postprocess 2>&1
+echo "BH4_3D_RESUME_DONE label=$LABEL endTime=$END_TIME"

@@ -1,0 +1,81 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      topoSetDict;
+}
+
+actions
+(
+    {
+        name valveCells;
+        type cellSet;
+        action new;
+        source boxToCell;
+        box (5.970 -0.04 -0.01) (5.990 0.04 0.06);
+    }
+    {
+        name valveZone;
+        type cellZoneSet;
+        action new;
+        source setToCellZone;
+        set valveCells;
+    }
+    {
+        name pocketCells;
+        type cellSet;
+        action new;
+        source boxToCell;
+        box (5.980 -0.04 -0.01) (6.591 0.04 0.06);
+    }
+    {
+        name pocketZone;
+        type cellZoneSet;
+        action new;
+        source setToCellZone;
+        set pocketCells;
+    }
+    {
+        name riserCells;
+        type cellSet;
+        action new;
+        source boxToCell;
+        box (3.445 -0.025 0.045) (3.495 0.025 1.851);
+    }
+    {
+        name riserZone;
+        type cellZoneSet;
+        action new;
+        source setToCellZone;
+        set riserCells;
+    }
+    {
+        name externalCells;
+        type cellSet;
+        action new;
+        source boxToCell;
+        box (3.319 -0.151 1.850) (3.621 0.151 3.051);
+    }
+    {
+        name externalZone;
+        type cellZoneSet;
+        action new;
+        source setToCellZone;
+        set externalCells;
+    }
+    {
+        name pt2Cells;
+        type cellSet;
+        action new;
+        source boxToCell;
+        box (3.450 -0.020 -0.001) (3.490 0.020 0.016);
+    }
+    {
+        name pt2Zone;
+        type cellZoneSet;
+        action new;
+        source setToCellZone;
+        set pt2Cells;
+    }
+);

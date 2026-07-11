@@ -1,0 +1,98 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+source /usr/share/modules/init/bash 2>/dev/null || true
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
+
+if [[ -d 0 || -d processor0 || -d constant/polyMesh || -d postProcessing ]]; then
+    echo "Generated mesh/solution exists; run ./Allclean first." >&2
+    exit 1
+fi
+
+NP="${BH4_NP:-$(nproc)}"
+if (( NP > 6 )); then
+    NP=6
+elif (( NP < 1 )); then
+    NP=1
+fi
+
+PIPE_SIZE="${BH4_PIPE_SIZE:-0.010}"
+RISER_SIZE="${BH4_RISER_SIZE:-0.006}"
+ATMOSPHERE_SIZE="${BH4_ATMOSPHERE_SIZE:-0.020}"
+END_TIME="${BH4_END_TIME:-13.0}"
+VALVE_TIME="${BH4_VALVE_TIME:-0.20}"
+VALVE_MODE="${BH4_VALVE_MODE:-opening}"
+DRY_RUN="${BH4_DRY_RUN:-0}"
+LABEL="${BH4_LABEL:-base_topen0p20}"
+
+restore_baseline_valve()
+{
+    python3 configure_valve.py --opening-time 0.20 >/dev/null
+}
+trap restore_baseline_valve EXIT
+
+python3 make_probe_locations.py > log.probes 2>&1
+if [[ "$VALVE_MODE" == "closed" ]]; then
+    python3 configure_valve.py --closed > log.valve 2>&1
+elif [[ "$VALVE_MODE" == "opening" ]]; then
+    python3 configure_valve.py --opening-time "$VALVE_TIME" > log.valve 2>&1
+else
+    echo "BH4_VALVE_MODE must be closed or opening" >&2
+    exit 2
+fi
+
+python3 make_mesh.py \
+    --output bh4-3d.msh \
+    --metadata mesh_metadata.json \
+    --pipe-size "$PIPE_SIZE" \
+    --riser-size "$RISER_SIZE" \
+    --atmosphere-size "$ATMOSPHERE_SIZE" \
+    > log.gmsh 2>&1
+
+gmshToFoam bh4-3d.msh > log.gmshToFoam 2>&1
+createPatch -overwrite > log.createPatch 2>&1
+topoSet > log.topoSet 2>&1
+checkMesh -allGeometry -allTopology > log.checkMesh 2>&1
+if ! rg -q "Mesh OK" log.checkMesh; then
+    echo "checkMesh did not report Mesh OK" >&2
+    exit 3
+fi
+python3 summarize_checkmesh.py log.checkMesh mesh_metadata.json \
+    > log.meshSummary 2>&1
+
+cp -a 0.orig 0
+setFields > log.setFields 2>&1
+setExprFields > log.setExprFields 2>&1
+foamDictionary system/controlDict -entry endTime -set "$END_TIME" >/dev/null
+
+solver_args=()
+if [[ "$DRY_RUN" == "1" ]]; then
+    solver_args+=(-dry-run)
+fi
+
+if (( NP == 1 )); then
+    compressibleInterFoam "${solver_args[@]}" > log.compressibleInterFoam 2>&1
+else
+    cp system/decomposeParDict system/decomposeParDict.runtime
+    foamDictionary system/decomposeParDict.runtime \
+        -entry numberOfSubdomains -set "$NP" >/dev/null
+    decomposePar -decomposeParDict system/decomposeParDict.runtime \
+        > log.decomposePar 2>&1
+    OMPI_ALLOW_RUN_AS_ROOT=1 \
+    OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
+    mpirun -np "$NP" compressibleInterFoam -parallel "${solver_args[@]}" \
+        > log.compressibleInterFoam 2>&1
+fi
+
+if [[ "$DRY_RUN" == "1" ]]; then
+    echo "BH4_3D_DRY_RUN_DONE"
+    exit 0
+fi
+
+python3 postprocess_compare.py \
+    --case-dir . \
+    --label "$LABEL" \
+    --mesh-metadata mesh_metadata.json \
+    > log.postprocess 2>&1
+echo "BH4_3D_DONE label=$LABEL endTime=$END_TIME valve=$VALVE_MODE/$VALVE_TIME"

@@ -1,0 +1,90 @@
+{
+  "case": "B-H4",
+  "solver": "compressibleInterFoam",
+  "openfoam_version": "v2512",
+  "geometry_m": {
+    "main_pipe_inner_diameter": 0.05,
+    "main_pipe_effective_length": 6.59,
+    "tee_x": 3.47,
+    "valve_x": 5.98,
+    "closed_end_x": 6.59,
+    "riser_inner_diameter": 0.031,
+    "riser_height_above_pipe_crown": 1.8,
+    "pipe_invert_z": 0.0,
+    "pipe_crown_z": 0.05,
+    "riser_rim_z": 1.85,
+    "external_atmosphere_top_z": 3.05,
+    "external_atmosphere_width": 0.3
+  },
+  "initial_conditions": {
+    "velocity_m_per_s": [0.0, 0.0, 0.0],
+    "temperature_K": 296.15,
+    "atmospheric_absolute_pressure_Pa": 101325.0,
+    "upstream_head_above_pipe_invert_m": 0.66,
+    "riser_free_surface_z_m": 0.66,
+    "air_pocket_x_m": [5.98, 6.59],
+    "air_pocket_length_m": 0.61,
+    "air_pocket_pressure": "atmospheric",
+    "main_pipe_except_pocket": "water",
+    "air_pocket_volume_target_m3": 0.0011977321991811086,
+    "air_pocket_mass_target_kg": 0.0014276016764529437
+  },
+  "materials": {
+    "water_density_at_23C_kg_per_m3": 998.0,
+    "water_dynamic_viscosity_Pa_s": 0.000932,
+    "water_bulk_modulus_Pa": 2200000000.0,
+    "air_specific_gas_constant_J_per_kg_K": 287.05,
+    "air_dynamic_viscosity_Pa_s": 0.0000184,
+    "surface_tension_N_per_m": 0.072,
+    "wall": "smooth no-slip acrylic",
+    "numerical_static_contact_angle_deg": 90.0,
+    "contact_angle_note": "Neutral closure; the paper reports no measured contact angle."
+  },
+  "boundaries": {
+    "reservoir": {
+      "U": "pressureInletOutletVelocity",
+      "p_rgh": "fixedValue corresponding to 0.66 m constant head",
+      "alpha.water": "fixedValue 1",
+      "T": "fixedValue 296.15 K"
+    },
+    "walls_and_closedEnd": {
+      "U": "noSlip",
+      "p_rgh": "fixedFluxPressure",
+      "alpha.water": "constantAlphaContactAngle 90 deg",
+      "T": "zeroGradient"
+    },
+    "atmosphere": {
+      "U": "pressureInletOutletVelocity",
+      "p_rgh": "totalPressure at 101325 Pa",
+      "alpha.water": "inletOutlet with air inflow (alpha.water=0)",
+      "T": "inletOutlet at 296.15 K"
+    }
+  },
+  "valve": {
+    "representation": "Brinkman momentum resistance in a 0.02 m cell zone; sink only",
+    "baseline_opening_time_s": 0.2,
+    "opening_law": "beta=beta_closed*(1-t/t_open)^4 for 0<=t<=t_open",
+    "closed_resistance_kg_per_m3_s": 10000000000.0,
+    "sensitivity_opening_times_s": [0.1, 0.3]
+  },
+  "experiment": {
+    "classification": "NO_GEYSER",
+    "air_arrival_time_s": 8.14,
+    "mean_free_surface_velocity_m_per_s": 0.207,
+    "mean_interface_velocity_m_per_s": 0.418,
+    "Vair_star": 2.4044
+  },
+  "simulation": {
+    "event_end_time_s": 13.0,
+    "base_mesh_m": {
+      "pipe": 0.01,
+      "riser": 0.006,
+      "atmosphere": 0.02
+    },
+    "refined_mesh_m": {
+      "pipe": 0.0075,
+      "riser": 0.0045,
+      "atmosphere": 0.015
+    }
+  }
+}

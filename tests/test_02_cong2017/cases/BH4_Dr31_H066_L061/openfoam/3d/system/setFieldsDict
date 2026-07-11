@@ -1,0 +1,37 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setFieldsDict;
+}
+
+// Default: the main pipe and the riser below z=H0 are water filled.
+defaultFieldValues
+(
+    volScalarFieldValue alpha.water 1
+    volScalarFieldValue T 296.15
+);
+
+regions
+(
+    // The selected Valve #4 leaves a full-bore, atmospheric 0.61 m pocket.
+    boxToCell
+    {
+        box (5.980 -1 -1) (6.591 1 1);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 0
+        );
+    }
+
+    // Riser headspace and the separate external atmosphere.
+    boxToCell
+    {
+        box (-1 -1 0.660) (7 1 4);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 0
+        );
+    }
+);

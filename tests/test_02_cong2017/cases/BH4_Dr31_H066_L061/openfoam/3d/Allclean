@@ -1,0 +1,23 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+set -euo pipefail
+
+if [[ -f /usr/lib/openfoam/openfoam2512/etc/bashrc ]]; then
+    source /usr/lib/openfoam/openfoam2512/etc/bashrc
+    foamListTimes -rm 2>/dev/null || true
+fi
+
+rm -rf \
+    0 \
+    processor* \
+    constant/polyMesh \
+    postProcessing \
+    bh4-3d.msh \
+    mesh_metadata.json \
+    log.* \
+    system/decomposeParDict.runtime \
+    system/riserProbeLocations \
+    system/horizontalProbeLocations
+
+python3 configure_valve.py --opening-time 0.20 >/dev/null
+echo "B-H4 generated OpenFOAM files removed"
