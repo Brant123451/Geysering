@@ -100,6 +100,12 @@ Acceptance additionally limits those cells to `1%`, low-determinant cells to
 skewness to 4; any negative-volume cell is fatal. These are explicit mesh
 diagnostics, not silently converted into a strict-check pass.
 
+The bounded transport/PIMPLE settings follow OpenFOAM v2512's
+`compressibleInterFoam/laminar/depthCharge3D` water-air reference: upwind
+momentum transport, uncorrected Laplacian/normal gradients, one outer
+corrector, and two pressure correctors. This declared solver baseline is used
+unchanged for all meshes and valve cases.
+
 Each run is created under ignored `runs/`; source templates remain clean.
 OpenFOAM v2512, Gmsh, NumPy, and Matplotlib are required.
 

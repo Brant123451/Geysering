@@ -103,7 +103,16 @@
     "end_time_s": 13.0,
     "max_Courant": 0.2,
     "max_alpha_Courant": 0.15,
-    "temperature_acceptance": "minimum temperature must remain positive; no clipping"
+    "temperature_acceptance": "minimum temperature must remain positive; no clipping",
+    "bounded_startup_numerics": {
+      "reference": "OpenFOAM v2512 compressibleInterFoam depthCharge3D",
+      "momentum_divergence": "Gauss upwind",
+      "laplacian": "Gauss linear uncorrected",
+      "surface_normal_gradient": "uncorrected",
+      "outer_correctors": 1,
+      "pressure_correctors": 2,
+      "non_orthogonal_correctors": 0
+    }
   },
   "experimental_targets_not_used_as_forcing": {
     "classification": "GEYSER",

@@ -127,6 +127,10 @@ measurements exist:
    `p_rgh=101332.42484 Pa`; the isolated end pocket remains `101325 Pa` on the
    pipe axis. This removes an artificial exterior-air pressure gradient and
    does not pressurize the selected pocket.
+8. **Numerical transport:** use the bounded schemes and PIMPLE structure from
+   OpenFOAM v2512's three-dimensional `compressibleInterFoam` water-air
+   `depthCharge3D` reference case. The same settings apply to every mesh and
+   valve run and are not selected from the known B-H1 outcome.
 
 With these declarations, all model-affecting paper conflicts are either
 resolved by primary evidence or isolated as named numerical sensitivities.

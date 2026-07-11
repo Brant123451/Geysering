@@ -20,7 +20,9 @@ divSchemes
 {
     div(phi,alpha)      Gauss vanLeer;
     div(phirb,alpha)    Gauss linear;
-    div(rhoPhi,U)       Gauss linearUpwind grad(U);
+    // Bounded startup scheme from the v2512 compressibleInterFoam
+    // depthCharge3D water-air reference case.
+    div(rhoPhi,U)       Gauss upwind;
     div(rhoPhi,T)       Gauss upwind;
     div(rhoPhi,K)       Gauss upwind;
     div(phi,p)          Gauss upwind;
@@ -30,7 +32,7 @@ divSchemes
 
 laplacianSchemes
 {
-    default             Gauss linear corrected;
+    default             Gauss linear uncorrected;
 }
 
 interpolationSchemes
@@ -40,7 +42,7 @@ interpolationSchemes
 
 snGradSchemes
 {
-    default             corrected;
+    default             uncorrected;
 }
 
 fluxRequired
