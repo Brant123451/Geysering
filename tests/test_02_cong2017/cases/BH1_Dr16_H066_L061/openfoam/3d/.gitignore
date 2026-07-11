@@ -9,4 +9,6 @@ case/decomposeParDict.runtime
 case/system/*.runtime
 case/dynamicCode/
 runs/
+solver/Make/linux*/
+solver/lnInclude/
 __pycache__/
