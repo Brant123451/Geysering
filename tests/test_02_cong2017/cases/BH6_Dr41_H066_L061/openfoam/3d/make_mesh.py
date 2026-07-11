@@ -21,6 +21,7 @@ VALVE_X = 5.980
 POCKET_LENGTH = 0.610
 SOFFIT_Z = PIPE_RADIUS
 RIM_Z = SOFFIT_Z + 1.800
+FREE_SURFACE_Z = -PIPE_RADIUS + 0.660
 ATMOSPHERE_TOP_Z = SOFFIT_Z + 3.000
 ATMOSPHERE_WIDTH = 0.240
 BOOLEAN_OVERLAP = 0.001
@@ -96,6 +97,29 @@ def add_box_field(
     field.setNumber(field_id, "ZMax", zmax)
 
 
+def add_x_plane(
+    occ: gmsh.model.occ,
+    x_coordinate: float,
+    y_min: float,
+    y_max: float,
+    z_min: float,
+    z_max: float,
+) -> int:
+    points = [
+        occ.addPoint(x_coordinate, y_min, z_min),
+        occ.addPoint(x_coordinate, y_max, z_min),
+        occ.addPoint(x_coordinate, y_max, z_max),
+        occ.addPoint(x_coordinate, y_min, z_max),
+    ]
+    lines = [
+        occ.addLine(points[0], points[1]),
+        occ.addLine(points[1], points[2]),
+        occ.addLine(points[2], points[3]),
+        occ.addLine(points[3], points[0]),
+    ]
+    return occ.addPlaneSurface([occ.addWire(lines)])
+
+
 def main() -> None:
     args = parse_args()
     validate_sizes(args)
@@ -137,11 +161,43 @@ def main() -> None:
             ATMOSPHERE_TOP_Z - atmosphere_min_z,
         )
         fluid, _ = occ.fuse(apparatus, [(3, atmosphere)])
+
+        # Conformal internal faces remove stair-stepped initial interfaces and
+        # give createBaffles an exact valve plane without changing the fluid
+        # geometry.  The physical rim plane is retained for volume accounting.
+        partition_surfaces = [
+            add_x_plane(
+                occ,
+                VALVE_X,
+                -PIPE_RADIUS - 0.005,
+                PIPE_RADIUS + 0.005,
+                -PIPE_RADIUS - 0.005,
+                PIPE_RADIUS + 0.005,
+            ),
+            occ.addRectangle(
+                TEE_X - 0.030,
+                -0.030,
+                FREE_SURFACE_Z,
+                0.060,
+                0.060,
+            ),
+            occ.addRectangle(
+                TEE_X - ATMOSPHERE_WIDTH / 2.0,
+                -ATMOSPHERE_WIDTH / 2.0,
+                RIM_Z,
+                ATMOSPHERE_WIDTH,
+                ATMOSPHERE_WIDTH,
+            ),
+        ]
+        fluid, _ = occ.fragment(
+            fluid,
+            [(2, surface) for surface in partition_surfaces],
+        )
         occ.synchronize()
 
         volumes = [tag for dim, tag in fluid if dim == 3]
-        if len(volumes) != 1:
-            raise RuntimeError(f"Expected one connected fluid volume, got {volumes}")
+        if not volumes:
+            raise RuntimeError("No fluid volumes remained after partitioning")
 
         reservoir_surfaces: list[int] = []
         atmosphere_surfaces: list[int] = []
@@ -314,6 +370,11 @@ def main() -> None:
             "valve_x_m": VALVE_X,
             "physical_rim_z_m": RIM_Z,
             "external_top_z_m": ATMOSPHERE_TOP_Z,
+            "internal_partition_planes_m": {
+                "valve_x": VALVE_X,
+                "initial_free_surface_z": FREE_SURFACE_Z,
+                "physical_rim_z": RIM_Z,
+            },
             "nominal_pocket_volume_m3": nominal_pocket_volume,
             "nominal_riser_water_above_soffit_m3": nominal_riser_water_volume,
             "mesh_sizes_m": {

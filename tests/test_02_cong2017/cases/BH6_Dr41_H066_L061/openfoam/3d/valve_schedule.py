@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Emit piecewise-constant Darcy--Forchheimer valve opening stages."""
+"""Write time-dependent porous-baffle coefficients for the B-H6 valve."""
 
 from __future__ import annotations
 
 import argparse
+import json
+from pathlib import Path
 
 
 CLOSED_DARCY_M2 = 1.0e12
@@ -17,7 +19,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--opening-start", type=float, required=True)
     parser.add_argument("--opening-duration", type=float, required=True)
     parser.add_argument("--end-time", type=float, required=True)
-    parser.add_argument("--stages", type=int, default=20)
+    parser.add_argument("--samples", type=int, default=40)
+    parser.add_argument("--darcy-table", type=Path, required=True)
+    parser.add_argument("--inertial-table", type=Path, required=True)
+    parser.add_argument("--audit-json", type=Path)
     return parser.parse_args()
 
 
@@ -33,23 +38,20 @@ def area_fraction(time_s: float, start_s: float, duration_s: float) -> float:
 def resistance(area: float) -> tuple[float, float]:
     seal_weight = max(1.0 - area / SEAL_RELEASE_FRACTION, 0.0)
     darcy = CLOSED_DARCY_M2 * seal_weight * seal_weight
-    if area < MINIMUM_AREA_FRACTION or area >= 1.0:
+    if area >= 1.0:
         return darcy, 0.0
-    loss_coefficient = ((1.0 - area) / area) ** 2
+    effective_area = max(area, MINIMUM_AREA_FRACTION)
+    loss_coefficient = ((1.0 - area) / effective_area) ** 2
     forchheimer = loss_coefficient / VALVE_ZONE_LENGTH_M
     return darcy, forchheimer
 
 
-def emit(
-    end_time_s: float,
-    area: float,
-    phase: str,
-) -> None:
-    darcy, forchheimer = resistance(area)
-    print(
-        f"{end_time_s:.12g}\t{darcy:.12g}\t{forchheimer:.12g}"
-        f"\t{area:.12g}\t{phase}"
-    )
+def write_table(path: Path, rows: list[tuple[float, float]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lines = ["("]
+    lines.extend(f"    ({time_s:.12g} {value:.12g})" for time_s, value in rows)
+    lines.append(")")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def main() -> None:
@@ -60,34 +62,66 @@ def main() -> None:
         raise ValueError("opening-start must be non-negative")
     if args.opening_duration <= 0:
         raise ValueError("opening-duration must be positive")
-    if args.stages < 1:
-        raise ValueError("stages must be positive")
+    if args.samples < 2:
+        raise ValueError("samples must be at least two")
 
-    opening_end = args.opening_start + args.opening_duration
-    if args.opening_start > 0:
-        closed_end = min(args.opening_start, args.end_time)
-        emit(closed_end, 0.0, "closed")
-        if closed_end >= args.end_time:
-            return
+    sample_times = {0.0, args.end_time}
+    if args.opening_start <= args.end_time:
+        sample_times.add(args.opening_start)
+        for index in range(args.samples + 1):
+            sample_times.add(
+                args.opening_start
+                + args.opening_duration * index / args.samples
+            )
+    sample_times = {
+        time_s
+        for time_s in sample_times
+        if 0.0 <= time_s <= max(
+            args.end_time,
+            args.opening_start + args.opening_duration,
+        )
+    }
 
-    stage_width = args.opening_duration / args.stages
-    for index in range(args.stages):
-        stage_start = args.opening_start + index * stage_width
-        if stage_start >= args.end_time:
-            return
-        stage_end = min(stage_start + stage_width, args.end_time)
-        midpoint = 0.5 * (stage_start + stage_end)
+    audit_rows = []
+    for time_s in sorted(sample_times):
         area = area_fraction(
-            midpoint,
+            time_s,
             args.opening_start,
             args.opening_duration,
         )
-        emit(stage_end, area, "opening")
-        if stage_end >= args.end_time:
-            return
+        darcy, inertial = resistance(area)
+        audit_rows.append(
+            {
+                "time_s": time_s,
+                "area_fraction": area,
+                "darcy_m-2": darcy,
+                "inertial_m-1": inertial,
+            }
+        )
 
-    if args.end_time > opening_end:
-        emit(args.end_time, 1.0, "open")
+    write_table(
+        args.darcy_table,
+        [(row["time_s"], row["darcy_m-2"]) for row in audit_rows],
+    )
+    write_table(
+        args.inertial_table,
+        [(row["time_s"], row["inertial_m-1"]) for row in audit_rows],
+    )
+    audit = {
+        "opening_start_s": args.opening_start,
+        "opening_duration_s": args.opening_duration,
+        "samples": args.samples,
+        "minimum_area_fraction": MINIMUM_AREA_FRACTION,
+        "seal_release_fraction": SEAL_RELEASE_FRACTION,
+        "valve_zone_length_m": VALVE_ZONE_LENGTH_M,
+        "rows": audit_rows,
+    }
+    if args.audit_json:
+        args.audit_json.write_text(
+            json.dumps(audit, indent=2) + "\n",
+            encoding="utf-8",
+        )
+    print(json.dumps(audit, indent=2))
 
 
 if __name__ == "__main__":

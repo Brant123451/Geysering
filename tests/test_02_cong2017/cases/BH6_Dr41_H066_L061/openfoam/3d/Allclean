@@ -14,7 +14,9 @@ rm -rf \
     geometry_audit.runtime.json \
     checkMesh.runtime.json \
     initial_audit.runtime.json \
-    valve_schedule.runtime.tsv \
+    valve_schedule.runtime.json \
+    constant/valveDarcyTable \
+    constant/valveInertialTable \
     system/decomposeParDict.runtime \
     log.*
 

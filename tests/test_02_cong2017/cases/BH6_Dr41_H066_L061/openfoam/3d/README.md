@@ -30,7 +30,9 @@ repository's conflicting dimensions from the primary paper.
 circular main pipe, a circular riser, and an external atmosphere box.  There
 are no wedge, empty, thin-layer, or equivalent-rectangle patches.  The
 physical riser ends at `z=1.825 m`; the box above it is external air, not an
-artificially lengthened riser.
+artificially lengthened riser.  Conformal internal partitions at the initial
+free surface, valve plane, and physical rim preserve the same connected fluid
+domain while aligning those model-defining surfaces with mesh faces.
 
 ## Solver and material model
 
@@ -41,14 +43,14 @@ acoustic compressibility is not needed to represent the entrapped-gas spring.
 Surface tension is `0.072 N/m`.  There is no pressure, velocity, or eruption
 forcing and no outcome-dependent source.
 
-The passive valve model is the only momentum sink.  A `10 mm` cell zone at the
-measured valve plane represents a quarter-turn valve.  A Darcy sealing term
-prevents numerical leakage while the smoothstep area fraction is below `0.02`;
-it then vanishes.  During opening, the contraction loss follows
+The passive valve model is the only pressure loss.  A zero-thickness cyclic
+baffle at the measured valve plane uses OpenFOAM's
+`porousBafflePressure` condition over a nominal `10 mm` valve length.  A Darcy
+sealing term prevents numerical leakage while the smoothstep area fraction is
+below `0.02`; it then vanishes.  During opening, the contraction loss follows
 `K=((1-A)/A)^2`, with `A` bounded only while the valve is nominally closed.
-The OpenFOAM-native Darcy--Forchheimer option is updated at 20 equal opening
-stages, restarting from the immediately preceding field state; both terms are
-zero after opening.  The same staging and law are used for the `0.10 s` and
+Forty tabulated samples are linearly interpolated in simulation time, and both
+terms are zero after opening.  The same law is used for the `0.10 s` and
 `0.40 s` sensitivity runs; no coefficient is fitted to B-H6 observations.
 
 ## Initial and boundary conditions

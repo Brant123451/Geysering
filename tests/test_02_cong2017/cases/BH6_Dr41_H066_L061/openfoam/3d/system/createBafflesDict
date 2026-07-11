@@ -1,0 +1,74 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| OpenFOAM v2512: zero-thickness time-varying B-H6 valve             |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      createBafflesDict;
+}
+
+internalFacesOnly true;
+
+baffles
+{
+    valveFaces
+    {
+        type        searchableSurface;
+        surface     plate;
+        origin      (5.98 -0.030 -0.030);
+        span        (0 0.060 0.060);
+
+        patches
+        {
+            master
+            {
+                name            valve_half0;
+                type            cyclic;
+                neighbourPatch  valve_half1;
+
+                patchFields
+                {
+                    p_rgh
+                    {
+                        type            porousBafflePressure;
+                        patchType       cyclic;
+                        D               tableFile;
+                        DCoeffs
+                        {
+                            file                "$FOAM_CASE/constant/valveDarcyTable";
+                            outOfBounds         clamp;
+                            interpolationScheme linear;
+                        }
+                        I               tableFile;
+                        ICoeffs
+                        {
+                            file                "$FOAM_CASE/constant/valveInertialTable";
+                            outOfBounds         clamp;
+                            interpolationScheme linear;
+                        }
+                        length          0.01;
+                        uniformJump     true;
+                        jump            uniform 0;
+                        value           uniform 101325;
+                    }
+                }
+            }
+
+            slave
+            {
+                name            valve_half1;
+                type            cyclic;
+                neighbourPatch  valve_half0;
+
+                patchFields
+                {
+                    ${../../master/patchFields}
+                }
+            }
+        }
+    }
+}
+
+// ************************************************************************* //

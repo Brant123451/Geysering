@@ -1,40 +1,10 @@
-/*--------------------------------*- C++ -*----------------------------------*\
-| OpenFOAM v2512: passive B-H6 ball-valve loss                       |
-\*---------------------------------------------------------------------------*/
+/* No volumetric source: the valve is a porous cyclic baffle. */
 FoamFile
 {
     version     2.0;
     format      ascii;
     class       dictionary;
     object      fvOptions;
-}
-
-valveResistance
-{
-    type            explicitPorositySource;
-    active          true;
-
-    explicitPorositySourceCoeffs
-    {
-        selectionMode       cellZone;
-        cellZone            valveZone;
-        type                DarcyForchheimer;
-
-        DarcyForchheimerCoeffs
-        {
-            // Allrun replaces d and f between opening-stage restarts.
-            // Negative transverse entries are multipliers of the axial value.
-            d d [0 -2 0 0 0 0 0] (1e12 -1000 -1000);
-            f f [0 -1 0 0 0 0 0] (0 0 0);
-
-            coordinateSystem
-            {
-                origin  (0 0 0);
-                e1      (1 0 0);
-                e2      (0 1 0);
-            }
-        }
-    }
 }
 
 // ************************************************************************* //

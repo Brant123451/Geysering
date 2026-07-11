@@ -87,9 +87,9 @@
     }
   },
   "valve": {
-    "type": "OpenFOAM explicitPorositySource with Darcy seal plus Forchheimer contraction loss in a 0.010 m cellZone",
+    "type": "OpenFOAM porousBafflePressure on a conformal cyclic face pair",
     "opening_law": "smoothstep monotone area fraction",
-    "piecewise_constant_opening_stages": 20,
+    "linearly_interpolated_table_samples": 40,
     "base_opening_duration_s": 0.2,
     "sensitivity_opening_durations_s": [
       0.1,
@@ -97,10 +97,10 @@
     ],
     "closed_hold_opening_start_s": 1000.0,
     "minimum_area_fraction": 0.01,
-    "closed_axial_darcy_coefficient_m-2": 1000000000000.0,
-    "closed_transverse_to_axial_darcy_ratio": 1000.0,
+    "closed_darcy_coefficient_m-2": 1000000000000.0,
     "seal_release_area_fraction": 0.02,
-    "contraction_loss_coefficient": "((1-A)/A)^2 for A>=0.01",
+    "nominal_baffle_length_m": 0.01,
+    "contraction_loss_coefficient": "((1-A)/max(A,0.01))^2",
     "fully_open_resistance": 0.0,
     "pressure_or_velocity_forcing": false
   },

@@ -6,6 +6,8 @@
 /constant/polyMesh/
 /bh6-3d.msh
 /geometry_audit.runtime.json
-/valve_schedule.runtime.tsv
+/valve_schedule.runtime.json
+/constant/valveDarcyTable
+/constant/valveInertialTable
 /system/decomposeParDict.runtime
 /log.*
