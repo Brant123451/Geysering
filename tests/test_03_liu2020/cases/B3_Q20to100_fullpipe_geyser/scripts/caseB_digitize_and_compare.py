@@ -18,14 +18,15 @@ from pathlib import Path
 
 import numpy as np
 
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE / "model"))
+CASE_ROOT = Path(__file__).resolve().parents[1]
+MODEL = CASE_ROOT / "model"
+sys.path.insert(0, str(MODEL))
 
 from liu2020_network_twofluid import LiuCase, run_case, RHO_L, G  # noqa: E402
 
-SCANS = HERE / "paper_scans"
-DIG = HERE / "digitized"
-OUT = HERE / "outputs"
+SCANS = CASE_ROOT / "reference" / "paper_scans"
+DIG = CASE_ROOT / "data" / "digitized"
+OUT = CASE_ROOT / "outputs"
 for d in (DIG, OUT):
     d.mkdir(exist_ok=True)
 
@@ -296,21 +297,21 @@ geyser。实测：涌波 t=1.20 s 到室 &rarr; PT2/PT3 冲击峰 55.03/51.76 kP
   <h2 style="margin-top:0">压力对比 — PT2（室顶盖）/ PT3（室底）/ PT1（竖管 +0.80 m）</h2>
   <p class="muted">彩色包络+中位线 = 论文 Fig.5(b) 数字化（逐列取色）；黑线 = 模型。
   t=0 为流量斜坡起点。</p>
-  <img src="outputs/caseB_comparison_pressure.png">
+  <img src="caseB_comparison_pressure.png">
   <div class="grid2" style="margin-top:10px">
-    <div><h3 style="margin:4px 0">论文原图 Fig.5(b)（扫描）</h3><img src="digitized/_fig5b_crop_probe.png"></div>
-    <div><h3 style="margin:4px 0">数字化质量检查</h3><img src="digitized/debug_fig5b_extract.png"></div>
+    <div><h3 style="margin:4px 0">论文原图 Fig.5(b)（扫描）</h3><img src="../data/digitized/_fig5b_crop_probe.png"></div>
+    <div><h3 style="margin:4px 0">数字化质量检查</h3><img src="../data/digitized/debug_fig5b_extract.png"></div>
   </div>
 </div>
 
 <div class="panel">
   <h2 style="margin-top:0">竖管混合柱 — 喷发判别与时序</h2>
-  <img src="outputs/caseB_riser_column.png">
+  <img src="caseB_riser_column.png">
 </div>
 
 <div class="panel">
   <h2 style="margin-top:0">喷发高度—峰压关系 — 对标 Fig.7(a)</h2>
-  <img src="outputs/caseB_h_vs_pmax.png">
+  <img src="caseB_h_vs_pmax.png">
   <p class="muted">论文对 Series B 全部喷发工况给出回归
   h = 0.6943&middot;P<sub>Max</sub>/&rho;g + 0.3086（R&sup2;=0.97）。模型点
   (P<sub>Max</sub>/&rho;g = {pmax_model*1e3/(RHO_L*G):.2f} m, h<sub>jet</sub> = {h_model:.2f} m)；
@@ -356,10 +357,10 @@ geyser。实测：涌波 t=1.20 s 到室 &rarr; PT2/PT3 冲击峰 55.03/51.76 kP
   一致的最低水位，未对任何瞬态/终态结果拟合）。</p>
 </div>
 </div></body></html>"""
-    (HERE / "report.html").write_text(html, encoding="utf-8")
+    (OUT / "report.html").write_text(html, encoding="utf-8")
     print(f"-> {OUT / 'caseB_comparison_pressure.png'}")
     print(f"-> {OUT / 'caseB_h_vs_pmax.png'}")
-    print(f"-> {HERE / 'report.html'}")
+    print(f"-> {OUT / 'report.html'}")
 
 
 if __name__ == "__main__":

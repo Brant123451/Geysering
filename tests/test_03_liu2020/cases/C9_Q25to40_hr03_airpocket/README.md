@@ -37,5 +37,5 @@
 ## 运行
 
 ```bash
-E:\Useless\Anaconda\python.exe caseC_digitize_and_compare.py
+python scripts/caseC_digitize_and_compare.py
 ```

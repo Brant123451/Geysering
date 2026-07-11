@@ -25,12 +25,13 @@ from pathlib import Path
 
 import numpy as np
 
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE / "model"))
+CASE_ROOT = Path(__file__).resolve().parents[1]
+MODEL = CASE_ROOT / "model"
+sys.path.insert(0, str(MODEL))
 
 from liu2020_network_twofluid import LiuCase, run_case, G  # noqa: E402
 
-OUT = HERE / "outputs"
+OUT = CASE_ROOT / "outputs"
 OUT.mkdir(exist_ok=True)
 
 

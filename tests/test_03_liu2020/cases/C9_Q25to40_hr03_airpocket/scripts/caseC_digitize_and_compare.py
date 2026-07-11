@@ -24,14 +24,15 @@ from pathlib import Path
 
 import numpy as np
 
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE / "model"))
+CASE_ROOT = Path(__file__).resolve().parents[1]
+MODEL = CASE_ROOT / "model"
+sys.path.insert(0, str(MODEL))
 
 from liu2020_network_twofluid import LiuCase, run_case, RHO_L, G  # noqa: E402
 
-SCANS = HERE / "paper_scans"
-DIG = HERE / "digitized"
-OUT = HERE / "outputs"
+SCANS = CASE_ROOT / "reference" / "paper_scans"
+DIG = CASE_ROOT / "data" / "digitized"
+OUT = CASE_ROOT / "outputs"
 for d in (DIG, OUT):
     d.mkdir(exist_ok=True)
 
@@ -357,7 +358,7 @@ h1{{font-size:22px}} h2{{font-size:17px}}
   <h2 style="margin-top:0">第一阶段三方对照 — 实测 vs 解析 Eq.(7) vs 本模型</h2>
   <p class="muted">纵轴为 PT2 测压头（基准取室顶）。模型跑两个声明变体：<b>全水变体</b>
   （上游管初始全水——与 Eq.(7) 假设组完全一致）与<b>封气囊变体</b>（气垫缓冲演示）。</p>
-  <img src="outputs/caseC_phase1_threeway.png">
+  <img src="caseC_phase1_threeway.png">
 </div>
 
 <div class="panel">
@@ -365,16 +366,16 @@ h1{{font-size:22px}} h2{{font-size:17px}}
   <p class="muted">灰色虚线 = 实测气囊本体到达时刻（6.46 s，第二阶段起点）。模型
   （全水变体）此后按纯水力路径趋稳；实测的 3–8 次喷发振荡为气囊释放驱动，模型
   不表示（声明）。</p>
-  <img src="outputs/caseC_comparison_pressure.png">
+  <img src="caseC_comparison_pressure.png">
   <div class="grid2" style="margin-top:10px">
-    <div><h3 style="margin:4px 0">论文原图 Fig.9（扫描）</h3><img src="paper_scans/p09_fig9_C9_pressure_phases.png"></div>
-    <div><h3 style="margin:4px 0">数字化质量检查</h3><img src="digitized/debug_fig9_extract.png"></div>
+    <div><h3 style="margin:4px 0">论文原图 Fig.9（扫描）</h3><img src="../reference/paper_scans/p09_fig9_C9_pressure_phases.png"></div>
+    <div><h3 style="margin:4px 0">数字化质量检查</h3><img src="../data/digitized/debug_fig9_extract.png"></div>
   </div>
 </div>
 
 <div class="panel">
   <h2 style="margin-top:0">竖管水柱 — 第一阶段喷发</h2>
-  <img src="outputs/caseC_riser_column.png">
+  <img src="caseC_riser_column.png">
 </div>
 
 <div class="panel">
@@ -407,10 +408,10 @@ h1{{font-size:22px}} h2{{font-size:17px}}
   运动分析"（弹状流机制）——与 Campaign 1/2 的机制学对照收进论文讨论章。</p>
 </div>
 </div></body></html>"""
-    (HERE / "report.html").write_text(html, encoding="utf-8")
+    (OUT / "report.html").write_text(html, encoding="utf-8")
     print(f"-> {OUT / 'caseC_phase1_threeway.png'}")
     print(f"-> {OUT / 'caseC_comparison_pressure.png'}")
-    print(f"-> {HERE / 'report.html'}")
+    print(f"-> {OUT / 'report.html'}")
 
 
 if __name__ == "__main__":

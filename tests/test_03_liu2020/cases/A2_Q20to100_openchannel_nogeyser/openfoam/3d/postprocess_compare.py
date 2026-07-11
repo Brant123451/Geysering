@@ -89,7 +89,7 @@ def main():
     dig = {}
     digdir = DIGITIZED
     for name in ("PT3", "PT2"):
-        f = digdir / f"fig3_{name}_median.csv"
+        f = digdir / f"fig3_{name}.csv"
         if f.exists():
             arr = np.loadtxt(f, delimiter=",", skiprows=1)
             dig[name] = arr

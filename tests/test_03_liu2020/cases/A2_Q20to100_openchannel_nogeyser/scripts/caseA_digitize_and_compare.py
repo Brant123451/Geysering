@@ -15,14 +15,15 @@ from pathlib import Path
 
 import numpy as np
 
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE / "model"))
+CASE_ROOT = Path(__file__).resolve().parents[1]
+MODEL = CASE_ROOT / "model"
+sys.path.insert(0, str(MODEL))
 
 from liu2020_network_twofluid import LiuCase, run_case  # noqa: E402
 
-SCANS = HERE / "paper_scans"
-DIG = HERE / "digitized"
-OUT = HERE / "outputs"
+SCANS = CASE_ROOT / "reference" / "paper_scans"
+DIG = CASE_ROOT / "data" / "digitized"
+OUT = CASE_ROOT / "outputs"
 for d in (DIG, OUT):
     d.mkdir(exist_ok=True)
 
@@ -252,16 +253,16 @@ EOS，气相质量守恒），两处断面突变为带动量状态的内部结�
   <h2 style="margin-top:0">压力对比 — PT3（室底）/ PT2（室顶盖）/ PT1（竖管 +0.80 m）</h2>
   <p class="muted">灰包络+中位线 = 论文 Fig.3 数字化（逐列取色）；红线 = 模型。
   t=0 为流量斜坡起点。</p>
-  <img src="outputs/caseA_comparison_pressure.png">
+  <img src="caseA_comparison_pressure.png">
   <div class="grid2" style="margin-top:10px">
-    <div><h3 style="margin:4px 0">论文原图 Fig.3（扫描）</h3><img src="paper_scans/fig3_panel.png"></div>
-    <div><h3 style="margin:4px 0">数字化质量检查</h3><img src="digitized/debug_fig3_extract.png"></div>
+    <div><h3 style="margin:4px 0">论文原图 Fig.3（扫描）</h3><img src="../reference/paper_scans/fig3_panel.png"></div>
+    <div><h3 style="margin:4px 0">数字化质量检查</h3><img src="../data/digitized/debug_fig3_extract.png"></div>
   </div>
 </div>
 
 <div class="panel">
   <h2 style="margin-top:0">竖管混合柱高度 — 对标 Fig.4</h2>
-  <img src="outputs/caseA_riser_column.png">
+  <img src="caseA_riser_column.png">
   <p class="muted">论文 Fig.4 给出 Series A 各工况"首个气水混合柱"最大高度；A2
   （Q0=20, Q1=100）实测 h&asymp;0.13 m。论文自己的零损失能量估计（h = V_u&sup2;/2g − &Delta;z）
   给 0.33 m，并注明"比实测大 0.10–0.15 m"。模型首峰 {mm['hr_max']:.2f} m（段塞动量
@@ -320,7 +321,7 @@ EOS，气相质量守恒），两处断面突变为带动量状态的内部结�
   缓坡才有的长距离 M2 降水曲线。若是缓坡（y_n&gt;y_c），审查直觉就完全正确：
   会出现拉长的 M2 曲线、坎唇水深收缩到约 0.7y_c。坎唇非静水压水舌弯曲仍超出一维
   静水压模型分辨能力。下图为模型暖机稳态实算剖面与 y_n / y_c 对照及沿程 Froude 数。</p>
-  <img src="outputs/caseA_steady_profile.png">
+  <img src="caseA_steady_profile.png">
 </div>
 
 __FRAME_VIEWER__
@@ -351,10 +352,10 @@ __FRAME_VIEWER__
 </div>
 </div></body></html>"""
     html = html.replace("__FRAME_VIEWER__", build_frame_viewer())
-    (HERE / "report.html").write_text(html, encoding="utf-8")
+    (OUT / "report.html").write_text(html, encoding="utf-8")
     print(f"-> {OUT / 'caseA_comparison_pressure.png'}")
     print(f"-> {OUT / 'caseA_riser_column.png'}")
-    print(f"-> {HERE / 'report.html'}")
+    print(f"-> {OUT / 'report.html'}")
 
 
 def build_frame_viewer() -> str:

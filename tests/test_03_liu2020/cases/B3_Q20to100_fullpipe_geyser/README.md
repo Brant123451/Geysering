@@ -56,7 +56,7 @@
   "再振荡两周期"定性一致；振荡周期偏慢（论文自家解析模型 Eq.7 也偏慢一倍）。
 - **已尝试并回退**：室内封闭气囊 EOS 加压方案（正反馈提前喷发，柱堵排气路）；
   出口瞬时孔口面（对刚性端格抖振）→ 改带动量出口面。
-- 复跑：`E:\Useless\Anaconda\python.exe caseB_digitize_and_compare.py`
+- 复跑：`python scripts/caseB_digitize_and_compare.py`
 
 ## 文件夹约定
 

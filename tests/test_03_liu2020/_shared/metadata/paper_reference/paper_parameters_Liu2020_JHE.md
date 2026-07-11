@@ -1,5 +1,5 @@
 # Liu, Shao & Zhu (2020), JHE 146(2):04019055 — apparatus & experimental parameters
-Source: papers/liu2020.pdf (parsed). DOI: 10.1061/(ASCE)HY.1943-7900.0001660
+Source: references/liu2020.pdf (parsed). DOI: 10.1061/(ASCE)HY.1943-7900.0001660
 
 原型：Edmonton 27 m 深竖井，交汇室连接 3.5 m 直径进水管与 4 m 跌落的出水管。
 实验室 1:20 概化模型。
