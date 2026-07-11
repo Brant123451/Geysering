@@ -27,7 +27,7 @@ valveResistance
         openingDuration        0.20;
         linearLossRate         500.0;
         minimumAreaFraction    0.01;
-        sealDarcyCoefficient   1e12;
+        sealDarcyCoefficient   1e15;
         sealReleaseFraction    0.02;
         valveZoneLength        0.01;
 
@@ -71,7 +71,7 @@ valveResistance
                 coeffs().getOrDefault<scalar>
                 (
                     "sealDarcyCoefficient",
-                    1e12
+                    1e15
                 ),
                 0.0
             );

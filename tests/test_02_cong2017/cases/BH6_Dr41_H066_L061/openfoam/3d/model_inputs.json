@@ -97,7 +97,7 @@
     "closed_hold_opening_start_s": 1000.0,
     "linear_loss_rate_s-1": 500.0,
     "minimum_area_fraction": 0.01,
-    "seal_darcy_coefficient_m-2": 1000000000000.0,
+    "seal_darcy_coefficient_m-2": 1000000000000000.0,
     "seal_release_area_fraction": 0.02,
     "contraction_loss_coefficient": "((1-A)/max(A,0.01))^2",
     "fully_open_resistance": 0.0,
