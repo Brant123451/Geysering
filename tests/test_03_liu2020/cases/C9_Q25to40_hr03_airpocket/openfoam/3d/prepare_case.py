@@ -1145,6 +1145,11 @@ NP="${{OPENFOAM_NP:-{args.np}}}"
     exit 2
 }}
 rm -rf constant/polyMesh processor*
+surfaceCheck constant/triSurface/diagnosticCombined.stl -checkSelfIntersection > log.surfaceCheck 2>&1
+rg -q '^Surface is closed' log.surfaceCheck || {{
+    echo "Combined C9 surface is not topologically closed; see log.surfaceCheck" >&2
+    exit 2
+}}
 blockMesh > log.blockMesh 2>&1
 surfaceFeatureExtract > log.surfaceFeatureExtract 2>&1
 rm -rf 0

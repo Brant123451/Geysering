@@ -25,8 +25,6 @@ HERE = Path(__file__).resolve().parent
 PARAMS = HERE / "case_parameters.json"
 OUT = HERE / "case" / "constant" / "triSurface"
 
-EPS_LIP = 0.001
-PEN = 0.02
 NSEG = 96
 NSEG_R = 64
 
@@ -208,23 +206,26 @@ def build(gate_area):
     }
 
     gate_radius = math.sqrt(gate_area / math.pi)
-    if gate_radius >= rd - 2.0 * EPS_LIP:
+    if gate_radius >= rd:
         raise ValueError("tailgate opening does not leave a resolved gate annulus")
 
+    # Every component terminates on the exact same ring as its neighbour.
+    # Earlier prototypes used small penetrations/lips; those create topological
+    # leaks for snappyHexMesh even when they look closed in a surface viewer.
     walls = [
         tube(
             [x_up, 0.0, zaxis_up(x_up)],
-            [PEN, 0.0, zaxis_up(PEN)],
+            [0.0, 0.0, zaxis_up(0.0)],
             ru,
             NSEG,
         ),
-        rect_with_hole("x", 0.0, -wc / 2.0, wc / 2.0, 0.0, hc, 0.0, drop + ru, ru - EPS_LIP, NSEG),
-        rect_with_hole("x", lc, -wc / 2.0, wc / 2.0, 0.0, hc, 0.0, zaxis_down, rd - EPS_LIP, NSEG),
-        rect_with_hole("z", hc, 0.0, lc, -wc / 2.0, wc / 2.0, xr, 0.0, rr - EPS_LIP, NSEG_R),
+        rect_with_hole("x", 0.0, -wc / 2.0, wc / 2.0, 0.0, hc, 0.0, drop + ru, ru, NSEG),
+        rect_with_hole("x", lc, -wc / 2.0, wc / 2.0, 0.0, hc, 0.0, zaxis_down, rd, NSEG),
+        rect_with_hole("z", hc, 0.0, lc, -wc / 2.0, wc / 2.0, xr, 0.0, rr, NSEG_R),
         box_faces(0.0, lc, -wc / 2.0, wc / 2.0, 0.0, hc, skip=("x0", "x1", "z1")),
-        tube([lc - PEN, 0.0, zaxis_down], [x_down, 0.0, zaxis_down], rd, NSEG),
+        tube([lc, 0.0, zaxis_down], [x_down, 0.0, zaxis_down], rd, NSEG),
     ]
-    riser = tube([xr, 0.0, z_lid - PEN], [xr, 0.0, z_rim + PEN], rr, NSEG_R)
+    riser = tube([xr, 0.0, z_lid], [xr, 0.0, z_rim], rr, NSEG_R)
 
     # The plume-box bottom is open to the laboratory atmosphere except for
     # the riser hole.  Ejected water can leave rather than accumulating and
@@ -248,7 +249,7 @@ def build(gate_area):
             plume["y1"],
             xr,
             0.0,
-            rr - EPS_LIP,
+                rr,
             NSEG_R,
         ),
     ]
@@ -267,6 +268,8 @@ def build(gate_area):
         stale.unlink()
     for name, triangles in pieces.items():
         write_stl(OUT / f"{name}.stl", name, triangles)
+    combined = np.concatenate(list(pieces.values()))
+    write_stl(OUT / "diagnosticCombined.stl", "diagnosticCombined", combined)
 
     metadata = {
         "source": "Liu et al. (2020), pp. 2-3, Fig. 2; plume and equivalent gate are model closures",
@@ -275,6 +278,7 @@ def build(gate_area):
         "plume_top_z_m": plume_top,
         "riser_rim_z_m": z_rim,
         "surface_triangle_counts": {name: int(len(triangles)) for name, triangles in pieces.items()},
+        "diagnostic_combined_triangle_count": int(len(combined)),
     }
     with (HERE / "case" / "generated_geometry.json").open("w", encoding="utf-8") as stream:
         json.dump(metadata, stream, indent=2)

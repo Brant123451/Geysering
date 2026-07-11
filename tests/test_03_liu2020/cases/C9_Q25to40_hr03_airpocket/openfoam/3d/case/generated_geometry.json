@@ -11,5 +11,6 @@
     "gateWall": 192,
     "gateOutlet": 96,
     "atmosphere": 138
-  }
+  },
+  "diagnostic_combined_triangle_count": 1552
 }

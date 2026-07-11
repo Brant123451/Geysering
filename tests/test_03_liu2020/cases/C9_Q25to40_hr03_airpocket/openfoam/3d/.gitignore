@@ -4,6 +4,8 @@ case/[0-9]*/
 case/processor*/
 case/postProcessing/
 case/constant/polyMesh/
+case/constant/extendedFeatureEdgeMesh/
+case/constant/triSurface/*.eMesh
 case/log.*
 case/core
 case/*.foam
