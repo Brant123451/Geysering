@@ -1,0 +1,29 @@
+{
+  "case": "B-H4",
+  "window_s": 0.3,
+  "purpose": "Production-step repeat of the open-valve smoke; this is not an event classification.",
+  "reference": {
+    "label": "open_smoke",
+    "maxCo": 0.2,
+    "maxAlphaCo": 0.1,
+    "nOuterCorrectors": 3
+  },
+  "production": {
+    "label": "open_smoke_prod",
+    "maxCo": 0.4,
+    "maxAlphaCo": 0.1,
+    "nOuterCorrectors": 2
+  },
+  "production_relative_to_reference": {
+    "pocket_pressure_peak_gauge_head_m": 0.0026217062099093253,
+    "pt2_pressure_peak_gauge_head_m": 0.004587755247521011,
+    "valve_volume_flux_peak_abs_m3_s": -0.0011328164405140866,
+    "pocket_volume_min_m3": -0.0006658230252530635,
+    "riser_interface_mixed_volume_max_m3": 0.006427792033923003
+  },
+  "production_conservation": {
+    "max_water_volume_balance_relative": 0.0002801579690949285,
+    "max_gas_mass_balance_relative": 0.000033112678720283234
+  },
+  "conclusion": "The 0.3 s pressure, valve-flow, pocket-volume, and interface-mixing diagnostics agree within 0.7%; the complete 13 s event and grid study remain the classification gate."
+}

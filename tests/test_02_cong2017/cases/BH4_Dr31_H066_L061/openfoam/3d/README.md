@@ -87,6 +87,13 @@ study uses 0.10, 0.20, and 0.30 s with every other input unchanged.  Closed
 hold, valve flux, and pressure on both sides are recorded independently before
 the experimental no-geyser label is examined.
 
+Production runs use `maxCo=0.40`, `maxAlphaCo=0.10`, and two PIMPLE outer
+correctors.  A repeat of the 0.3 s opening smoke against the more restrictive
+`maxCo=0.20`/three-outer-corrector setup changed pressure, valve-flow,
+pocket-volume, and interface-mixing diagnostics by less than 0.7%;
+`numerics_smoke_comparison.json` records the comparison.  This short check
+validates the production stepping only and is not used for classification.
+
 ## Run
 
 The environment needs OpenFOAM v2512, Gmsh, NumPy, and Matplotlib.
