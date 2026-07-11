@@ -19,6 +19,7 @@
     "mesh_preset": "base",
     "valve_mode": "closed",
     "valve_open_time_s": 0.25,
+    "valve_seal_speed_m_per_s": 1.0,
     "initial_air_head_m": 0.61,
     "initial_air_absolute_pressure_Pa": 107298.32862,
     "gas_equation_of_state": "perfectGas",
@@ -30,6 +31,7 @@
     "plume_write_interval_s": 0.001,
     "accounting_interval_s": 0.001,
     "c_alpha": 1.0,
+    "alpha_smooth_curvature_iterations": 2,
     "tower_probe_lines": 5,
     "tower_probe_spacing_m": 0.005,
     "plume_probe_lines": 5,
@@ -119,6 +121,14 @@
     "mass_balance_method": {
       "total": "solver rho and rhoPhi (signed atmosphere flux)",
       "phases": "EOS phase density with alpha*phi boundary split; diagnostic approximation because subcycled alphaPhi is not exposed"
+    },
+    "acceptance": {
+      "all_streams_reach_Tstar_6": false,
+      "geyser_resolved": false,
+      "phase_balance_within_1_percent": true,
+      "plume_not_domain_censored": true,
+      "closed_valve_hold_passed": false,
+      "compatible_base_refined_pair": false
     }
   },
   "experimental_error": {
@@ -139,6 +149,7 @@
   },
   "hold_test": {
     "duration_s": 0.001,
+    "requested_duration_s": 0.001,
     "Hstar_peak_to_peak": 0.0,
     "Yfs_star_max_drift": 0.0024590163934427034,
     "max_water_above_rim_m3": 0.0,
