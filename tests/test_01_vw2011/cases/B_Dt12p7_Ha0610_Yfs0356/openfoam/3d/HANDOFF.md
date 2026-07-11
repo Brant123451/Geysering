@@ -25,6 +25,13 @@ using DLR-RY TwoPhaseFlow `compressibleInterFlow` at pinned commit
 candidate is not accepted as the baseline until the full 1.0 s closed-valve
 hold passes.
 
+The first full-hold attempt then exposed stock-deck corrector counts that made
+each step perform about 18 pressure solves.  The source now materialises the
+TwoPhaseFlow surface-tension-case pattern (one alpha correction, two alpha
+subcycles, one outer loop, two pressure correctors and no non-orthogonal
+corrector).  This lower-cost candidate is not yet accepted: it must repeat the
+0.006 s screen before restarting the hold.
+
 ## Verified before handoff
 
 1. The paper and Case-B definition were audited in `PAPER_AUDIT.md`.
@@ -68,9 +75,9 @@ hold passes.
 
 The scientific reproduction is **not complete**.  Continue in this order:
 
-1. Run the full 1.0 s closed-valve hold and assess leakage, interface drift,
-   pressure drift, alpha bounds and mass balance.  The prerequisite 0.006 s RDF
-   screening is complete.
+1. Repeat the 0.006 s RDF screen with the materialised TwoPhaseFlow-reference
+   corrector counts, then run the full 1.0 s closed-valve hold and assess
+   leakage, interface drift, pressure drift, alpha bounds and mass balance.
 2. Run the opened-valve 0.5 s smoke case.
 3. Run the 10.5 s base case through \(T^*\ge6\).
 4. Run the refined grid and required timestep/valve/compressibility

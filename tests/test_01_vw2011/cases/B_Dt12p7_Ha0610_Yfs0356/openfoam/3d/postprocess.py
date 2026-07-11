@@ -61,6 +61,11 @@ def configuration_id(manifest: dict) -> str:
             "reconstruction_scheme",
             "curvature_model",
             "n_alpha_bounds",
+            "n_alpha_corr",
+            "n_alpha_subcycles",
+            "n_outer_correctors",
+            "n_pressure_correctors",
+            "n_non_orthogonal_correctors",
             "alpha_clip",
             "alpha_smooth_curvature_iterations",
             "end_time_s",
@@ -82,6 +87,11 @@ def is_baseline_numerics(manifest: dict) -> bool:
         and math.isclose(float(manifest.get("max_capillary_num", -1)), 1.0)
         and math.isclose(float(manifest.get("c_alpha", -1)), 1.0)
         and int(manifest.get("n_alpha_bounds", -1)) == 5
+        and int(manifest.get("n_alpha_corr", -1)) == 1
+        and int(manifest.get("n_alpha_subcycles", -1)) == 2
+        and int(manifest.get("n_outer_correctors", -1)) == 1
+        and int(manifest.get("n_pressure_correctors", -1)) == 2
+        and int(manifest.get("n_non_orthogonal_correctors", -1)) == 0
         and manifest.get("alpha_clip") is False
     )
 
@@ -166,6 +176,11 @@ def mesh_pair_compatible(first: dict, second: dict) -> bool:
         "reconstruction_scheme",
         "curvature_model",
         "n_alpha_bounds",
+        "n_alpha_corr",
+        "n_alpha_subcycles",
+        "n_outer_correctors",
+        "n_pressure_correctors",
+        "n_non_orthogonal_correctors",
         "alpha_clip",
         "alpha_smooth_curvature_iterations",
         "end_time_s",
@@ -352,6 +367,11 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "reconstructionScheme",
         "curvatureModel",
         "nAlphaBounds",
+        "nAlphaCorr",
+        "nAlphaSubCycles",
+        "nOuterCorrectors",
+        "nCorrectors",
+        "nNonOrthogonalCorrectors",
         "alphaClip",
         "alphaSmoothCurvature",
         "end_Tstar",
@@ -416,6 +436,13 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "reconstructionScheme": manifest.get("reconstruction_scheme"),
         "curvatureModel": manifest.get("curvature_model"),
         "nAlphaBounds": manifest.get("n_alpha_bounds"),
+        "nAlphaCorr": manifest.get("n_alpha_corr"),
+        "nAlphaSubCycles": manifest.get("n_alpha_subcycles"),
+        "nOuterCorrectors": manifest.get("n_outer_correctors"),
+        "nCorrectors": manifest.get("n_pressure_correctors"),
+        "nNonOrthogonalCorrectors": manifest.get(
+            "n_non_orthogonal_correctors"
+        ),
         "alphaClip": manifest.get("alpha_clip"),
         "alphaSmoothCurvature": manifest.get(
             "alpha_smooth_curvature_iterations"
@@ -473,6 +500,11 @@ def update_sensitivity_csv(metrics: dict) -> None:
         "reconstructionScheme",
         "curvatureModel",
         "nAlphaBounds",
+        "nAlphaCorr",
+        "nAlphaSubCycles",
+        "nOuterCorrectors",
+        "nCorrectors",
+        "nNonOrthogonalCorrectors",
         "alphaClip",
         "alphaSmoothCurvature",
         "requested_end_time_s",
@@ -514,6 +546,13 @@ def update_sensitivity_csv(metrics: dict) -> None:
         "reconstructionScheme": manifest.get("reconstruction_scheme"),
         "curvatureModel": manifest.get("curvature_model"),
         "nAlphaBounds": manifest.get("n_alpha_bounds"),
+        "nAlphaCorr": manifest.get("n_alpha_corr"),
+        "nAlphaSubCycles": manifest.get("n_alpha_subcycles"),
+        "nOuterCorrectors": manifest.get("n_outer_correctors"),
+        "nCorrectors": manifest.get("n_pressure_correctors"),
+        "nNonOrthogonalCorrectors": manifest.get(
+            "n_non_orthogonal_correctors"
+        ),
         "alphaClip": manifest.get("alpha_clip"),
         "alphaSmoothCurvature": manifest.get(
             "alpha_smooth_curvature_iterations"

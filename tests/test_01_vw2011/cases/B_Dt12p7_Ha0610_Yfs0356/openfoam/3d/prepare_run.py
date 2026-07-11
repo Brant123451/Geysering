@@ -67,6 +67,13 @@ def main() -> None:
     )
     curvature_model = os.environ.get("CASEB_CURVATURE_MODEL", "RDF")
     n_alpha_bounds = env_int("CASEB_N_ALPHA_BOUNDS", 5)
+    n_alpha_corr = env_int("CASEB_N_ALPHA_CORR", 1)
+    n_alpha_subcycles = env_int("CASEB_N_ALPHA_SUBCYCLES", 2)
+    n_outer_correctors = env_int("CASEB_N_OUTER_CORRECTORS", 1)
+    n_pressure_correctors = env_int("CASEB_N_CORRECTORS", 2)
+    n_non_orthogonal_correctors = env_int(
+        "CASEB_N_NON_ORTHOGONAL_CORRECTORS", 0
+    )
     alpha_clip = env_bool("CASEB_ALPHA_CLIP", False)
     initial_air_head = env_float("CASEB_HA0", 0.610)
     valve_mode = os.environ.get(
@@ -139,6 +146,23 @@ def main() -> None:
         raise SystemExit("CASEB_VALVE_OPEN_TIME cannot be negative")
     if n_alpha_bounds < 1:
         raise SystemExit("CASEB_N_ALPHA_BOUNDS must be positive")
+    positive_correctors = {
+        "CASEB_N_ALPHA_CORR": n_alpha_corr,
+        "CASEB_N_ALPHA_SUBCYCLES": n_alpha_subcycles,
+        "CASEB_N_OUTER_CORRECTORS": n_outer_correctors,
+        "CASEB_N_CORRECTORS": n_pressure_correctors,
+    }
+    invalid_correctors = [
+        name for name, value in positive_correctors.items() if value < 1
+    ]
+    if invalid_correctors:
+        raise SystemExit(
+            f"{', '.join(invalid_correctors)} must be positive"
+        )
+    if n_non_orthogonal_correctors < 0:
+        raise SystemExit(
+            "CASEB_N_NON_ORTHOGONAL_CORRECTORS cannot be negative"
+        )
     if stage != "mesh":
         write_interval = min(write_interval, end_time)
         probe_interval = min(0.005, end_time)
@@ -173,6 +197,15 @@ def main() -> None:
         f"nAlphaBounds            {n_alpha_bounds};\n"
         f"clip                    {str(alpha_clip).lower()};\n"
         "snapTol                 0;\n"
+    )
+    (SYSTEM / "alphaCorrectors").write_text(
+        f"nAlphaCorr      {n_alpha_corr};\n"
+        f"nAlphaSubCycles {n_alpha_subcycles};\n"
+    )
+    (SYSTEM / "pimpleCorrectors").write_text(
+        f"nOuterCorrectors         {n_outer_correctors};\n"
+        f"nCorrectors              {n_pressure_correctors};\n"
+        f"nNonOrthogonalCorrectors {n_non_orthogonal_correctors};\n"
     )
     (HERE / "constant" / "surfaceForces").write_text(
         "surfaceForces\n"
@@ -233,6 +266,11 @@ def main() -> None:
         "accounting_interval_s": accounting_interval,
         "c_alpha": c_alpha,
         "n_alpha_bounds": n_alpha_bounds,
+        "n_alpha_corr": n_alpha_corr,
+        "n_alpha_subcycles": n_alpha_subcycles,
+        "n_outer_correctors": n_outer_correctors,
+        "n_pressure_correctors": n_pressure_correctors,
+        "n_non_orthogonal_correctors": n_non_orthogonal_correctors,
         "alpha_clip": alpha_clip,
         "tower_probe_lines": 5,
         "tower_probe_spacing_m": 0.005,

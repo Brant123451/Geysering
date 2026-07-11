@@ -146,6 +146,12 @@ Copy the full block below into the new Cursor account's Cloud Agent.
     新的曲率敏感性为 `RDF|fitParaboloid|gradAlpha`，界面压缩敏感性必须用
     `CASEB_ADVECTION_SCHEME=MULESScheme` 配合 `CASEB_C_ALPHA`，不能把
     isoAdvection 下无作用的 cAlpha 当成有效敏感性。
+17. 首次完整 hold 尝试暴露了从 stock deck 沿用的过度校正：每步约有
+    2 outer × 3 pressure × 3 non-orthogonal = 18 次压力求解。当前候选改用
+    TwoPhaseFlow 自带表面张力算例常用的 1 次 alpha correction、2 次 alpha
+    subcycle、1 outer、2 pressure corrector、0 non-orthogonal corrector。
+    这些值必须写入 manifest，且必须重新通过 0.006 s 筛选；不能仅因更快就
+    接受。
 
 六、阀门
 
@@ -276,6 +282,11 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
 - CASEB_RECONSTRUCTION_SCHEME=plicRDF|isoAlpha|gradAlpha
 - CASEB_CURVATURE_MODEL=RDF|fitParaboloid|gradAlpha
 - CASEB_C_ALPHA=0.5|1.0|1.5（仅与 MULESScheme 配合）
+- CASEB_N_ALPHA_CORR=1
+- CASEB_N_ALPHA_SUBCYCLES=2
+- CASEB_N_OUTER_CORRECTORS=1
+- CASEB_N_CORRECTORS=2
+- CASEB_N_NON_ORTHOGONAL_CORRECTORS=0
 - CASEB_HA0=0.579|0.610|0.641
 - CASEB_GAS_EOS=perfectGas|rhoConst
 

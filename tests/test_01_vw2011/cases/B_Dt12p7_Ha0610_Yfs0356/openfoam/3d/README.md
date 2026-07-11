@@ -80,6 +80,16 @@ phase-accounting object, so the conflicting library is not loaded.  The clean
 rerun exited with code zero; the failed teardown attempt is not treated as
 screen evidence.
 
+The first attempted full hold also exposed stock-deck corrector counts that
+were not justified for TwoPhaseFlow: two outer loops, three pressure
+correctors and two non-orthogonal passes caused about 18 pressure solves per
+step.  TwoPhaseFlow's supplied surface-tension cases normally use one outer
+loop, two pressure correctors and zero non-orthogonal passes, with one alpha
+correction and two alpha subcycles.  Those values are now the numerical
+candidate and are materialised in the run manifest.  They must repeat the
+0.006 s screen before the full hold restarts; reduced cost alone is not
+evidence of equivalent stability.
+
 Thermophysical choices are:
 
 * air: `perfectGas`, molecular weight 28.965 kg/kmol, \(C_p=1005\) J/kg/K,
@@ -285,6 +295,19 @@ CASEB_C_ALPHA=0.5|1.0|1.5  # only with MULESScheme
 CASEB_HA0=0.579|0.610|0.641
 CASEB_GAS_EOS=perfectGas|rhoConst
 ```
+
+Advanced corrector controls are recorded for reproducibility and targeted
+numerical diagnostics:
+
+```text
+CASEB_N_ALPHA_CORR=1
+CASEB_N_ALPHA_SUBCYCLES=2
+CASEB_N_OUTER_CORRECTORS=1
+CASEB_N_CORRECTORS=2
+CASEB_N_NON_ORTHOGONAL_CORRECTORS=0
+```
+
+Changing any of these makes a non-baseline configuration.
 
 The \(H_{a0}\) endpoints are the reported ±0.031 m manometer precision.
 `rhoConst` is a deliberately incompressible-gas limiting case at atmospheric

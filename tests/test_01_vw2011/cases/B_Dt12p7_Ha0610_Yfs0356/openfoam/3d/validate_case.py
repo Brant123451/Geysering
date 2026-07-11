@@ -46,6 +46,8 @@ solver_sources = "\n".join(
     (
         (HERE / "system" / "controlDict").read_text(),
         (HERE / "system" / "runSettings.default").read_text(),
+        (HERE / "system" / "alphaCorrectors.default").read_text(),
+        (HERE / "system" / "pimpleCorrectors.default").read_text(),
         (HERE / "constant" / "thermophysicalProperties").read_text(),
         (HERE / "constant" / "surfaceForces.default").read_text(),
         (HERE / "Allrun").read_text(),
@@ -56,6 +58,11 @@ required_solver_fragments = [
     "advectionScheme         isoAdvection",
     "reconstructionScheme    plicRDF",
     "surfaceTensionForceModel    RDF",
+    "nAlphaCorr      1",
+    "nAlphaSubCycles 2",
+    "nOuterCorrectors         1",
+    "nCorrectors              2",
+    "nNonOrthogonalCorrectors 0",
     "pureMovingPhaseModel",
     "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
 ]
@@ -73,7 +80,8 @@ result = {
     "case_definition_ok": True,
     "solver_source_check": (
         "compressibleInterFlow at pinned TwoPhaseFlow commit with "
-        "isoAdvection, plicRDF reconstruction and RDF curvature"
+        "isoAdvection, plicRDF reconstruction, RDF curvature and "
+        "TwoPhaseFlow-reference corrector counts"
     ),
     "geometry_source_check": (
         "configured 3-D circular Boolean pipe/tower/exterior atmosphere; "

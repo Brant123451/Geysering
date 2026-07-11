@@ -30,6 +30,11 @@ ENVIRONMENT_KEYS = {
     "reconstruction_scheme": "CASEB_RECONSTRUCTION_SCHEME",
     "curvature_model": "CASEB_CURVATURE_MODEL",
     "n_alpha_bounds": "CASEB_N_ALPHA_BOUNDS",
+    "n_alpha_corr": "CASEB_N_ALPHA_CORR",
+    "n_alpha_subcycles": "CASEB_N_ALPHA_SUBCYCLES",
+    "n_outer_correctors": "CASEB_N_OUTER_CORRECTORS",
+    "n_pressure_correctors": "CASEB_N_CORRECTORS",
+    "n_non_orthogonal_correctors": "CASEB_N_NON_ORTHOGONAL_CORRECTORS",
     "alpha_clip": "CASEB_ALPHA_CLIP",
 }
 
@@ -45,6 +50,11 @@ NUMERIC_KEYS = {
     "field_write_interval_s",
     "c_alpha",
     "n_alpha_bounds",
+    "n_alpha_corr",
+    "n_alpha_subcycles",
+    "n_outer_correctors",
+    "n_pressure_correctors",
+    "n_non_orthogonal_correctors",
 }
 
 
@@ -84,11 +94,24 @@ def read_manifest(path: Path) -> dict:
         value = float(manifest[key])
         if not math.isfinite(value):
             raise ValueError(f"Non-finite {key} in run manifest")
+    positive_integer_keys = {
+        "n_alpha_bounds",
+        "n_alpha_corr",
+        "n_alpha_subcycles",
+        "n_outer_correctors",
+        "n_pressure_correctors",
+    }
+    for key in positive_integer_keys:
+        if not float(manifest[key]).is_integer() or int(manifest[key]) < 1:
+            raise ValueError(f"{key} must be a positive integer")
+    non_orthogonal = manifest["n_non_orthogonal_correctors"]
     if (
-        not float(manifest["n_alpha_bounds"]).is_integer()
-        or int(manifest["n_alpha_bounds"]) < 1
+        not float(non_orthogonal).is_integer()
+        or int(non_orthogonal) < 0
     ):
-        raise ValueError("Alpha bounding iterations must be a positive integer")
+        raise ValueError(
+            "n_non_orthogonal_correctors must be a non-negative integer"
+        )
     return manifest
 
 

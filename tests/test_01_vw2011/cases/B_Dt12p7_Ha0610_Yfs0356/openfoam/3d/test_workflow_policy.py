@@ -48,6 +48,11 @@ def baseline_manifest(mesh: str = "base") -> dict:
         "field_write_interval_s": 0.10,
         "c_alpha": 1.0,
         "n_alpha_bounds": 5,
+        "n_alpha_corr": 1,
+        "n_alpha_subcycles": 2,
+        "n_outer_correctors": 1,
+        "n_pressure_correctors": 2,
+        "n_non_orthogonal_correctors": 0,
         "alpha_clip": False,
     }
 
@@ -70,6 +75,9 @@ class BaselinePolicyTests(unittest.TestCase):
         self.assertFalse(is_baseline_full_physics(manifest))
         manifest = baseline_manifest()
         manifest["curvature_model"] = "fitParaboloid"
+        self.assertFalse(is_baseline_full_physics(manifest))
+        manifest = baseline_manifest()
+        manifest["n_outer_correctors"] = 2
         self.assertFalse(is_baseline_full_physics(manifest))
 
     def test_acceptance_can_only_complete_base_mesh(self) -> None:
@@ -147,6 +155,12 @@ class InitialFieldPolicyTests(unittest.TestCase):
 class TwoPhaseFlowDeckTests(unittest.TestCase):
     def test_rdf_geometric_vof_is_the_default(self) -> None:
         settings = (HERE / "system" / "runSettings.default").read_text()
+        alpha_correctors = (
+            HERE / "system" / "alphaCorrectors.default"
+        ).read_text()
+        pimple_correctors = (
+            HERE / "system" / "pimpleCorrectors.default"
+        ).read_text()
         surface_forces = (
             HERE / "constant" / "surfaceForces.default"
         ).read_text()
@@ -154,6 +168,11 @@ class TwoPhaseFlowDeckTests(unittest.TestCase):
         self.assertIn("reconstructionScheme    plicRDF;", settings)
         self.assertIn("clip                    false;", settings)
         self.assertIn("surfaceTensionForceModel    RDF;", surface_forces)
+        self.assertIn("nAlphaCorr      1;", alpha_correctors)
+        self.assertIn("nAlphaSubCycles 2;", alpha_correctors)
+        self.assertIn("nOuterCorrectors         1;", pimple_correctors)
+        self.assertIn("nCorrectors              2;", pimple_correctors)
+        self.assertIn("nNonOrthogonalCorrectors 0;", pimple_correctors)
 
     def test_compressible_inter_flow_entrypoints_are_consistent(self) -> None:
         control = (HERE / "system" / "controlDict").read_text()

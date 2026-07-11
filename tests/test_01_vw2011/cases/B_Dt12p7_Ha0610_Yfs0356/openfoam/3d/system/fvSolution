@@ -10,8 +10,7 @@ solvers
 {
     "alpha.water.*"
     {
-        nAlphaCorr      2;
-        nAlphaSubCycles 2;
+        #include "alphaCorrectors"
         #include "runSettings"
         MULESCorr       no;
         nLimiterIter    5;
@@ -97,7 +96,5 @@ PIMPLE
 {
     momentumPredictor          yes;
     transonic                  no;
-    nOuterCorrectors           2;
-    nCorrectors                3;
-    nNonOrthogonalCorrectors   2;
+    #include "pimpleCorrectors"
 }
