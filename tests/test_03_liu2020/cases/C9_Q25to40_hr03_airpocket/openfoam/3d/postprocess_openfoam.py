@@ -183,6 +183,37 @@ def first_sustained_time(times, active, minimum_duration):
     return float(times[events[0][0]]) if events else None
 
 
+def dominant_gas_component(
+    x: np.ndarray, alpha_water: np.ndarray, threshold: float = 0.50
+) -> tuple[float, float, float]:
+    """Return front, span, and furthest gas for the dominant connected component.
+
+    The thin crown layer can thicken or shed bubbles downstream of the main
+    pocket.  Taking the furthest gas-bearing probe therefore does not identify
+    the main pocket.  On the deeper probe line, the longest contiguous
+    gas-dominant component is the operational main body.
+    """
+    valid_gas = np.isfinite(alpha_water) & (alpha_water <= threshold)
+    gas_indices = np.flatnonzero(valid_gas)
+    if not len(gas_indices):
+        return math.nan, 0.0, math.nan
+
+    split_at = np.where(np.diff(gas_indices) > 1)[0] + 1
+    components = np.split(gas_indices, split_at)
+    dominant = max(
+        components,
+        key=lambda indices: (
+            float(x[indices[-1]] - x[indices[0]]),
+            len(indices),
+            float(x[indices[-1]]),
+        ),
+    )
+    front = float(x[dominant[-1]])
+    span = float(x[dominant[-1]] - x[dominant[0]])
+    furthest = float(x[gas_indices[-1]])
+    return front, span, furthest
+
+
 def read_experiment(name: str) -> tuple[np.ndarray, np.ndarray]:
     path = DATA / f"fig9_{name}.csv"
     if not path.exists():
@@ -196,8 +227,11 @@ def parse_mesh_quality(case: Path) -> dict:
     result = {
         "checkMesh_run": False,
         "checkMesh_passed": False,
+        "strict_check_run": False,
         "all_geometry_passed": False,
         "concave_cells": None,
+        "concave_faces": None,
+        "max_concave_face_angle_deg": None,
         "cells": None,
         "max_non_orthogonality": None,
         "max_skewness": None,
@@ -211,6 +245,7 @@ def parse_mesh_quality(case: Path) -> dict:
     strict_text = strict_path.read_text(errors="replace") if strict_path.exists() else text
     result["checkMesh_run"] = True
     result["checkMesh_passed"] = "Mesh OK." in text
+    result["strict_check_run"] = strict_path.exists()
     result["all_geometry_passed"] = "Mesh OK." in strict_text
     patterns = {
         "cells": r"cells:\s+(\d+)",
@@ -230,10 +265,20 @@ def parse_mesh_quality(case: Path) -> dict:
     concave = re.search(r"Concave cells .* number of cells:\s*(\d+)", strict_text)
     if concave:
         result["concave_cells"] = int(concave.group(1))
+    elif "Concave cell check OK." in strict_text:
+        result["concave_cells"] = 0
+    concave_faces = re.search(
+        rf"There are\s+(\d+)\s+faces with concave angles.*?"
+        rf"Max concave angle\s*=\s*({r'[-+0-9.eE]+'})",
+        strict_text,
+    )
+    if concave_faces:
+        result["concave_faces"] = int(concave_faces.group(1))
+        result["max_concave_face_angle_deg"] = float(concave_faces.group(2))
     return result
 
 
-def parse_numerics(case: Path) -> dict:
+def parse_numerics(case: Path, paper_time_offset: float = RAMP_OFFSET) -> dict:
     """Summarize stability controls from all completed stage logs."""
     result = {
         "logs": [],
@@ -244,9 +289,15 @@ def parse_numerics(case: Path) -> dict:
         "maximum_limited_cells": 0,
         "maximum_limited_cell_percent": 0.0,
         "maximum_limited_faces": 0,
+        "maximum_limited_face_percent": 0.0,
+        "maximum_limited_stage": None,
+        "maximum_limited_solver_time_s": None,
+        "maximum_limited_paper_time_s": None,
         "velocity_limiter_activated": False,
+        "limiter_by_stage": {},
     }
     number = r"[-+0-9.eE]+"
+    time_line = re.compile(rf"^Time\s*=\s*({number})\s*$")
     courant = re.compile(rf"Courant Number mean:\s*{number}\s+max:\s*({number})")
     alpha_courant = re.compile(
         rf"Interface Courant Number mean:\s*{number}\s+max:\s*({number})"
@@ -264,8 +315,22 @@ def parse_numerics(case: Path) -> dict:
         if not path.exists():
             continue
         result["logs"].append(path.name)
+        current_time = None
+        stage_result = {
+            "first_activation_solver_time_s": None,
+            "first_activation_paper_time_s": None,
+            "maximum_limited_cells": 0,
+            "maximum_limited_cell_percent": 0.0,
+            "maximum_limited_faces": 0,
+            "maximum_limited_face_percent": 0.0,
+            "maximum_activation_solver_time_s": None,
+            "maximum_activation_paper_time_s": None,
+        }
         with path.open(errors="replace") as stream:
             for line in stream:
+                match = time_line.match(line.strip())
+                if match:
+                    current_time = float(match.group(1))
                 match = courant.search(line)
                 if match:
                     value = float(match.group(1))
@@ -284,15 +349,41 @@ def parse_numerics(case: Path) -> dict:
                     max_velocity = value if max_velocity is None else max(max_velocity, value)
                 match = limited.search(line)
                 if match:
-                    result["maximum_limited_cells"] = max(
-                        result["maximum_limited_cells"], int(match.group(1))
-                    )
-                    result["maximum_limited_cell_percent"] = max(
-                        result["maximum_limited_cell_percent"], float(match.group(2))
-                    )
-                    result["maximum_limited_faces"] = max(
-                        result["maximum_limited_faces"], int(match.group(3))
-                    )
+                    cells = int(match.group(1))
+                    cell_percent = float(match.group(2))
+                    faces = int(match.group(3))
+                    face_percent = float(match.group(4))
+                    if cells > 0 and stage_result["first_activation_solver_time_s"] is None:
+                        stage_result["first_activation_solver_time_s"] = current_time
+                        stage_result["first_activation_paper_time_s"] = (
+                            current_time - paper_time_offset
+                            if current_time is not None
+                            else None
+                        )
+                    if cells > stage_result["maximum_limited_cells"]:
+                        stage_result["maximum_limited_cells"] = cells
+                        stage_result["maximum_limited_cell_percent"] = cell_percent
+                        stage_result["maximum_limited_faces"] = faces
+                        stage_result["maximum_limited_face_percent"] = face_percent
+                        stage_result["maximum_activation_solver_time_s"] = current_time
+                        stage_result["maximum_activation_paper_time_s"] = (
+                            current_time - paper_time_offset
+                            if current_time is not None
+                            else None
+                        )
+                    if cells > result["maximum_limited_cells"]:
+                        result["maximum_limited_cells"] = cells
+                        result["maximum_limited_cell_percent"] = cell_percent
+                        result["maximum_limited_faces"] = faces
+                        result["maximum_limited_face_percent"] = face_percent
+                        result["maximum_limited_stage"] = stage
+                        result["maximum_limited_solver_time_s"] = current_time
+                        result["maximum_limited_paper_time_s"] = (
+                            current_time - paper_time_offset
+                            if current_time is not None
+                            else None
+                        )
+        result["limiter_by_stage"][stage] = stage_result
     result["max_courant_number"] = max_co
     result["max_interface_courant_number"] = max_alpha_co
     result["minimum_delta_t_s"] = min_delta_t
@@ -371,32 +462,50 @@ def main() -> None:
     deep_t = deep_t_solver - offset
     if deep_alpha.size:
         deep_x = np.linspace(-5.75, -0.05, deep_alpha.shape[1])
+        component_diagnostics = [
+            dominant_gas_component(deep_x, row) for row in deep_alpha
+        ]
         main_body_front = np.asarray(
-            [
-                float(np.max(deep_x[row <= 0.50]))
-                if np.any(np.isfinite(row) & (row <= 0.50))
-                else math.nan
-                for row in deep_alpha
-            ]
+            [diagnostic[0] for diagnostic in component_diagnostics], dtype=float
         )
-        near_chamber_deep_gas = (
-            np.isfinite(deep_alpha[:, -1])
-            & (deep_alpha[:, -1] <= 0.50)
+        main_body_span = np.asarray(
+            [diagnostic[1] for diagnostic in component_diagnostics], dtype=float
+        )
+        furthest_deep_gas = np.asarray(
+            [diagnostic[2] for diagnostic in component_diagnostics], dtype=float
+        )
+        pocket = metadata.get("pocket", {})
+        prior_body_length = float(pocket.get("body_nose_x_m", -1.0)) - float(
+            pocket.get("tail_x_m", -4.8)
+        )
+        minimum_body_span = max(0.50, 0.25 * prior_body_length)
+        probe_spacing = float(np.median(np.diff(deep_x))) if len(deep_x) > 1 else 0.0
+        connected_body_at_chamber = (
+            np.isfinite(main_body_front)
+            & (main_body_front >= deep_x[-1] - 0.5 * probe_spacing)
+            & (main_body_span >= minimum_body_span)
             & (deep_t >= 0.0)
         )
         arrival_time = first_sustained_time(
-            deep_t, near_chamber_deep_gas, minimum_duration=0.05
+            deep_t, connected_body_at_chamber, minimum_duration=0.05
         )
     else:
         main_body_front = np.empty(0)
+        main_body_span = np.empty(0)
+        furthest_deep_gas = np.empty(0)
+        minimum_body_span = None
         arrival_time = None
     probe_depth = metadata.get("main_body_probe_depth_below_crown_m")
     arrival_definition = (
-        "first nonnegative paper time at which alpha.air >= 0.50 persists "
-        "for at least 0.05 s at x=-0.05 m and "
+        "first nonnegative paper time at which the longest contiguous "
+        "alpha.air >= 0.50 component on the deep crown-probe line reaches "
+        "x=-0.05 m for at least 0.05 s, while retaining a streamwise span of "
+        f"at least {minimum_body_span if minimum_body_span is not None else 'unknown'} m; "
+        "the line is "
         f"{probe_depth if probe_depth is not None else 'unknown'} m below the "
         "upstream-pipe crown; the probe is 4 mm below the selected initial "
-        "thin-layer thickness and operationally identifies the thick main pocket"
+        "thin-layer thickness, and connectivity separates the thick main "
+        "pocket from detached bubbles or local layer thickening"
     )
 
     uv_t_solver, upstream_water = first_column(post, "upstreamWaterVolume")
@@ -446,6 +555,16 @@ def main() -> None:
         if len(deep_t_solver)
         else np.full(len(uv_t_solver), np.nan)
     )
+    body_span_at_inventory_times = (
+        interp_series(deep_t_solver, main_body_span, uv_t_solver)
+        if len(deep_t_solver)
+        else np.full(len(uv_t_solver), np.nan)
+    )
+    furthest_gas_at_inventory_times = (
+        interp_series(deep_t_solver, furthest_deep_gas, uv_t_solver)
+        if len(deep_t_solver)
+        else np.full(len(uv_t_solver), np.nan)
+    )
     write_csv(
         OUTPUTS / "openfoam_3d_air_pocket.csv",
         [
@@ -454,6 +573,8 @@ def main() -> None:
             "upstream_air_mass_kg",
             "chamber_air_volume_m3",
             "main_body_front_x_m",
+            "main_body_component_span_m",
+            "furthest_deep_gas_x_m",
         ],
         zip(
             uv_t,
@@ -461,6 +582,8 @@ def main() -> None:
             upstream_air_mass,
             chamber_air,
             body_front_at_inventory_times,
+            body_span_at_inventory_times,
+            furthest_gas_at_inventory_times,
         ),
     )
 
@@ -579,6 +702,14 @@ def main() -> None:
         final_window = p_time >= 19.0
         finals = [float(np.nanmean(pressure[final_window, index])) for index in (1, 2, 3)]
 
+    sim_start = float(np.nanmin(p_time)) if len(p_time) else None
+    initialization_complete = (
+        sim_start is not None
+        and sim_start <= -0.24
+        and sim_end is not None
+        and sim_end >= 0.0
+    )
+    smoke_complete = sim_end is not None and sim_end >= 1.0
     phase1_complete = sim_end is not None and sim_end >= 6.5
     phase2_complete = sim_end is not None and sim_end >= 19.999
     phase1_geysers = sum(
@@ -602,14 +733,24 @@ def main() -> None:
             if phase2_complete
             else "complete_phase1_only"
             if phase1_complete
-            else "smoke_only"
-            if sim_end is not None
+            else "smoke_complete"
+            if smoke_complete
+            else "partial_smoke"
+            if sim_end is not None and sim_end > 0.0
+            else "initialization_only"
+            if initialization_complete
             else "not_run"
         ),
         "solver": metadata.get("application", "unknown"),
         "mesh_generator": metadata.get("mesh_generator", "unknown"),
         "simulation_end_paper_time_s": sim_end,
         "paper_time_offset_s": offset,
+        "initialization": {
+            "window_complete": initialization_complete,
+        },
+        "smoke": {
+            "window_complete": smoke_complete,
+        },
         "phase_1": {
             "window_complete": phase1_complete,
             "reproduced": bool(phase1_complete and phase1_geysers >= 2 and p1m is not None),
@@ -633,6 +774,7 @@ def main() -> None:
         "simulated_air_pocket_arrival_s": arrival_time,
         "air_pocket_arrival_definition": arrival_definition,
         "main_body_probe_depth_below_crown_m": probe_depth,
+        "minimum_main_body_component_span_m": minimum_body_span,
         "simulated_gas_transfer_onset_s": gas_transfer_onset,
         "gas_transfer_onset_definition": gas_transfer_definition,
         "experimental_air_pocket_arrival_s": PAPER["air_pocket_arrival_s"],
@@ -672,8 +814,18 @@ def main() -> None:
             if len(main_body_front) and np.isfinite(main_body_front[-1])
             else None
         ),
+        "end_main_body_component_span_m": (
+            float(main_body_span[-1])
+            if len(main_body_span) and np.isfinite(main_body_span[-1])
+            else None
+        ),
+        "end_furthest_deep_gas_x_m": (
+            float(furthest_deep_gas[-1])
+            if len(furthest_deep_gas) and np.isfinite(furthest_deep_gas[-1])
+            else None
+        ),
         "mesh": parse_mesh_quality(case),
-        "numerics": parse_numerics(case),
+        "numerics": parse_numerics(case, offset),
         "source_parameter_status": {
             "air_pocket_size": "uncertain sensitivity parameter, not reported by paper",
             "tailgate_opening": "derived boundary parameter, not reported by paper",
@@ -761,6 +913,8 @@ def main() -> None:
             "solver",
             "interface_solver",
             "mesh_generator",
+            "thin_layer_cell_size_m",
+            "thin_layer_target_cells",
             "cells",
             "strict_check_passed",
             "maxCo",
@@ -768,6 +922,7 @@ def main() -> None:
             "velocity_limit_m_s",
             "limiter_activated",
             "maximum_limited_cells",
+            "maximum_limited_cell_percent",
             "pocket_profile",
             "gate_area_m2",
             "contact_angle_deg",
@@ -789,6 +944,8 @@ def main() -> None:
                 metadata.get("application"),
                 metadata.get("interface_solver"),
                 metadata.get("mesh_generator"),
+                metadata.get("cartesian_thin_layer_cell_size_m"),
+                metadata.get("thin_layer_target_cells"),
                 mesh.get("cells"),
                 mesh.get("all_geometry_passed"),
                 metadata.get("maxCo"),
@@ -796,6 +953,7 @@ def main() -> None:
                 metadata.get("velocity_limit_m_s"),
                 metrics["numerics"].get("velocity_limiter_activated"),
                 metrics["numerics"].get("maximum_limited_cells"),
+                metrics["numerics"].get("maximum_limited_cell_percent"),
                 metadata.get("pocket_profile"),
                 metadata.get("gate_area_m2"),
                 metadata.get("contact_angle_deg"),
