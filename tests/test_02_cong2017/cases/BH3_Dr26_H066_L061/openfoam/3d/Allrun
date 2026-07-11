@@ -51,6 +51,18 @@ python3 make_runtime_config.py \
 
 cp -a 0.orig 0
 setFields > log.setFields 2>&1
+setExprFields -time 0 \
+    -field p \
+    -expression "101325 + alpha.water*998*9.81*max(0.66-pos().z(),0)" \
+    -load-fields "(alpha.water)" \
+    -keepPatches \
+    > log.initializeHydrostaticP 2>&1
+setExprFields -time 0 \
+    -field p_rgh \
+    -expression "p + (alpha.water*998 + (1-alpha.water)*(101325/(287.05*296.15)))*9.81*pos().z()" \
+    -load-fields "(alpha.water p)" \
+    -keepPatches \
+    > log.initializeHydrostaticPrgh 2>&1
 topoSet -dict system/topoSetDict.valve > log.topoSet.valve 2>&1
 python3 make_valve_dict.py \
     --mode "$VALVE_OPENING" \

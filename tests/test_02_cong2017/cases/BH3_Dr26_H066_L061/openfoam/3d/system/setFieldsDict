@@ -9,8 +9,10 @@ FoamFile
 defaultFieldValues
 (
     volScalarFieldValue alpha.water 1
-    volScalarFieldValue p_rgh 107787.946
-    volScalarFieldValue p 107787.946
+    // Seeds are replaced by the p/p_rgh-consistent hydrostatic expressions
+    // in Allrun after the phase regions have been assigned.
+    volScalarFieldValue p_rgh 107786.651
+    volScalarFieldValue p 107786.651
     volScalarFieldValue T 296.15
 );
 

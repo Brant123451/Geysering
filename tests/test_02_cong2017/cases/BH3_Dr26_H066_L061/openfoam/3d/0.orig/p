@@ -7,14 +7,14 @@ FoamFile
 }
 
 dimensions      [1 -1 -2 0 0 0 0];
-internalField   uniform 107787.946;
+internalField   uniform 107786.651;
 
 boundaryField
 {
     inlet
     {
         type            calculated;
-        value           uniform 107787.946;
+        value           uniform 107786.651;
     }
     closedEnd
     {
@@ -24,12 +24,12 @@ boundaryField
     walls
     {
         type            calculated;
-        value           uniform 107787.946;
+        value           uniform 107786.651;
     }
     riserWall
     {
         type            calculated;
-        value           uniform 107787.946;
+        value           uniform 107786.651;
     }
     atmosphere
     {

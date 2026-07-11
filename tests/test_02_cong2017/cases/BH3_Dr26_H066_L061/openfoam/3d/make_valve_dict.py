@@ -72,7 +72,7 @@ def coupled_fields(i_function: str) -> str:
                     alphat      {{ type cyclic; }}"""
 
 
-def wall_fields() -> str:
+def wall_fields(p_rgh: float, p: float, alpha_water: int) -> str:
     return """
                     U
                     {
@@ -82,19 +82,19 @@ def wall_fields() -> str:
                     p_rgh
                     {
                         type fixedFluxPressure;
-                        value uniform 101325;
+                        value uniform %s;
                     }
                     p
                     {
                         type calculated;
-                        value uniform 101325;
+                        value uniform %s;
                     }
                     alpha.water
                     {
                         type constantAlphaContactAngle;
                         theta0 90;
                         limit gradient;
-                        value uniform 0;
+                        value uniform %s;
                     }
                     T { type zeroGradient; }
                     k
@@ -122,7 +122,7 @@ def wall_fields() -> str:
                         type compressible::alphatWallFunction;
                         Prt 0.85;
                         value uniform 0;
-                    }"""
+                    }""" % (p_rgh, p, alpha_water)
 
 
 def main() -> None:
@@ -134,7 +134,8 @@ def main() -> None:
         slave_type = "wall"
         master_extra = ""
         slave_extra = ""
-        fields = wall_fields()
+        master_fields = wall_fields(107786.651, 107541.891, 1)
+        slave_fields = wall_fields(101325.292, 101325.0, 0)
     else:
         master_type = "cyclic"
         slave_type = "cyclic"
@@ -144,7 +145,8 @@ def main() -> None:
             i_function = "constant 0"
         else:
             i_function = inertial_table(float(args.mode))
-        fields = coupled_fields(i_function)
+        master_fields = coupled_fields(i_function)
+        slave_fields = master_fields
 
     text = f"""FoamFile
 {{
@@ -170,7 +172,7 @@ baffles
                 type {master_type};
                 {master_extra}
                 patchFields
-                {{{fields}
+                {{{master_fields}
                 }}
             }}
             slave
@@ -179,7 +181,7 @@ baffles
                 type {slave_type};
                 {slave_extra}
                 patchFields
-                {{{fields}
+                {{{slave_fields}
                 }}
             }}
         }}

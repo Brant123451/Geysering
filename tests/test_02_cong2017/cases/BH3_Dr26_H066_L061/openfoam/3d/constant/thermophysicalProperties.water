@@ -25,9 +25,10 @@ mixture
     }
     equationOfState
     {
-        // rho0*R is approximately the physical 2.2 GPa water bulk modulus.
-        R           2.2044e6;
-        rho0        998;
+        // perfectFluid uses rho=rho0+p/(R*T).  These values give rho=998
+        // kg/m3 at 101325 Pa and K=rho*R*T=2.2 GPa at 296.15 K.
+        R           7443.55501481;
+        rho0        997.954035295;
     }
     thermodynamics
     {

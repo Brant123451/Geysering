@@ -29,7 +29,7 @@ computational extension is not represented as a longer physical riser.
 - Solver: `compressibleInterFoam`.
 - Air: `perfectGas`, `Mw=28.966 kg/kmol`, initially `101325 Pa`.
 - Water: weakly compressible `perfectFluid` with physical `2.2 GPa` bulk
-  modulus and `rho0=998 kg/m3`.
+  modulus and density `998 kg/m3` at `101325 Pa`, `296.15 K`.
 - Initial temperature: `296.15 K` (the measured laboratory `23 degC`).
 - Surface tension: `0.072 N/m`.
 - Standard `kEpsilon`, matching the paired 2018 CFD study.
@@ -49,6 +49,12 @@ compressible initial air pocket.
 | Pocket `5.98<=x<=6.59 m` | `(0 0 0)` | atmospheric | 0 | 296.15 K |
 | Riser headspace and external atmosphere | `(0 0 0)` | atmospheric | 0 | 296.15 K |
 
+After `setFields`, `setExprFields` imposes
+`p=101325+alpha.water*rhoWater*g*max(H0-z,0)` and then
+`p_rgh=p-rhoMix*(g dot x)`. This makes the absolute pressure used to
+initialize both equations of state consistent with the reduced hydrostatic
+pressure before the first PIMPLE iteration.
+
 Analytic pocket target: `1.1977322 L`; ideal-gas mass target at the stated
 pressure and temperature: `1.427602 g`.
 
@@ -56,17 +62,17 @@ pressure and temperature: `1.427602 g`.
 
 | Patch | `U` | `p_rgh` / `p` | `alpha.water` | `T` | Contact angle / role |
 |---|---|---|---|---|---|
-| `inlet` | `pressureInletOutletVelocity` | fixed constant-head `p_rgh=107787.95 Pa`; `p` calculated | fixed 1 | fixed 296.15 K | Upstream water reservoir |
+| `inlet` | `pressureInletOutletVelocity` | fixed constant-head `p_rgh=107786.65 Pa`; `p` calculated | fixed 1 | fixed 296.15 K | Upstream water reservoir |
 | `closedEnd` | no slip | `fixedFluxPressure`; `p` calculated | zero gradient | zero gradient | Permanently capped downstream end |
 | `walls` | no slip | `fixedFluxPressure`; `p` calculated | static 90 deg | zero gradient | Circular pipe and external floor |
 | `riserWall` | no slip | `fixedFluxPressure`; `p` calculated | static 90 deg | zero gradient | Circular physical riser |
-| `atmosphere` | `pressureInletOutletVelocity` | atmospheric total `p_rgh`; `p` calculated | `inletOutlet`, inflow 0 | `inletOutlet`, inflow 296.15 K | Open sides/top of external air domain |
+| `atmosphere` | `pressureInletOutletVelocity` | `prghTotalPressure`, absolute `p0=101325 Pa`; `p` calculated | `inletOutlet`, inflow 0 | `inletOutlet`, inflow 296.15 K | Open sides/top of external air domain |
 | Valve baffle | coupled cyclic; wall for closed-hold test | zero-jump for instantaneous baseline or time-varying porous pressure loss | coupled | coupled | Published instantaneous opening; 0.2/0.5 s sensitivities |
 
 ## Mesh profiles
 
 `make_geometry.py` builds one exact OpenCASCADE Boolean fluid volume and
-generates a boundary-fitted HXT tetrahedral mesh with named inlet, cap, wall,
+generates a boundary-fitted Delaunay tetrahedral mesh with named inlet, cap, wall,
 riser-wall, and atmosphere physical groups. The base and refined profiles use
 independent pipe/riser/atmosphere target sizes; no cut-cell background or
 rectangular equivalent flow area enters the solution.
