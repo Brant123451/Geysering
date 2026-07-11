@@ -11,7 +11,7 @@ solvers
 {
     "alpha.water.*"
     {
-        nAlphaCorr 2;
+        nAlphaCorr 1;
         nAlphaSubCycles 2;
         cAlpha 1;
         MULESCorr no;
@@ -80,7 +80,7 @@ PIMPLE
 {
     momentumPredictor yes;
     transonic no;
-    nOuterCorrectors 2;
-    nCorrectors 3;
+    nOuterCorrectors 1;
+    nCorrectors 2;
     nNonOrthogonalCorrectors 1;
 }

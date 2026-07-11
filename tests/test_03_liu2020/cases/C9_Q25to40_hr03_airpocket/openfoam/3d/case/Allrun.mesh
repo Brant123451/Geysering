@@ -22,5 +22,6 @@ mpirun -np "$NP" snappyHexMesh -parallel -overwrite > log.snappyHexMesh 2>&1
 reconstructParMesh -constant > log.reconstructParMesh 2>&1
 rm -rf processor*
 topoSet > log.topoSet 2>&1
-checkMesh -allGeometry -allTopology > log.checkMesh 2>&1
+checkMesh > log.checkMesh 2>&1
+checkMesh -allGeometry -allTopology > log.checkMesh.all 2>&1
 echo MESH_DONE

@@ -167,8 +167,11 @@ the measured \(pV\) compression/expansion of a closed pocket. It is therefore
 not the final C9 solver. The source case uses OpenFOAM v2512
 `compressibleInterFoam`: VOF interface transport, perfect-gas air, and weakly
 compressible liquid water. This retains an energy equation and supports
-closed-pocket pressure/mass changes. `compressibleInterIsoFoam` is supplied as
-an isothermal sensitivity variant. Both are interface-capturing continuum
-models: they can advect and break a resolved gas region, but subcell bubbles,
-coalescence, and entrainment are mesh/model dependent. Reproducing phase 1
-does not by itself establish that phase 2 or eight eruptions were reproduced.
+closed-pocket pressure/mass changes. `compressibleInterIsoFoam` is supplied
+only as an isoAdvector interface-transport sensitivity; despite its name, it
+is not an isothermal-gas solver. Thermal closure is instead bracketed by
+declared heat-capacity limits, and liquid compressibility by bulk-modulus
+limits. These are interface-capturing continuum models: they can advect and
+break a resolved gas region, but subcell bubbles, coalescence, and entrainment
+are mesh/model dependent. Reproducing phase 1 does not by itself establish
+that phase 2 or eight eruptions were reproduced.

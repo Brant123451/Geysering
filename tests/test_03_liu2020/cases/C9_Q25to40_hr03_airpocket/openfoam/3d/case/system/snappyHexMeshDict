@@ -42,7 +42,7 @@ geometry
     pocketZone
     {
         type searchableBox;
-        min (-4.900000 -0.12 0.34);
+        min (-4.900000 -0.12 0.358000);
         max (0.05 0.12 0.46);
     }
     pocketTail
@@ -76,7 +76,7 @@ geometry
 castellatedMeshControls
 {
     maxLocalCells 1500000;
-    maxGlobalCells 4000000;
+    maxGlobalCells 2000000;
     minRefinementCells 10;
     maxLoadUnbalance 0.10;
     nCellsBetweenLevels 2;
@@ -99,8 +99,8 @@ castellatedMeshControls
         }
         riserWall
         {
-            level (3
-                   3);
+            level (2
+                   2);
             patchInfo { type wall; }
         }
         inlet
@@ -111,14 +111,14 @@ castellatedMeshControls
         }
         gateWall
         {
-            level (3
-                   3);
+            level (2
+                   2);
             patchInfo { type wall; }
         }
         gateOutlet
         {
-            level (3
-                   3);
+            level (2
+                   2);
             patchInfo { type patch; }
         }
         atmosphere
@@ -131,14 +131,14 @@ castellatedMeshControls
     resolveFeatureAngle 30;
     refinementRegions
     {
-        chamberZone      { mode inside; levels ((1e15 2)); }
-        riserZone        { mode inside; levels ((1e15 3)); }
+        chamberZone      { mode inside; levels ((1e15 1)); }
+        riserZone        { mode inside; levels ((1e15 2)); }
         plumeCore        { mode inside; levels ((1e15 1)); }
         pocketZone       { mode inside; levels ((1e15 2)); }
-        pocketTail       { mode inside; levels ((1e15 3)); }
-        pocketNose       { mode inside; levels ((1e15 3)); }
-        riserFreeSurface { mode inside; levels ((1e15 3)); }
-        gateZone         { mode inside; levels ((1e15 3)); }
+        pocketTail       { mode inside; levels ((1e15 2)); }
+        pocketNose       { mode inside; levels ((1e15 2)); }
+        riserFreeSurface { mode inside; levels ((1e15 2)); }
+        gateZone         { mode inside; levels ((1e15 2)); }
     }
     locationInMesh (0.15 0 0.20);
     allowFreeStandingZoneFaces true;

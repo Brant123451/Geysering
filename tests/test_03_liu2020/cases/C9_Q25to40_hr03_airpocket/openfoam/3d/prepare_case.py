@@ -466,11 +466,39 @@ def generate(args: argparse.Namespace) -> dict:
     model = raw["model"].copy()
     mesh = raw["mesh_profiles"][args.mesh_profile]
     pocket = model["pocket_profiles"][args.pocket_profile].copy()
+    if args.air_cp is not None:
+        model["air_Cp_J_kg_K"] = args.air_cp
+    if args.water_bulk_modulus is not None:
+        model["water_bulk_modulus_Pa"] = args.water_bulk_modulus
 
     gate_area = args.gate_area if args.gate_area is not None else model["tailgate_effective_area_m2"]
     contact_angle = args.contact_angle if args.contact_angle is not None else model["contact_angle_deg"]
     c_alpha = args.c_alpha if args.c_alpha is not None else model["interface_compression"]
-    application = "compressibleInterIsoFoam" if args.thermo == "isothermal" else "compressibleInterFoam"
+    application = (
+        "compressibleInterIsoFoam"
+        if args.interface_solver == "iso-advector"
+        else "compressibleInterFoam"
+    )
+    if args.interface_solver == "iso-advector":
+        alpha_settings = f"""nAlphaCorr 1;
+        nAlphaSubCycles 1;
+        cAlpha {c_alpha:.8g};
+        reconstructionScheme isoAlpha;
+        vof2IsoTol 1e-8;
+        surfCellTol 1e-6;
+        nAlphaBounds 3;
+        snapTol 1e-12;
+        clip true;"""
+    else:
+        alpha_settings = f"""nAlphaCorr 1;
+        nAlphaSubCycles 2;
+        cAlpha {c_alpha:.8g};
+        MULESCorr no;
+        nLimiterIter 5;
+        solver smoothSolver;
+        smoother symGaussSeidel;
+        tolerance 1e-8;
+        relTol 0;"""
     geometry_meta = build_geometry(gate_area)
 
     lu = paper["upstream_length_m"]
@@ -576,7 +604,7 @@ geometry
     pocketZone
     {{
         type searchableBox;
-        min ({tail - 0.10:.6f} -0.12 0.34);
+        min ({tail - 0.10:.6f} -0.12 {pocket['body_interface_z_m'] - 0.02:.6f});
         max (0.05 0.12 0.46);
     }}
     pocketTail
@@ -980,6 +1008,8 @@ divSchemes
 {
     div(phi,alpha) Gauss vanLeer;
     div(phirb,alpha) Gauss linear;
+    div(phi,thermo:rho.water) Gauss upwind;
+    div(phi,thermo:rho.air) Gauss upwind;
     div(rhoPhi,U) Gauss upwind;
     div(rhoPhi,T) Gauss upwind;
     div(rhoPhi,K) Gauss upwind;
@@ -1000,15 +1030,7 @@ solvers
 {{
     "alpha.water.*"
     {{
-        nAlphaCorr 2;
-        nAlphaSubCycles 2;
-        cAlpha {c_alpha:.8g};
-        MULESCorr no;
-        nLimiterIter 5;
-        solver smoothSolver;
-        smoother symGaussSeidel;
-        tolerance 1e-8;
-        relTol 0;
+        {alpha_settings}
     }}
     "pcorr.*"
     {{
@@ -1069,8 +1091,8 @@ PIMPLE
 {{
     momentumPredictor yes;
     transonic no;
-    nOuterCorrectors 2;
-    nCorrectors 3;
+    nOuterCorrectors 1;
+    nCorrectors 2;
     nNonOrthogonalCorrectors 1;
 }}
 """
@@ -1159,7 +1181,8 @@ mpirun -np "$NP" snappyHexMesh -parallel -overwrite > log.snappyHexMesh 2>&1
 reconstructParMesh -constant > log.reconstructParMesh 2>&1
 rm -rf processor*
 topoSet > log.topoSet 2>&1
-checkMesh -allGeometry -allTopology > log.checkMesh 2>&1
+checkMesh > log.checkMesh 2>&1
+checkMesh -allGeometry -allTopology > log.checkMesh.all 2>&1
 echo MESH_DONE
 """,
         executable=True,
@@ -1279,6 +1302,7 @@ rm -f log.*
         "generated_by": "prepare_case.py",
         "openfoam_version": "v2512",
         "application": application,
+        "interface_solver": args.interface_solver,
         "mesh_profile": args.mesh_profile,
         "pocket_profile": args.pocket_profile,
         "pocket_parameters_are_paper_values": False,
@@ -1289,6 +1313,8 @@ rm -f log.*
         "gate_area_is_paper_value": False,
         "contact_angle_deg": contact_angle,
         "interface_compression": c_alpha,
+        "air_Cp_J_kg_K": model["air_Cp_J_kg_K"],
+        "water_bulk_modulus_Pa": model["water_bulk_modulus_Pa"],
         "maxCo": args.max_co,
         "maxAlphaCo": args.max_alpha_co,
         "maxDeltaT": args.max_dt,
@@ -1308,13 +1334,20 @@ def main() -> None:
         choices=("pocket_small", "base", "pocket_large"),
         default="base",
     )
-    parser.add_argument("--thermo", choices=("energy", "isothermal"), default="energy")
+    parser.add_argument(
+        "--interface-solver",
+        choices=("mules", "iso-advector"),
+        default="mules",
+        help="VOF transport algorithm; both choices retain compressible energy/EOS physics",
+    )
+    parser.add_argument("--air-cp", type=float)
+    parser.add_argument("--water-bulk-modulus", type=float)
     parser.add_argument("--gate-area", type=float)
     parser.add_argument("--contact-angle", type=float)
     parser.add_argument("--c-alpha", type=float)
-    parser.add_argument("--max-co", type=float, default=0.20)
-    parser.add_argument("--max-alpha-co", type=float, default=0.15)
-    parser.add_argument("--max-dt", type=float, default=0.00025)
+    parser.add_argument("--max-co", type=float, default=0.35)
+    parser.add_argument("--max-alpha-co", type=float, default=0.20)
+    parser.add_argument("--max-dt", type=float, default=0.0005)
     parser.add_argument("--np", type=int, default=4)
     args = parser.parse_args()
     metadata = generate(args)

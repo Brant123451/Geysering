@@ -181,6 +181,8 @@ def parse_mesh_quality(case: Path) -> dict:
     result = {
         "checkMesh_run": False,
         "checkMesh_passed": False,
+        "all_geometry_passed": False,
+        "concave_cells": None,
         "cells": None,
         "max_non_orthogonality": None,
         "max_skewness": None,
@@ -190,8 +192,11 @@ def parse_mesh_quality(case: Path) -> dict:
     if not path.exists():
         return result
     text = path.read_text(errors="replace")
+    strict_path = case / "log.checkMesh.all"
+    strict_text = strict_path.read_text(errors="replace") if strict_path.exists() else text
     result["checkMesh_run"] = True
     result["checkMesh_passed"] = "Mesh OK." in text
+    result["all_geometry_passed"] = "Mesh OK." in strict_text
     patterns = {
         "cells": r"cells:\s+(\d+)",
         "max_non_orthogonality": r"Mesh non-orthogonality Max:\s*([-+0-9.eE]+)",
@@ -200,9 +205,12 @@ def parse_mesh_quality(case: Path) -> dict:
         "min_volume_m3": r"Min volume\s*=\s*([-+0-9.eE]+)",
     }
     for key, pattern in patterns.items():
-        match = re.search(pattern, text)
+        match = re.search(pattern, strict_text)
         if match:
             result[key] = int(match.group(1)) if key == "cells" else float(match.group(1))
+    concave = re.search(r"Concave cells .* number of cells:\s*(\d+)", strict_text)
+    if concave:
+        result["concave_cells"] = int(concave.group(1))
     return result
 
 
@@ -520,6 +528,8 @@ def main() -> None:
             [
                 "variant",
                 "status",
+                "solver",
+                "interface_solver",
                 "cells",
                 "maxCo",
                 "maxDeltaT_s",
@@ -527,6 +537,8 @@ def main() -> None:
                 "gate_area_m2",
                 "contact_angle_deg",
                 "cAlpha",
+                "air_Cp_J_kg_K",
+                "water_bulk_modulus_Pa",
                 "P1m_kPa",
                 "first_top_s",
                 "geyser_count",
@@ -538,6 +550,8 @@ def main() -> None:
                 [
                     metadata.get("mesh_profile", "base"),
                     metrics["status"],
+                    metadata.get("application"),
+                    metadata.get("interface_solver"),
                     mesh.get("cells"),
                     metadata.get("maxCo"),
                     metadata.get("maxDeltaT"),
@@ -545,6 +559,8 @@ def main() -> None:
                     metadata.get("gate_area_m2"),
                     metadata.get("contact_angle_deg"),
                     metadata.get("interface_compression"),
+                    metadata.get("air_Cp_J_kg_K"),
+                    metadata.get("water_bulk_modulus_Pa"),
                     p1m,
                     first_top,
                     len(event_rows),

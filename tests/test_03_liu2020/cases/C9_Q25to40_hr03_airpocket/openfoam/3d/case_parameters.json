@@ -74,15 +74,15 @@
     "base": {
       "background_cells": [306, 16, 69],
       "surface_level": 1,
-      "chamber_level": 2,
-      "riser_level": 3,
+      "chamber_level": 1,
+      "riser_level": 2,
       "pocket_level": 2,
-      "interface_level": 3,
-      "gate_level": 3,
-      "max_global_cells": 4000000
+      "interface_level": 2,
+      "gate_level": 2,
+      "max_global_cells": 2000000
     },
     "refined": {
-      "background_cells": [408, 22, 92],
+      "background_cells": [306, 16, 69],
       "surface_level": 1,
       "chamber_level": 2,
       "riser_level": 3,

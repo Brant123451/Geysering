@@ -7,8 +7,10 @@ one-dimensional model. A 1-D trace is never relabelled as a 3-D result.
 The governing solver is `compressibleInterFoam`: two compressible phases,
 VOF interface capture, gravity, surface tension, laminar viscous stress,
 perfect-gas air, and weakly compressible water (`perfectFluid`, bulk modulus
-2.2 GPa). `compressibleInterIsoFoam` is available as the declared thermal/EOS
-sensitivity. The model includes the full 5.80 m upstream pipe, 0.30 m junction
+2.2 GPa). `compressibleInterIsoFoam` is available strictly as an
+isoAdvector-versus-MULES **interface transport** sensitivity; it is not
+misidentified as an isothermal gas solver. The model includes the full 5.80 m
+upstream pipe, 0.30 m junction
 chamber, 5.95 m downstream pipe, 1.22 m riser, an external atmospheric plume
 region, a resolved tailgate opening, and the upstream crown air pocket.
 
@@ -82,13 +84,16 @@ pressure are recorded in `case/generated_case.json`.
 `blockMesh` and parallel `snappyHexMesh` generate the mesh. The base background
 is 306 × 16 × 69 cells, with local refinement at the pocket body and
 interfaces, chamber, riser, initial riser free surface, and tailgate. The
-`refined` profile raises the background to 408 × 22 × 92. `checkMesh
+`refined` profile adds one local level in the chamber, riser, pocket
+interfaces, and gate while retaining the same far-field background. `checkMesh
 -allGeometry -allTopology` is mandatory and its log is consumed by
 post-processing.
 
-The default transient limits are `maxCo=0.20`, `maxAlphaCo=0.15`, and
-`maxDeltaT=2.5e-4 s`. MULES uses two alpha corrections and two subcycles.
-Three pressure correctors and one non-orthogonal corrector are used. A
+The default transient limits are `maxCo=0.35`, `maxAlphaCo=0.20`, and
+`maxDeltaT=5e-4 s`; the tighter timestep case halves these limits. MULES uses
+one alpha correction with two subcycles. Two pressure correctors and one
+non-orthogonal corrector are used, following the supplied v2512
+`compressibleInterFoam` tutorial structure. A
 12 m/s velocity limiter is a numerical safety bound, more than twice the
 5.75 m/s experimental maximum quoted by the paper.
 
@@ -119,8 +124,11 @@ physical riser rim. Missing stages remain `not_run`, `smoke_only`, or
 ## Sensitivities
 
 The matrix covers mesh, timestep/Courant limits, small/base/large pocket
-volumes, energy versus isothermal gas treatment, gate area ±20%, contact angle
-60°/120°, and interface compression 0.5/1.5.
+volumes, MULES versus isoAdvector interface transport, adiabatic-like versus
+near-isothermal heat-capacity limits for pocket compression, liquid bulk
+modulus ±20%, gate area ±20%, contact angle 60°/120°, and interface
+compression 0.5/1.5. The thermal limits are declared closure sensitivities,
+not fitted air properties.
 
 ```bash
 # Materialize all source cases without running:
