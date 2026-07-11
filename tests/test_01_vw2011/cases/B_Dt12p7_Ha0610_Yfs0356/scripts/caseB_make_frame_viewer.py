@@ -17,14 +17,17 @@ from pathlib import Path
 
 import numpy as np
 
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE / "model"))
+CASE_ROOT = Path(__file__).resolve().parents[1]
+MODEL = CASE_ROOT / "model"
+DIGITIZED = CASE_ROOT / "data" / "digitized"
+SCANS = CASE_ROOT / "reference" / "paper_scans"
+OUTPUTS = CASE_ROOT / "outputs"
+sys.path.insert(0, str(MODEL))
 
 from vw2011_network_twofluid import NetworkCase, run_network
 
-OUT = HERE / "outputs"
-FRAMES = OUT / "frames"
-RISER_FRAMES = OUT / "riser_frames"
+FRAMES = OUTPUTS / "frames"
+RISER_FRAMES = OUTPUTS / "riser_frames"
 N_FRAMES = 90
 
 
@@ -38,7 +41,13 @@ def main():
     RISER_FRAMES.mkdir(parents=True, exist_ok=True)
 
     # t_end=9.0 s covers the full paper window (T*=5 is 8.64 s for Dt=12.7 mm)
-    case = NetworkCase(Dr=0.0127, air_head=0.610, init_water_level=0.356, t_end=9.0)
+    cfg = json.loads((CASE_ROOT / "config" / "case.json").read_text(encoding="utf-8"))
+    case = NetworkCase(
+        Dr=float(cfg["tower_diameter_m"]),
+        air_head=float(cfg["initial_air_pressure_head_m"]),
+        init_water_level=float(cfg["initial_water_level_m"]),
+        t_end=9.0,
+    )
     rec = run_network(case, verbose=False)
 
     xt = rec["xt"]; zr = rec["zr"]; dx = rec["dx"]; dz = rec["dz"]
@@ -134,8 +143,8 @@ def main():
         plt.close(fig)
 
         index.append(dict(
-            file=f"outputs/frames/frame_{n:04d}.png",
-            riserFile=f"outputs/riser_frames/riser_{n:04d}.png",
+            file=f"frames/frame_{n:04d}.png",
+            riserFile=f"riser_frames/riser_{n:04d}.png",
             time=round(t_k, 3),
             wtop=round(wtop, 3),
             itop=round(itop, 3),
@@ -143,9 +152,9 @@ def main():
             head=round(head, 3),
         ))
 
-    (OUT / "frames_index.json").write_text(json.dumps(index), encoding="utf-8")
+    (OUTPUTS / "frames_index.json").write_text(json.dumps(index), encoding="utf-8")
     print(f"{len(index)} frames -> {FRAMES} / {RISER_FRAMES}")
-    print(f"-> {OUT / 'frames_index.json'}")
+    print(f"-> {OUTPUTS / 'frames_index.json'}")
 
 
 if __name__ == "__main__":
