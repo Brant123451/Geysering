@@ -27,8 +27,11 @@ with at least eight nominal cells; the refined mesh uses at least twelve.
 ## Solver and initial state
 
 OpenFOAM v2512 `compressibleInterFoam` is used.  Air is an ideal gas and water
-uses a finite-compressibility `perfectFluid` law corresponding to a 2.2 GPa
-bulk modulus.  No pressure or velocity source is used.
+uses `rhoConst` at `998 kg/m3`.  Liquid compressibility is negligible on this
+seconds-long gravity/air-pocket event, while the ideal-gas phase retains the
+required pressure-volume coupling.  This avoids resolving irrelevant
+microsecond liquid-acoustic transients without making the air incompressible.
+No pressure or velocity forcing source is used.
 
 At `t=0`:
 

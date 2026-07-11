@@ -24,7 +24,7 @@ expressions
         dimensions  [1 -1 -2 0 0 0 0];
         keepPatches true;
         fieldMask   #{ alpha.water > 0.5 #};
-        expression  #{ 101325 + 997.954035295*9.81*(0.660 - pos().z()) #};
+        expression  #{ 101325 + 998*9.81*(0.660 - pos().z()) #};
     }
 
     atmosphericReducedPressure
@@ -41,6 +41,6 @@ expressions
         dimensions  [1 -1 -2 0 0 0 0];
         keepPatches true;
         fieldMask   #{ alpha.water > 0.5 #};
-        expression  #{ 101325 + 997.954035295*9.81*0.660 #};
+        expression  #{ 101325 + 998*9.81*0.660 #};
     }
 );

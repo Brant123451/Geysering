@@ -32,7 +32,7 @@
   "materials": {
     "water_density_at_23C_kg_per_m3": 998.0,
     "water_dynamic_viscosity_Pa_s": 0.000932,
-    "water_bulk_modulus_Pa": 2200000000.0,
+    "water_equation_of_state": "rhoConst; liquid compressibility is negligible on the event time scale",
     "air_specific_gas_constant_J_per_kg_K": 287.05,
     "air_dynamic_viscosity_Pa_s": 0.0000184,
     "surface_tension_N_per_m": 0.072,

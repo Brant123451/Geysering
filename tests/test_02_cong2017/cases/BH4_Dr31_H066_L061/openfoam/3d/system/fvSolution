@@ -73,7 +73,7 @@ solvers
         solver          smoothSolver;
         smoother        symGaussSeidel;
         tolerance       1e-8;
-        relTol          0.01;
+        relTol          0;
         maxIter         100;
     }
 }
