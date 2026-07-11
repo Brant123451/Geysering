@@ -114,13 +114,12 @@ Cloud Agent run. The new account should:
    transferred through Git.
 5. Ensure the old and new agents do not write to the same branch concurrently.
 
-Suggested prompt for the replacement agent:
+The complete copy/paste prompt is:
 
-> Continue `geysering test 3 caseC9` from PR #8 on branch
-> `cursor/c9-openfoam-3d-bf97`. Read `openfoam/3d/HANDOFF.md`,
-> `PAPER_AUDIT.md`, `README.md`, and `outputs/openfoam_3d_metrics.json` first.
-> Reproduce the committed base stages from source because runtime checkpoints
-> are ignored. Preserve evidence of the strict-mesh failure, velocity-limiter
-> activation, and 0.620 s early pocket transfer. Do not fit unreported pocket
-> parameters to the target or claim phase 2 until an actual 20 s run supports
-> it. Commit, push, and update the existing PR.
+`openfoam/3d/CONTINUATION_PROMPT.md`
+
+within this C9 case. Paste the **entire contents** into the replacement Agent;
+do not use only an abbreviated “continue the PR” instruction. It includes the
+original physical objective, paper targets, current failed/qualified evidence,
+allowed file scope, all execution stages, sensitivity requirements, required
+artifacts, anti-tuning rules, Git/PR requirements, and final-report checklist.

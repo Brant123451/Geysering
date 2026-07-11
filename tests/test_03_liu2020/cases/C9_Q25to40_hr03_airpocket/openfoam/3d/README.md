@@ -4,6 +4,9 @@ This directory contains a source-complete OpenFOAM v2512 model for Liu et al.
 (2020) Case C9. It is intentionally separate from the validated phase-1
 one-dimensional model. A 1-D trace is never relabelled as a 3-D result.
 
+For cross-account continuation, read `HANDOFF.md` and paste the complete
+`CONTINUATION_PROMPT.md` into the replacement Cloud Agent.
+
 The governing solver is `compressibleInterFoam`: two compressible phases,
 VOF interface capture, gravity, surface tension, laminar viscous stress,
 perfect-gas air, and weakly compressible water (`perfectFluid`, bulk modulus
