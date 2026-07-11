@@ -1,0 +1,20 @@
+# Generated meshes and OpenFOAM run state
+*.msh
+bh4-*.stl
+mesh_metadata.json
+0/
+[1-9]*/
+processor*/
+constant/polyMesh/
+postProcessing/
+log.*
+*.obj
+
+# Generated runtime dictionaries/includes
+system/meshDict
+system/decomposeParDict.runtime
+system/riserProbeLocations
+system/horizontalProbeLocations
+
+# Python bytecode
+__pycache__/
