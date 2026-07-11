@@ -2,7 +2,7 @@
   "case": "Liu2020 C9 three-dimensional compressible VOF",
   "status": "smoke_only",
   "solver": "compressibleInterFoam",
-  "simulation_end_paper_time_s": 1.0,
+  "simulation_end_paper_time_s": 1.504,
   "paper_time_offset_s": 0.25,
   "phase_1": {
     "window_complete": false,
@@ -38,15 +38,15 @@
     "PT3": null,
     "PT4": null
   },
-  "mass_conservation_relative_error": 4.184266436041732e-06,
-  "gas_mass_conservation_relative_error": 7.978795134987557e-05,
+  "mass_conservation_relative_error": 6.130065829910871e-06,
+  "gas_mass_conservation_relative_error": 0.0004057394960093709,
   "gas_mass_method": "alpha.air-weighted thermo:rho.air inventory; boundary gas flux is rhoPhi minus density-weighted conservative alphaPhi0.water",
   "pre_ramp_upstream_air_mass_change_relative": -0.005374727438495802,
   "initial_air_volume_m3": 0.014064849000000018,
   "initial_air_mass_kg": 0.0175569089,
-  "end_upstream_air_volume_m3": 0.005815511999999995,
-  "end_upstream_air_mass_kg": 0.00732916481,
-  "upstream_air_mass_retained_fraction": 0.4174518904065168,
+  "end_upstream_air_volume_m3": 0.0011459820000000176,
+  "end_upstream_air_mass_kg": 0.0014405144,
+  "upstream_air_mass_retained_fraction": 0.08204829268095137,
   "mesh": {
     "checkMesh_run": true,
     "checkMesh_passed": true,
@@ -61,14 +61,15 @@
   "numerics": {
     "logs": [
       "log.initialize",
-      "log.smoke"
+      "log.smoke",
+      "log.phase1"
     ],
     "max_courant_number": 0.49042379,
-    "max_interface_courant_number": 0.24832321,
+    "max_interface_courant_number": 0.29588,
     "minimum_delta_t_s": 1.1999904e-06,
     "maximum_velocity_m_s": 12.0,
-    "maximum_limited_cells": 7206,
-    "maximum_limited_cell_percent": 5.06,
+    "maximum_limited_cells": 18217,
+    "maximum_limited_cell_percent": 12.8,
     "maximum_limited_faces": 20,
     "velocity_limiter_activated": true
   },

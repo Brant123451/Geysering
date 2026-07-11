@@ -303,7 +303,7 @@ def relative_error(value, target):
 
 def write_csv(path: Path, header: list[str], rows) -> None:
     with path.open("w", newline="", encoding="utf-8") as stream:
-        writer = csv.writer(stream)
+        writer = csv.writer(stream, lineterminator="\n")
         writer.writerow(header)
         writer.writerows(rows)
 

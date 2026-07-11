@@ -132,30 +132,30 @@ physical riser rim. Missing stages remain `not_run`, `smoke_only`, or
 
 ## Current validation status
 
-The committed baseline covers the initialization and 1.00 s paper-time smoke
-window only. It is **not** a completed phase-1 or phase-2 validation. Measured
-against the paper targets, the smoke run gives:
+The committed artifacts cover the initialization, the complete 1.00 s
+paper-time smoke window, and an interrupted phase-1 attempt through paper time
+1.504 s. They are **not** a completed phase-1 or phase-2 validation. Measured
+against the paper targets, the run gives:
 
 - initialized PT2 = 2.853 kPa gauge versus 2.970 kPa;
 - first PT2 peak = 10.818 kPa at 0.392 s versus 10.690 kPa at 0.500 s;
 - first mixture crossing of the riser rim = 0.640 s versus 0.730 s;
-- total- and gas-mass residuals = \(4.18\times10^{-6}\) and
-  \(7.98\times10^{-5}\);
+- total- and gas-mass residuals through 1.504 s =
+  \(6.13\times10^{-6}\) and \(4.06\times10^{-4}\);
 - mesh-integrated initial upstream gas volume = 14.065 L versus the
   12.642 L analytic pocket construction;
-- upstream-zone gas mass falls from 17.557 g to 7.329 g by 1.00 s, showing
+- upstream-zone gas mass falls from 17.557 g to 1.441 g by 1.504 s, showing
   that the baseline pocket is transported/released much earlier than the
   paper's 6.46 s main-pocket arrival. The declared 20%-mass-transfer criterion
   gives 0.620 s (−90.4%).
 
-The velocity limiter activated during the transient and reached 7,206 cells
-(5.06%) on the final smoke step; the final maximum-velocity location was in
-the atmospheric plume. This is an unresolved numerical qualification and
-requires the declared control sensitivity before claiming eruption-count
-agreement. No air-pocket arrival or eight-eruption claim is made from this
+The velocity limiter activated during the transient and reached 18,217 cells
+(12.8%) during the partial phase-1 continuation; the smoke-window final
+maximum-velocity location was in the atmospheric plume. This is an unresolved
+numerical qualification and requires the declared control sensitivity before
+claiming eruption-count agreement. No eight-eruption claim is made from this
 short run. The early upstream gas loss is a physical-model discrepancy, not a
-mass-conservation failure: the domain-wide gas residual remains below
-\(10^{-4}\).
+domain mass-conservation failure.
 
 ## Sensitivities
 

@@ -191,7 +191,7 @@ def main():
         "gas_mass_error",
     ]
     with OUTPUT.open("w", newline="", encoding="utf-8") as stream:
-        writer = csv.DictWriter(stream, fieldnames=fieldnames)
+        writer = csv.DictWriter(stream, fieldnames=fieldnames, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
     print(OUTPUT)
