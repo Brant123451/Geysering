@@ -81,9 +81,13 @@ directories, logs, frames, or caches.
 
 ## Suggested new-agent prompt
 
+The complete copy/paste task prompt, including every original acceptance
+requirement and the current implementation state, is committed as
+`NEW_AGENT_PROMPT.md`.
+
 > Continue PR 9 on branch `cursor/test3-a2-openfoam-1850` for
 > “geysering test 3 caseA2.” First read `openfoam/3d/HANDOFF.md`,
-> `PAPER_AUDIT.md`, and `README.md`, verify the PR head and existing diff, then
-> complete the base and refined full OpenFOAM runs and the remaining acceptance
-> items. Preserve the current physical/modeling decisions unless runtime
-> evidence proves a defect. Commit and push to the same PR branch.
+> `NEW_AGENT_PROMPT.md`, `PAPER_AUDIT.md`, and `README.md`, verify the PR head
+> and existing diff, then execute every requirement in `NEW_AGENT_PROMPT.md`.
+> Preserve the current physical/modeling decisions unless runtime evidence
+> proves a defect. Commit and push to the same PR branch.
