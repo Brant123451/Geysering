@@ -19,7 +19,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--profile", choices=("base", "refined"), default="base")
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--threads", type=int, default=4)
+    parser.add_argument("--threads", type=int, default=1)
     return parser.parse_args()
 
 

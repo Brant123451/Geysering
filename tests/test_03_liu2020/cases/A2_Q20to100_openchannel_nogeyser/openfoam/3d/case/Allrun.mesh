@@ -19,12 +19,13 @@ if ! python3 -c "import gmsh" >/dev/null 2>&1; then
     exit 2
 fi
 
-NP="${NP:-$(nproc)}"
+GMSH_THREADS="${GMSH_THREADS:-1}"
 TMP_MSH="$(mktemp "/tmp/liu2020-A2-${PROFILE}-XXXXXX.msh")"
 trap 'rm -f "$TMP_MSH"' EXIT
 
 rm -rf constant/polyMesh processor* 0 postProcessing
 python3 ../make_geometry.py --case-dir .
+python3 ../prepare_runtime.py --case-dir .
 "$OF_LAUNCH" -- surfaceCheck constant/triSurface/geometry.stl > log.surfaceCheck 2>&1
 if ! rg -q "Surface is closed\\. All edges connected to two faces\\." log.surfaceCheck; then
     echo "source geometry is not closed" >&2
@@ -33,7 +34,7 @@ fi
 
 python3 ../make_gmsh_mesh.py \
     --profile "$PROFILE" \
-    --threads "$NP" \
+    --threads "$GMSH_THREADS" \
     --output "$TMP_MSH" > log.gmsh 2>&1
 "$OF_LAUNCH" -- gmshToFoam "$TMP_MSH" > log.gmshToFoam 2>&1
 "$OF_LAUNCH" -- createPatch -overwrite > log.createPatch 2>&1
