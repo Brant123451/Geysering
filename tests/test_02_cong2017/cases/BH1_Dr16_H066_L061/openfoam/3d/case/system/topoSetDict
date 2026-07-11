@@ -40,7 +40,7 @@ actions
         type            cellZoneSet;
         action          new;
         source          boxToCell;
-        box             (3.319 1.824 -0.151) (3.621 3.026 0.151);
+        box             (3.319 1.825 -0.151) (3.621 3.026 0.151);
     }
     {
         name            valvePlane;

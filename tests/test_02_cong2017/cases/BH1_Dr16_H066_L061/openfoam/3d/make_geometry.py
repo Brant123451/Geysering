@@ -88,14 +88,17 @@ def main() -> None:
         )
         apparatus, _ = occ.fuse([(3, main_pipe)], [(3, riser)])
         atmosphere_min_x = TEE_X - ATMOSPHERE_WIDTH / 2
-        atmosphere_min_y = RISER_RIM_Y - BOOLEAN_OVERLAP
+        # Keep the exposed floor/rim at the measured y=RISER_RIM_Y.  The riser
+        # already penetrates BOOLEAN_OVERLAP into the box, so lowering the box
+        # is unnecessary and would move the effective rim down by 1 mm.
+        atmosphere_min_y = RISER_RIM_Y
         atmosphere_min_z = -ATMOSPHERE_WIDTH / 2
         atmosphere = occ.addBox(
             atmosphere_min_x,
             atmosphere_min_y,
             atmosphere_min_z,
             ATMOSPHERE_WIDTH,
-            ATMOSPHERE_HEIGHT + BOOLEAN_OVERLAP,
+            ATMOSPHERE_HEIGHT,
             ATMOSPHERE_WIDTH,
         )
         fluid, _ = occ.fuse(apparatus, [(3, atmosphere)])
