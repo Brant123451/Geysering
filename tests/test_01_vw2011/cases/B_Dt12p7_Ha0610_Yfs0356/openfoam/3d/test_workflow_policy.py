@@ -35,6 +35,7 @@ def baseline_manifest(mesh: str = "base") -> dict:
         "max_delta_t_s": 0.00025,
         "field_write_interval_s": 0.10,
         "c_alpha": 1.0,
+        "alpha_smooth_curvature_iterations": 2,
     }
 
 
@@ -53,6 +54,9 @@ class BaselinePolicyTests(unittest.TestCase):
         self.assertFalse(is_baseline_full_physics(manifest))
         manifest = baseline_manifest()
         manifest["max_delta_t_s"] = 0.0005
+        self.assertFalse(is_baseline_full_physics(manifest))
+        manifest = baseline_manifest()
+        manifest["alpha_smooth_curvature_iterations"] = 0
         self.assertFalse(is_baseline_full_physics(manifest))
 
     def test_acceptance_can_only_complete_base_mesh(self) -> None:

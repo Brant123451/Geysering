@@ -17,6 +17,10 @@ def env_float(name: str, default: float) -> float:
     return float(os.environ.get(name, default))
 
 
+def env_int(name: str, default: int) -> int:
+    return int(os.environ.get(name, default))
+
+
 def probe_lines(
     offsets: list[tuple[float, float]], y0: float, y1: float, step: float
 ) -> str:
@@ -41,6 +45,7 @@ def main() -> None:
     max_delta_t = env_float("CASEB_MAX_DELTA_T", 0.00025)
     write_interval = env_float("CASEB_WRITE_INTERVAL", 0.10)
     c_alpha = env_float("CASEB_C_ALPHA", 1.0)
+    alpha_smooth_curvature = env_int("CASEB_ALPHA_SMOOTH_CURVATURE", 2)
     initial_air_head = env_float("CASEB_HA0", 0.610)
     valve_mode = os.environ.get(
         "CASEB_VALVE_MODE", "closed" if stage == "hold" else "opening"
@@ -82,6 +87,8 @@ def main() -> None:
         raise SystemExit("endTime must be positive for solver stages")
     if valve_open_time < 0:
         raise SystemExit("CASEB_VALVE_OPEN_TIME cannot be negative")
+    if alpha_smooth_curvature < 0:
+        raise SystemExit("CASEB_ALPHA_SMOOTH_CURVATURE cannot be negative")
     if stage != "mesh":
         write_interval = min(write_interval, end_time)
         probe_interval = min(0.005, end_time)
@@ -108,7 +115,10 @@ def main() -> None:
             )
         )
     )
-    (SYSTEM / "runSettings").write_text(f"cAlpha          {c_alpha:.10g};\n")
+    (SYSTEM / "runSettings").write_text(
+        f"cAlpha                  {c_alpha:.10g};\n"
+        f"nAlphaSmoothCurvature   {alpha_smooth_curvature};\n"
+    )
     initial_air_pressure = 101325.0 + 998.2 * 9.81 * initial_air_head
     set_fields = (SYSTEM / "setFieldsDict").read_text()
     if set_fields.count("107298.329") != 2:
@@ -151,6 +161,7 @@ def main() -> None:
         "plume_write_interval_s": plume_interval,
         "accounting_interval_s": accounting_interval,
         "c_alpha": c_alpha,
+        "alpha_smooth_curvature_iterations": alpha_smooth_curvature,
         "tower_probe_lines": 5,
         "tower_probe_spacing_m": 0.005,
         "plume_probe_lines": 5,

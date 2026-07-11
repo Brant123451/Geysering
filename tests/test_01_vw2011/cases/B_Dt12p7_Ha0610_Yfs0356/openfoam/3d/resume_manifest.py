@@ -23,6 +23,7 @@ ENVIRONMENT_KEYS = {
     "max_delta_t_s": "CASEB_MAX_DELTA_T",
     "field_write_interval_s": "CASEB_WRITE_INTERVAL",
     "c_alpha": "CASEB_C_ALPHA",
+    "alpha_smooth_curvature_iterations": "CASEB_ALPHA_SMOOTH_CURVATURE",
 }
 
 NUMERIC_KEYS = {
@@ -35,6 +36,7 @@ NUMERIC_KEYS = {
     "max_delta_t_s",
     "field_write_interval_s",
     "c_alpha",
+    "alpha_smooth_curvature_iterations",
 }
 
 
@@ -57,6 +59,8 @@ def read_manifest(path: Path) -> dict:
         value = float(manifest[key])
         if not math.isfinite(value):
             raise ValueError(f"Non-finite {key} in run manifest")
+    if not float(manifest["alpha_smooth_curvature_iterations"]).is_integer():
+        raise ValueError("Curvature smoothing iterations must be an integer")
     return manifest
 
 

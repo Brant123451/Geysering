@@ -53,6 +53,7 @@ def configuration_id(manifest: dict) -> str:
             "max_alpha_co",
             "max_delta_t_s",
             "c_alpha",
+            "alpha_smooth_curvature_iterations",
             "end_time_s",
         )
     }
@@ -76,6 +77,7 @@ def is_baseline_full_physics(manifest: dict) -> bool:
         and math.isclose(float(manifest.get("max_alpha_co", -1)), 0.20)
         and math.isclose(float(manifest.get("max_delta_t_s", -1)), 0.00025)
         and math.isclose(float(manifest.get("c_alpha", -1)), 1.0)
+        and int(manifest.get("alpha_smooth_curvature_iterations", -1)) == 2
         and float(manifest.get("end_time_s", 0)) >= 6 * TIME_SCALE
     )
 
@@ -104,6 +106,7 @@ def is_canonical_hold(manifest: dict) -> bool:
         and math.isclose(float(manifest.get("max_alpha_co", -1)), 0.20)
         and math.isclose(float(manifest.get("max_delta_t_s", -1)), 0.00025)
         and math.isclose(float(manifest.get("c_alpha", -1)), 1.0)
+        and int(manifest.get("alpha_smooth_curvature_iterations", -1)) == 2
     )
 
 
@@ -135,6 +138,7 @@ def mesh_pair_compatible(first: dict, second: dict) -> bool:
         "max_alpha_co",
         "max_delta_t_s",
         "c_alpha",
+        "alpha_smooth_curvature_iterations",
         "end_time_s",
     } - ignored
     return all(first.get(key) == second.get(key) for key in keys)
@@ -311,6 +315,7 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "mesh_ok",
         "maxCo",
         "cAlpha",
+        "alphaSmoothCurvature",
         "end_Tstar",
         "geyser",
         "Hstar_plateau",
@@ -365,6 +370,9 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "mesh_ok": mesh.get("mesh_ok"),
         "maxCo": manifest.get("max_co"),
         "cAlpha": manifest.get("c_alpha"),
+        "alphaSmoothCurvature": manifest.get(
+            "alpha_smooth_curvature_iterations"
+        ),
         "end_Tstar": (run_metrics or {}).get("end_Tstar"),
         "geyser": (run_metrics or {}).get("geyser"),
         "Hstar_plateau": (run_metrics or {}).get("Hstar_plateau"),

@@ -122,6 +122,9 @@ Copy the full block below into the new Cursor account's Cloud Agent.
     因为论文没有提供 acrylic wetting measurement，必须作为假设说明。
 12. 当前 baseline 为 laminar single-momentum VOF。若改变 turbulence model，
     必须给出证据并作为敏感性，不得无说明替换 baseline。
+13. 四面体界面的曲率估计使用 OpenFOAM 内置的 2 次
+    nAlphaSmoothCurvature；它不改变输运的 alpha，仅平滑曲率计算，并必须保留
+    0/1/2 次迭代敏感性。
 
 六、阀门
 
@@ -236,6 +239,7 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
 - CASEB_MAX_CO=0.15|0.30
 - CASEB_VALVE_OPEN_TIME=0|0.10|0.25|0.50|1.0
 - CASEB_C_ALPHA=0.5|1.0|1.5
+- CASEB_ALPHA_SMOOTH_CURVATURE=0|1|2
 - CASEB_HA0=0.579|0.610|0.641
 - CASEB_GAS_EOS=perfectGas|rhoConst
 

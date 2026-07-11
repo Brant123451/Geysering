@@ -75,6 +75,13 @@ Thermophysical choices are:
 * laminar momentum transport and smooth no-slip walls;
 * neutral 90° contact angle because no measured acrylic contact angle exists.
 
+The all-tetrahedral free-surface stencil uses two iterations of OpenFOAM's
+built-in `nAlphaSmoothCurvature` filter.  This smooths only the alpha field
+used to estimate curvature; it does not modify or diffuse the transported
+phase fraction.  The setting suppresses unphysical capillary currents from a
+nominally planar interface and is exposed as
+`CASEB_ALPHA_SMOOTH_CURVATURE` for zero/one/two-iteration sensitivity checks.
+
 The perfect-gas energy equation includes compression/expansion work; it does
 not impose the frozen 1-D model's isothermal pocket law.  Liquid
 compressibility is retained so acoustic propagation is not assigned an
@@ -224,6 +231,7 @@ CASEB_MESH=base|refined
 CASEB_MAX_CO=0.15|0.30
 CASEB_VALVE_OPEN_TIME=0|0.10|0.25|0.50|1.0
 CASEB_C_ALPHA=0.5|1.0|1.5
+CASEB_ALPHA_SMOOTH_CURVATURE=0|1|2
 CASEB_HA0=0.579|0.610|0.641
 CASEB_GAS_EOS=perfectGas|rhoConst
 ```
