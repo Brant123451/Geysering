@@ -156,6 +156,9 @@ Function objects record:
 `postprocess_compare.py` writes compact CSV, JSON, and one PNG under
 `../../outputs/openfoam3d/`.  Generated meshes, time directories,
 `processor*`, `postProcessing`, and logs are intentionally not committed.
+Runs shorter than the required 13 s event window are explicitly labelled
+`INDETERMINATE`; closed-hold and open-smoke diagnostics cannot establish a
+no-geyser classification.
 
 For this critical no-geyser case, a matching classification is insufficient:
 base/refined agreement, an unblocked external atmosphere, bounded mixed

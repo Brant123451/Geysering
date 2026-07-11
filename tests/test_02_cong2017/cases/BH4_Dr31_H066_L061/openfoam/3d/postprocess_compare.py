@@ -24,6 +24,7 @@ RHO_WATER = 998.0
 GRAVITY = 9.81
 PIPE_CROWN_Z = 0.050
 RISER_RIM_Z = 1.850
+REQUIRED_EVENT_WINDOW_S = 13.0
 RISER_Z = np.arange(0.060, 3.040 + 1.0e-9, 0.020)
 
 
@@ -338,6 +339,15 @@ def main() -> None:
     yfs_above_crown = yfs_z - PIPE_CROWN_Z
     max_yfs = float(np.nanmax(yfs_z))
     geyser = bool(max_yfs >= RISER_RIM_Z - 0.01)
+    event_window_complete = bool(
+        time[-1] >= REQUIRED_EVENT_WINDOW_S - 1.0e-6
+    )
+    if geyser:
+        classification = "GEYSER"
+    elif event_window_complete:
+        classification = "NO_GEYSER"
+    else:
+        classification = "INDETERMINATE"
     pocket_head = (pocket_pressure - PATM) / (RHO_WATER * GRAVITY)
     pt2_head = (pt2_pressure - PATM) / (RHO_WATER * GRAVITY)
 
@@ -363,9 +373,15 @@ def main() -> None:
         "label": args.label,
         "solver": "compressibleInterFoam",
         "simulated_end_time_s": float(time[-1]),
-        "classification_3d": "GEYSER" if geyser else "NO_GEYSER",
+        "required_event_window_s": REQUIRED_EVENT_WINDOW_S,
+        "event_window_complete": event_window_complete,
+        "classification_3d": classification,
         "classification_experiment": "NO_GEYSER",
-        "classification_match": not geyser,
+        "classification_match": (
+            classification == "NO_GEYSER"
+            if event_window_complete or geyser
+            else None
+        ),
         "Ta_3d_s": safe_float(ta),
         "Ta_experiment_s": float(experiment["Ta_meas_s"]),
         "vfs_3d_m_per_s": safe_float(vfs),
@@ -427,6 +443,7 @@ def main() -> None:
             "Ta is the first Yint crossing 0.02 m above the pipe crown; vfs and vint are maximum sustained 0.6 s climb rates, matching the existing 1D reduction.",
             "Gas balance includes the atmosphere gas-mass flux; water balance includes reservoir and atmosphere volume fluxes.",
             "Valve pressure is sampled on the complementary wall faces, not on the blended cyclicACMI values.",
+            "A non-geyser classification is issued only after the complete 13 s event window; shorter diagnostic runs remain indeterminate.",
         ],
     }
 
