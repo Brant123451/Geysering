@@ -623,6 +623,29 @@ boundary
         "system/surfaceFeatureExtractDict",
         foam_header("dictionary", "surfaceFeatureExtractDict") + feature_entries,
     )
+    thin_refinement_entries = []
+    n_thin_refinement = max(8, int(math.ceil(-nose / 0.10)))
+    pipe_radius = paper["upstream_diameter_m"] / 2.0
+    thin_half_width = math.sqrt(max(0.0, 2.0 * pipe_radius * thin_layer - thin_layer**2))
+    thin_refinement_width = min(2.0 * pipe_radius, 2.0 * thin_half_width + 0.012)
+    for i in range(n_thin_refinement):
+        x0 = nose + (0.0 - nose) * i / n_thin_refinement
+        x1 = nose + (0.0 - nose) * (i + 1) / n_thin_refinement
+        xm = 0.5 * (x0 + x1)
+        crown = paper["invert_drop_m"] + paper["upstream_diameter_m"] - paper[
+            "upstream_slope"
+        ] * xm
+        thin_refinement_entries.append(
+            f"""    thinLayer{i:02d}
+    {{
+        type box;
+        cellSize {mesh['cartesian_thin_layer_cell_size_m']:.8g};
+        centre ({xm:.8g} 0 {crown - 0.5 * thin_layer:.8g});
+        lengthX {x1 - x0 + 0.005:.8g};
+        lengthY {thin_refinement_width:.8g};
+        lengthZ {thin_layer + 0.004:.8g};
+    }}"""
+        )
     write(
         "system/meshDict",
         foam_header("dictionary", "meshDict")
@@ -659,7 +682,7 @@ objectRefinements
         cellSize {mesh['cartesian_pocket_cell_size_m']:.8g};
         centre ({0.5 * (tail - 0.10 + 0.05):.8g} 0 0.39);
         lengthX {0.05 - (tail - 0.10):.8g};
-        lengthY 0.24;
+        lengthY 0.205;
         lengthZ 0.14;
     }}
     pocketTail
@@ -668,8 +691,8 @@ objectRefinements
         cellSize {mesh['cartesian_interface_cell_size_m']:.8g};
         centre ({tail:.8g} 0 0.395);
         lengthX 0.36;
-        lengthY 0.24;
-        lengthZ 0.15;
+        lengthY 0.18;
+        lengthZ 0.08;
     }}
     pocketNose
     {{
@@ -677,8 +700,8 @@ objectRefinements
         cellSize {mesh['cartesian_interface_cell_size_m']:.8g};
         centre ({nose:.8g} 0 0.395);
         lengthX 0.50;
-        lengthY 0.24;
-        lengthZ 0.15;
+        lengthY 0.18;
+        lengthZ 0.08;
     }}
     pocketInterface
     {{
@@ -686,19 +709,10 @@ objectRefinements
         cellSize {mesh['cartesian_interface_cell_size_m']:.8g};
         centre ({0.5 * (tail + nose):.8g} 0 {pocket_interface:.8g});
         lengthX {nose - tail + 0.16:.8g};
-        lengthY 0.24;
-        lengthZ 0.03;
+        lengthY 0.18;
+        lengthZ 0.012;
     }}
-    thinLayer
-    {{
-        type box;
-        cellSize {mesh['cartesian_thin_layer_cell_size_m']:.8g};
-        centre ({0.5 * (nose - 0.08 + 0.02):.8g} 0
-                {0.5 * (0.38 - thin_layer - 0.012 + 0.38 - 0.01 * nose + 0.008):.8g});
-        lengthX {0.02 - (nose - 0.08):.8g};
-        lengthY 0.24;
-        lengthZ {(0.38 - 0.01 * nose + 0.008) - (0.38 - thin_layer - 0.012):.8g};
-    }}
+{os.linesep.join(thin_refinement_entries)}
     gate
     {{
         type cone;
@@ -1531,6 +1545,14 @@ rm -f log.*
         "analytic_initial_air_volume_m3": analytic_volume,
         "initial_air_gauge_pressure_Pa": pocket_gauge,
         "main_body_probe_depth_below_crown_m": pocket["thin_layer_m"] + 0.004,
+        "thin_layer_refinement_segments": n_thin_refinement,
+        "thin_layer_target_cells": (
+            pocket["thin_layer_m"] / mesh["cartesian_thin_layer_cell_size_m"]
+            if args.mesh_generator == "cartesian"
+            else 2 ** mesh["thin_layer_level"]
+            * pocket["thin_layer_m"]
+            / ((2.72 - (-0.05)) / mesh["background_cells"][2])
+        ),
         "gate_area_m2": gate_area,
         "gate_area_kind": "resolved_geometric",
         "target_effective_discharge_area_m2": model["tailgate_effective_discharge_area_m2"],

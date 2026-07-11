@@ -18,7 +18,7 @@ objectRefinements
     chamber
     {
         type box;
-        cellSize 0.01;
+        cellSize 0.04;
         centre (0.15 0 0.265);
         lengthX 0.90;
         lengthY 0.40;
@@ -27,7 +27,7 @@ objectRefinements
     riser
     {
         type cone;
-        cellSize 0.005;
+        cellSize 0.04;
         p0 (0.15 0 0.43);
         radius0 0.04;
         p1 (0.15 0 1.7);
@@ -36,53 +36,133 @@ objectRefinements
     pocket
     {
         type box;
-        cellSize 0.01;
+        cellSize 0.04;
         centre (-2.425 0 0.39);
         lengthX 4.95;
-        lengthY 0.24;
+        lengthY 0.205;
         lengthZ 0.14;
     }
     pocketTail
     {
         type box;
-        cellSize 0.005;
+        cellSize 0.04;
         centre (-4.8 0 0.395);
         lengthX 0.36;
-        lengthY 0.24;
-        lengthZ 0.15;
+        lengthY 0.18;
+        lengthZ 0.08;
     }
     pocketNose
     {
         type box;
-        cellSize 0.005;
+        cellSize 0.04;
         centre (-1 0 0.395);
         lengthX 0.50;
-        lengthY 0.24;
-        lengthZ 0.15;
+        lengthY 0.18;
+        lengthZ 0.08;
     }
     pocketInterface
     {
         type box;
-        cellSize 0.005;
+        cellSize 0.04;
         centre (-2.9 0 0.378);
         lengthX 3.96;
-        lengthY 0.24;
-        lengthZ 0.03;
+        lengthY 0.18;
+        lengthZ 0.012;
     }
-    thinLayer
+    thinLayer00
     {
         type box;
         cellSize 0.0025;
-        centre (-0.53 0
-                0.379);
-        lengthX 1.1;
-        lengthY 0.24;
-        lengthZ 0.038;
+        centre (-0.95 0 0.3855);
+        lengthX 0.105;
+        lengthY 0.090383672;
+        lengthZ 0.012;
+    }
+    thinLayer01
+    {
+        type box;
+        cellSize 0.0025;
+        centre (-0.85 0 0.3845);
+        lengthX 0.105;
+        lengthY 0.090383672;
+        lengthZ 0.012;
+    }
+    thinLayer02
+    {
+        type box;
+        cellSize 0.0025;
+        centre (-0.75 0 0.3835);
+        lengthX 0.105;
+        lengthY 0.090383672;
+        lengthZ 0.012;
+    }
+    thinLayer03
+    {
+        type box;
+        cellSize 0.0025;
+        centre (-0.65 0 0.3825);
+        lengthX 0.105;
+        lengthY 0.090383672;
+        lengthZ 0.012;
+    }
+    thinLayer04
+    {
+        type box;
+        cellSize 0.0025;
+        centre (-0.55 0 0.3815);
+        lengthX 0.105;
+        lengthY 0.090383672;
+        lengthZ 0.012;
+    }
+    thinLayer05
+    {
+        type box;
+        cellSize 0.0025;
+        centre (-0.45 0 0.3805);
+        lengthX 0.105;
+        lengthY 0.090383672;
+        lengthZ 0.012;
+    }
+    thinLayer06
+    {
+        type box;
+        cellSize 0.0025;
+        centre (-0.35 0 0.3795);
+        lengthX 0.105;
+        lengthY 0.090383672;
+        lengthZ 0.012;
+    }
+    thinLayer07
+    {
+        type box;
+        cellSize 0.0025;
+        centre (-0.25 0 0.3785);
+        lengthX 0.105;
+        lengthY 0.090383672;
+        lengthZ 0.012;
+    }
+    thinLayer08
+    {
+        type box;
+        cellSize 0.0025;
+        centre (-0.15 0 0.3775);
+        lengthX 0.105;
+        lengthY 0.090383672;
+        lengthZ 0.012;
+    }
+    thinLayer09
+    {
+        type box;
+        cellSize 0.0025;
+        centre (-0.05 0 0.3765);
+        lengthX 0.105;
+        lengthY 0.090383672;
+        lengthZ 0.012;
     }
     gate
     {
         type cone;
-        cellSize 0.005;
+        cellSize 0.04;
         p0 (6 0 0.14);
         radius0 0.15;
         p1 (6.27 0 0.14);
