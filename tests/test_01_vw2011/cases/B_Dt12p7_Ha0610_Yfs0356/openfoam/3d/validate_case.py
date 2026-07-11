@@ -42,8 +42,39 @@ missing = [fragment for fragment in required_fragments if fragment not in mesh_s
 if missing:
     raise SystemExit(f"Mesh source is missing required fragments: {missing}")
 
+solver_sources = "\n".join(
+    (
+        (HERE / "system" / "controlDict").read_text(),
+        (HERE / "system" / "runSettings.default").read_text(),
+        (HERE / "constant" / "thermophysicalProperties").read_text(),
+        (HERE / "constant" / "surfaceForces.default").read_text(),
+        (HERE / "Allrun").read_text(),
+    )
+)
+required_solver_fragments = [
+    "application     compressibleInterFlow",
+    "advectionScheme         isoAdvection",
+    "reconstructionScheme    plicRDF",
+    "surfaceTensionForceModel    RDF",
+    "pureMovingPhaseModel",
+    "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+]
+missing_solver = [
+    fragment
+    for fragment in required_solver_fragments
+    if fragment not in solver_sources
+]
+if missing_solver:
+    raise SystemExit(
+        f"Solver source is missing required fragments: {missing_solver}"
+    )
+
 result = {
     "case_definition_ok": True,
+    "solver_source_check": (
+        "compressibleInterFlow at pinned TwoPhaseFlow commit with "
+        "isoAdvection, plicRDF reconstruction and RDF curvature"
+    ),
     "geometry_source_check": (
         "configured 3-D circular Boolean pipe/tower/exterior atmosphere; "
         "generated mesh remains authoritative"

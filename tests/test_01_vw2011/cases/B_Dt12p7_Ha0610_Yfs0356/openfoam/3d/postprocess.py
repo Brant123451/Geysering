@@ -32,6 +32,7 @@ P_ATM = 101325.0
 TIME_SCALE = L / math.sqrt(G * DT)
 CROWN_Y = D / 2.0
 RIM_Y = CROWN_Y + L
+TWOPHASEFLOW_COMMIT = "de9826f9ffb24f4b635ac97fd388ebd560cfc174"
 NUMBER_PATTERN = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
 FLOAT_RE = re.compile(
     rf"(?i)(?:{NUMBER_PATTERN}|nan)"
@@ -51,8 +52,16 @@ def configuration_id(manifest: dict) -> str:
             "gas_equation_of_state",
             "max_co",
             "max_alpha_co",
+            "max_capillary_num",
             "max_delta_t_s",
             "c_alpha",
+            "solver",
+            "two_phase_flow_commit",
+            "advection_scheme",
+            "reconstruction_scheme",
+            "curvature_model",
+            "n_alpha_bounds",
+            "alpha_clip",
             "alpha_smooth_curvature_iterations",
             "end_time_s",
         )
@@ -61,6 +70,20 @@ def configuration_id(manifest: dict) -> str:
         json.dumps(controls, sort_keys=True, separators=(",", ":")).encode()
     ).hexdigest()[:12]
     return f"{manifest.get('mesh_preset', 'mesh')}-{digest}"
+
+
+def is_baseline_numerics(manifest: dict) -> bool:
+    return (
+        manifest.get("solver") == "compressibleInterFlow"
+        and manifest.get("two_phase_flow_commit") == TWOPHASEFLOW_COMMIT
+        and manifest.get("advection_scheme") == "isoAdvection"
+        and manifest.get("reconstruction_scheme") == "plicRDF"
+        and manifest.get("curvature_model") == "RDF"
+        and math.isclose(float(manifest.get("max_capillary_num", -1)), 1.0)
+        and math.isclose(float(manifest.get("c_alpha", -1)), 1.0)
+        and int(manifest.get("n_alpha_bounds", -1)) == 5
+        and manifest.get("alpha_clip") is False
+    )
 
 
 def is_baseline_full_physics(manifest: dict) -> bool:
@@ -76,8 +99,7 @@ def is_baseline_full_physics(manifest: dict) -> bool:
         and math.isclose(float(manifest.get("max_co", -1)), 0.30)
         and math.isclose(float(manifest.get("max_alpha_co", -1)), 0.20)
         and math.isclose(float(manifest.get("max_delta_t_s", -1)), 0.00025)
-        and math.isclose(float(manifest.get("c_alpha", -1)), 1.0)
-        and int(manifest.get("alpha_smooth_curvature_iterations", -1)) == 0
+        and is_baseline_numerics(manifest)
         and float(manifest.get("end_time_s", 0)) >= 6 * TIME_SCALE
     )
 
@@ -105,8 +127,7 @@ def is_canonical_hold(manifest: dict) -> bool:
         and math.isclose(float(manifest.get("max_co", -1)), 0.30)
         and math.isclose(float(manifest.get("max_alpha_co", -1)), 0.20)
         and math.isclose(float(manifest.get("max_delta_t_s", -1)), 0.00025)
-        and math.isclose(float(manifest.get("c_alpha", -1)), 1.0)
-        and int(manifest.get("alpha_smooth_curvature_iterations", -1)) == 0
+        and is_baseline_numerics(manifest)
     )
 
 
@@ -136,8 +157,16 @@ def mesh_pair_compatible(first: dict, second: dict) -> bool:
         "gas_equation_of_state",
         "max_co",
         "max_alpha_co",
+        "max_capillary_num",
         "max_delta_t_s",
         "c_alpha",
+        "solver",
+        "two_phase_flow_commit",
+        "advection_scheme",
+        "reconstruction_scheme",
+        "curvature_model",
+        "n_alpha_bounds",
+        "alpha_clip",
         "alpha_smooth_curvature_iterations",
         "end_time_s",
     } - ignored
@@ -285,6 +314,8 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "configuration_id",
         "mesh",
         "stage",
+        "solver",
+        "two_phase_flow_commit",
         "gas_eos",
         "initial_air_head_m",
         "valve_open_time_s",
@@ -314,7 +345,14 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "strict_audit_status",
         "mesh_ok",
         "maxCo",
+        "maxAlphaCo",
+        "maxCapillaryNum",
         "cAlpha",
+        "advectionScheme",
+        "reconstructionScheme",
+        "curvatureModel",
+        "nAlphaBounds",
+        "alphaClip",
         "alphaSmoothCurvature",
         "end_Tstar",
         "geyser",
@@ -330,6 +368,8 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "configuration_id": configuration_id(manifest),
         "mesh": manifest.get("mesh_preset", "base"),
         "stage": manifest.get("stage", "mesh"),
+        "solver": manifest.get("solver"),
+        "two_phase_flow_commit": manifest.get("two_phase_flow_commit"),
         "gas_eos": manifest.get("gas_equation_of_state"),
         "initial_air_head_m": manifest.get("initial_air_head_m"),
         "valve_open_time_s": manifest.get("valve_open_time_s"),
@@ -369,7 +409,14 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "strict_audit_status": mesh.get("strict_audit_status"),
         "mesh_ok": mesh.get("mesh_ok"),
         "maxCo": manifest.get("max_co"),
+        "maxAlphaCo": manifest.get("max_alpha_co"),
+        "maxCapillaryNum": manifest.get("max_capillary_num"),
         "cAlpha": manifest.get("c_alpha"),
+        "advectionScheme": manifest.get("advection_scheme"),
+        "reconstructionScheme": manifest.get("reconstruction_scheme"),
+        "curvatureModel": manifest.get("curvature_model"),
+        "nAlphaBounds": manifest.get("n_alpha_bounds"),
+        "alphaClip": manifest.get("alpha_clip"),
         "alphaSmoothCurvature": manifest.get(
             "alpha_smooth_curvature_iterations"
         ),
@@ -410,6 +457,8 @@ def update_sensitivity_csv(metrics: dict) -> None:
     fields = [
         "configuration_id",
         "mesh",
+        "solver",
+        "two_phase_flow_commit",
         "gas_eos",
         "initial_air_head_m",
         "valve_mode",
@@ -417,8 +466,14 @@ def update_sensitivity_csv(metrics: dict) -> None:
         "valve_seal_speed_m_per_s",
         "maxCo",
         "maxAlphaCo",
+        "maxCapillaryNum",
         "maxDeltaT_s",
         "cAlpha",
+        "advectionScheme",
+        "reconstructionScheme",
+        "curvatureModel",
+        "nAlphaBounds",
+        "alphaClip",
         "alphaSmoothCurvature",
         "requested_end_time_s",
         "end_Tstar",
@@ -441,6 +496,8 @@ def update_sensitivity_csv(metrics: dict) -> None:
     row = {
         "configuration_id": configuration_id(manifest),
         "mesh": manifest.get("mesh_preset"),
+        "solver": manifest.get("solver"),
+        "two_phase_flow_commit": manifest.get("two_phase_flow_commit"),
         "gas_eos": manifest.get("gas_equation_of_state"),
         "initial_air_head_m": manifest.get("initial_air_head_m"),
         "valve_mode": manifest.get("valve_mode"),
@@ -450,8 +507,14 @@ def update_sensitivity_csv(metrics: dict) -> None:
         ),
         "maxCo": manifest.get("max_co"),
         "maxAlphaCo": manifest.get("max_alpha_co"),
+        "maxCapillaryNum": manifest.get("max_capillary_num"),
         "maxDeltaT_s": manifest.get("max_delta_t_s"),
         "cAlpha": manifest.get("c_alpha"),
+        "advectionScheme": manifest.get("advection_scheme"),
+        "reconstructionScheme": manifest.get("reconstruction_scheme"),
+        "curvatureModel": manifest.get("curvature_model"),
+        "nAlphaBounds": manifest.get("n_alpha_bounds"),
+        "alphaClip": manifest.get("alpha_clip"),
         "alphaSmoothCurvature": manifest.get(
             "alpha_smooth_curvature_iterations"
         ),
@@ -543,8 +606,88 @@ def extract_levels() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     return times, levels[:, 0], levels[:, 1]
 
 
+def parse_solver_diagnostics(text: str) -> dict:
+    def values(pattern: str) -> list[float]:
+        return [
+            float(value)
+            for value in re.findall(pattern, text, flags=re.I | re.M)
+        ]
+
+    courant = values(
+        rf"^Courant Number mean:\s*{NUMBER_PATTERN}\s+max:\s*({NUMBER_PATTERN})"
+    )
+    interface_courant = values(
+        rf"^Interface Courant Number mean:\s*{NUMBER_PATTERN}\s+max:\s*"
+        rf"({NUMBER_PATTERN})"
+    )
+    capillary = values(rf"^Capillary Number:\s*({NUMBER_PATTERN})")
+    delta_t = values(rf"^deltaT\s*=\s*({NUMBER_PATTERN})")
+    alpha_min = values(
+        rf"Min\(alpha\.water\)\s*=\s*({NUMBER_PATTERN})"
+    )
+    alpha_max = values(
+        rf"Max\(alpha\.water\)\s*=\s*({NUMBER_PATTERN})(?!\s*-\s*1)"
+    )
+    alpha_max_minus_one = values(
+        rf"Max\(alpha\.water\)\s*-\s*1\s*=\s*({NUMBER_PATTERN})"
+    )
+    execution_time = values(
+        rf"^ExecutionTime\s*=\s*({NUMBER_PATTERN})\s+s"
+    )
+    clock_time = values(
+        rf"^ExecutionTime\s*=\s*{NUMBER_PATTERN}\s+s\s+ClockTime\s*=\s*"
+        rf"({NUMBER_PATTERN})\s+s"
+    )
+
+    velocity_samples: list[tuple[float, list[float]]] = []
+    velocity_pattern = re.compile(
+        rf"max\(mag\(U\)\)\s*=\s*({NUMBER_PATTERN}).*?"
+        rf"at location\s*\(\s*({NUMBER_PATTERN})\s+({NUMBER_PATTERN})\s+"
+        rf"({NUMBER_PATTERN})\s*\)",
+        flags=re.I,
+    )
+    for match in velocity_pattern.finditer(text):
+        velocity_samples.append(
+            (
+                float(match.group(1)),
+                [float(match.group(i)) for i in range(2, 5)],
+            )
+        )
+
+    result = {
+        "max_courant_number": max(courant) if courant else None,
+        "max_interface_courant_number": (
+            max(interface_courant) if interface_courant else None
+        ),
+        "max_capillary_number": max(capillary) if capillary else None,
+        "minimum_alpha_water": min(alpha_min) if alpha_min else None,
+        "maximum_alpha_water": (
+            max(alpha_max)
+            if alpha_max
+            else (
+                1.0 + max(alpha_max_minus_one)
+                if alpha_max_minus_one
+                else None
+            )
+        ),
+        "final_delta_t_s": delta_t[-1] if delta_t else None,
+        "execution_time_s": execution_time[-1] if execution_time else None,
+        "clock_time_s": clock_time[-1] if clock_time else None,
+    }
+    if velocity_samples:
+        maximum_velocity = max(velocity_samples, key=lambda sample: sample[0])
+        result["max_velocity_m_per_s"] = maximum_velocity[0]
+        result["max_velocity_location_m"] = maximum_velocity[1]
+        result["last_written_velocity_max_m_per_s"] = velocity_samples[-1][0]
+    else:
+        result["max_velocity_m_per_s"] = None
+        result["max_velocity_location_m"] = None
+        result["last_written_velocity_max_m_per_s"] = None
+    return result
+
+
 def parse_accounting() -> dict[str, np.ndarray]:
-    text = (HERE / "log.compressibleInterFoam").read_text(errors="replace")
+    text = (HERE / "log.compressibleInterFlow").read_text(errors="replace")
     values: dict[float, list[float]] = {}
     for line in text.splitlines():
         if "CASEB_ACCOUNTING" not in line:
@@ -734,6 +877,10 @@ def postprocess(manifest: dict, mesh: dict) -> dict:
     level_tstar = level_time / TIME_SCALE
     accounting = parse_accounting()
     accounting_tstar = accounting["time"] / TIME_SCALE
+    solver_text = (HERE / "log.compressibleInterFlow").read_text(
+        errors="replace"
+    )
+    numerical_diagnostics = parse_solver_diagnostics(solver_text)
 
     exp_pressure, exp_levels = experiment_data()
     one_d = frozen_1d()
@@ -878,6 +1025,7 @@ def postprocess(manifest: dict, mesh: dict) -> dict:
         "geyser_height_censored_by_domain": plume_censored,
         "overflow_volume_m3": max_above,
         "overflow_volume_method": "maximum liquid inventory above physical rim",
+        "numerical_diagnostics": numerical_diagnostics,
         "liquid_mass_error_pct_final": float(
             accounting["liquid_balance_error_pct"][-1]
         ),
@@ -897,8 +1045,8 @@ def postprocess(manifest: dict, mesh: dict) -> dict:
         "mass_balance_method": {
             "total": "solver rho and rhoPhi (signed atmosphere flux)",
             "phases": (
-                "EOS phase density with alpha*phi boundary split; diagnostic "
-                "approximation because subcycled alphaPhi is not exposed"
+                "registered thermo:rho phase densities and geometric "
+                "alphaPhi.water boundary flux; transported alpha is not clipped"
             ),
         },
     }
@@ -1029,8 +1177,12 @@ def postprocess(manifest: dict, mesh: dict) -> dict:
             "time_scale_s": TIME_SCALE,
         },
         "solver": {
-            "name": "compressibleInterFoam",
+            "name": manifest.get("solver", "compressibleInterFlow"),
             "openfoam_version": "v2512",
+            "two_phase_flow_commit": manifest.get("two_phase_flow_commit"),
+            "advection_scheme": manifest.get("advection_scheme"),
+            "reconstruction_scheme": manifest.get("reconstruction_scheme"),
+            "curvature_model": manifest.get("curvature_model"),
             "gas_equation_of_state": manifest.get(
                 "gas_equation_of_state", "unknown"
             ),

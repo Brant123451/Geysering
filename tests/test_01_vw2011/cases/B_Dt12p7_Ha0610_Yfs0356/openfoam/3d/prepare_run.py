@@ -11,6 +11,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 SYSTEM = HERE / "system"
 RUNTIME = HERE / "outputs" / "runtime"
+TWOPHASEFLOW_COMMIT = "de9826f9ffb24f4b635ac97fd388ebd560cfc174"
 
 
 def env_float(name: str, default: float) -> float:
@@ -19,6 +20,18 @@ def env_float(name: str, default: float) -> float:
 
 def env_int(name: str, default: int) -> int:
     return int(os.environ.get(name, default))
+
+
+def env_bool(name: str, default: bool) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    normalized = value.strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+    raise SystemExit(f"{name} must be true or false")
 
 
 def probe_lines(
@@ -42,10 +55,19 @@ def main() -> None:
     end_time = env_float("CASEB_END_TIME", defaults[stage])
     max_co = env_float("CASEB_MAX_CO", 0.30)
     max_alpha_co = env_float("CASEB_MAX_ALPHA_CO", 0.20)
+    max_capillary_num = env_float("CASEB_MAX_CAPILLARY_NUM", 1.0)
     max_delta_t = env_float("CASEB_MAX_DELTA_T", 0.00025)
     write_interval = env_float("CASEB_WRITE_INTERVAL", 0.10)
     c_alpha = env_float("CASEB_C_ALPHA", 1.0)
-    alpha_smooth_curvature = env_int("CASEB_ALPHA_SMOOTH_CURVATURE", 0)
+    advection_scheme = os.environ.get(
+        "CASEB_ADVECTION_SCHEME", "isoAdvection"
+    )
+    reconstruction_scheme = os.environ.get(
+        "CASEB_RECONSTRUCTION_SCHEME", "plicRDF"
+    )
+    curvature_model = os.environ.get("CASEB_CURVATURE_MODEL", "RDF")
+    n_alpha_bounds = env_int("CASEB_N_ALPHA_BOUNDS", 5)
+    alpha_clip = env_bool("CASEB_ALPHA_CLIP", False)
     initial_air_head = env_float("CASEB_HA0", 0.610)
     valve_mode = os.environ.get(
         "CASEB_VALVE_MODE", "closed" if stage == "hold" else "opening"
@@ -59,10 +81,37 @@ def main() -> None:
     gas_eos = os.environ.get("CASEB_GAS_EOS", "perfectGas")
     if gas_eos not in {"perfectGas", "rhoConst"}:
         raise SystemExit("CASEB_GAS_EOS must be perfectGas or rhoConst")
+    if advection_scheme not in {"isoAdvection", "MULESScheme"}:
+        raise SystemExit(
+            "CASEB_ADVECTION_SCHEME must be isoAdvection or MULESScheme"
+        )
+    if reconstruction_scheme not in {"plicRDF", "isoAlpha", "gradAlpha"}:
+        raise SystemExit(
+            "CASEB_RECONSTRUCTION_SCHEME must be plicRDF, isoAlpha, or gradAlpha"
+        )
+    if curvature_model not in {"RDF", "fitParaboloid", "gradAlpha"}:
+        raise SystemExit(
+            "CASEB_CURVATURE_MODEL must be RDF, fitParaboloid, or gradAlpha"
+        )
+    if "CASEB_ALPHA_SMOOTH_CURVATURE" in os.environ:
+        raise SystemExit(
+            "CASEB_ALPHA_SMOOTH_CURVATURE belongs to stock "
+            "compressibleInterFoam and is not valid for compressibleInterFlow"
+        )
+    if (
+        advection_scheme != "MULESScheme"
+        and "CASEB_C_ALPHA" in os.environ
+        and not math.isclose(c_alpha, 1.0)
+    ):
+        raise SystemExit(
+            "CASEB_C_ALPHA only changes interface compression when "
+            "CASEB_ADVECTION_SCHEME=MULESScheme"
+        )
     values = (
         end_time,
         max_co,
         max_alpha_co,
+        max_capillary_num,
         max_delta_t,
         write_interval,
         c_alpha,
@@ -74,6 +123,7 @@ def main() -> None:
     positive = (
         max_co,
         max_alpha_co,
+        max_capillary_num,
         max_delta_t,
         write_interval,
         c_alpha,
@@ -87,8 +137,8 @@ def main() -> None:
         raise SystemExit("endTime must be positive for solver stages")
     if valve_open_time < 0:
         raise SystemExit("CASEB_VALVE_OPEN_TIME cannot be negative")
-    if alpha_smooth_curvature < 0:
-        raise SystemExit("CASEB_ALPHA_SMOOTH_CURVATURE cannot be negative")
+    if n_alpha_bounds < 1:
+        raise SystemExit("CASEB_N_ALPHA_BOUNDS must be positive")
     if stage != "mesh":
         write_interval = min(write_interval, end_time)
         probe_interval = min(0.005, end_time)
@@ -107,6 +157,7 @@ def main() -> None:
                 f"writeInterval   {write_interval:.10g};",
                 f"maxCo           {max_co:.10g};",
                 f"maxAlphaCo      {max_alpha_co:.10g};",
+                f"maxCapillaryNum {max_capillary_num:.10g};",
                 f"maxDeltaT       {max_delta_t:.10g};",
                 f"caseBProbeInterval      {probe_interval:.10g};",
                 f"caseBPlumeInterval      {plume_interval:.10g};",
@@ -117,7 +168,21 @@ def main() -> None:
     )
     (SYSTEM / "runSettings").write_text(
         f"cAlpha                  {c_alpha:.10g};\n"
-        f"nAlphaSmoothCurvature   {alpha_smooth_curvature};\n"
+        f"advectionScheme         {advection_scheme};\n"
+        f"reconstructionScheme    {reconstruction_scheme};\n"
+        f"nAlphaBounds            {n_alpha_bounds};\n"
+        f"clip                    {str(alpha_clip).lower()};\n"
+        "snapTol                 0;\n"
+    )
+    (HERE / "constant" / "surfaceForces").write_text(
+        "surfaceForces\n"
+        "{\n"
+        "    sigma                       0.072;\n"
+        f"    surfaceTensionForceModel    {curvature_model};\n"
+        "    curvFromTr                  true;\n"
+        "    accelerationForceModel      gravity;\n"
+        "    deltaFunctionModel          alphaCSF;\n"
+        "}\n"
     )
     initial_air_pressure = 101325.0 + 998.2 * 9.81 * initial_air_head
     set_fields = (SYSTEM / "setFieldsDict").read_text()
@@ -153,15 +218,22 @@ def main() -> None:
         "initial_air_head_m": initial_air_head,
         "initial_air_absolute_pressure_Pa": initial_air_pressure,
         "gas_equation_of_state": gas_eos,
+        "solver": "compressibleInterFlow",
+        "two_phase_flow_commit": TWOPHASEFLOW_COMMIT,
+        "advection_scheme": advection_scheme,
+        "reconstruction_scheme": reconstruction_scheme,
+        "curvature_model": curvature_model,
         "max_co": max_co,
         "max_alpha_co": max_alpha_co,
+        "max_capillary_num": max_capillary_num,
         "max_delta_t_s": max_delta_t,
         "field_write_interval_s": write_interval,
         "probe_write_interval_s": probe_interval,
         "plume_write_interval_s": plume_interval,
         "accounting_interval_s": accounting_interval,
         "c_alpha": c_alpha,
-        "alpha_smooth_curvature_iterations": alpha_smooth_curvature,
+        "n_alpha_bounds": n_alpha_bounds,
+        "alpha_clip": alpha_clip,
         "tower_probe_lines": 5,
         "tower_probe_spacing_m": 0.005,
         "plume_probe_lines": 5,

@@ -9,8 +9,20 @@ FoamFile
 phases          (water air);
 pMin            50000;
 
+water
+{
+    type        pureMovingPhaseModel;
+}
+
+air
+{
+    type        pureMovingPhaseModel;
+}
+
 sigma
 {
     type        constant;
     sigma       0.072;
 }
+
+#include "surfaceForces"

@@ -17,6 +17,8 @@ defaultFieldValues
     volScalarFieldValue p_rgh 105271.314
     volScalarFieldValue p 105271.314
     volScalarFieldValue T 293.15
+    volScalarFieldValue T.water 293.15
+    volScalarFieldValue T.air 293.15
 );
 
 regions

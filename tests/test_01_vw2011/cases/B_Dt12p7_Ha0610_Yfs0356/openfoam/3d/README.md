@@ -46,7 +46,7 @@ This avoids cell-centre stair stepping on the tetrahedral mesh.  Finally,
 `setExprFields` makes `p` and `p_rgh` hydrostatically consistent with the
 geometric phase field.  In interface cells, `p_rgh` uses the same
 alpha-weighted perfect-gas/perfect-fluid density that
-`compressibleInterFoam` uses to reconstruct absolute pressure; a binary
+`compressibleInterFlow` uses to reconstruct absolute pressure; a binary
 alpha=0.5 density switch would create a nonphysical startup impulse.
 
 The inferred initial chamber volume is 0.003789 m³.  The initial water volume
@@ -56,11 +56,17 @@ values from the authoritative config before every run.
 
 ## Solver choice and represented physics
 
-The application is `compressibleInterFoam` from OpenFOAM.com **v2512**.  It is
-a single-momentum, two-phase VOF solver with phase compressibility, an energy
-equation, gravity, viscosity and surface tension.  It was selected instead of
-incompressible `interFoam` because the forcing is the expansion of a finite
-pressurised gas inventory.
+The application is DLR-RY TwoPhaseFlow `compressibleInterFlow` at pinned commit
+`de9826f9ffb24f4b635ac97fd388ebd560cfc174`, compiled against OpenFOAM.com
+**v2512**.  It is a single-momentum, two-phase VOF solver with phase
+compressibility, an energy equation, gravity, viscosity and surface tension.
+The baseline numerical candidate uses geometric `isoAdvection`, `plicRDF`
+interface reconstruction and RDF curvature.  This migration addresses the
+sustained free-surface parasitic currents found with stock
+`compressibleInterFoam`; it does not count as accepted evidence until the
+0.006 s screening and full 1.0 s hold pass.  A compressible solver remains
+necessary because the forcing is expansion of a finite pressurised gas
+inventory.
 
 Thermophysical choices are:
 
@@ -75,13 +81,15 @@ Thermophysical choices are:
 * laminar momentum transport and smooth no-slip walls;
 * neutral 90° contact angle because no measured acrylic contact angle exists.
 
-`CASEB_ALPHA_SMOOTH_CURVATURE` exposes OpenFOAM's built-in curvature-only
-alpha filter without modifying or diffusing the transported phase fraction.
-The baseline keeps its default at zero iterations: a two-pass startup
-diagnostic reduced the first 0.001 s velocity maximum but produced larger
-subsequent free-surface hotspots and higher runtime.  Zero/one/two iterations
-remain an explicit numerical sensitivity instead of silently smoothing the
-baseline interface.
+The former stock-solver control `CASEB_ALPHA_SMOOTH_CURVATURE` is intentionally
+rejected by the new deck: it acts only on
+`compressibleInterFoam::interfaceProperties` and has no meaning for RDF.
+Historical zero/two-pass diagnostics remain recorded: two passes reduced the
+first 0.001 s velocity maximum but produced larger subsequent free-surface
+hotspots and higher runtime.  The active curvature sensitivity is now
+`RDF|fitParaboloid|gradAlpha`; stock smoothing results remain labelled as
+rejected diagnostics rather than silently carrying an ineffective setting
+into the new solver.
 
 A conformal Gmsh disk at the initial tower free surface was also tested and
 rejected.  Although its 1,907,679-cell mesh had one connected region and
@@ -188,8 +196,15 @@ exception is not represented as a literal strict `Mesh OK.` result.
 
 ## Reproducible commands
 
-Prerequisites are Gmsh with Python bindings, NumPy, Matplotlib and
-OpenFOAM.com v2512.  Run from this directory.
+Prerequisites are Gmsh with Python bindings, NumPy, Matplotlib, OpenFOAM.com
+v2512, and the pinned TwoPhaseFlow build.  Run from this directory:
+
+```bash
+./build_twophaseflow.sh
+```
+
+`Allrun` verifies both the source commit and the installed
+`compressibleInterFlow` binary before any solver stage.
 
 Cheap preflight and mesh check:
 
@@ -231,7 +246,9 @@ Resume an interrupted decomposed run without remeshing:
 `outputs/runtime/run_manifest.json`, ignores ambient `CASEB_*` overrides, and
 refuses to run when the manifest is absent or incomplete.  A resume therefore
 continues the same numerical experiment; change controls by preparing a new
-run, not by mutating an interrupted one.  Do not run it after `Allclean`.
+run, not by mutating an interrupted one.  Stock `compressibleInterFoam`
+processor state is incompatible and cannot be resumed.  Do not run it after
+`Allclean`.
 
 Refined-grid full run:
 
@@ -247,9 +264,12 @@ Sensitivity controls, each requiring a separate clean run, are:
 ```text
 CASEB_MESH=base|refined
 CASEB_MAX_CO=0.15|0.30
+CASEB_MAX_CAPILLARY_NUM=0.5|1.0
 CASEB_VALVE_OPEN_TIME=0|0.10|0.25|0.50|1.0
-CASEB_C_ALPHA=0.5|1.0|1.5
-CASEB_ALPHA_SMOOTH_CURVATURE=0|1|2
+CASEB_ADVECTION_SCHEME=isoAdvection|MULESScheme
+CASEB_RECONSTRUCTION_SCHEME=plicRDF|isoAlpha|gradAlpha
+CASEB_CURVATURE_MODEL=RDF|fitParaboloid|gradAlpha
+CASEB_C_ALPHA=0.5|1.0|1.5  # only with MULESScheme
 CASEB_HA0=0.579|0.610|0.641
 CASEB_GAS_EOS=perfectGas|rhoConst
 ```
@@ -279,9 +299,9 @@ signed atmospheric flux:
 \]
 
 The total balance uses the solver's `rho` and `rhoPhi`.  Separate liquid/gas
-balances split volumetric flux as \(\alpha\rho\phi\); they are diagnostic
-approximations because `compressibleInterFoam` does not expose its subcycled
-phase flux to the function object.
+balances use registered `thermo:rho.water`, `thermo:rho.air` and the geometric
+`alphaPhi.water` boundary flux.  Cell inventories use transported alpha
+without clipping, so an alpha-bound defect cannot be hidden by accounting.
 
 `postprocess.py` creates the requested compact files under the Case-B
 `outputs/` directory.  Pressure and level plots contain all three sources:

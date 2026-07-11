@@ -22,6 +22,24 @@ if [[ "$MESH" != "base" && "$MESH" != "refined" ]]; then
     exit 2
 fi
 
+TWOPHASEFLOW_COMMIT="de9826f9ffb24f4b635ac97fd388ebd560cfc174"
+TWOPHASEFLOW_ROOT="${CASEB_TWOPHASEFLOW_ROOT:-$WM_PROJECT_USER_DIR/TwoPhaseFlow}"
+if [[ "$STAGE" != "mesh" ]]; then
+    if [[ ! -d "$TWOPHASEFLOW_ROOT/.git" ]]; then
+        echo "TwoPhaseFlow checkout not found at $TWOPHASEFLOW_ROOT" >&2
+        exit 1
+    fi
+    installed_commit="$(git -C "$TWOPHASEFLOW_ROOT" rev-parse HEAD)"
+    if [[ "$installed_commit" != "$TWOPHASEFLOW_COMMIT" ]]; then
+        echo "TwoPhaseFlow must be at $TWOPHASEFLOW_COMMIT, got $installed_commit" >&2
+        exit 1
+    fi
+    if ! command -v compressibleInterFlow >/dev/null; then
+        echo "compressibleInterFlow is not built in the sourced v2512 environment." >&2
+        exit 1
+    fi
+fi
+
 if [[ -z "${CASEB_VALVE_MODE:-}" ]]; then
     if [[ "$STAGE" == "hold" ]]; then
         export CASEB_VALVE_MODE=closed
@@ -72,8 +90,8 @@ decomposePar -decomposeParDict system/decomposeParDict.runtime \
 
 OMPI_ALLOW_RUN_AS_ROOT=1 \
 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
-mpirun -np "$NP" compressibleInterFoam -parallel \
-    > log.compressibleInterFoam 2>&1
+mpirun -np "$NP" compressibleInterFlow -parallel \
+    > log.compressibleInterFlow 2>&1
 
 if [[ "${CASEB_RECONSTRUCT:-0}" == "1" ]]; then
     reconstructPar -latestTime > log.reconstructPar 2>&1

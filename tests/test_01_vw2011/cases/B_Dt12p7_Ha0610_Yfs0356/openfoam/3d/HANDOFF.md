@@ -15,6 +15,15 @@ Large runtime artifacts are intentionally ignored, so a fresh cloud agent must
 rerun solver stages.  Do not use or merge the old 2-D branch
 `cursor/test1-caseb-2d-4ac2`, and do not modify the Case-A reference directory.
 
+The stock `compressibleInterFoam` startup evidence below exposed a sustained
+free-surface capillary hotspot (`|U|max=3.839 m/s` at 0.006 s).  Conformal
+meshing, curvature-alpha smoothing and a least-squares `nHat` gradient were
+screened and rejected.  The source deck now contains a numerical candidate
+using DLR-RY TwoPhaseFlow `compressibleInterFlow` at pinned commit
+`de9826f9ffb24f4b635ac97fd388ebd560cfc174`, with
+`isoAdvection + plicRDF + RDF`.  This candidate is not accepted evidence until
+its 0.006 s screen and full 1.0 s closed-valve hold pass.
+
 ## Verified before handoff
 
 1. The paper and Case-B definition were audited in `PAPER_AUDIT.md`.
@@ -46,8 +55,9 @@ rerun solver stages.  Do not use or merge the old 2-D branch
 
 The scientific reproduction is **not complete**.  Continue in this order:
 
-1. Run the full 1.0 s closed-valve hold and assess leakage, interface drift,
-   pressure drift, and mass balance.
+1. Build the pinned dependency with `./build_twophaseflow.sh`, run the 0.006 s
+   RDF screening, then run the full 1.0 s closed-valve hold and assess leakage,
+   interface drift, pressure drift, alpha bounds and mass balance.
 2. Run the opened-valve 0.5 s smoke case.
 3. Run the 10.5 s base case through \(T^*\ge6\).
 4. Run the refined grid and required timestep/valve/compressibility
@@ -73,6 +83,9 @@ cd tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356/openfoam/3d
 less HANDOFF.md
 less PAPER_AUDIT.md
 less README.md
+
+# Build the pinned geometric-VOF solver.
+./build_twophaseflow.sh
 
 # Recreate stages from source.
 ./Allclean

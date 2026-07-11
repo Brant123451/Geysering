@@ -6,7 +6,7 @@ FoamFile
     object      controlDict;
 }
 
-application     compressibleInterFoam;
+application     compressibleInterFlow;
 startFrom       latestTime;
 startTime       0;
 stopAt          endTime;
@@ -74,32 +74,25 @@ functions
         executeInterval $caseBAccountingInterval;
         writeControl    writeTime;
 
-        codeInclude
-        #{
-            #include <cstdlib>
-            #include <string>
-        #};
-
         codeExecute
         #{
             const fvMesh& fvmesh = mesh();
             const volScalarField& alpha =
                 fvmesh.lookupObject<volScalarField>("alpha.water");
-            const volScalarField& pressure =
-                fvmesh.lookupObject<volScalarField>("p");
-            const volScalarField& temperature =
-                fvmesh.lookupObject<volScalarField>("T");
+            const volScalarField& waterDensity =
+                fvmesh.lookupObject<volScalarField>("thermo:rho.water");
+            const volScalarField& airDensity =
+                fvmesh.lookupObject<volScalarField>("thermo:rho.air");
             const surfaceScalarField& phi =
                 fvmesh.lookupObject<surfaceScalarField>("phi");
+            const surfaceScalarField& waterAlphaPhi =
+                fvmesh.lookupObject<surfaceScalarField>("alphaPhi.water");
             const volScalarField& mixtureDensity =
                 fvmesh.lookupObject<volScalarField>("rho");
             const surfaceScalarField& mixtureMassFlux =
                 fvmesh.lookupObject<surfaceScalarField>("rhoPhi");
             const scalarField& volume = fvmesh.V();
             const vectorField& centres = fvmesh.C();
-            const char* gasEosText = std::getenv("CASEB_GAS_EOS");
-            const bool constantGas =
-                gasEosText && std::string(gasEosText) == "rhoConst";
 
             scalar liquidMass = 0;
             scalar gasMass = 0;
@@ -109,15 +102,11 @@ functions
             scalar plumeTop = 0.657;
             forAll(volume, cellI)
             {
-                const scalar a = min(max(alpha[cellI], scalar(0)), scalar(1));
-                const scalar rhoWater =
-                    998.153943
-                  + pressure[cellI]/(7504.690432*temperature[cellI]);
-                const scalar rhoAir = constantGas
-                    ? 1.204085
-                    : pressure[cellI]/(287.058*temperature[cellI]);
-                liquidMass += a*rhoWater*volume[cellI];
-                gasMass += (1.0-a)*rhoAir*volume[cellI];
+                // Preserve the transported alpha exactly so conservation
+                // diagnostics expose, rather than hide, any bound violation.
+                const scalar a = alpha[cellI];
+                liquidMass += a*waterDensity[cellI]*volume[cellI];
+                gasMass += (1.0-a)*airDensity[cellI]*volume[cellI];
                 liquidVolume += a*volume[cellI];
                 totalMass += mixtureDensity[cellI]*volume[cellI];
                 if (centres[cellI].y() > 0.657)
@@ -142,24 +131,20 @@ functions
             const label patchI = fvmesh.boundaryMesh().findPatchID("atmosphere");
             if (patchI >= 0)
             {
-                const scalarField& ap = alpha.boundaryField()[patchI];
-                const scalarField& pp = pressure.boundaryField()[patchI];
-                const scalarField& tp = temperature.boundaryField()[patchI];
                 const scalarField& phip = phi.boundaryField()[patchI];
+                const scalarField& alphaPhip =
+                    waterAlphaPhi.boundaryField()[patchI];
+                const scalarField& rhoWaterp =
+                    waterDensity.boundaryField()[patchI];
+                const scalarField& rhoAirp =
+                    airDensity.boundaryField()[patchI];
                 const scalarField& rhoPhip =
                     mixtureMassFlux.boundaryField()[patchI];
                 forAll(phip, faceI)
                 {
-                    const scalar a =
-                        min(max(ap[faceI], scalar(0)), scalar(1));
-                    const scalar rhoWater =
-                        998.153943
-                      + pp[faceI]/(7504.690432*tp[faceI]);
-                    liquidFlux += a*rhoWater*phip[faceI];
-                    const scalar rhoAir = constantGas
-                        ? 1.204085
-                        : pp[faceI]/(287.058*tp[faceI]);
-                    gasFlux += (1.0-a)*rhoAir*phip[faceI];
+                    liquidFlux += rhoWaterp[faceI]*alphaPhip[faceI];
+                    gasFlux +=
+                        rhoAirp[faceI]*(phip[faceI] - alphaPhip[faceI]);
                     totalMassFlux += rhoPhip[faceI];
                 }
             }
@@ -178,5 +163,18 @@ functions
                     << totalMass << ' ' << totalMassFlux << nl;
             }
         #};
+    }
+
+    solverBounds
+    {
+        type            fieldMinMax;
+        libs            (fieldFunctionObjects);
+        fields          (alpha.water U);
+        mode            magnitude;
+        location        yes;
+        writeToFile     no;
+        log             yes;
+        writeControl    adjustableRunTime;
+        writeInterval   $caseBAccountingInterval;
     }
 }

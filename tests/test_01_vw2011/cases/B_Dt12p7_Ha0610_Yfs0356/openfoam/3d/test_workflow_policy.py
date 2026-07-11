@@ -14,6 +14,7 @@ from postprocess import (
     is_baseline_full,
     is_baseline_full_physics,
     is_canonical_hold,
+    parse_solver_diagnostics,
     should_update_hold_evidence,
     update_sensitivity_csv,
 )
@@ -33,12 +34,21 @@ def baseline_manifest(mesh: str = "base") -> dict:
         "valve_seal_speed_m_per_s": 1.0,
         "initial_air_head_m": 0.610,
         "gas_equation_of_state": "perfectGas",
+        "solver": "compressibleInterFlow",
+        "two_phase_flow_commit": (
+            "de9826f9ffb24f4b635ac97fd388ebd560cfc174"
+        ),
+        "advection_scheme": "isoAdvection",
+        "reconstruction_scheme": "plicRDF",
+        "curvature_model": "RDF",
         "max_co": 0.30,
         "max_alpha_co": 0.20,
+        "max_capillary_num": 1.0,
         "max_delta_t_s": 0.00025,
         "field_write_interval_s": 0.10,
         "c_alpha": 1.0,
-        "alpha_smooth_curvature_iterations": 0,
+        "n_alpha_bounds": 5,
+        "alpha_clip": False,
     }
 
 
@@ -59,7 +69,7 @@ class BaselinePolicyTests(unittest.TestCase):
         manifest["max_delta_t_s"] = 0.0005
         self.assertFalse(is_baseline_full_physics(manifest))
         manifest = baseline_manifest()
-        manifest["alpha_smooth_curvature_iterations"] = 2
+        manifest["curvature_model"] = "fitParaboloid"
         self.assertFalse(is_baseline_full_physics(manifest))
 
     def test_acceptance_can_only_complete_base_mesh(self) -> None:
@@ -132,6 +142,65 @@ class InitialFieldPolicyTests(unittest.TestCase):
         self.assertIn("(1 - alpha.water)*(p/(287.058*293.15))", text)
         self.assertNotIn("reducedWaterPressure", text)
         self.assertNotIn("reducedAirPressure", text)
+
+
+class TwoPhaseFlowDeckTests(unittest.TestCase):
+    def test_rdf_geometric_vof_is_the_default(self) -> None:
+        settings = (HERE / "system" / "runSettings.default").read_text()
+        surface_forces = (
+            HERE / "constant" / "surfaceForces.default"
+        ).read_text()
+        self.assertIn("advectionScheme         isoAdvection;", settings)
+        self.assertIn("reconstructionScheme    plicRDF;", settings)
+        self.assertIn("clip                    false;", settings)
+        self.assertIn("surfaceTensionForceModel    RDF;", surface_forces)
+
+    def test_compressible_inter_flow_entrypoints_are_consistent(self) -> None:
+        control = (HERE / "system" / "controlDict").read_text()
+        allrun = (HERE / "Allrun").read_text()
+        resume = (HERE / "Allrun.resume").read_text()
+        self.assertIn("application     compressibleInterFlow;", control)
+        self.assertIn("mpirun -np \"$NP\" compressibleInterFlow", allrun)
+        self.assertIn("mpirun -np \"$NP\" compressibleInterFlow", resume)
+        self.assertNotIn("log.compressibleInterFoam", allrun + resume)
+
+    def test_phase_models_and_temperatures_are_explicit(self) -> None:
+        thermo = (HERE / "constant" / "thermophysicalProperties").read_text()
+        self.assertEqual(thermo.count("type        pureMovingPhaseModel;"), 2)
+        for phase in ("water", "air"):
+            temperature = (HERE / "0.orig" / f"T.{phase}").read_text()
+            self.assertIn(f"object      T.{phase};", temperature)
+
+    def test_accounting_uses_solver_phase_density_and_flux(self) -> None:
+        control = (HERE / "system" / "controlDict").read_text()
+        self.assertIn('"thermo:rho.water"', control)
+        self.assertIn('"thermo:rho.air"', control)
+        self.assertIn('"alphaPhi.water"', control)
+        self.assertNotIn("min(max(alpha[cellI]", control)
+
+    def test_solver_diagnostics_capture_rdf_screening_fields(self) -> None:
+        diagnostics = parse_solver_diagnostics(
+            "\n".join(
+                (
+                    "Courant Number mean: 0.01 max: 0.3",
+                    "Interface Courant Number mean: 0.02 max: 0.2",
+                    "Capillary Number: 0.04",
+                    "deltaT = 1.5e-05",
+                    "Phase-1 volume fraction = 0.2  "
+                    "Min(alpha.water) = -2e-09  "
+                    "Max(alpha.water) - 1 = 3e-10",
+                    "    max(mag(U)) = 0.25 in cell 1 at location "
+                    "(3.516 0.403 0.0) on processor 0",
+                    "ExecutionTime = 12.5 s  ClockTime = 13 s",
+                )
+            )
+        )
+        self.assertEqual(diagnostics["max_courant_number"], 0.3)
+        self.assertEqual(diagnostics["maximum_alpha_water"], 1.0000000003)
+        self.assertEqual(diagnostics["max_velocity_m_per_s"], 0.25)
+        self.assertEqual(
+            diagnostics["max_velocity_location_m"], [3.516, 0.403, 0.0]
+        )
 
 
 class SensitivityIndexTests(unittest.TestCase):

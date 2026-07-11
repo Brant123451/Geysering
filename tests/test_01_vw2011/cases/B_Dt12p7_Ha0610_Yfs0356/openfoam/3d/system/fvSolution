@@ -19,6 +19,14 @@ solvers
         smoother        symGaussSeidel;
         tolerance       1e-8;
         relTol          0;
+        vof2IsoTol      1e-8;
+        isoFaceTol      1e-8;
+        surfCellTol     1e-8;
+        tol             1e-6;
+        iterations      5;
+        interpolateNormal true;
+        writeVTK        false;
+        writeIsoFaces   false;
     }
 
     ".*(rho|rhoFinal)"

@@ -44,7 +44,7 @@ expressions
     {
         field p_rgh;
         dimensions [1 -1 -2 0 0 0 0];
-        // compressibleInterFoam reconstructs p as p_rgh + rho*gh using
+        // compressibleInterFlow reconstructs p as p_rgh + rho*gh using
         // alpha-weighted phase density.  Use that same mixture density in
         // geometric cut cells instead of switching p_rgh at alpha=0.5.
         expression

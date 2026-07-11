@@ -9,6 +9,8 @@ import shlex
 from pathlib import Path
 
 
+TWOPHASEFLOW_COMMIT = "de9826f9ffb24f4b635ac97fd388ebd560cfc174"
+
 ENVIRONMENT_KEYS = {
     "stage": "CASEB_STAGE",
     "end_time_s": "CASEB_END_TIME",
@@ -20,10 +22,15 @@ ENVIRONMENT_KEYS = {
     "gas_equation_of_state": "CASEB_GAS_EOS",
     "max_co": "CASEB_MAX_CO",
     "max_alpha_co": "CASEB_MAX_ALPHA_CO",
+    "max_capillary_num": "CASEB_MAX_CAPILLARY_NUM",
     "max_delta_t_s": "CASEB_MAX_DELTA_T",
     "field_write_interval_s": "CASEB_WRITE_INTERVAL",
     "c_alpha": "CASEB_C_ALPHA",
-    "alpha_smooth_curvature_iterations": "CASEB_ALPHA_SMOOTH_CURVATURE",
+    "advection_scheme": "CASEB_ADVECTION_SCHEME",
+    "reconstruction_scheme": "CASEB_RECONSTRUCTION_SCHEME",
+    "curvature_model": "CASEB_CURVATURE_MODEL",
+    "n_alpha_bounds": "CASEB_N_ALPHA_BOUNDS",
+    "alpha_clip": "CASEB_ALPHA_CLIP",
 }
 
 NUMERIC_KEYS = {
@@ -33,10 +40,11 @@ NUMERIC_KEYS = {
     "initial_air_head_m",
     "max_co",
     "max_alpha_co",
+    "max_capillary_num",
     "max_delta_t_s",
     "field_write_interval_s",
     "c_alpha",
-    "alpha_smooth_curvature_iterations",
+    "n_alpha_bounds",
 }
 
 
@@ -44,7 +52,8 @@ def read_manifest(path: Path) -> dict:
     if not path.is_file():
         raise ValueError(f"Run manifest does not exist: {path}")
     manifest = json.loads(path.read_text())
-    missing = sorted(set(ENVIRONMENT_KEYS) - set(manifest))
+    required = set(ENVIRONMENT_KEYS) | {"solver", "two_phase_flow_commit"}
+    missing = sorted(required - set(manifest))
     if missing:
         raise ValueError(f"Run manifest is missing controls: {', '.join(missing)}")
     if manifest["stage"] not in {"hold", "smoke", "full"}:
@@ -55,12 +64,31 @@ def read_manifest(path: Path) -> dict:
         raise ValueError("Unknown valve mode in run manifest")
     if manifest["gas_equation_of_state"] not in {"perfectGas", "rhoConst"}:
         raise ValueError("Unknown gas equation of state in run manifest")
+    if manifest["solver"] != "compressibleInterFlow":
+        raise ValueError("Run manifest was created by a different solver")
+    if manifest["two_phase_flow_commit"] != TWOPHASEFLOW_COMMIT:
+        raise ValueError("Run manifest uses a different TwoPhaseFlow commit")
+    if manifest["advection_scheme"] not in {"isoAdvection", "MULESScheme"}:
+        raise ValueError("Unknown advection scheme in run manifest")
+    if manifest["reconstruction_scheme"] not in {
+        "plicRDF",
+        "isoAlpha",
+        "gradAlpha",
+    }:
+        raise ValueError("Unknown reconstruction scheme in run manifest")
+    if manifest["curvature_model"] not in {"RDF", "fitParaboloid", "gradAlpha"}:
+        raise ValueError("Unknown curvature model in run manifest")
+    if not isinstance(manifest["alpha_clip"], bool):
+        raise ValueError("alpha_clip must be a boolean")
     for key in NUMERIC_KEYS:
         value = float(manifest[key])
         if not math.isfinite(value):
             raise ValueError(f"Non-finite {key} in run manifest")
-    if not float(manifest["alpha_smooth_curvature_iterations"]).is_integer():
-        raise ValueError("Curvature smoothing iterations must be an integer")
+    if (
+        not float(manifest["n_alpha_bounds"]).is_integer()
+        or int(manifest["n_alpha_bounds"]) < 1
+    ):
+        raise ValueError("Alpha bounding iterations must be a positive integer")
     return manifest
 
 

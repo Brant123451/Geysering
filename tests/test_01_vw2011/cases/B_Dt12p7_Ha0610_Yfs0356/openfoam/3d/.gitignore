@@ -7,6 +7,7 @@
 /caseB3d.msh
 /log.*
 /constant/airThermo
+/constant/surfaceForces
 /system/decomposeParDict.runtime
 /system/runControl
 /system/runSettings

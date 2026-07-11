@@ -43,7 +43,8 @@ Copy the full block below into the new Cursor account's Cloud Agent.
    - outputs/openfoam_3d_mesh_sensitivity.csv
    - outputs/openfoam_3d_hold_metrics.json
 3. 确认提交 867b2fccd591a9f44325a13c2042bbce32405087 是当前历史祖先。
-4. 确认 OpenFOAM.com v2512、Gmsh Python bindings、NumPy 和 Matplotlib 可用。
+4. 确认 OpenFOAM.com v2512、Gmsh Python bindings、NumPy、Matplotlib，
+   以及 `./build_twophaseflow.sh` 固定版本编译产物可用。
 5. 新 Cloud Agent 的 VM 不包含旧 Agent 的 mesh、processor、time、
    postProcessing、dynamicCode 或日志；这些必须从源文件重新生成。
 
@@ -93,8 +94,12 @@ Copy the full block below into the new Cursor account's Cloud Agent.
 
 五、物理模型和初始/边界条件
 
-1. Solver: OpenFOAM.com v2512 compressibleInterFoam 或经充分论证的等价
-   可压缩 VOF solver。当前 deck 使用 compressibleInterFoam。
+1. Solver: OpenFOAM.com v2512 加固定提交
+   `de9826f9ffb24f4b635ac97fd388ebd560cfc174` 的 DLR-RY TwoPhaseFlow
+   `compressibleInterFlow`。当前数值候选使用
+   `isoAdvection + plicRDF + RDF`；它仍是单动量、可压缩、非等温 VOF，
+   但必须先通过 0.006 s 筛选和完整 hold，不能仅因迁移成功就称为 baseline
+   已验证。
 2. 两相：
    - air: perfectGas, molecular weight 28.965 kg/kmol, Cp 1005 J/kg/K,
      mu 1.81e-5 Pa s
@@ -124,7 +129,8 @@ Copy the full block below into the new Cursor account's Cloud Agent.
     必须给出证据并作为敏感性，不得无说明替换 baseline。
 13. OpenFOAM 内置的 nAlphaSmoothCurvature 不改变输运的 alpha，仅平滑曲率
     计算。2 次平滑的短诊断在 0.001 s 降低了峰值速度，但随后产生更大热点且
-    更慢，因此 baseline 保持 0；必须保留 0/1/2 次迭代敏感性。
+    更慢，因此 stock baseline 保持 0；这些历史诊断必须保留，但该开关不适用
+    于下述 TwoPhaseFlow RDF 候选。
 14. 已测试并拒绝在 tower 初始自由面增加 conformal internal disk：网格仍为
     单一连通区域且标准 Mesh OK，但 0.001 s 的 |U|max 从 cut-cell 的
     3.207 m/s 增至 8.192 m/s，alpha undershoot 也恶化。stock solver 的曲率来自
@@ -134,6 +140,12 @@ Copy the full block below into the new Cursor account's Cloud Agent.
     |U|max 在 0.001 s 从 3.207 降到 2.018 m/s，但随后升至 0.006 s 的
     4.515 m/s（比 Gauss linear 高 17.7%），alpha undershoot 恶化到 1.6e-7。
     baseline 保持 Gauss linear，不能用首帧改善代替持续稳定性。
+16. 上述两项是 stock `compressibleInterFoam` 诊断。由于 stock CSF 在
+    0.006 s 仍有 3.839 m/s 自由面伪流，当前 source deck 已迁移到固定版本
+    TwoPhaseFlow。`CASEB_ALPHA_SMOOTH_CURVATURE` 对 RDF 无意义并被拒绝；
+    新的曲率敏感性为 `RDF|fitParaboloid|gradAlpha`，界面压缩敏感性必须用
+    `CASEB_ADVECTION_SCHEME=MULESScheme` 配合 `CASEB_C_ALPHA`，不能把
+    isoAdvection 下无作用的 cAlpha 当成有效敏感性。
 
 六、阀门
 
@@ -246,9 +258,12 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
 
 - CASEB_MESH=base|refined
 - CASEB_MAX_CO=0.15|0.30
+- CASEB_MAX_CAPILLARY_NUM=0.5|1.0
 - CASEB_VALVE_OPEN_TIME=0|0.10|0.25|0.50|1.0
-- CASEB_C_ALPHA=0.5|1.0|1.5
-- CASEB_ALPHA_SMOOTH_CURVATURE=0|1|2
+- CASEB_ADVECTION_SCHEME=isoAdvection|MULESScheme
+- CASEB_RECONSTRUCTION_SCHEME=plicRDF|isoAlpha|gradAlpha
+- CASEB_CURVATURE_MODEL=RDF|fitParaboloid|gradAlpha
+- CASEB_C_ALPHA=0.5|1.0|1.5（仅与 MULESScheme 配合）
 - CASEB_HA0=0.579|0.610|0.641
 - CASEB_GAS_EOS=perfectGas|rhoConst
 
