@@ -114,7 +114,7 @@ def parse_mesh_provenance() -> dict[str, object]:
 
     def match_float(pattern: str, text: str) -> float | None:
         match = re.search(pattern, text)
-        return float(match.group(1)) if match else None
+        return float(match.group(1).rstrip(".,;")) if match else None
 
     def match_int(pattern: str, text: str) -> int | None:
         match = re.search(pattern, text)
