@@ -57,13 +57,16 @@ neutral documented numerical closure, not an experimental measurement.
 
 ## Ball-valve process
 
-`configure_valve.py` writes a sink-only Brinkman resistance over a `0.02 m`
-cell zone immediately upstream of the valve plane at `x=5.98 m`; it does not
-penalise the downstream air-pocket cells.  For the baseline manual opening:
+`configure_valve.py` writes a cyclic `porousBafflePressure` condition on the
+full circular cross-section at `x=5.98 m`.  It applies only the passive Darcy
+loss `Delta p = D mu U L`; unlike a penalised cell zone, it permits the physical
+pressure discontinuity across a nearly closed valve without generating a
+poorly conditioned pressure cell.  For the baseline manual opening:
 
 ```text
-beta(t) = beta_closed (1 - t/t_open)^4,  0 <= t <= t_open
-beta_closed = 1e10 kg/(m3 s)
+D(t) = D_closed (1 - t/t_open)^4,  0 <= t <= t_open
+D_closed = 1e12 1/m2
+L = 0.02 m
 t_open = 0.20 s
 ```
 
@@ -110,8 +113,8 @@ the closed-valve startup diagnostic without rewriting `controlDict`.
 
 ```text
 Gmsh OCC multi-solid STL -> cartesianMesh -> topoSet
+                         -> setFields -> setExprFields -> createBaffles
                          -> checkMesh -allGeometry -allTopology
-                         -> setFields -> setExprFields
                          -> compressibleInterFoam
 ```
 

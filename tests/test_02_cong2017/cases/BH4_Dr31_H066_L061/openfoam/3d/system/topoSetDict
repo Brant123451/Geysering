@@ -9,18 +9,13 @@ FoamFile
 actions
 (
     {
-        name valveCells;
-        type cellSet;
+        name valveFaces;
+        type faceZoneSet;
         action new;
-        source boxToCell;
-        box (5.960 -0.04 -0.01) (5.980 0.04 0.06);
-    }
-    {
-        name valveZone;
-        type cellZoneSet;
-        action new;
-        source setToCellZone;
-        set valveCells;
+        source planeToFaceZone;
+        point (5.980 0 0.025);
+        normal (1 0 0);
+        option closest;
     }
     {
         name pocketCells;
