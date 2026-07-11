@@ -20,6 +20,9 @@ OPENING_START=0.0
 OPENING_DURATION=0.20
 WRITE_INTERVAL=0.10
 VALVE_SAMPLES=40
+MAX_CO=0.20
+MAX_ALPHA_CO=0.10
+MAX_DELTA_T=0.0005
 
 case "$PROFILE" in
     static)
@@ -62,6 +65,9 @@ OPENING_START="${BH6_OPENING_START:-$OPENING_START}"
 OPENING_DURATION="${BH6_OPENING_DURATION:-$OPENING_DURATION}"
 WRITE_INTERVAL="${BH6_WRITE_INTERVAL:-$WRITE_INTERVAL}"
 VALVE_SAMPLES="${BH6_VALVE_SAMPLES:-$VALVE_SAMPLES}"
+MAX_CO="${BH6_MAX_CO:-$MAX_CO}"
+MAX_ALPHA_CO="${BH6_MAX_ALPHA_CO:-$MAX_ALPHA_CO}"
+MAX_DELTA_T="${BH6_MAX_DELTA_T:-$MAX_DELTA_T}"
 RESULTS_DIR="${BH6_RESULTS_DIR:-$PWD/results/$PROFILE}"
 REFERENCE_CASE_ROOT="${BH6_REFERENCE_CASE_ROOT:-$(cd ../.. && pwd)}"
 
@@ -104,6 +110,12 @@ foamDictionary system/controlDict \
     -entry endTime -set "$END_TIME" >/dev/null
 foamDictionary system/controlDict \
     -entry writeInterval -set "$WRITE_INTERVAL" >/dev/null
+foamDictionary system/controlDict \
+    -entry maxCo -set "$MAX_CO" >/dev/null
+foamDictionary system/controlDict \
+    -entry maxAlphaCo -set "$MAX_ALPHA_CO" >/dev/null
+foamDictionary system/controlDict \
+    -entry maxDeltaT -set "$MAX_DELTA_T" >/dev/null
 
 foamDictionary system/decomposeParDict \
     -entry numberOfSubdomains -set "$NP" >/dev/null
@@ -129,6 +141,9 @@ python3 postprocess.py \
     --opening-start "$OPENING_START" \
     --opening-duration "$OPENING_DURATION" \
     --requested-end-time "$END_TIME" \
+    --max-co "$MAX_CO" \
+    --max-alpha-co "$MAX_ALPHA_CO" \
+    --max-delta-t "$MAX_DELTA_T" \
     --results-dir "$RESULTS_DIR" \
     > log.postprocess 2>&1
 

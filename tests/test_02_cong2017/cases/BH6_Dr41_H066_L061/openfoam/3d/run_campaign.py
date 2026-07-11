@@ -122,6 +122,10 @@ def aggregate(
                     "simulation_end_s": metrics.get("simulation_end_s"),
                     "run_completed": metrics.get("run_completed"),
                     "cells": metrics.get("mesh", {}).get("cells"),
+                    "maxCo": metrics.get("time_stepping", {}).get("maxCo"),
+                    "maxAlphaCo": metrics.get("time_stepping", {}).get(
+                        "maxAlphaCo"
+                    ),
                     "opening_duration_s": metrics.get("valve", {}).get(
                         "opening_duration_s"
                     ),

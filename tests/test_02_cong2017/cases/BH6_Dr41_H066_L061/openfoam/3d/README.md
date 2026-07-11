@@ -50,6 +50,9 @@ Time stepping is adaptive with `maxCo=0.20`, `maxAlphaCo=0.10`, and
 `maxDeltaT=5e-4 s`.  These limits carry the full `0.30 s` valve opening smoke
 test without temperature clipping; tighter limits are not substituted as an
 outcome-control mechanism.
+Controlled time-step studies may override them with `BH6_MAX_CO`,
+`BH6_MAX_ALPHA_CO`, and `BH6_MAX_DELTA_T`; every compact metrics file records
+the effective values.
 
 The passive valve is a zero-thickness `cyclicACMI` baffle at the measured
 valve plane.  Its coupled area follows the smoothstep opening fraction; the

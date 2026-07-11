@@ -78,6 +78,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--opening-start", type=float, default=0.0)
     parser.add_argument("--opening-duration", type=float, default=0.2)
     parser.add_argument("--requested-end-time", type=float)
+    parser.add_argument("--max-co", type=float)
+    parser.add_argument("--max-alpha-co", type=float)
+    parser.add_argument("--max-delta-t", type=float)
     parser.add_argument("--results-dir", type=Path, required=True)
     return parser.parse_args()
 
@@ -678,6 +681,11 @@ def main() -> None:
         "run_completed": run_completed,
         "data_coverage_end_s": coverage_end_s,
         "solver": "compressibleInterFoam",
+        "time_stepping": {
+            "maxCo": args.max_co,
+            "maxAlphaCo": args.max_alpha_co,
+            "maxDeltaT_s": args.max_delta_t,
+        },
         "geometry": {
             "type": "true 3-D circular pipe, circular riser, T-junction, external air",
             "main_pipe_diameter_m": PIPE_D,
