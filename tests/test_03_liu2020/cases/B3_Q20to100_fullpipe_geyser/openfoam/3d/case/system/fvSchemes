@@ -26,6 +26,8 @@ divSchemes
     div(rhoPhi,U)       Gauss upwind;
     div(rhoPhi,T)       Gauss upwind;
     div(rhoPhi,K)       Gauss upwind;
+    div(rhoPhi,k)       Gauss upwind;
+    div(rhoPhi,omega)   Gauss upwind;
     div(phi,p)          Gauss upwind;
     div(phi,k)          Gauss upwind;
     div(phi,omega)      Gauss upwind;
