@@ -27,6 +27,7 @@ gmshToFoam b3_3d.msh > log.gmshToFoam 2>&1
 # wall type directly to the constant mesh; createPatch -overwrite writes a
 # time-directory mesh in v2512 and would be lost when Allrun.init recreates 0/.
 changeDictionary -constant -dict system/changeDictionaryDict \
+    -subDict dictionaryReplacement \
     > log.changeDictionary 2>&1
 checkMesh -allGeometry -allTopology > log.checkMesh 2>&1
 
