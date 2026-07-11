@@ -55,7 +55,8 @@ neutral documented numerical closure, not an experimental measurement.
 ## Ball-valve process
 
 `configure_valve.py` writes a sink-only Brinkman resistance over a `0.02 m`
-cell zone centred at `x=5.98 m`.  For the baseline manual opening:
+cell zone immediately upstream of the valve plane at `x=5.98 m`; it does not
+penalise the downstream air-pocket cells.  For the baseline manual opening:
 
 ```text
 beta(t) = beta_closed (1 - t/t_open)^4,  0 <= t <= t_open
