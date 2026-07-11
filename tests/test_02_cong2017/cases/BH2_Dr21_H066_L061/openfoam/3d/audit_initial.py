@@ -22,7 +22,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def tetra_data(mesh: Path) -> tuple[np.ndarray, np.ndarray]:
+def tetra_data(mesh: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     gmsh.initialize()
     try:
         gmsh.open(str(mesh))
@@ -44,27 +44,50 @@ def tetra_data(mesh: Path) -> tuple[np.ndarray, np.ndarray]:
                 np.cross(p[:, 2] - p[:, 0], p[:, 3] - p[:, 0]),
             )
         ) / 6.0
-        return centres, volumes
+        return centres, volumes, p
     finally:
         gmsh.finalize()
+
+
+def fraction_below_plane(vertex_z: np.ndarray, height: float) -> np.ndarray:
+    """Exact tetrahedral volume fraction below a linear horizontal plane."""
+    zmin = np.min(vertex_z, axis=1)
+    zmax = np.max(vertex_z, axis=1)
+    fraction = np.zeros(len(vertex_z), dtype=float)
+    fraction[zmax <= height] = 1.0
+    crossing = np.flatnonzero((zmin < height) & (zmax > height))
+    for celli in crossing:
+        values = vertex_z[celli].copy()
+        # The divided-difference form has a removable singularity when two
+        # vertices share an elevation.  A sub-nanometre deterministic split
+        # evaluates the same geometric limit without changing audit precision.
+        for i in range(4):
+            for j in range(i):
+                if abs(values[i] - values[j]) < 1e-12:
+                    values[i] += (i + 1) * 1e-12
+        tail_sum = 0.0
+        for i, value in enumerate(values):
+            if value <= height:
+                continue
+            denominator = 1.0
+            for j, other in enumerate(values):
+                if i != j:
+                    denominator *= value - other
+            tail_sum += (value - height) ** 3 / denominator
+        fraction[celli] = 1.0 - tail_sum
+    return np.clip(fraction, 0.0, 1.0)
 
 
 def main() -> None:
     cli = parse_args()
     mesh = cli.run / "bh2.msh"
-    centres, volumes = tetra_data(mesh)
+    centres, volumes, vertices = tetra_data(mesh)
     x, y, z = centres.T
 
     pocket = x >= 5.98
-    headspace = (
-        (x >= 3.30)
-        & (x <= 3.64)
-        & (y >= -0.20)
-        & (y <= 0.20)
-        & (z >= 0.635)
-    )
-    air = pocket | headspace
-    water = ~air
+    water_fraction = fraction_below_plane(vertices[:, :, 2], 0.635)
+    water_fraction[pocket] = 0.0
+    air_fraction = 1.0 - water_fraction
     external = (
         (x >= 3.3199)
         & (x <= 3.6201)
@@ -84,20 +107,24 @@ def main() -> None:
 
     analytic_pocket = math.pi * 0.05**2 * 0.61 / 4.0
     mesh_pocket = float(np.sum(volumes[pocket]))
+    water_volume = float(np.sum(water_fraction * volumes))
+    air_volume = float(np.sum(air_fraction * volumes))
     data = {
         "schema_version": 1,
         "mesh": str(mesh),
         "cell_count": int(len(volumes)),
         "mesh_fluid_volume_m3": float(np.sum(volumes)),
         "initial_volume_m3": {
-            "water": float(np.sum(volumes[water])),
-            "air_total_including_external": float(np.sum(volumes[air])),
+            "water": water_volume,
+            "air_total_including_external": air_volume,
             "air_pocket": mesh_pocket,
             "external_domain": float(np.sum(volumes[external])),
         },
         "initial_mass_kg": {
-            "water": float(rho_w * np.sum(volumes[water])),
-            "air_total_including_external": float(np.sum(rho_air[air] * volumes[air])),
+            "water": rho_w * water_volume,
+            "air_total_including_external": float(
+                np.sum(rho_air * air_fraction * volumes)
+            ),
             "air_pocket": float(np.sum(rho_air[pocket] * volumes[pocket])),
         },
         "analytic_pocket": {
@@ -108,7 +135,8 @@ def main() -> None:
         "pocket_volume_relative_error": (mesh_pocket - analytic_pocket)
         / analytic_pocket,
         "classification_rule": (
-            "Cell-centre equivalent of setFieldsDict; no phase fraction adjusted "
+            "Exact tetrahedral cut fraction below z=0.635 m, followed by the "
+            "conformal x>=5.98 m pocket override; no phase fraction adjusted "
             "to force analytic volume."
         ),
     }

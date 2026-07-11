@@ -25,7 +25,7 @@ export FOAM_LIBBIN="${OF_PLATFORM}/lib"
 export PATH="${FOAM_APPBIN}:${OF_ROOT}/bin:${PATH}"
 export LD_LIBRARY_PATH="${FOAM_LIBBIN}:${FOAM_LIBBIN}/sys-openmpi:/usr/lib/x86_64-linux-gnu/openmpi/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 
-for command_name in gmshToFoam createPatch setFields setExprFields topoSet createBaffles checkMesh compressibleInterFoam; do
+for command_name in gmshToFoam createPatch setFields setAlphaField setExprFields topoSet createBaffles checkMesh compressibleInterFoam; do
     command -v "$command_name" >/dev/null || {
         echo "Missing OpenFOAM v2512 command: $command_name" >&2
         exit 1
@@ -61,6 +61,8 @@ PY
         createPatch -overwrite > log.createPatch 2>&1
         cp -a 0.orig 0
         setFields > log.setFields 2>&1
+        setAlphaField > log.setAlphaField 2>&1
+        setFields -dict system/setPocketFieldsDict > log.setPocketFields 2>&1
         setExprFields > log.setExprFields 2>&1
         topoSet > log.topoSet 2>&1
         checkMesh -allGeometry -allTopology > log.checkMesh.core 2>&1
