@@ -7,11 +7,20 @@ This audit is for the single Case `BH6_Dr41_H066_L061`.  The primary source is
 Page references below are printed journal pages.  Figure dimensions take
 precedence over rounded prose, and no value from another run is substituted.
 
-**Formal-mesh gate: PASS.**  Every model-defining item requested below is
-resolved.  The paper does not give a numerical offset for either pressure
-transducer; their unambiguous physical locations are therefore used and the
-mesh-dependent sampling offset must be reported rather than presented as an
-experimental coordinate.
+**B-H6 model-input gate: PASS.**  Every paper-defined item required to build
+this B-H6 model is resolved.  The paper does not give a numerical offset for
+either pressure transducer; their unambiguous physical locations are therefore
+used and the mesh-dependent sampling offset must be reported rather than
+presented as an experimental coordinate.
+
+**Existing-code B-H1 pairing gate: NOT VERIFIABLE.**  The repository has no
+`BH1_Dr16_H066_L061/openfoam/3d` case.  Its legacy 1-D model uses a rounded
+`6.0 m` pipe and `x=2.88 m` tee, which conflict with the primary-paper
+dimensions resolved below and therefore cannot serve as the requested 3-D
+baseline.  This directory defines the common paper-audited 3-D baseline: a
+future B-H1 3-D case must differ only in `Dr` and geometry/mesh entities
+directly dependent on `Dr`.  Until that counterpart exists, “same as BH1”
+is a design contract, not a completed source-to-source verification.
 
 ## Coordinate convention
 

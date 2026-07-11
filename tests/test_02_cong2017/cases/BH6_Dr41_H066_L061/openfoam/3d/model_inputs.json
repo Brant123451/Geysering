@@ -10,6 +10,14 @@
     "water_density_kg_m3": 998.0,
     "gas_compressibility_solved": true
   },
+  "bh1_pairing": {
+    "intended_only_difference": "riser inside diameter Dr and directly dependent mesh geometry",
+    "bh1_target_riser_inside_diameter_m": 0.016,
+    "bh1_openfoam_3d_case_present": false,
+    "source_equivalence_verified": false,
+    "legacy_bh1_1d_is_not_the_3d_baseline": true,
+    "reason": "legacy 1-D uses rounded 6.0 m / tee x=2.88 m geometry rejected by the primary-paper audit"
+  },
   "coordinates": {
     "pipe_axis": "x",
     "vertical_axis": "z",

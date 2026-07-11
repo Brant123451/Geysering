@@ -1,10 +1,13 @@
 # B-H6 paper-faithful 3-D OpenFOAM case
 
-This directory models Cong, Chan & Lee (2017) Series-B run B-H6.  It is the
-strict non-geyser counterpart of B-H1: the riser diameter is `0.041 m` instead
-of `0.016 m`; geometry other than `Dr`, initial conditions, boundary
-conditions, valve law, solver, discretisation, and post-processing definitions
-are common.  The measured `NO GEYSER` label is a comparison result and is not
+This directory models Cong, Chan & Lee (2017) Series-B run B-H6 and defines the
+paper-audited 3-D baseline for its intended strict B-H1/B-H6 comparison.  A
+B-H1 OpenFOAM 3-D source case is not present in this repository, so file-level
+equivalence to an existing B-H1 implementation cannot be claimed.  A future
+B-H1 3-D member must clone this baseline and change only `Dr` from `0.041 m` to
+`0.016 m` (and mesh entities that geometrically depend on `Dr`).  The legacy
+B-H1 1-D model is not that baseline and uses the rejected rounded `6.0 m`
+geometry.  The measured `NO GEYSER` label is a comparison result and is not
 used to force the calculation.
 
 Read `PAPER_AUDIT.md` first.  It is the gate for this model and resolves the
@@ -42,6 +45,11 @@ temperature.  Water uses the paper's constant `998 kg/m3` density; water
 acoustic compressibility is not needed to represent the entrapped-gas spring.
 Surface tension is `0.072 N/m`.  There is no pressure, velocity, or eruption
 forcing and no outcome-dependent source.
+
+Time stepping is adaptive with `maxCo=0.20`, `maxAlphaCo=0.10`, and
+`maxDeltaT=5e-4 s`.  These limits carry the full `0.30 s` valve opening smoke
+test without temperature clipping; tighter limits are not substituted as an
+outcome-control mechanism.
 
 The passive valve is a zero-thickness `cyclicACMI` baffle at the measured
 valve plane.  Its coupled area follows the smoothstep opening fraction; the
@@ -121,6 +129,9 @@ including open-boundary fluxes.  Paper Figure-7 and 3-D levels use distance
 above the riser entrance (pipe soffit); the frozen 1-D curves are explicitly
 shifted from their native pipe-invert datum before plotting.  Mesh audits are
 reported both before and after the duplicate ACMI baffle faces are created.
+Every required probe and conservation stream must cover the requested end
+time; incomplete runs fail instead of being extrapolated into apparently
+complete CSV or metrics.
 
 ## Generated-file policy
 
