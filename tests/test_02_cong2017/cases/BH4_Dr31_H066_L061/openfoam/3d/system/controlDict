@@ -10,7 +10,7 @@ application     compressibleInterFoam;
 startFrom       latestTime;
 startTime       0;
 stopAt          endTime;
-endTime         13.0;
+#include "endTime.inc"
 deltaT          1e-6;
 
 writeControl    adjustableRunTime;

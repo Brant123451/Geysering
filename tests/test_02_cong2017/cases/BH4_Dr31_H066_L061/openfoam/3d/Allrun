@@ -34,7 +34,7 @@ fi
 restore_baseline_controls()
 {
     python3 configure_valve.py --opening-time 0.20 >/dev/null
-    foamDictionary system/controlDict -entry endTime -set 13.0 >/dev/null
+    printf 'endTime 13.0;\n' > system/endTime.inc
 }
 trap restore_baseline_controls EXIT
 
@@ -82,7 +82,7 @@ python3 summarize_checkmesh.py log.checkMesh mesh_metadata.json \
 cp -a 0.orig 0
 setFields > log.setFields 2>&1
 setExprFields > log.setExprFields 2>&1
-foamDictionary system/controlDict -entry endTime -set "$RUN_END_TIME" >/dev/null
+printf 'endTime %s;\n' "$RUN_END_TIME" > system/endTime.inc
 
 if (( NP == 1 )); then
     compressibleInterFoam > log.compressibleInterFoam 2>&1

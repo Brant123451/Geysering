@@ -29,4 +29,5 @@ rm -rf \
     system/horizontalProbeLocations
 
 python3 configure_valve.py --opening-time 0.20 >/dev/null
+printf 'endTime 13.0;\n' > system/endTime.inc
 echo "B-H4 generated OpenFOAM files removed"

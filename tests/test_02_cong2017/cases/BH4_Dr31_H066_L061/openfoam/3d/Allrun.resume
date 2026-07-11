@@ -13,7 +13,13 @@ fi
 NP="${BH4_NP:-$(compgen -G 'processor*' | wc -l)}"
 END_TIME="${BH4_END_TIME:-13.0}"
 LABEL="${BH4_LABEL:-base_topen0p20}"
-foamDictionary system/controlDict -entry endTime -set "$END_TIME" >/dev/null
+
+restore_baseline_end_time()
+{
+    printf 'endTime 13.0;\n' > system/endTime.inc
+}
+trap restore_baseline_end_time EXIT
+printf 'endTime %s;\n' "$END_TIME" > system/endTime.inc
 
 OMPI_ALLOW_RUN_AS_ROOT=1 \
 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
