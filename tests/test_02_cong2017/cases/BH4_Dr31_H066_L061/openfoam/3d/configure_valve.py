@@ -7,6 +7,7 @@ import argparse
 from pathlib import Path
 
 
+# Positive SuSp is assembled on the momentum diagonal and therefore damps U.
 BETA_CLOSED = 1.0e10  # kg/(m3 s), Brinkman penalisation coefficient
 
 
@@ -21,13 +22,13 @@ def parse_args() -> argparse.Namespace:
 
 def ramp(opening_time: float | None, closed: bool) -> list[tuple[float, float]]:
     if closed:
-        return [(0.0, -BETA_CLOSED), (100.0, -BETA_CLOSED)]
+        return [(0.0, BETA_CLOSED), (100.0, BETA_CLOSED)]
     if opening_time is None or opening_time <= 0:
         raise ValueError("opening-time must be positive")
     points: list[tuple[float, float]] = []
     for fraction in (0.0, 0.25, 0.50, 0.75, 1.0):
         beta = BETA_CLOSED * (1.0 - fraction) ** 4
-        points.append((fraction * opening_time, -beta))
+        points.append((fraction * opening_time, beta))
     points.append((100.0, 0.0))
     return points
 
