@@ -27,18 +27,14 @@ boundaryField
         type            calculated;
         value           uniform 0;
     }
-    walls
+    solidWalls
     {
         type            nutkWallFunction;
         value           uniform 0;
     }
-    riserWall
+    solidRiserWall
     {
         type            nutkWallFunction;
         value           uniform 0;
-    }
-    allBoundary
-    {
-        type            zeroGradient;
     }
 }

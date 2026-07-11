@@ -1,3 +1,44 @@
+#!/usr/bin/env bash
+# Resume an interrupted decomposed full run from the latest processor time.
+set -euo pipefail
+cd "$(dirname "$0")"
+
+OF_LAUNCH="${OPENFOAM_LAUNCH:-/usr/bin/openfoam2512}"
+if [[ ! -d processor0 ]]; then
+    echo "no decomposed run found; use: bash Allrun.solve full" >&2
+    exit 2
+fi
+PROCESSORS=(processor[0-9]*)
+RUN_NP="${#PROCESSORS[@]}"
+NP="${NP:-$RUN_NP}"
+if [[ "$NP" -ne "$RUN_NP" ]]; then
+    echo "NP=$NP but interrupted run has $RUN_NP processor directories" >&2
+    exit 2
+fi
+
+BACKUP="$(mktemp)"
+DECOMP_BACKUP="$(mktemp)"
+cp system/controlDict "$BACKUP"
+cp system/decomposeParDict "$DECOMP_BACKUP"
+restore_dicts()
+{
+    cp "$BACKUP" system/controlDict
+    cp "$DECOMP_BACKUP" system/decomposeParDict
+    rm -f "$BACKUP"
+    rm -f "$DECOMP_BACKUP"
+}
+trap restore_dicts EXIT
+
+python3 ../prepare_runtime.py --case-dir .
+"$OF_LAUNCH" -- foamDictionary system/controlDict -entry startFrom -set latestTime
+"$OF_LAUNCH" -- foamDictionary system/decomposeParDict \
+    -entry numberOfSubdomains -set "$NP" >/dev/null
+LOG="log.interFoam.resume.$(date -u +%Y%m%dT%H%M%SZ)"
+"$OF_LAUNCH" -- mpirun -np "$NP" interFoam -parallel > "$LOG" 2>&1
+rg -q "^End$" "$LOG"
+PROFILE="unrecorded"
+[[ -f mesh.profile ]] && PROFILE="$(< mesh.profile)"
+echo "RESUME_DONE profile=$PROFILE ranks=$NP"
 #!/bin/bash
 # RESUME an interrupted run from the latest checkpoint.
 # Does NOT touch fields / decomposition -- controlDict has

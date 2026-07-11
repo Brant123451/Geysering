@@ -30,18 +30,14 @@ boundaryField
         inletValue      uniform 1e-4;
         value           uniform 1e-4;
     }
-    walls
+    solidWalls
     {
         type            kqRWallFunction;
         value           uniform 1e-4;
     }
-    riserWall
+    solidRiserWall
     {
         type            kqRWallFunction;
         value           uniform 1e-4;
-    }
-    allBoundary
-    {
-        type            zeroGradient;
     }
 }

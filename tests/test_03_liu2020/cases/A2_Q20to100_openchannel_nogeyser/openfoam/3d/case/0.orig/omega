@@ -30,18 +30,14 @@ boundaryField
         inletValue      uniform 5;
         value           uniform 5;
     }
-    walls
+    solidWalls
     {
         type            omegaWallFunction;
         value           uniform 5;
     }
-    riserWall
+    solidRiserWall
     {
         type            omegaWallFunction;
         value           uniform 5;
-    }
-    allBoundary
-    {
-        type            zeroGradient;
     }
 }

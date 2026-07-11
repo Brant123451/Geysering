@@ -1,7 +1,6 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-| interFoam -- Liu2020 Case A2, FULL width domain                             |
-| timeline: 0-2 s settle at Q0=20 L/s, 2-2.4 s ramp to 100 L/s, end 16 s      |
-| (1D comparison time = t_3D - 2)                                             |
+| Liu2020 A2: full 3-D interFoam validation                                  |
+| t=-8..0 s Q0 stabilization; t=0..0.4 s Q0->Q1; end t=14.4 s               |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
@@ -12,14 +11,15 @@ FoamFile
 }
 
 application     interFoam;
-startFrom       latestTime;
-startTime       0;
+startFrom       startTime;
+startTime       -8;
 stopAt          endTime;
-endTime         16;
-deltaT          0.0002;
+endTime         14.4;
+deltaT          0.0001;
+
 writeControl    adjustableRunTime;
 writeInterval   1.0;
-purgeWrite      0;
+purgeWrite      3;
 writeFormat     binary;
 writePrecision  7;
 writeCompression off;
@@ -28,27 +28,30 @@ timePrecision   6;
 runTimeModifiable yes;
 
 adjustTimeStep  yes;
-maxCo           0.9;
-maxAlphaCo      0.5;
-maxDeltaT       0.001;
+maxCo           0.40;
+maxAlphaCo      0.35;
+maxDeltaT       0.002;
 
 functions
 {
+    // Order is PT1, PT2, PT3.  The paper gives elevation/wall but not the
+    // in-plane or circumferential coordinates; those choices are documented.
     probesPT
     {
         type            probes;
         libs            (sampling);
         writeControl    timeStep;
-        writeInterval   10;
+        writeInterval   5;
         fields          (p p_rgh alpha.water);
         probeLocations
         (
-            (0.02 0.05 0.01)      // PT3: chamber floor, upstream-wall side
-            (0.10 0.05 0.44)      // PT2: under the chamber lid
-            (0.15 0.012 1.25)     // PT1: riser wall +0.80 m above lid
+            (0.15  0.025 1.25)
+            (0.08  0.080 0.445)
+            (0.15 -0.145 0.020)
         );
     }
 
+    // 61 levels x 5 radial samples; generated deterministically before solve.
     riserAlpha
     {
         type            probes;
@@ -58,15 +61,7 @@ functions
         fields          (alpha.water);
         probeLocations
         (
-            (0.15 0.005 0.47) (0.15 0.005 0.51) (0.15 0.005 0.55)
-            (0.15 0.005 0.59) (0.15 0.005 0.63) (0.15 0.005 0.67)
-            (0.15 0.005 0.71) (0.15 0.005 0.75) (0.15 0.005 0.79)
-            (0.15 0.005 0.83) (0.15 0.005 0.87) (0.15 0.005 0.91)
-            (0.15 0.005 0.95) (0.15 0.005 0.99) (0.15 0.005 1.03)
-            (0.15 0.005 1.07) (0.15 0.005 1.11) (0.15 0.005 1.15)
-            (0.15 0.005 1.19) (0.15 0.005 1.23) (0.15 0.005 1.27)
-            (0.15 0.005 1.31) (0.15 0.005 1.35) (0.15 0.005 1.43)
-            (0.15 0.005 1.51) (0.15 0.005 1.59) (0.15 0.005 1.66)
+            #include "riserProbeLocations"
         );
     }
 
@@ -79,50 +74,63 @@ functions
         fields          (alpha.water);
         probeLocations
         (
-            (0.05 0.05 0.05) (0.05 0.05 0.15) (0.05 0.05 0.25)
-            (0.05 0.05 0.35) (0.05 0.05 0.43)
-            (0.25 0.05 0.05) (0.25 0.05 0.15) (0.25 0.05 0.25)
-            (0.25 0.05 0.35) (0.25 0.05 0.43)
+            (0.05 0.05 0.02) (0.05 0.05 0.10) (0.05 0.05 0.20)
+            (0.05 0.05 0.30) (0.05 0.05 0.44)
+            (0.25 0.05 0.02) (0.25 0.05 0.10) (0.25 0.05 0.20)
+            (0.25 0.05 0.30) (0.25 0.05 0.44)
         );
     }
 
-    inletFlow
+    // Interpolate alpha to faces, then integrate phase-weighted boundary
+    // fluxes.  Together with waterVolume these give an independent liquid
+    // continuity residual.
+    alphaWaterFace
+    {
+        type            surfaceInterpolate;
+        libs            (fieldFunctionObjects);
+        fields          ((alpha.water alphaWaterFace));
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    none;
+    }
+
+    waterVolume
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        writeControl    timeStep;
+        writeInterval   20;
+        log             false;
+        writeFields     false;
+        regionType      all;
+        operation       volIntegrate;
+        fields          (alpha.water);
+    }
+
+    waterFluxInlet
     {
         type            surfaceFieldValue;
         libs            (fieldFunctionObjects);
         writeControl    timeStep;
-        writeInterval   50;
+        writeInterval   20;
         log             false;
         writeFields     false;
         regionType      patch;
         name            inlet;
-        operation       sum;
+        operation       weightedSum;
+        weightField     alphaWaterFace;
         fields          (phi);
     }
 
-    symPlane
+    waterFluxOutlet
     {
-        type            surfaces;
-        libs            (sampling);
-        writeControl    adjustableRunTime;
-        writeInterval   0.1;
-        surfaceFormat   vtk;
-        formatOptions { vtk { legacy false; } }
-        interpolationScheme cellPoint;
-        fields          (alpha.water U);
-        surfaces
-        (
-            sym
-            {
-                type            cuttingPlane;
-                planeType       pointAndNormal;
-                pointAndNormalDict
-                {
-                    point  (0 0.005 0);
-                    normal (0 1 0);
-                }
-                interpolate     true;
-            }
-        );
+        $waterFluxInlet;
+        name            outlet;
+    }
+
+    waterFluxAtmosphere
+    {
+        $waterFluxInlet;
+        name            atmosphere;
     }
 }

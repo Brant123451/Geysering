@@ -27,15 +27,11 @@ boundaryField
         inletValue      uniform 0;
         value           uniform 0;
     }
-    walls
+    solidWalls
     {
         type            zeroGradient;
     }
-    riserWall
-    {
-        type            zeroGradient;
-    }
-    allBoundary
+    solidRiserWall
     {
         type            zeroGradient;
     }

@@ -1,12 +1,60 @@
-#!/bin/bash
-# initialize fields + parallel interFoam run
-cd "$(dirname "$0")" || exit 1
-source /usr/lib/openfoam/openfoam2512/etc/bashrc
+#!/usr/bin/env bash
+# Initialize the phase field and run either the smoke or complete experiment.
+set -euo pipefail
+cd "$(dirname "$0")"
 
-set -e
-rm -rf 0
-cp -r 0.orig 0
-setFields > log.setFields 2>&1
-decomposePar -force > log.decomposePar 2>&1
-mpirun -np 6 interFoam -parallel > log.interFoam 2>&1
-echo "SOLVE_DONE"
+MODE="${1:-full}"
+case "$MODE" in
+    smoke|full) ;;
+    *) echo "usage: bash Allrun.solve [smoke|full]" >&2; exit 2 ;;
+esac
+
+OF_LAUNCH="${OPENFOAM_LAUNCH:-/usr/bin/openfoam2512}"
+NP="${NP:-$(nproc)}"
+if [[ ! -d constant/polyMesh ]]; then
+    echo "mesh missing; first run: bash Allrun.mesh [base|refined]" >&2
+    exit 2
+fi
+
+RESTORE_DICT=""
+RESTORE_DECOMP="$(mktemp)"
+cp system/decomposeParDict "$RESTORE_DECOMP"
+restore_dictionaries()
+{
+    if [[ -n "$RESTORE_DICT" && -f "$RESTORE_DICT" ]]; then
+        cp "$RESTORE_DICT" system/controlDict
+        rm -f "$RESTORE_DICT"
+    fi
+    if [[ -f "$RESTORE_DECOMP" ]]; then
+        cp "$RESTORE_DECOMP" system/decomposeParDict
+        rm -f "$RESTORE_DECOMP"
+    fi
+}
+trap restore_dictionaries EXIT
+
+if [[ "$MODE" == smoke ]]; then
+    RESTORE_DICT="$(mktemp)"
+    cp system/controlDict "$RESTORE_DICT"
+    "$OF_LAUNCH" -- foamDictionary system/controlDict -entry endTime -set -7.8
+    "$OF_LAUNCH" -- foamDictionary system/controlDict -entry writeInterval -set 0.2
+    "$OF_LAUNCH" -- foamDictionary system/controlDict -entry purgeWrite -set 0
+fi
+"$OF_LAUNCH" -- foamDictionary system/decomposeParDict \
+    -entry numberOfSubdomains -set "$NP" >/dev/null
+
+rm -rf processor* postProcessing
+"$OF_LAUNCH" -- foamListTimes -rm >/dev/null 2>&1 || true
+rm -rf -- -8
+cp -r 0.orig ./-8
+python3 ../prepare_runtime.py --case-dir .
+"$OF_LAUNCH" -- setFields -time -8 > log.setFields 2>&1
+"$OF_LAUNCH" -- decomposePar -force > log.decomposePar 2>&1
+"$OF_LAUNCH" -- mpirun -np "$NP" interFoam -parallel > "log.interFoam.${MODE}" 2>&1
+
+if ! rg -q "^End$" "log.interFoam.${MODE}"; then
+    echo "interFoam did not reach a clean End" >&2
+    exit 1
+fi
+PROFILE="unrecorded"
+[[ -f mesh.profile ]] && PROFILE="$(< mesh.profile)"
+echo "SOLVE_DONE mode=$MODE profile=$PROFILE ranks=$NP"

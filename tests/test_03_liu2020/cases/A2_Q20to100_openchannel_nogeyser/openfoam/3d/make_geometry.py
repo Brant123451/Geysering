@@ -5,28 +5,34 @@ Coordinates match the 1D composite-domain model exactly:
   x = 0 at the chamber upstream wall, chamber occupies x in [0, 0.3];
   z = 0 at the chamber floor (= downstream pipe invert).
 
-Pieces (each a separate STL -> its own snappy patch):
-  walls.stl      headbox shell + both pipe tubes + chamber shell (with the
-                 three circular openings) + outfall shell
-  riserWall.stl  riser tube (own STL for finer surface refinement)
-  inlet.stl      headbox bottom (flow-rate inlet)
-  atmosphere.stl headbox top + riser top disk + outfall top
-  outlet.stl     outfall far face + outfall bottom
+Pieces (each a separate STL -> its own OpenFOAM patch):
+  walls.stl      numerical headbox shell + both pipe tubes + chamber shell
+  riserWall.stl  riser tube
+  inlet.stl      numerical headbox bottom (flow-rate inlet)
+  atmosphere.stl headbox top + riser top disk
+  outlet.stl     downstream-pipe end (equivalent open-channel/weir boundary)
 
-Watertightness policy at pipe/wall junctions: every wall hole has radius
-(pipe_r - 1 mm) and the pipe tube PENETRATES 2 cm past the wall, so the
-1 mm annular lip overlaps the tube -- the flood fill cannot leak, and the
-sub-grid lip is swallowed by the mesh resolution.
+All pipe/wall rings share identical vertices.  There are no overlapping lips
+or penetrations: the combined geometry.stl is a genuinely closed surface that
+can be checked independently and meshed by cartesianMesh.
 """
+import argparse
+from collections import defaultdict, deque
 import numpy as np
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-OUT = HERE / "case" / "constant" / "triSurface"
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--case-dir",
+    type=Path,
+    default=HERE / "case",
+    help="OpenFOAM case receiving constant/triSurface (default: source case)",
+)
+args = parser.parse_args()
+OUT = args.case_dir.resolve() / "constant" / "triSurface"
 OUT.mkdir(parents=True, exist_ok=True)
 
-EPS_LIP = 0.001        # hole radius deficit vs pipe radius [m]
-PEN = 0.02             # tube penetration past each wall [m]
 NSEG = 64              # pipe circumference segments
 NSEG_R = 48            # riser circumference segments
 
@@ -45,11 +51,12 @@ xr, yr = Lc / 2, 0.0              # riser axis
 z_lid = Hc
 z_rtop = Hc + Hr
 
+# The paper does not report the upstream tank dimensions.  This is explicitly
+# a numerical boundary extension, not a reconstructed apparatus dimension.
+# The reported upstream length stops at this tank face exactly.
 # headbox
 HB = dict(x0=x_up0 - 0.35, x1=x_up0, y0=-0.15, y1=0.15, z0=drop + ru - 0.10 - slope * x_up0 - 0.05,
           z1=1.10)
-# outfall box
-OF = dict(x0=x_dn1, x1=x_dn1 + 0.40, y0=-0.15, y1=0.15, z0=-0.25, z1=0.45)
 
 
 def tri_block(tris):
@@ -80,6 +87,71 @@ def write_stl(path, solids):
             f.write(f"endsolid {name}\n")
 
 
+def orient_closed_surface(solids):
+    """Orient all connected triangles consistently and outward.
+
+    Patch seams participate in the same edge graph, so orientation is fixed
+    globally without losing the five physical region names.
+    """
+    names = []
+    flat = []
+    for name, tris in solids.items():
+        for tri in tris:
+            names.append(name)
+            flat.append(np.asarray(tri, dtype=float))
+
+    edge_uses = defaultdict(list)
+    for ti, tri in enumerate(flat):
+        keys = [tuple(np.round(v, 12)) for v in tri]
+        for i, j in ((0, 1), (1, 2), (2, 0)):
+            key = tuple(sorted((keys[i], keys[j])))
+            direction = 1 if (keys[i], keys[j]) == key else -1
+            edge_uses[key].append((ti, direction))
+
+    bad = [edge for edge, uses in edge_uses.items() if len(uses) != 2]
+    if bad:
+        raise RuntimeError(f"surface is not closed: {len(bad)} unmatched/nonmanifold edges")
+
+    neighbours = defaultdict(list)
+    for uses in edge_uses.values():
+        (a, da), (b, db) = uses
+        same_direction = da == db
+        neighbours[a].append((b, same_direction))
+        neighbours[b].append((a, same_direction))
+
+    flip = {0: False}
+    queue = deque([0])
+    while queue:
+        a = queue.popleft()
+        for b, toggle in neighbours[a]:
+            candidate = flip[a] ^ toggle
+            if b in flip and flip[b] != candidate:
+                raise RuntimeError("surface orientation graph is inconsistent")
+            if b not in flip:
+                flip[b] = candidate
+                queue.append(b)
+    if len(flip) != len(flat):
+        raise RuntimeError("surface has disconnected components")
+
+    for i, do_flip in flip.items():
+        if do_flip:
+            flat[i] = flat[i][[0, 2, 1]]
+
+    signed_volume = sum(
+        np.dot(t[0], np.cross(t[1], t[2])) for t in flat
+    ) / 6.0
+    if signed_volume < 0:
+        flat = [t[[0, 2, 1]] for t in flat]
+
+    oriented = {}
+    for name in solids:
+        oriented[name] = np.asarray(
+            [tri for label, tri in zip(names, flat) if label == name],
+            dtype=float,
+        )
+    return oriented, abs(signed_volume)
+
+
 def tube(p0, p1, r, nseg):
     """open cylinder tube from p0 to p1 (axis), radius r"""
     p0, p1 = np.asarray(p0, float), np.asarray(p1, float)
@@ -98,6 +170,34 @@ def tube(p0, p1, r, nseg):
     return tri_block(tris)
 
 
+def tube_x(p0, p1, r, nseg):
+    """Open tube with circular rings in x=constant planes.
+
+    The upstream axis has a 1:100 slope.  Using vertical end rings makes the
+    STL exactly conformal with the vertical tank/chamber faces; the resulting
+    0.005% difference from a plane-normal section is far below either mesh
+    resolution while preserving the specified circular flow area at each x.
+    """
+    p0, p1 = np.asarray(p0, float), np.asarray(p1, float)
+    th = np.linspace(0, 2 * np.pi, nseg + 1)
+
+    def ring(c):
+        return np.stack(
+            [
+                np.full_like(th, c[0]),
+                c[1] + r * np.cos(th),
+                c[2] + r * np.sin(th),
+            ],
+            axis=1,
+        )
+
+    ring0, ring1 = ring(p0), ring(p1)
+    tris = []
+    for i in range(nseg):
+        tris += quad(ring0[i], ring1[i], ring1[i + 1], ring0[i + 1])
+    return tri_block(tris)
+
+
 def disk(center, r, nseg, normal_up=True, zconst=None):
     """triangle fan disk in a plane z=const (riser top)"""
     c = np.asarray(center, float)
@@ -113,16 +213,39 @@ def disk(center, r, nseg, normal_up=True, zconst=None):
     return tri_block(tris)
 
 
+def disk_x(center, r, nseg, normal_positive=True):
+    """Triangle fan disk normal to x (downstream pipe outlet)."""
+    c = np.asarray(center, float)
+    th = np.linspace(0, 2 * np.pi, nseg + 1)
+    ring = np.stack(
+        [
+            np.full_like(th, c[0]),
+            c[1] + r * np.cos(th),
+            c[2] + r * np.sin(th),
+        ],
+        axis=1,
+    )
+    tris = []
+    for i in range(nseg):
+        if normal_positive:
+            tris.append([c, ring[i], ring[i + 1]])
+        else:
+            tris.append([c, ring[i + 1], ring[i]])
+    return tri_block(tris)
+
+
 def rect(a, b, c, d):
     return tri_block(quad(np.asarray(a, float), np.asarray(b, float),
                           np.asarray(c, float), np.asarray(d, float)))
 
 
 def rect_with_hole(plane_axis, plane_val, u0, u1, v0, v1, cu, cv, r, nseg):
-    """rectangle [u0,u1]x[v0,v1] in the plane {plane_axis=plane_val} with a
-    circular hole (center (cu,cv), radius r).  Ring triangulation: sample the
-    circle and the rectangle boundary by the SAME angles from the hole
-    center (rectangle is convex -> radial parametrization is bijective)."""
+    """Rectangle with a circular hole and only four outer boundary edges.
+
+    Each rectangle side and its corresponding circular arc form one polygon.
+    Fan triangulation keeps neighboring box faces exactly conformal (the old
+    radial triangulation left T-junctions along every rectangle edge).
+    """
     th = np.linspace(0, 2 * np.pi, nseg + 1)[:-1]
     tris = []
 
@@ -133,29 +256,25 @@ def rect_with_hole(plane_axis, plane_val, u0, u1, v0, v1, cu, cv, r, nseg):
             return np.array([u, plane_val, v])
         return np.array([u, v, plane_val])   # z-plane
 
-    def rect_pt(a):
-        du, dv = np.cos(a), np.sin(a)
-        tmax = np.inf
-        if du > 1e-12:
-            tmax = min(tmax, (u1 - cu) / du)
-        elif du < -1e-12:
-            tmax = min(tmax, (u0 - cu) / du)
-        if dv > 1e-12:
-            tmax = min(tmax, (v1 - cv) / dv)
-        elif dv < -1e-12:
-            tmax = min(tmax, (v0 - cv) / dv)
-        return cu + tmax * du, cv + tmax * dv
-
     circ = [(cu + r * np.cos(a), cv + r * np.sin(a)) for a in th]
-    outer = [rect_pt(a) for a in th]
-    n = len(th)
-    for i in range(n):
-        j = (i + 1) % n
-        c0, c1 = circ[i], circ[j]
-        o0, o1 = outer[i], outer[j]
-        t1 = [to3(*c0), to3(*o0), to3(*o1)]
-        t2 = [to3(*c0), to3(*o1), to3(*c1)]
-        tris += [t1, t2]
+    # Counter-clockwise rectangle corners, beginning at lower right.
+    outer = [(u1, v0), (u1, v1), (u0, v1), (u0, v0)]
+    corner_idx = []
+    for u, v in outer:
+        angle = np.arctan2(v - cv, u - cu) % (2 * np.pi)
+        corner_idx.append(int(np.rint(angle * nseg / (2 * np.pi))) % nseg)
+
+    for side in range(4):
+        a, b = outer[side], outer[(side + 1) % 4]
+        ia, ib = corner_idx[side], corner_idx[(side + 1) % 4]
+        ids = [ia]
+        while ids[-1] != ib:
+            ids.append((ids[-1] + 1) % nseg)
+        arc = [circ[i] for i in ids]
+        # Polygon order: outer A->B, then inner arc B->A (clockwise).
+        poly = [a, b, *reversed(arc)]
+        for i in range(1, len(poly) - 1):
+            tris.append([to3(*poly[0]), to3(*poly[i]), to3(*poly[i + 1])])
     return tri_block(tris)
 
 
@@ -185,81 +304,66 @@ walls = []
 walls.append(box_faces(HB["x0"], HB["x1"], HB["y0"], HB["y1"], HB["z0"], HB["z1"],
                        skip=("x1", "z0", "z1")))
 walls.append(rect_with_hole("x", HB["x1"], HB["y0"], HB["y1"], HB["z0"], HB["z1"],
-                            0.0, zax_up(x_up0), ru - EPS_LIP, NSEG))
+                            0.0, zax_up(x_up0), ru, NSEG))
 
-# ---- upstream pipe tube (penetrates headbox and chamber walls)
-p0 = np.array([x_up0 - PEN, 0.0, zax_up(x_up0 - PEN)])
-p1 = np.array([0.0 + PEN, 0.0, zax_up(0.0 + PEN)])
-walls.append(tube(p0, p1, ru, NSEG))
+# ---- upstream pipe tube: exact paper length, ring-matched at both ends
+p0 = np.array([x_up0, 0.0, zax_up(x_up0)])
+p1 = np.array([0.0, 0.0, zax_up(0.0)])
+walls.append(tube_x(p0, p1, ru, NSEG))
 
 # ---- chamber shell ----
 # upstream wall (x=0) with pipe hole
 walls.append(rect_with_hole("x", 0.0, -Wc / 2, Wc / 2, 0.0, Hc,
-                            0.0, drop + ru, ru - EPS_LIP, NSEG))
-# downstream wall (x=Lc) with pipe hole (tangent to the floor -> lip handles it)
+                            0.0, drop + ru, ru, NSEG))
+# downstream wall (x=Lc) with pipe hole tangent to the floor
 walls.append(rect_with_hole("x", Lc, -Wc / 2, Wc / 2, 0.0, Hc,
-                            0.0, zax_dn, rd - EPS_LIP, NSEG))
+                            0.0, zax_dn, rd, NSEG))
 # lid with riser hole
 walls.append(rect_with_hole("z", Hc, 0.0, Lc, -Wc / 2, Wc / 2,
-                            xr, yr, rr - EPS_LIP, NSEG_R))
+                            xr, yr, rr, NSEG_R))
 # floor + side walls
 walls.append(box_faces(0.0, Lc, -Wc / 2, Wc / 2, 0.0, Hc,
                        skip=("x0", "x1", "z1")))
 
 # ---- downstream pipe tube ----
-walls.append(tube([Lc - PEN, 0.0, zax_dn], [x_dn1 + PEN, 0.0, zax_dn], rd, NSEG))
-
-# ---- outfall box: near face holed; top=atmo, far+bottom=outlet ----
-walls.append(rect_with_hole("x", OF["x0"], OF["y0"], OF["y1"], OF["z0"], OF["z1"],
-                            0.0, zax_dn, rd - EPS_LIP, NSEG))
-walls.append(box_faces(OF["x0"], OF["x1"], OF["y0"], OF["y1"], OF["z0"], OF["z1"],
-                       skip=("x0", "x1", "z0", "z1")))
-
-# ---- tailwater weir plate (paper Series A: weir-controlled open-channel
-# tailwater, hd = Dd/4 at Q0; 1D model: sharp-crested weir, crest AT the
-# downstream pipe invert z=0).  Solid 2 cm plate across the outfall box,
-# crest z=0: rating gives hd~0.088 m at 20 L/s, ~0.26 m at 100 L/s --
-# identical closure to the 1D weir_Cd=0.62 law ----
-W_X0, W_X1 = OF["x0"] + 0.23, OF["x0"] + 0.25
-walls.append(box_faces(W_X0, W_X1, OF["y0"], OF["y1"], OF["z0"], 0.0,
-                       skip=("y0", "y1")))
-# pool bottom (upstream of the plate) is SOLID -- an open bottom there would
-# drain the weir pool from below and defeat the tailwater control
-walls.append(rect([OF["x0"], OF["y0"], OF["z0"]], [OF["x0"], OF["y1"], OF["z0"]],
-                  [W_X1, OF["y1"], OF["z0"]], [W_X1, OF["y0"], OF["z0"]]))
+walls.append(tube_x([Lc, 0.0, zax_dn], [x_dn1, 0.0, zax_dn], rd, NSEG))
 
 walls_tris = np.concatenate(walls, axis=0)
 
 # ---- riser tube (separate STL: finer refinement level) ----
-riser_tris = tube([xr, yr, z_lid - PEN], [xr, yr, z_rtop], rr, NSEG_R)
+riser_tris = tube([xr, yr, z_lid], [xr, yr, z_rtop], rr, NSEG_R)
 
 # ---- inlet: headbox bottom ----
 inlet_tris = rect([HB["x0"], HB["y0"], HB["z0"]], [HB["x1"], HB["y0"], HB["z0"]],
                   [HB["x1"], HB["y1"], HB["z0"]], [HB["x0"], HB["y1"], HB["z0"]])
 
-# ---- atmosphere: headbox top + riser top disk + outfall top ----
+# ---- atmosphere: headbox top + riser top disk ----
 atmo = [rect([HB["x0"], HB["y0"], HB["z1"]], [HB["x0"], HB["y1"], HB["z1"]],
              [HB["x1"], HB["y1"], HB["z1"]], [HB["x1"], HB["y0"], HB["z1"]]),
-        disk([xr, yr, z_rtop], rr, NSEG_R),
-        rect([OF["x0"], OF["y0"], OF["z1"]], [OF["x0"], OF["y1"], OF["z1"]],
-             [OF["x1"], OF["y1"], OF["z1"]], [OF["x1"], OF["y0"], OF["z1"]])]
+        disk([xr, yr, z_rtop], rr, NSEG_R)]
 atmo_tris = np.concatenate(atmo, axis=0)
 
-# ---- outlet: outfall far face + bottom DOWNSTREAM of the weir plate ----
-outl = [rect([OF["x1"], OF["y0"], OF["z0"]], [OF["x1"], OF["y1"], OF["z0"]],
-             [OF["x1"], OF["y1"], OF["z1"]], [OF["x1"], OF["y0"], OF["z1"]]),
-        rect([W_X1, OF["y0"], OF["z0"]], [W_X1, OF["y1"], OF["z0"]],
-             [OF["x1"], OF["y1"], OF["z0"]], [OF["x1"], OF["y0"], OF["z0"]])]
-outlet_tris = np.concatenate(outl, axis=0)
+# ---- outlet: exact end of the reported downstream pipe.  The physical
+# overflow-weir/tank geometry was not reported; its hd/Dd=1/4 control is
+# represented by the phase/pressure boundary condition, not invented solids.
+outlet_tris = disk_x([x_dn1, 0.0, zax_dn], rd, NSEG)
 
-write_stl(OUT / "walls.stl", {"walls": walls_tris})
-write_stl(OUT / "riserWall.stl", {"riserWall": riser_tris})
-write_stl(OUT / "inlet.stl", {"inlet": inlet_tris})
-write_stl(OUT / "atmosphere.stl", {"atmosphere": atmo_tris})
-write_stl(OUT / "outlet.stl", {"outlet": outlet_tris})
+pieces, enclosed_volume = orient_closed_surface(
+    {
+        "walls": walls_tris,
+        "riserWall": riser_tris,
+        "inlet": inlet_tris,
+        "atmosphere": atmo_tris,
+        "outlet": outlet_tris,
+    }
+)
+for name, tris in pieces.items():
+    write_stl(OUT / f"{name}.stl", {name: tris})
+write_stl(OUT / "geometry.stl", pieces)
 
-for f in ("walls", "riserWall", "inlet", "atmosphere", "outlet"):
+for f in ("walls", "riserWall", "inlet", "atmosphere", "outlet", "geometry"):
     p = OUT / f"{f}.stl"
     print(f"{f}.stl  {p.stat().st_size/1e6:.2f} MB")
-print("bounding box: x[%.2f, %.2f] y[-0.16,0.16] z[%.2f, %.2f]"
-      % (HB["x0"], OF["x1"], OF["z0"], z_rtop))
+print("bounding box: x[%.2f, %.2f] y[-0.15,0.15] z[%.2f, %.2f]"
+      % (HB["x0"], x_dn1, HB["z0"], z_rtop))
+print(f"closed fluid volume: {enclosed_volume:.8f} m3")

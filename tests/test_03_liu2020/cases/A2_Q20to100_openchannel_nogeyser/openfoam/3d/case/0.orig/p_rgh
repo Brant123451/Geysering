@@ -29,18 +29,14 @@ boundaryField
         p0              uniform 0;
         value           uniform 0;
     }
-    walls
+    solidWalls
     {
         type            fixedFluxPressure;
         value           uniform 0;
     }
-    riserWall
+    solidRiserWall
     {
         type            fixedFluxPressure;
         value           uniform 0;
-    }
-    allBoundary
-    {
-        type            zeroGradient;
     }
 }

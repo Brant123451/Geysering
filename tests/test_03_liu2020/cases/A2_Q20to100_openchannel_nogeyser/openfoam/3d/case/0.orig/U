@@ -14,14 +14,16 @@ boundaryField
 {
     inlet
     {
-        // Q(t): 20 L/s settle (0-2 s), 0.4 s linear ramp, 100 L/s after
+        // Reported Q0/Q1.  Task time origin: ramp begins at t=0.
+        // The paper instead defines t=0 at fully-open valve (audit documents
+        // this 0.4 s shift).  Negative time is the Q0 stabilization run.
         type            flowRateInletVelocity;
         volumetricFlowRate table
         (
-            (0.0   0.020)
-            (2.0   0.020)
-            (2.4   0.100)
-            (16.0  0.100)
+            (-8.0  0.020)
+            ( 0.0  0.020)
+            ( 0.4  0.100)
+            (14.4  0.100)
         );
         value           uniform (0 0 0);
     }
@@ -35,16 +37,12 @@ boundaryField
         type            pressureInletOutletVelocity;
         value           uniform (0 0 0);
     }
-    walls
+    solidWalls
     {
         type            noSlip;
     }
-    riserWall
+    solidRiserWall
     {
         type            noSlip;
-    }
-    allBoundary
-    {
-        type            zeroGradient;
     }
 }
