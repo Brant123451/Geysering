@@ -26,7 +26,6 @@ PARAMS = HERE / "case_parameters.json"
 OUT = HERE / "case" / "constant" / "triSurface"
 
 NSEG = 96
-NSEG_R = 64
 
 
 def tri_block(tris):
@@ -43,21 +42,42 @@ def rect(a, b, c, d):
     )
 
 
-def tube(p0, p1, radius, nseg):
-    """Open circular tube between arbitrary 3-D points."""
-    p0 = np.asarray(p0, float)
-    p1 = np.asarray(p1, float)
-    axis = p1 - p0
-    axis /= np.linalg.norm(axis)
-    ref = np.array([0.0, 0.0, 1.0]) if abs(axis[2]) < 0.9 else np.array([0.0, 1.0, 0.0])
-    e1 = np.cross(axis, ref)
-    e1 /= np.linalg.norm(e1)
-    e2 = np.cross(axis, e1)
-    theta = np.linspace(0.0, 2.0 * np.pi, nseg + 1)
-    ring0 = p0 + radius * (
-        np.cos(theta)[:, None] * e1[None, :] + np.sin(theta)[:, None] * e2[None, :]
+def angles(nseg):
+    if nseg % 4:
+        raise ValueError("surface segment count must be divisible by four")
+    return np.linspace(-3.0 * np.pi / 4.0, 5.0 * np.pi / 4.0, nseg + 1)
+
+
+def tube_x(x0, z0, x1, z1, radius, nseg):
+    """Open tube with circular sections in constant-x planes.
+
+    This tiny shear (1% for the upstream pipe) makes the inlet and chamber
+    rings exactly conformal while retaining the reported centreline slope.
+    """
+    theta = angles(nseg)
+    ring0 = np.stack(
+        [np.full_like(theta, x0), radius * np.cos(theta), z0 + radius * np.sin(theta)],
+        axis=1,
     )
-    ring1 = ring0 + (p1 - p0)
+    ring1 = np.stack(
+        [np.full_like(theta, x1), radius * np.cos(theta), z1 + radius * np.sin(theta)],
+        axis=1,
+    )
+    tris = []
+    for i in range(nseg):
+        tris += quad(ring0[i], ring0[i + 1], ring1[i + 1], ring1[i])
+    return tri_block(tris)
+
+
+def tube_z(x0, y0, z0, z1, radius, nseg):
+    """Open vertical tube with horizontal circular sections."""
+    theta = angles(nseg)
+    ring0 = np.stack(
+        [x0 + radius * np.cos(theta), y0 + radius * np.sin(theta), np.full_like(theta, z0)],
+        axis=1,
+    )
+    ring1 = ring0.copy()
+    ring1[:, 2] = z1
     tris = []
     for i in range(nseg):
         tris += quad(ring0[i], ring0[i + 1], ring1[i + 1], ring1[i])
@@ -67,7 +87,7 @@ def tube(p0, p1, radius, nseg):
 def disk_x(x, y0, z0, radius, nseg, normal_positive=True):
     """Disk normal to x."""
     centre = np.array([x, y0, z0])
-    theta = np.linspace(0.0, 2.0 * np.pi, nseg + 1)
+    theta = angles(nseg)
     ring = np.stack(
         [np.full_like(theta, x), y0 + radius * np.cos(theta), z0 + radius * np.sin(theta)],
         axis=1,
@@ -81,7 +101,7 @@ def disk_x(x, y0, z0, radius, nseg, normal_positive=True):
 
 def annulus_x(x, y0, z0, inner_radius, outer_radius, nseg, normal_positive=True):
     """Annular disk normal to x."""
-    theta = np.linspace(0.0, 2.0 * np.pi, nseg + 1)
+    theta = angles(nseg)
     inner = np.stack(
         [np.full_like(theta, x), y0 + inner_radius * np.cos(theta), z0 + inner_radius * np.sin(theta)],
         axis=1,
@@ -97,57 +117,67 @@ def annulus_x(x, y0, z0, inner_radius, outer_radius, nseg, normal_positive=True)
     return tri_block(tris)
 
 
-def box_faces(x0, x1, y0, y1, z0, z1, skip=()):
-    p = lambda x, y, z: np.array([x, y, z])
-    out = []
-    if "x0" not in skip:
-        out += quad(p(x0, y0, z0), p(x0, y0, z1), p(x0, y1, z1), p(x0, y1, z0))
-    if "x1" not in skip:
-        out += quad(p(x1, y0, z0), p(x1, y1, z0), p(x1, y1, z1), p(x1, y0, z1))
-    if "y0" not in skip:
-        out += quad(p(x0, y0, z0), p(x1, y0, z0), p(x1, y0, z1), p(x0, y0, z1))
-    if "y1" not in skip:
-        out += quad(p(x0, y1, z0), p(x0, y1, z1), p(x1, y1, z1), p(x1, y1, z0))
-    if "z0" not in skip:
-        out += quad(p(x0, y0, z0), p(x0, y1, z0), p(x1, y1, z0), p(x1, y0, z0))
-    if "z1" not in skip:
-        out += quad(p(x0, y0, z1), p(x1, y0, z1), p(x1, y1, z1), p(x0, y1, z1))
-    return tri_block(out)
+def rectangle_loop(u0, u1, v0, v1, nseg):
+    """Conformal rectangular perimeter with nseg/4 points per edge."""
+    quarter = nseg // 4
+    loop = []
+    for i in range(nseg + 1):
+        if i <= quarter:
+            fraction = i / quarter
+            loop.append((u0 + fraction * (u1 - u0), v0))
+        elif i <= 2 * quarter:
+            fraction = (i - quarter) / quarter
+            loop.append((u1, v0 + fraction * (v1 - v0)))
+        elif i <= 3 * quarter:
+            fraction = (i - 2 * quarter) / quarter
+            loop.append((u1 - fraction * (u1 - u0), v1))
+        else:
+            fraction = (i - 3 * quarter) / quarter
+            loop.append((u0, v1 - fraction * (v1 - v0)))
+    return loop
+
+
+def to3(plane_axis, plane_value, u, v):
+    if plane_axis == "x":
+        return np.array([plane_value, u, v])
+    if plane_axis == "y":
+        return np.array([u, plane_value, v])
+    return np.array([u, v, plane_value])
+
+
+def rect_fan(plane_axis, plane_value, u0, u1, v0, v1, nseg):
+    """Rectangle triangulated with the same segmented perimeter as hole faces."""
+    boundary = rectangle_loop(u0, u1, v0, v1, nseg)
+    centre = to3(plane_axis, plane_value, 0.5 * (u0 + u1), 0.5 * (v0 + v1))
+    return tri_block(
+        [
+            [centre, to3(plane_axis, plane_value, *boundary[i]), to3(plane_axis, plane_value, *boundary[i + 1])]
+            for i in range(nseg)
+        ]
+    )
 
 
 def rect_with_hole(plane_axis, plane_value, u0, u1, v0, v1, cu, cv, radius, nseg):
-    """Rectangle in an axis plane with a circular hole."""
-    theta = np.linspace(0.0, 2.0 * np.pi, nseg + 1)[:-1]
-
-    def to3(u, v):
-        if plane_axis == "x":
-            return np.array([plane_value, u, v])
-        if plane_axis == "y":
-            return np.array([u, plane_value, v])
-        return np.array([u, v, plane_value])
-
-    def outer_point(angle):
-        du = math.cos(angle)
-        dv = math.sin(angle)
-        scale = float("inf")
-        if du > 1e-12:
-            scale = min(scale, (u1 - cu) / du)
-        elif du < -1e-12:
-            scale = min(scale, (u0 - cu) / du)
-        if dv > 1e-12:
-            scale = min(scale, (v1 - cv) / dv)
-        elif dv < -1e-12:
-            scale = min(scale, (v0 - cv) / dv)
-        return cu + scale * du, cv + scale * dv
-
+    """Rectangle with a circular hole and a conformal rectangular perimeter."""
+    theta = angles(nseg)
     circle = [(cu + radius * math.cos(a), cv + radius * math.sin(a)) for a in theta]
-    outer = [outer_point(a) for a in theta]
+    outer = rectangle_loop(u0, u1, v0, v1, nseg)
     tris = []
     for i in range(nseg):
-        j = (i + 1) % nseg
-        c0, c1 = circle[i], circle[j]
-        o0, o1 = outer[i], outer[j]
-        tris += [[to3(*c0), to3(*o0), to3(*o1)], [to3(*c0), to3(*o1), to3(*c1)]]
+        c0, c1 = circle[i], circle[i + 1]
+        o0, o1 = outer[i], outer[i + 1]
+        tris += [
+            [
+                to3(plane_axis, plane_value, *c0),
+                to3(plane_axis, plane_value, *o0),
+                to3(plane_axis, plane_value, *o1),
+            ],
+            [
+                to3(plane_axis, plane_value, *c0),
+                to3(plane_axis, plane_value, *o1),
+                to3(plane_axis, plane_value, *c1),
+            ],
+        ]
     return tri_block(tris)
 
 
@@ -213,33 +243,26 @@ def build(gate_area):
     # Earlier prototypes used small penetrations/lips; those create topological
     # leaks for snappyHexMesh even when they look closed in a surface viewer.
     walls = [
-        tube(
-            [x_up, 0.0, zaxis_up(x_up)],
-            [0.0, 0.0, zaxis_up(0.0)],
-            ru,
-            NSEG,
-        ),
+        tube_x(x_up, zaxis_up(x_up), 0.0, zaxis_up(0.0), ru, NSEG),
         rect_with_hole("x", 0.0, -wc / 2.0, wc / 2.0, 0.0, hc, 0.0, drop + ru, ru, NSEG),
         rect_with_hole("x", lc, -wc / 2.0, wc / 2.0, 0.0, hc, 0.0, zaxis_down, rd, NSEG),
-        rect_with_hole("z", hc, 0.0, lc, -wc / 2.0, wc / 2.0, xr, 0.0, rr, NSEG_R),
-        box_faces(0.0, lc, -wc / 2.0, wc / 2.0, 0.0, hc, skip=("x0", "x1", "z1")),
-        tube([lc, 0.0, zaxis_down], [x_down, 0.0, zaxis_down], rd, NSEG),
+        rect_with_hole("z", hc, 0.0, lc, -wc / 2.0, wc / 2.0, xr, 0.0, rr, NSEG),
+        rect_fan("y", -wc / 2.0, 0.0, lc, 0.0, hc, NSEG),
+        rect_fan("y", wc / 2.0, 0.0, lc, 0.0, hc, NSEG),
+        rect_fan("z", 0.0, 0.0, lc, -wc / 2.0, wc / 2.0, NSEG),
+        tube_x(lc, zaxis_down, x_down, zaxis_down, rd, NSEG),
     ]
-    riser = tube([xr, 0.0, z_lid], [xr, 0.0, z_rim], rr, NSEG_R)
+    riser = tube_z(xr, 0.0, z_lid, z_rim, rr, NSEG)
 
     # The plume-box bottom is open to the laboratory atmosphere except for
     # the riser hole.  Ejected water can leave rather than accumulating and
     # falling back through an artificial closed vessel.
     atmosphere = [
-        box_faces(
-            plume["x0"],
-            plume["x1"],
-            plume["y0"],
-            plume["y1"],
-            plume["z0"],
-            plume["z1"],
-            skip=("z0",),
-        ),
+        rect_fan("x", plume["x0"], plume["y0"], plume["y1"], plume["z0"], plume["z1"], NSEG),
+        rect_fan("x", plume["x1"], plume["y0"], plume["y1"], plume["z0"], plume["z1"], NSEG),
+        rect_fan("y", plume["y0"], plume["x0"], plume["x1"], plume["z0"], plume["z1"], NSEG),
+        rect_fan("y", plume["y1"], plume["x0"], plume["x1"], plume["z0"], plume["z1"], NSEG),
+        rect_fan("z", plume["z1"], plume["x0"], plume["x1"], plume["y0"], plume["y1"], NSEG),
         rect_with_hole(
             "z",
             plume["z0"],
@@ -249,8 +272,8 @@ def build(gate_area):
             plume["y1"],
             xr,
             0.0,
-                rr,
-            NSEG_R,
+            rr,
+            NSEG,
         ),
     ]
 

@@ -6,6 +6,7 @@ case/postProcessing/
 case/constant/polyMesh/
 case/constant/extendedFeatureEdgeMesh/
 case/constant/triSurface/*.eMesh
+case/constant/triSurface/*.vtp
 case/log.*
 case/core
 case/*.foam

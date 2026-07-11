@@ -31,13 +31,13 @@
     "plume_top_z_m": 2.67,
     "riser_rim_z_m": 1.67,
     "surface_triangle_counts": {
-      "walls": 902,
-      "riserWall": 128,
+      "walls": 1248,
+      "riserWall": 192,
       "inlet": 96,
       "gateWall": 192,
       "gateOutlet": 96,
-      "atmosphere": 138
+      "atmosphere": 672
     },
-    "diagnostic_combined_triangle_count": 1552
+    "diagnostic_combined_triangle_count": 2496
   }
 }
