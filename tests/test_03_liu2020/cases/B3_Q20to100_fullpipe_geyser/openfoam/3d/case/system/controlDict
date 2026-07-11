@@ -157,7 +157,7 @@ functions
     {
         type            fieldMinMax;
         libs            (fieldFunctionObjects);
-        fields          (p alpha.water);
+        fields          (p alpha.water U T);
         mode            magnitude;
         location        true;
         log             false;

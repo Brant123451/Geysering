@@ -1,0 +1,25 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvOptions;
+}
+
+// These bounds are far outside the expected B3 physical state.  They prevent
+// isolated tetrahedral/interface overshoots from collapsing the adaptive time
+// step or producing a non-physical temperature before the next correction.
+limitTemperatureAll
+{
+    type            limitTemperature;
+    selectionMode   all;
+    min             250;
+    max             400;
+}
+
+limitVelocityAll
+{
+    type            limitVelocity;
+    selectionMode   all;
+    max             50;
+}
