@@ -77,6 +77,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--profile", default="custom")
     parser.add_argument("--opening-start", type=float, default=0.0)
     parser.add_argument("--opening-duration", type=float, default=0.2)
+    parser.add_argument("--requested-end-time", type=float)
     parser.add_argument("--results-dir", type=Path, required=True)
     return parser.parse_args()
 
@@ -218,6 +219,26 @@ def interpolation_rmse(
         model_value[finite_model],
     )
     return float(np.sqrt(np.mean((predicted - observed_value[mask]) ** 2)))
+
+
+def interpolate_without_extrapolation(
+    target_time: np.ndarray,
+    source_time: np.ndarray,
+    source_value: np.ndarray,
+) -> np.ndarray:
+    result = np.full(target_time.shape, np.nan, dtype=float)
+    finite = np.isfinite(source_time) & np.isfinite(source_value)
+    if np.count_nonzero(finite) < 2:
+        return result
+    source_time = source_time[finite]
+    source_value = source_value[finite]
+    inside = (target_time >= source_time[0]) & (target_time <= source_time[-1])
+    result[inside] = np.interp(
+        target_time[inside],
+        source_time,
+        source_value,
+    )
+    return result
 
 
 def max_climb_rate(
@@ -392,6 +413,32 @@ def main() -> None:
         if wet.size:
             highest_water[row] = PLUME_Z[wet[-1]] - RIM_Z
 
+    coverage_end_s = {
+        "PT1": float(pt1_time[-1]),
+        "PT2": float(pt2_time[-1]),
+        "riserCentreline": float(riser_time[-1]),
+        "plumeCentreline": float(plume_time[-1]),
+        "conservationAudit": float(
+            audit[-1, AUDIT_INDEX["time_s"]]
+        ),
+    }
+    simulation_end_s = min(coverage_end_s.values())
+    requested_end_s = (
+        float(args.requested_end_time)
+        if args.requested_end_time is not None
+        else simulation_end_s
+    )
+    completion_tolerance_s = max(1e-8, 1e-6 * requested_end_s)
+    run_completed = (
+        simulation_end_s >= requested_end_s - completion_tolerance_s
+    )
+    if not run_completed:
+        raise RuntimeError(
+            "Incomplete result coverage: "
+            f"requested {requested_end_s:g} s, common coverage ends at "
+            f"{simulation_end_s:g} s; streams={coverage_end_s}"
+        )
+
     ta = first_time(riser_time, yint >= 0.02)
     catch = first_time(
         riser_time,
@@ -476,15 +523,33 @@ def main() -> None:
             common_time,
             yfs,
             yint,
-            np.interp(common_time, pt1_time, pt1_head),
-            np.interp(common_time, pt1_time, pt1_smooth),
-            np.interp(common_time, pt2_time, pt2_head),
-            np.interp(common_time, audit_time, apparatus_air_volume),
-            np.interp(common_time, audit_time, apparatus_air_mass),
-            np.interp(common_time, audit_time, downstream_air_volume),
-            np.interp(common_time, audit_time, downstream_air_mass),
-            np.interp(common_time, audit_time, expelled_water),
-            np.interp(common_time, plume_time, highest_water),
+            interpolate_without_extrapolation(
+                common_time, pt1_time, pt1_head
+            ),
+            interpolate_without_extrapolation(
+                common_time, pt1_time, pt1_smooth
+            ),
+            interpolate_without_extrapolation(
+                common_time, pt2_time, pt2_head
+            ),
+            interpolate_without_extrapolation(
+                common_time, audit_time, apparatus_air_volume
+            ),
+            interpolate_without_extrapolation(
+                common_time, audit_time, apparatus_air_mass
+            ),
+            interpolate_without_extrapolation(
+                common_time, audit_time, downstream_air_volume
+            ),
+            interpolate_without_extrapolation(
+                common_time, audit_time, downstream_air_mass
+            ),
+            interpolate_without_extrapolation(
+                common_time, audit_time, expelled_water
+            ),
+            interpolate_without_extrapolation(
+                common_time, plume_time, highest_water
+            ),
         )
     )
     write_csv(
@@ -608,9 +673,10 @@ def main() -> None:
     metrics = {
         "case": "BH6_Dr41_H066_L061",
         "profile": args.profile,
-        "simulation_end_s": float(
-            min(pt1_time[-1], riser_time[-1], audit_time[-1])
-        ),
+        "requested_end_s": requested_end_s,
+        "simulation_end_s": simulation_end_s,
+        "run_completed": run_completed,
+        "data_coverage_end_s": coverage_end_s,
         "solver": "compressibleInterFoam",
         "geometry": {
             "type": "true 3-D circular pipe, circular riser, T-junction, external air",
@@ -677,7 +743,9 @@ def main() -> None:
             "Yfs_max_above_riser_entrance_m": float(
                 np.nanmax(one_d_yfs_entrance)
             ),
-            "geyser": bool(np.nanmax(one_d["Yfs_m"]) >= 0.98 * 1.8),
+            "geyser": bool(
+                np.nanmax(one_d_yfs_entrance) >= 0.98 * RIM_Y
+            ),
         },
         "comparison": {
             "Yfs_RMSE_m_no_time_shift": fs_rmse,
@@ -715,7 +783,7 @@ def main() -> None:
         "limitations": [
             "Paper gives PT1 topology but no numerical cap offset.",
             "Neutral 90 degree acrylic contact angle is not measured or calibrated.",
-            "Laminar stress closure is common to the B-H1/B-H6 pair.",
+            "No BH1 3-D OpenFOAM source exists in this repository for a file-level pairing audit.",
             "Fig.10(b) pressure is B-32, a same-condition repeat, not the B-H6 camera run.",
         ],
     }

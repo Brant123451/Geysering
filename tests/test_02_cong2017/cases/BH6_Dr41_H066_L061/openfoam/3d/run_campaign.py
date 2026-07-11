@@ -101,19 +101,23 @@ def run_profile(
 
 def aggregate(
     results_root: Path,
-    profiles: list[str],
+    requested_profiles: list[str],
+    completed_profiles: list[str],
     work_root: Path,
     work_retained: bool,
+    failed: bool,
 ) -> None:
     rows: list[dict] = []
-    for profile in profiles:
+    for profile in completed_profiles:
         path = results_root / profile / "metrics.json"
         if path.exists():
             metrics = json.loads(path.read_text(encoding="utf-8"))
             rows.append(
                 {
                     "profile": profile,
+                    "requested_end_s": metrics.get("requested_end_s"),
                     "simulation_end_s": metrics.get("simulation_end_s"),
+                    "run_completed": metrics.get("run_completed"),
                     "cells": metrics.get("mesh", {}).get("cells"),
                     "opening_duration_s": metrics.get("valve", {}).get(
                         "opening_duration_s"
@@ -144,8 +148,18 @@ def aggregate(
         "case": "BH6_Dr41_H066_L061",
         "work_root": str(work_root),
         "work_root_retained": work_retained,
-        "profiles_requested": profiles,
+        "campaign_status": (
+            "failed"
+            if failed and not completed_profiles
+            else "partial"
+            if failed or len(completed_profiles) != len(requested_profiles)
+            else "success"
+        ),
+        "profiles_requested": requested_profiles,
         "profiles_completed": [row["profile"] for row in rows],
+        "profiles_incomplete": [
+            row["profile"] for row in rows if not row["run_completed"]
+        ],
         "results": rows,
     }
     results_root.mkdir(parents=True, exist_ok=True)
@@ -204,7 +218,14 @@ def main() -> None:
         raise
     finally:
         work_retained = args.keep_work or failed
-        aggregate(results_root, completed, work_root, work_retained)
+        aggregate(
+            results_root,
+            list(args.profiles),
+            completed,
+            work_root,
+            work_retained,
+            failed,
+        )
         if not work_retained:
             shutil.rmtree(work_root)
 

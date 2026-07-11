@@ -28,8 +28,8 @@ timePrecision   10;
 runTimeModifiable yes;
 
 adjustTimeStep  yes;
-maxCo           0.05;
-maxAlphaCo      0.02;
+maxCo           0.20;
+maxAlphaCo      0.10;
 maxDeltaT       0.0005;
 
 functions

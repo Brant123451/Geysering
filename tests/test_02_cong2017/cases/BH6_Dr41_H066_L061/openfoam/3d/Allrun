@@ -128,6 +128,7 @@ python3 postprocess.py \
     --profile "$PROFILE" \
     --opening-start "$OPENING_START" \
     --opening-duration "$OPENING_DURATION" \
+    --requested-end-time "$END_TIME" \
     --results-dir "$RESULTS_DIR" \
     > log.postprocess 2>&1
 
