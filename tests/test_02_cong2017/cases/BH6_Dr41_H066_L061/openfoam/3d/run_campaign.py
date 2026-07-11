@@ -34,7 +34,7 @@ def parse_args() -> argparse.Namespace:
         "profiles",
         nargs="*",
         choices=DEFAULT_PROFILES,
-        default=list(DEFAULT_PROFILES),
+        default=None,
     )
     parser.add_argument(
         "--results-dir",
@@ -48,7 +48,10 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Retain generated mesh, fields, and processor directories",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    if not args.profiles:
+        args.profiles = list(DEFAULT_PROFILES)
+    return args
 
 
 def source_ignore(_directory: str, names: list[str]) -> set[str]:
