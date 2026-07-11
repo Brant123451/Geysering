@@ -71,6 +71,7 @@ def write_mesh_dict(path: Path, pipe: float, riser: float, atmosphere: float) ->
     # despite floating-point roundoff.
     pipe_request = 1.02 * pipe
     riser_request = 1.02 * riser
+    tee_request = 0.51 * riser
     atmosphere_request = atmosphere
     plume_request = 1.02 * max(atmosphere / 2.0, 2.0 * pipe)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -85,7 +86,7 @@ def write_mesh_dict(path: Path, pipe: float, riser: float, atmosphere: float) ->
 
 surfaceFile     "bh4-physical.stl";
 maxCellSize     {atmosphere_request:.10g};
-minCellSize     {min(pipe_request, riser_request):.10g};
+minCellSize     {min(pipe_request, riser_request, tee_request):.10g};
 boundaryCellSize {atmosphere_request:.10g};
 
 localRefinement
@@ -134,8 +135,8 @@ objectRefinements
     {{
         type sphere;
         centre ({TEE_X:.10g} 0 {R:.10g});
-        radius 0.075;
-        cellSize {min(pipe_request, riser_request):.10g};
+        radius 0.04;
+        cellSize {tee_request:.10g};
     }}
     valve
     {{
@@ -353,7 +354,7 @@ def main() -> None:
                 0.070,
                 RISER_RIM_Z - 0.02,
                 ATMOSPHERE_TOP_Z,
-                min(args.atmosphere_size, 1.5 * args.riser_size),
+                max(args.atmosphere_size / 2.0, 2.0 * args.pipe_size),
                 outer,
             ),
         ]
@@ -396,6 +397,7 @@ def main() -> None:
             "main_pipe_analytic_volume_m3": analytic_pipe,
             "pipe_size_m": args.pipe_size,
             "riser_size_m": args.riser_size,
+            "tee_size_m": args.riser_size / 2.0,
             "atmosphere_size_m": args.atmosphere_size,
             "main_pipe_diameter_m": D,
             "riser_diameter_m": DR,
