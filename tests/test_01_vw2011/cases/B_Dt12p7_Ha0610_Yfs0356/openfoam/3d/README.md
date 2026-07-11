@@ -40,6 +40,12 @@ The initial state follows the paper:
 * the tower headspace and exterior start as 101325 Pa air;
 * velocity is zero and temperature is 293.15 K.
 
+`setFields` first assigns the bulk regions, then OpenFOAM `setAlphaField`
+computes cut-cell volume fractions for the planar valve and tower interfaces.
+This avoids cell-centre stair stepping on the tetrahedral mesh.  Finally,
+`setExprFields` makes `p` and `p_rgh` hydrostatically consistent with the
+geometric phase field.
+
 The inferred initial chamber volume is 0.003789 m³.  The initial water volume
 from ideal geometry is 0.0240116 m³ in the downstream main pipe plus
 0.0000451 m³ in the tower extension.  `validate_case.py` recalculates these

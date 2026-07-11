@@ -1,0 +1,63 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setAlphaFieldDict;
+}
+
+// Geometric cut-cell initialisation avoids a stair-stepped, cell-centre
+// approximation of the two planar gas/water interfaces on tetrahedra.
+field alpha.water;
+type  composedFunction;
+mode  add;
+
+composedFunction
+{
+    downstreamMainPipe
+    {
+        type  composedFunction;
+        mode  intersect;
+
+        composedFunction
+        {
+            downstreamOfValve
+            {
+                type    plane;
+                origin  (0.546 0 0);
+                normal  (1 0 0);
+            }
+
+            belowExteriorDomain
+            {
+                type    plane;
+                origin  (0 0.1 0);
+                normal  (0 -1 0);
+            }
+        }
+    }
+
+    towerWaterColumn
+    {
+        type  composedFunction;
+        mode  intersect;
+
+        composedFunction
+        {
+            insideTower
+            {
+                type       cylinder;
+                origin     (3.516 0 0);
+                direction  (0 1 0);
+                radius     0.00635;
+            }
+
+            belowFreeSurface
+            {
+                type    plane;
+                origin  (0 0.403 0);
+                normal  (0 -1 0);
+            }
+        }
+    }
+}

@@ -114,8 +114,9 @@ Copy the full block below into the new Cursor account's Cloud Agent.
    - absolute model y = 0.403 m
 7. Tower headspace and exterior initially atmospheric air at 101325 Pa.
 8. Initial U = 0 and T = 293.15 K.
-9. setFields 后必须运行 setExprFields，保持 p 与 p_rgh 的 hydrostatic
-   consistency；不要恢复不一致的 uniform pressure 初始化。
+9. setFields 后必须运行 setAlphaField 生成几何 cut-cell 体积分数，再运行
+   setExprFields，保持 p 与 p_rgh 的 hydrostatic consistency；不要恢复阶梯状
+   cell-centre 界面或不一致的 uniform pressure 初始化。
 10. Atmosphere p_rgh 使用 prghPressure 对应 101325 Pa absolute atmosphere。
 11. Walls 为 smooth no-slip、adiabatic。当前 contact angle = 90 degrees，
     因为论文没有提供 acrylic wetting measurement，必须作为假设说明。
