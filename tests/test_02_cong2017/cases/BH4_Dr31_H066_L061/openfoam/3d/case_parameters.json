@@ -19,7 +19,8 @@
   "initial_conditions": {
     "velocity_m_per_s": [0.0, 0.0, 0.0],
     "temperature_K": 296.15,
-    "atmospheric_absolute_pressure_Pa": 101325.0,
+    "atmospheric_absolute_pressure_Pa_at_z_H0": 101325.0,
+    "initial_air_pressure_profile": "linear hydrostatic profile about z=H0 using rho_air=1.191920596 kg/m3",
     "upstream_head_above_pipe_invert_m": 0.66,
     "riser_free_surface_z_m": 0.66,
     "air_pocket_x_m": [5.98, 6.59],
@@ -55,7 +56,7 @@
     },
     "atmosphere": {
       "U": "pressureInletOutletVelocity",
-      "p_rgh": "prghPressure for 101325 Pa static far-field pressure including hydrostatic correction",
+      "p_rgh": "fixedValue 101332.717209 Pa, corresponding to p=101325 Pa at z=H0 in the hydrostatic air column",
       "alpha.water": "inletOutlet with air inflow (alpha.water=0)",
       "T": "inletOutlet at 296.15 K"
     }

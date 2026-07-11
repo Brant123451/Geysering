@@ -29,10 +29,8 @@ boundaryField
     }
     atmosphere
     {
-        // Static far-field pressure with the hydrostatic rho*g*h correction.
-        type            prghPressure;
-        p               uniform 101325;
-        rho             rho;
-        value           uniform 101325;
+        // Reduced pressure for p=101325 Pa at the initial free-surface height.
+        type            fixedValue;
+        value           uniform 101332.717209;
     }
 }

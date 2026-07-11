@@ -15,7 +15,7 @@ expressions
         field       p;
         dimensions  [1 -1 -2 0 0 0 0];
         keepPatches true;
-        expression  #{ 101325 #};
+        expression  #{ 101325 + 1.191920596*9.81*(0.660 - pos().z()) #};
     }
 
     hydrostaticAbsolutePressure
@@ -32,7 +32,7 @@ expressions
         field       p_rgh;
         dimensions  [1 -1 -2 0 0 0 0];
         keepPatches true;
-        expression  #{ 101325 + 1.191920596*9.81*pos().z() #};
+        expression  #{ 101325 + 1.191920596*9.81*0.660 #};
     }
 
     hydrostaticReducedPressure

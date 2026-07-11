@@ -39,7 +39,8 @@ At `t=0`:
 - `T=296.15 K` (the reported laboratory temperature, 23 degC);
 - the pipe up to Valve #4 and the riser up to global `z=0.66 m` contain water;
 - `x=5.98...6.59 m` contains `1.197732 L` of atmospheric air;
-- the remaining riser/external domain contains atmospheric air;
+- the remaining riser/external domain contains the same hydrostatic air
+  column, referenced to 101325 Pa at `z=H0`;
 - water pressure is hydrostatic below the `H0=0.66 m` free surface;
 - the upstream patch maintains the same 0.66 m piezometric head.
 
@@ -50,17 +51,19 @@ At `t=0`:
 | `reservoir` | `pressureInletOutletVelocity` | fixed `p_rgh=107786.6508 Pa` (0.66 m head); `p` calculated | fixed 1 | fixed 296.15 K |
 | `walls` | no slip | `fixedFluxPressure`; `p` calculated | `constantAlphaContactAngle`, 90 deg | zero gradient |
 | `closedEnd` | no slip | `fixedFluxPressure`; `p` calculated | `constantAlphaContactAngle`, 90 deg | zero gradient |
-| `atmosphere` | `pressureInletOutletVelocity` | `prghPressure`, static `p=101325 Pa`; `p` calculated | `inletOutlet`, air on inflow | `inletOutlet`, 296.15 K on inflow |
+| `atmosphere` | `pressureInletOutletVelocity` | fixed `p_rgh=101332.717209 Pa`, giving static `p=101325 Pa` at `z=H0`; `p` calculated | `inletOutlet`, air on inflow | `inletOutlet`, 296.15 K on inflow |
 | `valveCouple*` | `cyclicACMI` | `cyclicACMI`; `p` coupled | `cyclicACMI` | `cyclicACMI` |
 | `valveWall*` | no slip | `fixedFluxPressure`; `p` calculated | `constantAlphaContactAngle`, 90 deg | zero gradient |
 
 The paper gives acrylic walls but no contact angle.  The 90-degree value is a
 neutral documented numerical closure, not an experimental measurement.
-`prghPressure` keeps a static 101325 Pa far field hydrostatically consistent at
-every elevation.  A plain `totalPressure` lacks the gravity correction, while
-`prghTotalPressure` treats the far field as a total-pressure reservoir and was
-rejected because its velocity-head feedback generated a nonphysical side-wall
-air jet during the closed-valve hold.
+The air is initialised with
+`p=101325+rho_air*g*(H0-z)` and constant
+`p_rgh=101325+rho_air*g*H0`.  Referencing ambient pressure at the experimental
+free-surface height keeps both phases continuous there and prevents the open
+external air from undergoing gravitational free fall.  The 7.7 Pa correction
+between `z=0` and `H0` is below 0.01% of ambient pressure but is retained for a
+true static hold.
 
 ## Ball-valve process
 
