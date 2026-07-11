@@ -111,15 +111,23 @@ def extract_levels(alpha: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
 
 def interp_rmse(x_model, y_model, x_obs, y_obs) -> float:
+    model_mask = np.isfinite(x_model) & np.isfinite(y_model)
+    if np.count_nonzero(model_mask) < 2:
+        return float("nan")
+    x_valid = x_model[model_mask]
+    y_valid = y_model[model_mask]
+    order = np.argsort(x_valid, kind="stable")
+    x_valid = x_valid[order]
+    y_valid = y_valid[order]
     mask = (
         np.isfinite(x_obs)
         & np.isfinite(y_obs)
-        & (x_obs >= np.nanmin(x_model))
-        & (x_obs <= np.nanmax(x_model))
+        & (x_obs >= x_valid[0])
+        & (x_obs <= x_valid[-1])
     )
     if not np.any(mask):
         return float("nan")
-    pred = np.interp(x_obs[mask], x_model, y_model)
+    pred = np.interp(x_obs[mask], x_valid, y_valid)
     return float(np.sqrt(np.mean((pred - y_obs[mask]) ** 2)))
 
 
@@ -218,6 +226,10 @@ def main() -> None:
             "interface_catch_Tstar": 8.4,
             "observed_geysering": False,
         },
+        "rmse_window": (
+            "No event-time shift; each RMSE uses finite experimental samples "
+            "within the finite model-time range."
+        ),
         "caveat": (
             "Planar 2-D area ratio Dt/D=0.607; physical circular area ratio "
             "(Dt/D)^2=0.369. No event-time shift was applied."
