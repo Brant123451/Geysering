@@ -159,8 +159,8 @@ objectRefinements
 
 boundaryLayers
 {{
-    // Keep only cfMesh's single fitted boundary layer; add no extra layers.
-    nLayers 1;
+    // Do not extrude a wall layer at the sharp circular-tee intersection.
+    nLayers 0;
 }}
 
 renameBoundary
