@@ -106,9 +106,12 @@ valve and initial pocket nose, initial free surface, near-rim jet and plume
 corridor.  A 40 mm linear transition surrounds each box, and a 4 mm corridor
 extends around the full exterior tower casing; this prevents fine casing
 triangles from connecting directly to far-atmosphere cells.  HXT is followed
-by explicit Gmsh and Netgen tetrahedron optimization.  The selected algorithm,
-optimizer, transition thickness and Gmsh version are written to the mesh
-metadata.  The long main pipe and far atmosphere remain coarse.
+by explicit Gmsh tetrahedron optimization.  Netgen remains an optional
+`make_mesh.py --optimizer netgen` experiment when the installed Gmsh build
+provides it; the packaged Gmsh 4.12.1 used for validation does not.  The
+selected algorithm, optimizer, transition thickness and Gmsh version are
+written to the mesh metadata.  The long main pipe and far atmosphere remain
+coarse.
 
 | preset | nominal tower edge | nominal edges across \(D_t\) | pipe edge | purpose |
 |---|---:|---:|---:|---|

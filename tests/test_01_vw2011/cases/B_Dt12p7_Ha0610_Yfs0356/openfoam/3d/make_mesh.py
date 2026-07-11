@@ -72,7 +72,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--optimizer",
         choices=("none", "gmsh", "netgen", "relocate"),
-        default="netgen",
+        default="gmsh",
         help="Explicit post-generation tetrahedron optimization sequence",
     )
     parser.add_argument(
