@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+reconstructPar -latestTime > log.reconstructPar 2>&1

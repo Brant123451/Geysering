@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+NP="${OPENFOAM_NP:-4}"
+test "$NP" -eq 4 || {
+    echo "OPENFOAM_NP must match system/decomposeParDict (4)" >&2
+    exit 2
+}
+rm -rf constant/polyMesh processor*
+blockMesh > log.blockMesh 2>&1
+surfaceFeatureExtract > log.surfaceFeatureExtract 2>&1
+rm -rf 0
+cp -r 0.orig 0
+decomposePar -copyZero > log.decomposePar.mesh 2>&1
+mpirun -np "$NP" snappyHexMesh -parallel -overwrite > log.snappyHexMesh 2>&1
+reconstructParMesh -constant > log.reconstructParMesh 2>&1
+rm -rf processor*
+topoSet > log.topoSet 2>&1
+checkMesh -allGeometry -allTopology > log.checkMesh 2>&1
+echo MESH_DONE

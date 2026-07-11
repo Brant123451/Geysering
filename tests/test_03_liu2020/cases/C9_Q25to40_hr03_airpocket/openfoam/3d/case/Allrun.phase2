@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+test -d processor0 || ./Allrun.phase1
+./Allrun.resume full

@@ -1,0 +1,42 @@
+{
+  "generated_by": "prepare_case.py",
+  "openfoam_version": "v2512",
+  "application": "compressibleInterFoam",
+  "mesh_profile": "base",
+  "pocket_profile": "base",
+  "pocket_parameters_are_paper_values": false,
+  "pocket": {
+    "tail_x_m": -4.8,
+    "body_nose_x_m": -1.0,
+    "body_interface_z_m": 0.378,
+    "thin_layer_m": 0.008,
+    "analytic_volume_m3": 0.0126421741,
+    "status": "uncertain sensitivity prior, not a paper measurement"
+  },
+  "analytic_initial_air_volume_m3": 0.012642174103355249,
+  "initial_air_gauge_pressure_Pa": 3642.751224,
+  "gate_area_m2": 0.0084,
+  "gate_area_is_paper_value": false,
+  "contact_angle_deg": 90.0,
+  "interface_compression": 1.0,
+  "maxCo": 0.2,
+  "maxAlphaCo": 0.15,
+  "maxDeltaT": 0.00025,
+  "nProcs": 4,
+  "paper_time_offset_s": 0.25,
+  "geometry": {
+    "source": "Liu et al. (2020), pp. 2-3, Fig. 2; plume and equivalent gate are model closures",
+    "gate_effective_area_m2": 0.0084,
+    "gate_radius_m": 0.051708829458264105,
+    "plume_top_z_m": 2.67,
+    "riser_rim_z_m": 1.67,
+    "surface_triangle_counts": {
+      "walls": 902,
+      "riserWall": 128,
+      "inlet": 96,
+      "gateWall": 192,
+      "gateOutlet": 96,
+      "atmosphere": 138
+    }
+  }
+}

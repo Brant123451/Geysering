@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+NP="${OPENFOAM_NP:-4}"
+rm -rf processor* postProcessing
+foamListTimes -rm >/dev/null 2>&1 || true
+rm -rf 0
+cp -r 0.orig 0
+setFields > log.setFields 2>&1
+decomposePar -force > log.decomposePar 2>&1
+mpirun -np "$NP" compressibleInterFoam -parallel -dict system/controlDict.initialize > log.initialize 2>&1
+echo INITIALIZATION_DONE

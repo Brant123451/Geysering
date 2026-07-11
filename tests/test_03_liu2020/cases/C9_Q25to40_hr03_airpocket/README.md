@@ -34,6 +34,17 @@
 
 封气变体：首峰缓冲定性一致，~4 s 后降阶气楔模型漂移（见 report）。
 
+## 三维可压缩 OpenFOAM 验证
+
+`openfoam/3d/` 是独立的 OpenFOAM v2512 `compressibleInterFoam` 模型，目标是
+显式计算气囊压缩、输运、进入交汇室及 phase-2 排气喷发。该目录包含论文审计、
+完整几何/网格/初场生成器、分阶段并行运行与恢复脚本、质量守恒诊断、事件识别和
+敏感性矩阵。论文未报告的气囊体积和尾门开度均明确列为敏感性参数，未按喷发结果
+反标。三维结果的实际完成状态只以
+`outputs/openfoam_3d_metrics.json` 为准；未跑满 20 s 时不得宣称复现了 phase-2。
+
+详见 `openfoam/3d/README.md` 和带论文页码的 `openfoam/3d/PAPER_AUDIT.md`。
+
 ## 运行
 
 ```bash
