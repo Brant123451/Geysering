@@ -71,7 +71,7 @@ def write_mesh_dict(path: Path, pipe: float, riser: float, atmosphere: float) ->
     # despite floating-point roundoff.
     pipe_request = 1.02 * pipe
     riser_request = 1.02 * riser
-    atmosphere_request = 1.02 * atmosphere
+    atmosphere_request = atmosphere
     plume_request = 1.02 * max(atmosphere / 2.0, 2.0 * pipe)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
@@ -159,8 +159,8 @@ objectRefinements
 
 boundaryLayers
 {{
-    // Disable cfMesh's implicit layer so all quality tests are deterministic.
-    nLayers 0;
+    // Keep only cfMesh's single fitted boundary layer; add no extra layers.
+    nLayers 1;
 }}
 
 renameBoundary

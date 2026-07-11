@@ -53,6 +53,18 @@ python3 make_mesh.py \
 
 cartesianMesh > log.cartesianMesh 2>&1
 topoSet > log.topoSet 2>&1
+checkMesh -allGeometry -allTopology > log.checkMesh.pre 2>&1
+if ! rg -q "Mesh OK" log.checkMesh.pre; then
+    if [[ -f constant/polyMesh/sets/lowQualityTetFaces ]] && \
+       rg -q "Error in face tets" log.checkMesh.pre; then
+        topoSet -dict system/repairTopoSetDict > log.repairTopoSet 2>&1
+        splitCells 200 -geometry -set badTetCells -overwrite \
+            > log.splitCells 2>&1
+        # Rebuild all diagnostic/source zones after the local topology change.
+        topoSet > log.topoSet.afterRepair 2>&1
+    fi
+fi
+
 checkMesh -allGeometry -allTopology > log.checkMesh 2>&1
 if ! rg -q "Mesh OK" log.checkMesh; then
     echo "checkMesh did not report Mesh OK" >&2
