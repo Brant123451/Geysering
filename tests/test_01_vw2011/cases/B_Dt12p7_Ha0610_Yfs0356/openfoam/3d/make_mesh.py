@@ -195,14 +195,15 @@ def main() -> None:
         # curvature and severe parasitic capillary currents even though the
         # physical 90-degree interface has zero curvature.  Fragment the fluid
         # with a horizontal disk so the initial tower interface is represented
-        # by conformal internal faces.  The disk extends a few microns into the
-        # (non-fluid) wall envelope to make the OCC intersection robust.
+        # by conformal internal faces.  Match the cylinder radius exactly:
+        # extending the disk into the solid wall creates a ring of sliver
+        # tetrahedra at the three-surface intersection.
         initial_free_surface_disk = occ.addDisk(
             TOWER_CENTRE_X,
             INITIAL_FREE_SURFACE_Y,
             0.0,
-            TOWER_RADIUS + BOOLEAN_OVERLAP,
-            TOWER_RADIUS + BOOLEAN_OVERLAP,
+            TOWER_RADIUS,
+            TOWER_RADIUS,
             zAxis=[0.0, 1.0, 0.0],
             xAxis=[1.0, 0.0, 0.0],
         )
