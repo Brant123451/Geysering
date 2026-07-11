@@ -87,6 +87,9 @@ class LogParsingTests(unittest.TestCase):
                         "Time = 0.5",
                         "limitVelocity limitU Limited 5 (0.3%) of cells, "
                         "3 (0.4%) of faces, with max limit 12",
+                        "Time = 0.55",
+                        "limitVelocity limitU Limited 4 (0.25%) of cells, "
+                        "8 (1.2%) of faces, with max limit 12",
                     ]
                 ),
                 encoding="utf-8",
@@ -95,7 +98,8 @@ class LogParsingTests(unittest.TestCase):
             numerics = post.parse_numerics(case, paper_time_offset=0.25)
 
         self.assertEqual(numerics["maximum_limited_cells"], 5)
-        self.assertEqual(numerics["maximum_limited_faces"], 3)
+        self.assertEqual(numerics["maximum_limited_faces"], 8)
+        self.assertAlmostEqual(numerics["maximum_limited_face_percent"], 1.2)
         self.assertEqual(numerics["maximum_limited_stage"], "smoke")
         self.assertAlmostEqual(numerics["maximum_limited_paper_time_s"], 0.25)
         self.assertAlmostEqual(

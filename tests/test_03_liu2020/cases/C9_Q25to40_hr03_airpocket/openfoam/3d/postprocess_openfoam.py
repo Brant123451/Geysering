@@ -363,19 +363,21 @@ def parse_numerics(case: Path, paper_time_offset: float = RAMP_OFFSET) -> dict:
                     if cells > stage_result["maximum_limited_cells"]:
                         stage_result["maximum_limited_cells"] = cells
                         stage_result["maximum_limited_cell_percent"] = cell_percent
-                        stage_result["maximum_limited_faces"] = faces
-                        stage_result["maximum_limited_face_percent"] = face_percent
                         stage_result["maximum_activation_solver_time_s"] = current_time
                         stage_result["maximum_activation_paper_time_s"] = (
                             current_time - paper_time_offset
                             if current_time is not None
                             else None
                         )
+                    stage_result["maximum_limited_faces"] = max(
+                        stage_result["maximum_limited_faces"], faces
+                    )
+                    stage_result["maximum_limited_face_percent"] = max(
+                        stage_result["maximum_limited_face_percent"], face_percent
+                    )
                     if cells > result["maximum_limited_cells"]:
                         result["maximum_limited_cells"] = cells
                         result["maximum_limited_cell_percent"] = cell_percent
-                        result["maximum_limited_faces"] = faces
-                        result["maximum_limited_face_percent"] = face_percent
                         result["maximum_limited_stage"] = stage
                         result["maximum_limited_solver_time_s"] = current_time
                         result["maximum_limited_paper_time_s"] = (
@@ -383,6 +385,12 @@ def parse_numerics(case: Path, paper_time_offset: float = RAMP_OFFSET) -> dict:
                             if current_time is not None
                             else None
                         )
+                    result["maximum_limited_faces"] = max(
+                        result["maximum_limited_faces"], faces
+                    )
+                    result["maximum_limited_face_percent"] = max(
+                        result["maximum_limited_face_percent"], face_percent
+                    )
         result["limiter_by_stage"][stage] = stage_result
     result["max_courant_number"] = max_co
     result["max_interface_courant_number"] = max_alpha_co
