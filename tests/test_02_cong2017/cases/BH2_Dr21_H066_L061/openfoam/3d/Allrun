@@ -106,7 +106,11 @@ case "$ACTION" in
         prepare_case
         (
             cd "$RUN_DIR"
-            compressibleInterFoam -dry-run > log.smoke 2>&1
+            # OpenFOAM's -dry-run replaces the mesh with a simplified column
+            # mesh and cannot retain the valve faceZone/ACMI.  Run one real
+            # physical step instead.
+            foamDictionary system/controlDict -entry endTime -set 1e-5 >/dev/null
+            compressibleInterFoam > log.smoke 2>&1
         )
         echo "SMOKE_OK $RUN_DIR"
         ;;
