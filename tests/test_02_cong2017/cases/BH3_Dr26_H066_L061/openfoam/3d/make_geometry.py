@@ -235,7 +235,9 @@ def main() -> None:
         gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
         gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 20)
         gmsh.option.setNumber("Mesh.Algorithm", 6)
-        gmsh.option.setNumber("Mesh.Algorithm3D", 10)
+        # The classic Delaunay tetrahedralizer avoids the under-determined
+        # boundary tets produced by HXT for this long pipe/box union.
+        gmsh.option.setNumber("Mesh.Algorithm3D", 1)
         gmsh.option.setNumber("Mesh.Optimize", 1)
         gmsh.option.setNumber("Mesh.OptimizeNetgen", 1)
         gmsh.option.setNumber("Mesh.MshFileVersion", 2.2)
