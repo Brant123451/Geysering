@@ -46,10 +46,13 @@ acoustic compressibility is not needed to represent the entrapped-gas spring.
 Surface tension is `0.072 N/m`.  There is no pressure, velocity, or eruption
 forcing and no outcome-dependent source.
 
-Time stepping is adaptive with `maxCo=0.20`, `maxAlphaCo=0.10`, and
-`maxDeltaT=5e-4 s`.  These limits carry the full `0.30 s` valve opening smoke
-test without temperature clipping; tighter limits are not substituted as an
-outcome-control mechanism.
+Time stepping is adaptive with `maxCo=0.50`, `maxAlphaCo=0.25`, and
+`maxDeltaT=5e-4 s`.  A full `0.30 s` opening comparison against
+`maxCo=0.20` / `maxAlphaCo=0.10` changed maximum `Yfs` by less than `1e-6 m`,
+the PT2 extrema by at most `0.002 H0`, and the liquid/gas balance residuals by
+less than `7e-6` relative.  Both completed without temperature clipping.
+Increasing `maxDeltaT` to `0.002 s`, by contrast, destabilised the early
+opening and is rejected.
 Controlled time-step studies may override them with `BH6_MAX_CO`,
 `BH6_MAX_ALPHA_CO`, and `BH6_MAX_DELTA_T`; every compact metrics file records
 the effective values.

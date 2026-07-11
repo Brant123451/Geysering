@@ -10,6 +10,18 @@
     "water_density_kg_m3": 998.0,
     "gas_compressibility_solved": true
   },
+  "time_stepping": {
+    "adaptive": true,
+    "maxCo": 0.5,
+    "maxAlphaCo": 0.25,
+    "maxDeltaT_s": 0.0005,
+    "conservative_smoke_reference": {
+      "maxCo": 0.2,
+      "maxAlphaCo": 0.1,
+      "maxDeltaT_s": 0.0005
+    },
+    "rejected_unstable_maxDeltaT_s": 0.002
+  },
   "bh1_pairing": {
     "intended_only_difference": "riser inside diameter Dr and directly dependent mesh geometry",
     "bh1_target_riser_inside_diameter_m": 0.016,
