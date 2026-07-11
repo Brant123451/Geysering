@@ -207,7 +207,11 @@ def parse_mesh_quality(case: Path) -> dict:
     for key, pattern in patterns.items():
         match = re.search(pattern, strict_text)
         if match:
-            result[key] = int(match.group(1)) if key == "cells" else float(match.group(1))
+            result[key] = (
+                int(match.group(1))
+                if key == "cells"
+                else float(match.group(1).rstrip("."))
+            )
     concave = re.search(r"Concave cells .* number of cells:\s*(\d+)", strict_text)
     if concave:
         result["concave_cells"] = int(concave.group(1))
