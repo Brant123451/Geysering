@@ -23,7 +23,7 @@ export FOAM_API=2512
 export FOAM_APPBIN="${OF_PLATFORM}/bin"
 export FOAM_LIBBIN="${OF_PLATFORM}/lib"
 export PATH="${FOAM_APPBIN}:${OF_ROOT}/bin:${PATH}"
-export LD_LIBRARY_PATH="${FOAM_LIBBIN}:${FOAM_LIBBIN}/sys-openmpi:/usr/lib/x86_64-linux-gnu/openmpi/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+export LD_LIBRARY_PATH="${FOAM_LIBBIN}:${FOAM_LIBBIN}/dummy:${FOAM_LIBBIN}/sys-openmpi:/usr/lib/x86_64-linux-gnu/openmpi/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 SOLVER=compressibleInterIsoFoam
 
 for command_name in gmshToFoam createPatch setFields setAlphaField setExprFields topoSet createBaffles checkMesh "$SOLVER"; do
