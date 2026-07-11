@@ -131,7 +131,9 @@ functions
             scalar airVolume = 0.0;
             scalar airMass = 0.0;
             scalar apparatusAirVolume = 0.0;
+            scalar apparatusAirMass = 0.0;
             scalar downstreamAirVolume = 0.0;
+            scalar downstreamAirMass = 0.0;
             scalar externalWaterVolume = 0.0;
             scalar maxSpeed = 0.0;
             scalar minPressure = GREAT;
@@ -154,6 +156,7 @@ functions
                 if (centres[cellI].z() < 1.825)
                 {
                     apparatusAirVolume += aa*cellVolume;
+                    apparatusAirMass += aa*rhoAir*cellVolume;
                 }
                 if
                 (
@@ -163,6 +166,7 @@ functions
                 )
                 {
                     downstreamAirVolume += aa*cellVolume;
+                    downstreamAirMass += aa*rhoAir*cellVolume;
                 }
                 if (centres[cellI].z() > 1.825)
                 {
@@ -178,7 +182,9 @@ functions
             reduce(airVolume, sumOp<scalar>());
             reduce(airMass, sumOp<scalar>());
             reduce(apparatusAirVolume, sumOp<scalar>());
+            reduce(apparatusAirMass, sumOp<scalar>());
             reduce(downstreamAirVolume, sumOp<scalar>());
+            reduce(downstreamAirMass, sumOp<scalar>());
             reduce(externalWaterVolume, sumOp<scalar>());
             reduce(maxSpeed, maxOp<scalar>());
             reduce(minPressure, minOp<scalar>());
@@ -245,7 +251,9 @@ functions
                     << airVolume << ' '
                     << airMass << ' '
                     << apparatusAirVolume << ' '
+                    << apparatusAirMass << ' '
                     << downstreamAirVolume << ' '
+                    << downstreamAirMass << ' '
                     << externalWaterVolume << ' '
                     << reservoirWaterFlux << ' '
                     << atmosphereWaterFlux << ' '

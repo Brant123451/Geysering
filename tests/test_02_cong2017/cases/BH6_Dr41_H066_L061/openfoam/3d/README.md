@@ -45,12 +45,14 @@ forcing and no outcome-dependent source.
 
 The passive valve is a zero-thickness `cyclicACMI` baffle at the measured
 valve plane.  Its coupled area follows the smoothstep opening fraction; the
-non-overlap area is a no-slip wall.  Thus it is exactly impermeable at zero
-opening and exactly transparent when fully open, without an ill-conditioned
-penalty coefficient or a prescribed pressure/velocity.  Forty tabulated
-samples are linearly interpolated in simulation time.  The same law is used
-for the `0.10 s` and `0.40 s` sensitivity runs; no coefficient is fitted to
-B-H6 observations.
+non-overlap area is a no-slip wall.  The commanded coupled fraction runs from
+zero to one; OpenFOAM internally clips those endpoints by its ACMI geometric
+tolerance, so the closed and fully open limits are numerical wall/transparent
+limits rather than mathematically exact zeros.  No ill-conditioned penalty
+coefficient or prescribed pressure/velocity is used.  Forty tabulated samples
+are linearly interpolated in simulation time.  The same law is used for the
+`0.10 s` and `0.40 s` sensitivity runs; no coefficient is fitted to B-H6
+observations.
 
 ## Initial and boundary conditions
 
@@ -61,7 +63,8 @@ water-side reduced pressure is
 `p_rgh` is the solved pressure and exactly encodes that hydrostatic state.
 Before decomposition, the `hydrostaticInitialize` function writes the
 thermodynamic `p` field as `p_rgh + rho gh` in water and `p_atm` in air.  This
-avoids using the first transient pressure correction as an initializer.
+avoids using the first transient pressure correction as an initializer and
+records the true `t=0` water/gas volume and mass audit.
 
 | Region / patch | `U` | `p` / `p_rgh` | `alpha.water` | `T` |
 |---|---|---|---|---|
@@ -94,6 +97,9 @@ BH6_RESULTS_DIR="$PWD/results/base" \
 
 # Static, base/refined, and valve-time campaign
 python3 run_campaign.py --results-dir results
+
+# Retain generated work cases only when debugging
+python3 run_campaign.py smoke --results-dir results --keep-work
 ```
 
 Profiles are:
@@ -107,15 +113,19 @@ Profiles are:
 | `valve-fast` | `13 s` | base | `0.10 s` |
 | `valve-slow` | `13 s` | base | `0.40 s` |
 
-The post-processor writes only compact CSV/JSON/PNG.  It reports `PT1`,
-`Yfs`, `Yint`, entrapped/apparatus air, far-field flow, external-water
-inventory and cumulative expelled water; compares experiment, frozen 1-D, and
-3-D without a time shift; and audits liquid volume and gas mass including open
-boundary fluxes.
+The post-processor writes only compact CSV/JSON/PNG.  It reports `PT1`, `PT2`,
+`Yfs`, `Yint`, entrapped/apparatus air volume and mass, far-field flow,
+external-water inventory and cumulative expelled water; compares experiment,
+frozen 1-D, and 3-D without a time shift; and audits liquid volume and gas mass
+including open-boundary fluxes.  Paper Figure-7 and 3-D levels use distance
+above the riser entrance (pipe soffit); the frozen 1-D curves are explicitly
+shifted from their native pipe-invert datum before plotting.  Mesh audits are
+reported both before and after the duplicate ACMI baffle faces are created.
 
 ## Generated-file policy
 
 Never commit `processor*`, `constant/polyMesh`, numerical time directories,
 `postProcessing`, `.msh`, dynamic-code builds, logs, or frame sequences.
 `Allclean` removes them.  Only this source case and compact files under
-`results/` are intended for version control.
+`results/` are intended for version control.  Successful campaigns delete
+their disposable work directories unless `--keep-work` is requested.

@@ -12,8 +12,6 @@ rm -rf \
     constant/cellToRegion \
     bh6-3d.msh \
     geometry_audit.runtime.json \
-    checkMesh.runtime.json \
-    initial_audit.runtime.json \
     valve_schedule.runtime.json \
     constant/valveAreaTable \
     system/decomposeParDict.runtime \

@@ -20,8 +20,10 @@ experimental coordinate.
 - Main-pipe centreline elevation is `z=0`; pipe invert and soffit (crown) are
   `z=-0.025 m` and `z=+0.025 m`, respectively.
 - The riser axis intersects the main-pipe axis at `x=3.47 m`.
-- Heads and vertical interface levels reported by the paper are measured from
-  the horizontal-pipe invert unless explicitly stated otherwise.
+- `H0` is measured from the horizontal-pipe invert.  The image-derived
+  `Yfs`/`Yint` trajectories are different: the measurement procedure on p.4
+  explicitly measures their distance from the riser entrance, i.e. the pipe
+  soffit.  The two vertical datums differ by `D=0.050 m`.
 
 ## Item-by-item verification
 
@@ -35,7 +37,7 @@ experimental coordinate.
 | Closed-end position | Fig. 1 cap at the end of the `3.12 m` tee-to-end dimension | downstream cap plane `x=6.59 m` | RESOLVED |
 | Physical riser height | pp.2 and 8: `1.8 m`; p.8 explicitly says measured from the soffit of the horizontal pipe | physical rim is `1.8 m` above pipe soffit, hence `z=1.825 m` in the model coordinates | RESOLVED |
 | Upstream head | Table 2, B-H6 row: `H0=0.66 m`; notation on p.12 defines Series-B `H0` from tunnel invert | constant free-surface elevation `z=-0.025+0.66=0.635 m`, equivalent to `0.66 m` water head above invert | RESOLVED |
-| Initial riser water level | p.3: for Series B the initial riser water depth is at the same level as the constant-head tank | `Yfs(0)=H0=0.66 m` above invert (`z=0.635 m`) | RESOLVED |
+| Initial riser water level | p.3: for Series B the initial riser water depth is at the same level as the constant-head tank; p.4 defines image trajectories from the riser entrance | physical level `z=0.635 m`, equal to `0.66 m` above invert and `0.61 m` above the riser entrance; digitised Figure-7 trajectories retain the latter datum | RESOLVED |
 | Valve opening time | p.3: manual opening takes approximately `0.2 s` | base opening duration `0.20 s`; sensitivity cases must bracket it and may not replace it with fitted timing | RESOLVED |
 | Pressure measurement positions | p.4 and Fig. 1: PT1 at pipe crown near the capped pipe end; PT2 at pipe invert directly below the riser | PT1 sampled in the crown-adjacent cell nearest the cap; PT2 sampled in the invert-adjacent cell at `x=3.47 m`; exact cell centres are emitted with results | RESOLVED TO PAPER PRECISION |
 
@@ -70,8 +72,9 @@ experimental coordinate.
 - B-H6 measured comparison targets from Table 2 are `Ta=8.10 s`,
   `vfs=0.246 m/s`, `vint=0.476 m/s`, and no geyser observed.  Fig. 6 shows the
   bubble catching the free surface at about `10.5 s`; Fig. 7 shows the free
-  surface rising from about `0.58 m` to `1.21 m`.  Fig. 10(b), Run B-32 at the
-  same nominal conditions, supplies the approximately `1.4 H0` slow PT1 peak.
+  surface rising from about `0.58 m` to `1.21 m`, both measured above the riser
+  entrance.  Fig. 10(b), Run B-32 at the same nominal conditions, supplies the
+  approximately `1.4 H0` slow PT1 peak.
   These are validation outputs, never forcing or calibration inputs.
 
 ## Explicit limitations that do not alter the apparatus definition

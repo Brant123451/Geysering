@@ -7,6 +7,7 @@ hydrostaticInitialize
     codeInclude
     #{
         #include "fvCFD.H"
+        #include "PstreamReduceOps.H"
     #};
 
     codeExecute
@@ -45,6 +46,85 @@ hydrostaticInitialize
         }
         pressure.correctBoundaryConditions();
         pressure.write();
+
+        const scalar Rair = 8314.46261815324/28.965;
+        const scalar temperature = 296.15;
+        const scalarField& volumes = mesh().V();
+        scalar waterVolume = 0.0;
+        scalar waterMass = 0.0;
+        scalar airVolume = 0.0;
+        scalar airMass = 0.0;
+        scalar apparatusAirVolume = 0.0;
+        scalar apparatusAirMass = 0.0;
+        scalar downstreamAirVolume = 0.0;
+        scalar downstreamAirMass = 0.0;
+        scalar externalWaterVolume = 0.0;
+        scalar minPressure = GREAT;
+        scalar maxPressure = -GREAT;
+        forAll(volumes, cellI)
+        {
+            const scalar aw = min(max(alpha[cellI], 0.0), 1.0);
+            const scalar aa = 1.0 - aw;
+            const scalar cellVolume = volumes[cellI];
+            const scalar pAbs = max(pressure[cellI], 1.0);
+            const scalar rhoAir = pAbs/(Rair*temperature);
+
+            waterVolume += aw*cellVolume;
+            waterMass += aw*998.0*cellVolume;
+            airVolume += aa*cellVolume;
+            airMass += aa*rhoAir*cellVolume;
+            if (centres[cellI].z() < 1.825)
+            {
+                apparatusAirVolume += aa*cellVolume;
+                apparatusAirMass += aa*rhoAir*cellVolume;
+            }
+            if
+            (
+                centres[cellI].x() >= 5.98
+             && mag(centres[cellI].y()) <= 0.025
+             && mag(centres[cellI].z()) <= 0.025
+            )
+            {
+                downstreamAirVolume += aa*cellVolume;
+                downstreamAirMass += aa*rhoAir*cellVolume;
+            }
+            if (centres[cellI].z() > 1.825)
+            {
+                externalWaterVolume += aw*cellVolume;
+            }
+            minPressure = min(minPressure, pressure[cellI]);
+            maxPressure = max(maxPressure, pressure[cellI]);
+        }
+
+        reduce(waterVolume, sumOp<scalar>());
+        reduce(waterMass, sumOp<scalar>());
+        reduce(airVolume, sumOp<scalar>());
+        reduce(airMass, sumOp<scalar>());
+        reduce(apparatusAirVolume, sumOp<scalar>());
+        reduce(apparatusAirMass, sumOp<scalar>());
+        reduce(downstreamAirVolume, sumOp<scalar>());
+        reduce(downstreamAirMass, sumOp<scalar>());
+        reduce(externalWaterVolume, sumOp<scalar>());
+        reduce(minPressure, minOp<scalar>());
+        reduce(maxPressure, maxOp<scalar>());
+
+        if (Pstream::master())
+        {
+            Info.stream().precision(12);
+            Info<< "BH6_INITIAL_AUDIT "
+                << mesh().time().value() << ' '
+                << waterVolume << ' '
+                << waterMass << ' '
+                << airVolume << ' '
+                << airMass << ' '
+                << apparatusAirVolume << ' '
+                << apparatusAirMass << ' '
+                << downstreamAirVolume << ' '
+                << downstreamAirMass << ' '
+                << externalWaterVolume << ' '
+                << minPressure << ' '
+                << maxPressure << nl;
+        }
         Info<< "BH6_HYDROSTATIC_P_INITIALIZED" << nl;
     #};
 }

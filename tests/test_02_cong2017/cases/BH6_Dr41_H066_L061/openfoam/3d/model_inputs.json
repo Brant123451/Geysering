@@ -15,6 +15,8 @@
     "vertical_axis": "z",
     "pipe_centreline_z_m": 0.0,
     "head_datum": "horizontal-pipe invert",
+    "image_trajectory_datum": "riser entrance at horizontal-pipe soffit",
+    "head_to_trajectory_datum_offset_m": 0.05,
     "pipe_invert_z_m": -0.025,
     "pipe_soffit_z_m": 0.025
   },
@@ -96,8 +98,9 @@
       0.4
     ],
     "closed_hold_opening_start_s": 1000.0,
-    "closed_coupled_area_fraction": 0.0,
-    "open_coupled_area_fraction": 1.0,
+    "closed_commanded_coupled_area_fraction": 0.0,
+    "open_commanded_coupled_area_fraction": 1.0,
+    "endpoint_handling": "OpenFOAM cyclicACMI geometric-tolerance clipping",
     "nonoverlap_boundary": "no-slip wall",
     "fully_open_resistance": 0.0,
     "pressure_or_velocity_forcing": false

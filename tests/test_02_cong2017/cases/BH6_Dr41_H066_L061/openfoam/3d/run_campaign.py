@@ -43,6 +43,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--work-root", type=Path)
     parser.add_argument("--np", type=int, default=min(os.cpu_count() or 1, 6))
+    parser.add_argument(
+        "--keep-work",
+        action="store_true",
+        help="Retain generated mesh, fields, and processor directories",
+    )
     return parser.parse_args()
 
 
@@ -55,8 +60,6 @@ def source_ignore(_directory: str, names: list[str]) -> set[str]:
         "__pycache__",
         "bh6-3d.msh",
         "geometry_audit.runtime.json",
-        "checkMesh.runtime.json",
-        "initial_audit.runtime.json",
         "valve_schedule.runtime.json",
         "valveAreaTable",
     }
@@ -96,7 +99,12 @@ def run_profile(
     subprocess.run(["bash", "Allrun"], cwd=work_case, env=env, check=True)
 
 
-def aggregate(results_root: Path, profiles: list[str], work_root: Path) -> None:
+def aggregate(
+    results_root: Path,
+    profiles: list[str],
+    work_root: Path,
+    work_retained: bool,
+) -> None:
     rows: list[dict] = []
     for profile in profiles:
         path = results_root / profile / "metrics.json"
@@ -135,6 +143,7 @@ def aggregate(results_root: Path, profiles: list[str], work_root: Path) -> None:
     summary = {
         "case": "BH6_Dr41_H066_L061",
         "work_root": str(work_root),
+        "work_root_retained": work_retained,
         "profiles_requested": profiles,
         "profiles_completed": [row["profile"] for row in rows],
         "results": rows,
@@ -185,12 +194,19 @@ def main() -> None:
     print(f"[campaign] disposable work root: {work_root}", flush=True)
 
     completed: list[str] = []
+    failed = False
     try:
         for profile in args.profiles:
             run_profile(profile, work_root, results_root, args.np)
             completed.append(profile)
+    except BaseException:
+        failed = True
+        raise
     finally:
-        aggregate(results_root, completed, work_root)
+        work_retained = args.keep_work or failed
+        aggregate(results_root, completed, work_root, work_retained)
+        if not work_retained:
+            shutil.rmtree(work_root)
 
 
 if __name__ == "__main__":

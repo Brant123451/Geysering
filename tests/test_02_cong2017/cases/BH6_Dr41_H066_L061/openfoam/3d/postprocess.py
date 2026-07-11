@@ -38,7 +38,9 @@ AUDIT_COLUMNS = (
     "air_volume_m3",
     "air_mass_kg",
     "apparatus_air_volume_m3",
+    "apparatus_air_mass_kg",
     "downstream_air_volume_m3",
+    "downstream_air_mass_kg",
     "external_water_volume_m3",
     "reservoir_water_flux_out_m3_s",
     "atmosphere_water_flux_out_m3_s",
@@ -48,6 +50,24 @@ AUDIT_COLUMNS = (
     "min_pressure_Pa",
     "max_pressure_Pa",
 )
+INITIAL_AUDIT_COLUMNS = (
+    "time_s",
+    "water_volume_m3",
+    "water_mass_kg",
+    "air_volume_m3",
+    "air_mass_kg",
+    "apparatus_air_volume_m3",
+    "apparatus_air_mass_kg",
+    "downstream_air_volume_m3",
+    "downstream_air_mass_kg",
+    "external_water_volume_m3",
+    "min_pressure_Pa",
+    "max_pressure_Pa",
+)
+AUDIT_INDEX = {name: index for index, name in enumerate(AUDIT_COLUMNS)}
+INITIAL_AUDIT_INDEX = {
+    name: index for index, name in enumerate(INITIAL_AUDIT_COLUMNS)
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -222,23 +242,39 @@ def max_climb_rate(
     return best
 
 
-def parse_audit(log_path: Path) -> np.ndarray:
+def parse_tagged_rows(
+    log_path: Path,
+    tag: str,
+    columns: tuple[str, ...],
+) -> np.ndarray:
     rows = []
-    pattern = re.compile(r"BH6_AUDIT\s+(.+)$")
+    pattern = re.compile(rf"{re.escape(tag)}\s+(.+)$")
     for line in log_path.read_text(encoding="utf-8", errors="replace").splitlines():
         match = pattern.search(line)
         if not match:
             continue
         values = [float(value) for value in match.group(1).split()]
-        if len(values) == len(AUDIT_COLUMNS):
+        if len(values) == len(columns):
             rows.append(values)
     if not rows:
-        raise RuntimeError(f"No BH6_AUDIT records in {log_path}")
+        raise RuntimeError(f"No {tag} records in {log_path}")
     data = np.asarray(rows, dtype=float)
     order = np.argsort(data[:, 0], kind="stable")
     data = data[order]
     _, reverse_indices = np.unique(data[::-1, 0], return_index=True)
     return data[np.sort(len(data) - 1 - reverse_indices)]
+
+
+def parse_audit(log_path: Path) -> np.ndarray:
+    return parse_tagged_rows(log_path, "BH6_AUDIT", AUDIT_COLUMNS)
+
+
+def parse_initial_audit(log_path: Path) -> np.ndarray:
+    return parse_tagged_rows(
+        log_path,
+        "BH6_INITIAL_AUDIT",
+        INITIAL_AUDIT_COLUMNS,
+    )
 
 
 def cumulative_trapezoid(time: np.ndarray, value: np.ndarray) -> np.ndarray:
@@ -257,15 +293,36 @@ def parse_check_mesh(path: Path) -> dict:
         match = re.search(pattern, text)
         return float(match.group(1)) if match else None
 
+    def integer(pattern: str) -> int | None:
+        value = number(pattern)
+        return int(value) if value is not None else None
+
     cells_match = re.search(r"\bcells:\s+(\d+)", text)
     return {
         "mesh_ok": "Mesh OK." in text,
+        "failed_checks": integer(r"Failed\s+(\d+)\s+mesh checks"),
         "cells": int(cells_match.group(1)) if cells_match else None,
+        "regions": integer(r"Number of regions:\s+(\d+)"),
+        "duplicate_baffle_faces": integer(
+            r"identical duplicate faces \(baffle faces\):\s+(\d+)"
+        ),
         "max_aspect_ratio": number(r"Max aspect ratio\s*=\s*([0-9.eE+-]+)"),
         "max_non_orthogonality_deg": number(
             r"Mesh non-orthogonality Max:\s*([0-9.eE+-]+)"
         ),
+        "severely_non_orthogonal_faces": integer(
+            r"severely non-orthogonal \(> 70 degrees\) faces:\s+(\d+)"
+        ),
         "max_skewness": number(r"Max skewness\s*=\s*([0-9.eE+-]+)"),
+        "underdetermined_cells": integer(
+            r"Cells with small determinant .* number of cells:\s+(\d+)"
+        ),
+        "concave_cells": integer(
+            r"Concave cells .* number of cells:\s+(\d+)"
+        ),
+        "low_weight_faces": integer(
+            r"Faces with small interpolation weight .* number of faces:\s+(\d+)"
+        ),
         "all_geometry_and_topology": True,
     }
 
@@ -299,9 +356,19 @@ def main() -> None:
     )
 
     pt1 = read_scalar_probe(case, "PT1", "p")
+    pt2 = read_scalar_probe(case, "PT2", "p")
     riser = read_scalar_probe(case, "riserCentreline", "alpha.water")
     plume = read_scalar_probe(case, "plumeCentreline", "alpha.water")
     audit = parse_audit(case / "log.compressibleInterFoam")
+    initial = parse_initial_audit(case / "log.hydrostaticInitialize")[-1]
+    initial_record = np.zeros(len(AUDIT_COLUMNS), dtype=float)
+    for name in INITIAL_AUDIT_COLUMNS:
+        initial_record[AUDIT_INDEX[name]] = initial[INITIAL_AUDIT_INDEX[name]]
+    audit = audit[
+        audit[:, AUDIT_INDEX["time_s"]]
+        > initial_record[AUDIT_INDEX["time_s"]] + 1e-12
+    ]
+    audit = np.vstack((initial_record, audit))
     if riser.shape[1] - 1 != len(RISER_Z):
         raise RuntimeError(
             f"Expected {len(RISER_Z)} riser probes, got {riser.shape[1]-1}"
@@ -314,6 +381,8 @@ def main() -> None:
     pt1_time = pt1[:, 0]
     pt1_head = (pt1[:, 1] - P_ATM) / (RHO_W * G * H0)
     pt1_smooth = moving_average(pt1_time, pt1_head, 0.10)
+    pt2_time = pt2[:, 0]
+    pt2_head = (pt2[:, 1] - P_ATM) / (RHO_W * G * H0)
     riser_time = riser[:, 0]
     yint, yfs = extract_riser_levels(riser[:, 1:])
     plume_time = plume[:, 0]
@@ -348,19 +417,34 @@ def main() -> None:
         else float("nan")
     )
 
-    audit_time = audit[:, 0]
-    water_flux = audit[:, 8] + audit[:, 9]
-    gas_mass_flux = audit[:, 10] + audit[:, 11]
+    audit_time = audit[:, AUDIT_INDEX["time_s"]]
+    water_volume = audit[:, AUDIT_INDEX["water_volume_m3"]]
+    air_mass = audit[:, AUDIT_INDEX["air_mass_kg"]]
+    apparatus_air_volume = audit[:, AUDIT_INDEX["apparatus_air_volume_m3"]]
+    apparatus_air_mass = audit[:, AUDIT_INDEX["apparatus_air_mass_kg"]]
+    downstream_air_volume = audit[:, AUDIT_INDEX["downstream_air_volume_m3"]]
+    downstream_air_mass = audit[:, AUDIT_INDEX["downstream_air_mass_kg"]]
+    external_water_volume = audit[:, AUDIT_INDEX["external_water_volume_m3"]]
+    water_flux = (
+        audit[:, AUDIT_INDEX["reservoir_water_flux_out_m3_s"]]
+        + audit[:, AUDIT_INDEX["atmosphere_water_flux_out_m3_s"]]
+    )
+    gas_mass_flux = (
+        audit[:, AUDIT_INDEX["reservoir_air_mass_flux_out_kg_s"]]
+        + audit[:, AUDIT_INDEX["atmosphere_air_mass_flux_out_kg_s"]]
+    )
     cumulative_water_out = cumulative_trapezoid(audit_time, water_flux)
     cumulative_gas_out = cumulative_trapezoid(audit_time, gas_mass_flux)
-    water_residual = (
-        audit[:, 1] - audit[0, 1] + cumulative_water_out
-    )
-    gas_residual = audit[:, 4] - audit[0, 4] + cumulative_gas_out
+    water_residual = water_volume - water_volume[0] + cumulative_water_out
+    gas_residual = air_mass - air_mass[0] + cumulative_gas_out
     cumulative_far_water_out = cumulative_trapezoid(
-        audit_time, np.maximum(audit[:, 9], 0.0)
+        audit_time,
+        np.maximum(
+            audit[:, AUDIT_INDEX["atmosphere_water_flux_out_m3_s"]],
+            0.0,
+        ),
     )
-    expelled_water = audit[:, 7] + cumulative_far_water_out
+    expelled_water = external_water_volume + cumulative_far_water_out
     estimated_rim_flow = np.gradient(expelled_water, audit_time)
 
     balance_rows = np.column_stack(
@@ -394,8 +478,11 @@ def main() -> None:
             yint,
             np.interp(common_time, pt1_time, pt1_head),
             np.interp(common_time, pt1_time, pt1_smooth),
-            np.interp(common_time, audit_time, audit[:, 5]),
-            np.interp(common_time, audit_time, audit[:, 6]),
+            np.interp(common_time, pt2_time, pt2_head),
+            np.interp(common_time, audit_time, apparatus_air_volume),
+            np.interp(common_time, audit_time, apparatus_air_mass),
+            np.interp(common_time, audit_time, downstream_air_volume),
+            np.interp(common_time, audit_time, downstream_air_mass),
             np.interp(common_time, audit_time, expelled_water),
             np.interp(common_time, plume_time, highest_water),
         )
@@ -408,8 +495,11 @@ def main() -> None:
             "Yint_3d_m",
             "PT1_H_over_H0_raw",
             "PT1_H_over_H0_smooth_0p10s",
+            "PT2_H_over_H0_raw",
             "apparatus_air_volume_m3",
+            "apparatus_air_mass_kg",
             "downstream_air_volume_m3",
+            "downstream_air_mass_kg",
             "expelled_water_volume_m3",
             "sampled_water_height_above_rim_m",
         ),
@@ -423,6 +513,11 @@ def main() -> None:
         reference_case / "data" / "digitized" / "fig10b_pt1.csv"
     )
     one_d = load_named_csv(reference_case / "outputs" / "caseB_model_series.csv")
+    # The frozen 1-D model reports height above the pipe invert.  Figure 7 and
+    # the 3-D probes report distance above the physical riser entrance at the
+    # pipe soffit, so remove one pipe diameter before plotting the trajectories.
+    one_d_yfs_entrance = np.maximum(one_d["Yfs_m"] - PIPE_D, 0.0)
+    one_d_yint_entrance = np.maximum(one_d["Yint_m"] - PIPE_D, 0.0)
     fs_mask = levels_exp["kind"] == "fs"
     int_mask = levels_exp["kind"] == "int"
     fs_rmse = interpolation_rmse(
@@ -447,7 +542,16 @@ def main() -> None:
     geometry = json.loads(
         (case / "geometry_audit.runtime.json").read_text(encoding="utf-8")
     )
-    mesh = parse_check_mesh(case / "log.checkMesh")
+    pre_baffle_mesh = parse_check_mesh(case / "log.checkMesh.preBaffle")
+    valve_baffle_mesh = parse_check_mesh(case / "log.checkMesh")
+    mesh_audit = {
+        "pre_baffle": pre_baffle_mesh,
+        "with_valve_baffle": valve_baffle_mesh,
+    }
+    (results / "check_mesh_audit.json").write_text(
+        json.dumps(mesh_audit, indent=2) + "\n",
+        encoding="utf-8",
+    )
     nominal_pocket_volume = math.pi * PIPE_D**2 * L0 / 4.0
     nominal_pocket_mass = (
         P_ATM * nominal_pocket_volume / (R_AIR * TEMPERATURE)
@@ -456,25 +560,36 @@ def main() -> None:
         math.pi * PIPE_D**2 * VALVE_X / 4.0
         + math.pi * RISER_D**2 * (H0 - PIPE_D) / 4.0
     )
-    numerical_pocket_volume = float(audit[0, 6])
-    numerical_pocket_mass = (
-        numerical_pocket_volume * P_ATM / (R_AIR * TEMPERATURE)
+    numerical_pocket_volume = float(
+        initial[INITIAL_AUDIT_INDEX["downstream_air_volume_m3"]]
+    )
+    numerical_pocket_mass = float(
+        initial[INITIAL_AUDIT_INDEX["downstream_air_mass_kg"]]
     )
     initial_audit = {
-        "first_numerical_sample_time_s": float(audit_time[0]),
+        "numerical_sample_time_s": float(
+            initial[INITIAL_AUDIT_INDEX["time_s"]]
+        ),
         "analytical_initial_water_volume_m3": nominal_water_volume,
-        "numerical_first_sample_water_volume_m3": float(audit[0, 1]),
+        "numerical_initial_water_volume_m3": float(
+            initial[INITIAL_AUDIT_INDEX["water_volume_m3"]]
+        ),
         "analytical_initial_pocket_volume_m3": nominal_pocket_volume,
-        "numerical_first_sample_downstream_air_volume_m3": numerical_pocket_volume,
-        "pocket_volume_relative_discretisation_error": (
+        "numerical_initial_downstream_air_volume_m3": numerical_pocket_volume,
+        "pocket_volume_relative_mesh_error": (
             numerical_pocket_volume / nominal_pocket_volume - 1.0
         ),
         "analytical_initial_pocket_air_mass_kg": nominal_pocket_mass,
-        "numerical_first_sample_pocket_air_mass_kg": numerical_pocket_mass,
-        "whole_domain_first_sample_air_mass_kg": float(audit[0, 4]),
+        "numerical_initial_pocket_air_mass_kg": numerical_pocket_mass,
+        "whole_domain_initial_air_mass_kg": float(
+            initial[INITIAL_AUDIT_INDEX["air_mass_kg"]]
+        ),
+        "apparatus_initial_air_mass_kg": float(
+            initial[INITIAL_AUDIT_INDEX["apparatus_air_mass_kg"]]
+        ),
         "note": (
             "The whole-domain gas mass includes the external atmosphere. "
-            "Pocket mass uses the valve-to-cap gas region at the first audit sample."
+            "Pocket mass is integrated in the valve-to-cap region at t=0."
         ),
     }
     (results / "initial_volume_mass_audit.json").write_text(
@@ -482,8 +597,14 @@ def main() -> None:
         encoding="utf-8",
     )
 
-    water_scale = max(abs(audit[0, 1]), 1e-30)
-    gas_scale = max(abs(audit[0, 4]), 1e-30)
+    water_scale = max(abs(water_volume[0]), 1e-30)
+    gas_scale = max(abs(air_mass[0]), 1e-30)
+    mesh_summary = {
+        **valve_baffle_mesh,
+        **geometry.get("mesh_sizes_m", {}),
+        "pre_baffle": pre_baffle_mesh,
+        "with_valve_baffle": valve_baffle_mesh,
+    }
     metrics = {
         "case": "BH6_Dr41_H066_L061",
         "profile": args.profile,
@@ -502,7 +623,7 @@ def main() -> None:
             "physical_riser_height_m": 1.8,
             "external_top_above_soffit_m": 3.0,
         },
-        "mesh": {**mesh, **geometry.get("mesh_sizes_m", {})},
+        "mesh": mesh_summary,
         "valve": {
             "opening_start_s": args.opening_start,
             "opening_duration_s": args.opening_duration,
@@ -511,6 +632,7 @@ def main() -> None:
             "passive_loss_only": True,
         },
         "events": {
+            "vertical_datum": "riser entrance at pipe soffit",
             "Ta_3d_s": ta,
             "interface_catch_3d_s": catch,
             "Yfs_max_3d_m": yfs_max,
@@ -527,6 +649,8 @@ def main() -> None:
         },
         "pressure": {
             "post_arrival_peak_H_over_H0": pressure_peak,
+            "PT2_min_H_over_H0": float(np.nanmin(pt2_head)),
+            "PT2_max_H_over_H0": float(np.nanmax(pt2_head)),
             "experiment_proxy": "Run B-32, same nominal Dr/H0/L0 as B-H6",
             "experiment_post_arrival_slow_peak_H_over_H0": 1.4,
             "RMSE_H_over_H0_no_time_shift": pressure_rmse,
@@ -537,6 +661,7 @@ def main() -> None:
             "vfs_m_s": 0.246,
             "vint_m_s": 0.476,
             "interface_catch_s": 10.5,
+            "Yfs_initial_m": 0.58,
             "Yfs_peak_m": 1.21,
             "geyser": False,
         },
@@ -544,9 +669,14 @@ def main() -> None:
             "source": "outputs/caseB_model_series.csv",
             "geometry_difference": (
                 "Frozen 1-D uses 6.0 m / tee x=2.88 m; "
-                "paper-audited 3-D uses 6.59 m / tee x=3.47 m."
+                "paper-audited 3-D uses 6.59 m / tee x=3.47 m. "
+                "Its native vertical datum is the pipe invert; plotted "
+                "trajectories are shifted by D=0.05 m to the riser entrance."
             ),
-            "Yfs_max_m": float(np.nanmax(one_d["Yfs_m"])),
+            "Yfs_max_native_above_invert_m": float(np.nanmax(one_d["Yfs_m"])),
+            "Yfs_max_above_riser_entrance_m": float(
+                np.nanmax(one_d_yfs_entrance)
+            ),
             "geyser": bool(np.nanmax(one_d["Yfs_m"]) >= 0.98 * 1.8),
         },
         "comparison": {
@@ -572,10 +702,14 @@ def main() -> None:
             "open_boundary_fluxes_included": True,
         },
         "static_diagnostics": {
-            "max_speed_m_s": float(np.nanmax(audit[:, 12])),
-            "water_volume_change_m3": float(audit[-1, 1] - audit[0, 1]),
+            "max_speed_m_s": float(
+                np.nanmax(audit[:, AUDIT_INDEX["max_speed_m_s"]])
+            ),
+            "water_volume_change_m3": float(
+                water_volume[-1] - water_volume[0]
+            ),
             "downstream_air_volume_change_m3": float(
-                audit[-1, 6] - audit[0, 6]
+                downstream_air_volume[-1] - downstream_air_volume[0]
             ),
         },
         "limitations": [
@@ -607,16 +741,27 @@ def main() -> None:
         edgecolors="#1f4e79",
         label="experiment B-H6 $Y_{int}$",
     )
-    axes[0].plot(one_d["t_s"], one_d["Yfs_m"], color="0.55", lw=1, label="1-D $Y_{fs}$")
     axes[0].plot(
-        one_d["t_s"], one_d["Yint_m"], color="0.55", lw=1, ls="--", label="1-D $Y_{int}$"
+        one_d["t_s"],
+        one_d_yfs_entrance,
+        color="0.55",
+        lw=1,
+        label="1-D $Y_{fs}$ (datum-aligned)",
+    )
+    axes[0].plot(
+        one_d["t_s"],
+        one_d_yint_entrance,
+        color="0.55",
+        lw=1,
+        ls="--",
+        label="1-D $Y_{int}$ (datum-aligned)",
     )
     axes[0].plot(riser_time, yfs, color="#b22222", lw=1.4, label="3-D $Y_{fs}$")
     axes[0].plot(
         riser_time, yint, color="#1f4e79", lw=1.4, ls="--", label="3-D $Y_{int}$"
     )
     axes[0].axhline(RIM_Y, color="k", lw=0.8, ls=":", label="physical rim")
-    axes[0].set_ylabel("level above pipe invert [m]")
+    axes[0].set_ylabel("level above riser entrance [m]")
     axes[0].legend(frameon=False, fontsize=7, ncol=3)
 
     axes[1].fill_between(
@@ -639,13 +784,13 @@ def main() -> None:
 
     axes[2].plot(
         audit_time,
-        1e3 * audit[:, 5],
+        1e3 * apparatus_air_volume,
         label="air below physical rim",
         color="#4c78a8",
     )
     axes[2].plot(
         audit_time,
-        1e3 * audit[:, 6],
+        1e3 * downstream_air_volume,
         label="air in initial pocket region",
         color="#72b7b2",
     )
