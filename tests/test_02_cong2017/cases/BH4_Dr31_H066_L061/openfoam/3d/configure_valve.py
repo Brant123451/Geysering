@@ -75,8 +75,7 @@ baffles
                     }}
                     p
                     {{
-                        type calculated;
-                        value uniform 101325;
+                        type cyclic;
                     }}
                     p_rgh
                     {{
