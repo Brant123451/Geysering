@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "contract_id": "cong2017-series-b-bh3-bh4-3d-v1",
+  "case": {
+    "run": "B-H3",
+    "riser_diameter_m": 0.026,
+    "paired_run": "B-H4",
+    "paired_riser_diameter_m": 0.031
+  },
+  "sole_permitted_case_variable": "riser_diameter_m",
+  "invariants": {
+    "geometry": {
+      "horizontal_pipe_inner_diameter_m": 0.05,
+      "horizontal_pipe_length_m": 6.59,
+      "tee_axis_from_upstream_m": 3.47,
+      "release_plane_from_upstream_m": 5.98,
+      "closed_end_from_upstream_m": 6.59,
+      "initial_air_length_m": 0.61,
+      "physical_riser_height_above_soffit_m": 1.8,
+      "physical_rim_elevation_from_invert_m": 1.85,
+      "computational_top_elevation_from_invert_m": 3.0,
+      "external_atmosphere_width_m": 0.3
+    },
+    "initial_and_boundary_conditions": {
+      "upstream_head_from_invert_m": 0.66,
+      "initial_riser_free_surface_from_invert_m": 0.66,
+      "ambient_absolute_pressure_pa": 101325.0,
+      "initial_temperature_k": 296.15,
+      "initial_velocity_m_per_s": [0.0, 0.0, 0.0],
+      "initial_air_pocket_gauge_pressure_pa": 0.0,
+      "upstream_alpha_water": 1.0,
+      "atmosphere_inflow_alpha_water": 0.0,
+      "downstream_end": "closed_no_slip_wall",
+      "physical_rim": "open_to_expanded_external_air_domain"
+    },
+    "materials": {
+      "water_density_reference_kg_per_m3": 998.0,
+      "water_dynamic_viscosity_pa_s": 0.000933,
+      "water_bulk_modulus_pa": 2200000000.0,
+      "air_equation_of_state": "perfectGas",
+      "air_molecular_weight_kg_per_kmol": 28.966,
+      "air_dynamic_viscosity_pa_s": 0.00001846,
+      "surface_tension_n_per_m": 0.072,
+      "static_contact_angle_deg": 90.0,
+      "wall_roughness_m": 0.000001
+    },
+    "solver": {
+      "openfoam_version": "v2512",
+      "application": "compressibleInterFoam",
+      "turbulence_model": "standard_kEpsilon",
+      "interface_scheme": "MULES_vanLeer",
+      "baseline_c_alpha": 1.0,
+      "event_end_time_s": 13.0,
+      "baseline_max_courant": 0.25,
+      "baseline_max_alpha_courant": 0.15,
+      "baseline_max_delta_t_s": 0.0005
+    },
+    "valve_sensitivity": {
+      "published_cfd_baseline_s": 0.0,
+      "experiment_nominal_s": 0.2,
+      "paired_cfd_reported_experiment_s": 0.5,
+      "finite_opening_model": "time-varying inertial porous baffle with smoothstep area fraction"
+    },
+    "mesh_profiles": {
+      "base": {
+        "pipe_cross_cell_m": 0.00625,
+        "pipe_axial_cell_m": 0.015,
+        "riser_axial_cell_m": 0.0125,
+        "atmosphere_cell_m": 0.025
+      },
+      "refined": {
+        "pipe_cross_cell_m": 0.005,
+        "pipe_axial_cell_m": 0.01,
+        "riser_axial_cell_m": 0.01,
+        "atmosphere_cell_m": 0.02
+      }
+    },
+    "classification": {
+      "geyser_if_water_crosses_physical_rim": true,
+      "physical_rim_elevation_m": 1.85,
+      "alpha_water_detection_threshold": 0.05,
+      "classification_is_validation_target_not_tuning_input": true
+    }
+  }
+}

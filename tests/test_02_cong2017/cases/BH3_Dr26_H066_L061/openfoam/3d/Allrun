@@ -1,0 +1,84 @@
+#!/bin/bash
+cd "$(dirname "$0")" || exit 1
+
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
+
+RUN_MODE="${RUN_MODE:-event}"
+VALVE_OPENING="${VALVE_OPENING:-instant}"
+END_TIME="${END_TIME:-13}"
+RUN_ID="${RUN_ID:-${RUN_MODE}_${VALVE_OPENING}}"
+NP="${OPENFOAM_NP:-4}"
+
+if [[ "$RUN_MODE" != "event" && "$RUN_MODE" != "closed" ]]; then
+    echo "RUN_MODE must be event or closed" >&2
+    exit 2
+fi
+if [[ "$RUN_MODE" == "event" ]]; then
+    case "$VALVE_OPENING" in
+        instant|0.2|0.5) ;;
+        *)
+            echo "VALVE_OPENING must be instant, 0.2, or 0.5" >&2
+            exit 2
+            ;;
+    esac
+else
+    VALVE_OPENING=closed
+fi
+if (( NP < 1 )); then
+    echo "OPENFOAM_NP must be positive" >&2
+    exit 2
+fi
+
+if [[ ! -d constant/polyMesh ]]; then
+    ./Allmesh
+fi
+if [[ -d 0 || -d processor0 ]]; then
+    echo "Existing initial/decomposed solution detected; use a clean runtime copy." >&2
+    exit 1
+fi
+
+python3 make_runtime_config.py \
+    --end-time "$END_TIME" \
+    --initial-delta-t "${INITIAL_DELTA_T:-1e-6}" \
+    --max-co "${MAX_CO:-0.25}" \
+    --max-alpha-co "${MAX_ALPHA_CO:-0.15}" \
+    --max-delta-t "${MAX_DELTA_T:-0.0005}" \
+    --c-alpha "${C_ALPHA:-1.0}" \
+    --sample-interval "${SAMPLE_INTERVAL:-0.005}" \
+    --write-interval "${WRITE_INTERVAL:-0.05}" \
+    > log.runtimeConfig 2>&1
+
+cp -a 0.orig 0
+setFields > log.setFields 2>&1
+topoSet -dict system/topoSetDict.valve > log.topoSet.valve 2>&1
+python3 make_valve_dict.py \
+    --mode "$VALVE_OPENING" \
+    --output system/createBafflesDict.runtime \
+    > log.valveDict 2>&1
+createBaffles -overwrite -dict system/createBafflesDict.runtime \
+    > log.createBaffles 2>&1
+checkMesh -allGeometry -allTopology > log.checkMesh.baffled 2>&1
+
+if (( NP == 1 )); then
+    compressibleInterFoam > log.compressibleInterFoam 2>&1
+else
+    cp system/decomposeParDict system/decomposeParDict.runtime
+    foamDictionary system/decomposeParDict.runtime \
+        -entry numberOfSubdomains -set "$NP" >/dev/null
+    decomposePar -decomposeParDict system/decomposeParDict.runtime \
+        > log.decomposePar 2>&1
+    OMPI_ALLOW_RUN_AS_ROOT=1 \
+    OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
+        mpirun -np "$NP" compressibleInterFoam -parallel \
+        > log.compressibleInterFoam 2>&1
+fi
+
+python3 postprocess.py \
+    --case . \
+    --run-id "$RUN_ID" \
+    --run-mode "$RUN_MODE" \
+    --valve-opening "$VALVE_OPENING" \
+    --output outputs
+
+echo "BH3_RUN_DONE id=$RUN_ID mode=$RUN_MODE valve=$VALVE_OPENING"

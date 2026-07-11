@@ -1,0 +1,18 @@
+#!/bin/bash
+cd "$(dirname "$0")" || exit 1
+set -euo pipefail
+
+rm -rf -- \
+    0 \
+    [1-9]* \
+    processor[0-9]* \
+    postProcessing \
+    constant/polyMesh \
+    constant/triSurface
+rm -f -- \
+    log.* \
+    system/blockMeshDict.runtime \
+    system/createBafflesDict.runtime \
+    system/decomposeParDict.runtime
+
+echo "BH3_CLEAN"

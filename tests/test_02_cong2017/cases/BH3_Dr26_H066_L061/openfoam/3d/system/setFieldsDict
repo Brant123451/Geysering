@@ -1,0 +1,44 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setFieldsDict;
+}
+
+defaultFieldValues
+(
+    volScalarFieldValue alpha.water 1
+    volScalarFieldValue p_rgh 107787.946
+    volScalarFieldValue p 107787.946
+    volScalarFieldValue T 296.15
+);
+
+regions
+(
+    // Atmospheric initial pocket behind Valve #4.
+    boxToCell
+    {
+        box (5.979 -0.04 -0.01) (6.591 0.04 0.06);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 0
+            volScalarFieldValue p_rgh 101325
+            volScalarFieldValue p 101325
+            volScalarFieldValue T 296.15
+        );
+    }
+
+    // Riser headspace and expanded external atmosphere.
+    boxToCell
+    {
+        box (3.30 -0.16 0.660) (3.64 0.16 3.01);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 0
+            volScalarFieldValue p_rgh 101325
+            volScalarFieldValue p 101325
+            volScalarFieldValue T 296.15
+        );
+    }
+);

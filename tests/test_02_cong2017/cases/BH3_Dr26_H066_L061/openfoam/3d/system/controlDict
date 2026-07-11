@@ -1,0 +1,268 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+
+#include "runControl.runtime"
+
+application     compressibleInterFoam;
+startFrom       latestTime;
+startTime       0;
+stopAt          endTime;
+endTime         $eventEndTime;
+
+deltaT          $initialDeltaT;
+
+writeControl    adjustableRunTime;
+writeInterval   $fieldWriteInterval;
+purgeWrite      4;
+writeFormat     binary;
+writePrecision  10;
+writeCompression off;
+
+timeFormat      general;
+timePrecision   10;
+runTimeModifiable yes;
+
+adjustTimeStep  yes;
+maxCo           $maxCoValue;
+maxAlphaCo      $maxAlphaCoValue;
+maxDeltaT       $maxDeltaTValue;
+
+functions
+{
+    pressureProbes
+    {
+        type            probes;
+        libs            (sampling);
+        fields          (p p_rgh alpha.water U);
+        probeLocations
+        (
+            // PT1: one local cell inside the downstream-end soffit.
+            (6.582 0 0.047)
+            // PT2: one local cell above the invert beneath the riser.
+            (3.470 0 0.003)
+        );
+        writeControl    adjustableRunTime;
+        writeInterval   $sampleInterval;
+    }
+
+    riserCentreline
+    {
+        type            probes;
+        libs            (sampling);
+        fields          (alpha.water U p);
+        probeLocations
+        (
+            #include "riserProbeLocations.runtime"
+        );
+        writeControl    adjustableRunTime;
+        writeInterval   $sampleInterval;
+    }
+
+    plumeCentreline
+    {
+        type            probes;
+        libs            (sampling);
+        fields          (alpha.water U p);
+        probeLocations
+        (
+            #include "plumeProbeLocations.runtime"
+        );
+        writeControl    adjustableRunTime;
+        writeInterval   $sampleInterval;
+    }
+
+    alphaAirAudit
+    {
+        type            exprField;
+        libs            (fieldFunctionObjects);
+        field           alphaAirAudit;
+        action          new;
+        useNamePrefix   false;
+        expression      "1-alpha.water";
+        dimensions      [0 0 0 0 0 0 0];
+        executeControl  timeStep;
+        writeControl    none;
+    }
+
+    airPTAudit
+    {
+        type            exprField;
+        libs            (fieldFunctionObjects);
+        field           airPTAudit;
+        action          new;
+        useNamePrefix   false;
+        expression      "(1-alpha.water)*p/T";
+        dimensions      [1 -1 -2 -1 0 0 0];
+        executeControl  timeStep;
+        writeControl    none;
+    }
+
+    waterVelocityAudit
+    {
+        type            exprField;
+        libs            (fieldFunctionObjects);
+        field           waterVelocityAudit;
+        action          new;
+        useNamePrefix   false;
+        expression      "alpha.water*U";
+        dimensions      [0 1 -1 0 0 0 0];
+        executeControl  timeStep;
+        writeControl    none;
+    }
+
+    airPTVelocityAudit
+    {
+        type            exprField;
+        libs            (fieldFunctionObjects);
+        field           airPTVelocityAudit;
+        action          new;
+        useNamePrefix   false;
+        expression      "(1-alpha.water)*p*U/T";
+        dimensions      [1 0 -3 -1 0 0 0];
+        executeControl  timeStep;
+        writeControl    none;
+    }
+
+    waterVolume
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        fields          (alpha.water);
+        operation       volIntegrate;
+        regionType      all;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   $sampleInterval;
+    }
+
+    totalMass
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        fields          (rho);
+        operation       volIntegrate;
+        regionType      all;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   $sampleInterval;
+    }
+
+    globalAirPT
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        fields          (airPTAudit);
+        operation       volIntegrate;
+        regionType      all;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   $sampleInterval;
+    }
+
+    initialPocketVolume
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        fields          (alphaAirAudit);
+        operation       volIntegrate;
+        regionType      cellZone;
+        name            initialPocket;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   $sampleInterval;
+    }
+
+    initialRiserWaterVolume
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        fields          (alpha.water);
+        operation       volIntegrate;
+        regionType      cellZone;
+        name            initialRiserWater;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   $sampleInterval;
+    }
+
+    internalAirPT
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        fields          (airPTAudit);
+        operation       volIntegrate;
+        regionType      cellZone;
+        name            internalSystem;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   $sampleInterval;
+    }
+
+    inletWaterFlux
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            inlet;
+        fields          (waterVelocityAudit);
+        operation       areaNormalIntegrate;
+        writeArea       true;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   $sampleInterval;
+    }
+
+    atmosphereWaterFlux
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            atmosphere;
+        fields          (waterVelocityAudit);
+        operation       areaNormalIntegrate;
+        writeArea       true;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   $sampleInterval;
+    }
+
+    atmosphereAirPTFlux
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            atmosphere;
+        fields          (airPTVelocityAudit);
+        operation       areaNormalIntegrate;
+        writeArea       true;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   $sampleInterval;
+    }
+
+    rimWaterFlux
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      sampledSurface;
+        name            physicalRimPlane;
+        sampledSurfaceDict
+        {
+            type        cuttingPlane;
+            point       (3.47 0 1.851);
+            normal      (0 0 1);
+            interpolate true;
+        }
+        fields          (waterVelocityAudit);
+        operation       areaNormalIntegrate;
+        writeArea       true;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   $sampleInterval;
+    }
+}

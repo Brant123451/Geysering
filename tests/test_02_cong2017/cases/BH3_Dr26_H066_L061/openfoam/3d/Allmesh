@@ -1,0 +1,48 @@
+#!/bin/bash
+cd "$(dirname "$0")" || exit 1
+
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
+
+PROFILE="${MESH_PROFILE:-base}"
+case "$PROFILE" in
+    base)
+        SURFACE_SIZE=0.004
+        ;;
+    refined)
+        SURFACE_SIZE=0.003
+        ;;
+    *)
+        echo "MESH_PROFILE must be base or refined" >&2
+        exit 2
+        ;;
+esac
+
+if [[ -d constant/polyMesh ]]; then
+    echo "constant/polyMesh already exists; run ./Allclean first." >&2
+    exit 1
+fi
+
+python3 make_geometry.py \
+    --riser-diameter 0.026 \
+    --atmosphere-width "${ATMOSPHERE_WIDTH:-0.300}" \
+    --surface-size "$SURFACE_SIZE" \
+    > log.geometry 2>&1
+
+python3 make_block_mesh.py \
+    --profile "$PROFILE" \
+    --output system/blockMeshDict.runtime \
+    > log.blockMeshDict 2>&1
+
+blockMesh -dict system/blockMeshDict.runtime > log.blockMesh 2>&1
+snappyHexMesh -overwrite > log.snappyHexMesh 2>&1
+topoSet -dict system/topoSetDict.regions > log.topoSet.regions 2>&1
+checkMesh -allGeometry -allTopology > log.checkMesh 2>&1
+
+python3 mesh_audit.py \
+    --profile "$PROFILE" \
+    --check-mesh-log log.checkMesh \
+    --geometry-log log.geometry \
+    --output "outputs/mesh_${PROFILE}.json"
+
+echo "BH3_MESH_DONE profile=$PROFILE"

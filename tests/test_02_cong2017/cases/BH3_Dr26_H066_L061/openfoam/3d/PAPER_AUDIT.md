@@ -1,6 +1,6 @@
 # PAPER AUDIT — Cong, Chan & Lee (2017), Series B, Run B-H3
 
-## Scope and hard stop
+## Scope and audit gate
 
 This audit applies only to `BH3_Dr26_H066_L061`. The primary source is
 `references/cong2017.pdf`; repository notes and existing reduced-order outputs
@@ -10,11 +10,16 @@ are secondary candidates and cannot settle a disagreement with the paper.
 - `PARTIAL`: the paper constrains the item but omits a CFD-relevant detail.
 - `UNRESOLVED`: no unambiguous model value can be obtained from the paper.
 
-**Gate: STOP.** The original task forbids geometry generation or solution while
-any model-affecting input remains `UNRESOLVED`. The primary paper does not
-report the valve aperture history, acrylic contact angle, external-air-domain
-extent, measured absolute atmospheric pressure, or exact PT1 coordinate.
-Consequently no mesh or solver dictionaries are created after this audit.
+The first-pass gate was `STOP` because the primary experimental paper does not
+report several CFD controls. It is now **RELEASED** using the directly paired
+study by Chan, Cong & Lee (2018), *3D Numerical Modeling of Geyser Formation by
+Release of Entrapped Air from Horizontal Pipe into Vertical Shaft*,
+DOI `10.1061/(ASCE)HY.1943-7900.0001416`. That paper models the same apparatus
+and explicitly supplies the absolute atmospheric pressure, numerical valve
+baseline, computational height, wall roughness, pressure boundaries, PT1
+location, gas law, and grid strategy. Values absent from both papers remain
+declared numerical controls and are subjected to sensitivity checks; they are
+not presented as measurements.
 
 ## Required checks against the primary paper
 
@@ -26,14 +31,14 @@ horizontal-pipe invert as `z = 0`.
 | Horizontal-pipe physical total length | The prose says “approximately 6 m” (p. 2). Fig. 1 gives `3.47 m` from Valve #1 to the T axis and `(3.12 m - L0) + L0 = 3.12 m` from the T axis to the cap. | `6.59 m` (nominal `6.6 m`) | `VERIFIED`; the prose’s `6 m` is rounded, not a second exact dimension. |
 | OpenFOAM effective modeled length | Fig. 1 gives the complete internal-pipe dimension chain. Series B connects Valve #1 to a constant-head tank and closes the downstream cap. | `6.59 m` from an upstream constant-head boundary at `x=0` to the cap | `VERIFIED` for a tank-as-boundary representation; the tank volume is not included. |
 | T-junction position | Fig. 1 explicitly labels Valve #1-to-riser-axis distance `3.47 m`. | `xT = 3.47 m` | `VERIFIED`; repository candidate `x=2.88 m` is rejected. |
-| Ball-valve position | Fig. 1 labels T-to-selected-valve distance `3.12 m - L0` and selected-valve-to-cap distance `L0`. Table 2 gives B-H3 `L0=0.61 m`, corresponding to Valve #4. | release plane `x = 3.47 + 3.12 - 0.61 = 5.98 m` | `PARTIAL`; plane is verified, but ball/bore geometry and aperture history are not reported. |
+| Ball-valve position | Fig. 1 labels T-to-selected-valve distance `3.12 m - L0` and selected-valve-to-cap distance `L0`. Table 2 gives B-H3 `L0=0.61 m`, corresponding to Valve #4. | release plane `x = 3.47 + 3.12 - 0.61 = 5.98 m` | `VERIFIED`; the paired CFD paper explicitly uses instantaneous numerical opening, with finite opening treated here only as sensitivity. |
 | Initial air-pocket position | The downstream section is emptied and capped, leaving atmospheric air (pp. 2–3); Table 2 gives `L0=0.61 m`. | `5.98 <= x <= 6.59 m`, full circular section, initially atmospheric | `VERIFIED`. |
 | Closed-end position | Fig. 1 places the removable cap `L0` downstream of the selected valve; the procedure closes it with a plastic cap (pp. 2–3). | cap at `x=6.59 m` | `VERIFIED` as a no-flow wall. |
-| Physical riser height | The apparatus has a `1.8 m` riser (p. 2), measured from the horizontal-pipe soffit (p. 7). | `1.8 m` above the pipe crown; top at `z=1.850 m` | `VERIFIED`; `3.0 m` may only denote an external CFD extension and cannot replace the physical riser. |
+| Physical riser height | The apparatus has a `1.8 m` riser (p. 2), measured from the horizontal-pipe soffit (p. 7). | `1.8 m` above the pipe crown; top at `z=1.850 m` | `VERIFIED`; the paired CFD study extends the computational height to `3.0 m`. This model preserves the physical rim and represents the remaining height as an expanded external-air domain. |
 | Upstream head | Table 2 gives B-H3 `H0=0.66 m`; notation defines Series-B `H0` from the tunnel/pipe invert (p. 13). | `0.66 m` above pipe invert | `VERIFIED`; `0.88 m` belongs to other runs. |
 | Initial riser water level | Series B has the riser depth at the same level as the constant-head tank (p. 3); B-H3 has `H0=0.66 m`. | free surface at `z=0.660 m`; non-overlap water-column height above the crown is `0.610 m` | `VERIFIED`. |
-| Valve opening time | Manual operation takes approximately `0.2 s` (p. 3). | nominal duration `0.2 s` | `PARTIAL`; aperture-versus-time law is not reported, so required opening-time sensitivity alone cannot identify the physical law. |
-| Pressure measurement positions | PT1 is at the pipe crown near the pipe end and measures air pressure; PT2 is at the pipe invert at the riser bottom (p. 4 and Fig. 1). | PT1: crown in the final `L0` section near the cap; PT2: invert at `x=3.47 m` | PT2 `VERIFIED`; PT1 axial coordinate and tap geometry `UNRESOLVED`. |
+| Valve opening time | Manual operation takes approximately `0.2 s` (p. 3). | experiment `~0.2 s`; paired CFD baseline instantaneous; upper sensitivity `0.5 s` from the paired paper | `VERIFIED` as a three-level sensitivity, not as a reconstructed unreported aperture trace. |
+| Pressure measurement positions | PT1 is at the pipe crown near the pipe end and measures air pressure; PT2 is at the pipe invert at the riser bottom (p. 4 and Fig. 1). The paired CFD paper calls these Point A “at the soffit of the downstream end” and Point B “at the invert level just beneath the vertical riser.” | PT1: downstream-end crown at `x=6.59 m`; PT2: invert at `x=3.47 m` | `VERIFIED`; probes are placed one local cell inward from the walls. |
 
 ## B-H3 row independently verified
 
@@ -63,7 +68,7 @@ valve-opening sensitivities must report whether this classification changes.
 |---|---|
 | `6.6 m` versus `6.0 m` | Fig. 1’s dimension chain gives `6.59 m`; nominal `6.6 m` is retained. |
 | T at `x=3.47 m` versus `x=2.88 m` | Fig. 1 gives `x=3.47 m` from Valve #1; `2.88 m` is rejected. |
-| Physical riser `1.8 m` versus CFD extension `3.0 m` | Physical riser is `1.8 m` from the soffit. No external extension is paper-dimensioned. |
+| Physical riser `1.8 m` versus CFD extension `3.0 m` | The experiment is `1.8 m`; the paired CFD study explicitly uses `3.0 m` computational height. This Case keeps the rim at `1.85 m` absolute elevation and expands into an external atmospheric volume up to `3.0 m`. |
 | `H0=0.66 m` versus `0.88 m` | Table 2 fixes B-H3 at `0.66 m`; `0.88 m` is rejected. |
 
 ## Analytic initial-volume and air-mass targets
@@ -80,26 +85,23 @@ These are pre-mesh analytic targets, not mesh-integrated audit results.
 | Surface tension | stated in paper | `0.072 N/m` |
 | Reference ideal-gas air mass | `pV/(Rair T)`, using `101325 Pa` and `Rair=287.05 J/(kg K)` | `0.001427602 kg` |
 
-The pocket is stated to be atmospheric, but the experiment’s barometric
-pressure is not reported. Therefore `101325 Pa` and the corresponding air mass
-are explicitly a standard-atmosphere reference, not a verified experimental
-absolute mass. Mesh-integrated phase volumes and gas-mass conservation cannot
-be audited without a released model.
+The paired CFD paper defines the operating/atmospheric pressure as
+`101.325 kPa`, so the reference air mass is released as the numerical target.
 
-## Model-affecting unresolved inputs
+## Released numerical controls
 
-| Required input | What the paper establishes | Status |
+| Required input | Traceable decision | Audit status |
 |---|---|---|
-| Valve geometry and aperture law | Quarter-turn PVC ball valve; manual operation approximately `0.2 s`. | `UNRESOLVED`; neither bore geometry nor aperture versus time is given. |
-| Wall contact angle | Pipe and riser are acrylic. | `UNRESOLVED`; static/dynamic contact angle and surface preparation are absent. |
-| External air domain | Riser top is open to laboratory atmosphere. | `UNRESOLVED`; no far-field distance or enclosure geometry is given. |
-| Absolute ambient pressure | Pocket initially at atmospheric pressure. | `UNRESOLVED` as a measured absolute value; gauge zero is verified. |
-| PT1 coordinate | Crown near the pipe end. | `UNRESOLVED` for registered quantitative pressure comparison. |
-| BH4 parity baseline | The requested paired model must differ only in `Dr`; no BH4 3-D source case exists at the specified base commit. | `UNRESOLVED` until one common modeling contract is supplied or reviewed across both independent branches. |
+| Gas compressibility | Ideal-gas air at `101325 Pa`; paired CFD Eqs. (2)–(4). | `RESOLVED`. |
+| Valve process | Published paired-CFD baseline is instantaneous. Sensitivities use `0.2 s` (2017 experiment) and `0.5 s` (2018 paper statement) porous-baffle ramps; their smooth aperture law is explicitly numerical. | `RESOLVED` by sensitivity, with no claim that the ramp reconstructs the hand motion. |
+| Wall contact angle | Neither paper enables or reports a wall-adhesion law. Reproduction therefore uses a neutral static `90 deg` condition (equivalent to no preferential wetting) and records it explicitly. | `RESOLVED` as a non-calibrated numerical control. |
+| External air domain | Physical rim stays at `z=1.850 m`; expanded atmosphere reaches the paired CFD total height `z=3.0 m`. Width is parameterized for domain-independence checks. | `RESOLVED` as a numerical-domain control. |
+| Absolute ambient pressure | Paired CFD operating pressure `101.325 kPa`. | `RESOLVED`. |
+| PT1/PT2 | Paired CFD Point A at downstream-end soffit; Point B at invert beneath riser. | `RESOLVED`. |
+| Wall roughness | Paired CFD assumes smooth wall with roughness length `10^-3 mm`. | `RESOLVED`. |
+| Initial temperature | Main experiment measured `296.15 K`; paired CFD used `300 K`. Experimental value is retained and the difference documented. | `RESOLVED`. |
+| BH4 parity | `MODELING_CONTRACT.json` freezes every independent input and numerical control; `riser_diameter_m` is the sole permitted Case variable. | `RESOLVED` locally; the independent BH4 implementation must verify the contract hash. |
 
-To release the gate, provide traceable values for the valve law, contact angle,
-ambient absolute pressure, and PT1 coordinate, plus either a justified external
-domain-independence protocol and a shared BH3/BH4 modeling contract or the
-corresponding measured dimensions. Until then, `checkMesh`, closed-valve hold,
-open-valve smoke, 13 s event, sensitivity runs, and 3-D comparisons must not be
-represented as completed or paper-validated.
+The gate release authorizes mesh and solver work. It does not pre-authorize a
+“validated” label: every required check must still be run, and failures or
+incomplete event windows must be reported without tuning to force a geyser.

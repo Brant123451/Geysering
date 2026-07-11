@@ -1,0 +1,15 @@
+0/
+[1-9]*/
+processor*/
+postProcessing/
+constant/polyMesh/
+constant/triSurface/
+system/blockMeshDict.runtime
+system/createBafflesDict.runtime
+system/decomposeParDict.runtime
+system/runControl.runtime
+system/riserProbeLocations.runtime
+system/plumeProbeLocations.runtime
+log.*
+*.foam
+_work/
