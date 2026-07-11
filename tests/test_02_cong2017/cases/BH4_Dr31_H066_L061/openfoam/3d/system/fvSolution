@@ -43,27 +43,20 @@ solvers
 
     p_rgh
     {
-        solver          GAMG;
+        solver          PBiCGStab;
+        preconditioner  DILU;
         tolerance       1e-7;
         relTol          0.01;
-        smoother        DIC;
+        maxIter         200;
     }
 
     p_rghFinal
     {
-        solver          PCG;
-        preconditioner
-        {
-            preconditioner  GAMG;
-            tolerance       1e-7;
-            relTol          0;
-            nVcycles        2;
-            smoother        DICGaussSeidel;
-            nPreSweeps      2;
-        }
-        tolerance       1e-7;
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        tolerance       1e-8;
         relTol          0;
-        maxIter         60;
+        maxIter         300;
     }
 
     "U.*"
