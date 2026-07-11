@@ -30,6 +30,11 @@
   "interface_compression": 1.0,
   "air_Cp_J_kg_K": 1005.0,
   "water_bulk_modulus_Pa": 2200000000.0,
+  "initial_field_correction": {
+    "pressure": "p = p_rgh + rho_mixture*g.z",
+    "gate_velocity": "axisymmetric constant-Q smooth contraction over one downstream-pipe diameter",
+    "gate_contraction_length_m": 0.28
+  },
   "velocity_limit_m_s": null,
   "maxCo": 0.35,
   "maxAlphaCo": 0.2,

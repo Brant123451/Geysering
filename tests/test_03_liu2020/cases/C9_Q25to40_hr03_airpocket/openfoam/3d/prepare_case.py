@@ -87,11 +87,6 @@ def generate_set_fields(paper: dict, model: dict, pocket: dict) -> str:
     patm = paper["atmospheric_pressure_Pa"]
     p_water_rgh = patm + rho * g * hgl
     p_pocket = patm + rho * g * (hgl - pocket["body_interface_z_m"])
-    gate_area = model["tailgate_geometric_area_m2"]
-    gate_velocity = q0 / gate_area
-    tailwater_rgh = patm + rho * g * model["tailwater_level_m"]
-    gate_static_p = patm + rho * g * (model["tailwater_level_m"] - paper["downstream_diameter_m"] / 2.0)
-    x_gate = paper["chamber_length_m"] + paper["downstream_length_m"]
     free_z = hgl
 
     regions = [
@@ -117,18 +112,6 @@ def generate_set_fields(paper: dict, model: dict, pocket: dict) -> str:
         fieldValues
         (
             volVectorFieldValue U (0.12 0 0)
-        );
-    }}""",
-        f"""    cylinderToCell
-    {{
-        point1 ({x_gate - 0.25:.8g} 0 {paper['downstream_diameter_m'] / 2.0:.8g});
-        point2 ({x_gate + 0.01:.8g} 0 {paper['downstream_diameter_m'] / 2.0:.8g});
-        radius {math.sqrt(gate_area / math.pi):.10g};
-        fieldValues
-        (
-            volVectorFieldValue U ({gate_velocity:.10g} 0 0)
-            volScalarFieldValue p {gate_static_p:.10g}
-            volScalarFieldValue p_rgh {tailwater_rgh:.10g}
         );
     }}""",
         f"""    boxToCell
@@ -195,6 +178,101 @@ defaultFieldValues
 regions
 (
 {os.linesep.join(regions)}
+);
+"""
+    )
+
+
+def generate_initial_field_correction(
+    paper: dict, model: dict, pocket: dict
+) -> str:
+    """Return hydrostatic pressure and divergence-free gate-start corrections."""
+    q0 = paper["initial_flow_m3_s"]
+    downstream_radius = paper["downstream_diameter_m"] / 2.0
+    gate_radius = math.sqrt(model["tailgate_geometric_area_m2"] / math.pi)
+    x_gate = paper["chamber_length_m"] + paper["downstream_length_m"]
+    x_transition = x_gate - paper["downstream_diameter_m"]
+    z_axis = downstream_radius
+    rho_air = (
+        paper["atmospheric_pressure_Pa"]
+        + model["water_density_kg_m3"]
+        * 9.81
+        * (
+            paper["chamber_height_m"]
+            + paper["initial_riser_column_m"]
+            - pocket["body_interface_z_m"]
+        )
+    ) / (
+        (8314.46261815324 / model["air_molecular_weight_kg_kmol"])
+        * paper["temperature_K"]
+    )
+    return (
+        foam_header("dictionary", "setExprFieldsDict")
+        + f"""
+// setFields supplies phase topology and piecewise hydraulic estimates.
+// These expressions then enforce p = p_rgh + rho*g.z and replace the
+// discontinuous gate-cylinder velocity with an axisymmetric, constant-Q
+// contraction over one downstream-pipe diameter.  The correction changes no
+// pocket coordinate, volume prior, gate area, or paper-time forcing.
+readFields (alpha.water p_rgh U);
+
+expressions
+(
+    hydrostaticPressure
+    {{
+        field p;
+        dimensions [1 -1 -2 0 0 0 0];
+        expression
+        #{{
+            p_rgh
+          + (alpha.water*{model['water_density_kg_m3']:.12g}
+          + (1 - alpha.water)*{rho_air:.12g})
+           *((vector(0, 0, -9.81)) & pos())
+        #}};
+    }}
+
+    stopGateAnnulus
+    {{
+        field U;
+        dimensions [0 1 -1 0 0 0 0];
+        fieldMask "pos().x() >= {x_transition:.12g}";
+        expression "vector(0, 0, 0)";
+    }}
+
+    convergingGateCore
+    {{
+        field U;
+        dimensions [0 1 -1 0 0 0 0];
+        variables
+        (
+            "x0 = {x_transition:.12g}"
+            "x1 = {x_gate:.12g}"
+            "length = x1 - x0"
+            "xi = min(max((pos().x() - x0)/length, 0), 1)"
+            "smooth = 3*sqr(xi) - 2*xi*sqr(xi)"
+            "radius0 = {downstream_radius:.12g}"
+            "radius1 = {gate_radius:.12g}"
+            "radius = radius0 + (radius1 - radius0)*smooth"
+            "drdx = (radius1 - radius0)*6*xi*(1 - xi)/length"
+            "speed = {q0:.12g}/(3.141592653589793*sqr(radius))"
+            "radial = sqrt(sqr(pos().y()) + sqr(pos().z() - {z_axis:.12g}))"
+        );
+        fieldMask
+        #{{
+            (pos().x() >= x0)
+         && (pos().x() <= x1 + 0.01)
+         && (radial <= radius)
+        #}};
+        expression
+        #{{
+            vector
+            (
+                speed,
+                pos().y()*speed*drdx/radius,
+                (pos().z() - {z_axis:.12g})*speed*drdx/radius
+            )
+        #}};
+    }}
 );
 """
     )
@@ -937,6 +1015,10 @@ mergeTolerance 1e-6;
 
     write("system/setFieldsDict", generate_set_fields(paper, model, pocket))
     write(
+        "system/setExprFieldsDict",
+        generate_initial_field_correction(paper, model, pocket),
+    )
+    write(
         "system/topoSetDict",
         foam_header("dictionary", "topoSetDict")
         + """
@@ -1441,6 +1523,7 @@ foamListTimes -rm >/dev/null 2>&1 || true
 rm -rf 0
 cp -r 0.orig 0
 setFields > log.setFields 2>&1
+setExprFields > log.setExprFields 2>&1
 decomposePar -force > log.decomposePar 2>&1
 trap 'cp system/controlDict.full system/controlDict' EXIT
 cp system/controlDict.initialize system/controlDict
@@ -1577,6 +1660,14 @@ rm -f log.*
         "interface_compression": c_alpha,
         "air_Cp_J_kg_K": model["air_Cp_J_kg_K"],
         "water_bulk_modulus_Pa": model["water_bulk_modulus_Pa"],
+        "initial_field_correction": {
+            "pressure": "p = p_rgh + rho_mixture*g.z",
+            "gate_velocity": (
+                "axisymmetric constant-Q smooth contraction over one "
+                "downstream-pipe diameter"
+            ),
+            "gate_contraction_length_m": paper["downstream_diameter_m"],
+        },
         "velocity_limit_m_s": velocity_limit if velocity_limit > 0 else None,
         "maxCo": args.max_co,
         "maxAlphaCo": args.max_alpha_co,
