@@ -240,7 +240,7 @@ functions
 
             if (Pstream::master())
             {
-                Info.precision(12);
+                Info.stream().precision(12);
                 Info<< "BH6_AUDIT "
                     << mesh().time().value() << ' '
                     << waterVolume << ' '
