@@ -7,6 +7,8 @@ CSV/JSON/PNG products are copied back to this source directory.
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import os
 import shutil
 import subprocess
@@ -15,6 +17,20 @@ from pathlib import Path
 
 
 HERE = Path(__file__).resolve().parent
+PRODUCT_SUFFIXES = (
+    "_metrics.json",
+    "_timeseries.csv",
+    "_comparison.csv",
+    "_summary.png",
+)
+MESH_INPUTS = (
+    Path("Allmesh"),
+    Path("make_geometry.py"),
+    Path("make_runtime_config.py"),
+    Path("mesh_audit.py"),
+    Path("system/changeDictionaryDict"),
+    Path("system/topoSetDict.regions"),
+)
 
 
 @dataclass(frozen=True)
@@ -81,6 +97,7 @@ def copy_source(destination: Path) -> None:
             "polyMesh",
             "triSurface",
             "log.*",
+            "outputs",
             "_work",
             "__pycache__",
         ),
@@ -92,12 +109,47 @@ def run(command: list[str], cwd: Path, env: dict[str, str]) -> None:
     subprocess.run(command, cwd=cwd, env=env, check=True)
 
 
+def fingerprint(paths: list[Path] | tuple[Path, ...]) -> str:
+    digest = hashlib.sha256()
+    for relative in sorted(paths, key=lambda item: item.as_posix()):
+        digest.update(relative.as_posix().encode())
+        digest.update((HERE / relative).read_bytes())
+    return digest.hexdigest()
+
+
+def source_fingerprint() -> str:
+    paths = [
+        path.relative_to(HERE)
+        for path in HERE.rglob("*")
+        if path.is_file()
+        and "outputs" not in path.relative_to(HERE).parts
+        and "__pycache__" not in path.relative_to(HERE).parts
+    ]
+    return fingerprint(paths)
+
+
+def mesh_cache_valid(cache: Path, profile: str, expected_fingerprint: str) -> bool:
+    boundary = cache / "constant" / "polyMesh" / "boundary"
+    audit = cache / "outputs" / f"mesh_{profile}.json"
+    if not boundary.is_file() or not audit.is_file():
+        return False
+    try:
+        data = json.loads(audit.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return False
+    return (
+        data.get("profile") == profile
+        and data.get("checkMesh_allGeometry_allTopology") is True
+        and data.get("source_fingerprint") == expected_fingerprint
+    )
+
+
 def ensure_mesh(profile: str, root: Path, force: bool) -> Path:
     cache = root / f"mesh-{profile}"
-    marker = cache / "constant" / "polyMesh" / "boundary"
+    expected_fingerprint = fingerprint(MESH_INPUTS)
     if force and cache.exists():
         shutil.rmtree(cache)
-    if marker.exists():
+    if mesh_cache_valid(cache, profile, expected_fingerprint):
         return cache
     if cache.exists():
         shutil.rmtree(cache)
@@ -105,6 +157,12 @@ def ensure_mesh(profile: str, root: Path, force: bool) -> Path:
     env = os.environ.copy()
     env["MESH_PROFILE"] = profile
     run(["bash", "./Allmesh"], cache, env)
+    audit = cache / "outputs" / f"mesh_{profile}.json"
+    data = json.loads(audit.read_text(encoding="utf-8"))
+    data["source_fingerprint"] = expected_fingerprint
+    audit.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    if not mesh_cache_valid(cache, profile, expected_fingerprint):
+        raise RuntimeError(f"Mesh cache validation failed for profile {profile}")
     return cache
 
 
@@ -114,6 +172,33 @@ def copy_products(runtime: Path, source_output: Path, run_id: str) -> None:
         shutil.copy2(product, source_output / product.name)
     for product in (runtime / "outputs").glob("mesh_*.json"):
         shutil.copy2(product, source_output / product.name)
+
+
+def outputs_complete(
+    source_output: Path,
+    variant: Variant,
+    expected_fingerprint: str,
+) -> bool:
+    products = [source_output / f"{variant.run_id}{suffix}" for suffix in PRODUCT_SUFFIXES]
+    if not all(path.is_file() and path.stat().st_size > 0 for path in products):
+        return False
+    try:
+        data = json.loads(products[0].read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return False
+    return (
+        data.get("run_id") == variant.run_id
+        and data.get("run_mode") == variant.mode
+        and float(data.get("simulated_end_time_s", -1.0)) >= variant.end_time - 1.0e-9
+        and data.get("source_fingerprint") == expected_fingerprint
+    )
+
+
+def annotate_metrics(runtime: Path, run_id: str, expected_fingerprint: str) -> None:
+    path = runtime / "outputs" / f"{run_id}_metrics.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["source_fingerprint"] = expected_fingerprint
+    path.write_text(json.dumps(data, indent=2, allow_nan=False) + "\n", encoding="utf-8")
 
 
 def main() -> None:
@@ -130,11 +215,14 @@ def main() -> None:
     ]
     args.work_root.mkdir(parents=True, exist_ok=True)
     source_output = HERE / "outputs"
+    expected_fingerprint = source_fingerprint()
 
     for variant in selected:
-        final_metrics = source_output / f"{variant.run_id}_metrics.json"
-        if final_metrics.exists() and not args.force:
-            print(f"[{variant.run_id}] compact output exists; skipping")
+        if (
+            outputs_complete(source_output, variant, expected_fingerprint)
+            and not args.force
+        ):
+            print(f"[{variant.run_id}] complete current compact output exists; skipping")
             continue
         mesh_cache = ensure_mesh(variant.mesh, args.work_root, args.force)
         runtime = args.work_root / variant.run_id
@@ -165,6 +253,7 @@ def main() -> None:
             }
         )
         run(["bash", "./Allrun"], runtime, env)
+        annotate_metrics(runtime, variant.run_id, expected_fingerprint)
         copy_products(runtime, source_output, variant.run_id)
 
     subprocess.run(
