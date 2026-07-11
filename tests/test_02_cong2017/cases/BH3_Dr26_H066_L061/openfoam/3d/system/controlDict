@@ -85,7 +85,8 @@ functions
         useNamePrefix   false;
         expression      "1-alpha.water";
         dimensions      [0 0 0 0 0 0 0];
-        executeControl  timeStep;
+        executeControl  adjustableRunTime;
+        executeInterval $sampleInterval;
         writeControl    none;
     }
 
@@ -98,7 +99,8 @@ functions
         useNamePrefix   false;
         expression      "(1-alpha.water)*p/T";
         dimensions      [1 -1 -2 -1 0 0 0];
-        executeControl  timeStep;
+        executeControl  adjustableRunTime;
+        executeInterval $sampleInterval;
         writeControl    none;
     }
 
@@ -111,7 +113,8 @@ functions
         useNamePrefix   false;
         expression      "alpha.water*U";
         dimensions      [0 1 -1 0 0 0 0];
-        executeControl  timeStep;
+        executeControl  adjustableRunTime;
+        executeInterval $sampleInterval;
         writeControl    none;
     }
 
@@ -124,7 +127,8 @@ functions
         useNamePrefix   false;
         expression      "(1-alpha.water)*p*U/T";
         dimensions      [1 0 -3 -1 0 0 0];
-        executeControl  timeStep;
+        executeControl  adjustableRunTime;
+        executeInterval $sampleInterval;
         writeControl    none;
     }
 
