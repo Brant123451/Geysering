@@ -1,18 +1,4 @@
-solid atmosphere
- facet normal 0.000000e+00 0.000000e+00 1.000000e+00
-  outer loop
-   vertex -6.150000e+00 -1.500000e-01 1.100000e+00
-   vertex -5.800000e+00 1.500000e-01 1.100000e+00
-   vertex -6.150000e+00 1.500000e-01 1.100000e+00
-  endloop
- endfacet
- facet normal 0.000000e+00 0.000000e+00 1.000000e+00
-  outer loop
-   vertex -6.150000e+00 -1.500000e-01 1.100000e+00
-   vertex -5.800000e+00 -1.500000e-01 1.100000e+00
-   vertex -5.800000e+00 1.500000e-01 1.100000e+00
-  endloop
- endfacet
+solid riserOutlet
  facet normal 0.000000e+00 0.000000e+00 1.000000e+00
   outer loop
    vertex 1.500000e-01 0.000000e+00 1.670000e+00
@@ -349,4 +335,4 @@ solid atmosphere
    vertex 1.800000e-01 -7.347881e-18 1.670000e+00
   endloop
  endfacet
-endsolid atmosphere
+endsolid riserOutlet

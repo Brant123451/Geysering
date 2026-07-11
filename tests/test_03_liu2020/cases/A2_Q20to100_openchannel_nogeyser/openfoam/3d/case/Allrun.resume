@@ -39,22 +39,3 @@ rg -q "^End$" "$LOG"
 PROFILE="unrecorded"
 [[ -f mesh.profile ]] && PROFILE="$(< mesh.profile)"
 echo "RESUME_DONE profile=$PROFILE ranks=$NP"
-#!/bin/bash
-# RESUME an interrupted run from the latest checkpoint.
-# Does NOT touch fields / decomposition -- controlDict has
-# startFrom latestTime, so mpirun picks up where the last
-# checkpoint (written every 1 s of physical time) left off.
-# Use Allrun.solve ONLY for a fresh start (it wipes progress).
-cd "$(dirname "$0")" || exit 1
-source /usr/lib/openfoam/openfoam2512/etc/bashrc
-
-if ! ls -d processor0 > /dev/null 2>&1; then
-    echo "no processor dirs -- nothing to resume; use Allrun.solve" >&2
-    exit 1
-fi
-if pgrep -x interFoam > /dev/null; then
-    echo "interFoam already running -- refusing to double-start" >&2
-    exit 1
-fi
-mpirun -np 6 interFoam -parallel >> log.interFoam 2>&1
-echo "RESUME_DONE"

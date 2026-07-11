@@ -28,7 +28,7 @@ timePrecision   6;
 runTimeModifiable yes;
 
 adjustTimeStep  yes;
-maxCo           0.40;
+maxCo           0.47;
 maxAlphaCo      0.35;
 maxDeltaT       0.002;
 
@@ -122,15 +122,27 @@ functions
         fields          (phi);
     }
 
-    waterFluxOutlet
+    waterFluxOutletAir
     {
         $waterFluxInlet;
         name            outlet;
     }
 
-    waterFluxAtmosphere
+    waterFluxOutletWater
     {
         $waterFluxInlet;
-        name            atmosphere;
+        name            outletWater;
+    }
+
+    waterFluxHeadboxAtmosphere
+    {
+        $waterFluxInlet;
+        name            headboxAtmosphere;
+    }
+
+    waterFluxRiserOutlet
+    {
+        $waterFluxInlet;
+        name            riserOutlet;
     }
 }

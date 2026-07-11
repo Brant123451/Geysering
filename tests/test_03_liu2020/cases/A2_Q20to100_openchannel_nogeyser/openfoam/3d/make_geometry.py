@@ -6,11 +6,12 @@ Coordinates match the 1D composite-domain model exactly:
   z = 0 at the chamber floor (= downstream pipe invert).
 
 Pieces (each a separate STL -> its own OpenFOAM patch):
-  walls.stl      numerical headbox shell + both pipe tubes + chamber shell
-  riserWall.stl  riser tube
-  inlet.stl      numerical headbox bottom (flow-rate inlet)
-  atmosphere.stl headbox top + riser top disk
-  outlet.stl     downstream-pipe end (equivalent open-channel/weir boundary)
+  walls.stl              headbox shell + pipes + chamber shell
+  riserWall.stl          riser tube
+  inlet.stl              numerical headbox bottom (flow-rate inlet)
+  headboxAtmosphere.stl  numerical headbox open top
+  riserOutlet.stl        physical riser open top
+  outlet.stl             reported downstream-pipe end
 
 All pipe/wall rings share identical vertices.  There are no overlapping lips
 or penetrations: the combined geometry.stl is a genuinely closed surface that
@@ -32,6 +33,7 @@ parser.add_argument(
 args = parser.parse_args()
 OUT = args.case_dir.resolve() / "constant" / "triSurface"
 OUT.mkdir(parents=True, exist_ok=True)
+(OUT / "atmosphere.stl").unlink(missing_ok=True)  # retired combined patch
 
 NSEG = 64              # pipe circumference segments
 NSEG_R = 48            # riser circumference segments
@@ -337,11 +339,14 @@ riser_tris = tube([xr, yr, z_lid], [xr, yr, z_rtop], rr, NSEG_R)
 inlet_tris = rect([HB["x0"], HB["y0"], HB["z0"]], [HB["x1"], HB["y0"], HB["z0"]],
                   [HB["x1"], HB["y1"], HB["z0"]], [HB["x0"], HB["y1"], HB["z0"]])
 
-# ---- atmosphere: headbox top + riser top disk ----
-atmo = [rect([HB["x0"], HB["y0"], HB["z1"]], [HB["x0"], HB["y1"], HB["z1"]],
-             [HB["x1"], HB["y1"], HB["z1"]], [HB["x1"], HB["y0"], HB["z1"]]),
-        disk([xr, yr, z_rtop], rr, NSEG_R)]
-atmo_tris = np.concatenate(atmo, axis=0)
+# ---- distinct atmospheric openings (separate overflow accounting) ----
+headbox_atmo_tris = rect(
+    [HB["x0"], HB["y0"], HB["z1"]],
+    [HB["x0"], HB["y1"], HB["z1"]],
+    [HB["x1"], HB["y1"], HB["z1"]],
+    [HB["x1"], HB["y0"], HB["z1"]],
+)
+riser_outlet_tris = disk([xr, yr, z_rtop], rr, NSEG_R)
 
 # ---- outlet: exact end of the reported downstream pipe.  The physical
 # overflow-weir/tank geometry was not reported; its hd/Dd=1/4 control is
@@ -353,7 +358,8 @@ pieces, enclosed_volume = orient_closed_surface(
         "walls": walls_tris,
         "riserWall": riser_tris,
         "inlet": inlet_tris,
-        "atmosphere": atmo_tris,
+        "headboxAtmosphere": headbox_atmo_tris,
+        "riserOutlet": riser_outlet_tris,
         "outlet": outlet_tris,
     }
 )
@@ -361,7 +367,15 @@ for name, tris in pieces.items():
     write_stl(OUT / f"{name}.stl", {name: tris})
 write_stl(OUT / "geometry.stl", pieces)
 
-for f in ("walls", "riserWall", "inlet", "atmosphere", "outlet", "geometry"):
+for f in (
+    "walls",
+    "riserWall",
+    "inlet",
+    "headboxAtmosphere",
+    "riserOutlet",
+    "outlet",
+    "geometry",
+):
     p = OUT / f"{f}.stl"
     print(f"{f}.stl  {p.stat().st_size/1e6:.2f} MB")
 print("bounding box: x[%.2f, %.2f] y[-0.15,0.15] z[%.2f, %.2f]"

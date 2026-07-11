@@ -24,7 +24,19 @@ boundaryField
         inletValue      uniform 5;
         value           uniform 5;
     }
-    atmosphere
+    outletWater
+    {
+        type            inletOutlet;
+        inletValue      uniform 5;
+        value           uniform 5;
+    }
+    headboxAtmosphere
+    {
+        type            inletOutlet;
+        inletValue      uniform 5;
+        value           uniform 5;
+    }
+    riserOutlet
     {
         type            inletOutlet;
         inletValue      uniform 5;

@@ -22,4 +22,10 @@ patches
         constructFrom   patches;
         patches         (riserWall);
     }
+    {
+        name            outletWater;
+        patchInfo       { type patch; }
+        constructFrom   set;
+        set             outletWaterFaces;
+    }
 );

@@ -19,9 +19,23 @@ boundaryField
     }
     outlet
     {
-        type            zeroGradient;
+        type            inletOutlet;
+        inletValue      uniform 0;
+        value           uniform 0;
     }
-    atmosphere
+    outletWater
+    {
+        type            inletOutlet;
+        inletValue      uniform 1;
+        value           uniform 1;
+    }
+    headboxAtmosphere
+    {
+        type            inletOutlet;
+        inletValue      uniform 0;
+        value           uniform 0;
+    }
+    riserOutlet
     {
         type            inletOutlet;
         inletValue      uniform 0;

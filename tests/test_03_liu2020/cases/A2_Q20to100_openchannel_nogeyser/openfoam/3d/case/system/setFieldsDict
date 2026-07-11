@@ -17,6 +17,7 @@ defaultFieldValues
 (
     volScalarFieldValue alpha.water 0
     volScalarFieldValue p_rgh 0
+    volVectorFieldValue U (0 0 0)
 );
 
 regions
@@ -27,6 +28,7 @@ regions
         (
             volScalarFieldValue alpha.water 1
             volScalarFieldValue p_rgh 3118
+            volVectorFieldValue U (0 0 0.190476)
         ); }
 
     // Upstream pipe: invert z=0.18-0.01*x, depth ~0.08 m.
@@ -35,36 +37,42 @@ regions
         (
             volScalarFieldValue alpha.water 1
             volScalarFieldValue p_rgh 3072
+            volVectorFieldValue U (1.70425 0 -0.0170425)
         ); }
     boxToCell { box (-4.83 -1 -1) (-3.87 1 0.3035);
         fieldValues
         (
             volScalarFieldValue alpha.water 1
             volScalarFieldValue p_rgh 2977
+            volVectorFieldValue U (1.70425 0 -0.0170425)
         ); }
     boxToCell { box (-3.87 -1 -1) (-2.90 1 0.2939);
         fieldValues
         (
             volScalarFieldValue alpha.water 1
             volScalarFieldValue p_rgh 2883
+            volVectorFieldValue U (1.70425 0 -0.0170425)
         ); }
     boxToCell { box (-2.90 -1 -1) (-1.93 1 0.2842);
         fieldValues
         (
             volScalarFieldValue alpha.water 1
             volScalarFieldValue p_rgh 2788
+            volVectorFieldValue U (1.70425 0 -0.0170425)
         ); }
     boxToCell { box (-1.93 -1 -1) (-0.97 1 0.2745);
         fieldValues
         (
             volScalarFieldValue alpha.water 1
             volScalarFieldValue p_rgh 2693
+            volVectorFieldValue U (1.70425 0 -0.0170425)
         ); }
     boxToCell { box (-0.97 -1 -1) ( 0.00 1 0.2649);
         fieldValues
         (
             volScalarFieldValue alpha.water 1
             volScalarFieldValue p_rgh 2599
+            volVectorFieldValue U (1.70425 0 -0.0170425)
         ); }
 
     // junction chamber
@@ -81,5 +89,6 @@ regions
         (
             volScalarFieldValue alpha.water 1
             volScalarFieldValue p_rgh 687
+            volVectorFieldValue U (1.66140 0 0)
         ); }
 );

@@ -2,10 +2,10 @@
 """Generate a conformal tetrahedral mesh of Liu2020 Case A2 with Gmsh.
 
 The OpenCASCADE Boolean union removes the overlapping/STL-junction ambiguity
-of the original pilot.  Only the reported rig geometry is represented, plus a
-clearly identified numerical upstream reservoir extension.  The unreported
-downstream tank/weir dimensions are replaced by an equivalent open-channel
-boundary at the end of the reported 5.95 m downstream pipe.
+of the original pilot.  The reported rig is represented with a clearly
+identified numerical upstream reservoir extension and a 6.4 mL local
+tetrahedral regularization.  Unreported tank/weir dimensions are not invented:
+the reported hd/Dd condition is imposed at the end of the 5.95 m pipe.
 """
 from __future__ import annotations
 
@@ -116,7 +116,8 @@ def main() -> None:
             "walls": [],
             "riserWall": [],
             "inlet": [],
-            "atmosphere": [],
+            "headboxAtmosphere": [],
+            "riserOutlet": [],
             "outlet": [],
         }
         boundary = gmsh.model.getBoundary([(3, volumes[0])], oriented=False)
@@ -126,11 +127,10 @@ def main() -> None:
             xmin, ymin, zmin, xmax, ymax, zmax = gmsh.model.getBoundingBox(dim, tag)
             if near(zmin, hb_z0) and near(zmax, hb_z0) and xmax < -5.79:
                 patch = "inlet"
-            elif (
-                (near(zmin, hb_z1) and near(zmax, hb_z1) and xmax < -5.79)
-                or (near(zmin, hc + hr) and near(zmax, hc + hr))
-            ):
-                patch = "atmosphere"
+            elif near(zmin, hb_z1) and near(zmax, hb_z1) and xmax < -5.79:
+                patch = "headboxAtmosphere"
+            elif near(zmin, hc + hr) and near(zmax, hc + hr):
+                patch = "riserOutlet"
             elif near(xmin, lc + ld) and near(xmax, lc + ld):
                 patch = "outlet"
             elif (

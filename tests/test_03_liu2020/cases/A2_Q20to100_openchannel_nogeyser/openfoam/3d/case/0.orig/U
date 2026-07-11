@@ -32,7 +32,17 @@ boundaryField
         type            pressureInletOutletVelocity;
         value           uniform (0 0 0);
     }
-    atmosphere
+    outletWater
+    {
+        type            pressureInletOutletVelocity;
+        value           uniform (0 0 0);
+    }
+    headboxAtmosphere
+    {
+        type            pressureInletOutletVelocity;
+        value           uniform (0 0 0);
+    }
+    riserOutlet
     {
         type            pressureInletOutletVelocity;
         value           uniform (0 0 0);
