@@ -112,5 +112,75 @@
       "interpretation": "The 0.001 s screen reduced the free-surface maximum velocity by 37.1%, but the maximum then grew to 4.515 m/s at 0.006 s, 17.7% above the Gauss-linear diagnostic. Alpha undershoot also worsened by roughly fifty times. The source deck therefore retains Gauss linear."
     },
     "completion_claim": "This is a rejected short numerical diagnostic, not a hold, smoke, or completed experiment."
+  },
+  "rdf_geometric_vof_screen": {
+    "status": "screen_passed_hold_pending",
+    "source_commits": [
+      "0f5e816",
+      "9a59974"
+    ],
+    "purpose": "Screen the pinned compressibleInterFlow isoAdvection, plicRDF and RDF candidate against the sustained stock-solver free-surface parasitic current before attempting the canonical hold.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "openfoam_version": "v2512",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "RDF",
+      "surface_tension_N_per_m": 0.072,
+      "contact_angle_deg": 90.0,
+      "valve_mode": "closed",
+      "valve_seal_speed_m_per_s": 1.0,
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "n_alpha_bounds": 5,
+      "alpha_clip": false
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1904269,
+      "solver_exit_code": 0,
+      "execution_time_s": 1106.08,
+      "clock_time_s": 1118,
+      "final_delta_t_s": 0.00011111111,
+      "courant_max": 0.31504586,
+      "interface_courant_max": 0.2342725,
+      "capillary_number_max": 0.4105486,
+      "alpha_water_min": -2.6578337e-09,
+      "alpha_water_max": 1.0000000034019312,
+      "max_velocity_by_time_m_per_s": {
+        "0.001": 0.97390857,
+        "0.002": 1.3040777,
+        "0.003": 1.3712031,
+        "0.004": 0.96312727,
+        "0.005": 0.96987835,
+        "0.006": 1.0769195
+      },
+      "peak_velocity_location_m": [
+        3.51307,
+        0.40397566,
+        0.0037364212
+      ],
+      "liquid_mass_error_pct_max_abs": 0.0,
+      "gas_mass_error_pct_max_abs": 3.739734697360403e-06,
+      "total_mass_error_pct_max_abs": 1.527200778804715e-08,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "comparison": {
+      "stock_gauss_linear_velocity_at_0p001_s_m_per_s": 3.207,
+      "stock_gauss_linear_velocity_at_0p006_s_m_per_s": 3.8390766,
+      "rdf_to_stock_velocity_ratio_at_0p001_s": 0.30368212347988777,
+      "rdf_to_stock_velocity_ratio_at_0p006_s": 0.28051524160783875,
+      "interpretation": "RDF reduced the written-time free-surface velocity by about 70 percent at 0.001 s and 72 percent at 0.006 s while retaining tight alpha and mass bounds. The hotspot remains at the initial tower free surface, so this is only a short numerical screen; the 1.0 s closed-valve hold remains mandatory."
+    },
+    "teardown_regression": {
+      "initial_exit_code": 134,
+      "cause": "fieldFunctionObjects loaded stock libgeometricVoF beside TwoPhaseFlow libVoF and corrupted the duplicate runtime-selection table during process teardown",
+      "fix_commit": "9a59974",
+      "fix": "Compute alpha and velocity extrema inside phaseAccounting and do not load fieldFunctionObjects.",
+      "clean_rerun_exit_code": 0
+    },
+    "completion_claim": "This passed the 0.006 s RDF screening only. It is not the canonical hold, smoke run, full experiment, or accepted baseline."
   }
 }

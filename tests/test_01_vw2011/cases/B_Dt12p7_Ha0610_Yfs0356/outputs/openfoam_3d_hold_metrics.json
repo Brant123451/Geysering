@@ -8,14 +8,18 @@
     "time_scale_s": 1.7281978911310492
   },
   "solver": {
-    "name": "compressibleInterFoam",
+    "name": "compressibleInterFlow",
     "openfoam_version": "v2512",
+    "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+    "advection_scheme": "isoAdvection",
+    "reconstruction_scheme": "plicRDF",
+    "curvature_model": "RDF",
     "gas_equation_of_state": "perfectGas",
     "water_equation_of_state": "perfectFluid rho=998.153943+p/(7504.690432*T)"
   },
   "run_configuration": {
     "stage": "hold",
-    "end_time_s": 0.001,
+    "end_time_s": 0.006,
     "mesh_preset": "base",
     "valve_mode": "closed",
     "valve_open_time_s": 0.25,
@@ -23,15 +27,22 @@
     "initial_air_head_m": 0.61,
     "initial_air_absolute_pressure_Pa": 107298.32862,
     "gas_equation_of_state": "perfectGas",
+    "solver": "compressibleInterFlow",
+    "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+    "advection_scheme": "isoAdvection",
+    "reconstruction_scheme": "plicRDF",
+    "curvature_model": "RDF",
     "max_co": 0.3,
     "max_alpha_co": 0.2,
+    "max_capillary_num": 1.0,
     "max_delta_t_s": 0.00025,
     "field_write_interval_s": 0.001,
-    "probe_write_interval_s": 0.001,
-    "plume_write_interval_s": 0.001,
-    "accounting_interval_s": 0.001,
+    "probe_write_interval_s": 0.005,
+    "plume_write_interval_s": 0.006,
+    "accounting_interval_s": 0.006,
     "c_alpha": 1.0,
-    "alpha_smooth_curvature_iterations": 0,
+    "n_alpha_bounds": 5,
+    "alpha_clip": false,
     "tower_probe_lines": 5,
     "tower_probe_spacing_m": 0.005,
     "plume_probe_lines": 5,
@@ -87,11 +98,11 @@
   },
   "openfoam_3d": {
     "completion_status": "incomplete",
-    "end_Tstar": 0.000578637437953088,
+    "end_Tstar": 0.00289318718976544,
     "stream_end_Tstar": {
-      "pressure": 0.000578637437953088,
-      "levels": 0.000578637437953088,
-      "accounting": 0.000578637437953088
+      "pressure": 0.00289318718976544,
+      "levels": 0.00289318718976544,
+      "accounting": 0.0034718246277185283
     },
     "geyser": false,
     "geyser_criterion": {
@@ -112,15 +123,32 @@
     "geyser_height_censored_by_domain": false,
     "overflow_volume_m3": 0.0,
     "overflow_volume_method": "maximum liquid inventory above physical rim",
+    "numerical_diagnostics": {
+      "max_courant_number": 0.31504586,
+      "max_interface_courant_number": 0.2342725,
+      "max_capillary_number": 0.4105486,
+      "minimum_alpha_water": -2.6578337e-09,
+      "maximum_alpha_water": 1.0000000034019312,
+      "final_delta_t_s": 0.00011111111,
+      "execution_time_s": 1106.08,
+      "clock_time_s": 1118.0,
+      "max_velocity_m_per_s": 1.3712031,
+      "max_velocity_location_m": [
+        3.51307,
+        0.40397566,
+        0.0037364212
+      ],
+      "last_written_velocity_max_m_per_s": 1.0769195
+    },
     "liquid_mass_error_pct_final": 0.0,
     "liquid_mass_error_pct_max_abs": 0.0,
-    "gas_mass_error_pct_final": 0.0,
-    "gas_mass_error_pct_max_abs": 0.0,
-    "total_mass_error_pct_final": 0.0,
-    "total_mass_error_pct_max_abs": 0.0,
+    "gas_mass_error_pct_final": -3.739734697360403e-06,
+    "gas_mass_error_pct_max_abs": 3.739734697360403e-06,
+    "total_mass_error_pct_final": -1.527200778804715e-08,
+    "total_mass_error_pct_max_abs": 1.527200778804715e-08,
     "mass_balance_method": {
       "total": "solver rho and rhoPhi (signed atmosphere flux)",
-      "phases": "EOS phase density with alpha*phi boundary split; diagnostic approximation because subcycled alphaPhi is not exposed"
+      "phases": "registered thermo:rho phase densities and geometric alphaPhi.water boundary flux; transported alpha is not clipped"
     },
     "acceptance": {
       "all_streams_reach_Tstar_6": false,
@@ -148,14 +176,14 @@
     "reason": "This run is not the declared baseline configuration"
   },
   "hold_test": {
-    "duration_s": 0.001,
-    "requested_duration_s": 0.001,
+    "duration_s": 0.005,
+    "requested_duration_s": 0.006,
     "Hstar_peak_to_peak": 0.0,
     "Yfs_star_max_drift": 0.0024590163934427034,
     "max_water_above_rim_m3": 0.0,
     "gas_entry_detected": false,
     "liquid_mass_error_pct_max_abs": 0.0,
-    "gas_mass_error_pct_max_abs": 0.0,
+    "gas_mass_error_pct_max_abs": 3.739734697360403e-06,
     "passed": false
   }
 }

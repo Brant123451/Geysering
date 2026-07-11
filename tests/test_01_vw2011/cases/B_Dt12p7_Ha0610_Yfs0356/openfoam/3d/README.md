@@ -63,10 +63,22 @@ compressibility, an energy equation, gravity, viscosity and surface tension.
 The baseline numerical candidate uses geometric `isoAdvection`, `plicRDF`
 interface reconstruction and RDF curvature.  This migration addresses the
 sustained free-surface parasitic currents found with stock
-`compressibleInterFoam`; it does not count as accepted evidence until the
-0.006 s screening and full 1.0 s hold pass.  A compressible solver remains
-necessary because the forcing is expansion of a finite pressurised gas
-inventory.
+`compressibleInterFoam`.  A clean 0.006 s RDF screen exited normally and
+reduced the written-time free-surface velocity from 3.839 to 1.077 m/s at
+0.006 s; its peak over the screen was 1.371 m/s.  Alpha remained within
+\([-2.66\times10^{-9},1+3.40\times10^{-9}]\), and gas/total balance errors
+remained below \(4\times10^{-6}\%\).  The hotspot is still at the initial free
+surface, so the candidate does not count as an accepted baseline until the
+full 1.0 s hold passes.  A compressible solver remains necessary because the
+forcing is expansion of a finite pressurised gas inventory.
+
+The first RDF screen reached its requested end time but aborted during process
+teardown: loading `fieldFunctionObjects` also loaded stock `libgeometricVoF`
+beside TwoPhaseFlow `libVoF` and corrupted the duplicate runtime-selection
+table at destruction.  Runtime extrema are now calculated by the existing
+phase-accounting object, so the conflicting library is not loaded.  The clean
+rerun exited with code zero; the failed teardown attempt is not treated as
+screen evidence.
 
 Thermophysical choices are:
 

@@ -97,9 +97,9 @@ Copy the full block below into the new Cursor account's Cloud Agent.
 1. Solver: OpenFOAM.com v2512 加固定提交
    `de9826f9ffb24f4b635ac97fd388ebd560cfc174` 的 DLR-RY TwoPhaseFlow
    `compressibleInterFlow`。当前数值候选使用
-   `isoAdvection + plicRDF + RDF`；它仍是单动量、可压缩、非等温 VOF，
-   但必须先通过 0.006 s 筛选和完整 hold，不能仅因迁移成功就称为 baseline
-   已验证。
+   `isoAdvection + plicRDF + RDF`；它仍是单动量、可压缩、非等温 VOF。
+   0.006 s 筛选已干净退出并显著降低伪流，但完整 hold 尚未完成，不能仅因
+   短筛选通过就称为 baseline 已验证。
 2. 两相：
    - air: perfectGas, molecular weight 28.965 kg/kmol, Cp 1005 J/kg/K,
      mu 1.81e-5 Pa s
@@ -237,7 +237,19 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
 4. 该 0.001 s 运行在四 rank 约需 6.5 分钟，max Co 约 0.3，timestep 最终约
    1.4e-5 s。启动完整时窗前必须检查 startup velocity 和 runtime cost；不得把
    0.001 s 结果外推成完整物理结果。
-5. 下一项工作必须是完整 1.0 s closed-valve hold。
+5. 固定版本 RDF 候选的干净 0.006 s 筛选已完成：
+   - solver exit code = 0，四 rank wall time = 1118 s；
+   - 屏幕内 `|U|max` 峰值 1.371 m/s，0.006 s 为 1.077 m/s；stock 同时刻为
+     3.839 m/s；
+   - alpha 范围约
+     \([-2.66\times10^{-9},1+3.40\times10^{-9}]\)；
+   - gas/total balance 最大误差分别约
+     \(3.74\times10^{-6}\%\) 和 \(1.53\times10^{-8}\%\)；
+   - 无 rim 以上水量或 gas-entry。
+   第一次尝试在 `End` 后因 stock `libgeometricVoF` 与 TwoPhaseFlow `libVoF`
+   重复加载而析构失败；commit `9a59974` 移除了冲突依赖，以上数据来自随后
+   exit 0 的干净复测。
+6. 下一项工作必须是完整 1.0 s closed-valve hold。
 
 十、hold 验收
 
