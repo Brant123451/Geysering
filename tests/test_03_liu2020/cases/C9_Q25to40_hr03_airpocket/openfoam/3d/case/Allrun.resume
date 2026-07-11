@@ -13,5 +13,7 @@ pgrep -f '[c]ompressibleInterFoam.*-parallel|[c]ompressibleInterIsoFoam.*-parall
     echo "A C9 solver is already running" >&2
     exit 2
 }
-mpirun -np "$NP" compressibleInterFoam -parallel -dict "system/controlDict.${STAGE}" >> "log.${STAGE}" 2>&1
+trap 'cp system/controlDict.full system/controlDict' EXIT
+cp "system/controlDict.${STAGE}" system/controlDict
+mpirun -np "$NP" compressibleInterFoam -parallel >> "log.${STAGE}" 2>&1
 echo "${STAGE^^}_DONE"

@@ -1173,7 +1173,9 @@ rm -rf 0
 cp -r 0.orig 0
 setFields > log.setFields 2>&1
 decomposePar -force > log.decomposePar 2>&1
-mpirun -np "$NP" {application} -parallel -dict system/controlDict.initialize > log.initialize 2>&1
+trap 'cp system/controlDict.full system/controlDict' EXIT
+cp system/controlDict.initialize system/controlDict
+mpirun -np "$NP" {application} -parallel > log.initialize 2>&1
 echo INITIALIZATION_DONE
 """,
         executable=True,
@@ -1191,7 +1193,9 @@ pgrep -f '[c]ompressibleInterFoam.*-parallel|[c]ompressibleInterIsoFoam.*-parall
     echo "A C9 solver is already running" >&2
     exit 2
 }}
-mpirun -np "$NP" {application} -parallel -dict "system/controlDict.${{STAGE}}" >> "log.${{STAGE}}" 2>&1
+trap 'cp system/controlDict.full system/controlDict' EXIT
+cp "system/controlDict.${{STAGE}}" system/controlDict
+mpirun -np "$NP" {application} -parallel >> "log.${{STAGE}}" 2>&1
 echo "${{STAGE^^}}_DONE"
 """,
         executable=True,
