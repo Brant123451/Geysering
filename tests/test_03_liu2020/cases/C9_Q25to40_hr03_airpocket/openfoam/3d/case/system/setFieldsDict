@@ -47,10 +47,10 @@ regions
     {
         point1 (6 0 0.14);
         point2 (6.26 0 0.14);
-        radius 0.05170882946;
+        radius 0.05664418463;
         fieldValues
         (
-            volVectorFieldValue U (2.976190476 0 0)
+            volVectorFieldValue U (2.48015873 0 0)
             volScalarFieldValue p 102695.9279
             volScalarFieldValue p_rgh 104066.8558
         );

@@ -275,6 +275,18 @@ functions
         writeFields     false;
     }
 
+    gasMass
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        operation       weightedVolIntegrate;
+        weightField     alpha.air;
+        fields          (thermo:rho.air);
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+        writeFields     false;
+    }
+
     upstreamWaterVolume
     {
         type            volFieldValue;
@@ -315,6 +327,20 @@ functions
         writeFields     false;
     }
 
+    upstreamGasMass
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      cellZone;
+        name            upstreamPipe;
+        operation       weightedVolIntegrate;
+        weightField     alpha.air;
+        fields          (thermo:rho.air);
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+        writeFields     false;
+    }
+
     chamberWaterVolume
     {
         type            volFieldValue;
@@ -341,15 +367,14 @@ functions
         writeFields     false;
     }
 
-    inletWaterMassFlux
+    inletPhaseMassFlux
     {
         type            surfaceFieldValue;
         libs            (fieldFunctionObjects);
         regionType      patch;
         name            inlet;
-        operation       weightedSum;
-        weightField     alpha.water;
-        fields          (rhoPhi);
+        operation       sum;
+        fields          (alphaRhoPhi.water alphaRhoPhi.air);
         writeControl    adjustableRunTime;
         writeInterval   0.01;
         writeFields     false;
@@ -368,15 +393,14 @@ functions
         writeFields     false;
     }
 
-    gateWaterMassFlux
+    gatePhaseMassFlux
     {
         type            surfaceFieldValue;
         libs            (fieldFunctionObjects);
         regionType      patch;
         name            gateOutlet;
-        operation       weightedSum;
-        weightField     alpha.water;
-        fields          (rhoPhi);
+        operation       sum;
+        fields          (alphaRhoPhi.water alphaRhoPhi.air);
         writeControl    adjustableRunTime;
         writeInterval   0.01;
         writeFields     false;
@@ -395,15 +419,14 @@ functions
         writeFields     false;
     }
 
-    atmosphereWaterMassFlux
+    atmospherePhaseMassFlux
     {
         type            surfaceFieldValue;
         libs            (fieldFunctionObjects);
         regionType      patch;
         name            atmosphere;
-        operation       weightedSum;
-        weightField     alpha.water;
-        fields          (rhoPhi);
+        operation       sum;
+        fields          (alphaRhoPhi.water alphaRhoPhi.air);
         writeControl    adjustableRunTime;
         writeInterval   0.01;
         writeFields     false;

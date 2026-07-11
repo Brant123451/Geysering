@@ -54,6 +54,14 @@ obtained. Air formerly in the upper upstream pipe was thereby trapped
 (p. 3). This preparation history is important: the final initial condition is
 not an arbitrary spherical bubble in a full pipe.
 
+The tailgate opening itself is not reported. For a downstream-full closure
+\(H_{tail}=D_d=0.28\) m, the documented \(Q_0\) and initial HGL give an
+effective discharge area \(Q_0/\sqrt{2g(0.75-0.28)}=0.00823\ {\rm m^2}\).
+The resolved sharp opening produced \(C_d=0.817\) in the no-ramp hydraulic
+check, so the source uses a 0.01008 m² geometric opening. This is a one-time
+initial-condition closure; it does not use any eruption count, timing, or
+pressure peak. Gate area remains a ±20% sensitivity.
+
 ## What the paper does and does not determine about the air pocket
 
 The following points are directly supported:

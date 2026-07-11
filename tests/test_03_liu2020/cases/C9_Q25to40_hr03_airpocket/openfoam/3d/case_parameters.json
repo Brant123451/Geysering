@@ -38,9 +38,11 @@
     "smoke_end_solver_s": 1.25,
     "phase1_end_solver_s": 6.75,
     "full_end_solver_s": 20.25,
-    "tailgate_effective_area_m2": 0.0084,
+    "tailgate_geometric_area_m2": 0.01008,
+    "tailgate_effective_discharge_area_m2": 0.00823,
+    "tailgate_resolved_discharge_coefficient": 0.817,
     "tailwater_level_m": 0.28,
-    "tailgate_note": "Equivalent resolved circular opening. The paper reports a movable flat tailgate but not its opening; 0.0084 m2 is derived once from C9 Q0, initial HGL=0.75 m, and the downstream-full tailwater closure Htail=Dd=0.28 m. Neither area nor tailwater level is fitted to eruption data.",
+    "tailgate_note": "The paper reports a movable flat tailgate but not its opening. The target effective discharge area 0.00823 m2 follows once from Q0=0.025 m3/s, initial HGL=0.75 m, and Htail=Dd=0.28 m. A resolved sharp opening has Cd=0.817 from the no-ramp hydraulic initialization, so its geometric area is 0.01008 m2. This is a one-time initial-condition closure, not a fit to eruptions.",
     "plume_height_above_rim_m": 1.0,
     "pocket_profile": "base",
     "pocket_profiles": {

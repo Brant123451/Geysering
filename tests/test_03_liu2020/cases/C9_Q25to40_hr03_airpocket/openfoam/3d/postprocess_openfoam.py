@@ -119,6 +119,15 @@ def first_column(post: Path, name: str) -> tuple[np.ndarray, np.ndarray]:
     return times, values[:, 0] if values.size else np.empty(0)
 
 
+def function_region_volume(post: Path, name: str, fallback: float) -> float:
+    _, _, headers = parse_function(post, name)
+    for header in headers:
+        match = re.search(r"#\s*Volume\s*:\s*([-+0-9.eE]+)", header)
+        if match:
+            return float(match.group(1).rstrip("."))
+    return fallback
+
+
 def interp_series(source_t, source_y, target_t):
     if len(source_t) == 0 or len(target_t) == 0:
         return np.full(len(target_t), np.nan)
@@ -284,17 +293,28 @@ def main() -> None:
 
     uv_t_solver, upstream_water = first_column(post, "upstreamWaterVolume")
     uv_t = uv_t_solver - offset
-    upstream_air_volume = UPSTREAM_VOLUME - upstream_water if len(upstream_water) else np.empty(0)
+    upstream_zone_volume = function_region_volume(
+        post, "upstreamWaterVolume", UPSTREAM_VOLUME
+    )
+    upstream_air_volume = (
+        upstream_zone_volume - upstream_water if len(upstream_water) else np.empty(0)
+    )
     um_t, upstream_mass = first_column(post, "upstreamMass")
     uwm_t, upstream_water_mass = first_column(post, "upstreamWaterMass")
-    upstream_air_mass = (
-        interp_series(um_t, upstream_mass, uv_t_solver)
-        - interp_series(uwm_t, upstream_water_mass, uv_t_solver)
-        if len(uv_t_solver)
-        else np.empty(0)
-    )
+    ugm_t, upstream_gas_mass_direct = first_column(post, "upstreamGasMass")
+    if len(uv_t_solver) and len(ugm_t):
+        upstream_air_mass = interp_series(ugm_t, upstream_gas_mass_direct, uv_t_solver)
+    elif len(uv_t_solver):
+        upstream_air_mass = interp_series(um_t, upstream_mass, uv_t_solver) - interp_series(
+            uwm_t, upstream_water_mass, uv_t_solver
+        )
+    else:
+        upstream_air_mass = np.empty(0)
     cv_t, chamber_water = first_column(post, "chamberWaterVolume")
-    chamber_air = CHAMBER_VOLUME - interp_series(cv_t, chamber_water, uv_t_solver)
+    chamber_zone_volume = function_region_volume(
+        post, "chamberWaterVolume", CHAMBER_VOLUME
+    )
+    chamber_air = chamber_zone_volume - interp_series(cv_t, chamber_water, uv_t_solver)
 
     arrival_time = None
     if len(uv_t):
@@ -358,25 +378,34 @@ def main() -> None:
     # Total and gas conservation from volume and flux function objects.
     mass_t, total_mass = first_column(post, "totalMass")
     wm_t, water_mass = first_column(post, "waterMass")
-    gas_mass = total_mass - interp_series(wm_t, water_mass, mass_t) if len(mass_t) else np.empty(0)
+    gm_t, gas_mass_direct = first_column(post, "gasMass")
+    gas_mass = (
+        interp_series(gm_t, gas_mass_direct, mass_t)
+        if len(gm_t)
+        else total_mass - interp_series(wm_t, water_mass, mass_t)
+        if len(mass_t)
+        else np.empty(0)
+    )
     boundary_names = ("inletFlux", "gateFlux", "atmosphereFlux")
-    water_flux_names = ("inletWaterMassFlux", "gateWaterMassFlux", "atmosphereWaterMassFlux")
+    phase_flux_names = ("inletPhaseMassFlux", "gatePhaseMassFlux", "atmospherePhaseMassFlux")
     total_flux = np.zeros(len(mass_t))
     water_flux = np.zeros(len(mass_t))
+    gas_flux = np.zeros(len(mass_t))
     flux_complete = bool(len(mass_t))
     for name in boundary_names:
         ft, values = first_column(post, name)
         if not len(ft):
             flux_complete = False
         total_flux += interp_series(ft, values, mass_t)
-    for name in water_flux_names:
-        ft, values = first_column(post, name)
-        if not len(ft):
+    for name in phase_flux_names:
+        ft, values, _ = parse_function(post, name)
+        if not len(ft) or values.shape[1] < 2:
             flux_complete = False
-        water_flux += interp_series(ft, values, mass_t)
+            continue
+        water_flux += interp_series(ft, values[:, 0], mass_t)
+        gas_flux += interp_series(ft, values[:, 1], mass_t)
     if len(mass_t) and flux_complete:
         total_residual = total_mass - total_mass[0] + cumulative_trapezoid(mass_t, total_flux)
-        gas_flux = total_flux - water_flux
         gas_residual = gas_mass - gas_mass[0] + cumulative_trapezoid(mass_t, gas_flux)
         mass_error = float(np.nanmax(np.abs(total_residual)) / max(abs(total_mass[0]), 1e-12))
         gas_error = float(np.nanmax(np.abs(gas_residual)) / max(abs(gas_mass[0]), 1e-12))
@@ -413,6 +442,14 @@ def main() -> None:
     phase2_events = sum(
         1 for row in event_rows if arrival_time is not None and float(row[1]) >= arrival_time
     )
+    pre_ramp_air_mass_change = None
+    if len(uv_t) > 1 and np.isfinite(upstream_air_mass[0]):
+        before_ramp = np.where(uv_t <= 0.0)[0]
+        if len(before_ramp):
+            pre_ramp_air_mass_change = float(
+                (upstream_air_mass[before_ramp[-1]] - upstream_air_mass[0])
+                / max(abs(upstream_air_mass[0]), 1e-12)
+            )
     metrics = {
         "case": "Liu2020 C9 three-dimensional compressible VOF",
         "status": (
@@ -459,9 +496,10 @@ def main() -> None:
         "mass_conservation_relative_error": mass_error,
         "gas_mass_conservation_relative_error": gas_error,
         "gas_mass_method": (
-            "mixture mass minus alpha-weighted water mass; boundary gas flux is total minus "
-            "alpha-weighted water mass flux"
+            "alpha.air-weighted thermo:rho.air inventory and summed "
+            "alphaRhoPhi.air boundary flux"
         ),
+        "pre_ramp_upstream_air_mass_change_relative": pre_ramp_air_mass_change,
         "initial_air_volume_m3": float(upstream_air_volume[0]) if len(upstream_air_volume) else None,
         "initial_air_mass_kg": float(upstream_air_mass[0]) if len(upstream_air_mass) else None,
         "mesh": parse_mesh_quality(case),

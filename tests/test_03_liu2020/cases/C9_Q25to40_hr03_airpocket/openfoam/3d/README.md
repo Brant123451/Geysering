@@ -17,10 +17,13 @@ region, a resolved tailgate opening, and the upstream crown air pocket.
 Read `PAPER_AUDIT.md` first. In particular, the paper does **not** report the
 initial trapped-air length, volume, nose/tail coordinates, or tailgate
 opening. Those quantities are named sensitivity parameters, not measurements.
-The default air volume is 12.642 L and the two bracketing priors are 4.641 and
-21.608 L. The default 0.0084 m² effective gate opening is rated once from
-the documented initial state, downstream-full closure, and \(Q_0\); it is not
-fitted to any geyser timing or peak.
+The default analytic air volume is 12.642 L and the two bracketing priors are
+4.641 and 21.608 L; the mesh-integrated value is reported separately. The
+target gate discharge area is 0.00823 m² from the documented initial state,
+downstream-full closure, and \(Q_0\). Because the resolved sharp opening has
+\(C_d=0.817\) in the no-ramp hydraulic check, its geometric area is
+0.01008 m². This one-time initial-condition closure is not fitted to any
+geyser timing or peak.
 
 ## Build and staged execution
 
@@ -69,7 +72,7 @@ The time convention is deliberate:
 - The inlet is pure water with a tabulated volumetric flow-rate boundary.
 - The downstream pipe is full. The tailgate is a resolved circular opening
   against a 0.28 m tailwater HGL (`Dd`); the omitted experimental opening is
-  represented by the documented effective-area sensitivity.
+  represented by the explicitly derived geometric/effective-area closure.
 - The riser opens into a 0.6 × 0.6 × 1.0 m atmospheric plume region. Its side,
   top, and floor outside the riser use pressure/open boundaries, allowing
   expelled water and air to leave the computational domain.

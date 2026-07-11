@@ -87,7 +87,7 @@ def generate_set_fields(paper: dict, model: dict, pocket: dict) -> str:
     patm = paper["atmospheric_pressure_Pa"]
     p_water_rgh = patm + rho * g * hgl
     p_pocket = patm + rho * g * (hgl - pocket["body_interface_z_m"])
-    gate_area = model["tailgate_effective_area_m2"]
+    gate_area = model["tailgate_geometric_area_m2"]
     gate_velocity = q0 / gate_area
     tailwater_rgh = patm + rho * g * model["tailwater_level_m"]
     gate_static_p = patm + rho * g * (model["tailwater_level_m"] - paper["downstream_diameter_m"] / 2.0)
@@ -325,6 +325,18 @@ functions
         writeFields     false;
     }}
 
+    gasMass
+    {{
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        operation       weightedVolIntegrate;
+        weightField     alpha.air;
+        fields          (thermo:rho.air);
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+        writeFields     false;
+    }}
+
     upstreamWaterVolume
     {{
         type            volFieldValue;
@@ -365,6 +377,20 @@ functions
         writeFields     false;
     }}
 
+    upstreamGasMass
+    {{
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      cellZone;
+        name            upstreamPipe;
+        operation       weightedVolIntegrate;
+        weightField     alpha.air;
+        fields          (thermo:rho.air);
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+        writeFields     false;
+    }}
+
     chamberWaterVolume
     {{
         type            volFieldValue;
@@ -391,15 +417,14 @@ functions
         writeFields     false;
     }}
 
-    inletWaterMassFlux
+    inletPhaseMassFlux
     {{
         type            surfaceFieldValue;
         libs            (fieldFunctionObjects);
         regionType      patch;
         name            inlet;
-        operation       weightedSum;
-        weightField     alpha.water;
-        fields          (rhoPhi);
+        operation       sum;
+        fields          (alphaRhoPhi.water alphaRhoPhi.air);
         writeControl    adjustableRunTime;
         writeInterval   0.01;
         writeFields     false;
@@ -418,15 +443,14 @@ functions
         writeFields     false;
     }}
 
-    gateWaterMassFlux
+    gatePhaseMassFlux
     {{
         type            surfaceFieldValue;
         libs            (fieldFunctionObjects);
         regionType      patch;
         name            gateOutlet;
-        operation       weightedSum;
-        weightField     alpha.water;
-        fields          (rhoPhi);
+        operation       sum;
+        fields          (alphaRhoPhi.water alphaRhoPhi.air);
         writeControl    adjustableRunTime;
         writeInterval   0.01;
         writeFields     false;
@@ -445,15 +469,14 @@ functions
         writeFields     false;
     }}
 
-    atmosphereWaterMassFlux
+    atmospherePhaseMassFlux
     {{
         type            surfaceFieldValue;
         libs            (fieldFunctionObjects);
         regionType      patch;
         name            atmosphere;
-        operation       weightedSum;
-        weightField     alpha.water;
-        fields          (rhoPhi);
+        operation       sum;
+        fields          (alphaRhoPhi.water alphaRhoPhi.air);
         writeControl    adjustableRunTime;
         writeInterval   0.01;
         writeFields     false;
@@ -488,8 +511,8 @@ def generate(args: argparse.Namespace) -> dict:
     if args.water_bulk_modulus is not None:
         model["water_bulk_modulus_Pa"] = args.water_bulk_modulus
 
-    gate_area = args.gate_area if args.gate_area is not None else model["tailgate_effective_area_m2"]
-    model["tailgate_effective_area_m2"] = gate_area
+    gate_area = args.gate_area if args.gate_area is not None else model["tailgate_geometric_area_m2"]
+    model["tailgate_geometric_area_m2"] = gate_area
     contact_angle = args.contact_angle if args.contact_angle is not None else model["contact_angle_deg"]
     c_alpha = args.c_alpha if args.c_alpha is not None else model["interface_compression"]
     application = (
@@ -1329,6 +1352,9 @@ rm -f log.*
         "analytic_initial_air_volume_m3": analytic_volume,
         "initial_air_gauge_pressure_Pa": pocket_gauge,
         "gate_area_m2": gate_area,
+        "gate_area_kind": "resolved_geometric",
+        "target_effective_discharge_area_m2": model["tailgate_effective_discharge_area_m2"],
+        "resolved_gate_discharge_coefficient": model["tailgate_resolved_discharge_coefficient"],
         "gate_area_is_paper_value": False,
         "contact_angle_deg": contact_angle,
         "interface_compression": c_alpha,

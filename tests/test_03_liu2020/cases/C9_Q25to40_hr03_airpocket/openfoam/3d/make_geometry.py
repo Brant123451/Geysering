@@ -296,7 +296,7 @@ def build(gate_area):
 
     metadata = {
         "source": "Liu et al. (2020), pp. 2-3, Fig. 2; plume and equivalent gate are model closures",
-        "gate_effective_area_m2": gate_area,
+        "gate_geometric_area_m2": gate_area,
         "gate_radius_m": gate_radius,
         "plume_top_z_m": plume_top,
         "riser_rim_z_m": z_rim,
@@ -311,7 +311,7 @@ def build(gate_area):
 
 def main():
     with PARAMS.open(encoding="utf-8") as stream:
-        default_area = json.load(stream)["model"]["tailgate_effective_area_m2"]
+        default_area = json.load(stream)["model"]["tailgate_geometric_area_m2"]
     parser = argparse.ArgumentParser()
     parser.add_argument("--gate-area", type=float, default=default_area)
     args = parser.parse_args()
