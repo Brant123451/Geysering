@@ -130,6 +130,10 @@ Copy the full block below into the new Cursor account's Cloud Agent.
     3.207 m/s 增至 8.192 m/s，alpha undershoot 也恶化。stock solver 的曲率来自
     cell-centred alpha，不直接使用 disk 几何法向，因此 baseline 保持
     setAlphaField cut-cell；详见 openfoam_3d_numerical_diagnostics.json。
+15. 仅把 curvature normal 的 nHat gradient 改为 leastSquares 也已拒绝：
+    |U|max 在 0.001 s 从 3.207 降到 2.018 m/s，但随后升至 0.006 s 的
+    4.515 m/s（比 Gauss linear 高 17.7%），alpha undershoot 恶化到 1.6e-7。
+    baseline 保持 Gauss linear，不能用首帧改善代替持续稳定性。
 
 六、阀门
 

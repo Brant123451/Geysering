@@ -50,7 +50,7 @@
     "completion_claim": "This is a rejected short numerical diagnostic, not a hold, smoke, or completed experiment."
   },
   "least_squares_interface_normal": {
-    "status": "screening_passed_pending_0p006_s",
+    "status": "rejected",
     "source_commit": "a56d784",
     "purpose": "Change only the interfaceProperties nHat gradient from Gauss linear to leastSquares on the original geometric cut-cell mesh.",
     "unchanged_physics": {
@@ -79,11 +79,38 @@
         -0.0025148316
       ]
     },
+    "sustained_result_0p006_s": {
+      "execution_time_s": 1448.53,
+      "clock_time_s": 1461,
+      "delta_t_before_written_time_s": 1.5486272e-05,
+      "courant_max_before_written_time": 0.30521116,
+      "interface_courant_max_before_written_time": 0.076241761,
+      "alpha_water_min": -1.5923675e-07,
+      "alpha_water_max": 1.0,
+      "max_velocity_by_time_m_per_s": {
+        "0.001": 2.0176343,
+        "0.002": 2.787534,
+        "0.003": 2.7154609,
+        "0.004": 3.7075096,
+        "0.005": 3.9567631,
+        "0.006": 4.5154002
+      },
+      "max_velocity_location_at_0p006_s_m": [
+        3.5172133,
+        0.40381909,
+        0.00053588181
+      ],
+      "liquid_mass_error_pct_max_abs": 0.0,
+      "gas_mass_error_pct_max_abs": 6.569088356170451e-06,
+      "water_above_rim_m3": 0.0
+    },
     "comparison": {
       "gauss_linear_max_velocity_at_0p001_s_m_per_s": 3.207,
+      "gauss_linear_max_velocity_at_0p006_s_m_per_s": 3.8390766,
       "least_squares_to_gauss_max_velocity_ratio": 0.6291762082943559,
-      "interpretation": "The 0.001 s screen reduced the free-surface maximum velocity by 37.1% while preserving alpha bounds. It must still pass the 0.006 s sustained screen because earlier curvature smoothing improved only the first sample."
+      "least_squares_to_gauss_max_velocity_ratio_at_0p006_s": 1.1766902904829495,
+      "interpretation": "The 0.001 s screen reduced the free-surface maximum velocity by 37.1%, but the maximum then grew to 4.515 m/s at 0.006 s, 17.7% above the Gauss-linear diagnostic. Alpha undershoot also worsened by roughly fifty times. The source deck therefore retains Gauss linear."
     },
-    "completion_claim": "This is a promising short numerical diagnostic, not a hold, smoke, or completed experiment."
+    "completion_claim": "This is a rejected short numerical diagnostic, not a hold, smoke, or completed experiment."
   }
 }

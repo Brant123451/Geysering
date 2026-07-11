@@ -93,6 +93,13 @@ face alignment did not cure the imbalance.  The reproducible source therefore
 retains geometric cut-cell initialisation.  Compact values are preserved in
 `../../outputs/openfoam_3d_numerical_diagnostics.json`.
 
+Using a least-squares gradient only for OpenFOAM's `nHat` curvature normal was
+likewise rejected.  It reduced the 0.001 s maximum from 3.207 to 2.018 m/s,
+but the maximum then rose to 4.515 m/s at 0.006 s, 17.7% above the
+Gauss-linear diagnostic; alpha undershoot also worsened to
+\(1.6\times10^{-7}\).  The baseline therefore retains `Gauss linear`.
+First-sample improvement alone is not accepted as stabilization.
+
 The perfect-gas energy equation includes compression/expansion work; it does
 not impose the frozen 1-D model's isothermal pocket law.  Liquid
 compressibility is retained so acoustic propagation is not assigned an
