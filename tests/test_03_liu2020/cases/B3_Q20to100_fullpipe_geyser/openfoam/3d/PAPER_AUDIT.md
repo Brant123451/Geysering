@@ -176,6 +176,9 @@ cavitation, and phase change remain unresolved uncertainty sources.
   confused with experimental uncertainty.
 - Riser above that chamber level and the plume domain: atmospheric air.
 - Upstream pipe/headbox: same free-surface initialisation used by A2.
+- The experimental pre-ramp state carries `Q0=0.020 m3/s`. The CFD liquid
+  velocity is therefore seeded with `Q0/A` in the half-full upstream pipe,
+  chamber, and full downstream pipe; it is not started from stagnant water.
 - A constant-Q0 settling stage precedes the 0.4 s ramp. Reported comparison
   time is shifted so `t=0` is the ramp start.
 

@@ -47,8 +47,11 @@ inventing a gate opening or fitting the transient.
 
 Initial water is A2's free-surface upstream state, a full downstream pipe, and
 a declared `0.30 m` chamber stage. The riser/plume headspace contains
-atmospheric air and remains vented. A 2 s `Q0` settling interval precedes a
-linear 0.4 s ramp; comparison time is `OpenFOAM time - 2.0 s`.
+atmospheric air and remains vented. Liquid velocity is seeded at `Q0/A` in the
+upstream pipe, chamber, and downstream pipe so the reported steady-Q0 initial
+condition is not approximated by stagnant water. A 2 s `Q0` relaxation
+interval precedes a linear 0.4 s ramp; comparison time is
+`OpenFOAM time - 2.0 s`.
 
 ## Mesh profiles
 
