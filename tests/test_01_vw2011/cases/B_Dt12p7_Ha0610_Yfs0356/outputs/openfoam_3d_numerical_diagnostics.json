@@ -1,0 +1,52 @@
+{
+  "conformal_initial_tower_interface": {
+    "status": "rejected",
+    "source_commits": [
+      "52eb3b4",
+      "c347641"
+    ],
+    "purpose": "Test whether a face-aligned planar tower interface suppresses the free-surface Courant hotspot without changing physical properties.",
+    "unchanged_physics": {
+      "solver": "compressibleInterFoam v2512",
+      "surface_tension_N_per_m": 0.072,
+      "contact_angle_deg": 90.0,
+      "valve_mode": "closed",
+      "valve_seal_speed_m_per_s": 1.0,
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "alpha_smooth_curvature_iterations": 0
+    },
+    "mesh": {
+      "cells": 1907679,
+      "connected_regions": 1,
+      "standard_mesh_ok": true,
+      "strict_audit_status": "accepted_boundary_tet_exception",
+      "max_non_orthogonality_deg": 69.285652,
+      "max_skewness": 0.94901183,
+      "minimum_cell_volume_m3": 6.3355577e-11
+    },
+    "startup_result": {
+      "requested_end_time_s": 0.006,
+      "interrupted_after_written_time_s": 0.001,
+      "execution_time_at_written_time_s": 529.19,
+      "clock_time_at_written_time_s": 541,
+      "delta_t_after_written_time_s": 1.4084507e-05,
+      "courant_max_after_written_time": 0.33607198,
+      "interface_courant_max_after_written_time": 0.13016065,
+      "alpha_water_min_at_written_time": -9.68414e-06,
+      "alpha_water_max_at_written_time": 1.0,
+      "max_velocity_m_per_s": 8.1915868,
+      "max_velocity_location_m": [
+        3.5144035,
+        0.40381585,
+        0.0023687626
+      ]
+    },
+    "comparison": {
+      "cut_cell_max_velocity_at_0p001_s_m_per_s": 3.207,
+      "conformal_to_cut_cell_max_velocity_ratio": 2.5549067664483958,
+      "interpretation": "The stock cell-centred-alpha CSF curvature did not benefit from the conformal disk. The disk increased the free-surface velocity maximum and alpha undershoot, so the source deck was restored to geometric cut-cell initialisation."
+    },
+    "completion_claim": "This is a rejected short numerical diagnostic, not a hold, smoke, or completed experiment."
+  }
+}

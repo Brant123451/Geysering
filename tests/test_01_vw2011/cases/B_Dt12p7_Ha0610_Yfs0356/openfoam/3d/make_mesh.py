@@ -5,10 +5,7 @@ The mesh is the Boolean union of a circular 94 mm main pipe, a circular
 12.7 mm tower, and an exterior atmosphere above the physical rim.  Refinement
 is local: the long main pipe remains affordable while the base preset retains
 about twelve nominal edge lengths across the small tower and the refined
-preset retains about eighteen.  An internal conformal disk partitions the
-tower at its initially planar free surface.  Both sides retain the same fluid
-physical group, so the disk becomes ordinary owner-neighbour faces rather than
-a wall or baffle.
+preset retains about eighteen.
 """
 from __future__ import annotations
 
@@ -189,38 +186,11 @@ def main() -> None:
         )
         exterior, _ = occ.cut([(3, atmosphere)], [(3, casing)])
         fluid, _ = occ.fuse(apparatus, exterior)
-
-        # The stock CSF curvature uses gradients of cell-centred alpha.  A
-        # planar cut through arbitrary tetrahedra creates a noisy initial
-        # curvature and severe parasitic capillary currents even though the
-        # physical 90-degree interface has zero curvature.  Fragment the fluid
-        # with a horizontal disk so the initial tower interface is represented
-        # by conformal internal faces.  Match the cylinder radius exactly:
-        # extending the disk into the solid wall creates a ring of sliver
-        # tetrahedra at the three-surface intersection.
-        initial_free_surface_disk = occ.addDisk(
-            TOWER_CENTRE_X,
-            INITIAL_FREE_SURFACE_Y,
-            0.0,
-            TOWER_RADIUS,
-            TOWER_RADIUS,
-            zAxis=[0.0, 1.0, 0.0],
-            xAxis=[1.0, 0.0, 0.0],
-        )
-        fluid, _ = occ.fragment(
-            fluid,
-            [(2, initial_free_surface_disk)],
-            removeObject=True,
-            removeTool=True,
-        )
         occ.synchronize()
 
         volumes = [tag for dim, tag in fluid if dim == 3]
-        if len(volumes) < 2:
-            raise RuntimeError(
-                "Initial free-surface disk did not partition the fluid: "
-                f"{volumes}"
-            )
+        if len(volumes) != 1:
+            raise RuntimeError(f"Expected one connected volume, got {volumes}")
 
         atmosphere_surfaces: list[int] = []
         wall_surfaces: list[int] = []
@@ -396,9 +366,6 @@ def main() -> None:
             "tower_diameter_m": TOWER_DIAMETER,
             "tower_height_m": TOWER_HEIGHT,
             "tower_rim_y_m": TOWER_RIM_Y,
-            "initial_free_surface_y_m": INITIAL_FREE_SURFACE_Y,
-            "initial_free_surface_conformal": True,
-            "fluid_volume_partitions": len(volumes),
             "atmosphere_top_y_m": atmosphere_top_y,
             "atmosphere_bottom_y_m": atmosphere_min_y,
             "assumed_tower_wall_thickness_m": ASSUMED_TOWER_WALL_THICKNESS,

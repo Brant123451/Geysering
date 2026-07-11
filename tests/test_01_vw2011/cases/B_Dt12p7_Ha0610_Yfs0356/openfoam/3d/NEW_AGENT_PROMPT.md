@@ -114,11 +114,9 @@ Copy the full block below into the new Cursor account's Cloud Agent.
    - absolute model y = 0.403 m
 7. Tower headspace and exterior initially atmospheric air at 101325 Pa.
 8. Initial U = 0 and T = 293.15 K.
-9. 网格在 tower 初始自由面包含保持 owner-neighbour 连通的 conformal internal
-   disk（不是 wall/baffle）。setFields 后必须运行 setAlphaField，使 tower
-   界面在该 disk 上为 binary，并为 valve 平面生成几何 cut-cell 体积分数；再运行
-   setExprFields，保持 p 与 p_rgh 的 hydrostatic consistency。不要恢复随机四面体
-   cut-through、阶梯状 cell-centre 界面或不一致的 uniform pressure 初始化。
+9. setFields 后必须运行 setAlphaField 生成几何 cut-cell 体积分数，再运行
+   setExprFields，保持 p 与 p_rgh 的 hydrostatic consistency；不要恢复阶梯状
+   cell-centre 界面或不一致的 uniform pressure 初始化。
 10. Atmosphere p_rgh 使用 prghPressure 对应 101325 Pa absolute atmosphere。
 11. Walls 为 smooth no-slip、adiabatic。当前 contact angle = 90 degrees，
     因为论文没有提供 acrylic wetting measurement，必须作为假设说明。
@@ -127,6 +125,11 @@ Copy the full block below into the new Cursor account's Cloud Agent.
 13. OpenFOAM 内置的 nAlphaSmoothCurvature 不改变输运的 alpha，仅平滑曲率
     计算。2 次平滑的短诊断在 0.001 s 降低了峰值速度，但随后产生更大热点且
     更慢，因此 baseline 保持 0；必须保留 0/1/2 次迭代敏感性。
+14. 已测试并拒绝在 tower 初始自由面增加 conformal internal disk：网格仍为
+    单一连通区域且标准 Mesh OK，但 0.001 s 的 |U|max 从 cut-cell 的
+    3.207 m/s 增至 8.192 m/s，alpha undershoot 也恶化。stock solver 的曲率来自
+    cell-centred alpha，不直接使用 disk 几何法向，因此 baseline 保持
+    setAlphaField cut-cell；详见 openfoam_3d_numerical_diagnostics.json。
 
 六、阀门
 

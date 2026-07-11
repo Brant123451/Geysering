@@ -34,8 +34,6 @@ time_scale = 0.610 / math.sqrt(9.81 * config["tower_diameter_m"])
 mesh_source = (HERE / "make_mesh.py").read_text()
 required_fragments = [
     "occ.addCylinder",
-    "occ.addDisk",
-    "occ.fragment",
     "TOWER_DIAMETER = 0.0127",
     "ATMOSPHERE_HEIGHT = 1.200",
     '"refined"',
@@ -47,9 +45,8 @@ if missing:
 result = {
     "case_definition_ok": True,
     "geometry_source_check": (
-        "configured 3-D circular Boolean pipe/tower/exterior atmosphere with "
-        "a conformal initial tower free surface; generated mesh remains "
-        "authoritative"
+        "configured 3-D circular Boolean pipe/tower/exterior atmosphere; "
+        "generated mesh remains authoritative"
     ),
     "pipe_length_m": 4.006,
     "pipe_diameter_m": pipe_diameter,
