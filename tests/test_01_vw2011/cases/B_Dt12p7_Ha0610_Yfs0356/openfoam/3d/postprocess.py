@@ -400,6 +400,80 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         writer.writerows(existing)
 
 
+def update_sensitivity_csv(metrics: dict) -> None:
+    """Upsert one full-run row for cross-parameter sensitivity analysis."""
+    manifest = metrics.get("run_configuration", {})
+    if manifest.get("stage") != "full":
+        return
+    run = metrics.get("openfoam_3d", {})
+    path = OUTPUTS / "openfoam_3d_sensitivity.csv"
+    fields = [
+        "configuration_id",
+        "mesh",
+        "gas_eos",
+        "initial_air_head_m",
+        "valve_mode",
+        "valve_open_time_s",
+        "valve_seal_speed_m_per_s",
+        "maxCo",
+        "maxAlphaCo",
+        "maxDeltaT_s",
+        "cAlpha",
+        "alphaSmoothCurvature",
+        "requested_end_time_s",
+        "end_Tstar",
+        "completion_status",
+        "geyser",
+        "Hstar_plateau",
+        "Yfs_star_plateau",
+        "gas_entry_Tstar",
+        "interface_0p85L_Tstar",
+        "free_surface_top_Tstar",
+        "pressure_drop_Tstar",
+        "Vint_star",
+        "Vfs_star",
+        "max_geyser_height_m",
+        "overflow_volume_m3",
+        "liquid_mass_error_pct_max_abs",
+        "gas_mass_error_pct_max_abs",
+        "total_mass_error_pct_max_abs",
+    ]
+    row = {
+        "configuration_id": configuration_id(manifest),
+        "mesh": manifest.get("mesh_preset"),
+        "gas_eos": manifest.get("gas_equation_of_state"),
+        "initial_air_head_m": manifest.get("initial_air_head_m"),
+        "valve_mode": manifest.get("valve_mode"),
+        "valve_open_time_s": manifest.get("valve_open_time_s"),
+        "valve_seal_speed_m_per_s": manifest.get(
+            "valve_seal_speed_m_per_s"
+        ),
+        "maxCo": manifest.get("max_co"),
+        "maxAlphaCo": manifest.get("max_alpha_co"),
+        "maxDeltaT_s": manifest.get("max_delta_t_s"),
+        "cAlpha": manifest.get("c_alpha"),
+        "alphaSmoothCurvature": manifest.get(
+            "alpha_smooth_curvature_iterations"
+        ),
+        "requested_end_time_s": manifest.get("end_time_s"),
+        **{name: run.get(name) for name in fields if name in run},
+    }
+    existing = []
+    if path.is_file():
+        with path.open(newline="") as stream:
+            existing = list(csv.DictReader(stream))
+    key = str(row["configuration_id"])
+    existing = [
+        old for old in existing if old.get("configuration_id") != key
+    ]
+    existing.append({name: row.get(name) for name in fields})
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=fields, lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(existing)
+
+
 def numeric_rows(path: Path) -> list[list[float]]:
     rows = []
     for line in path.read_text(errors="replace").splitlines():
@@ -1093,6 +1167,7 @@ def postprocess(manifest: dict, mesh: dict) -> dict:
     if write_canonical_hold:
         hold_path.write_text(json.dumps(metrics, indent=2) + "\n")
     update_mesh_csv(mesh, manifest, run)
+    update_sensitivity_csv(metrics)
     return metrics
 
 

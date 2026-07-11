@@ -2,17 +2,20 @@
 """Regression tests for Case-B evidence and resume policies."""
 from __future__ import annotations
 
+import csv
 import json
 import tempfile
 import unittest
 from pathlib import Path
 
+import postprocess as postprocess_module
 from postprocess import (
     apply_acceptance,
     is_baseline_full,
     is_baseline_full_physics,
     is_canonical_hold,
     should_update_hold_evidence,
+    update_sensitivity_csv,
 )
 from resume_manifest import ENVIRONMENT_KEYS, read_manifest, shell_exports
 
@@ -129,6 +132,33 @@ class InitialFieldPolicyTests(unittest.TestCase):
         self.assertIn("(1 - alpha.water)*(p/(287.058*293.15))", text)
         self.assertNotIn("reducedWaterPressure", text)
         self.assertNotIn("reducedAirPressure", text)
+
+
+class SensitivityIndexTests(unittest.TestCase):
+    def test_full_run_rows_are_upserted_by_configuration(self) -> None:
+        metrics = {
+            "run_configuration": baseline_manifest(),
+            "openfoam_3d": {
+                "end_Tstar": 6.0,
+                "completion_status": "incomplete",
+                "geyser": True,
+            },
+        }
+        original_outputs = postprocess_module.OUTPUTS
+        with tempfile.TemporaryDirectory() as directory:
+            postprocess_module.OUTPUTS = Path(directory)
+            try:
+                update_sensitivity_csv(metrics)
+                metrics["openfoam_3d"]["end_Tstar"] = 6.1
+                update_sensitivity_csv(metrics)
+                with (
+                    Path(directory) / "openfoam_3d_sensitivity.csv"
+                ).open(newline="") as stream:
+                    rows = list(csv.DictReader(stream))
+            finally:
+                postprocess_module.OUTPUTS = original_outputs
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(float(rows[0]["end_Tstar"]), 6.1)
 
 
 if __name__ == "__main__":

@@ -277,6 +277,9 @@ refined run writes its own preset metrics and updates the base result's mesh
 comparison without replacing that canonical result.  Closed-valve evidence is
 also monotonic: a shorter or failed diagnostic cannot overwrite an already
 passed hold, and non-baseline hold controls remain runtime-only.
+Every full run also upserts one configuration-keyed row in
+`openfoam_3d_sensitivity.csv`, including all varied controls, event metrics,
+geyser height, rim-water inventory, and phase/total conservation errors.
 
 No `processor*`, `postProcessing`, `constant/polyMesh`, time directories,
 mesh, logs, dynamic-code cache or frame sequence belongs in Git.
