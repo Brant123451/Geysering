@@ -392,11 +392,13 @@ def main() -> None:
     water_flux = np.zeros(len(mass_t))
     flux_complete = bool(len(mass_t))
     for name in boundary_names:
-        ft, values = first_column(post, name)
-        if not len(ft):
+        ft, values, _ = parse_function(post, name)
+        if not len(ft) or values.shape[1] < 2:
             flux_complete = False
             continue
-        total_flux += interp_series(ft, values, mass_t)
+        # Each boundary function writes (phi, rhoPhi); conservation requires
+        # the second, mass-flux column.
+        total_flux += interp_series(ft, values[:, 1], mass_t)
     for name in water_flux_names:
         ft, values = first_column(post, name)
         if not len(ft):
