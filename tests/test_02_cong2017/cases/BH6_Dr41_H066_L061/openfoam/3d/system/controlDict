@@ -105,7 +105,6 @@ functions
         #{
             #include "fvCFD.H"
             #include "PstreamReduceOps.H"
-            #include <iomanip>
         #};
 
         codeExecute
@@ -241,8 +240,8 @@ functions
 
             if (Pstream::master())
             {
+                Info.precision(12);
                 Info<< "BH6_AUDIT "
-                    << std::setprecision(12)
                     << mesh().time().value() << ' '
                     << waterVolume << ' '
                     << waterMass << ' '
