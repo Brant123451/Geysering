@@ -66,6 +66,13 @@ def add_box_field(
 
 def write_mesh_dict(path: Path, pipe: float, riser: float, atmosphere: float) -> None:
     """Write cfMesh controls with independent pipe/riser volume resolution."""
+    # cfMesh selects power-of-two octree levels.  A small positive guard keeps
+    # an exact threshold (for example 0.00625 m) on its intended coarser level
+    # despite floating-point roundoff.
+    pipe_request = 1.02 * pipe
+    riser_request = 1.02 * riser
+    atmosphere_request = 1.02 * atmosphere
+    plume_request = 1.02 * max(atmosphere / 2.0, 2.0 * pipe)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         f"""FoamFile
@@ -77,29 +84,29 @@ def write_mesh_dict(path: Path, pipe: float, riser: float, atmosphere: float) ->
 }}
 
 surfaceFile     "bh4-physical.stl";
-maxCellSize     {atmosphere:.10g};
-minCellSize     {min(pipe, riser):.10g};
-boundaryCellSize {atmosphere:.10g};
+maxCellSize     {atmosphere_request:.10g};
+minCellSize     {min(pipe_request, riser_request):.10g};
+boundaryCellSize {atmosphere_request:.10g};
 
 localRefinement
 {{
     pipeWall
     {{
-        cellSize {pipe:.10g};
+        cellSize {pipe_request:.10g};
         refinementThickness {2.0 * pipe:.10g};
     }}
     riserWall
     {{
-        cellSize {riser:.10g};
+        cellSize {riser_request:.10g};
         refinementThickness {2.0 * riser:.10g};
     }}
     "(reservoir|closedEnd)"
     {{
-        cellSize {pipe:.10g};
+        cellSize {pipe_request:.10g};
     }}
     deck
     {{
-        cellSize {atmosphere:.10g};
+        cellSize {atmosphere_request:.10g};
     }}
 }}
 
@@ -112,7 +119,7 @@ objectRefinements
         lengthX {PIPE_LENGTH + 0.02:.10g};
         lengthY {D + 0.02:.10g};
         lengthZ {D + 0.02:.10g};
-        cellSize {pipe:.10g};
+        cellSize {pipe_request:.10g};
     }}
     riser
     {{
@@ -121,14 +128,14 @@ objectRefinements
         radius0 {RR + 0.012:.10g};
         p1 ({TEE_X:.10g} 0 {RISER_RIM_Z + 0.02:.10g});
         radius1 {RR + 0.012:.10g};
-        cellSize {riser:.10g};
+        cellSize {riser_request:.10g};
     }}
     tee
     {{
         type sphere;
         centre ({TEE_X:.10g} 0 {R:.10g});
         radius 0.075;
-        cellSize {min(pipe, riser):.10g};
+        cellSize {min(pipe_request, riser_request):.10g};
     }}
     valve
     {{
@@ -137,7 +144,7 @@ objectRefinements
         lengthX 0.08;
         lengthY 0.07;
         lengthZ 0.07;
-        cellSize {min(pipe, 1.25 * riser):.10g};
+        cellSize {pipe_request:.10g};
     }}
     plume
     {{
@@ -146,8 +153,14 @@ objectRefinements
         lengthX 0.14;
         lengthY 0.14;
         lengthZ {ATMOSPHERE_TOP_Z - RISER_RIM_Z:.10g};
-        cellSize {min(atmosphere, 1.5 * riser):.10g};
+        cellSize {plume_request:.10g};
     }}
+}}
+
+boundaryLayers
+{{
+    // Disable cfMesh's implicit layer so all quality tests are deterministic.
+    nLayers 0;
 }}
 
 renameBoundary
