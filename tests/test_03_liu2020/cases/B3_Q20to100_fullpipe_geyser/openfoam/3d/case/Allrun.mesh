@@ -19,6 +19,7 @@ python3 ../make_mesh.py \
     > log.gmsh 2>&1
 
 gmshToFoam b3_3d.msh > log.gmshToFoam 2>&1
+createPatch -overwrite > log.createPatch 2>&1
 checkMesh -allGeometry -allTopology > log.checkMesh 2>&1
 
 {
