@@ -1,0 +1,43 @@
+/* V&W (2011) Case B initial state.
+   Air chamber gauge pressure = rho_w*g*0.610 m = 5973.33 Pa.
+   Tower free surface = crown y 0.047 + 0.356 = 0.403 m. */
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setFieldsDict;
+}
+
+defaultFieldValues
+(
+    volScalarFieldValue alpha.water 1
+    volScalarFieldValue p_rgh 105271.314
+    volScalarFieldValue p 105271.314
+    volScalarFieldValue T 293.15
+);
+
+regions
+(
+    boxToCell
+    {
+        box (-1 -1 -1) (0.546 1 1);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 0
+            volScalarFieldValue p_rgh 107298.329
+            volScalarFieldValue p 107298.329
+        );
+    }
+
+    boxToCell
+    {
+        box (3.50965 0.403 -1) (3.52235 1 1);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 0
+            volScalarFieldValue p_rgh 101330
+            volScalarFieldValue p 101325
+        );
+    }
+);

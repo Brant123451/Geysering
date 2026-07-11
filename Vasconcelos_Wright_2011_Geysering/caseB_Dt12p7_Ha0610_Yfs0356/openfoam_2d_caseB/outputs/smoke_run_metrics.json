@@ -1,0 +1,15 @@
+{
+  "openfoam_version": "v2512",
+  "solver": "compressibleInterFoam",
+  "run_mode": "serial",
+  "mesh_cells": 51984,
+  "requested_end_time_s": 0.02,
+  "reached_end_time_s": 0.02,
+  "max_courant_at_final_step": 0.085454894,
+  "max_interface_courant_at_final_step": 0.08248218,
+  "alpha_water_min_at_final_step": -2.6170543e-19,
+  "alpha_water_max_at_final_step": 1.0,
+  "solver_execution_time_s": 14.64,
+  "mesh_ok": true,
+  "completed": true
+}

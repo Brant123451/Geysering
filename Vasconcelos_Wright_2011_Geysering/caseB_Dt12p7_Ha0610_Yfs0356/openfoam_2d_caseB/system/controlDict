@@ -1,0 +1,63 @@
+/* OpenFOAM v2512 compressible VOF run for V&W (2011) Case B. */
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+
+application     compressibleInterFoam;
+
+startFrom       latestTime;
+startTime       0;
+stopAt          endTime;
+endTime         9.0;
+
+deltaT          1e-5;
+
+writeControl    adjustableRunTime;
+writeInterval   0.10;
+purgeWrite      4;
+writeFormat     binary;
+writePrecision  8;
+writeCompression off;
+
+timeFormat      general;
+timePrecision   10;
+runTimeModifiable yes;
+
+adjustTimeStep  yes;
+maxCo           0.20;
+maxAlphaCo      0.15;
+maxDeltaT       0.0005;
+
+functions
+{
+    transducer
+    {
+        type            probes;
+        libs            (sampling);
+        fields          (p p_rgh alpha.water U);
+        probeLocations
+        (
+            // Valve x=0.546 m plus the published 1.07 m offset.
+            (1.616 -0.043 0)
+        );
+        writeControl    adjustableRunTime;
+        writeInterval   0.005;
+    }
+
+    towerCentreline
+    {
+        type            probes;
+        libs            (sampling);
+        fields          (alpha.water U p);
+        probeLocations
+        (
+            #include "towerProbeLocations"
+        );
+        writeControl    adjustableRunTime;
+        writeInterval   0.005;
+    }
+}
