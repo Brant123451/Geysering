@@ -32,8 +32,9 @@ P_ATM = 101325.0
 TIME_SCALE = L / math.sqrt(G * DT)
 CROWN_Y = D / 2.0
 RIM_Y = CROWN_Y + L
+NUMBER_PATTERN = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
 FLOAT_RE = re.compile(
-    r"(?i)(?:[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|nan)"
+    rf"(?i)(?:{NUMBER_PATTERN}|nan)"
 )
 
 
@@ -111,15 +112,53 @@ def parse_mesh() -> dict:
         match = re.search(pattern, text, flags=re.I)
         return cast(match.group(1)) if match else None
 
+    mesh_ok = "Mesh OK." in text and not re.search(
+        r"Failed\s+\d+\s+mesh checks", text, flags=re.I
+    )
+    failed_checks = number(r"Failed\s+(\d+)\s+mesh checks", int)
     return {
         "cells": number(r"\bcells:\s+(\d+)", int),
-        "max_aspect_ratio": number(r"Max aspect ratio\s*=\s*([0-9.eE+-]+)"),
-        "max_non_orthogonality_deg": number(
-            r"Mesh non-orthogonality Max:\s*([0-9.eE+-]+)"
+        "max_aspect_ratio": number(
+            rf"Max aspect ratio\s*=\s*({NUMBER_PATTERN})"
         ),
-        "max_skewness": number(r"Max skewness\s*=\s*([0-9.eE+-]+)"),
-        "minimum_cell_volume_m3": number(r"Min volume\s*=\s*([0-9.eE+-]+)"),
-        "mesh_ok": "Mesh OK." in text and "Failed" not in text,
+        "max_non_orthogonality_deg": number(
+            rf"Mesh non-orthogonality Max:\s*({NUMBER_PATTERN})"
+        ),
+        "severe_non_orthogonal_faces": number(
+            r"severely non-orthogonal[^:]*faces:\s*(\d+)", int
+        ),
+        "max_skewness": number(
+            rf"Max skewness\s*=\s*({NUMBER_PATTERN})"
+        ),
+        "highly_skew_faces": number(
+            r",\s*(\d+)\s+highly skew faces", int
+        ),
+        "minimum_cell_volume_m3": number(
+            rf"Min volume\s*=\s*({NUMBER_PATTERN})"
+        ),
+        "minimum_cell_determinant": number(
+            rf"Cell determinant[^:]*:\s*minimum:\s*({NUMBER_PATTERN})"
+        ),
+        "underdetermined_cells": number(
+            r"Cells with small determinant[^:]*:\s*(\d+)", int
+        ),
+        "minimum_face_weight": number(
+            rf"Face interpolation weight\s*:\s*minimum:\s*({NUMBER_PATTERN})"
+        ),
+        "low_weight_faces": number(
+            r"Faces with small interpolation weight[^:]*:\s*(\d+)", int
+        ),
+        "minimum_volume_ratio": number(
+            rf"Face volume ratio\s*:\s*minimum:\s*({NUMBER_PATTERN})"
+        ),
+        "low_volume_ratio_faces": number(
+            r"Faces with small volume ratio[^:]*:\s*(\d+)", int
+        ),
+        "two_internal_face_cells": number(
+            r"Writing\s+(\d+)\s+cells with two non-boundary faces", int
+        ),
+        "failed_checks": 0 if mesh_ok else failed_checks,
+        "mesh_ok": mesh_ok,
     }
 
 
@@ -135,8 +174,18 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "cells",
         "nominal_cells_across_tower",
         "max_non_orthogonality_deg",
+        "severe_non_orthogonal_faces",
         "max_skewness",
+        "highly_skew_faces",
         "minimum_cell_volume_m3",
+        "minimum_cell_determinant",
+        "underdetermined_cells",
+        "minimum_face_weight",
+        "low_weight_faces",
+        "minimum_volume_ratio",
+        "low_volume_ratio_faces",
+        "two_internal_face_cells",
+        "failed_checks",
         "mesh_ok",
         "maxCo",
         "cAlpha",
@@ -162,8 +211,20 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
             "nominal_cells_across_tower"
         ),
         "max_non_orthogonality_deg": mesh.get("max_non_orthogonality_deg"),
+        "severe_non_orthogonal_faces": mesh.get(
+            "severe_non_orthogonal_faces"
+        ),
         "max_skewness": mesh.get("max_skewness"),
+        "highly_skew_faces": mesh.get("highly_skew_faces"),
         "minimum_cell_volume_m3": mesh.get("minimum_cell_volume_m3"),
+        "minimum_cell_determinant": mesh.get("minimum_cell_determinant"),
+        "underdetermined_cells": mesh.get("underdetermined_cells"),
+        "minimum_face_weight": mesh.get("minimum_face_weight"),
+        "low_weight_faces": mesh.get("low_weight_faces"),
+        "minimum_volume_ratio": mesh.get("minimum_volume_ratio"),
+        "low_volume_ratio_faces": mesh.get("low_volume_ratio_faces"),
+        "two_internal_face_cells": mesh.get("two_internal_face_cells"),
+        "failed_checks": mesh.get("failed_checks"),
         "mesh_ok": mesh.get("mesh_ok"),
         "maxCo": manifest.get("max_co"),
         "cAlpha": manifest.get("c_alpha"),
