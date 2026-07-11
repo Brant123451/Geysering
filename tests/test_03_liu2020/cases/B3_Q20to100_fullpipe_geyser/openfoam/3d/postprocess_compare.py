@@ -289,7 +289,9 @@ def parse_check_mesh(case: Path) -> dict[str, float | int | str | None]:
             r"Mesh non-orthogonality Max:\s*[0-9.eE+-]+\s+average:\s*([0-9.eE+-]+)"
         ),
         "max_skewness": number(r"Max skewness\s*=\s*([0-9.eE+-]+)"),
-        "min_cell_volume_m3": number(r"Min volume\s*=\s*([0-9.eE+-]+)"),
+        "min_cell_volume_m3": number(
+            r"Min volume\s*=\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)"
+        ),
         "underdetermined_tetrahedra": number(
             r"Cells with small determinant \(< 0\.001\) found, number of cells:\s*(\d+)",
             int,
