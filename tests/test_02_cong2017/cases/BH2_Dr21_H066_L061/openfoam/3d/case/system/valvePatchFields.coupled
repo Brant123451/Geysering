@@ -1,0 +1,40 @@
+U
+{
+    type    cyclicACMI;
+    value   uniform (0 0 0);
+}
+p_rgh
+{
+    type    cyclicACMI;
+    value   uniform 101325;
+}
+p
+{
+    type    cyclicACMI;
+    value   uniform 101325;
+}
+alpha.water
+{
+    type    cyclicACMI;
+    value   uniform 0;
+}
+T
+{
+    type    cyclicACMI;
+    value   uniform 296.15;
+}
+k
+{
+    type    cyclicACMI;
+    value   uniform 1e-4;
+}
+epsilon
+{
+    type    cyclicACMI;
+    value   uniform 3.3e-5;
+}
+alphat
+{
+    type    cyclicACMI;
+    value   uniform 1e-3;
+}

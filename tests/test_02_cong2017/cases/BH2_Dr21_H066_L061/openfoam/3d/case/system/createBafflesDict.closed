@@ -18,11 +18,19 @@ baffles
             {
                 name            valveWall0;
                 type            wall;
+                patchFields
+                {
+                    #include "valvePatchFields.wall"
+                }
             }
             slave
             {
                 name            valveWall1;
                 type            wall;
+                patchFields
+                {
+                    #include "valvePatchFields.wall"
+                }
             }
         }
     }

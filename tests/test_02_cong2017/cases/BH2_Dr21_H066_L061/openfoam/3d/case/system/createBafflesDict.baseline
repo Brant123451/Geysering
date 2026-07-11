@@ -27,6 +27,10 @@ baffles
                     (0.2   1)
                     (100   1)
                 );
+                patchFields
+                {
+                    #include "valvePatchFields.coupled"
+                }
             }
             slave
             {
@@ -35,16 +39,28 @@ baffles
                 neighbourPatch  valveCouple0;
                 nonOverlapPatch valveWall1;
                 transform       noOrdering;
+                patchFields
+                {
+                    #include "valvePatchFields.coupled"
+                }
             }
             master2
             {
                 name            valveWall0;
                 type            wall;
+                patchFields
+                {
+                    #include "valvePatchFields.wall"
+                }
             }
             slave2
             {
                 name            valveWall1;
                 type            wall;
+                patchFields
+                {
+                    #include "valvePatchFields.wall"
+                }
             }
         }
     }

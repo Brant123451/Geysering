@@ -63,6 +63,7 @@ PY
         setFields > log.setFields 2>&1
         setExprFields > log.setExprFields 2>&1
         topoSet > log.topoSet 2>&1
+        checkMesh -allGeometry -allTopology > log.checkMesh.core 2>&1
         createBaffles \
             -dict "system/createBafflesDict.${VALVE}" \
             -overwrite > log.createBaffles 2>&1

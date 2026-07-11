@@ -1,0 +1,40 @@
+U
+{
+    type    noSlip;
+}
+p_rgh
+{
+    type    fixedFluxPressure;
+    value   uniform 101325;
+}
+p
+{
+    type    calculated;
+    value   uniform 101325;
+}
+alpha.water
+{
+    type    constantAlphaContactAngle;
+    theta0  90;
+    limit   gradient;
+    value   uniform 0;
+}
+T
+{
+    type    zeroGradient;
+}
+k
+{
+    type    kqRWallFunction;
+    value   uniform 1e-4;
+}
+epsilon
+{
+    type    epsilonWallFunction;
+    value   uniform 3.3e-5;
+}
+alphat
+{
+    type    compressible::alphatWallFunction;
+    value   uniform 1e-3;
+}
