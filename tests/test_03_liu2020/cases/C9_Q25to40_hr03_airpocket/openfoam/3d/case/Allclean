@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 cd "$(dirname "$0")"
 source /usr/lib/openfoam/openfoam2512/etc/bashrc
 rm -rf processor* postProcessing constant/polyMesh 0
