@@ -33,5 +33,5 @@
     "failure": "Negative initial temperature T0: -24.839621",
     "result_used": false
   },
-  "conclusion": "Despite agreement within 0.7% over 0.3 s, the faster candidate failed the extended stability gate and was rejected. Production retains maxCo=0.2, maxAlphaCo=0.1, and three outer correctors."
+  "conclusion": "Despite agreement within 0.7% over 0.3 s, the two-outer-corrector candidate failed the extended stability gate and was rejected. The factors were subsequently isolated in numerics_stability_gate.json."
 }
