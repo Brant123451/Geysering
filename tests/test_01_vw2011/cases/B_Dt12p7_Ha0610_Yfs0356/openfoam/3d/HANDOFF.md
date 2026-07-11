@@ -8,6 +8,7 @@
 * Case root:
   `tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356`
 * CFD root: `openfoam/3d`
+* Complete copy/paste prompt: `openfoam/3d/NEW_AGENT_PROMPT.md`
 
 All source changes and compact base-mesh evidence are committed and pushed.
 Large runtime artifacts are intentionally ignored, so a fresh cloud agent must
@@ -90,6 +91,9 @@ NumPy, and Matplotlib.  Runtime recovery is available through
 `./Allrun.resume` only when `processor*` state exists in the same VM.
 
 ## Prompt for a fresh cloud agent
+
+For the complete task specification, copy the entire fenced block from
+`NEW_AGENT_PROMPT.md`.  The shorter prompt below is only a routing summary.
 
 > Continue Geysering Test 1 Case B as a genuinely 3-D OpenFOAM validation from
 > PR #10 and branch `cursor/test1-caseb-3d-0614`. Read
