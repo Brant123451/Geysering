@@ -122,9 +122,9 @@ Copy the full block below into the new Cursor account's Cloud Agent.
     因为论文没有提供 acrylic wetting measurement，必须作为假设说明。
 12. 当前 baseline 为 laminar single-momentum VOF。若改变 turbulence model，
     必须给出证据并作为敏感性，不得无说明替换 baseline。
-13. 四面体界面的曲率估计使用 OpenFOAM 内置的 2 次
-    nAlphaSmoothCurvature；它不改变输运的 alpha，仅平滑曲率计算，并必须保留
-    0/1/2 次迭代敏感性。
+13. OpenFOAM 内置的 nAlphaSmoothCurvature 不改变输运的 alpha，仅平滑曲率
+    计算。2 次平滑的短诊断在 0.001 s 降低了峰值速度，但随后产生更大热点且
+    更慢，因此 baseline 保持 0；必须保留 0/1/2 次迭代敏感性。
 
 六、阀门
 

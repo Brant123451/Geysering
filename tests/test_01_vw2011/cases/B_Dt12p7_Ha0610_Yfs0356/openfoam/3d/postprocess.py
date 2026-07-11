@@ -77,7 +77,7 @@ def is_baseline_full_physics(manifest: dict) -> bool:
         and math.isclose(float(manifest.get("max_alpha_co", -1)), 0.20)
         and math.isclose(float(manifest.get("max_delta_t_s", -1)), 0.00025)
         and math.isclose(float(manifest.get("c_alpha", -1)), 1.0)
-        and int(manifest.get("alpha_smooth_curvature_iterations", -1)) == 2
+        and int(manifest.get("alpha_smooth_curvature_iterations", -1)) == 0
         and float(manifest.get("end_time_s", 0)) >= 6 * TIME_SCALE
     )
 
@@ -106,7 +106,7 @@ def is_canonical_hold(manifest: dict) -> bool:
         and math.isclose(float(manifest.get("max_alpha_co", -1)), 0.20)
         and math.isclose(float(manifest.get("max_delta_t_s", -1)), 0.00025)
         and math.isclose(float(manifest.get("c_alpha", -1)), 1.0)
-        and int(manifest.get("alpha_smooth_curvature_iterations", -1)) == 2
+        and int(manifest.get("alpha_smooth_curvature_iterations", -1)) == 0
     )
 
 

@@ -45,7 +45,7 @@ def main() -> None:
     max_delta_t = env_float("CASEB_MAX_DELTA_T", 0.00025)
     write_interval = env_float("CASEB_WRITE_INTERVAL", 0.10)
     c_alpha = env_float("CASEB_C_ALPHA", 1.0)
-    alpha_smooth_curvature = env_int("CASEB_ALPHA_SMOOTH_CURVATURE", 2)
+    alpha_smooth_curvature = env_int("CASEB_ALPHA_SMOOTH_CURVATURE", 0)
     initial_air_head = env_float("CASEB_HA0", 0.610)
     valve_mode = os.environ.get(
         "CASEB_VALVE_MODE", "closed" if stage == "hold" else "opening"

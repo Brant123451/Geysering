@@ -75,12 +75,13 @@ Thermophysical choices are:
 * laminar momentum transport and smooth no-slip walls;
 * neutral 90° contact angle because no measured acrylic contact angle exists.
 
-The all-tetrahedral free-surface stencil uses two iterations of OpenFOAM's
-built-in `nAlphaSmoothCurvature` filter.  This smooths only the alpha field
-used to estimate curvature; it does not modify or diffuse the transported
-phase fraction.  The setting suppresses unphysical capillary currents from a
-nominally planar interface and is exposed as
-`CASEB_ALPHA_SMOOTH_CURVATURE` for zero/one/two-iteration sensitivity checks.
+`CASEB_ALPHA_SMOOTH_CURVATURE` exposes OpenFOAM's built-in curvature-only
+alpha filter without modifying or diffusing the transported phase fraction.
+The baseline keeps its default at zero iterations: a two-pass startup
+diagnostic reduced the first 0.001 s velocity maximum but produced larger
+subsequent free-surface hotspots and higher runtime.  Zero/one/two iterations
+remain an explicit numerical sensitivity instead of silently smoothing the
+baseline interface.
 
 The perfect-gas energy equation includes compression/expansion work; it does
 not impose the frozen 1-D model's isothermal pocket law.  Liquid
