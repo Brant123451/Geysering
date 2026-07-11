@@ -87,12 +87,13 @@ study uses 0.10, 0.20, and 0.30 s with every other input unchanged.  Closed
 hold, valve flux, and pressure on both sides are recorded independently before
 the experimental no-geyser label is examined.
 
-Production runs use `maxCo=0.40`, `maxAlphaCo=0.10`, and two PIMPLE outer
-correctors.  A repeat of the 0.3 s opening smoke against the more restrictive
-`maxCo=0.20`/three-outer-corrector setup changed pressure, valve-flow,
-pocket-volume, and interface-mixing diagnostics by less than 0.7%;
-`numerics_smoke_comparison.json` records the comparison.  This short check
-validates the production stepping only and is not used for classification.
+Production runs use the conservative `maxCo=0.20`, `maxAlphaCo=0.10`, and
+three PIMPLE outer correctors.  A faster `maxCo=0.40`/two-outer-corrector
+candidate agreed within 0.7% over the 0.3 s smoke, but was rejected when its
+extended run developed a local `Co=2.38` overshoot and negative temperature at
+`t=0.507 s`.  `numerics_smoke_comparison.json` records both the tempting
+short-window agreement and the decisive extended-run failure; neither
+diagnostic is used for event classification.
 
 ## Run
 
