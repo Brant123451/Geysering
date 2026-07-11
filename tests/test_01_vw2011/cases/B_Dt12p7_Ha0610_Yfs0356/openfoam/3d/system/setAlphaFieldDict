@@ -6,8 +6,9 @@ FoamFile
     object      setAlphaFieldDict;
 }
 
-// Geometric cut-cell initialisation avoids a stair-stepped, cell-centre
-// approximation of the two planar gas/water interfaces on tetrahedra.
+// Geometric initialisation avoids a stair-stepped, cell-centre approximation.
+// The tower free surface is conformal with internal mesh faces and therefore
+// becomes binary; the valve plane still receives exact cut-cell fractions.
 field alpha.water;
 type  composedFunction;
 mode  add;

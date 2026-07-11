@@ -126,6 +126,12 @@ class ResumeManifestTests(unittest.TestCase):
 
 
 class InitialFieldPolicyTests(unittest.TestCase):
+    def test_initial_tower_surface_is_conformal_without_a_baffle(self) -> None:
+        text = (HERE / "make_mesh.py").read_text()
+        self.assertIn("initial_free_surface_disk = occ.addDisk", text)
+        self.assertIn("fluid, _ = occ.fragment(", text)
+        self.assertNotIn("createBaffles", text)
+
     def test_cut_cells_use_mixture_density_for_reduced_pressure(self) -> None:
         text = (HERE / "system" / "setExprFieldsDict").read_text()
         self.assertIn("mixtureReducedPressure", text)

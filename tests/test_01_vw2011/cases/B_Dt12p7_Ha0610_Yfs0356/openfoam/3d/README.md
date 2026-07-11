@@ -40,12 +40,16 @@ The initial state follows the paper:
 * the tower headspace and exterior start as 101325 Pa air;
 * velocity is zero and temperature is 293.15 K.
 
-`setFields` first assigns the bulk regions, then OpenFOAM `setAlphaField`
-computes cut-cell volume fractions for the planar valve and tower interfaces.
-This avoids cell-centre stair stepping on the tetrahedral mesh.  Finally,
-`setExprFields` makes `p` and `p_rgh` hydrostatically consistent with the
-geometric phase field.  In interface cells, `p_rgh` uses the same
-alpha-weighted perfect-gas/perfect-fluid density that
+The mesh has an internal conformal disk at the initially planar tower free
+surface.  It remains an ordinary owner-neighbour connection in the single
+fluid region, never a wall or baffle.  `setFields` first assigns the bulk
+regions, then OpenFOAM `setAlphaField` produces a binary tower interface on
+that disk and geometric cut-cell fractions at the valve plane.  This avoids
+cell-centre stair stepping and the noisy initial curvature created by a
+random tetrahedral cut through the narrow tower.  Finally, `setExprFields`
+makes `p` and `p_rgh` hydrostatically consistent with the geometric phase
+field.  In interface cells, `p_rgh` uses the same alpha-weighted
+perfect-gas/perfect-fluid density that
 `compressibleInterFoam` uses to reconstruct absolute pressure; a binary
 alpha=0.5 density switch would create a nonphysical startup impulse.
 
@@ -123,13 +127,16 @@ optional completion evidence.
 
 ## Mesh
 
-Gmsh OpenCASCADE fuses the three circular/exterior volumes and HXT creates
-unstructured tetrahedra.  Refinement boxes target the tower, circular tee,
-valve and initial pocket nose, initial free surface, near-rim jet and plume
-corridor.  A 40 mm linear transition surrounds each box, and a 4 mm corridor
-extends around the full exterior tower casing; this prevents fine casing
-triangles from connecting directly to far-atmosphere cells.  HXT is followed
-by explicit Gmsh tetrahedron optimization.  Netgen remains an optional
+Gmsh OpenCASCADE fuses the three circular/exterior volumes, partitions the
+tower with the conformal initial free-surface disk, and HXT creates
+unstructured tetrahedra.  All resulting volume partitions share one physical
+fluid group, so `gmshToFoam` reconstructs the disk as internal faces.
+Refinement boxes target the tower, circular tee, valve and initial pocket
+nose, initial free surface, near-rim jet and plume corridor.  A 40 mm linear
+transition surrounds each box, and a 4 mm corridor extends around the full
+exterior tower casing; this prevents fine casing triangles from connecting
+directly to far-atmosphere cells.  HXT is followed by explicit Gmsh
+tetrahedron optimization.  Netgen remains an optional
 `make_mesh.py --optimizer netgen` experiment when the installed Gmsh build
 provides it; the packaged Gmsh 4.12.1 used for validation does not.  The
 selected algorithm, optimizer, transition thickness and Gmsh version are
