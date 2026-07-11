@@ -1192,12 +1192,12 @@ PIMPLE
     if velocity_limit > 0:
         fv_options += f"""
 limitU
-{
+{{
     type limitVelocity;
     active yes;
     selectionMode all;
     max {velocity_limit:.8g};
-}
+}}
 """
     else:
         fv_options += "\n// Velocity clipping disabled for the control case.\n"
