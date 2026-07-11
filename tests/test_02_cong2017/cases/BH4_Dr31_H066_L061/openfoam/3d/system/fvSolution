@@ -43,27 +43,20 @@ solvers
 
     p_rgh
     {
-        solver          GAMG;
+        solver          PCG;
+        preconditioner  DIC;
         tolerance       1e-7;
         relTol          0.01;
-        smoother        DIC;
+        maxIter         1000;
     }
 
     p_rghFinal
     {
         solver          PCG;
-        preconditioner
-        {
-            preconditioner  GAMG;
-            tolerance       1e-7;
-            relTol          0;
-            nVcycles        2;
-            smoother        DICGaussSeidel;
-            nPreSweeps      2;
-        }
-        tolerance       1e-7;
+        preconditioner  DIC;
+        tolerance       1e-8;
         relTol          0;
-        maxIter         50;
+        maxIter         1000;
     }
 
     "U.*"
@@ -81,7 +74,7 @@ solvers
         smoother        symGaussSeidel;
         tolerance       1e-8;
         relTol          0;
-        maxIter         100;
+        maxIter         1000;
     }
 }
 
