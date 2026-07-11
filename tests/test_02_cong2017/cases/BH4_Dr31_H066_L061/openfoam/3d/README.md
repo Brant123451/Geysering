@@ -50,33 +50,37 @@ At `t=0`:
 | `reservoir` | `pressureInletOutletVelocity` | fixed `p_rgh=107786.6508 Pa` (0.66 m head); `p` calculated | fixed 1 | fixed 296.15 K |
 | `walls` | no slip | `fixedFluxPressure`; `p` calculated | `constantAlphaContactAngle`, 90 deg | zero gradient |
 | `closedEnd` | no slip | `fixedFluxPressure`; `p` calculated | `constantAlphaContactAngle`, 90 deg | zero gradient |
-| `atmosphere` | `pressureInletOutletVelocity` | total `p_rgh=101325 Pa`; `p` calculated | `inletOutlet`, air on inflow | `inletOutlet`, 296.15 K on inflow |
+| `atmosphere` | `pressureInletOutletVelocity` | `prghTotalPressure`, `p0=101325 Pa`; `p` calculated | `inletOutlet`, air on inflow | `inletOutlet`, 296.15 K on inflow |
+| `valveCouple*` | `cyclicACMI` | `cyclicACMI`; `p` coupled | `cyclicACMI` | `cyclicACMI` |
+| `valveWall*` | no slip | `fixedFluxPressure`; `p` calculated | `constantAlphaContactAngle`, 90 deg | zero gradient |
 
 The paper gives acrylic walls but no contact angle.  The 90-degree value is a
 neutral documented numerical closure, not an experimental measurement.
+`prghTotalPressure` keeps the open external atmosphere hydrostatically
+consistent at every elevation; a plain `totalPressure` condition would impose
+an artificial pressure variation over the 3 m external domain.
 
 ## Ball-valve process
 
-`configure_valve.py` writes a cyclic `porousBafflePressure` condition on the
-full circular cross-section at `x=5.98 m`.  It applies only the passive Darcy
-loss `Delta p = D mu U L`; unlike a penalised cell zone, it permits the physical
-pressure discontinuity across a nearly closed valve without generating a
-poorly conditioned pressure cell.  For the baseline manual opening:
+`configure_valve.py` writes a `cyclicACMI` interface and a coincident
+non-overlap wall on the full circular cross-section at `x=5.98 m`.  The ACMI
+coupled area is the prescribed open area and the complementary area is a real
+no-slip wall.  Thus the closed state supports the physical initial pressure
+difference without replacing a solid valve by an extreme, lagged porous
+coefficient.  For the baseline manual opening:
 
 ```text
-D(t) = D_closed (1 - t/t_open)^4,  0 <= t <= t_open
-D_closed = 1e11 1/m2
-L = 0.02 m
+open area / full area = 3 s^2 - 2 s^3
+s = clamp(t/t_open, 0, 1)
 t_open = 0.20 s
 ```
 
-The loss is evaluated face by face so opposite local fluxes cannot cancel into
-an artificially open valve; for one-directional pipe flow this reduces to the
-same Darcy relation over the full section.
-
-The coefficient is selected by the independent closed-valve leakage test, not
-by geyser classification.  The required duration study uses 0.10, 0.20, and
-0.30 s with every other input unchanged.
+The paper reports the total opening time but not ball angle or area versus
+time.  The monotonic smoothstep is therefore an explicit closure assumption
+with zero endpoint slopes, not a fitted loss curve.  The required duration
+study uses 0.10, 0.20, and 0.30 s with every other input unchanged.  Closed
+hold, valve flux, and pressure on both sides are recorded independently before
+the experimental no-geyser label is examined.
 
 ## Run
 
@@ -132,7 +136,9 @@ Function objects record:
 - pocket gas volume, water volume above the physical rim, outlet water flux,
   and cumulative ejected water;
 - water volume and gas mass, including open-boundary flux balances;
-- mixed-interface volume in the riser to expose numerical gas diffusion.
+- mixed-interface volume in the riser to expose numerical gas diffusion;
+- valve flow and both face-averaged pressures to prove that the closed state
+  does not leak or add energy.
 
 `postprocess_compare.py` writes compact CSV, JSON, and one PNG under
 `../../outputs/openfoam3d/`.  Generated meshes, time directories,

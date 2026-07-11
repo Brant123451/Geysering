@@ -25,8 +25,8 @@ timePrecision   10;
 runTimeModifiable yes;
 
 adjustTimeStep  yes;
-maxCo           0.25;
-maxAlphaCo      0.15;
+maxCo           0.20;
+maxAlphaCo      0.10;
 #include "maxDeltaT.inc"
 
 functions
@@ -220,6 +220,45 @@ functions
         regionType      cellZone;
         name            pt2Zone;
         operation       volAverage;
+        fields          (p);
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.005;
+    }
+
+    valveVolumeFlux
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            valveCoupleUpstream;
+        operation       sum;
+        fields          (phi);
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.005;
+    }
+
+    valveUpstreamPressure
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            valveCoupleUpstream;
+        operation       areaAverage;
+        fields          (p);
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.005;
+    }
+
+    valveDownstreamPressure
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            valveCoupleDownstream;
+        operation       areaAverage;
         fields          (p);
         writeFields     false;
         writeControl    adjustableRunTime;

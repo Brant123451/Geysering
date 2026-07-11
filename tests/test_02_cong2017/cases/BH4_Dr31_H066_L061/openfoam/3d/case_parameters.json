@@ -55,19 +55,17 @@
     },
     "atmosphere": {
       "U": "pressureInletOutletVelocity",
-      "p_rgh": "totalPressure at 101325 Pa",
+      "p_rgh": "prghTotalPressure at 101325 Pa including hydrostatic correction",
       "alpha.water": "inletOutlet with air inflow (alpha.water=0)",
       "T": "inletOutlet at 296.15 K"
     }
   },
   "valve": {
-    "representation": "cyclic porousBafflePressure face zone at x=5.98 m; passive Darcy pressure loss only",
+    "representation": "cyclicACMI face zone at x=5.98 m with complementary no-slip wall area",
     "baseline_opening_time_s": 0.2,
-    "opening_law": "D=D_closed*(1-t/t_open)^4 for 0<=t<=t_open",
-    "closed_darcy_coefficient_per_m2": 100000000000.0,
-    "baffle_length_m": 0.02,
-    "pressure_jump_relaxation": 0.1,
-    "uniform_pressure_jump": false,
+    "opening_law": "effective coupled area fraction=3*s^2-2*s^3, s=clamp(t/t_open,0,1)",
+    "closed_state": "zero coupled area (OpenFOAM ACMI tolerance only); complementary patch is a no-slip wall",
+    "opening_law_basis": "paper reports only the approximately 0.2 s total manual opening duration; no coefficient is fitted to classification",
     "sensitivity_opening_times_s": [0.1, 0.3]
   },
   "experiment": {
