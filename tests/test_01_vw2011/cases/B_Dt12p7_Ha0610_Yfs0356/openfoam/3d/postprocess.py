@@ -339,7 +339,7 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
     existing.append({name: row.get(name) for name in fields})
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=fields)
+        writer = csv.DictWriter(stream, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
         writer.writerows(existing)
 

@@ -36,7 +36,7 @@ functions
             (1.616 -0.043 0)
         );
         writeControl    adjustableRunTime;
-        writeInterval   0.005;
+        writeInterval   $caseBProbeInterval;
     }
 
     towerProfiles
@@ -49,7 +49,7 @@ functions
             #include "towerProbeLocations"
         );
         writeControl    adjustableRunTime;
-        writeInterval   0.005;
+        writeInterval   $caseBProbeInterval;
     }
 
     plumeProfiles
@@ -62,7 +62,7 @@ functions
             #include "plumeProbeLocations"
         );
         writeControl    adjustableRunTime;
-        writeInterval   0.010;
+        writeInterval   $caseBPlumeInterval;
     }
 
     phaseAccounting
@@ -71,7 +71,7 @@ functions
         libs            (utilityFunctionObjects);
         name            caseBPhaseAccounting;
         executeControl  adjustableRunTime;
-        executeInterval 0.010;
+        executeInterval $caseBAccountingInterval;
         writeControl    writeTime;
 
         codeInclude

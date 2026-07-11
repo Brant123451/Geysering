@@ -71,6 +71,15 @@ def main() -> None:
         raise SystemExit("endTime must be positive for solver stages")
     if valve_open_time < 0:
         raise SystemExit("CASEB_VALVE_OPEN_TIME cannot be negative")
+    if stage != "mesh":
+        write_interval = min(write_interval, end_time)
+        probe_interval = min(0.005, end_time)
+        plume_interval = min(0.010, end_time)
+        accounting_interval = min(0.010, end_time)
+    else:
+        probe_interval = 0.005
+        plume_interval = 0.010
+        accounting_interval = 0.010
 
     (SYSTEM / "runControl").write_text(
         "\n".join(
@@ -81,6 +90,9 @@ def main() -> None:
                 f"maxCo           {max_co:.10g};",
                 f"maxAlphaCo      {max_alpha_co:.10g};",
                 f"maxDeltaT       {max_delta_t:.10g};",
+                f"caseBProbeInterval      {probe_interval:.10g};",
+                f"caseBPlumeInterval      {plume_interval:.10g};",
+                f"caseBAccountingInterval {accounting_interval:.10g};",
                 "",
             )
         )
@@ -122,6 +134,10 @@ def main() -> None:
         "max_co": max_co,
         "max_alpha_co": max_alpha_co,
         "max_delta_t_s": max_delta_t,
+        "field_write_interval_s": write_interval,
+        "probe_write_interval_s": probe_interval,
+        "plume_write_interval_s": plume_interval,
+        "accounting_interval_s": accounting_interval,
         "c_alpha": c_alpha,
         "tower_probe_lines": 5,
         "tower_probe_spacing_m": 0.005,
