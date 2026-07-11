@@ -1,10 +1,10 @@
 {
   "cad_volume_m3": 0.12132103416240549,
   "case": "Cong2017_B-H1",
-  "check_log": "log.checkMesh",
+  "check_log": "log.checkMesh.afterBaffle",
   "concave_cell_fraction": 0.007219653179190751,
   "concave_cells": 1249,
-  "faces": 564623,
+  "faces": 564675,
   "max_aspect_ratio": 3.9590984,
   "max_non_orthogonality_deg": 48.998245,
   "max_skewness": 1.9486384,
@@ -40,6 +40,6 @@
     "walls": 153286
   },
   "underdetermined_cells": 0,
-  "valve_representation": "unobstructed fluid mesh",
-  "valve_state": "open"
+  "valve_representation": "zero-thickness impermeable wall baffle",
+  "valve_state": "closed"
 }

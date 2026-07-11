@@ -41,5 +41,5 @@
   },
   "underdetermined_cells": 0,
   "valve_representation": "unobstructed fluid mesh",
-  "valve_state": "open"
+  "valve_state": "closed"
 }
