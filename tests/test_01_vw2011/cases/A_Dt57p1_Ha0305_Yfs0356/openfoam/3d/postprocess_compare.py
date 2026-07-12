@@ -196,6 +196,14 @@ def parse_mesh_provenance() -> dict[str, object]:
         ),
         "gmsh_version": gmsh_values.get("gmsh_version"),
         "standard_checkMesh_ok": "Mesh OK." in check_text,
+        "strict_checkMesh_ok": (
+            "Mesh OK." in strict_text if strict_path.exists() else None
+        ),
+        "strict_failed_checks": (
+            match_int(r"Failed\s+(\d+)\s+mesh checks", strict_text)
+            if strict_path.exists()
+            else None
+        ),
         "max_non_orthogonality": match_float(
             r"Mesh non-orthogonality Max:\s*([-+0-9.eE]+)", check_text
         ),
