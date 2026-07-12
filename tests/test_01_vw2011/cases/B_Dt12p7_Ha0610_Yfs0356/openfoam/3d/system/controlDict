@@ -74,6 +74,12 @@ functions
         executeInterval $caseBAccountingInterval;
         writeControl    writeTime;
 
+        codeInclude
+        #{
+            #include "fvcSnGrad.H"
+            #include "surfaceInterpolate.H"
+        #};
+
         codeExecute
         #{
             const fvMesh& fvmesh = mesh();
@@ -91,6 +97,14 @@ functions
                 fvmesh.lookupObject<surfaceScalarField>("alphaPhi.water");
             const volScalarField& mixtureDensity =
                 fvmesh.lookupObject<volScalarField>("rho");
+            const volScalarField& pressure =
+                fvmesh.lookupObject<volScalarField>("p");
+            const volScalarField& reducedPressure =
+                fvmesh.lookupObject<volScalarField>("p_rgh");
+            const volScalarField& curvature =
+                fvmesh.lookupObject<volScalarField>("K_");
+            const surfaceScalarField& ghf =
+                fvmesh.lookupObject<surfaceScalarField>("ghf");
             const surfaceScalarField& mixtureMassFlux =
                 fvmesh.lookupObject<surfaceScalarField>("rhoPhi");
             const scalarField& volume = fvmesh.V();
@@ -106,6 +120,7 @@ functions
             scalar maxAlpha = -GREAT;
             scalar localMaxVelocity = -GREAT;
             vector localMaxVelocityLocation = vector::zero;
+            label localMaxVelocityCell = -1;
             forAll(volume, cellI)
             {
                 // Preserve the transported alpha exactly so conservation
@@ -122,6 +137,7 @@ functions
                 {
                     localMaxVelocity = speed;
                     localMaxVelocityLocation = centres[cellI];
+                    localMaxVelocityCell = cellI;
                 }
                 if (centres[cellI].y() > 0.657)
                 {
@@ -154,6 +170,190 @@ functions
               : vector::zero;
             maxVelocityLocation =
                 returnReduce(maxVelocityLocation, sumOp<vector>());
+            const bool ownsMaxVelocity =
+                Pstream::myProcNo() == maxVelocityProc;
+            const scalar maxVelocityAlpha = returnReduce
+            (
+                ownsMaxVelocity ? alpha[localMaxVelocityCell] : scalar(0),
+                sumOp<scalar>()
+            );
+            const scalar maxVelocityDensity = returnReduce
+            (
+                ownsMaxVelocity
+              ? mixtureDensity[localMaxVelocityCell]
+              : scalar(0),
+                sumOp<scalar>()
+            );
+            const scalar maxVelocityCurvature = returnReduce
+            (
+                ownsMaxVelocity ? curvature[localMaxVelocityCell] : scalar(0),
+                sumOp<scalar>()
+            );
+            const scalar maxVelocityPressure = returnReduce
+            (
+                ownsMaxVelocity ? pressure[localMaxVelocityCell] : scalar(0),
+                sumOp<scalar>()
+            );
+            const scalar maxVelocityReducedPressure = returnReduce
+            (
+                ownsMaxVelocity
+              ? reducedPressure[localMaxVelocityCell]
+              : scalar(0),
+                sumOp<scalar>()
+            );
+            const label maxVelocityCell = returnReduce
+            (
+                ownsMaxVelocity ? localMaxVelocityCell : label(-1),
+                maxOp<label>()
+            );
+
+            const dimensionedScalar sigma
+            (
+                "sigma",
+                dimensionSet(1, 0, -2, 0, 0, 0, 0),
+                0.072
+            );
+            const surfaceScalarField hydrostaticForceResidual
+            (
+                "caseBHydrostaticForceResidual",
+               -ghf*fvc::snGrad(mixtureDensity)
+              - fvc::snGrad(reducedPressure)
+            );
+            const surfaceScalarField surfaceTensionForce
+            (
+                "caseBSurfaceTensionForce",
+                sigma*fvc::interpolate(curvature)*fvc::snGrad(alpha)
+            );
+            const surfaceScalarField totalForceResidual
+            (
+                "caseBTotalForceResidual",
+                hydrostaticForceResidual + surfaceTensionForce
+            );
+
+            scalar localMaxHydrostaticForce = -GREAT;
+            scalar localMaxSurfaceTensionForce = -GREAT;
+            scalar localMaxTotalForce = -GREAT;
+            scalar localHydrostaticForceValue = 0;
+            scalar localSurfaceTensionForceValue = 0;
+            scalar localTotalForceValue = 0;
+            vector localHydrostaticForceLocation = vector::zero;
+            vector localSurfaceTensionForceLocation = vector::zero;
+            vector localTotalForceLocation = vector::zero;
+            for (label faceI = 0; faceI < fvmesh.nInternalFaces(); ++faceI)
+            {
+                const scalar hydrostaticMagnitude =
+                    mag(hydrostaticForceResidual[faceI]);
+                const scalar surfaceMagnitude =
+                    mag(surfaceTensionForce[faceI]);
+                const scalar totalMagnitude = mag(totalForceResidual[faceI]);
+                if (hydrostaticMagnitude > localMaxHydrostaticForce)
+                {
+                    localMaxHydrostaticForce = hydrostaticMagnitude;
+                    localHydrostaticForceValue =
+                        hydrostaticForceResidual[faceI];
+                    localHydrostaticForceLocation = fvmesh.Cf()[faceI];
+                }
+                if (surfaceMagnitude > localMaxSurfaceTensionForce)
+                {
+                    localMaxSurfaceTensionForce = surfaceMagnitude;
+                    localSurfaceTensionForceValue =
+                        surfaceTensionForce[faceI];
+                    localSurfaceTensionForceLocation = fvmesh.Cf()[faceI];
+                }
+                if (totalMagnitude > localMaxTotalForce)
+                {
+                    localMaxTotalForce = totalMagnitude;
+                    localTotalForceValue = totalForceResidual[faceI];
+                    localTotalForceLocation = fvmesh.Cf()[faceI];
+                }
+            }
+
+            const scalar maxHydrostaticForce = returnReduce
+            (
+                localMaxHydrostaticForce,
+                maxOp<scalar>()
+            );
+            label maxHydrostaticForceProc =
+                localMaxHydrostaticForce == maxHydrostaticForce
+              ? Pstream::myProcNo()
+              : Pstream::nProcs();
+            maxHydrostaticForceProc = returnReduce
+            (
+                maxHydrostaticForceProc,
+                minOp<label>()
+            );
+            scalar hydrostaticForceValue = returnReduce
+            (
+                Pstream::myProcNo() == maxHydrostaticForceProc
+              ? localHydrostaticForceValue
+              : scalar(0),
+                sumOp<scalar>()
+            );
+            vector hydrostaticForceLocation = returnReduce
+            (
+                Pstream::myProcNo() == maxHydrostaticForceProc
+              ? localHydrostaticForceLocation
+              : vector::zero,
+                sumOp<vector>()
+            );
+
+            const scalar maxSurfaceTensionForce = returnReduce
+            (
+                localMaxSurfaceTensionForce,
+                maxOp<scalar>()
+            );
+            label maxSurfaceTensionForceProc =
+                localMaxSurfaceTensionForce == maxSurfaceTensionForce
+              ? Pstream::myProcNo()
+              : Pstream::nProcs();
+            maxSurfaceTensionForceProc = returnReduce
+            (
+                maxSurfaceTensionForceProc,
+                minOp<label>()
+            );
+            scalar surfaceTensionForceValue = returnReduce
+            (
+                Pstream::myProcNo() == maxSurfaceTensionForceProc
+              ? localSurfaceTensionForceValue
+              : scalar(0),
+                sumOp<scalar>()
+            );
+            vector surfaceTensionForceLocation = returnReduce
+            (
+                Pstream::myProcNo() == maxSurfaceTensionForceProc
+              ? localSurfaceTensionForceLocation
+              : vector::zero,
+                sumOp<vector>()
+            );
+
+            const scalar maxTotalForce = returnReduce
+            (
+                localMaxTotalForce,
+                maxOp<scalar>()
+            );
+            label maxTotalForceProc =
+                localMaxTotalForce == maxTotalForce
+              ? Pstream::myProcNo()
+              : Pstream::nProcs();
+            maxTotalForceProc = returnReduce
+            (
+                maxTotalForceProc,
+                minOp<label>()
+            );
+            scalar totalForceValue = returnReduce
+            (
+                Pstream::myProcNo() == maxTotalForceProc
+              ? localTotalForceValue
+              : scalar(0),
+                sumOp<scalar>()
+            );
+            vector totalForceLocation = returnReduce
+            (
+                Pstream::myProcNo() == maxTotalForceProc
+              ? localTotalForceLocation
+              : vector::zero,
+                sumOp<vector>()
+            );
 
             scalar liquidFlux = 0;
             scalar gasFlux = 0;
@@ -195,7 +395,24 @@ functions
                     << "Min(alpha.water) = " << minAlpha << ' '
                     << "Max(alpha.water) = " << maxAlpha << ' '
                     << "max(mag(U)) = " << maxVelocity
-                    << " at location " << maxVelocityLocation << nl;
+                    << " at location " << maxVelocityLocation
+                    << " alphaAtMax = " << maxVelocityAlpha
+                    << " rhoAtMax = " << maxVelocityDensity
+                    << " KAtMax = " << maxVelocityCurvature
+                    << " pAtMax = " << maxVelocityPressure
+                    << " p_rghAtMax = " << maxVelocityReducedPressure
+                    << " proc = " << maxVelocityProc
+                    << " cell = " << maxVelocityCell << nl;
+                Info<< "CASEB_FORCE_BALANCE "
+                    << "maxHydrostatic(Pa/m) = " << maxHydrostaticForce
+                    << " signed = " << hydrostaticForceValue
+                    << " at location " << hydrostaticForceLocation << ' '
+                    << "maxSurface(Pa/m) = " << maxSurfaceTensionForce
+                    << " signed = " << surfaceTensionForceValue
+                    << " at location " << surfaceTensionForceLocation << ' '
+                    << "maxTotal(Pa/m) = " << maxTotalForce
+                    << " signed = " << totalForceValue
+                    << " at location " << totalForceLocation << nl;
             }
         #};
     }

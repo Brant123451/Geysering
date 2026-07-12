@@ -284,6 +284,10 @@ class TwoPhaseFlowDeckTests(unittest.TestCase):
         self.assertIn('"thermo:rho.air"', control)
         self.assertIn('"alphaPhi.water"', control)
         self.assertIn("CASEB_BOUNDS", control)
+        self.assertIn("alphaAtMax", control)
+        self.assertIn("CASEB_FORCE_BALANCE", control)
+        self.assertIn("hydrostaticForceResidual", control)
+        self.assertIn("surfaceTensionForce", control)
         self.assertNotIn("min(max(alpha[cellI]", control)
         self.assertNotIn("fieldFunctionObjects", control)
 
@@ -300,7 +304,17 @@ class TwoPhaseFlowDeckTests(unittest.TestCase):
                     "Max(alpha.water) - 1 = 3e-10",
                     "CASEB_BOUNDS Min(alpha.water) = -1e-10 "
                     "Max(alpha.water) = 1 max(mag(U)) = 0.25 "
-                    "at location (3.516 0.403 0.0)",
+                    "at location (3.516 0.403 0.0) "
+                    "alphaAtMax = 0.4 rhoAtMax = 400 "
+                    "KAtMax = -12 pAtMax = 101325 "
+                    "p_rghAtMax = 105270 proc = 2 cell = 42",
+                    "CASEB_FORCE_BALANCE "
+                    "maxHydrostatic(Pa/m) = 10 signed = -10 "
+                    "at location (3.5 0.4 0) "
+                    "maxSurface(Pa/m) = 20 signed = 20 "
+                    "at location (3.51 0.41 0.01) "
+                    "maxTotal(Pa/m) = 25 signed = -25 "
+                    "at location (3.52 0.42 -0.01)",
                     "ExecutionTime = 12.5 s  ClockTime = 13 s",
                 )
             )
@@ -311,6 +325,15 @@ class TwoPhaseFlowDeckTests(unittest.TestCase):
         self.assertEqual(
             diagnostics["max_velocity_location_m"], [3.516, 0.403, 0.0]
         )
+        self.assertEqual(diagnostics["alpha_water_at_max_velocity"], 0.4)
+        self.assertEqual(diagnostics["curvature_at_max_velocity_per_m"], -12)
+        self.assertEqual(diagnostics["max_velocity_processor"], 2)
+        self.assertEqual(diagnostics["max_velocity_local_cell"], 42)
+        self.assertEqual(
+            diagnostics["max_hydrostatic_force_residual_pa_per_m"], 10
+        )
+        self.assertEqual(diagnostics["max_surface_tension_force_pa_per_m"], 20)
+        self.assertEqual(diagnostics["max_total_force_residual_pa_per_m"], 25)
 
 
 class SensitivityIndexTests(unittest.TestCase):

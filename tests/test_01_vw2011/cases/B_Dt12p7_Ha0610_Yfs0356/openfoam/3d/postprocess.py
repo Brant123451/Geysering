@@ -735,19 +735,85 @@ def parse_solver_diagnostics(text: str) -> dict:
         rf"({NUMBER_PATTERN})\s+s"
     )
 
-    velocity_samples: list[tuple[float, list[float]]] = []
+    velocity_samples: list[dict] = []
     velocity_pattern = re.compile(
         rf"max\(mag\(U\)\)\s*=\s*({NUMBER_PATTERN}).*?"
         rf"at location\s*\(\s*({NUMBER_PATTERN})\s+({NUMBER_PATTERN})\s+"
         rf"({NUMBER_PATTERN})\s*\)",
         flags=re.I,
     )
-    for match in velocity_pattern.finditer(text):
-        velocity_samples.append(
-            (
-                float(match.group(1)),
-                [float(match.group(i)) for i in range(2, 5)],
+    velocity_state_pattern = re.compile(
+        rf"alphaAtMax\s*=\s*({NUMBER_PATTERN})\s+"
+        rf"rhoAtMax\s*=\s*({NUMBER_PATTERN})\s+"
+        rf"KAtMax\s*=\s*({NUMBER_PATTERN})\s+"
+        rf"pAtMax\s*=\s*({NUMBER_PATTERN})\s+"
+        rf"p_rghAtMax\s*=\s*({NUMBER_PATTERN})\s+"
+        r"proc\s*=\s*(\d+)\s+cell\s*=\s*(\d+)",
+        flags=re.I,
+    )
+    for line in text.splitlines():
+        if "CASEB_BOUNDS" not in line:
+            continue
+        match = velocity_pattern.search(line)
+        if match is None:
+            continue
+        sample = {
+            "speed": float(match.group(1)),
+            "location": [float(match.group(i)) for i in range(2, 5)],
+        }
+        state_match = velocity_state_pattern.search(line)
+        if state_match is not None:
+            sample.update(
+                {
+                    "alpha_water": float(state_match.group(1)),
+                    "density": float(state_match.group(2)),
+                    "curvature": float(state_match.group(3)),
+                    "pressure": float(state_match.group(4)),
+                    "reduced_pressure": float(state_match.group(5)),
+                    "processor": int(state_match.group(6)),
+                    "local_cell": int(state_match.group(7)),
+                }
             )
+        velocity_samples.append(sample)
+
+    force_samples: list[dict] = []
+    vector_pattern = (
+        rf"\(\s*({NUMBER_PATTERN})\s+({NUMBER_PATTERN})\s+"
+        rf"({NUMBER_PATTERN})\s*\)"
+    )
+    force_pattern = re.compile(
+        rf"maxHydrostatic\(Pa/m\)\s*=\s*({NUMBER_PATTERN})\s+"
+        rf"signed\s*=\s*({NUMBER_PATTERN})\s+at location\s*{vector_pattern}\s+"
+        rf"maxSurface\(Pa/m\)\s*=\s*({NUMBER_PATTERN})\s+"
+        rf"signed\s*=\s*({NUMBER_PATTERN})\s+at location\s*{vector_pattern}\s+"
+        rf"maxTotal\(Pa/m\)\s*=\s*({NUMBER_PATTERN})\s+"
+        rf"signed\s*=\s*({NUMBER_PATTERN})\s+at location\s*{vector_pattern}",
+        flags=re.I,
+    )
+    for line in text.splitlines():
+        if "CASEB_FORCE_BALANCE" not in line:
+            continue
+        match = force_pattern.search(line)
+        if match is None:
+            continue
+        force_samples.append(
+            {
+                "hydrostatic": float(match.group(1)),
+                "hydrostatic_signed": float(match.group(2)),
+                "hydrostatic_location": [
+                    float(match.group(i)) for i in range(3, 6)
+                ],
+                "surface": float(match.group(6)),
+                "surface_signed": float(match.group(7)),
+                "surface_location": [
+                    float(match.group(i)) for i in range(8, 11)
+                ],
+                "total": float(match.group(11)),
+                "total_signed": float(match.group(12)),
+                "total_location": [
+                    float(match.group(i)) for i in range(13, 16)
+                ],
+            }
         )
 
     result = {
@@ -763,14 +829,48 @@ def parse_solver_diagnostics(text: str) -> dict:
         "clock_time_s": clock_time[-1] if clock_time else None,
     }
     if velocity_samples:
-        maximum_velocity = max(velocity_samples, key=lambda sample: sample[0])
-        result["max_velocity_m_per_s"] = maximum_velocity[0]
-        result["max_velocity_location_m"] = maximum_velocity[1]
-        result["last_written_velocity_max_m_per_s"] = velocity_samples[-1][0]
+        maximum_velocity = max(
+            velocity_samples, key=lambda sample: sample["speed"]
+        )
+        result["max_velocity_m_per_s"] = maximum_velocity["speed"]
+        result["max_velocity_location_m"] = maximum_velocity["location"]
+        result["last_written_velocity_max_m_per_s"] = velocity_samples[-1][
+            "speed"
+        ]
+        for source, target in (
+            ("alpha_water", "alpha_water_at_max_velocity"),
+            ("density", "density_at_max_velocity_kg_per_m3"),
+            ("curvature", "curvature_at_max_velocity_per_m"),
+            ("pressure", "pressure_at_max_velocity_pa"),
+            ("reduced_pressure", "reduced_pressure_at_max_velocity_pa"),
+            ("processor", "max_velocity_processor"),
+            ("local_cell", "max_velocity_local_cell"),
+        ):
+            result[target] = maximum_velocity.get(source)
     else:
         result["max_velocity_m_per_s"] = None
         result["max_velocity_location_m"] = None
         result["last_written_velocity_max_m_per_s"] = None
+    for source, key_prefix in (
+        ("hydrostatic", "hydrostatic_force_residual"),
+        ("surface", "surface_tension_force"),
+        ("total", "total_force_residual"),
+    ):
+        if force_samples:
+            maximum_force = max(
+                force_samples, key=lambda sample: sample[source]
+            )
+            result[f"max_{key_prefix}_pa_per_m"] = maximum_force[source]
+            result[f"max_{key_prefix}_signed_pa_per_m"] = maximum_force[
+                f"{source}_signed"
+            ]
+            result[f"max_{key_prefix}_location_m"] = maximum_force[
+                f"{source}_location"
+            ]
+        else:
+            result[f"max_{key_prefix}_pa_per_m"] = None
+            result[f"max_{key_prefix}_signed_pa_per_m"] = None
+            result[f"max_{key_prefix}_location_m"] = None
     return result
 
 
