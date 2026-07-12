@@ -366,6 +366,26 @@ timestep controls.
     Do not extend to 0.04 s.  Construct a discrete hydrostatic `p_rgh` field
     using the solver's gravity-force operator, verify the pre-solver face
     residual, and then repeat source-default RDF.
+27. The discrete hydrostatic initializer now compiles and runs after explicitly
+    linking its TwoPhaseFlow/OpenFOAM model libraries, applying
+    `constrainPressure` before evaluating `fixedFluxPressure`, and registering
+    the `hRef` object required by `prghPressure`.  Twenty policy tests pass.  Its
+    ten-corrector physical RDF screen showed:
+    * the pre-solver maximum gravity-pressure face residual fell from
+      1.661 MPa/m to 1.018 kPa/m, while algebraic `p/p_rgh` consistency reached
+      \(1.46\times10^{-11}\) Pa;
+    * the remaining face residual is not roundoff, so the projection is an
+      improvement rather than an exact facewise balance;
+    * all written velocity and force hotspots stayed at the intended free
+      surface; the y=0.463 m pure-gas hotspot did not occur;
+    * global/interface Courant maxima were 0.365/0.204 and the first, peak and
+      final written velocities were 1.279, 1.798 and 1.056 m/s;
+    * dynamic pressure-gravity/surface-force maxima were 83/118 kPa/m;
+    * alpha and mass balances remained clean, with no rim water or gas entry.
+    This is effectively unchanged from the otherwise identical analytic
+    adaptive-timestep RDF run and is rejected.  Pair the discrete initializer
+    with `maxDeltaT=1e-5` through 0.006 s to test directly whether it removes
+    the analytic hard-cap run's growing exterior-gas hotspot.
 
 ## Still required
 
@@ -384,9 +404,11 @@ The scientific reproduction is **not complete**.  Continue in this order:
    fully-wet physical RDF rerun and hard-timestep curvature-formula pair are
    complete.  `curvFromTr=false` is worse and rejected.  The retained trace
    formula's capped 0.006 s extension then exposed a growing pure-gas
-   pressure-gravity hotspot.  Add and verify discrete hydrostatic pressure
-   initialization before repeating RDF; do not approach the 0.04 s
-   pressure-drift window yet.  Extend a candidate past the 0.04 s
+   pressure-gravity hotspot.  Discrete hydrostatic initialization strongly
+   reduces its pre-solver force residual, but the adaptive RDF rerun still
+   fails both Courant gates and has essentially unchanged free-surface startup
+   velocity.  Complete the directly paired hard-cap discrete run before any
+   0.04 s pressure-drift window.  Extend a candidate past the 0.04 s
    pressure-drift onset only if it stays within the declared Courant limits
    and reduces peak velocity, and only \(H^*\) peak-to-peak at or below 0.02
    may proceed to the full 1.0 s hold.  Opening runs retain the dissipative

@@ -207,8 +207,15 @@ formula is rejected.  The retained trace formula was then repeated to 0.006 s
 under the same cap: Courant limits passed, but the final pure-gas velocity was
 the run maximum at 1.481 m/s and its collocated pressure-gravity residual
 reached 208 kPa/m, while curvature and surface force were zero there.  This
-selects a discrete hydrostatic-pressure initialization check before any longer
-hold extension.
+selected a discrete hydrostatic-pressure initialization check.  Ten projection
+correctors reduced the pre-solver maximum face residual from 1.661 MPa/m to
+1.018 kPa/m and retained \(p/p_{rgh}\) consistency to
+\(1.46\times10^{-11}\) Pa, although the face residual is not roundoff.  The
+adaptive RDF rerun kept all hotspots at the physical free surface, but still
+reached global/interface Co=0.365/0.204 and a 1.798 m/s peak, essentially
+unchanged from the analytic initializer.  It is rejected.  The next direct
+comparison uses the discrete initializer with the same `maxDeltaT=1e-5` as the
+analytic hard-cap trace run; no longer hold extension is cleared.
 
 Thermophysical choices are:
 

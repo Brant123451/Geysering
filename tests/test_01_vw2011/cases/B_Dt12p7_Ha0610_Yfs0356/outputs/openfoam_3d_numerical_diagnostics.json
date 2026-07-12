@@ -1288,5 +1288,104 @@
       "next_action": "Construct a discrete hydrostatic p_rgh initialization using the same gravity-force operator, verify its pre-solver face residual, then repeat the retained RDF short screen."
     },
     "completion_claim": "This is a rejected capped startup extension, not a passed hold, smoke run, or completed reproduction."
+  },
+  "discrete_hydrostatic_rdf_screen_0p006_s": {
+    "status": "rejected_courant_limits_surface_tension_dominated",
+    "source_commits": [
+      "26b625c",
+      "ca23def",
+      "3b1a51a",
+      "a75683f",
+      "bc04f52"
+    ],
+    "purpose": "Project the initial reduced pressure with the solver gravity-force operator and repeat the source-default physical RDF screen.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "reconstruction_iterations": 5,
+      "reconstruction_tolerance": 1e-06,
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "tower_water_selector_radius_m": 0.00735,
+      "hydrostatic_initialization": "discrete",
+      "hydrostatic_correctors": 10,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "write_interval_s": 0.0005,
+      "requested_end_time_s": 0.006
+    },
+    "hydrostatic_projection": {
+      "connected_regions": 2,
+      "unvented_pressure_references": 1,
+      "correctors": 10,
+      "before_max_force_residual_pa_per_m": 1661428.0,
+      "after_max_force_residual_pa_per_m": 1017.9579,
+      "force_residual_ratio": 0.0006127005804645161,
+      "after_max_force_residual_location_m": [
+        3.5144812,
+        0.40242351,
+        0.0010191192
+      ],
+      "after_max_algebraic_residual_pa": 1.4551915e-11,
+      "assessment": "The projection reduced the maximum face residual by a factor of 1632, but the remaining 1.018 kPa/m is not roundoff."
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.006008831281,
+      "postprocessed_probe_duration_s": 0.0050388373,
+      "execution_time_s": 244.08,
+      "clock_time_s": 257,
+      "final_delta_t_s": 6.9204977e-05,
+      "maximum_courant_number": 0.36517433,
+      "maximum_interface_courant_number": 0.20352232,
+      "maximum_capillary_number": 0.36481116,
+      "alpha_water_min": -1.3113495e-11,
+      "alpha_water_max": 1.0000000000000049,
+      "first_written_velocity_m_per_s": 1.2790886,
+      "first_written_velocity_time_s": 0.00046771408,
+      "written_peak_velocity_m_per_s": 1.7976449,
+      "written_peak_velocity_time_s": 0.0015242498,
+      "written_peak_velocity_location_m": [
+        3.5163674,
+        0.4046661,
+        -0.0013608496
+      ],
+      "alpha_water_at_written_peak_velocity": 0.0,
+      "density_at_written_peak_velocity_kg_per_m3": 1.2025456,
+      "curvature_at_written_peak_velocity_per_m": 249.6971,
+      "final_written_velocity_m_per_s": 1.0564421,
+      "maximum_hydrostatic_force_residual_pa_per_m": 83012.297,
+      "maximum_hydrostatic_force_residual_location_m": [
+        3.5145467,
+        0.4026696,
+        -0.0040576548
+      ],
+      "maximum_surface_tension_force_pa_per_m": 118148.97,
+      "maximum_surface_tension_force_location_m": [
+        3.5145467,
+        0.4026696,
+        -0.0040576548
+      ],
+      "maximum_total_force_residual_pa_per_m": 78344.749,
+      "gas_mass_error_pct_max_abs": 9.077101920436604e-07,
+      "total_mass_error_pct_max_abs": 4.380791064027939e-09,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "interpretation": {
+      "finding": "The discrete projection removed the exterior-gas hotspot from this adaptive-timestep screen: every written velocity and force maximum remained at the intended free surface. The candidate nevertheless failed both Courant gates and retained a 1.798 m/s startup peak.",
+      "comparison": "Against the otherwise identical analytic fully-wet RDF screen, peak velocity changed from 1.805 to 1.798 m/s, final velocity from 1.056 to 1.056 m/s, and maximum surface force from 118.214 to 118.149 kPa/m. The physical startup response is therefore essentially unchanged.",
+      "mechanism": "After projection, the maximum dynamic pressure-gravity and surface-tension residuals were 83 and 118 kPa/m at the physical free surface. Surface tension remains the larger startup term.",
+      "decision": "Do not extend this adaptive candidate to 0.04 s or the full hold.",
+      "next_action": "Repeat the discrete initializer with maxDeltaT=1e-5 through 0.006 s, directly paired with the rejected analytic hard-cap trace run, to test whether projection removes its growing exterior-gas hotspot."
+    },
+    "completion_claim": "This is a rejected discrete-hydrostatic startup screen, not a passed hold, smoke run, or completed reproduction."
   }
 }

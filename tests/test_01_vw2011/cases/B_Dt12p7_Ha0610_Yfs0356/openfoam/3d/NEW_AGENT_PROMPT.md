@@ -460,6 +460,21 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     该候选不得延长到 0.04 s。下一项是用 solver 相同 gravity-force operator
     构造离散 hydrostatic `p_rgh`，先验证 pre-solver face residual，再复筛
     source-default RDF。
+24. 离散 hydrostatic initializer 已完成动态验证；补齐模型库、修正
+    `fixedFluxPressure` 调用顺序并注册 `hRef` 后，20 项测试通过：
+    - 10 次 corrector 把 pre-solver 最大 face residual 从 1.661 MPa/m
+      降到 1.018 kPa/m，代数 `p/p_rgh` residual 为
+      \(1.46\times10^{-11}\) Pa；但 face residual 尚非 roundoff；
+    - adaptive RDF 复筛中，所有速度/力热点均在 y=0.403 m 物理自由面，
+      y=0.463 m exterior-gas 热点未出现；
+    - global/interface Co 为 0.365/0.204，仍双双超限；
+    - 首帧、峰值、末帧速度为 1.279、1.798、1.056 m/s，与 analytic
+      fully-wet RDF 的 1.338、1.805、1.056 m/s 实质相同；
+    - dynamic pressure-gravity/surface force 最大值为 83/118 kPa/m；
+    - alpha、质量界、rim water 和 gas-entry 干净。
+    该 adaptive 候选被拒绝。下一项只改变 `maxDeltaT=1e-5`，与既有
+    analytic hard-cap trace 运行直接配对，确认 discrete projection 是否
+    消除其增长的 exterior-gas 热点；不得直接延长到 0.04 s。
 
 十、hold 验收
 
