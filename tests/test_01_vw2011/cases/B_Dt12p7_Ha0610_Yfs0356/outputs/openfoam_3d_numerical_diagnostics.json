@@ -496,5 +496,53 @@
       "next_action": "Isolate the reconstruction setting from timestep feedback with a tightly capped, paired startup timestep screen before selecting any candidate for a pressure-drift window beyond 0.04 s."
     },
     "completion_claim": "This is a rejected short numerical screen. It is not a passed hold, smoke run, full experiment, or accepted baseline."
+  },
+  "fit_paraboloid_interpolated_normal_capped_timestep_screen": {
+    "status": "rejected_deterministic_early_flux_spike",
+    "source_commit": "15b916d",
+    "purpose": "Test whether the interpolateNormal=true Courant excursion was caused by adaptive timestep growth by imposing maxCo=0.2 and maxDeltaT=1e-5 s.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "fitParaboloid",
+      "interpolate_normal": true,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.2,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 1e-05,
+      "requested_end_time_s": 0.0035
+    },
+    "interrupted_result": {
+      "solver_exit_code_after_sigint": 1,
+      "latest_completed_solver_time_s": 0.001385121015,
+      "execution_time_s": 684.0,
+      "clock_time_s": 696,
+      "maximum_courant_number": 1.9915299,
+      "spike_state_time_s": 1.979890176e-05,
+      "spike_report_time_s": 2.023071219e-05,
+      "timestep_before_spike_feedback_s": 4.299817e-06,
+      "timestep_after_spike_feedback_s": 4.3181043e-07,
+      "interface_courant_at_spike": 0.0074808715,
+      "capillary_number_at_spike": 0.014385182,
+      "written_velocity_m_per_s": {
+        "0.00049512101": 1.2385568,
+        "0.00099512101": 1.2074082
+      },
+      "alpha_at_written_samples": {
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "water_above_rim_m3": 0.0
+    },
+    "rejection": {
+      "finding": "The same approximately 2.0 global Courant excursion recurred while the actual timestep was only 4.30e-6 s, below the imposed 1e-5 s cap. Interface Courant remained 0.0075, identifying a highly local pressure-corrected flux excursion outside the near-interface mask rather than timestep growth.",
+      "velocity_finding": "The first written velocity was already 1.239 m/s, above the uncapped interpolateNormal=true peak of 1.187 m/s, so smaller timesteps did not preserve the earlier apparent velocity benefit.",
+      "decision": "The run was stopped after both the Courant and velocity screening limits had irreversibly failed. Further maxDeltaT reduction is not justified.",
+      "next_action": "Keep interpolateNormal=false and test whether the static-benchmark plicRDF convergence controls, iterations=10 and tol=1e-8, reduce its 0.003 s peak without reintroducing the early flux spike."
+    },
+    "completion_claim": "This is an intentionally stopped timestep diagnostic. It is not a passed hold, smoke run, full experiment, or accepted baseline."
   }
 }

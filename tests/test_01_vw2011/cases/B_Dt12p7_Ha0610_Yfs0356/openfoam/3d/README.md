@@ -133,7 +133,16 @@ they reconstruct geometry without solving the transient momentum equation;
 its dynamic capillary-wave cases use the source default `true`.  Since
 OpenFOAM Courant control acts on the next timestep rather than as a strict
 current-step cap, the next diagnostic pairs normal interpolation with a hard
-startup timestep cap before choosing a pressure-drift candidate.
+startup timestep cap before choosing a pressure-drift candidate.  That
+diagnostic reproduced global Co=1.992 at approximately
+\(2.0\times10^{-5}\) s even though its preceding timestep was only
+\(4.30\times10^{-6}\) s, below the imposed `maxDeltaT=1e-5`.  Interface Co was
+only 0.0075, and the first written velocity was already 1.239 m/s.  The event
+is therefore a highly local pressure-corrected flux excursion, not adaptive
+timestep growth, and the interpolated-normal path is rejected.  The next
+minimal sensitivity retains `interpolateNormal=false` while matching the
+static benchmark's stricter plicRDF convergence controls
+(`iterations=10`, `tol=1e-8`).
 
 Thermophysical choices are:
 

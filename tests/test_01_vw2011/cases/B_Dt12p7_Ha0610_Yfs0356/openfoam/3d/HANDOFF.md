@@ -54,8 +54,13 @@ benchmarks, before any extension.  That repeat exited normally and reduced the
 global/interface Courant maxima to 0.350/0.289, but its peak velocity increased
 9.7% to 1.302 m/s; only the final velocity improved slightly to 0.788 m/s.
 It therefore fails the required joint Courant-and-velocity improvement and
-must not be extended.  The next screen must separate normal interpolation from
-the one-step timestep-feedback lag with a tightly capped paired startup test.
+must not be extended.  A tightly capped `interpolateNormal=true` diagnostic
+then reproduced the same Co=1.99 excursion at only \(2.0\times10^{-5}\) s,
+while the actual timestep was already below the cap.  Its first written
+velocity also rose to 1.239 m/s.  This rejects timestep growth as the cause and
+rejects the interpolated-normal path.  The next minimal screen keeps
+`interpolateNormal=false` and tests the static-benchmark plicRDF convergence
+controls (`iterations=10`, `tol=1e-8`).
 
 ## Verified before handoff
 
@@ -154,16 +159,27 @@ the one-step timestep-feedback lag with a tightly capped paired startup test.
     This does not meet the required joint velocity-and-Courant improvement.
     The single pressure sample also gives no usable \(H^*\) stability evidence,
     so the candidate is not cleared for extension.
+14. Reducing the interpolated-normal diagnostic to `maxCo=0.2` and
+    `maxDeltaT=1e-5` did not suppress its startup event:
+    * global Co reached 1.992 at approximately \(2.0\times10^{-5}\) s while
+      the preceding timestep was only \(4.30\times10^{-6}\) s;
+    * interface Co at the event was only 0.0075, so the hotspot was a highly
+      local pressure-corrected flux outside the near-interface mask;
+    * the first two written velocities were 1.239 and 1.207 m/s, already above
+      the earlier 1.187 m/s peak.
+    The run was stopped at 0.0014 s after both immutable screening limits had
+    failed.  Further reduction of `maxDeltaT` is not a justified remedy.
 
 ## Still required
 
 The scientific reproduction is **not complete**.  Continue in this order:
 
-1. Do not extend either existing `fitParaboloid` screen.  Run a tightly
-   timestep-capped paired startup diagnostic to separate the lower velocity
-   seen with `interpolateNormal=true` from its one-step Courant overshoot.
-   Re-screen to 0.006 s only if the early pair stays within the declared
-   Courant limits without increasing peak velocity.  A candidate may then
+1. Do not extend either existing `fitParaboloid` screen and do not retry
+   `interpolateNormal=true` with a smaller timestep cap.  Materialise and test
+   the static-benchmark plicRDF convergence controls (`iterations=10`,
+   `tol=1e-8`) with `interpolateNormal=false` through the previous 0.003 s
+   velocity-peak window.  Re-screen to 0.006 s only if it stays within the
+   declared Courant limits and reduces peak velocity.  A candidate may then
    extend past the 0.04 s pressure-drift onset, and only \(H^*\) peak-to-peak
    at or below 0.02 may proceed to the full 1.0 s hold.  Opening runs retain
    the dissipative resistance and must be tested separately.

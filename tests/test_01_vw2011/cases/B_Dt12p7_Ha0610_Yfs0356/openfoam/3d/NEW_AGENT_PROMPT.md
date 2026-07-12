@@ -314,6 +314,16 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     Courant 控制；只有早期配对同时通过声明的 Courant 和速度门槛，才复筛至
     0.006 s 并延长到超过 0.04 s。只有 Hstar peak-to-peak 不超过 0.02 的候选
     才能开始完整 1.0 s hold。
+11. 上述 `interpolateNormal=true` 硬 timestep 诊断已主动停止：
+    - 即使 `maxCo=0.2`、`maxDeltaT=1e-5`，global Co 仍在约
+      \(2.0\times10^{-5}\) s 重现 1.992；
+    - 尖峰前实际 timestep 只有 \(4.30\times10^{-6}\) s，interface Co 只有
+      0.0075，因此根因不是后期 timestep 放大，而是 near-interface mask 外的
+      高度局部 pressure-corrected flux；
+    - 首两个写出速度已为 1.239/1.207 m/s，也未保留旧运行的低峰值。
+    不得继续缩小 `maxDeltaT` 挽救 true 路径。下一步保留
+    `interpolateNormal=false`，物化并筛选静态 benchmark 的 plicRDF 收敛控制
+    `iterations=10`、`tol=1e-8`，先覆盖旧 false 候选约 0.003 s 的速度峰值。
 
 十、hold 验收
 
