@@ -80,7 +80,7 @@
       0.05,
       1.65
     ],
-    "method": "height interval divided by interpolated first-passage time"
+    "method": "height interval divided by interpolated first-passage time after gas first enters the riser"
   },
   "vfs_first_passage_m_per_s": null,
   "vfs_fit_m_per_s": null,
