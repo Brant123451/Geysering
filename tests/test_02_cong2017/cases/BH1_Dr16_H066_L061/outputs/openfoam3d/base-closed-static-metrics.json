@@ -34,6 +34,7 @@
     "vint_m_per_s": 1.231
   },
   "exterior_water_max_m3": 0.0,
+  "geyser_ejection_threshold_m3": 1e-09,
   "initial_inventory": {
     "analytic_pocket_air_mass_kg": 0.0014276016764529437,
     "analytic_pocket_volume_m3": 0.0011977321991811086,
@@ -70,6 +71,19 @@
     "pass": true
   },
   "valve_duration_s": 0.0,
+  "velocity_metric": {
+    "Yfs_height_window_m": [
+      0.65,
+      1.7
+    ],
+    "Yint_height_window_m": [
+      0.05,
+      1.65
+    ],
+    "method": "height interval divided by interpolated first-passage time"
+  },
+  "vfs_first_passage_m_per_s": null,
   "vfs_fit_m_per_s": null,
+  "vint_first_passage_m_per_s": null,
   "vint_fit_m_per_s": null
 }
