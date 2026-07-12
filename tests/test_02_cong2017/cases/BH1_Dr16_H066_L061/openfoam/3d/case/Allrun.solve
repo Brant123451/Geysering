@@ -89,14 +89,7 @@ if [[ "$MODE" == "static" ]]; then
 elif [[ "$VALVE_DURATION" != "0" && "$VALVE_DURATION" != "0.0" ]]; then
     python3 "$MODEL_DIR/configure_valve.py" \
         --duration "$VALVE_DURATION" \
-        --output system/createBafflesDict.runtime
-    createBaffles \
-        -dict system/createBafflesDict.runtime \
-        -overwrite > log.createBaffles 2>&1
-    if ! checkMesh -allGeometry -allTopology > log.checkMesh.afterBaffle 2>&1; then
-        echo "Extended porous-baffle checkMesh reported documented diagnostics."
-    fi
-    checkMesh > log.checkMesh.afterBaffle.standard 2>&1
+        --output constant/valveProperties
 fi
 
 foamDictionary system/controlDict -entry endTime -set "$END_TIME" >/dev/null

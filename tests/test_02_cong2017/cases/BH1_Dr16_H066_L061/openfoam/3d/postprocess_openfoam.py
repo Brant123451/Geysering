@@ -452,6 +452,11 @@ def main() -> None:
         "mode": args.mode,
         "solver": "bh1CompressibleInterFoam",
         "valve_duration_s": args.valve_duration,
+        "valve_model": (
+            "25 mm semi-implicit passive Forchheimer resistance zone"
+            if args.valve_duration > 0
+            else "instantaneously unobstructed internal connection"
+        ),
         "reached_time_s": reached_end,
         "observed_3d_geyser": observed_geyser,
         "geyser_ejection_threshold_m3": 1e-9,

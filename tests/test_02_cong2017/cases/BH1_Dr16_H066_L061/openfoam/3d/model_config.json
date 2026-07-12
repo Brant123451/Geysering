@@ -72,14 +72,22 @@
       0.5
     ],
     "sensitivity_area_law": "A/A0=sin(pi*t/(2*tau))^2 for 0<t<tau",
-    "sensitivity_note": "equivalent porous-baffle uncertainty model, not a measured ball-angle law",
-    "pressure_jump_initialization": {
-      "upstream_p_rgh_Pa": 107543.13717,
-      "pocket_p_rgh_Pa": 101325.0,
-      "fixed_jump_Pa": -6218.13717,
-      "fixed_jump_sign_convention": "owner = neighbour - jump; the master owner is upstream",
-      "time_step_relaxation": 0.1,
-      "purpose": "retain the audited hydrostatic pressure difference at zero initial flux and damp the explicit quadratic-loss feedback; this is not a pressure source"
+    "sensitivity_note": "equivalent passive-resistance uncertainty model, not a measured ball-angle law",
+    "minimum_area_fraction": 0.001,
+    "resistance_model": {
+      "type": "semi-implicit Forchheimer momentum sink",
+      "cell_zone": "valveResistanceZone",
+      "zone_x_interval_m": [
+        5.96,
+        5.985
+      ],
+      "resistance_length_m": 0.025,
+      "loss_coefficient": "K=(A0/A)^2-1",
+      "force_per_volume": "-0.5*rho*K*mag(U)*U/L",
+      "linearization": "non-negative 0.5*rho*K*mag(U_old)/L coefficient added to the momentum diagonal",
+      "zero_velocity_floor": false,
+      "zone_volume_check": "equivalent 50 mm-pipe length must agree with resistance_length within 20%",
+      "purpose": "passive mesh-coupled loss without the unstable old-flux pressure-jump feedback; no pressure or velocity source"
     }
   },
   "meshes": {

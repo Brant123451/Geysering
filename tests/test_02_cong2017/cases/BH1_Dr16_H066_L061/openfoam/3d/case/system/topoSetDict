@@ -43,6 +43,16 @@ actions
         box             (3.319 1.825 -0.151) (3.621 3.026 0.151);
     }
     {
+        // Four base-mesh or eight refined-mesh axial layers immediately
+        // upstream of the selected valve. The solver verifies that the zone
+        // volume represents the declared 25 mm resistance length.
+        name            valveResistanceZone;
+        type            cellZoneSet;
+        action          new;
+        source          boxToCell;
+        box             (5.96 -0.026 -0.026) (5.985 0.026 0.026);
+    }
+    {
         name            valvePlane;
         type            faceZoneSet;
         action          new;

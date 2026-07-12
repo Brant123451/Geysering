@@ -46,8 +46,10 @@ def main() -> None:
     max_skewness = first(r"Max skewness\s*=\s*([0-9.eE+-]+)", text)
     strict_fraction = concave_cells / cells if cells else None
     standard_pass = "Mesh OK." in standard_text and "Failed " not in standard_text
+    valve_resistance_zone_present = "valveResistanceZone" in text
     extended_diagnostics_accepted = bool(
         cells is not None
+        and valve_resistance_zone_present
         and strict_failed_checks <= 2
         and underdetermined_cells <= 10
         and concave_cells <= 0.01 * cells
@@ -90,6 +92,7 @@ def main() -> None:
         "standard_check_pass": standard_pass,
         "strict_check_pass": strict_failed_checks == 0,
         "strict_failed_checks": strict_failed_checks,
+        "valve_resistance_zone_present": valve_resistance_zone_present,
         "production_acceptance": {
             "pass": standard_pass and extended_diagnostics_accepted,
             "policy": (
@@ -111,6 +114,7 @@ def main() -> None:
             "true circular main",
             "true circular riser",
             "conformal Boolean T-junction",
+            "valve resistance cell zone",
         ],
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -121,6 +125,7 @@ def main() -> None:
         raise SystemExit(
             "Mesh acceptance failed: "
             f"standard_pass={standard_pass}, "
+            f"valve_resistance_zone_present={valve_resistance_zone_present}, "
             f"strict_failed_checks={strict_failed_checks}, "
             f"extended_diagnostics_accepted={extended_diagnostics_accepted}"
         )

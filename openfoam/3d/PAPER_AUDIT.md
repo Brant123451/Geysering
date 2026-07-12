@@ -108,12 +108,14 @@ measurements exist:
    sensitivity uses the same monotone,
    non-fitted normalized effective-area law for `0.2 s` and `0.5 s`. It is
    labelled an equivalent-valve uncertainty study, not a measured ball-angle
-   history. The passive jump is initialized from the audited hydrostatic
-   difference (`p_rgh,pocket-p_rgh,upstream=-6218.13717 Pa`) and uses
-   OpenFOAM's fixed-jump time-step relaxation factor `0.1` to prevent the
-   explicit quadratic-loss update from erasing that difference at zero
-   initial flux. This is a numerical closure fixed before sensitivity results;
-   no pressure or velocity source may be used.
+   history. The corresponding loss `K=(A0/A)^2-1` is applied as the passive
+   Forchheimer sink `-0.5*rho*K*|U|*U/L` over a declared `25 mm` zone
+   immediately upstream of the valve. A non-negative Picard coefficient is
+   added to the momentum diagonal, with no velocity floor; the source is
+   therefore zero at zero flow and cannot inject momentum. This avoids the
+   unstable old-flux feedback of an explicit pressure-jump boundary while
+   preserving the same area/loss law. The closure is fixed before sensitivity
+   results; no pressure or velocity source may be used.
 5. **Wall wetting:** no contact angle is reported. The baseline therefore
    imposes no fitted contact-angle model (`alpha.water` uses `zeroGradient` on
    smooth no-slip acrylic walls). This is recorded as “contact angle not

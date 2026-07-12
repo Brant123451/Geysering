@@ -36,7 +36,8 @@ Description
     it is energetically equivalent to total internal energy but avoids
     subtracting large atmospheric-pressure work terms in low-Mach open air.
     The two compressible thermodynamic phases and VOF transport equations are
-    unchanged.
+    unchanged. Opening-time sensitivity can additionally activate a passive,
+    semi-implicit Forchheimer resistance in the declared valve cell zone.
 
 \*---------------------------------------------------------------------------*/
 
@@ -50,6 +51,7 @@ Description
 #include "pimpleControl.H"
 #include "fvOptions.H"
 #include "fvcSmooth.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -70,6 +72,105 @@ int main(int argc, char *argv[])
     #include "createControl.H"
     #include "createTimeControls.H"
     #include "createFields.H"
+
+    IOdictionary valveProperties
+    (
+        IOobject
+        (
+            "valveProperties",
+            runTime.constant(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::NO_WRITE
+        )
+    );
+    const Switch valveActive(valveProperties.get<Switch>("active"));
+    const word valveModel(valveProperties.get<word>("model"));
+    const word valveResistanceZone
+    (
+        valveProperties.get<word>("cellZone")
+    );
+    const scalar valveOpeningDuration =
+        valveProperties.get<scalar>("openingDuration");
+    const scalar valveMinimumAreaFraction =
+        valveProperties.get<scalar>("minimumAreaFraction");
+    const scalar valveResistanceLength =
+        valveProperties.get<scalar>("resistanceLength");
+    label valveResistanceZoneID = -1;
+
+    if (valveActive)
+    {
+        if (valveModel != "sineSquaredAreaForchheimer")
+        {
+            FatalErrorInFunction
+                << "Unsupported valve model " << valveModel << nl
+                << exit(FatalError);
+        }
+        if (valveOpeningDuration <= SMALL)
+        {
+            FatalErrorInFunction
+                << "openingDuration must be positive for an active valve" << nl
+                << exit(FatalError);
+        }
+        if
+        (
+            valveMinimumAreaFraction <= 0
+         || valveMinimumAreaFraction >= 1
+        )
+        {
+            FatalErrorInFunction
+                << "minimumAreaFraction must lie between zero and one" << nl
+                << exit(FatalError);
+        }
+        if (valveResistanceLength <= SMALL)
+        {
+            FatalErrorInFunction
+                << "resistanceLength must be positive" << nl
+                << exit(FatalError);
+        }
+
+        valveResistanceZoneID =
+            mesh.cellZones().findZoneID(valveResistanceZone);
+        if (valveResistanceZoneID < 0)
+        {
+            FatalErrorInFunction
+                << "Cannot find valve cellZone " << valveResistanceZone << nl
+                << exit(FatalError);
+        }
+
+        const labelList& valveCells =
+            mesh.cellZones()[valveResistanceZoneID];
+        label valveCellCount = valveCells.size();
+        scalar valveZoneVolume = 0;
+        for (const label celli : valveCells)
+        {
+            valveZoneVolume += mesh.V()[celli];
+        }
+        reduce(valveCellCount, sumOp<label>());
+        reduce(valveZoneVolume, sumOp<scalar>());
+
+        const scalar pipeArea =
+            constant::mathematical::pi*sqr(scalar(0.025));
+        const scalar equivalentZoneLength = valveZoneVolume/pipeArea;
+        if
+        (
+            valveCellCount == 0
+         || mag(equivalentZoneLength/valveResistanceLength - 1) > 0.2
+        )
+        {
+            FatalErrorInFunction
+                << "Valve zone volume " << valveZoneVolume
+                << " m3 represents " << equivalentZoneLength
+                << " m of the 50 mm pipe, inconsistent with resistanceLength "
+                << valveResistanceLength << " m" << nl
+                << exit(FatalError);
+        }
+
+        Info<< "Equivalent valve resistance active: duration="
+            << valveOpeningDuration << " s, zone=" << valveResistanceZone
+            << ", global cells=" << valveCellCount
+            << ", equivalent length=" << equivalentZoneLength << " m" << nl;
+    }
 
     volScalarField& p = mixture.p();
     volScalarField& T = mixture.T();
