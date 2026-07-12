@@ -293,9 +293,15 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
    - gas/total balance 误差低于 \(6.5\times10^{-6}\%\)，无 rim 水量和
      gas-entry。
    这证明 baffle 拓扑正确，但剩余缺陷是自由面曲率/压力平衡。
-9. 下一步必须先运行 `CASEB_CURVATURE_MODEL=fitParaboloid` 的 0.006 s
-   短筛选；只有显著改善后才延长到超过 0.04 s，并且只有 Hstar
-   peak-to-peak 不超过 0.02 的候选才能开始完整 1.0 s hold。
+9. `CASEB_CURVATURE_MODEL=fitParaboloid` 的首个 0.006 s 短筛选已 exit 0：
+   - 写出时刻峰值和末帧速度为 1.187 和 0.796 m/s，比 reference-corrector
+     RDF 分别低 29.4% 和 38.1%；
+   - alpha 和相/总质量守恒仍干净，无 rim 水量或 gas-entry；
+   - 但 startup 单步 global Co 达 1.957、interface Co 达 0.676，超过声明限制。
+   该结果尚不能延长。下一步必须物化并记录 `plicRDF` 的
+   `interpolateNormal false`（TwoPhaseFlow 静态表面张力 benchmark 的设置），
+   重复 0.006 s 筛选；只有 CFL 和速度都改善后才延长到超过 0.04 s，并且只有
+   Hstar peak-to-peak 不超过 0.02 的候选才能开始完整 1.0 s hold。
 
 十、hold 验收
 

@@ -111,9 +111,15 @@ transducer range was 337.96 Pa, or \(H^*=0.05658\), already above the immutable
 remained below \(6.5\times10^{-6}\%\), and there was no rim water or gas entry.
 The baffle is therefore retained as the physically correct closed-valve
 topology, but `plicRDF + RDF` is not an accepted hold configuration.  The next
-screen uses the library-supported `fitParaboloid` curvature sensitivity,
+screen used the library-supported `fitParaboloid` curvature sensitivity,
 which has lower reported curvature error than RDF on unstructured
-triangular/tetrahedral meshes.
+triangular/tetrahedral meshes.  Its 0.006 s written peak and final velocities
+fell to 1.187 and 0.796 m/s, 29.4% and 38.1% below the reference-corrector RDF
+screen, with clean alpha and mass bounds.  It nevertheless experienced a
+one-step startup Courant spike of 1.957 while `plicRDF` was interpolating
+interface normals.  This short run is not cleared for extension.  The next
+screen sets `interpolateNormal false`, matching TwoPhaseFlow's static
+surface-tension benchmarks, and records that control in the manifest.
 
 Thermophysical choices are:
 

@@ -375,5 +375,63 @@
       "next_action": "Screen the library-supported plicRDF plus fitParaboloid curvature sensitivity, which has lower reported curvature error on unstructured triangular/tetrahedral meshes, before any new full hold."
     },
     "completion_claim": "This is a rejected partial hold diagnostic. It validates the baffle topology but is not a passed hold, smoke run, full experiment, or accepted baseline."
+  },
+  "fit_paraboloid_baffle_screen": {
+    "status": "velocity_improved_cfl_rescreen_required",
+    "source_commit": "c9c81aa",
+    "purpose": "Screen the library-supported fitParaboloid curvature model after the conformal-baffle RDF screen identified the tower free surface as the remaining hotspot.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "fitParaboloid",
+      "interpolate_normal": true,
+      "valve_representation": "conformalNoSlipBaffle",
+      "time_control": "runTime",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "execution_time_s": 562.6,
+      "clock_time_s": 573,
+      "final_delta_t_s": 7.379764e-05,
+      "maximum_courant_number": 1.957062,
+      "maximum_interface_courant_number": 0.67553249,
+      "maximum_capillary_number": 0.39970573,
+      "alpha_water_min": -2.1175824e-22,
+      "alpha_water_max": 1.0000000000419587,
+      "max_velocity_by_time_m_per_s": {
+        "0.0010341426": 1.1867446,
+        "0.0019752562": 1.0227726,
+        "0.0030320094": 1.0106506,
+        "0.0040139282": 0.89364252,
+        "0.0049912558": 0.85378794,
+        "0.0059900886": 0.79567944
+      },
+      "peak_written_velocity_location_m": [
+        3.5122401,
+        0.26270327,
+        -0.003968537
+      ],
+      "liquid_mass_error_pct_max_abs": 0.0,
+      "gas_mass_error_pct_max_abs": 3.848598598984234e-06,
+      "total_mass_error_pct_max_abs": 1.9541479469896424e-08,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "pressure_probe_samples": 1
+    },
+    "comparison": {
+      "reference_rdf_peak_velocity_m_per_s": 1.6815591,
+      "reference_rdf_final_velocity_m_per_s": 1.2850141,
+      "fit_to_rdf_peak_velocity_ratio": 0.7057300030536514,
+      "fit_to_rdf_final_velocity_ratio": 0.619199000527542,
+      "interpretation": "fitParaboloid reduced the written peak and final velocities by 29.4 and 38.1 percent while preserving alpha and mass bounds. It is promising, but a one-step startup Courant spike to 1.957 exceeded the declared 0.3 limit, so this run does not clear the model for an extended hold."
+    },
+    "next_action": "Align plicRDF interpolateNormal with the library static surface-tension benchmarks by setting it false, record that control in the manifest, and repeat the 0.006 s screen before extending the candidate.",
+    "completion_claim": "This is a short curvature sensitivity with a CFL regression. It is not a passed hold, smoke run, full experiment, or accepted baseline."
   }
 }

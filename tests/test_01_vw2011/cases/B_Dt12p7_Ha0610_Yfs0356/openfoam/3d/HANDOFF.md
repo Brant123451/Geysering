@@ -46,7 +46,11 @@ at the initial tower free surface, while the transducer range reached
 balances, rim-water inventory and gas-entry checks stayed clean.  This
 separates the physically correct closed-valve topology from the remaining
 free-surface curvature/pressure-balance defect.  The next numerical screen is
-`plicRDF + fitParaboloid`, not another full RDF hold.
+`plicRDF + fitParaboloid`, not another full RDF hold.  Its first 0.006 s run
+reduced the written peak and final velocities to 1.187 and 0.796 m/s, but a
+one-step startup Courant spike reached 1.957.  It must be repeated with
+`interpolateNormal false`, as used by TwoPhaseFlow's static surface-tension
+benchmarks, before any extension.
 
 ## Verified before handoff
 
@@ -119,17 +123,30 @@ free-surface curvature/pressure-balance defect.  The next numerical screen is
       water or gas entry occurred.
     This validates the baffle topology but rejects `plicRDF + RDF` as the
     hold configuration.
+12. The first conformal-baffle `fitParaboloid` screen exited normally at
+    0.006 s:
+    * written peak and final velocities were 1.187 and 0.796 m/s, 29.4% and
+      38.1% below the reference-corrector RDF screen;
+    * alpha stayed within
+      \([-2.12\times10^{-22},1+4.20\times10^{-11}]\);
+    * gas and total balance errors remained below
+      \(3.9\times10^{-6}\%\), with no rim water or gas entry;
+    * a one-step startup Courant spike reached 1.957 and interface Courant
+      reached 0.676.
+    The velocity reduction is promising, but the CFL regression prevents
+    extension until the static-benchmark normal-interpolation setting is
+    tested.
 
 ## Still required
 
 The scientific reproduction is **not complete**.  Continue in this order:
 
-1. Screen the conformal-baffle hold with
-   `CASEB_CURVATURE_MODEL=fitParaboloid`, first through 0.006 s and then past
-   the 0.04 s pressure-drift onset if its short metrics improve.  Only a
-   candidate with \(H^*\) peak-to-peak at or below 0.02 may proceed to the
-   full 1.0 s hold.  Opening runs retain the dissipative resistance and must
-   be tested separately.
+1. Materialise and record `plicRDF`'s `interpolateNormal` control, repeat the
+   conformal-baffle `fitParaboloid` screen through 0.006 s with interpolation
+   disabled, and extend past the 0.04 s pressure-drift onset only if both the
+   velocity and Courant metrics improve.  Only a candidate with \(H^*\)
+   peak-to-peak at or below 0.02 may proceed to the full 1.0 s hold.  Opening
+   runs retain the dissipative resistance and must be tested separately.
 2. Run the opened-valve 0.5 s smoke case.
 3. Run the 10.5 s base case through \(T^*\ge6\).
 4. Run the refined grid and required timestep/valve/compressibility
