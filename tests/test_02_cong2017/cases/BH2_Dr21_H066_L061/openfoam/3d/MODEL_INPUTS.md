@@ -69,7 +69,7 @@ non-physical `T=-102 K` interface cell at `t=8.13985 s`; the run was rejected.
 | `inlet` | upstream constant-head tank at `x=0` | `pressureInletOutletVelocity` | `totalPressure`, reduced total `p0=107541.8913 Pa` | `calculated` | `inletOutlet`, inflow 1 | `inletOutlet`, 296.15 K | low-turbulence `inletOutlet` |
 | `downstreamCap` | plastic closed end | `noSlip` | `fixedFluxPressure` | `calculated` | 90° `constantAlphaContactAngle` | `zeroGradient` | wall functions |
 | `walls` | main, riser and external-domain floor | `noSlip` | `fixedFluxPressure` | `calculated` | 90° `constantAlphaContactAngle` | `zeroGradient` | wall functions |
-| `atmosphere` | open sides/top of external air domain | `pressureInletOutletVelocity` | `totalPressure`, `p0=101325 Pa` | `calculated` | `inletOutlet`, inflow 0 | `inletOutlet`, 296.15 K | low-turbulence `inletOutlet` |
+| `atmosphere` | open sides/top of external air domain | `pressureInletOutletVelocity` | `prghTotalPressure`, absolute `p0=101325 Pa` | `calculated` | `inletOutlet`, inflow 0 | `inletOutlet`, 296.15 K | low-turbulence `inletOutlet` |
 | `valveCouple0/1` | coupled portion of opening valve | `cyclicACMI` | `cyclicACMI` | `cyclicACMI` | `cyclicACMI` | `cyclicACMI` | `cyclicACMI` |
 | `valveWall0/1` | still-blocked portion of opening valve | `noSlip` | `fixedFluxPressure` | `calculated` | 90° `constantAlphaContactAngle` | `zeroGradient` | wall functions |
 
@@ -77,6 +77,17 @@ The upstream boundary specifies head, not velocity or discharge.  Reverse flow
 there is water (`alpha.water=1`).  The external boundary specifies atmospheric
 total pressure and air on inflow (`alpha.water=0`).  The only downstream end of
 the horizontal main is a wall; it never acts as an outlet.
+
+The inlet intentionally prescribes a constant *reduced* total head with
+`totalPressure` on `p_rgh`.  The elevated external boundary instead uses
+`prghTotalPressure`: it subtracts the local hydrostatic term from `p_rgh`, so
+the reconstructed absolute pressure remains 101325 Pa when either air or
+ejected water reaches the patch.  A pre-production event run using
+`totalPressure` on this patch was stopped at `t=7.061 s`, before any water
+entered or crossed the external domain.  That setting would have imposed an
+unphysical 18--30 kPa pressure deficit on water at the elevated open boundary;
+no result from that run is accepted and all event/sensitivity runs start again
+from `t=0`.
 
 ## Ball-valve process
 

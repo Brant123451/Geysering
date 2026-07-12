@@ -17,7 +17,7 @@ boundaryField
     }
     atmosphere
     {
-        type            totalPressure;
+        type            prghTotalPressure;
         p0              uniform 101325;
         value           uniform 101325;
     }
