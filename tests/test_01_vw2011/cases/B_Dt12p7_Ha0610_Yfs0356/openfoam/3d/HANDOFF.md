@@ -443,6 +443,17 @@ timestep controls.
     default target and the expensive hard cap for the next window.  Continue
     the same decomposed state to 0.04 s and require \(H^*\) peak-to-peak at or
     below 0.02 before starting a 1.0 s hold.
+32. The selected `maxCo=0.15` state passed its 0.04 s drift window:
+    * solver time reached 0.040005 s and postprocessed probes reached
+      0.036009 s;
+    * \(H^*\) peak-to-peak was 0.000926, only 4.6% of the 0.02 admission limit;
+    * observed global/interface Courant maxima remained 0.165/0.132;
+    * free-surface velocity oscillated, peaking at 1.945 m/s at 0.0160 s and
+      falling to 1.288 m/s at the final written sample, with no exterior-gas
+      or valve hotspot;
+    * alpha, phase/total balances, rim water and gas entry remained clean.
+    This passes the drift admission screen, not the hold.  Resume the exact
+    decomposed state to 1.0 s and apply the full hold criteria.
 
 ## Still required
 
@@ -470,8 +481,9 @@ The scientific reproduction is **not complete**.  Continue in this order:
    0.006 s screen.  The paired default-target adaptive run fails both observed
    Courant gates but does not regenerate the gas hotspot.  The required
    `maxCo=0.15` adaptive member now passes the 0.006 s gates and has the lowest
-   peak velocity of the three timestep members.  Extend that exact state to
-   the 0.04 s pressure-drift window next.
+   short-window peak velocity of the three timestep members.  Its 0.04 s
+   continuation also passes the pressure-drift admission gate.  Resume that
+   exact decomposed state to the full 1.0 s hold next.
    Extend a candidate past the 0.04 s
    pressure-drift onset only if it stays within the declared Courant limits
    and reduces peak velocity, and only \(H^*\) peak-to-peak at or below 0.02

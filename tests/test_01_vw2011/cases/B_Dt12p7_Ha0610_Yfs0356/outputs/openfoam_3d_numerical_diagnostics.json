@@ -1641,7 +1641,7 @@
     "completion_claim": "This is a rejected adaptive-timestep startup screen, not a passed drift check, hold, smoke run, or completed reproduction."
   },
   "tight_pressure_maxco_0p15_screen_0p006_s": {
-    "status": "passed_short_screen_0p04_s_drift_extension_pending",
+    "status": "passed_short_screen_and_selected_for_drift_window",
     "source_commit": "ce3260c",
     "purpose": "Use the required maxCo=0.15 timestep-sensitivity member to retain adaptive stepping while satisfying the immutable 0.30/0.20 observed-Courant gates.",
     "configuration": {
@@ -1712,9 +1712,81 @@
     "interpretation": {
       "finding": "The lower adaptive target passed both observed-Courant gates, retained all hotspots at the physical free surface, and produced the lowest written velocity peak of the three tight-pressure timestep members.",
       "mechanism": "Reducing maxCo from 0.30 to 0.15 absorbs the one-step controller lag without imposing the 1e-5 hard cap. The peak velocity fell by 25.2 percent relative to the default-target adaptive member and by 10.1 percent relative to the hard-cap member.",
-      "decision": "Accept this only as the timestep-screen winner and continue the same decomposed state to 0.04 s. It is not yet a drift-window or hold pass.",
-      "next_action": "Extend the same maxCo=0.15 state to 0.04 s, then require Hstar peak-to-peak at or below 0.02, bounded velocity, observed Courant compliance, clean alpha and mass balances, no rim water, and no gas entry before starting the 1.0 s hold."
+      "decision": "Accept this as the timestep-screen winner. Its subsequently completed 0.04 s continuation also passed the pressure-drift gate.",
+      "next_action": "Continue the same decomposed state to the full 1.0 s closed-valve hold."
     },
     "completion_claim": "This passes only the 0.006 s timestep screen; it is not a passed 0.04 s drift check, 1.0 s hold, smoke run, or completed reproduction."
+  },
+  "tight_pressure_maxco_0p15_drift_screen_0p04_s": {
+    "status": "passed_drift_screen_full_hold_pending",
+    "source_commit": "9c8853d",
+    "purpose": "Extend the selected tight-pressure low-Courant state beyond the former 0.04 s pressure-drift onset before authorizing the full closed-valve hold.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "hydrostatic_initialization": "discrete",
+      "hydrostatic_correctors": 10,
+      "pressure_final_tolerance": 1e-10,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.15,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "continuation_field_write_interval_s": 0.005,
+      "requested_end_time_s": 0.04
+    },
+    "continued_run_result_0p04_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.0400045408,
+      "postprocessed_probe_duration_s": 0.036009269,
+      "continuation_execution_time_s": 2804.37,
+      "continuation_clock_time_s": 2811,
+      "final_delta_t_s": 2.4361612e-05,
+      "maximum_courant_number": 0.16484573,
+      "maximum_interface_courant_number": 0.13217248,
+      "maximum_capillary_number": 0.23623177,
+      "alpha_water_min": -9.3840651e-15,
+      "alpha_water_max": 1.0000000000000202,
+      "written_peak_velocity_m_per_s": 1.9449346,
+      "written_peak_velocity_time_s": 0.016019972,
+      "written_peak_velocity_location_m": [
+        3.5160891,
+        0.40370703,
+        -0.0031976625
+      ],
+      "alpha_water_at_written_peak_velocity": 8.6366562e-13,
+      "curvature_at_written_peak_velocity_per_m": 551.78947,
+      "final_written_velocity_m_per_s": 1.2883001,
+      "maximum_hydrostatic_force_residual_pa_per_m": 103598.57,
+      "maximum_surface_tension_force_pa_per_m": 165328.67,
+      "maximum_total_force_residual_pa_per_m": 115099.65,
+      "Hstar_peak_to_peak": 0.0009257819804996403,
+      "Yfs_star_max_drift": 0.0024590163934427034,
+      "gas_mass_error_pct_max_abs": 3.7547205226641856e-06,
+      "total_mass_error_pct_max_abs": 1.4279579091243324e-07,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "written_velocity_history_m_per_s": {
+      "0.011020513": 1.4566547,
+      "0.016019972": 1.9449346,
+      "0.020996035": 0.81147436,
+      "0.026025020": 1.4003322,
+      "0.031016323": 1.6209778,
+      "0.036009269": 1.2883001
+    },
+    "interpretation": {
+      "finding": "The transducer pressure remained essentially flat through the drift window: Hstar peak-to-peak was 0.000926, only 4.6 percent of the 0.02 admission limit.",
+      "stability": "Velocity remained an oscillatory free-surface parasitic mode rather than a monotonic instability. It peaked at 1.945 m/s at 0.0160 s and fell to 1.288 m/s at the final written sample; no exterior-gas or valve hotspot appeared.",
+      "decision": "Pass the 0.04 s drift screen and authorize continuation of this exact state to the full 1.0 s closed-valve hold. Do not treat this partial window as a hold pass.",
+      "next_action": "Resume to 1.0 s with a 0.1 s field-write interval and require at least 0.9 s postprocessed duration, Hstar and Yfs-star drift at or below 0.02, both phase mass errors below 1 percent, no rim water, and no gas entry."
+    },
+    "completion_claim": "This passes the 0.04 s drift admission screen only; it is not a passed 1.0 s hold, smoke run, or completed reproduction."
   }
 }

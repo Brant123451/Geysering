@@ -523,6 +523,15 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     因此下一窗口选择该低 Courant adaptive 成员，而不是默认目标或更昂贵的
     hard cap。必须续算同一 decomposed state 至 0.04 s，并确认
     \(H^*\) peak-to-peak 不超过 0.02，才可启动 1.0 s hold。
+29. 选定的 `maxCo=0.15` state 已通过 0.04 s drift admission：
+    - solver 达到 0.040005 s，probe 达到 0.036009 s；
+    - \(H^*\) peak-to-peak 为 0.000926，仅为 0.02 门槛的 4.6%；
+    - 实测 global/interface Co 仍为 0.165/0.132；
+    - 自由面伪流呈振荡而非单调增长，在 0.0160 s 达 1.945 m/s，末个写出
+      样本降至 1.288 m/s，未出现 exterior-gas 或 valve 热点；
+    - alpha、相/总质量、rim water 与 gas-entry 检查干净。
+    这只通过了 drift admission，不是 hold。下一步必须续算同一 decomposed
+    state 至 1.0 s，并执行完整 hold 验收。
 
 十、hold 验收
 
