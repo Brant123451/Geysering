@@ -7,9 +7,10 @@ The geometry is a Boolean union, not intersecting shell approximations:
 * circular 26 mm vertical riser and true three-dimensional tee opening;
 * expanded external atmosphere above the physical 1.8 m riser.
 
-The initial horizontal free surface is embedded as a conformal internal mesh
-plane.  This prevents a cell-centre stair-step interface from seeding capillary
-currents in the closed-valve hold.
+The initial horizontal free surface and Valve #4 cross-section are embedded as
+conformal internal mesh surfaces.  The former prevents a cell-centre stair-step
+interface from seeding capillary currents; the latter lets createBaffles split
+one exact pipe cross-section instead of a jagged band of tetrahedron faces.
 """
 from __future__ import annotations
 
@@ -30,6 +31,7 @@ PHYSICAL_RISER_HEIGHT = 1.800
 PHYSICAL_RIM_Z = PIPE_INVERT_Z + PIPE_DIAMETER + PHYSICAL_RISER_HEIGHT
 COMPUTATIONAL_TOP_Z = 3.000
 INITIAL_FREE_SURFACE_Z = 0.660
+VALVE_X = 5.980
 BOOLEAN_OVERLAP = 0.001
 
 
@@ -126,18 +128,27 @@ def main() -> None:
             args.atmosphere_width,
             args.atmosphere_width,
         )
+        valve_disk = occ.addDisk(
+            VALVE_X,
+            0.0,
+            PIPE_AXIS_Z,
+            PIPE_RADIUS,
+            PIPE_RADIUS,
+            zAxis=[1.0, 0.0, 0.0],
+            xAxis=[0.0, 1.0, 0.0],
+        )
         fluid, _ = occ.fragment(
             fused_fluid,
-            [(2, free_surface)],
+            [(2, free_surface), (2, valve_disk)],
             removeObject=True,
             removeTool=True,
         )
         occ.synchronize()
 
         volumes = [tag for dim, tag in fluid if dim == 3]
-        if len(volumes) < 2:
+        if len(volumes) < 3:
             raise RuntimeError(
-                "Initial free-surface fragmentation did not partition the fluid"
+                "Free-surface and valve fragmentation did not partition the fluid"
             )
 
         patches: dict[str, list[int]] = {
@@ -238,11 +249,21 @@ def main() -> None:
         gmsh.model.mesh.field.setNumber(tee_field, "ZMin", -0.005)
         gmsh.model.mesh.field.setNumber(tee_field, "ZMax", 0.10)
 
+        valve_field = gmsh.model.mesh.field.add("Box")
+        gmsh.model.mesh.field.setNumber(valve_field, "VIn", args.riser_size)
+        gmsh.model.mesh.field.setNumber(valve_field, "VOut", args.atmosphere_size)
+        gmsh.model.mesh.field.setNumber(valve_field, "XMin", VALVE_X - 0.03)
+        gmsh.model.mesh.field.setNumber(valve_field, "XMax", VALVE_X + 0.03)
+        gmsh.model.mesh.field.setNumber(valve_field, "YMin", -0.03)
+        gmsh.model.mesh.field.setNumber(valve_field, "YMax", 0.03)
+        gmsh.model.mesh.field.setNumber(valve_field, "ZMin", -0.005)
+        gmsh.model.mesh.field.setNumber(valve_field, "ZMax", 0.055)
+
         minimum_field = gmsh.model.mesh.field.add("Min")
         gmsh.model.mesh.field.setNumbers(
             minimum_field,
             "FieldsList",
-            [pipe_field, riser_field, tee_field],
+            [pipe_field, riser_field, tee_field, valve_field],
         )
         gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
 
@@ -279,6 +300,7 @@ def main() -> None:
         print(f"physical_rim_z_m={PHYSICAL_RIM_Z}")
         print(f"computational_top_z_m={COMPUTATIONAL_TOP_Z}")
         print(f"conformal_initial_free_surface_z_m={INITIAL_FREE_SURFACE_Z}")
+        print(f"conformal_valve_plane_x_m={VALVE_X}")
         print(f"fluid_partitions={len(volumes)}")
         element_blocks = gmsh.model.mesh.getElements(3)[1]
         print(f"cells_3d={sum(len(block) for block in element_blocks)}")

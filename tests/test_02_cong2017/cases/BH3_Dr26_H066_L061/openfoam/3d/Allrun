@@ -81,6 +81,12 @@ python3 make_valve_dict.py \
 createBaffles -overwrite -dict system/createBafflesDict.runtime \
     > log.createBaffles 2>&1
 checkMesh -allGeometry -allTopology > log.checkMesh.baffled 2>&1
+python3 mesh_audit.py \
+    --profile "${MESH_PROFILE:-base}-${VALVE_OPENING}" \
+    --check-mesh-log log.checkMesh.baffled \
+    --geometry-log log.geometry \
+    --output "outputs/${RUN_ID}_mesh.json" \
+    > log.meshAudit.baffled 2>&1
 
 if (( NP == 1 )); then
     compressibleInterFoam > log.compressibleInterFoam 2>&1

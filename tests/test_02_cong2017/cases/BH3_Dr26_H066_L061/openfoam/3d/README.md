@@ -79,7 +79,10 @@ pressure and temperature: `1.427641 g`.
 generates a boundary-fitted Delaunay tetrahedral mesh with named inlet, cap, wall,
 riser-wall, and atmosphere physical groups. The base and refined profiles use
 independent pipe/riser/atmosphere target sizes; no cut-cell background or
-rectangular equivalent flow area enters the solution.
+rectangular equivalent flow area enters the solution. Both the initial free
+surface and the Valve #4 circular cross-section are conformal internal mesh
+surfaces. Every run repeats the strict mesh check after creating its valve
+baffle and aborts before solving unless that final mesh reports `Mesh OK`.
 
 ```bash
 MESH_PROFILE=base ./Allmesh

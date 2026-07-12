@@ -48,6 +48,19 @@ def main() -> None:
         ),
         "max_skewness": first(r"Max skewness\s*=\s*([0-9.eE+-]+)", check),
         "minimum_volume_m3": first(r"Min volume\s*=\s*([0-9.eE+-]+)", check),
+        "minimum_cell_determinant": first(
+            r"Cell determinant.*minimum:\s*([0-9.eE+-]+)", check
+        ),
+        "number_of_regions": first(
+            r"^\s*\*?Number of regions:\s*(\d+)", check, int
+        ),
+        "duplicate_baffle_faces": first(
+            r"identical duplicate faces \(baffle faces\):\s*(\d+)", check, int
+        ),
+        "small_determinant_cells": first(
+            r"Cells with small determinant.*number of cells:\s*(\d+)", check, int
+        )
+        or 0,
         "fluid_geometry_volume_m3": first(
             r"^fluid_volume_m3=([0-9.eE+-]+)", geometry
         ),
