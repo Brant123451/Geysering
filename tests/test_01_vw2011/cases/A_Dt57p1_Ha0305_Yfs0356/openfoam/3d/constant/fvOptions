@@ -1,0 +1,29 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2512                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvOptions;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// The experiment starts at 293.15 K and its small pressure ratio cannot
+// physically approach these bounds.  This standard correction prevents an
+// isolated interface cell from passing an unphysical temperature to either
+// phase equation of state during the violent tower-entry transient.
+limitT
+{
+    type            limitTemperature;
+    min             250;
+    max             350;
+    selectionMode   all;
+}
+
+// ************************************************************************* //

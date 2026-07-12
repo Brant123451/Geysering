@@ -37,10 +37,11 @@ def load_common_postprocessor():
 
 def parse_water_mass(log_path: Path) -> tuple[np.ndarray, np.ndarray]:
     samples: dict[float, float] = {}
-    for line in log_path.read_text(encoding="utf-8", errors="replace").splitlines():
-        match = WATER_MASS_PATTERN.match(line)
-        if match:
-            samples[float(match["time"])] = float(match["mass"])
+    with log_path.open(encoding="utf-8", errors="replace") as stream:
+        for line in stream:
+            match = WATER_MASS_PATTERN.match(line)
+            if match:
+                samples[float(match["time"])] = float(match["mass"])
     if not samples:
         raise RuntimeError(f"No CASEA_WATER_MASS_KG samples found in {log_path}")
     time = np.asarray(sorted(samples), dtype=float)
@@ -49,41 +50,82 @@ def parse_water_mass(log_path: Path) -> tuple[np.ndarray, np.ndarray]:
 
 
 def parse_solver_provenance(log_path: Path) -> dict[str, object]:
-    lines = log_path.read_text(encoding="utf-8", errors="replace").splitlines()
     version = None
     ranks = None
     segments: list[tuple[float, float]] = []
     current_execution = None
     current_clock = None
     in_solver_segment = False
+    completed_parallel_run = False
+    lower_corrections = 0
+    lower_limited_cells = 0
+    minimum_unlimited_temperature = None
+    upper_corrections = 0
+    upper_limited_cells = 0
+    maximum_unlimited_temperature = None
 
-    for line in lines:
-        version_match = re.search(r"OPENFOAM=(\d+)\s+version=(\d+)", line)
-        if version_match:
-            version = version_match.group(2)
-        rank_match = re.match(r"nProcs\s*:\s*(\d+)", line)
-        if rank_match:
-            ranks = int(rank_match.group(1))
-        if line.startswith("Exec   :") and "compressibleInterFoam" in line:
-            if in_solver_segment and current_execution is not None:
-                segments.append((current_execution, current_clock or 0.0))
-            in_solver_segment = True
-            current_execution = None
-            current_clock = None
-            continue
-        timing_match = re.match(
-            r"ExecutionTime = ([-+0-9.eE]+) s\s+ClockTime = ([-+0-9.eE]+) s",
-            line,
-        )
-        if in_solver_segment and timing_match:
-            current_execution = float(timing_match.group(1))
-            current_clock = float(timing_match.group(2))
-        if in_solver_segment and line.strip() == "Finalising parallel run":
-            if current_execution is not None:
-                segments.append((current_execution, current_clock or 0.0))
-            in_solver_segment = False
-            current_execution = None
-            current_clock = None
+    with log_path.open(encoding="utf-8", errors="replace") as stream:
+        for line in stream:
+            version_match = re.search(r"OPENFOAM=(\d+)\s+version=(\d+)", line)
+            if version_match:
+                version = version_match.group(2)
+            rank_match = re.match(r"nProcs\s*:\s*(\d+)", line)
+            if rank_match:
+                ranks = int(rank_match.group(1))
+            if line.startswith("Exec   :") and "compressibleInterFoam" in line:
+                if in_solver_segment and current_execution is not None:
+                    segments.append((current_execution, current_clock or 0.0))
+                in_solver_segment = True
+                current_execution = None
+                current_clock = None
+                continue
+            timing_match = re.match(
+                r"ExecutionTime = ([-+0-9.eE]+) s\s+"
+                r"ClockTime = ([-+0-9.eE]+) s",
+                line,
+            )
+            if in_solver_segment and timing_match:
+                current_execution = float(timing_match.group(1))
+                current_clock = float(timing_match.group(2))
+            if in_solver_segment and line.strip() == "Finalising parallel run":
+                if current_execution is not None:
+                    segments.append((current_execution, current_clock or 0.0))
+                completed_parallel_run = True
+                in_solver_segment = False
+                current_execution = None
+                current_clock = None
+
+            lower_match = re.search(
+                r"limitTemperature=.*Type=Lower, LimitedCells=(\d+).*"
+                r"UnlimitedTmin=([-+0-9.eE]+)",
+                line,
+            )
+            if lower_match:
+                limited = int(lower_match.group(1))
+                unlimited = float(lower_match.group(2))
+                lower_corrections += int(limited > 0)
+                lower_limited_cells += limited
+                minimum_unlimited_temperature = (
+                    unlimited
+                    if minimum_unlimited_temperature is None
+                    else min(minimum_unlimited_temperature, unlimited)
+                )
+
+            upper_match = re.search(
+                r"limitTemperature=.*Type=Upper, LimitedCells=(\d+).*"
+                r"UnlimitedTmax=([-+0-9.eE]+)",
+                line,
+            )
+            if upper_match:
+                limited = int(upper_match.group(1))
+                unlimited = float(upper_match.group(2))
+                upper_corrections += int(limited > 0)
+                upper_limited_cells += limited
+                maximum_unlimited_temperature = (
+                    unlimited
+                    if maximum_unlimited_temperature is None
+                    else max(maximum_unlimited_temperature, unlimited)
+                )
 
     if in_solver_segment and current_execution is not None:
         segments.append((current_execution, current_clock or 0.0))
@@ -94,9 +136,16 @@ def parse_solver_provenance(log_path: Path) -> dict[str, object]:
         "solver_execution_time_s": float(sum(value[0] for value in segments)),
         "solver_clock_time_s": float(sum(value[1] for value in segments)),
         "solver_segments": len(segments),
-        "completed_parallel_run": any(
-            line.strip() == "Finalising parallel run" for line in lines
-        ),
+        "completed_parallel_run": completed_parallel_run,
+        "temperature_limiter": {
+            "bounds_K": [250.0, 350.0],
+            "lower_corrections_with_limiting": lower_corrections,
+            "lower_total_cell_corrections": lower_limited_cells,
+            "minimum_unlimited_temperature_K": minimum_unlimited_temperature,
+            "upper_corrections_with_limiting": upper_corrections,
+            "upper_total_cell_corrections": upper_limited_cells,
+            "maximum_unlimited_temperature_K": maximum_unlimited_temperature,
+        },
     }
 
 
