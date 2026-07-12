@@ -13,4 +13,10 @@ RAS
     RASModel        kOmegaSST;
     turbulence      on;
     printCoeffs     on;
+
+    // Prevent k/omega underflow in the large initially quiescent air volume
+    // of the receiving tank.  These floors imply at most O(1e-6 m2/s)
+    // background nut and do not calibrate hydraulic losses or pressures.
+    kMin           1e-12;
+    omegaMin       1e-6;
 }
