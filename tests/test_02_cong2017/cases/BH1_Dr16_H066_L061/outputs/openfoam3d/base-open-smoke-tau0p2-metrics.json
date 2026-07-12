@@ -1,0 +1,89 @@
+{
+  "PT1_peak_over_H0": 0.050959734812689374,
+  "Ta_gas_enters_riser_s": null,
+  "Yfs_max_m": 0.605,
+  "Yint_max_m": 0.0,
+  "atmosphere_water_outflow_peak_m3_s": 0.0,
+  "comparison_to_experiment": {
+    "Ta_error_s": null,
+    "Ta_relative_error": null,
+    "classification_match": false,
+    "vfs_error_m_per_s": null,
+    "vfs_relative_error": null,
+    "vint_error_m_per_s": null,
+    "vint_relative_error": null
+  },
+  "comparison_warning": "Fig.10(a) is the same nominal B-1 condition; PT1 exact axial offset was not reported, so the 3-D curve is labelled PT1_proxy.",
+  "conservation": {
+    "budget_definition": "final inventory + integrated outward boundary flux - initial inventory",
+    "gas_budget_error_kg": -1.395950097182741e-08,
+    "gas_budget_relative_error": -1.070492665377506e-07,
+    "gas_flux_definition": "solver rhoPhi minus alphaPhi0.water times 998.2 kg/m3",
+    "total_budget_error_kg": 2.1809700886166183e-05,
+    "total_budget_relative_error": 1.8366812366824011e-06,
+    "total_flux_definition": "solver rhoPhi summed directly over atmosphere and inlet",
+    "water_budget_error_kg": 2.1823660388164967e-05,
+    "water_budget_relative_error": 1.8582637495937832e-06
+  },
+  "ejected_water_cumulative_positive_m3": 0.0,
+  "ejected_water_max_m3": 0.0,
+  "experimental_targets": {
+    "Ta_s": 8.07,
+    "classification": "GEYSER",
+    "vfs_m_per_s": 0.924,
+    "vint_m_per_s": 1.231
+  },
+  "exterior_water_max_m3": 0.0,
+  "geyser_ejection_threshold_m3": 1e-09,
+  "initial_inventory": {
+    "analytic_pocket_air_mass_kg": 0.0014276016764529437,
+    "analytic_pocket_volume_m3": 0.0011977321991811086,
+    "mesh_pocket_air_mass_at_initial_state_kg": 0.0014194857709001571,
+    "pocket_air_mass_relative_error": -0.005684993010761625,
+    "pocket_volume_relative_error": -0.005684993010761514,
+    "total_domain_gas_mass_kg": 0.130402584,
+    "total_gas_volume_m3": 0.109428831,
+    "tunnel_pocket_volume_m3": 0.0011909231,
+    "water_volume_m3": 0.0117652712
+  },
+  "mode": "smoke",
+  "observed_3d_geyser": false,
+  "one_d_comparison_warning": "The frozen 1-D model uses a 6.0 m effective pipe and x_tee=2.88 m, not the audited 3-D geometry. Its riser coordinates are shifted down by D=0.05 m in the plot to share the above-crown datum; the comparison is qualitative. The tracked legacy CSV is consumed without runtime regeneration.",
+  "pocket_peak_over_H0": 0.05102487538762639,
+  "reached_time_s": 0.05,
+  "rim_water_flow_peak_m3_s": 0.0,
+  "rim_water_net_transfer_m3": 0.0,
+  "run": "base-open-smoke-tau0p2",
+  "smoke": {
+    "pass": true
+  },
+  "solver": "bh1CompressibleInterFoam",
+  "t_free_surface_at_rim_s": null,
+  "temperature_validity": {
+    "acceptance_bounds_K": [
+      200.0,
+      600.0
+    ],
+    "clipping_applied": false,
+    "maximum_K": 296.41977,
+    "minimum_K": 296.140046,
+    "pass": true
+  },
+  "valve_duration_s": 0.2,
+  "valve_model": "25 mm semi-implicit passive Forchheimer resistance zone",
+  "velocity_metric": {
+    "Yfs_height_window_m": [
+      0.65,
+      1.7
+    ],
+    "Yint_height_window_m": [
+      0.05,
+      1.65
+    ],
+    "method": "height interval divided by interpolated first-passage time after gas first enters the riser"
+  },
+  "vfs_first_passage_m_per_s": null,
+  "vfs_fit_m_per_s": null,
+  "vint_first_passage_m_per_s": null,
+  "vint_fit_m_per_s": null
+}

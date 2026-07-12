@@ -1,0 +1,47 @@
+{
+  "cad_volume_m3": 0.12132103416240549,
+  "case": "Cong2017_B-H1",
+  "check_log": "log.checkMesh",
+  "concave_cell_fraction": 0.007219653179190751,
+  "concave_cells": 1249,
+  "faces": 564623,
+  "max_aspect_ratio": 3.9590984,
+  "max_non_orthogonality_deg": 48.998245,
+  "max_skewness": 1.9486384,
+  "mesh_level": "base",
+  "min_cell_determinant": 0.043393326,
+  "nominal_volume_sizes_m": {
+    "pipe": 0.00625,
+    "plume": 0.0125,
+    "riser": 0.0015625
+  },
+  "openfoam_cells": 173000,
+  "points": 221127,
+  "production_acceptance": {
+    "extended_diagnostics_accepted": true,
+    "pass": true,
+    "policy": "standard checkMesh must pass; extended check may report at most 10 low-determinant cells and 1% concave local-refinement cells, with determinant >=4e-4, non-orthogonality <=70 deg, skewness <=4, and no negative-volume cell",
+    "strict_warning": "checkMesh -allGeometry -allTopology completed with recorded warnings"
+  },
+  "required_checks": [
+    "checkMesh -allGeometry -allTopology",
+    "checkMesh",
+    "true circular main",
+    "true circular riser",
+    "conformal Boolean T-junction",
+    "valve resistance cell zone"
+  ],
+  "standard_check_pass": true,
+  "strict_check_pass": false,
+  "strict_failed_checks": 1,
+  "surface_triangles": {
+    "atmosphere": 15832,
+    "inlet": 304,
+    "riserWall": 210626,
+    "walls": 153286
+  },
+  "underdetermined_cells": 0,
+  "valve_representation": "unobstructed fluid mesh",
+  "valve_resistance_zone_present": true,
+  "valve_state": "open"
+}
