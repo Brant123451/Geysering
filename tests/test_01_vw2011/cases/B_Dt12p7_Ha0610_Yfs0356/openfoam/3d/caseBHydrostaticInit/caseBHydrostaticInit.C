@@ -185,7 +185,24 @@ int main(int argc, char *argv[])
 
     const uniformDimensionedVectorField& g =
         meshObjects::gravity::New(runTime);
-    dimensionedScalar ghRef("ghRef", g.dimensions()*dimLength, 0);
+    const uniformDimensionedScalarField hRef
+    (
+        IOobject
+        (
+            "hRef",
+            runTime.constant(),
+            mesh,
+            IOobject::READ_IF_PRESENT,
+            IOobject::NO_WRITE
+        ),
+        dimensionedScalar(dimLength, Zero)
+    );
+    const dimensionedScalar ghRef
+    (
+        mag(g.value()) > SMALL
+      ? g & (cmptMag(g.value())/mag(g.value()))*hRef
+      : dimensionedScalar("ghRef", g.dimensions()*dimLength, Zero)
+    );
     volScalarField gh("gh", (g & mesh.C()) - ghRef);
     surfaceScalarField ghf("ghf", (g & mesh.Cf()) - ghRef);
 

@@ -239,6 +239,7 @@ class InitialFieldPolicyTests(unittest.TestCase):
         )
         self.assertIn("hydrostaticEqn.setReferences", initializer)
         self.assertIn("CASEB_HYDROSTATIC_INIT_SUMMARY", initializer)
+        self.assertIn("uniformDimensionedScalarField hRef", initializer)
         self.assertIn("-ltwoPhaseProperties", build_options)
         self.assertLess(
             initializer.index(
