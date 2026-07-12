@@ -21,6 +21,7 @@ FoamFile
 temperatureBounds
 {
     type            scalarCodedSource;
+    name            caseATemperatureBounds;
 
     scalarCodedSourceCoeffs
     {
