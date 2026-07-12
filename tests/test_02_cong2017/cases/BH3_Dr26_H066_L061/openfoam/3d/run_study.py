@@ -113,6 +113,7 @@ def copy_source(destination: Path) -> None:
             "_work",
             "__pycache__",
             "*.runtime",
+            "linux*",
         ),
     )
 
@@ -141,7 +142,9 @@ def source_fingerprint() -> str:
         and "triSurface" not in path.relative_to(HERE).parts
         and "postProcessing" not in path.relative_to(HERE).parts
         and not any(
-            part == "0" or part.startswith("processor")
+            part == "0"
+            or part.startswith("processor")
+            or part.startswith("linux")
             for part in path.relative_to(HERE).parts
         )
         and not path.name.endswith(".runtime")

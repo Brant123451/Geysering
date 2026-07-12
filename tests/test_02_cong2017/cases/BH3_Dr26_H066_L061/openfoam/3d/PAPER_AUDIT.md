@@ -108,6 +108,7 @@ The paired CFD paper defines the operating/atmospheric pressure as
 | Valve process | Published paired-CFD baseline is instantaneous. Sensitivities use `0.2 s` (2017 experiment) and `0.5 s` (2018 paper statement) porous-baffle ramps; their smooth aperture law is explicitly numerical. | `RESOLVED` by sensitivity, with no claim that the ramp reconstructs the hand motion. |
 | Wall contact angle | Neither paper enables or reports a wall-adhesion law. Reproduction therefore uses a neutral static `90 deg` condition (equivalent to no preferential wetting) and records it explicitly. | `NUMERICAL CONTROL`; non-calibrated. |
 | Initial VOF transition | The measured free surface is at `H0`; neither paper defines a numerical interface thickness. A symmetric `15 mm` linear transition preserves the analytic phase volume but has **not yet passed** the 1 s closed-hold gate. | `NUMERICAL CONTROL`; transported-interface compression is varied independently, and this width is identical in the BH3/BH4 contract. |
+| Discrete initial pressure balance | Neither paper prescribes a finite-volume pressure initializer. The analytic phase-specific profiles are used as a first guess, then the closed-valve mesh projects `p_rgh` against the same gravity and CSF face operators used by the solver while holding `alpha.water` and `U=0` fixed. | `NUMERICAL CONTROL`; it preserves the isolated pocket reference and adds no runtime pressure or velocity source. Acceptance still requires the closed hold. |
 | External air domain | Physical rim stays at `z=1.850 m`; a `0.30 m` wide external atmosphere reaches `z=3.0 m`. The paired CFD study instead uses a confined 3.0 m computational riser. | `MODEL TRANSLATION`; the physical-rim flux and remote-boundary influence must be reported. |
 | Absolute ambient pressure | Paired CFD operating pressure `101.325 kPa`, applied at `z=H0`; the connected open-air column follows the isothermal ideal-gas hydrostatic profile implied by gravity and the selected EOS. | `PAIRED-CFD INPUT`; the vertical correction prevents an initially uniform-pressure gas column from entering gravitational free fall. |
 | PT1/PT2 sampling coordinates | Main-paper physical locations are retained; numerical probes are one local cell inside the fluid. | `NUMERICAL TRANSLATION`. |
@@ -156,4 +157,6 @@ This is enforced by `run_study.py`: a failed hold is not cache-complete, and
 core/sensitivity groups cannot start without a passing current-source hold.
 The water and air pressure expressions are hydrostatic in their pure-phase
 regions; their alpha-weighted blend through the declared 15 mm transition is
-not claimed to be an exact discrete equilibrium and is part of this gate.
+not claimed to be an exact discrete equilibrium. The case-local pressure
+projection is the next controlled correction under this gate; it is not a
+substitute for the 1 s result.

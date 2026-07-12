@@ -103,6 +103,12 @@ python3 mesh_audit.py \
     --output "outputs/${RUN_ID}_mesh.json" \
     > log.meshAudit.baffled 2>&1
 
+if [[ "$RUN_MODE" == "closed" ]]; then
+    bash ./Allwmake > log.wmake.balanceInitialPressure 2>&1
+    balanceInitialPressure -time 0 \
+        > log.balanceInitialPressure 2>&1
+fi
+
 if (( NP == 1 )); then
     compressibleInterFoam > log.compressibleInterFoam 2>&1
 else

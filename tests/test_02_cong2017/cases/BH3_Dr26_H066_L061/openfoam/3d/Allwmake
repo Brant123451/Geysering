@@ -1,0 +1,9 @@
+#!/bin/bash
+cd "$(dirname "$0")" || exit 1
+
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
+
+wmake applications/balanceInitialPressure
+
+echo "BH3_WMAKE_DONE"

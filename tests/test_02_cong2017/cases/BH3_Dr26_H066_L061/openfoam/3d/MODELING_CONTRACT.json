@@ -31,6 +31,7 @@
       "initial_temperature_k": 296.15,
       "initial_velocity_m_per_s": [0.0, 0.0, 0.0],
       "initial_air_pocket_gauge_pressure_pa": 0.0,
+      "closed_hold_pressure_initialisation": "EOS-consistent discrete gravity-and-CSF projection on the closed-valve mesh",
       "upstream_alpha_water": 1.0,
       "atmosphere_inflow_alpha_water": 0.0,
       "downstream_end": "closed_no_slip_wall",

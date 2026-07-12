@@ -11,6 +11,7 @@ system/runControl.runtime
 system/riserProbeLocations.runtime
 system/plumeProbeLocations.runtime
 constant/surfaceTension.runtime
+applications/**/Make/linux*/
 log.*
 *.foam
 *.msh

@@ -70,6 +70,14 @@ pressure. `setExprBoundaryFields` applies the same phase, `p`, and `p_rgh`
 state to every wall face, including the water/air transitions along the riser
 wall and downstream pocket.
 
+For the closed-hold gate, `balanceInitialPressure` then keeps `alpha.water`
+and `U=0` fixed while iterating both phase equations of state and projecting
+`p_rgh` against the face operators used for gravity and CSF. It runs only
+after the valve has become a closed baffle, so the isolated atmospheric pocket
+retains its own pressure reference rather than being numerically equalized
+with the upstream water. This is a discrete initialization, not a physical
+source term.
+
 Analytic pocket target: `1.1977322 L`; ideal-gas mass target at the stated
 pressure and temperature: `1.427641 g`. `initialVolumeAuditDict` samples the
 mesh-integrated pocket and non-overlap riser water volumes at exactly `t=0`,
@@ -113,6 +121,9 @@ Neither generated STL surfaces nor `constant/polyMesh` are committed.
 ## Runs
 
 ```bash
+# Build the case-local discrete pressure initializer
+bash ./Allwmake
+
 # Closed-valve static hold
 RUN_MODE=closed END_TIME=1.0 ./Allrun
 
