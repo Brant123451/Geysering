@@ -60,7 +60,11 @@ while the actual timestep was already below the cap.  Its first written
 velocity also rose to 1.239 m/s.  This rejects timestep growth as the cause and
 rejects the interpolated-normal path.  The next minimal screen keeps
 `interpolateNormal=false` and tests the static-benchmark plicRDF convergence
-controls (`iterations=10`, `tol=1e-8`).
+controls (`iterations=10`, `tol=1e-8`).  That screen also failed early: its
+first written velocity rose to 1.905 m/s and global/interface Co reached
+0.487.  The next candidate is `isoAlpha + fitParaboloid`, which changes the
+reconstruction algorithm instead of further tightening rejected plicRDF
+iterations.
 
 ## Verified before handoff
 
@@ -169,17 +173,27 @@ controls (`iterations=10`, `tol=1e-8`).
       the earlier 1.187 m/s peak.
     The run was stopped at 0.0014 s after both immutable screening limits had
     failed.  Further reduction of `maxDeltaT` is not a justified remedy.
+15. The stricter static-benchmark plicRDF convergence controls were also
+    rejected before the prior 0.003 s hotspot window:
+    * `iterations=10`, `tol=1e-8`, `interpolateNormal=false`;
+    * the first written velocity at 0.00047 s was 1.905 m/s, 46.3% above the
+      default-false screen's overall peak;
+    * global and interface Co both reached 0.487;
+    * alpha stayed within roundoff-scale bounds, with no rim water or gas
+      entry.
+    The run was stopped at 0.0018 s because later decay cannot remove an
+    already failed peak-to-peak numerical screen.
 
 ## Still required
 
 The scientific reproduction is **not complete**.  Continue in this order:
 
 1. Do not extend either existing `fitParaboloid` screen and do not retry
-   `interpolateNormal=true` with a smaller timestep cap.  The source now
-   materialises plicRDF iteration and tolerance controls; test the
-   static-benchmark values (`iterations=10`, `tol=1e-8`) with
-   `interpolateNormal=false` through the previous 0.003 s velocity-peak
-   window.  Re-screen to 0.006 s only if it stays within the
+   `interpolateNormal=true` with a smaller timestep cap.  The source
+   materialises plicRDF iteration and tolerance controls, and the
+   static-benchmark values (`iterations=10`, `tol=1e-8`) are also rejected.
+   Screen `isoAlpha + fitParaboloid` through the previous 0.003 s
+   velocity-peak window.  Re-screen to 0.006 s only if it stays within the
    declared Courant limits and reduces peak velocity.  A candidate may then
    extend past the 0.04 s pressure-drift onset, and only \(H^*\) peak-to-peak
    at or below 0.02 may proceed to the full 1.0 s hold.  Opening runs retain

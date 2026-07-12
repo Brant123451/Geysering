@@ -142,7 +142,11 @@ is therefore a highly local pressure-corrected flux excursion, not adaptive
 timestep growth, and the interpolated-normal path is rejected.  The next
 minimal sensitivity retains `interpolateNormal=false` while matching the
 static benchmark's stricter plicRDF convergence controls
-(`iterations=10`, `tol=1e-8`).
+(`iterations=10`, `tol=1e-8`).  That sensitivity was worse: the first written
+velocity rose to 1.905 m/s and global/interface Co reached 0.487, so it was
+stopped at 0.0018 s.  The next screen uses `isoAlpha + fitParaboloid` to remove
+the plicRDF reconstruction iteration from the candidate rather than tightening
+it further.
 
 Thermophysical choices are:
 

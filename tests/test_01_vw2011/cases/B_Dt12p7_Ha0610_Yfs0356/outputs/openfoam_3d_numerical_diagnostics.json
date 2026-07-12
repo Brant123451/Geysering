@@ -544,5 +544,56 @@
       "next_action": "Keep interpolateNormal=false and test whether the static-benchmark plicRDF convergence controls, iterations=10 and tol=1e-8, reduce its 0.003 s peak without reintroducing the early flux spike."
     },
     "completion_claim": "This is an intentionally stopped timestep diagnostic. It is not a passed hold, smoke run, full experiment, or accepted baseline."
+  },
+  "fit_paraboloid_strict_plic_convergence_screen": {
+    "status": "rejected_early_velocity_and_courant_regression",
+    "source_commit": "e98e9b0",
+    "purpose": "Test whether the static-curvature-benchmark plicRDF controls reduce the non-interpolated-normal velocity peak by increasing iterations from 5 to 10 and reducing tol from 1e-6 to 1e-8.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "reconstruction_iterations": 10,
+      "reconstruction_tolerance": 1e-08,
+      "curvature_model": "fitParaboloid",
+      "interpolate_normal": false,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "requested_end_time_s": 0.0035
+    },
+    "interrupted_result": {
+      "solver_exit_code_after_sigint": 1,
+      "latest_completed_solver_time_s": 0.001787248407,
+      "execution_time_s": 255.11,
+      "clock_time_s": 265,
+      "maximum_courant_number": 0.48705647,
+      "maximum_interface_courant_number": 0.48705647,
+      "maximum_capillary_number_observed": 0.38631301,
+      "written_velocity_m_per_s": {
+        "0.00046548758": 1.9047473,
+        "0.00095862514": 1.2554877,
+        "0.0014645568": 1.1656539
+      },
+      "peak_velocity_location_m": [
+        3.5122788,
+        0.38073292,
+        -0.0044391549
+      ],
+      "alpha_water_min_observed": -1.0587912e-22,
+      "alpha_water_max_observed": 1.0000000000006453,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "rejection": {
+      "velocity_change_vs_default_false_pct": 46.30381052261341,
+      "finding": "The stricter plicRDF convergence settings increased the first written velocity to 1.905 m/s and generated global/interface Co=0.487. Both values exceeded the screening limits before the previous 0.003 s hotspot window.",
+      "decision": "The run was stopped once the early peak made the candidate ineligible. More plicRDF iterations are not promoted to the baseline.",
+      "next_action": "Screen isoAlpha reconstruction with fitParaboloid so that the next test changes the reconstruction algorithm instead of further tightening the rejected plicRDF iteration."
+    },
+    "completion_claim": "This is an intentionally stopped reconstruction-convergence sensitivity. It is not a passed hold, smoke run, full experiment, or accepted baseline."
   }
 }

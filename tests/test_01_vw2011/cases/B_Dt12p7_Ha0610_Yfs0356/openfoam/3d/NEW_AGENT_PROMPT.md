@@ -325,6 +325,14 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     iteration/tolerance 控制；下一步保留 `interpolateNormal=false`，筛选静态
     benchmark 的 `iterations=10`、`tol=1e-8`，先覆盖旧 false 候选约
     0.003 s 的速度峰值。
+12. 上述严格 plicRDF 收敛筛选也已主动停止：
+    - 0.00047 s 首个写出速度为 1.905 m/s，比默认 false 运行的全窗峰值高
+      46.3%；
+    - global/interface Co 均达到 0.487；
+    - alpha 仍在 roundoff 范围内，无 rim 水量或 gas-entry。
+    因峰值门槛已不可逆失败，运行在 0.0018 s 停止。不得继续增加 plicRDF
+    iterations；下一项是 `CASEB_RECONSTRUCTION_SCHEME=isoAlpha` 配合
+    `fitParaboloid`，先筛到超过旧 0.003 s 速度峰窗口。
 
 十、hold 验收
 
