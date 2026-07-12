@@ -98,7 +98,8 @@ functions
         libs                (utilityFunctionObjects);
         name                bh6ConservationAudit;
         executeControl      adjustableRunTime;
-        executeInterval     0.01;
+        // Resolve boundary-flux oscillations when integrating conservation.
+        executeInterval     0.001;
         writeControl        none;
 
         codeInclude

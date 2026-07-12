@@ -24,6 +24,7 @@ H0 = 0.66
 PIPE_D = 0.050
 RISER_D = 0.041
 L0 = 0.61
+TEE_X = 3.47
 VALVE_X = 5.98
 RIM_Y = 1.80  # physical riser height above horizontal-pipe soffit
 RIM_Z = 1.825
@@ -148,10 +149,16 @@ def extract_riser_levels(alpha: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         if not np.any(wet):
             yint[row] = np.nan
             continue
-        first = int(np.argmax(wet))
+        # The air pocket eventually acquires a water-filled tail.  Select the
+        # uppermost contiguous water column, which is the column between the
+        # bubble nose and free surface; selecting the first wet cell would
+        # mistake tail water for Yint after that topology change.
         last = int(len(wet) - 1 - np.argmax(wet[::-1]))
+        first = last
+        while first > 0 and wet[first - 1]:
+            first -= 1
         if first == 0:
-            lower = elevations[0]
+            lower = 0.0
         else:
             lower = crossing(
                 elevations[first - 1],
@@ -264,6 +271,23 @@ def max_climb_rate(
             slope = float(np.polyfit(time[mask], level[mask], 1)[0])
             best = slope if not np.isfinite(best) else max(best, slope)
     return best
+
+
+def average_climb_rate(
+    time: np.ndarray,
+    level: np.ndarray,
+    start: float,
+    stop: float,
+) -> float:
+    mask = (
+        (time >= start)
+        & (time <= stop)
+        & np.isfinite(time)
+        & np.isfinite(level)
+    )
+    if np.count_nonzero(mask) < 3 or stop <= start:
+        return float("nan")
+    return float(np.polyfit(time[mask], level[mask], 1)[0])
 
 
 def parse_tagged_rows(
@@ -455,17 +479,52 @@ def main() -> None:
         (yint >= 0.10) & ((yfs - yint) <= 0.05),
         after=ta if np.isfinite(ta) else None,
     )
-    water_above_rim = bool(np.any(np.isfinite(highest_water)))
+    centreline_water_above_rim = bool(np.any(np.isfinite(highest_water)))
     yfs_max = float(np.nanmax(yfs)) if np.any(np.isfinite(yfs)) else float("nan")
     event_stop = catch if np.isfinite(catch) else float(riser_time[-1])
     vfs = (
-        max_climb_rate(riser_time, yfs, ta, event_stop)
+        average_climb_rate(riser_time, yfs, ta, event_stop)
         if np.isfinite(ta)
         else float("nan")
     )
     vint = (
+        average_climb_rate(riser_time, yint, ta, event_stop)
+        if np.isfinite(ta)
+        else float("nan")
+    )
+    vfs_max_0p6 = (
+        max_climb_rate(riser_time, yfs, ta, event_stop)
+        if np.isfinite(ta)
+        else float("nan")
+    )
+    vint_max_0p6 = (
         max_climb_rate(riser_time, yint, ta, event_stop)
         if np.isfinite(ta)
+        else float("nan")
+    )
+    ynet = np.full(yfs.shape, np.nan)
+    finite_surface = np.isfinite(riser_time) & np.isfinite(yfs)
+    if np.isfinite(ta) and np.count_nonzero(finite_surface) >= 2:
+        yfs_at_arrival = float(
+            np.interp(ta, riser_time[finite_surface], yfs[finite_surface])
+        )
+        finite_net = np.isfinite(yfs) & np.isfinite(yint) & (riser_time >= ta)
+        ynet[finite_net] = yfs_at_arrival - (
+            yfs[finite_net] - yint[finite_net]
+        )
+        vnet = average_climb_rate(riser_time, ynet, ta, event_stop)
+    else:
+        vnet = float("nan")
+    taylor_velocity = 0.345 * math.sqrt(G * RISER_D)
+    arrival_elapsed = ta - args.opening_start if np.isfinite(ta) else float("nan")
+    horizontal_front_velocity = (
+        (VALVE_X - TEE_X) / arrival_elapsed
+        if np.isfinite(arrival_elapsed) and arrival_elapsed > 0.0
+        else float("nan")
+    )
+    horizontal_front_froude = (
+        horizontal_front_velocity / math.sqrt(G * PIPE_D)
+        if np.isfinite(horizontal_front_velocity)
         else float("nan")
     )
     pressure_peak = (
@@ -502,6 +561,10 @@ def main() -> None:
         ),
     )
     expelled_water = external_water_volume + cumulative_far_water_out
+    ejection_volume_threshold = 1.0e-9
+    water_above_rim = bool(
+        np.nanmax(expelled_water) >= ejection_volume_threshold
+    )
     estimated_rim_flow = np.gradient(expelled_water, audit_time)
 
     balance_rows = np.column_stack(
@@ -533,6 +596,7 @@ def main() -> None:
             common_time,
             yfs,
             yint,
+            ynet,
             interpolate_without_extrapolation(
                 common_time, pt1_time, pt1_head
             ),
@@ -568,6 +632,7 @@ def main() -> None:
             "time_s",
             "Yfs_3d_m",
             "Yint_3d_m",
+            "Ynet_3d_m",
             "PT1_H_over_H0_raw",
             "PT1_H_over_H0_smooth_0p10s",
             "PT2_H_over_H0_raw",
@@ -595,7 +660,15 @@ def main() -> None:
     one_d_yint_entrance = np.maximum(one_d["Yint_m"] - PIPE_D, 0.0)
     fs_mask = levels_exp["kind"] == "fs"
     int_mask = levels_exp["kind"] == "int"
-    if valve_event_started:
+    level_validation_covered = (
+        valve_event_started
+        and riser_time[-1] >= float(np.nanmax(levels_exp["t_s"])) - 1.0e-6
+    )
+    pressure_proxy_covered = (
+        valve_event_started
+        and pt1_time[-1] >= float(np.nanmax(pressure_exp["t_s"])) - 1.0e-6
+    )
+    if level_validation_covered:
         fs_rmse = interpolation_rmse(
             riser_time,
             yfs,
@@ -608,6 +681,10 @@ def main() -> None:
             levels_exp["t_s"][int_mask],
             levels_exp["Y_m"][int_mask],
         )
+    else:
+        fs_rmse = float("nan")
+        int_rmse = float("nan")
+    if pressure_proxy_covered:
         pressure_rmse = interpolation_rmse(
             pt1_time,
             pt1_smooth,
@@ -615,8 +692,6 @@ def main() -> None:
             pressure_exp["HoverH0_med"],
         )
     else:
-        fs_rmse = float("nan")
-        int_rmse = float("nan")
         pressure_rmse = float("nan")
 
     geometry = json.loads(
@@ -644,6 +719,7 @@ def main() -> None:
     nominal_pocket_mass = (
         P_ATM * nominal_pocket_volume / (R_AIR * TEMPERATURE)
     )
+    paper_nominal_riser_water_volume = math.pi * RISER_D**2 * H0 / 4.0
     nominal_water_volume = (
         math.pi * PIPE_D**2 * VALVE_X / 4.0
         + math.pi * RISER_D**2 * (H0 - PIPE_D) / 4.0
@@ -663,9 +739,16 @@ def main() -> None:
             initial[INITIAL_AUDIT_INDEX["water_volume_m3"]]
         ),
         "analytical_initial_pocket_volume_m3": nominal_pocket_volume,
+        "paper_nominal_riser_water_volume_m3": paper_nominal_riser_water_volume,
+        "analytical_Vair_over_Vw": (
+            nominal_pocket_volume / paper_nominal_riser_water_volume
+        ),
         "numerical_initial_downstream_air_volume_m3": numerical_pocket_volume,
         "pocket_volume_relative_mesh_error": (
             numerical_pocket_volume / nominal_pocket_volume - 1.0
+        ),
+        "pocket_volume_mesh_error_within_one_percent": bool(
+            abs(numerical_pocket_volume / nominal_pocket_volume - 1.0) <= 0.01
         ),
         "analytical_initial_pocket_air_mass_kg": nominal_pocket_mass,
         "numerical_initial_pocket_air_mass_kg": numerical_pocket_mass,
@@ -741,7 +824,7 @@ def main() -> None:
             "riser_diameter_m": RISER_D,
             "area_ratio": (RISER_D / PIPE_D) ** 2,
             "pipe_length_m": 6.59,
-            "tee_x_m": 3.47,
+            "tee_x_m": TEE_X,
             "valve_x_m": VALVE_X,
             "physical_riser_height_m": 1.8,
             "external_top_above_soffit_m": 3.0,
@@ -757,33 +840,56 @@ def main() -> None:
         "events": {
             "vertical_datum": "riser entrance at pipe soffit",
             "Ta_3d_s": ta,
+            "Ta_from_valve_start_3d_s": arrival_elapsed,
+            "horizontal_front_velocity_3d_m_s": horizontal_front_velocity,
+            "horizontal_front_Uf_over_sqrt_gD_3d": horizontal_front_froude,
             "interface_catch_3d_s": catch,
             "Yfs_max_3d_m": yfs_max,
-            "vfs_max_sustained_0p6s_m_s": vfs,
-            "vint_max_sustained_0p6s_m_s": vint,
+            "vfs_average_rise_3d_m_s": vfs,
+            "vint_average_rise_3d_m_s": vint,
+            "vnet_average_rise_3d_m_s": vnet,
+            "vTaylor_m_s": taylor_velocity,
+            "vnet_exceeds_vTaylor": bool(
+                np.isfinite(vnet) and vnet > taylor_velocity
+            ),
+            "vfs_max_sustained_0p6s_m_s": vfs_max_0p6,
+            "vint_max_sustained_0p6s_m_s": vint_max_0p6,
             "water_above_rim": water_above_rim,
+            "centreline_water_above_rim": centreline_water_above_rim,
+            "ejection_detection_volume_threshold_m3": ejection_volume_threshold,
             "max_sampled_water_height_above_rim_m": (
                 float(np.nanmax(highest_water))
-                if water_above_rim
+                if centreline_water_above_rim
                 else 0.0
             ),
             "geyser_3d": water_above_rim,
+            "geyser_definition": (
+                "water ejection or splash through the physical riser rim; "
+                "detected from full external-domain water inventory"
+            ),
             "max_expelled_water_volume_m3": float(np.nanmax(expelled_water)),
         },
         "pressure": {
             "post_arrival_peak_H_over_H0": pressure_peak,
             "PT2_min_H_over_H0": float(np.nanmin(pt2_head)),
             "PT2_max_H_over_H0": float(np.nanmax(pt2_head)),
-            "experiment_proxy": "Run B-32, same nominal Dr/H0/L0 as B-H6",
-            "experiment_post_arrival_slow_peak_H_over_H0": 1.4,
-            "RMSE_H_over_H0_no_time_shift": pressure_rmse,
+            "same_condition_repeat_proxy": (
+                "Run B-32 Fig.10(b), not B-H6; same nominal Dr/H0/L0"
+            ),
+            "proxy_post_arrival_slow_peak_H_over_H0": 1.4,
+            "proxy_RMSE_H_over_H0_no_time_shift": pressure_rmse,
         },
         "experiment": {
             "run": "B-H6",
             "Ta_s": 8.10,
+            "horizontal_front_Uf_over_sqrt_gD": 0.443,
             "vfs_m_s": 0.246,
             "vint_m_s": 0.476,
-            "interface_catch_s": 10.5,
+            "vnet_m_s": 0.235,
+            "vTaylor_m_s": 0.219,
+            "Dr_over_D": 0.82,
+            "Vair_over_Vw": 1.37,
+            "interface_catch_s_approximate": "10.5-10.9",
             "Yfs_initial_m": 0.58,
             "Yfs_peak_m": 1.21,
             "geyser": False,
@@ -805,9 +911,26 @@ def main() -> None:
             ),
         },
         "comparison": {
+            "B_H6_level_validation_covered": level_validation_covered,
+            "B32_pressure_proxy_covered": pressure_proxy_covered,
             "Yfs_RMSE_m_no_time_shift": fs_rmse,
             "Yint_RMSE_m_no_time_shift": int_rmse,
-            "PT1_RMSE_H_over_H0_no_time_shift": pressure_rmse,
+            "B32_proxy_PT1_RMSE_H_over_H0_no_time_shift": pressure_rmse,
+            "Ta_error_s": ta - 8.10 if np.isfinite(ta) else float("nan"),
+            "Uf_over_sqrt_gD_error": (
+                horizontal_front_froude - 0.443
+                if np.isfinite(horizontal_front_froude)
+                else float("nan")
+            ),
+            "vfs_average_error_m_s": (
+                vfs - 0.246 if np.isfinite(vfs) else float("nan")
+            ),
+            "vint_average_error_m_s": (
+                vint - 0.476 if np.isfinite(vint) else float("nan")
+            ),
+            "vnet_average_error_m_s": (
+                vnet - 0.235 if np.isfinite(vnet) else float("nan")
+            ),
             "no_event_time_shift": True,
             "no_outcome_tuning": True,
         },
