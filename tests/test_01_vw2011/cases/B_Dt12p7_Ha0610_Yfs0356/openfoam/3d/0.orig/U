@@ -16,6 +16,11 @@ boundaryField
         type            noSlip;
     }
 
+    "valveWall.*"
+    {
+        type            noSlip;
+    }
+
     atmosphere
     {
         type            pressureInletOutletVelocity;

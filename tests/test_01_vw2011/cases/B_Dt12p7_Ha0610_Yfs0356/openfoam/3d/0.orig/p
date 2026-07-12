@@ -17,6 +17,12 @@ boundaryField
         value           uniform 105271.314;
     }
 
+    "valveWall.*"
+    {
+        type            calculated;
+        value           uniform 105271.314;
+    }
+
     atmosphere
     {
         type            calculated;

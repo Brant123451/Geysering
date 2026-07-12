@@ -102,12 +102,12 @@ the first cell upstream of the sharp penalty-valve zone.
 
 The scientific reproduction is **not complete**.  Continue in this order:
 
-1. Replace the connected porous closed-valve limit with a conformal,
-   two-sided no-slip baffle for `CASEB_VALVE_MODE=closed`, remove
-   `adjustableRunTime` timestep enlargement, re-screen beyond the previous
-   0.04 s onset, then run the full 1.0 s hold and assess leakage, interface
-   drift, pressure drift, alpha bounds and mass balance.  Opening runs retain
-   the dissipative resistance and must be tested separately.
+1. Validate the new conformal, two-sided no-slip baffle for
+   `CASEB_VALVE_MODE=closed` and the `runTime` output controls on the generated
+   mesh, re-screen beyond the previous 0.04 s onset, then run the full 1.0 s
+   hold and assess leakage, interface drift, pressure drift, alpha bounds and
+   mass balance.  Opening runs retain the dissipative resistance and must be
+   tested separately.
 2. Run the opened-valve 0.5 s smoke case.
 3. Run the 10.5 s base case through \(T^*\ge6\).
 4. Run the refined grid and required timestep/valve/compressibility

@@ -5,7 +5,9 @@ The mesh is the Boolean union of a circular 94 mm main pipe, a circular
 12.7 mm tower, and an exterior atmosphere above the physical rim.  Refinement
 is local: the long main pipe remains affordable while the base preset retains
 about twelve nominal edge lengths across the small tower and the refined
-preset retains about eighteen.
+preset retains about eighteen.  A conformal internal disk at the valve plane
+is an ordinary face zone for opening runs and becomes a two-sided wall baffle
+for the closed-valve hold.
 """
 from __future__ import annotations
 
@@ -186,11 +188,52 @@ def main() -> None:
         )
         exterior, _ = occ.cut([(3, atmosphere)], [(3, casing)])
         fluid, _ = occ.fuse(apparatus, exterior)
+
+        # A connected porous penalty cannot support the finite pressure jump
+        # of a perfectly closed valve at exactly zero velocity.  Fragment the
+        # pipe at the physical valve plane so closed runs can convert this
+        # internal face zone into a two-sided wall.  The exact pipe radius
+        # avoids the sliver cells created by extending a disk into the wall.
+        valve_disk = occ.addDisk(
+            AIR_CHAMBER_LENGTH,
+            0.0,
+            0.0,
+            PIPE_RADIUS,
+            PIPE_RADIUS,
+            zAxis=[1.0, 0.0, 0.0],
+            xAxis=[0.0, 1.0, 0.0],
+        )
+        fluid, _ = occ.fragment(
+            fluid,
+            [(2, valve_disk)],
+            removeObject=True,
+            removeTool=True,
+        )
         occ.synchronize()
 
         volumes = [tag for dim, tag in fluid if dim == 3]
-        if len(volumes) != 1:
-            raise RuntimeError(f"Expected one connected volume, got {volumes}")
+        if len(volumes) < 2:
+            raise RuntimeError(
+                f"Valve disk did not partition the connected fluid: {volumes}"
+            )
+
+        valve_surfaces: list[int] = []
+        for dim, tag in gmsh.model.getEntities(2):
+            xmin, ymin, zmin, xmax, ymax, zmax = gmsh.model.getBoundingBox(dim, tag)
+            if (
+                close(xmin, AIR_CHAMBER_LENGTH)
+                and close(xmax, AIR_CHAMBER_LENGTH)
+                and close(ymin, -PIPE_RADIUS)
+                and close(ymax, PIPE_RADIUS)
+                and close(zmin, -PIPE_RADIUS)
+                and close(zmax, PIPE_RADIUS)
+            ):
+                valve_surfaces.append(tag)
+        if len(valve_surfaces) != 1:
+            raise RuntimeError(
+                "Expected one conformal valve-plane surface, got "
+                f"{valve_surfaces}"
+            )
 
         atmosphere_surfaces: list[int] = []
         wall_surfaces: list[int] = []
@@ -234,6 +277,8 @@ def main() -> None:
         gmsh.model.setPhysicalName(2, wall_group, "walls_raw")
         atmosphere_group = gmsh.model.addPhysicalGroup(2, atmosphere_surfaces)
         gmsh.model.setPhysicalName(2, atmosphere_group, "atmosphere_raw")
+        valve_group = gmsh.model.addPhysicalGroup(2, valve_surfaces)
+        gmsh.model.setPhysicalName(2, valve_group, "valvePlane")
 
         far = sizes["atmosphere_size"]
         fields = [
@@ -366,6 +411,10 @@ def main() -> None:
             "tower_diameter_m": TOWER_DIAMETER,
             "tower_height_m": TOWER_HEIGHT,
             "tower_rim_y_m": TOWER_RIM_Y,
+            "valve_plane_x_m": AIR_CHAMBER_LENGTH,
+            "valve_plane_conformal": True,
+            "valve_plane_surface_count": len(valve_surfaces),
+            "fluid_volume_partitions": len(volumes),
             "atmosphere_top_y_m": atmosphere_top_y,
             "atmosphere_bottom_y_m": atmosphere_min_y,
             "assumed_tower_wall_thickness_m": ASSUMED_TOWER_WALL_THICKNESS,

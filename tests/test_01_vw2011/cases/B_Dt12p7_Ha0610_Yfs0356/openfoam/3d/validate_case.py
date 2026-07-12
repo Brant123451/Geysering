@@ -34,6 +34,8 @@ time_scale = 0.610 / math.sqrt(9.81 * config["tower_diameter_m"])
 mesh_source = (HERE / "make_mesh.py").read_text()
 required_fragments = [
     "occ.addCylinder",
+    "valve_plane_conformal",
+    'setPhysicalName(2, valve_group, "valvePlane")',
     "TOWER_DIAMETER = 0.0127",
     "ATMOSPHERE_HEIGHT = 1.200",
     '"refined"',
@@ -48,7 +50,10 @@ solver_sources = "\n".join(
         (HERE / "system" / "runSettings.default").read_text(),
         (HERE / "system" / "alphaCorrectors.default").read_text(),
         (HERE / "system" / "pimpleCorrectors.default").read_text(),
+        (HERE / "system" / "runControl.default").read_text(),
+        (HERE / "system" / "createBafflesDict.hold").read_text(),
         (HERE / "constant" / "thermophysicalProperties").read_text(),
+        (HERE / "constant" / "fvOptions").read_text(),
         (HERE / "constant" / "surfaceForces.default").read_text(),
         (HERE / "Allrun").read_text(),
     )
@@ -63,6 +68,9 @@ required_solver_fragments = [
     "nOuterCorrectors         1",
     "nCorrectors              2",
     "nNonOrthogonalCorrectors 0",
+    "writeControl    runTime",
+    "zoneName    valvePlane",
+    'if (mode != "closed")',
     "pureMovingPhaseModel",
     "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
 ]
@@ -81,11 +89,12 @@ result = {
     "solver_source_check": (
         "compressibleInterFlow at pinned TwoPhaseFlow commit with "
         "isoAdvection, plicRDF reconstruction, RDF curvature and "
-        "TwoPhaseFlow-reference corrector counts"
+        "TwoPhaseFlow-reference corrector counts; conformal no-slip closed "
+        "baffle and runTime output control"
     ),
     "geometry_source_check": (
-        "configured 3-D circular Boolean pipe/tower/exterior atmosphere; "
-        "generated mesh remains authoritative"
+        "configured 3-D circular Boolean pipe/tower/exterior atmosphere with "
+        "a conformal valve-plane face zone; generated mesh remains authoritative"
     ),
     "pipe_length_m": 4.006,
     "pipe_diameter_m": pipe_diameter,

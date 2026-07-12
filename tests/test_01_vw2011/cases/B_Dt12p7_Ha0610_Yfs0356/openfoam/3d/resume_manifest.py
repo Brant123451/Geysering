@@ -62,7 +62,12 @@ def read_manifest(path: Path) -> dict:
     if not path.is_file():
         raise ValueError(f"Run manifest does not exist: {path}")
     manifest = json.loads(path.read_text())
-    required = set(ENVIRONMENT_KEYS) | {"solver", "two_phase_flow_commit"}
+    required = set(ENVIRONMENT_KEYS) | {
+        "solver",
+        "two_phase_flow_commit",
+        "valve_representation",
+        "time_control",
+    }
     missing = sorted(required - set(manifest))
     if missing:
         raise ValueError(f"Run manifest is missing controls: {', '.join(missing)}")
@@ -72,6 +77,15 @@ def read_manifest(path: Path) -> dict:
         raise ValueError("Unknown mesh preset in run manifest")
     if manifest["valve_mode"] not in {"opening", "closed", "instant"}:
         raise ValueError("Unknown valve mode in run manifest")
+    expected_valve = (
+        "conformalNoSlipBaffle"
+        if manifest["valve_mode"] == "closed"
+        else "dissipativeResistance"
+    )
+    if manifest["valve_representation"] != expected_valve:
+        raise ValueError("Run manifest has an inconsistent valve representation")
+    if manifest["time_control"] != "runTime":
+        raise ValueError("Run manifest uses a timestep-disturbing output control")
     if manifest["gas_equation_of_state"] not in {"perfectGas", "rhoConst"}:
         raise ValueError("Unknown gas equation of state in run manifest")
     if manifest["solver"] != "compressibleInterFlow":

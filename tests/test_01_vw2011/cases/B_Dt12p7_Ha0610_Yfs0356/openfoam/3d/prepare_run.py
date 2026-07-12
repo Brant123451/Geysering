@@ -85,6 +85,12 @@ def main() -> None:
         raise SystemExit("CASEB_VALVE_MODE must be opening, closed, or instant")
     if stage == "hold" and valve_mode != "closed":
         raise SystemExit("CASEB_STAGE=hold requires CASEB_VALVE_MODE=closed")
+    valve_representation = (
+        "conformalNoSlipBaffle"
+        if valve_mode == "closed"
+        else "dissipativeResistance"
+    )
+    time_control = "runTime"
     gas_eos = os.environ.get("CASEB_GAS_EOS", "perfectGas")
     if gas_eos not in {"perfectGas", "rhoConst"}:
         raise SystemExit("CASEB_GAS_EOS must be perfectGas or rhoConst")
@@ -177,7 +183,7 @@ def main() -> None:
         "\n".join(
             (
                 f"endTime         {end_time:.10g};",
-                "writeControl    adjustableRunTime;",
+                f"writeControl    {time_control};",
                 f"writeInterval   {write_interval:.10g};",
                 f"maxCo           {max_co:.10g};",
                 f"maxAlphaCo      {max_alpha_co:.10g};",
@@ -246,6 +252,7 @@ def main() -> None:
         "end_time_s": end_time,
         "mesh_preset": os.environ.get("CASEB_MESH", "base"),
         "valve_mode": valve_mode,
+        "valve_representation": valve_representation,
         "valve_open_time_s": valve_open_time,
         "valve_seal_speed_m_per_s": valve_seal_speed,
         "initial_air_head_m": initial_air_head,
@@ -260,6 +267,7 @@ def main() -> None:
         "max_alpha_co": max_alpha_co,
         "max_capillary_num": max_capillary_num,
         "max_delta_t_s": max_delta_t,
+        "time_control": time_control,
         "field_write_interval_s": write_interval,
         "probe_write_interval_s": probe_interval,
         "plume_write_interval_s": plume_interval,

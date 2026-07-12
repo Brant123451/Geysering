@@ -16,6 +16,11 @@ boundaryField
         type            fixedFluxPressure;
     }
 
+    "valveWall.*"
+    {
+        type            fixedFluxPressure;
+    }
+
     atmosphere
     {
         // Enforce 101325 Pa static pressure for either phase; a constant

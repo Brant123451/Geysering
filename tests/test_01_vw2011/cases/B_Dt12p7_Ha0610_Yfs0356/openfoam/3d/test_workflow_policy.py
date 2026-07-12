@@ -30,6 +30,7 @@ def baseline_manifest(mesh: str = "base") -> dict:
         "end_time_s": 10.5,
         "mesh_preset": mesh,
         "valve_mode": "opening",
+        "valve_representation": "dissipativeResistance",
         "valve_open_time_s": 0.25,
         "valve_seal_speed_m_per_s": 1.0,
         "initial_air_head_m": 0.610,
@@ -45,6 +46,7 @@ def baseline_manifest(mesh: str = "base") -> dict:
         "max_alpha_co": 0.20,
         "max_capillary_num": 1.0,
         "max_delta_t_s": 0.00025,
+        "time_control": "runTime",
         "field_write_interval_s": 0.10,
         "c_alpha": 1.0,
         "n_alpha_bounds": 5,
@@ -79,6 +81,9 @@ class BaselinePolicyTests(unittest.TestCase):
         manifest = baseline_manifest()
         manifest["n_outer_correctors"] = 2
         self.assertFalse(is_baseline_full_physics(manifest))
+        manifest = baseline_manifest()
+        manifest["time_control"] = "adjustableRunTime"
+        self.assertFalse(is_baseline_full_physics(manifest))
 
     def test_acceptance_can_only_complete_base_mesh(self) -> None:
         for mesh, expected in (("base", "complete"), ("refined", "incomplete")):
@@ -102,8 +107,16 @@ class BaselinePolicyTests(unittest.TestCase):
 class HoldEvidenceTests(unittest.TestCase):
     def test_canonical_hold_requires_baseline_controls(self) -> None:
         manifest = baseline_manifest()
-        manifest.update(stage="hold", valve_mode="closed", end_time_s=1.0)
+        manifest.update(
+            stage="hold",
+            valve_mode="closed",
+            valve_representation="conformalNoSlipBaffle",
+            end_time_s=1.0,
+        )
         self.assertTrue(is_canonical_hold(manifest))
+        manifest["valve_representation"] = "dissipativeResistance"
+        self.assertFalse(is_canonical_hold(manifest))
+        manifest["valve_representation"] = "conformalNoSlipBaffle"
         manifest["mesh_preset"] = "refined"
         self.assertFalse(is_canonical_hold(manifest))
 
@@ -125,6 +138,7 @@ class ResumeManifestTests(unittest.TestCase):
         manifest = baseline_manifest()
         manifest["stage"] = "hold"
         manifest["valve_mode"] = "closed"
+        manifest["valve_representation"] = "conformalNoSlipBaffle"
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "manifest.json"
             path.write_text(json.dumps(manifest))
@@ -182,6 +196,25 @@ class TwoPhaseFlowDeckTests(unittest.TestCase):
         self.assertIn("mpirun -np \"$NP\" compressibleInterFlow", allrun)
         self.assertIn("mpirun -np \"$NP\" compressibleInterFlow", resume)
         self.assertNotIn("log.compressibleInterFoam", allrun + resume)
+
+    def test_closed_mode_uses_conformal_baffle_and_runtime_output(self) -> None:
+        mesh = (HERE / "make_mesh.py").read_text()
+        allrun = (HERE / "Allrun").read_text()
+        baffles = (HERE / "system" / "createBafflesDict.hold").read_text()
+        control = (HERE / "system" / "controlDict").read_text()
+        run_control = (HERE / "system" / "runControl.default").read_text()
+        valve = (HERE / "constant" / "fvOptions").read_text()
+        self.assertIn('setPhysicalName(2, valve_group, "valvePlane")', mesh)
+        self.assertIn("createBaffles -overwrite", allrun)
+        self.assertIn("zoneName    valvePlane;", baffles)
+        self.assertIn("valveWallUpstream", baffles)
+        self.assertIn("valveWallDownstream", baffles)
+        self.assertIn('if (mode != "closed")', valve)
+        self.assertNotIn("adjustableRunTime", control + run_control)
+        self.assertIn("writeControl    runTime;", run_control)
+        for field in ("U", "p", "p_rgh", "alpha.water", "T", "T.air", "T.water"):
+            text = (HERE / "0.orig" / field).read_text()
+            self.assertIn('"valveWall.*"', text)
 
     def test_phase_models_and_temperatures_are_explicit(self) -> None:
         thermo = (HERE / "constant" / "thermophysicalProperties").read_text()

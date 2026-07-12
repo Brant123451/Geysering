@@ -46,6 +46,7 @@ def configuration_id(manifest: dict) -> str:
             "stage",
             "mesh_preset",
             "valve_mode",
+            "valve_representation",
             "valve_open_time_s",
             "valve_seal_speed_m_per_s",
             "initial_air_head_m",
@@ -54,6 +55,7 @@ def configuration_id(manifest: dict) -> str:
             "max_alpha_co",
             "max_capillary_num",
             "max_delta_t_s",
+            "time_control",
             "c_alpha",
             "solver",
             "two_phase_flow_commit",
@@ -93,6 +95,7 @@ def is_baseline_numerics(manifest: dict) -> bool:
         and int(manifest.get("n_pressure_correctors", -1)) == 2
         and int(manifest.get("n_non_orthogonal_correctors", -1)) == 0
         and manifest.get("alpha_clip") is False
+        and manifest.get("time_control") == "runTime"
     )
 
 
@@ -100,6 +103,7 @@ def is_baseline_full_physics(manifest: dict) -> bool:
     return (
         manifest.get("stage") == "full"
         and manifest.get("valve_mode") == "opening"
+        and manifest.get("valve_representation") == "dissipativeResistance"
         and math.isclose(float(manifest.get("valve_open_time_s", -1)), 0.25)
         and math.isclose(
             float(manifest.get("valve_seal_speed_m_per_s", -1)), 1.0
@@ -128,6 +132,7 @@ def is_canonical_hold(manifest: dict) -> bool:
         manifest.get("stage") == "hold"
         and manifest.get("mesh_preset") == "base"
         and manifest.get("valve_mode") == "closed"
+        and manifest.get("valve_representation") == "conformalNoSlipBaffle"
         and math.isclose(float(manifest.get("valve_open_time_s", -1)), 0.25)
         and math.isclose(
             float(manifest.get("valve_seal_speed_m_per_s", -1)), 1.0
@@ -161,6 +166,7 @@ def mesh_pair_compatible(first: dict, second: dict) -> bool:
     keys = {
         "stage",
         "valve_mode",
+        "valve_representation",
         "valve_open_time_s",
         "valve_seal_speed_m_per_s",
         "initial_air_head_m",
@@ -169,6 +175,7 @@ def mesh_pair_compatible(first: dict, second: dict) -> bool:
         "max_alpha_co",
         "max_capillary_num",
         "max_delta_t_s",
+        "time_control",
         "c_alpha",
         "solver",
         "two_phase_flow_commit",
@@ -333,7 +340,10 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "two_phase_flow_commit",
         "gas_eos",
         "initial_air_head_m",
+        "valve_mode",
+        "valve_representation",
         "valve_open_time_s",
+        "time_control",
         "gmsh_version",
         "algorithm",
         "optimizer",
@@ -392,7 +402,10 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "two_phase_flow_commit": manifest.get("two_phase_flow_commit"),
         "gas_eos": manifest.get("gas_equation_of_state"),
         "initial_air_head_m": manifest.get("initial_air_head_m"),
+        "valve_mode": manifest.get("valve_mode"),
+        "valve_representation": manifest.get("valve_representation"),
         "valve_open_time_s": manifest.get("valve_open_time_s"),
+        "time_control": manifest.get("time_control"),
         "gmsh_version": metadata.get("gmsh_version"),
         "algorithm": metadata.get("algorithm"),
         "optimizer": metadata.get("optimizer"),
@@ -489,8 +502,10 @@ def update_sensitivity_csv(metrics: dict) -> None:
         "gas_eos",
         "initial_air_head_m",
         "valve_mode",
+        "valve_representation",
         "valve_open_time_s",
         "valve_seal_speed_m_per_s",
+        "time_control",
         "maxCo",
         "maxAlphaCo",
         "maxCapillaryNum",
@@ -533,10 +548,12 @@ def update_sensitivity_csv(metrics: dict) -> None:
         "gas_eos": manifest.get("gas_equation_of_state"),
         "initial_air_head_m": manifest.get("initial_air_head_m"),
         "valve_mode": manifest.get("valve_mode"),
+        "valve_representation": manifest.get("valve_representation"),
         "valve_open_time_s": manifest.get("valve_open_time_s"),
         "valve_seal_speed_m_per_s": manifest.get(
             "valve_seal_speed_m_per_s"
         ),
+        "time_control": manifest.get("time_control"),
         "maxCo": manifest.get("max_co"),
         "maxAlphaCo": manifest.get("max_alpha_co"),
         "maxCapillaryNum": manifest.get("max_capillary_num"),

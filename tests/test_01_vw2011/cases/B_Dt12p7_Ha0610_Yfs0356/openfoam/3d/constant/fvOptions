@@ -41,6 +41,11 @@ valveResistance
         #{
             const char* modeText = std::getenv("CASEB_VALVE_MODE");
             const std::string mode = modeText ? modeText : "opening";
+            // Closed-mode meshes contain an exact two-sided wall baffle at
+            // the valve plane.  Do not retain the connected-domain penalty:
+            // its sharp rAU jump generated a growing upstream-edge hotspot.
+            if (mode != "closed")
+            {
             const char* durationText = std::getenv("CASEB_VALVE_OPEN_TIME");
             const scalar openingTime =
                 durationText ? std::atof(durationText) : 0.25;
@@ -102,6 +107,7 @@ valveResistance
                 diagonal[cellI] -=
                     rho[cellI]*lossK*speed*volumes[cellI]
                    /(2.0*valveThickness);
+            }
             }
         #};
 

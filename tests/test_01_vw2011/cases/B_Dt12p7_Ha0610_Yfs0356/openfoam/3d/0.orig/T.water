@@ -17,6 +17,11 @@ boundaryField
         type            zeroGradient;
     }
 
+    "valveWall.*"
+    {
+        type            zeroGradient;
+    }
+
     atmosphere
     {
         type            inletOutlet;

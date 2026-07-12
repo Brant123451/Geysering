@@ -35,7 +35,7 @@ functions
             // unresolved; this lower-wall coordinate follows the Case-A deck.
             (1.616 -0.043 0)
         );
-        writeControl    adjustableRunTime;
+        writeControl    runTime;
         writeInterval   $caseBProbeInterval;
     }
 
@@ -48,7 +48,7 @@ functions
         (
             #include "towerProbeLocations"
         );
-        writeControl    adjustableRunTime;
+        writeControl    runTime;
         writeInterval   $caseBProbeInterval;
     }
 
@@ -61,7 +61,7 @@ functions
         (
             #include "plumeProbeLocations"
         );
-        writeControl    adjustableRunTime;
+        writeControl    runTime;
         writeInterval   $caseBPlumeInterval;
     }
 
@@ -70,7 +70,7 @@ functions
         type            coded;
         libs            (utilityFunctionObjects);
         name            caseBPhaseAccounting;
-        executeControl  adjustableRunTime;
+        executeControl  runTime;
         executeInterval $caseBAccountingInterval;
         writeControl    writeTime;
 

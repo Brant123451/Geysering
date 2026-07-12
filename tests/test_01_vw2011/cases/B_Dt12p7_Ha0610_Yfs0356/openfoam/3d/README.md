@@ -179,21 +179,24 @@ as the valve opens and never prescribes pressure, velocity, or mass.
 first extended static test failed because a connected porous zone cannot
 support the finite closed-valve pressure jump at exactly zero velocity and
 creates a sharp pressure-correction coefficient jump at its cell-zone edge.
-The next closed-mode candidate therefore uses a conformal two-sided no-slip
-baffle at the valve plane, while opening/instant modes retain the purely
-dissipative resistance.  The baffle must pass the same leakage, drift and
-conservation hold criteria; it is not accepted merely because it is exactly
-impermeable.
+The source now uses a conformal two-sided no-slip baffle at the valve plane
+for closed mode, while opening/instant modes retain the purely dissipative
+resistance.  The baffle must pass the same leakage, drift and conservation
+hold criteria; it is not accepted merely because it is exactly impermeable.
 
 ## Mesh
 
-Gmsh OpenCASCADE fuses the three circular/exterior volumes and HXT creates
-unstructured tetrahedra.  Refinement boxes target the tower, circular tee,
-valve and initial pocket nose, initial free surface, near-rim jet and plume
-corridor.  A 40 mm linear transition surrounds each box, and a 4 mm corridor
-extends around the full exterior tower casing; this prevents fine casing
-triangles from connecting directly to far-atmosphere cells.  HXT is followed
-by explicit Gmsh tetrahedron optimization.  Netgen remains an optional
+Gmsh OpenCASCADE fuses the circular pipe/tower/exterior geometry, fragments it
+with an exact-radius disk at x=0.546 m, and HXT creates unstructured
+tetrahedra.  The disk is a conformal `valvePlane` face zone: it remains
+ordinary owner-neighbour faces for opening runs and `createBaffles` converts
+it to two no-slip wall patches for closed runs.  Refinement boxes target the
+tower, circular tee, valve and initial pocket nose, initial free surface,
+near-rim jet and plume corridor.  A 40 mm linear transition surrounds each
+box, and a 4 mm corridor extends around the full exterior tower casing; this
+prevents fine casing triangles from connecting directly to far-atmosphere
+cells.  HXT is followed by explicit Gmsh tetrahedron optimization.  Netgen
+remains an optional
 `make_mesh.py --optimizer netgen` experiment when the installed Gmsh build
 provides it; the packaged Gmsh 4.12.1 used for validation does not.  The
 selected algorithm, optimizer, transition thickness and Gmsh version are
@@ -338,6 +341,11 @@ Runtime data are intentionally untracked.  Probes sample:
 * absolute pressure and velocity at the transducer;
 * five vertical lines across the tower every 5 mm;
 * five vertical lines through the exterior plume every 10 mm.
+
+Field, probe and accounting schedules use `runTime`, not
+`adjustableRunTime`.  Samples may therefore lag their nominal interval by one
+accepted timestep; this prevents output alignment from enlarging a
+Courant-limited timestep after the solver has selected it.
 
 The lower and upper transitions of the principal five-point arithmetic wet
 profile define \(Y_{int}\) and \(Y_{fs}\).  A coded accounting object logs

@@ -59,6 +59,10 @@ python3 make_mesh.py \
     --metadata "outputs/runtime/mesh_${MESH}.json" \
     > log.gmsh 2>&1
 gmshToFoam caseB3d.msh > log.gmshToFoam 2>&1
+if [[ "$CASEB_VALVE_MODE" == "closed" ]]; then
+    createBaffles -overwrite -dict system/createBafflesDict.hold \
+        > log.createBaffles 2>&1
+fi
 createPatch -overwrite > log.createPatch 2>&1
 topoSet > log.topoSet 2>&1
 checkMesh > log.checkMesh 2>&1

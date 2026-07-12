@@ -160,7 +160,8 @@ Copy the full block below into the new Cursor account's Cloud Agent.
 1. 阀位于 x = 0.546 m 附近，当前 valveZone 长度 0.012 m。
 2. opening/instant 模式使用纯耗散 coded fvOption resistance，不得产生压力、
    速度或质量。connected-domain penalty 的 closed 模式已被 0.06 s 诊断拒绝；
-   下一候选在同一阀面使用两侧 no-slip conformal baffle 来支撑真实闭阀压差。
+   当前 source candidate 在同一阀面使用两侧 no-slip conformal baffle 来支撑
+   真实闭阀压差；opening/instant 仍使用耗散 resistance。
 3. baseline opening time = 0.25 s；论文只说明 less than 1 s，因此这是显式假设。
 4. fully-open loss coefficient K = 2；closed-state K cap = 1e8，仅作为数值
    impermeability device。
