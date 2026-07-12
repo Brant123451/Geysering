@@ -5,10 +5,11 @@
                   axes t = 8..11 s, Y = 0..2.0 m  (box px: x 202..813 = 8..11,
                   y 1378..926 = 0..2.0, measured with _probe_boxes.py);
   * Fig. 10(b) -- PT1 pressure trace H/H0 vs t for Run B-32 (video series,
-                  same Dr=41 mm condition), axes t = 0..13 s, H/H0 = 0..4
-                  (box px: x 180..747, y 970..550).
+                  same Dr=41 mm condition), axes t = 0..13 s,
+                  H/H0 = -0.5..4 (box px: x 180..747, y 970..550).
 
-Outputs digitized/fig7a_levels.csv, digitized/fig10b_pt1.csv + debug overlays.
+Outputs data/digitized/fig7a_levels.csv, data/digitized/fig10b_pt1.csv and
+debug overlays.
 """
 import csv
 from pathlib import Path
@@ -20,11 +21,13 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
 HERE = Path(__file__).resolve().parent
-DIG = HERE / "digitized"
-DIG.mkdir(exist_ok=True)
+CASE_ROOT = HERE.parent
+SCANS = CASE_ROOT / "reference" / "paper_scans"
+DIG = CASE_ROOT / "data" / "digitized"
+DIG.mkdir(parents=True, exist_ok=True)
 
 F7 = dict(x0=202.0, x1=813.0, t0=8.0, t1=11.0, y0=1378.0, y1=926.0, v0=0.0, v1=2.0)
-F10 = dict(x0=180.0, x1=747.0, t0=0.0, t1=13.0, y0=970.0, y1=550.0, v0=0.0, v1=4.0)
+F10 = dict(x0=180.0, x1=747.0, t0=0.0, t1=13.0, y0=970.0, y1=550.0, v0=-0.5, v1=4.0)
 
 
 def px_to_val(box, px, py):
@@ -34,18 +37,42 @@ def px_to_val(box, px, py):
 
 
 def cluster_points(mask, min_px=4):
-    import scipy.ndimage as ndi
-    lab, n = ndi.label(mask)
+    remaining = mask.copy()
     out = []
-    for i in range(1, n + 1):
-        ys, xs = np.where(lab == i)
-        if xs.size >= min_px:
-            out.append((float(xs.mean()), float(ys.mean()), int(xs.size)))
+    height, width = remaining.shape
+    for start_y, start_x in np.argwhere(remaining):
+        if not remaining[start_y, start_x]:
+            continue
+        remaining[start_y, start_x] = False
+        stack = [(int(start_y), int(start_x))]
+        x_sum = 0
+        y_sum = 0
+        count = 0
+        while stack:
+            y, x = stack.pop()
+            x_sum += x
+            y_sum += y
+            count += 1
+            for neighbour_y, neighbour_x in (
+                (y - 1, x),
+                (y + 1, x),
+                (y, x - 1),
+                (y, x + 1),
+            ):
+                if (
+                    0 <= neighbour_y < height
+                    and 0 <= neighbour_x < width
+                    and remaining[neighbour_y, neighbour_x]
+                ):
+                    remaining[neighbour_y, neighbour_x] = False
+                    stack.append((neighbour_y, neighbour_x))
+        if count >= min_px:
+            out.append((x_sum / count, y_sum / count, count))
     return out
 
 
 def digitize_fig7a():
-    img = mpimg.imread(HERE / "paper_scans" / "fig7_bh6_riser.png")
+    img = mpimg.imread(SCANS / "fig7_bh6_riser.png")
     rgb = img[..., :3]
     H, W = rgb.shape[:2]
     r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
@@ -69,7 +96,7 @@ def digitize_fig7a():
         rows.append((t, v, "int"))
     rows.sort()
     with (DIG / "fig7a_levels.csv").open("w", newline="") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator="\n")
         w.writerow(["t_s", "Y_m", "kind"])
         for t, v, k in rows:
             w.writerow([f"{t:.4f}", f"{v:.4f}", k])
@@ -97,7 +124,7 @@ def digitize_fig7a():
 
 
 def digitize_fig10b():
-    img = mpimg.imread(HERE / "paper_scans" / "fig10_pressure.png")
+    img = mpimg.imread(SCANS / "fig10_pressure.png")
     rgb = img[..., :3]
     H, W = rgb.shape[:2]
     r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
@@ -117,7 +144,7 @@ def digitize_fig10b():
         _, vlo = px_to_val(F10, c, float(ys.max()))
         ts.append(t); med.append(vmed); lo.append(vlo); hi.append(vhi)
     with (DIG / "fig10b_pt1.csv").open("w", newline="") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator="\n")
         w.writerow(["t_s", "HoverH0_med", "HoverH0_min", "HoverH0_max"])
         for row in zip(ts, med, lo, hi):
             w.writerow([f"{v:.4f}" for v in row])
@@ -127,7 +154,7 @@ def digitize_fig10b():
     a1.set_title("Fig.10(b): PT1 red-pixel mask (Run B-32)")
     a2.fill_between(ts, lo, hi, color="#fca5a5", alpha=0.6, label="pixel envelope")
     a2.plot(ts, med, color="#b91c1c", lw=1.0, label="median")
-    a2.set_xlim(0, 13); a2.set_ylim(0, 4)
+    a2.set_xlim(0, 13); a2.set_ylim(-0.5, 4)
     a2.grid(alpha=0.3); a2.legend()
     a2.set_title("digitized Fig.10(b): PT1 H/H0 (Run B-32, no geyser)")
     fig.tight_layout()

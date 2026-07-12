@@ -2,6 +2,7 @@
   "case": "BH6_Dr41_H066_L061",
   "run": "B-H6",
   "source": "Cong, Chan & Lee (2017), JHE 143(9):04017039",
+  "primary_pdf_sha256": "6a2fd77ae65f6361ec5479780a3226e5f5cf69fde643866f692279588c16aa3e",
   "solver": "compressibleInterFoam",
   "openfoam_version": "v2512",
   "thermodynamics": {
@@ -142,14 +143,42 @@
     "paper_measured_contact_angle_available": false,
     "calibrated_to_outcome": false
   },
+  "model_assumptions_not_measured_in_cong2017": {
+    "upstream_tank": "equivalent fixed-head pressure/water inlet at the active pipe entrance",
+    "selected_ball_valve": "zero-thickness cyclicACMI with a smooth monotone area law",
+    "other_open_valves": "not geometrically resolved",
+    "contact_angle_deg": 90.0,
+    "external_air_domain": "0.24 m square, extending to z=3.025 m",
+    "air": "dry ideal gas at 101325 Pa",
+    "walls": "smooth, rigid and adiabatic",
+    "turbulence_closure": "laminar baseline; sensitivity required before quantitative acceptance"
+  },
+  "companion_cfd_reference": {
+    "source": "Chan, Cong & Lee (2018), JHE 144(3):04017071",
+    "method": "ANSYS Fluent VOF, standard k-epsilon, geometric reconstruction",
+    "fine_grid": "about 100000 cells; 25 across pipe, 50 across riser, 0.1 mm minimum wall cell",
+    "coarse_grid": "about 40000 cells for parametric studies",
+    "use_in_this_case": "numerical-fidelity evidence, not an OpenFOAM input specification"
+  },
   "experimental_targets": {
     "geyser": false,
     "air_arrival_time_s": 8.1,
+    "horizontal_front_Uf_over_sqrt_gD": 0.443,
     "free_surface_velocity_m_s": 0.246,
     "interface_velocity_m_s": 0.476,
+    "net_interface_velocity_m_s": 0.235,
+    "taylor_velocity_m_s": 0.219,
+    "riser_to_pipe_diameter_ratio": 0.82,
+    "initial_air_to_nominal_riser_water_volume": 1.37,
     "interface_catch_time_s": 10.5,
     "free_surface_initial_m": 0.58,
-    "free_surface_peak_m": 1.21,
-    "post_arrival_PT1_peak_H_over_H0": 1.4
+    "free_surface_peak_m": 1.21
+  },
+  "same_condition_repeat_pressure_proxy": {
+    "run": "B-32",
+    "figure": "Fig. 10(b)",
+    "nominal_Dr_H0_L0_match": true,
+    "approximate_post_arrival_peak_H_over_H0": 1.4,
+    "strict_BH6_target": false
   }
 }

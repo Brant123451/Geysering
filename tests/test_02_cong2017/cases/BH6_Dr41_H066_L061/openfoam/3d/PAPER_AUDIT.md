@@ -7,11 +7,27 @@ This audit is for the single Case `BH6_Dr41_H066_L061`.  The primary source is
 Page references below are printed journal pages.  Figure dimensions take
 precedence over rounded prose, and no value from another run is substituted.
 
-**B-H6 model-input gate: PASS.**  Every paper-defined item required to build
-this B-H6 model is resolved.  The paper does not give a numerical offset for
-either pressure transducer; their unambiguous physical locations are therefore
-used and the mesh-dependent sampling offset must be reported rather than
-presented as an experimental coordinate.
+The two tracked copies, `references/cong2017.pdf` and
+`tests/test_02_cong2017/_shared/reference/paper_source/cong2017_JHE2017_offprint.pdf`,
+are byte-identical (SHA-256
+`6a2fd77ae65f6361ec5479780a3226e5f5cf69fde643866f692279588c16aa3e`).
+This audit was repeated directly from that PDF, not inferred from repository
+summaries.
+
+**B-H6 experimental-input gate: PASS.**  Every paper-defined experimental
+input required to build B-H6 is resolved.  The paper does not give a numerical
+offset for either pressure transducer; their unambiguous physical locations
+are therefore used and the mesh-dependent sampling offset must be reported
+rather than presented as an experimental coordinate.
+
+**Quantitative-production gate: CONDITIONAL.**  The 2017 paper is experimental
+and does not prescribe an OpenFOAM discretization, contact angle, air
+properties, or turbulence closure.  Its companion CFD paper (Chan, Cong &
+Lee 2018, DOI `10.1061/(ASCE)HY.1943-7900.0001416`) supplies useful numerical
+evidence but used ANSYS Fluent, standard `k-epsilon`, geometric VOF, and a
+different numerical outlet extension.  The OpenFOAM mesh, turbulence and
+interface choices must therefore be reported and tested rather than described
+as paper inputs.
 
 **Existing-code B-H1 pairing gate: NOT VERIFIABLE.**  The repository has no
 `BH1_Dr16_H066_L061/openfoam/3d` case.  Its legacy 1-D model uses a rounded
@@ -79,12 +95,60 @@ is a design contract, not a completed source-to-source verification.
 - Riser top: open to the atmosphere; the external-air volume continues above
   the physical rim so expelled water is retained and measured.
 - B-H6 measured comparison targets from Table 2 are `Ta=8.10 s`,
-  `vfs=0.246 m/s`, `vint=0.476 m/s`, and no geyser observed.  Fig. 6 shows the
-  bubble catching the free surface at about `10.5 s`; Fig. 7 shows the free
-  surface rising from about `0.58 m` to `1.21 m`, both measured above the riser
-  entrance.  Fig. 10(b), Run B-32 at the same nominal conditions, supplies the
-  approximately `1.4 H0` slow PT1 peak.
+  `Uf/sqrt(gD)=0.443`, `vfs=0.246 m/s`, `vint=0.476 m/s`,
+  `vnet=0.235 m/s`, `vTaylor=0.219 m/s`, `Dr/D=0.82`,
+  `Vair/Vw=1.37`, and no geyser observed.  Fig. 6 shows the bubble catching
+  the free surface at about `10.5–10.9 s`; Fig. 7 shows the free surface rising
+  from about `0.58 m` to `1.21 m`, both measured above the riser entrance.
+  Table 2's quantitative `Ta=8.10 s` takes precedence over the prose estimate
+  “approximately 8.6 s,” which describes visual arrival in the image sequence.
+  Fig. 10(b) is Run B-32, not B-H6; it has the same nominal `Dr/H0/L0` but
+  different measured velocities and may only be used as a labelled repeat-run
+  pressure proxy.
   These are validation outputs, never forcing or calibration inputs.
+
+## Direct as-built model cross-check
+
+| Experimental feature | OpenFOAM representation | Disposition |
+|---|---|---|
+| Circular `D=0.050 m` pipe, `Dr=0.041 m` riser and true T-junction | OCC cylinders joined at `x=3.47 m`; no wedge or equivalent rectangle | MATCH |
+| Dimension chain `3.47 m + 3.12 m` | Active pipe `x=0…6.59 m` | MATCH |
+| Selected valve and `L0=0.61 m` atmospheric pocket | Valve plane `x=5.98 m`; gas to capped wall at `x=6.59 m` | MATCH |
+| Constant-head upstream tank | Fixed-head pressure/water inlet at the test-pipe entrance | PHYSICALLY EQUIVALENT BOUNDARY; tank volume and entrance geometry omitted |
+| Initially still water to `H0=0.66 m` above invert | `U=0`; free surface `z=0.635 m`; discrete hydrostatic `p/p_rgh` | MATCH |
+| Initially atmospheric trapped air | Ideal-gas pocket referenced to `101325 Pa` at pipe centreline | MATCH |
+| Physical `1.8 m` open riser | Circular wall to `z=1.825 m`, then an explicitly separate external-air domain | MATCH AT RIM; external-domain dimensions are numerical |
+| Manual quarter-turn ball valve, approximately `0.2 s` | Zero-thickness variable-area `cyclicACMI`, smooth monotone `0.2 s` area law | DURATION MATCH; unmeasured opening law is a sensitivity |
+| PT1 crown near cap; PT2 invert under riser | `(6.56,0,0.022)` and `(3.47,0,-0.022)` probes | TOPOLOGY MATCH; offsets are numerical proxies |
+| Acrylic walls | Smooth no-slip walls; neutral `90 deg` contact angle and adiabatic heat flux | NO-SLIP MATCH; wetting/thermal assumptions unmeasured |
+
+The actual tank, the three non-selected open valve bodies, and the selected
+ball geometry are not resolved.  The resulting model is an experimentally
+matched active test section with equivalent hydraulic boundaries, not a CAD
+replica of every laboratory component.
+
+## Companion 3-D CFD evidence and OpenFOAM differences
+
+Chan, Cong & Lee (2018) used about `100,000` boundary-fitted cells for selected
+fine simulations: about 25 cells across the main pipe, about 50 across the
+riser, a minimum near-wall riser cell of `0.1 mm`, hexahedra away from a
+tetrahedral T-junction, standard `k-epsilon`, second-order upwind transport,
+geometric VOF reconstruction, and first-order implicit time marching.  Their
+parametric mesh used about `40,000` cells.  They emphasized that resolving the
+`0.6–1.2 mm` falling water film is important.
+
+This case deliberately differs where the requested model differs:
+
+- it uses open-source `compressibleInterFoam` with ideal-gas air;
+- it retains the physical `1.8 m` riser and adds an external atmosphere,
+  instead of treating the numerical `3.0 m` height as a longer closed riser;
+- it resolves the measured `0.2 s` valve motion and brackets its duration,
+  instead of opening instantaneously;
+- it uses the measured `23 degC` rather than the companion model's assumed
+  `300 K`.
+
+Mesh and turbulence sensitivity are model-fidelity gates.  A coarse result may
+screen stability, but it cannot by itself validate Taylor-bubble film dynamics.
 
 ## Explicit limitations that do not alter the apparatus definition
 
