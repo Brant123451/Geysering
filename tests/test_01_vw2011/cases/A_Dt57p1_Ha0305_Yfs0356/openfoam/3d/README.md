@@ -17,7 +17,7 @@ the circular pipe/tower area ratio and terminates at the tower rim.
 | Tower length above pipe crown | `0.610 m` |
 | Initial free surface above crown | `0.356 m` |
 | Initial air gauge-pressure head | `0.305 m` |
-| Pressure probe | `(1.616, -0.043, 0) m` |
+| Pressure probe | `(1.616, -0.043, 0) m` (near invert) |
 
 The Boolean CAD domain uses a circular main pipe and circular tower, giving
 the physical area ratio
@@ -38,6 +38,15 @@ apparatus. The latter represents a hydrostatic free surface at absolute
 `p_rgh = 101333 Pa`, corresponding to `101325 Pa` absolute pressure at the
 physical rim. Both horizontal ends and the apparatus walls are closed,
 no-slip walls.
+
+The raw pressure probe is deliberately inside the fluid, `4 mm` above the
+pipe invert. The paper's calibrated `H*` curves use the ventilation-tower
+base/pipe-crown elevation, consistently with the repository's independently
+validated small-tower case. Post-processing therefore subtracts the fixed
+piezometric datum difference
+`(0.047 - (-0.043))/0.610 = 0.147541` from the probe `H*`. The uncorrected
+probe history is retained beside the crown-datum history in the compact CSV;
+this is an elevation-datum conversion, not a fitted pressure offset.
 
 ## Run
 
@@ -66,6 +75,13 @@ The full run logs an exact domain integral of
 samples to `outputs/openfoam_3d_water_mass.csv` and reports final and maximum
 relative mass drift in `outputs/openfoam_3d_metrics.json`; raw logs and fields
 remain untracked.
+
+Fig. 7 contains three separate interface trajectories from repeated manual
+valve openings. The metrics retain the conservative RMSE against the complete
+marker cloud and also separate the approximately parallel trajectories,
+reporting a no-shift RMSE, climb velocity, and fitted catch time for each
+repetition. This avoids treating simultaneous markers from different runs as
+one impossible interface shape.
 
 `constant/fvOptions` applies a coded correction equivalent to OpenFOAM's
 temperature limiter directly to the solver's shared mixture-temperature field

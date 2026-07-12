@@ -294,15 +294,29 @@ def main() -> None:
     metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
     pressure_target = metrics["comparison_targets"]["pressure_plateau_Hstar"]
     free_surface_target = metrics["comparison_targets"]["free_surface_max_Ystar"]
-    catch_target = metrics["comparison_targets"]["interface_catch_Tstar"]
+    catch_earliest = metrics["comparison_targets"][
+        "interface_catch_Tstar_earliest_repetition"
+    ]
+    catch_repetitions = metrics["comparison_targets"][
+        "interface_catch_Tstar_repetition_fits"
+    ]
+    interface_velocity_target = metrics["comparison_targets"][
+        "interface_climb_velocity_Vstar"
+    ]
     liftoff_repetitions = metrics["comparison_targets"][
         "interface_liftoff_Tstar_repetitions"
     ]
     liftoff = metrics["interface_liftoff_Tstar"]
+    catch = metrics["interface_catch_Tstar"]
     liftoff_range_error = max(
         min(liftoff_repetitions) - liftoff,
         0.0,
         liftoff - max(liftoff_repetitions),
+    )
+    catch_range_error = max(
+        min(catch_repetitions) - catch,
+        0.0,
+        catch - max(catch_repetitions),
     )
     metrics.update(
         {
@@ -349,18 +363,38 @@ def main() -> None:
                 "interface_RMSE_Ystar_no_shift": metrics[
                     "interface_RMSE_Ystar_no_shift"
                 ],
+                "interface_RMSE_best_repetition_no_shift": metrics[
+                    "interface_RMSE_best_repetition_no_shift"
+                ],
                 "interface_liftoff_distance_outside_repetition_range_Tstar": (
                     liftoff_range_error
                 ),
-                "interface_catch_signed_Tstar": (
-                    metrics["interface_catch_Tstar"] - catch_target
+                "interface_catch_signed_from_earliest_repetition_Tstar": (
+                    catch - catch_earliest
                 ),
+                "interface_catch_distance_outside_repetition_range_Tstar": (
+                    catch_range_error
+                ),
+                "interface_climb_velocity_Vstar_signed": (
+                    metrics["interface_climb_velocity_Vstar_fit"]
+                    - interface_velocity_target
+                ),
+                "interface_climb_velocity_percent_signed": 100.0
+                * (
+                    metrics["interface_climb_velocity_Vstar_fit"]
+                    - interface_velocity_target
+                )
+                / interface_velocity_target,
             },
             "mesh": parse_mesh_provenance(),
             "solver": parse_solver_provenance(HERE / "log.compressibleInterFoam"),
             "caveat": (
-                "Circular 3-D apparatus with an external atmosphere. No event-time "
-                "shift or fitted wall/turbulence parameters were applied."
+                "Circular 3-D apparatus with an external atmosphere. Pressure is "
+                "mapped from the near-invert probe to the paper's pipe-crown datum; "
+                "the uncorrected probe value remains in the compact series. Fig. 7 "
+                "interface errors are reported both for the full marker cloud and "
+                "for each of the three repetitions. No event-time shift or fitted "
+                "wall/turbulence parameters were applied."
             ),
         }
     )
