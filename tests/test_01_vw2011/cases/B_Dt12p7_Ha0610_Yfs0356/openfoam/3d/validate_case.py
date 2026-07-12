@@ -87,6 +87,28 @@ if missing_solver:
         f"Solver source is missing required fragments: {missing_solver}"
     )
 
+pressure_initialisation = (HERE / "system" / "setExprFieldsDict").read_text()
+reduced_pressure_initialisation = (
+    HERE / "system" / "setExprFieldsReducedPressureDict"
+).read_text()
+allrun_source = (HERE / "Allrun").read_text()
+pressure_call = "setExprFields -dict system/setExprFieldsDict.runtime"
+reduced_pressure_call = (
+    "setExprFields -dict system/setExprFieldsReducedPressureDict.runtime"
+)
+if (
+    "mixtureReducedPressure" in pressure_initialisation
+    or "mixtureReducedPressure" not in reduced_pressure_initialisation
+    or "readFields (alpha.water p p_rgh T);" not in reduced_pressure_initialisation
+    or pressure_call not in allrun_source
+    or reduced_pressure_call not in allrun_source
+    or allrun_source.index(pressure_call) > allrun_source.index(reduced_pressure_call)
+):
+    raise SystemExit(
+        "Absolute and reduced pressure must be initialised by ordered, "
+        "independent setExprFields processes"
+    )
+
 result = {
     "case_definition_ok": True,
     "solver_source_check": (
@@ -99,6 +121,10 @@ result = {
     "geometry_source_check": (
         "configured 3-D circular Boolean pipe/tower/exterior atmosphere with "
         "a conformal valve-plane face zone; generated mesh remains authoritative"
+    ),
+    "initial_pressure_source_check": (
+        "absolute p is written before a separate process reloads it to construct "
+        "mixture-density p_rgh"
     ),
     "pipe_length_m": 4.006,
     "pipe_diameter_m": pipe_diameter,

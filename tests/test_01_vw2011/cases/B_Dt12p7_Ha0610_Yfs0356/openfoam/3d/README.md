@@ -43,8 +43,12 @@ The initial state follows the paper:
 `setFields` first assigns the bulk regions, then OpenFOAM `setAlphaField`
 computes cut-cell volume fractions for the planar valve and tower interfaces.
 This avoids cell-centre stair stepping on the tetrahedral mesh.  Finally,
-`setExprFields` makes `p` and `p_rgh` hydrostatically consistent with the
-geometric phase field.  In interface cells, `p_rgh` uses the same
+two independent `setExprFields` processes first write `p` and then reload that
+final field to make `p_rgh` hydrostatically consistent with the geometric
+phase field.  The process split is required because OpenFOAM writes each
+modified field through an unregistered object; a later expression in the same
+process would otherwise read the pressure cached before those writes.  In
+interface cells, `p_rgh` uses the same
 alpha-weighted perfect-gas/perfect-fluid density that
 `compressibleInterFlow` uses to reconstruct absolute pressure; a binary
 alpha=0.5 density switch would create a nonphysical startup impulse.

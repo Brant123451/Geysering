@@ -262,11 +262,16 @@ def main() -> None:
         raise SystemExit("Expected two baseline pressure tokens in setFieldsDict")
     set_fields = set_fields.replace("107298.329", f"{initial_air_pressure:.6f}")
     (SYSTEM / "setFieldsDict.runtime").write_text(set_fields)
-    set_expr = (SYSTEM / "setExprFieldsDict").read_text()
-    if set_expr.count("107298.329") != 1:
+    set_expr_pressure = (SYSTEM / "setExprFieldsDict").read_text()
+    if set_expr_pressure.count("107298.329") != 1:
         raise SystemExit("Expected one baseline pressure token in setExprFieldsDict")
-    set_expr = set_expr.replace("107298.329", f"{initial_air_pressure:.6f}")
-    (SYSTEM / "setExprFieldsDict.runtime").write_text(set_expr)
+    set_expr_pressure = set_expr_pressure.replace(
+        "107298.329", f"{initial_air_pressure:.6f}"
+    )
+    (SYSTEM / "setExprFieldsDict.runtime").write_text(set_expr_pressure)
+    (SYSTEM / "setExprFieldsReducedPressureDict.runtime").write_text(
+        (SYSTEM / "setExprFieldsReducedPressureDict").read_text()
+    )
     (HERE / "constant" / "airThermo").write_text(
         (HERE / "constant" / f"airThermo.{gas_eos}").read_text()
     )

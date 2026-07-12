@@ -176,11 +176,33 @@ class ResumeManifestTests(unittest.TestCase):
 
 class InitialFieldPolicyTests(unittest.TestCase):
     def test_cut_cells_use_mixture_density_for_reduced_pressure(self) -> None:
-        text = (HERE / "system" / "setExprFieldsDict").read_text()
-        self.assertIn("mixtureReducedPressure", text)
-        self.assertIn("(1 - alpha.water)*(p/(287.058*293.15))", text)
-        self.assertNotIn("reducedWaterPressure", text)
-        self.assertNotIn("reducedAirPressure", text)
+        pressure = (HERE / "system" / "setExprFieldsDict").read_text()
+        reduced = (
+            HERE / "system" / "setExprFieldsReducedPressureDict"
+        ).read_text()
+        allrun = (HERE / "Allrun").read_text()
+
+        self.assertNotIn("mixtureReducedPressure", pressure)
+        self.assertIn("mixtureReducedPressure", reduced)
+        self.assertIn("(1 - alpha.water)*(p/(287.058*293.15))", reduced)
+        self.assertNotIn("reducedWaterPressure", reduced)
+        self.assertNotIn("reducedAirPressure", reduced)
+        pressure_call = "setExprFields -dict system/setExprFieldsDict.runtime"
+        reduced_call = (
+            "setExprFields -dict "
+            "system/setExprFieldsReducedPressureDict.runtime"
+        )
+        self.assertLess(allrun.index(pressure_call), allrun.index(reduced_call))
+
+    def test_reduced_pressure_reloads_final_absolute_pressure(self) -> None:
+        pressure = (HERE / "system" / "setExprFieldsDict").read_text()
+        reduced = (
+            HERE / "system" / "setExprFieldsReducedPressureDict"
+        ).read_text()
+
+        self.assertIn("readFields (alpha.water);", pressure)
+        self.assertIn("readFields (alpha.water p p_rgh T);", reduced)
+        self.assertIn("keepPatches true;", reduced)
 
 
 class TwoPhaseFlowDeckTests(unittest.TestCase):
