@@ -105,8 +105,9 @@ class LiuCase:
     hd0_frac: float = 0.25       # initial tailwater depth hd = Dd/4
     downstream_full: bool = False  # Series-B mode: downstream pipe starts FULL
                                    # and discharges as a full-bore outfall over
-                                   # the tail gate (outlet piezometric head
-                                   # pinned at the crown); the Series-A weir
+                                   # the hd/Dd=1 overflow-weir tailwater
+                                   # (outlet piezometric head pinned at the
+                                   # crown); the Series-A quarter-depth weir
                                    # rating is not used in this mode
     # numerics
     dx: float = 0.05
@@ -131,18 +132,12 @@ class LiuCase:
     L_eq_riser: float = 0.24     # entrance equivalent length ~ 4*dr [m]
     H_tail: float = 0.28         # Series-B downstream boundary: constant
                                  # tailwater level of the receiving tank above
-                                 # the downstream invert [m].  A fixed-opening
-                                 # orifice gate cannot reproduce this rig: with
-                                 # Q ~ sqrt(H) a gate that holds the pipe full
-                                 # at 20 L/s (>= 0.28 m of head) would demand
-                                 # ~7 m at 100 L/s against the reported 0.63 m
-                                 # chamber HGL, so the boundary is a SUBMERGED
-                                 # outfall against a fixed tank level.  The
-                                 # paper does not report the tank level; it is
-                                 # set at the downstream crown (= Dd), the
-                                 # minimal level consistent with the reported
-                                 # Series-B initial condition (downstream pipe
-                                 # full at Q0), NOT fitted to any transient or
+                                 # the downstream invert [m].  This is the
+                                 # hydrostatic equivalent of the paper's
+                                 # Series-B overflow-weir setting hd/Dd=1.
+                                 # The detailed weir rating is not reported;
+                                 # the level is set at the downstream crown
+                                 # (= Dd), NOT fitted to any transient or
                                  # final-state outcome.
     K_exit: float = 0.0          # EXTRA outfall drag beyond the velocity-head
                                  # conversion.  The momentum-face closure
@@ -442,7 +437,7 @@ def _run_case_composite(case: LiuCase, verbose: bool = True) -> dict:
     if case.downstream_full:
         # Series-B initial condition: downstream pipe full at Q0, chamber
         # stage standing near the downstream crown (the warm-up settles the
-        # exact steady stage against the tail-gate rating)
+        # exact steady stage against the overflow-weir-equivalent tailwater)
         Al[ic1:] = A_full[ic1:]
         Al[ic0:ic1] = min(case.Dd + 0.02, 0.95 * case.Hc) * case.Wc
     Mg = RHO_ATM * np.maximum(A_full - Al, 0.0) * dx

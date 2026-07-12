@@ -20,8 +20,8 @@ boundaryField
     outlet
     {
         // p_rgh = p_atm + rho_water*g*H_tail, H_tail = Dd = 0.28 m.
-        // This imposes a hydrostatic submerged reservoir without inventing a
-        // tail-gate opening (which the paper does not report).
+        // This is the hydrostatic equivalent of the Series-B overflow weir
+        // setting hd/Dd=1; the paper does not report its detailed rating.
         type            fixedValue;
         value           uniform 104066.86;
     }

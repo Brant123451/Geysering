@@ -26,9 +26,12 @@ mixture
 
     equationOfState
     {
-        // K ~= rho*R = 2.20 GPa; c = sqrt(R) ~= 1483 m/s.
-        R           2.2e6;
-        rho0        998.2;
+        // The paper gives about 305 m/s for pressure waves in the clear
+        // acrylic pipe.  R=c^2 represents that measured pipe-plus-water
+        // compliance in this fluid-only model.  rho0 is offset so that
+        // rho(101325 Pa)=998.2 kg/m3 for perfectFluid: rho=rho0+p/R.
+        R           93025;
+        rho0        997.1107767;
     }
 
     thermodynamics

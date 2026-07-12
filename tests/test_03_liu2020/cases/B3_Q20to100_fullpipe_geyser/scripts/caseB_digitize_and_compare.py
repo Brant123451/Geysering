@@ -4,7 +4,7 @@
 workflow as the Case A2 campaign in the sibling folder.
 
 Case B3: Q = 20 -> 100 L/s (Tv ~ 0.4 s), downstream pipe initially FULL
-(tail-gate controlled), observed: single-shoot GEYSER; PT2/PT3 slam peak
+(overflow-weir controlled at hd/Dd=1), observed: single-shoot GEYSER; PT2/PT3 slam peak
 55.03/51.76 kPa at t ~ 1.47 s; rebound troughs PT2 -20.26 / PT3 -17.77 kPa;
 two more inertia oscillations (periods 0.51 / 0.37 s); final steady
 time-averaged PT1/PT2/PT3 = 0 / 1.82 / 4.65 kPa.
@@ -353,8 +353,8 @@ geyser。实测：涌波 t=1.20 s 到室 &rarr; PT2/PT3 冲击峰 55.03/51.76 kP
   的混合振荡，同样偏慢——单相水柱 + 通风室不含掺气弹性，此项列为已知短板。
   (5) 室内"水气混合加压"（论文原述机制）尝试过封闭气囊 EOS 方案：气囊在涌波到达前
   就加压喷发（正反馈：柱堵住排气路），已回退为通风室 + 液相惯量方案并记录。
-  (6) 下游边界为淹没出流对固定尾水位 H_tail=Dd（尾门开度论文未报告；取与"初始满管"
-  一致的最低水位，未对任何瞬态/终态结果拟合）。</p>
+  (6) 下游边界为淹没出流对固定尾水位 H_tail=Dd，是论文 Series B 溢流堰
+  hd/Dd=1 的静水等效实现；未对任何瞬态/终态结果拟合。</p>
 </div>
 </div></body></html>"""
     (OUT / "report.html").write_text(html, encoding="utf-8")

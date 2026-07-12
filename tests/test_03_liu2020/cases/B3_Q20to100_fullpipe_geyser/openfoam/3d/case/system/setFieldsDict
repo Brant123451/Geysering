@@ -23,61 +23,62 @@ regions
         fieldValues (volScalarFieldValue alpha.water 1);
     }
 
-    // Upstream pipe: six steps follow invert z = 0.18 - 0.01*x with
-    // approximately 0.10 m initial depth.  U is Q0 divided by the
-    // half-full circular area and follows the 1:100 falling axis.
+    // Upstream pipe: six steps follow invert z = 0.18 - 0.01*x with the
+    // approximately 0.08 m initial depth reported for A2.  The paper says
+    // B3 differs from A2 only in its downstream condition.  U is Q0 divided
+    // by the corresponding circular-segment area and follows the 1:100 axis.
     boxToCell
     {
-        box (-5.82 -1 -1) (-4.83 1 0.338);
+        box (-5.82 -1 -1) (-4.83 1 0.318);
         fieldValues
         (
             volScalarFieldValue alpha.water 1
-            volVectorFieldValue U (1.27318 0 -0.0127318)
+            volVectorFieldValue U (1.70425 0 -0.0170425)
         );
     }
     boxToCell
     {
-        box (-4.83 -1 -1) (-3.87 1 0.328);
+        box (-4.83 -1 -1) (-3.87 1 0.308);
         fieldValues
         (
             volScalarFieldValue alpha.water 1
-            volVectorFieldValue U (1.27318 0 -0.0127318)
+            volVectorFieldValue U (1.70425 0 -0.0170425)
         );
     }
     boxToCell
     {
-        box (-3.87 -1 -1) (-2.90 1 0.319);
+        box (-3.87 -1 -1) (-2.90 1 0.299);
         fieldValues
         (
             volScalarFieldValue alpha.water 1
-            volVectorFieldValue U (1.27318 0 -0.0127318)
+            volVectorFieldValue U (1.70425 0 -0.0170425)
         );
     }
     boxToCell
     {
-        box (-2.90 -1 -1) (-1.93 1 0.309);
+        box (-2.90 -1 -1) (-1.93 1 0.289);
         fieldValues
         (
             volScalarFieldValue alpha.water 1
-            volVectorFieldValue U (1.27318 0 -0.0127318)
+            volVectorFieldValue U (1.70425 0 -0.0170425)
         );
     }
     boxToCell
     {
-        box (-1.93 -1 -1) (-0.97 1 0.299);
+        box (-1.93 -1 -1) (-0.97 1 0.279);
         fieldValues
         (
             volScalarFieldValue alpha.water 1
-            volVectorFieldValue U (1.27318 0 -0.0127318)
+            volVectorFieldValue U (1.70425 0 -0.0170425)
         );
     }
     boxToCell
     {
-        box (-0.97 -1 -1) (0.00 1 0.290);
+        box (-0.97 -1 -1) (0.00 1 0.270);
         fieldValues
         (
             volScalarFieldValue alpha.water 1
-            volVectorFieldValue U (1.27318 0 -0.0127318)
+            volVectorFieldValue U (1.70425 0 -0.0170425)
         );
     }
 

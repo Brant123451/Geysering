@@ -10,29 +10,25 @@ realisations; the latter are not fitted to the B3 pressure record.
   Geyser in Vertical Shaft above Junction Chamber*, Journal of Hydraulic
   Engineering 146(2), 04019055,
   DOI `10.1061/(ASCE)HY.1943-7900.0001660`.
-- The requested file `tests/test_03_liu2020/references/liu2020.pdf` is absent
-  from required base commit `867b2fccd591a9f44325a13c2042bbce32405087`.
-  `docs/file-layout/pre-migration-files.csv` records the former
-  `papers/liu2020.pdf` as 3,024,304 bytes with SHA-256
+- A user-supplied local copy is available at `references/liu2020.pdf`. Its
+  SHA-256 is
   `32abd351252725009ebbef98c8d5c7794b957a448ee23bf8729fcb347ce5c9c3`,
-  but the blob is not in Git history. The ASCE page exposes the abstract but
-  the full text is access controlled.
-- The requested B3 `reference/paper_scans/` directory is also empty. The
-  migration manifest records page scans for Fig. 5, Fig. 6 and Fig. 7, but
-  those image blobs are absent.
-- Numerical values below were therefore cross-checked between the parsed paper
-  record `_shared/metadata/paper_reference/paper_parameters_Liu2020_JHE.md`,
-  the paper quotations frozen in `scripts/caseB_digitize_and_compare.py`,
-  `outputs/caseB_metrics.json`, and the three independently digitised Fig. 5(b)
-  traces in `data/digitized/`. Figure page references use the former scan names
-  (`p05`, `p06`, `p07`) and are not a claim that the missing PDF was re-read.
+  exactly matching the former file recorded by
+  `docs/file-layout/pre-migration-files.csv`. The PDF is not part of the
+  required base commit, but it was read directly for this audit.
+- Pages 2--7 and 10--12 were checked directly. In particular, Fig. 2 fixes the
+  apparatus and boundary-control hardware, Fig. 5 fixes the B3 chronology and
+  pressure traces, Fig. 6 fixes the Series-B comparison, Fig. 7 fixes the
+  pressure-height relation, Table 2 gives spilled volume, and pp. 11--12
+  discuss the approximately 305 m/s acrylic-pipe wave speed and B3
+  compressibility.
+- Values were also cross-checked against
+  `_shared/metadata/paper_reference/paper_parameters_Liu2020_JHE.md`,
+  `scripts/caseB_digitize_and_compare.py`, `outputs/caseB_metrics.json`, and
+  the independently digitised Fig. 5(b) traces in `data/digitized/`.
 - No `PAPER_AUDIT.md` exists in A2 on the required base commit. The A2
   `openfoam/3d` source, A2 README, and shared parsed paper record were audited
   read-only. A2 was not modified.
-
-This missing-source limitation prevents a new page-image audit. It does not
-justify inventing the unreported tail-gate opening, initial chamber level, air
-volume, or sensor coordinates.
 
 ## Experiment geometry (Fig. 2)
 
@@ -56,26 +52,27 @@ boundaries, and the physical rim remains 1.22 m above the chamber lid.
 ## Flow programme and A2/B3 branch distinction
 
 - B3 is Series B, `Q0 = 20 L/s` to `Q1 = 100 L/s`.
-- The reported valve-opening duration is approximately `0.4 s`. The paper
-  materials available in this commit do not resolve the valve trace within
-  that interval. A linear ramp is a declared numerical realisation, not a
-  measured waveform.
+- The manual valve-opening duration varied from `0.2` to `0.4 s`; the paper's
+  analytical comparisons use `0.4 s`. The CFD therefore uses a 0.4 s linear
+  ramp as a declared numerical realisation, not a measured waveform.
 - The paper states that the initial conditions of B3 differ from A2 only in
   the downstream condition:
   - A2: downstream open-channel flow, initially `hd/Dd = 1/4`, weir controlled;
-  - B3: downstream pipe initially full, tail-gate controlled.
+  - B3: downstream pipe initially full, with `hd/Dd = 1`, controlled by the
+    movable overflow weir in the downstream tank.
+- The flat tailgate is used to create the pressurised Series-C cases. It is
+  present in the rig but Table 1 does not identify it as the Series-B control.
 - Series B has no deliberately trapped upstream air pocket. That intervention
   belongs to Series C.
 - Pipe diameters, chamber volume, riser length, inflow, and initial gas volume
   are not changed to force geysering.
 
-The tail-gate opening, gate loss coefficient, receiving-tank level, and exact
-initial B3 chamber level are not reported in the available paper record.
-Consequently the CFD boundary uses the least-head interpretation already
-declared by the frozen B3 one-dimensional model: a submerged full-bore outlet
-with tailwater free-surface elevation at the downstream crown
-`H_tail = Dd = 0.28 m`. This is a reproducible *boundary realisation*, not a
-paper datum and not a calibration. No gate solid or opening area is fabricated.
+The detailed overflow-weir geometry/rating and receiving-tank transient are not
+reported. The CFD therefore uses the hydrostatic equivalent of the reported
+initial `hd/Dd=1`: a submerged full-bore outlet with tailwater free-surface
+elevation at the downstream crown, `H_tail = Dd = 0.28 m`. This is a
+reproducible *boundary realisation*, not a fitted transient. No unreported weir
+or gate solid is fabricated.
 
 ## Pressure transducers
 
@@ -95,8 +92,8 @@ comparison and this uncertainty is not hidden. Pressure output is absolute
 
 ## B3 targets from Fig. 5, Fig. 6 and Fig. 7
 
-The former scan names place Fig. 5 on PDF page 5, Fig. 6 on page 6, and Fig. 7
-on page 7. These pages are unavailable in the base commit.
+Fig. 5 is on PDF page 5, Fig. 6 on page 6, and Fig. 7 on page 7; all three were
+checked directly against the local PDF.
 
 ### Fig. 5(a): event chronology
 
@@ -142,17 +139,26 @@ For `Pmax = 55.03 kPa`, `rho = 998.2 kg/m3`, and `g = 9.81 m/s2`, the
 regression predicts `h ~= 4.21 m`. This is a regression estimate for B3, not a
 separately reported exact B3 height. The riser-top threshold `h=1.22 m`
 corresponds to a peak-pressure head of about `1.31 m`. Fig. 7(b)'s B3 critical
-flow increment is not available and is not reconstructed.
+point has `Delta Q=80 L/s`; the reported geyser threshold lies between
+`30` and `40 L/s`.
+
+### Table 2: spilled water
+
+The three B3 repeats spilled `0.65`, `0.78`, and `0.82 L`, with a reported mean
+of `0.72 L`. The CFD comparison uses net integrated outward liquid flux over
+all atmosphere faces; gross outward flux is retained separately because the
+experimental value was water collected outside the riser.
 
 ## Compressibility decision
 
 B3 contains a short 55 kPa positive pulse followed by about -20 kPa gauge
 pressure. These are pressure-wave and gas-compression observables, not merely
-quasi-static free-surface head. The physical-water acoustic transit time over
-the two pipes is about `11.75/1483 = 0.008 s`, far shorter than the
-gravity/riser oscillation scale. An incompressible `interFoam` calculation
-cannot establish the water-hammer amplitude and is therefore not used as the
-validation solver.
+quasi-static free-surface head. On p. 11 the paper gives an approximately
+`305 m/s` wave speed for the nearly pure water in the clear acrylic downstream
+pipe. The corresponding transit time over the two reported pipe lengths is
+about `11.75/305 = 0.039 s`. An incompressible `interFoam` calculation cannot
+establish the pressure amplitude and is therefore not used as the validation
+solver.
 
 The baseline uses OpenFOAM v2512 `compressibleInterIsoFoam`. It solves the
 same two-compressible-phase pressure/energy system as
@@ -162,16 +168,19 @@ explicit phase-fraction bounds and clipping. Screening with
 tetrahedral free-surface cells, so its MULES interface transport was not used
 for the production case:
 
-- water: `perfectFluid`, `rho0=998.2 kg/m3`, `R=2.2e6 m2/s2`, giving
-  `c=sqrt(R)~=1483 m/s` and a 2.2 GPa bulk modulus near atmospheric pressure;
+- water/system compliance: `perfectFluid`, `R=93025 m2/s2`, giving
+  `c=sqrt(R)=305 m/s`; `rho0=997.1107767 kg/m3` makes the EOS density
+  `998.2 kg/m3` at 101325 Pa;
 - air: `perfectGas` at 293.15 K;
 - VOF surface tension: 0.072 N/m;
 - absolute atmospheric pressure: 101325 Pa.
 
-No reduced numerical sound speed or fitted gas pocket is introduced. The PVC
-wall is rigid because its thickness and elastic modulus are not reported.
-Thus pipe-wall compliance, dissolved/dispersed air below the mesh scale,
-cavitation, and phase change remain unresolved uncertainty sources.
+The 305 m/s value is a paper-sourced effective pipe-plus-water wave speed, not
+a fitted reduced sound speed. The fluid-only mesh cannot deform its clear
+acrylic pipes/riser or clear PVC chamber, so the effective EOS represents the
+reported pipe compliance uniformly. Spatial differences in wall compliance,
+dissolved/dispersed air below the mesh scale, cavitation, and phase change
+remain unresolved uncertainty sources.
 
 The production case bounds `|U| <= 50 m/s`, outside the expected experimental
 state, only to stop isolated VOF/tetrahedral overshoots from corrupting the
@@ -181,18 +190,23 @@ activation or thermal instability can be reported.
 ## Initialisation and non-paper assumptions
 
 - Downstream pipe: water filled to the full circular section.
-- Junction chamber: initial water level 0.30 m, the minimal 0.02 m surcharge
-  above the downstream crown used by the frozen B3 model. The paper does not
-  report this level; sensitivity to this declared initialisation must not be
-  confused with experimental uncertainty.
+- Junction chamber: initial water level 0.30 m, 0.02 m above the downstream
+  crown. The exact value is not tabulated, but it is consistent with the
+  Fig. 5(a) `t=0` image and keeps the reported downstream pipe full while the
+  0.45 m chamber remains unfilled. It is an image-based declared
+  initialisation, not a pressure-fit parameter.
 - Riser above that chamber level and the plume domain: atmospheric air.
-- Upstream pipe/headbox: same free-surface initialisation used by A2.
+- Upstream pipe: approximately 0.08 m initial depth, as reported for A2; B3
+  retains A2's upstream condition. The numerical headbox is the inlet plenum.
 - The experimental pre-ramp state carries `Q0=0.020 m3/s`. The CFD liquid
-  velocity is therefore seeded with `Q0/A` in the half-full upstream pipe,
+  velocity is therefore seeded with `Q0/A` in the 0.08 m-deep upstream pipe,
   chamber, and full downstream pipe; it is not started from stagnant water.
 - A constant-Q0 settling stage precedes the 0.4 s ramp. Reported comparison
-  time is shifted so `t=0` is the ramp start.
+  time is shifted so `t=0` is the ramp start. The paper describes a manual
+  0.2--0.4 s valve opening and also calls the fully-open indication `t=0`;
+  therefore the exact sub-0.4 s time origin remains an experimental
+  uncertainty.
 
-No initial B3 air volume is prescribed because none is reported. Air present
-in the chamber/riser follows directly from the measured geometry and declared
-initial water surface, and remains connected to atmosphere.
+No independent gas volume is tuned. Air in the chamber/riser follows directly
+from the reported geometry and the declared Fig. 5-consistent initial water
+surface, and remains connected to atmosphere.

@@ -18,7 +18,7 @@ expressions
         dimensions  [1 -1 -2 0 0 0 0];
         variables
         (
-            "head = (pos().x() < -5.80 ? 0.42 : (pos().x() < 0 ? 0.28 - 0.01*pos().x() : (pos().x() < 0.30 ? 0.30 : 0.28)))"
+            "head = (pos().x() < -5.80 ? 0.42 : (pos().x() < 0 ? 0.26 - 0.01*pos().x() : (pos().x() < 0.30 ? 0.30 : 0.28)))"
         );
         expression
         #{

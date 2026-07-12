@@ -2,9 +2,10 @@
 
 This directory contains the source-only, full-width 3-D model for B3
 (`20 -> 100 L/s`, downstream initially full). Read `PAPER_AUDIT.md` before
-interpreting a result: the required base commit omits the paper PDF and page
-scans, and the paper does not report the tail-gate opening, exact B3 chamber
-level, or exact in-plane coordinates of every pressure tap.
+interpreting a result. A user-supplied `references/liu2020.pdf` matching the
+pre-migration SHA-256 was read directly. The paper still does not report the
+detailed Series-B overflow-weir rating, exact numerical B3 chamber stage, or
+the in-plane coordinates of every pressure tap.
 
 ## Solver choice
 
@@ -18,14 +19,16 @@ explicit clipping. This was selected after `compressibleInterFoam` screening
 developed local negative-temperature failures at mixed tetrahedral interface
 cells.
 
-- Water is a `perfectFluid` with `rho0=998.2 kg/m3` and `R=2.2e6 m2/s2`
-  (`c=sqrt(R)=1483 m/s`, bulk modulus about 2.2 GPa).
+- Water/system compliance is a `perfectFluid` with `R=93025 m2/s2`
+  (`c=sqrt(R)=305 m/s`, the acrylic-pipe wave speed stated on paper p. 11).
+  `rho0=997.1107767 kg/m3` gives `rho=998.2 kg/m3` at 101325 Pa.
 - Air is a 293.15 K `perfectGas`.
 - The A2 `kOmegaSST` closure and standard coefficients are retained; no
   coefficient is fitted to B3.
-- The PVC walls are rigid because wall thickness and modulus are not reported.
-  Wall compliance and unresolved dispersed air are therefore uncertainty
-  sources, not tunable effective wave speeds.
+- The fluid mesh walls remain rigid. The paper-sourced 305 m/s effective EOS
+  represents the compliance of the clear acrylic pipes in this fluid-only
+  calculation; differences between the acrylic pipes/riser and clear PVC
+  chamber remain uncertain because wall thickness and modulus are not reported.
 - `fvOptions` bounds numerical velocity overshoots to `|U| <= 50 m/s`, far
   outside the expected B3 state. Velocity and temperature are monitored by the
   `extrema` function object; the velocity bound is a solver safeguard, not a
@@ -53,14 +56,16 @@ are atmospheric boundaries. Thus the physical riser still ends at
 `z=1.67 m`; water is not deleted there and can rise to the approximately
 `4.21 m` Fig. 7(a) regression height above the chamber lid.
 
-B3 does **not** contain A2's outfall box or weir. The downstream circular end
-is water-filled and uses a hydrostatic `p_rgh` for a submerged reservoir with
-`H_tail=Dd=0.28 m`. This is the minimum-head realisation already declared by
-the frozen B3 1-D model. It preserves the reported full-pipe condition without
-inventing a gate opening or fitting the transient.
+B3 does **not** contain A2's open-channel outfall box. Series B used the
+downstream-tank overflow weir at `hd/Dd=1`; the downstream circular end is
+therefore water-filled and uses a hydrostatic `p_rgh` with
+`H_tail=Dd=0.28 m`. This is the direct hydrostatic equivalent of the reported
+initial full-pipe depth. It avoids inventing an unreported weir rating or
+fitting the transient.
 
-Initial water is A2's free-surface upstream state, a full downstream pipe, and
-a declared `0.30 m` chamber stage. The riser/plume headspace contains
+Initial water is the reported approximately `0.08 m`-deep A2 upstream state, a
+full downstream pipe, and a declared `0.30 m` chamber stage consistent with
+the Fig. 5(a) `t=0` image and 0.28 m downstream crown. The riser/plume headspace contains
 atmospheric air and remains vented. Liquid velocity is seeded at `Q0/A` in the
 upstream pipe, chamber, and downstream pipe so the reported steady-Q0 initial
 condition is not approximated by stagnant water. A 2 s `Q0` relaxation
@@ -146,7 +151,10 @@ one sample above the physical rim.
 
 Mass residual is computed from the change in integrated `alpha.water` volume
 plus the time integral of `alpha.water`-weighted `phi` over inlet, submerged
-outlet and all atmosphere faces.
+outlet and all atmosphere faces. Net atmosphere liquid outflow is also
+reported as spilled volume against Table 2's B3 repeats
+(`0.65/0.78/0.82 L`, mean `0.72 L`); gross outward crossings are retained
+separately.
 
 Generated OpenFOAM time directories, `processor*`, `postProcessing`,
 `constant/polyMesh`, `.msh` files, logs and frame data are ignored and must not
