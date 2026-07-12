@@ -84,7 +84,6 @@ checkMesh -allGeometry -allTopology > log.checkMesh.baffled 2>&1
 python3 mesh_audit.py \
     --profile "${MESH_PROFILE:-base}-${VALVE_OPENING}" \
     --check-mesh-log log.checkMesh.baffled \
-    --geometry-log log.geometry \
     --output "outputs/${RUN_ID}_mesh.json" \
     > log.meshAudit.baffled 2>&1
 

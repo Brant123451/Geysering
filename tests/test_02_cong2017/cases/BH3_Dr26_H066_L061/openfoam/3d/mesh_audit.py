@@ -12,7 +12,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--profile", required=True)
     parser.add_argument("--check-mesh-log", type=Path, required=True)
-    parser.add_argument("--geometry-log", type=Path, required=True)
+    parser.add_argument("--geometry-log", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     return parser.parse_args()
 
@@ -25,7 +25,11 @@ def first(pattern: str, text: str, cast=float):
 def main() -> None:
     args = parse_args()
     check = args.check_mesh_log.read_text(encoding="utf-8", errors="replace")
-    geometry = args.geometry_log.read_text(encoding="utf-8", errors="replace")
+    geometry = (
+        args.geometry_log.read_text(encoding="utf-8", errors="replace")
+        if args.geometry_log is not None
+        else ""
+    )
 
     data = {
         "schema_version": 1,
