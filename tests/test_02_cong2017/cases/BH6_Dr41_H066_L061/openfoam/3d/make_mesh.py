@@ -55,6 +55,30 @@ def parse_args() -> argparse.Namespace:
         default=0.035,
         help="Nominal external far-field edge length [m]",
     )
+    parser.add_argument(
+        "--riser-wall-first-cell",
+        type=float,
+        default=0.00015,
+        help="First wall-normal cell in the swept riser [m]",
+    )
+    parser.add_argument(
+        "--riser-wall-thickness",
+        type=float,
+        default=0.0015,
+        help="Total swept-riser near-wall layer thickness [m]",
+    )
+    parser.add_argument(
+        "--riser-wall-growth",
+        type=float,
+        default=1.2,
+        help="Swept-riser wall-normal layer growth ratio",
+    )
+    parser.add_argument(
+        "--riser-wall-tangent",
+        type=float,
+        default=0.001,
+        help="Tangential edge length at the swept-riser wall [m]",
+    )
     return parser.parse_args()
 
 
@@ -68,6 +92,9 @@ def validate_sizes(args: argparse.Namespace) -> None:
         args.riser_size,
         args.jet_size,
         args.external_size,
+        args.riser_wall_first_cell,
+        args.riser_wall_thickness,
+        args.riser_wall_tangent,
     )
     if any(size <= 0 for size in sizes):
         raise ValueError("All mesh sizes must be positive")
@@ -77,6 +104,12 @@ def validate_sizes(args: argparse.Namespace) -> None:
         raise ValueError("jet-size must not exceed external-size")
     if RISER_DIAMETER / args.riser_size < 4.0:
         raise ValueError("The riser must have at least four nominal cells across")
+    if args.riser_wall_growth <= 1.0:
+        raise ValueError("riser-wall-growth must exceed one")
+    if args.riser_wall_first_cell >= args.riser_wall_thickness:
+        raise ValueError("riser wall first cell must be smaller than its thickness")
+    if args.riser_wall_tangent > args.riser_size:
+        raise ValueError("riser wall tangent size must not exceed riser-size")
 
 
 def add_box_field(
@@ -156,6 +189,29 @@ def boundary_disk(
             f"Expected one riser disk at z={z_coordinate}: {candidates}"
         )
     return candidates[0]
+
+
+def circular_boundary_curves(occ: gmsh.model.occ, surface: int) -> list[int]:
+    curves = sorted(
+        {
+            int(tag)
+            for dim, tag in gmsh.model.getBoundary(
+                [(2, surface)],
+                combined=False,
+                oriented=False,
+                recursive=False,
+            )
+            if dim == 1
+        }
+    )
+    perimeter = sum(occ.getMass(1, curve) for curve in curves)
+    expected = 2.0 * math.pi * RISER_RADIUS
+    if not curves or abs(perimeter - expected) > 1.0e-8:
+        raise RuntimeError(
+            "Unexpected swept-riser source perimeter: "
+            f"curves={curves}, perimeter={perimeter}, expected={expected}"
+        )
+    return curves
 
 
 def layered_extrude(
@@ -345,6 +401,13 @@ def main() -> None:
         wall_group = gmsh.model.addPhysicalGroup(2, wall_surfaces)
         gmsh.model.setPhysicalName(2, wall_group, "walls")
 
+        riser_wall_curves = circular_boundary_curves(occ, sweep_base)
+        excluded_wall_faces: set[int] = set()
+        for curve in riser_wall_curves:
+            upward, _ = gmsh.model.getAdjacencies(1, curve)
+            excluded_wall_faces.update(int(surface) for surface in upward)
+        excluded_wall_faces.discard(sweep_base)
+
         field = gmsh.model.mesh.field
         pipe_field = field.add("Box")
         add_box_field(
@@ -403,17 +466,72 @@ def main() -> None:
                 ATMOSPHERE_TOP_Z,
             ),
         )
+
+        wall_distance = field.add("Distance")
+        field.setNumbers(wall_distance, "CurvesList", riser_wall_curves)
+        field.setNumber(wall_distance, "Sampling", 512)
+        wall_transition = field.add("Threshold")
+        field.setNumber(wall_transition, "InField", wall_distance)
+        field.setNumber(
+            wall_transition, "SizeMin", args.riser_wall_tangent
+        )
+        field.setNumber(wall_transition, "SizeMax", args.riser_size)
+        field.setNumber(
+            wall_transition, "DistMin", args.riser_wall_thickness
+        )
+        field.setNumber(
+            wall_transition,
+            "DistMax",
+            max(0.006, 3.0 * args.riser_wall_thickness),
+        )
+        field.setNumber(wall_transition, "StopAtDistMax", 1)
+
         minimum = field.add("Min")
         field.setNumbers(
             minimum,
             "FieldsList",
-            [pipe_field, riser_field, valve_field, jet_field],
+            [
+                pipe_field,
+                riser_field,
+                valve_field,
+                jet_field,
+                wall_transition,
+            ],
         )
         field.setAsBackgroundMesh(minimum)
 
+        wall_layer = field.add("BoundaryLayer")
+        field.setNumbers(wall_layer, "CurvesList", riser_wall_curves)
+        if excluded_wall_faces:
+            field.setNumbers(
+                wall_layer,
+                "ExcludedFaceList",
+                sorted(excluded_wall_faces),
+            )
+        field.setNumber(
+            wall_layer, "Size", args.riser_wall_first_cell
+        )
+        field.setNumber(
+            wall_layer, "SizeFar", args.riser_wall_tangent
+        )
+        field.setNumber(
+            wall_layer, "Ratio", args.riser_wall_growth
+        )
+        field.setNumber(
+            wall_layer, "Thickness", args.riser_wall_thickness
+        )
+        field.setNumber(wall_layer, "Quads", 0)
+        field.setAsBoundaryLayer(wall_layer)
+
         gmsh.option.setNumber(
             "Mesh.MeshSizeMin",
-            min(args.pipe_size, args.riser_size, valve_size, args.jet_size),
+            min(
+                args.pipe_size,
+                args.riser_size,
+                valve_size,
+                args.jet_size,
+                args.riser_wall_first_cell,
+            ),
         )
         gmsh.option.setNumber("Mesh.MeshSizeMax", args.external_size)
         gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
@@ -460,6 +578,15 @@ def main() -> None:
                 f"max z error {free_surface_z_error}"
             )
 
+        _, source_element_tags, _ = gmsh.model.mesh.getElements(
+            2, sweep_base
+        )
+        source_triangle_count = sum(len(tags) for tags in source_element_tags)
+        wall_edge_count = 0
+        for curve in riser_wall_curves:
+            _, curve_element_tags, _ = gmsh.model.mesh.getElements(1, curve)
+            wall_edge_count += sum(len(tags) for tags in curve_element_tags)
+
         gmsh.write(str(args.output))
 
         cell_count = sum(len(tags) for tags in element_tags)
@@ -474,6 +601,16 @@ def main() -> None:
         nominal_riser_water_volume = (
             math.pi * RISER_DIAMETER**2 * (0.660 - PIPE_DIAMETER) / 4.0
         )
+        nominal_wall_layers: list[float] = []
+        wall_depth = 0.0
+        wall_cell = args.riser_wall_first_cell
+        while (
+            wall_depth + wall_cell
+            <= args.riser_wall_thickness * (1.0 + 1.0e-12)
+        ):
+            wall_depth += wall_cell
+            nominal_wall_layers.append(wall_depth)
+            wall_cell *= args.riser_wall_growth
         audit = {
             "geometry": (
                 "3-D circular pipe and T-junction with a vertically swept "
@@ -501,12 +638,29 @@ def main() -> None:
                 "lower_layers": layers_low,
                 "upper_layers": layers_high,
                 "free_surface_max_z_error_m": free_surface_z_error,
+                "source_triangles": source_triangle_count,
+                "wall_edges": wall_edge_count,
+                "near_wall": {
+                    "first_cell_m": args.riser_wall_first_cell,
+                    "thickness_m": args.riser_wall_thickness,
+                    "growth_ratio": args.riser_wall_growth,
+                    "tangential_size_m": args.riser_wall_tangent,
+                    "nominal_cumulative_layer_depths_m": nominal_wall_layers,
+                    "nominal_layers_within_0p6_mm": sum(
+                        depth <= 0.0006 for depth in nominal_wall_layers
+                    ),
+                    "nominal_layers_within_1p2_mm": sum(
+                        depth <= 0.0012 for depth in nominal_wall_layers
+                    ),
+                },
             },
             "nominal_pocket_volume_m3": nominal_pocket_volume,
             "nominal_riser_water_above_soffit_m3": nominal_riser_water_volume,
             "mesh_sizes_m": {
                 "pipe": args.pipe_size,
                 "riser": args.riser_size,
+                "riser_wall_first": args.riser_wall_first_cell,
+                "riser_wall_tangent": args.riser_wall_tangent,
                 "jet": args.jet_size,
                 "external": args.external_size,
             },
