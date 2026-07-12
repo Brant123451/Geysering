@@ -90,6 +90,12 @@ resume its latest processor checkpoint with:
 NP=4 ./Allrun.resume
 ```
 
+For a diagnostic split run, `NP=4 ./Allrun.solve initialize` stops cleanly at
+the ramp start after the full Q0 interval. Inspect inlet/weir fluxes, tank
+stage, and PT3 there, then continue the same decomposed state with
+`NP=4 ./Allrun.resume`. The standard `Allrun` still executes one fresh full
+solve.
+
 The second command cleans generated base runtime state but retains its compact
 outputs. The equivalent manual grid-sensitivity sequence is:
 

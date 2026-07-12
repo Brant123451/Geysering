@@ -5,8 +5,8 @@ cd "$(dirname "$0")"
 
 MODE="${1:-full}"
 case "$MODE" in
-    smoke|full) ;;
-    *) echo "usage: bash Allrun.solve [smoke|full]" >&2; exit 2 ;;
+    smoke|initialize|full) ;;
+    *) echo "usage: bash Allrun.solve [smoke|initialize|full]" >&2; exit 2 ;;
 esac
 
 OF_LAUNCH="${OPENFOAM_LAUNCH:-/usr/bin/openfoam2512}"
@@ -39,6 +39,12 @@ if [[ "$MODE" == smoke ]]; then
     cp system/controlDict "$RESTORE_DICT"
     "$OF_LAUNCH" -- foamDictionary system/controlDict -entry endTime -set "$SMOKE_END"
     "$OF_LAUNCH" -- foamDictionary system/controlDict -entry writeInterval -set 0.2
+    "$OF_LAUNCH" -- foamDictionary system/controlDict -entry purgeWrite -set 0
+elif [[ "$MODE" == initialize ]]; then
+    RESTORE_DICT="$(mktemp)"
+    cp system/controlDict "$RESTORE_DICT"
+    "$OF_LAUNCH" -- foamDictionary system/controlDict -entry endTime -set 0
+    "$OF_LAUNCH" -- foamDictionary system/controlDict -entry writeInterval -set 1
     "$OF_LAUNCH" -- foamDictionary system/controlDict -entry purgeWrite -set 0
 fi
 "$OF_LAUNCH" -- foamDictionary system/decomposeParDict \

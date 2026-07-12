@@ -178,7 +178,11 @@ def tank_stage(alpha_samples: np.ndarray) -> np.ndarray:
 
 
 def parse_run_metadata(case: Path) -> dict[str, object]:
-    logs = sorted(case.glob("log.interFoam.full")) + sorted(case.glob("log.interFoam.resume.*"))
+    logs = (
+        sorted(case.glob("log.interFoam.initialize"))
+        + sorted(case.glob("log.interFoam.full"))
+        + sorted(case.glob("log.interFoam.resume.*"))
+    )
     log_texts = [path.read_text(errors="replace") for path in logs if path.exists()]
     text = "\n".join(log_texts)
     decompose_text = (case / "system" / "decomposeParDict").read_text(errors="replace")
