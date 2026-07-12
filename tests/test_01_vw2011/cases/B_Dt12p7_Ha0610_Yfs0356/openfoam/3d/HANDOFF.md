@@ -71,8 +71,16 @@ normally at 0.006 s.  It reduced the reference-RDF peak/final velocities to
 1.437/0.770 m/s, but global/interface Courant maxima still reached
 0.393/0.214, above their declared limits.  Removing variable curvature
 therefore did not remove the startup free-surface imbalance, and this
-nonphysical mechanism test must not be extended.  The next screen is the
-missing physical `RDF + plicRDF + interpolateNormal=false` combination.
+nonphysical mechanism test must not be extended.  The subsequent physical
+`RDF + plicRDF + interpolateNormal=false` screen also exited at 0.006 s, with
+global/interface Courant maxima 0.365/0.306 and end velocity 1.220 m/s.
+It exposed a more fundamental initialization error: a direct field check found
+up to 3946.5 Pa inconsistency between `p` and `p_rgh` at the initial tower free
+surface.  The single `setExprFields` process preloaded the original `p`, while
+its independent unregistered writes did not update that cached field before
+evaluating `p_rgh`.  All prior startup screens share this defect.  Absolute
+and reduced pressure initialization must be split into separate processes and
+re-screened before any hold extension.
 
 ## Verified before handoff
 
@@ -213,6 +221,23 @@ missing physical `RDF + plicRDF + interpolateNormal=false` combination.
     The test shows that variable curvature is not the sole source of the
     startup imbalance.  It is not a physical hold candidate and is not
     cleared for extension.
+18. The physical `RDF + plicRDF + interpolateNormal=false` screen exited
+    normally at 0.006 s but was rejected:
+    * global Co reached 0.365 at completed time 0.000854 s;
+    * interface Co reached 0.306 at completed time 0.003903 s;
+    * the end written velocity was 1.220 m/s at the initial tower free surface;
+    * alpha remained within
+      \([-1.58\times10^{-10},1+3.44\times10^{-13}]\), with no rim water or
+      gas entry.
+    The next-step reductions exactly matched the configured Courant ratios,
+    confirming one-step controller lag rather than pressure-solver divergence.
+    More importantly, a direct pre-solver field residual
+    `p_rgh - (p + rho*9.81*y)` ranged from -453.5 to +3946.5 Pa, with the
+    maximum at the initial free surface.  Source inspection confirmed that
+    `setExprFields` wrote each new `p` through an unregistered object while the
+    final expression still read the original preloaded `p`.  These screens
+    cannot validate curvature behavior until this initialization defect is
+    fixed.
 
 ## Still required
 
@@ -222,14 +247,16 @@ The scientific reproduction is **not complete**.  Continue in this order:
    `interpolateNormal=true` with a smaller timestep cap.  The source
    materialises plicRDF iteration and tolerance controls, and the
    static-benchmark values (`iterations=10`, `tol=1e-8`),
-   `isoAlpha + fitParaboloid`, and the nonphysical `constantCurvature=0`
-   mechanism diagnostic are also rejected.  Screen the missing
-   `RDF + plicRDF + interpolateNormal=false` physical combination to
-   0.006 s.  Extend it past the 0.04 s pressure-drift onset only if it stays
-   within the declared Courant limits and reduces peak velocity, and only
-   \(H^*\) peak-to-peak at or below 0.02 may proceed to the full 1.0 s hold.
-   Opening runs retain the dissipative resistance and must be tested
-   separately.
+   `isoAlpha + fitParaboloid`, the nonphysical `constantCurvature=0`
+   diagnostic, and the first `RDF + plicRDF + interpolateNormal=false`
+   screen are also rejected.  First split absolute-pressure and
+   reduced-pressure initialization into separate `setExprFields` processes,
+   verify the pre-solver residual is near roundoff, and repeat
+   `constantCurvature=0` as a mechanism check.  Then re-screen physical RDF.
+   Extend it past the 0.04 s pressure-drift onset only if it stays within the
+   declared Courant limits and reduces peak velocity, and only \(H^*\)
+   peak-to-peak at or below 0.02 may proceed to the full 1.0 s hold.  Opening
+   runs retain the dissipative resistance and must be tested separately.
 2. Run the opened-valve 0.5 s smoke case.
 3. Run the 10.5 s base case through \(T^*\ge6\).
 4. Run the refined grid and required timestep/valve/compressibility

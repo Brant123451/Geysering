@@ -157,7 +157,19 @@ at 0.006 s and reduced the reference-RDF peak/final velocities to
 0.393/0.214 and the hotspot remained at the initial tower free surface.
 Variable curvature is therefore not the sole source of the startup imbalance.
 This nonphysical diagnostic is rejected for extension; the next physical
-screen is `RDF + plicRDF + interpolateNormal=false`.
+screen is `RDF + plicRDF + interpolateNormal=false`.  That physical screen
+also exited normally at 0.006 s, but global/interface Courant maxima reached
+0.365/0.306 and the end velocity remained 1.220 m/s at the initial free
+surface.  A direct pre-solver consistency check then exposed the more
+fundamental defect: `p_rgh - (p + rho*9.81*y)` ranged from -453.5 to
++3946.5 Pa, with the maximum at that same free surface.  In a single
+`setExprFields` process, `p` was preloaded once; each absolute-pressure
+expression wrote an independent unregistered object to disk, so the final
+reduced-pressure expression still read the original cached `p`.  All startup
+screens prepared by that path are consequently initialization-defective.
+Absolute and reduced pressure initialization must run as separate processes,
+and both zero-curvature and physical RDF screens must be repeated before any
+hold extension.
 
 Thermophysical choices are:
 

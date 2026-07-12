@@ -353,6 +353,20 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     `RDF + plicRDF + interpolateNormal=false` 物理组合；只有同时满足
     Courant 和速度门槛才可超过旧 0.04 s pressure-drift 窗口，且只有
     Hstar peak-to-peak 不超过 0.02 才能开始完整 1.0 s hold。
+15. 上述 `RDF + plicRDF + interpolateNormal=false` 物理组合也已正常运行
+    至 0.006 s，但不能延长：
+    - global/interface Co 分别达到 0.365/0.306；
+    - 0.006 s 写出速度为 1.220 m/s，热点仍在 tower 初始自由面；
+    - alpha 仍 bounded，无 rim 水量或 gas-entry；
+    - 两次超限后的 timestep 缩减精确符合 `limit/observed` 比例，确认是一步
+      滞后的 Courant controller，而不是 pressure solver 发散。
+    更重要的是，pre-solver 直接检查
+    `p_rgh - (p + rho*9.81*y)` 得到 -453.5 至 +3946.5 Pa，最大值就在初始
+    自由面。源码审计确认单次 `setExprFields` 预加载旧 `p` 后，各个新 `p`
+    通过未注册临时对象写盘，最终 `p_rgh` 表达式仍读取缓存旧值。此前全部
+    startup 筛选均受此缺陷影响。下一步必须拆分 absolute `p` 与 `p_rgh`
+    为两个独立 `setExprFields` 进程，先证明 residual 接近 roundoff，再复筛
+    `constantCurvature=0` 和物理 RDF；不得直接开始完整 hold。
 
 十、hold 验收
 
