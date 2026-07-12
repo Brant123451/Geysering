@@ -127,6 +127,9 @@ bash ./Allwmake
 # Closed-valve static hold
 RUN_MODE=closed END_TIME=1.0 ./Allrun
 
+# Paired-CFD surface-tension omission diagnostic (not the experiment baseline)
+python3 run_study.py --variant closed_sigma_zero
+
 # Open-valve numerical smoke
 RUN_MODE=event VALVE_OPENING=instant END_TIME=0.02 ./Allrun
 

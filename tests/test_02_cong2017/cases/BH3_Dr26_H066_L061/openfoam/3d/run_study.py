@@ -60,6 +60,15 @@ VARIANTS = (
         end_time=1.0,
         sample_interval=1.0e-3,
     ),
+    Variant(
+        "closed_sigma_zero",
+        "diagnostic",
+        mode="closed",
+        valve="closed",
+        end_time=0.05,
+        sample_interval=1.0e-3,
+        surface_tension=0.0,
+    ),
     Variant("open_smoke", "smoke", end_time=0.02, sample_interval=1.0e-3),
     Variant("base_nominal", "core"),
     Variant("refined_nominal", "core", mesh="refined"),
@@ -82,7 +91,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--group",
-        choices=("smoke", "core", "sensitivity", "all"),
+        choices=("smoke", "diagnostic", "core", "sensitivity", "all"),
         default="smoke",
     )
     parser.add_argument(

@@ -114,7 +114,7 @@ The paired CFD paper defines the operating/atmospheric pressure as
 | PT1/PT2 sampling coordinates | Main-paper physical locations are retained; numerical probes are one local cell inside the fluid. | `NUMERICAL TRANSLATION`. |
 | Wall roughness | Paired CFD assumes smooth wall with roughness length `10^-3 mm`. | `RESOLVED`. |
 | Initial temperature | Main experiment measured `296.15 K`; paired CFD used `300 K`. Experimental value is retained and the difference documented. | `RESOLVED`. |
-| Surface tension | The primary paper gives `0.072 N/m`; the paired CFD momentum equation does not include a surface-tension term. | Primary-paper `0.072 N/m` remains the baseline; the separately labeled `sigma_zero` run is diagnostic/sensitivity only. |
+| Surface tension | The primary paper gives `0.072 N/m`; the paired CFD momentum equation does not include a surface-tension term. | Primary-paper `0.072 N/m` remains the baseline; the separately labeled `closed_sigma_zero` diagnostic and `sigma_zero` event sensitivity cannot be relabeled as the experiment baseline. |
 | BH4 parity | `MODELING_CONTRACT.json` freezes every independent input and numerical control; `riser_diameter_m` is the sole permitted Case variable. | `RESOLVED` locally; the independent BH4 implementation must verify the contract hash. |
 
 The gate release authorizes mesh and solver work. It does not pre-authorize a
