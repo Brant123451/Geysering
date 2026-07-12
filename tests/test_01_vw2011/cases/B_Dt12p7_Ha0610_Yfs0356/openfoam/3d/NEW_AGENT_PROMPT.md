@@ -440,6 +440,15 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     - alpha 与质量界仍干净。
     这只证明硬 timestep 本身显著影响峰值，不能据此选择 curvature formula。
     下一步必须用完全相同控制运行 `curvFromTr=false`，完成配对后再决策。
+22. 完全同控制的 `curvFromTr=false` 已完成，且被拒绝：
+    - global/interface Co 为 0.125/0.024，仍在门槛内；
+    - 首帧速度从 true 的 1.317 降至 1.121 m/s，但 0.0035 s 速度反而增长到
+      1.549 m/s；true 同时刻仅 0.949 m/s；
+    - y=0.463 m exterior-gas pressure residual 从 true 的 132 增至
+      198 kPa/m；
+    - 最大 surface force 小幅从 119 降至 113 kPa/m，不能抵消后期恶化。
+    因此保留 source-default `curvFromTr=true`。先以同一 `maxDeltaT=1e-5`
+    复跑至 0.006 s，确认 exterior-gas 热点有界；不得直接跨到 0.04 s。
 
 十、hold 验收
 

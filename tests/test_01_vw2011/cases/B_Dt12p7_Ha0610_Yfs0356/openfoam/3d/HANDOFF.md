@@ -343,6 +343,17 @@ timestep controls.
     The cap itself materially changes the response, so this member cannot be
     compared directly with the adaptive-timestep result.  Complete the
     otherwise identical `curvFromTr=false` member before choosing a formula.
+25. The otherwise identical `curvFromTr=false` member is complete and
+    rejected:
+    * global/interface Courant maxima stayed within limits at 0.125/0.024;
+    * first written velocity fell from 1.317 to 1.121 m/s, but velocity then
+      grew to 1.549 m/s at 0.0035 s versus 0.949 m/s for the trace formula;
+    * the y=0.463 m exterior-gas pressure residual increased from 132 to
+      198 kPa/m;
+    * maximum surface force decreased only from 119 to 113 kPa/m.
+    Retain source-default `curvFromTr=true`.  Repeat it to 0.006 s under the
+    same hard cap to verify that the exterior-gas hotspot stays bounded before
+    considering the 0.04 s pressure-drift window.
 
 ## Still required
 
@@ -358,10 +369,11 @@ The scientific reproduction is **not complete**.  Continue in this order:
    `constantCurvature=0` mechanism rerun and corrected physical RDF screen are
    complete, and the collocated logger has exposed an unintended deep
    wall-adjacent interface.  The alpha repair, zero-curvature verification and
-   fully-wet physical RDF rerun are complete.  The deep hotspot is absent and
-   surface force is now the larger term; run a hard-timestep paired RDF screen
-   with `curvFromTr=true|false`.  Only a clearly improved physical curvature
-   discretisation may be extended.  Extend a candidate past the 0.04 s
+   fully-wet physical RDF rerun and hard-timestep curvature-formula pair are
+   complete.  `curvFromTr=false` is worse and rejected.  Repeat the retained
+   trace formula to 0.006 s under the same cap and verify its later gas hotspot
+   remains bounded.  Only then may it approach the 0.04 s pressure-drift
+   window.  Extend a candidate past the 0.04 s
    pressure-drift onset only if it stays within the declared Courant limits
    and reduces peak velocity, and only \(H^*\) peak-to-peak at or below 0.02
    may proceed to the full 1.0 s hold.  Opening runs retain the dissipative

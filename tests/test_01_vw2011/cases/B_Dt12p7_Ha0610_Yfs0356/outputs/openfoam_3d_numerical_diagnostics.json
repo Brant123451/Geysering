@@ -1103,8 +1103,11 @@
     "completion_claim": "This is a rejected fully-wet physical-curvature screen, not a passed hold, smoke run, full experiment, or accepted baseline."
   },
   "hard_timestep_curvature_discretisation_pair": {
-    "status": "trace_reference_complete_divergence_candidate_pending",
-    "source_commit": "82c2dfb",
+    "status": "divergence_formula_rejected_trace_formula_short_extension_pending",
+    "source_commits": [
+      "82c2dfb",
+      "da428ec"
+    ],
     "purpose": "Compare the RDF trace-of-gradient and divergence-of-face-normal curvature formulas under an identical hard timestep cap.",
     "common_configuration": {
       "solver": "compressibleInterFlow",
@@ -1165,11 +1168,53 @@
       "water_above_rim_m3": 0.0,
       "gas_entry_detected": false
     },
-    "provisional_interpretation": {
-      "finding": "The hard timestep cap kept both Courant metrics far below their limits and reduced the written velocity peak relative to the adaptive-timestep RDF screen, so timestep effects must be controlled in the curvature-formula comparison.",
-      "caveat": "A later pressure-gravity and velocity hotspot appeared in exterior gas at y=0.463 m, while the surface-tension maximum remained at the physical free surface.",
-      "next_action": "Run the otherwise identical curvFromTr=false member before selecting or extending either formula."
+    "curvature_from_trace_false": {
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.003497496603,
+      "execution_time_s": 821.51,
+      "clock_time_s": 835,
+      "final_delta_t_s": 1e-05,
+      "maximum_courant_number": 0.12504879,
+      "maximum_interface_courant_number": 0.024473929,
+      "maximum_capillary_number": 0.031645463,
+      "alpha_water_min": -2.3782627e-24,
+      "alpha_water_max": 1.000000000000003,
+      "first_written_velocity_m_per_s": 1.1209989,
+      "first_written_velocity_time_s": 0.0004974966027,
+      "written_peak_velocity_m_per_s": 1.548821,
+      "written_peak_velocity_time_s": 0.003497496603,
+      "written_peak_velocity_location_m": [
+        3.5110978,
+        0.46288289,
+        -0.0079204663
+      ],
+      "alpha_water_at_written_peak_velocity": 0.0,
+      "curvature_at_written_peak_velocity_per_m": 0.0,
+      "final_written_velocity_m_per_s": 1.548821,
+      "maximum_hydrostatic_force_residual_pa_per_m": 197549.93,
+      "maximum_hydrostatic_force_residual_location_m": [
+        3.5108768,
+        0.46300156,
+        -0.0077883644
+      ],
+      "maximum_surface_tension_force_pa_per_m": 113258.57,
+      "maximum_surface_tension_force_location_m": [
+        3.5156845,
+        0.40274995,
+        0.0036621505
+      ],
+      "maximum_total_force_residual_pa_per_m": 197549.93,
+      "gas_mass_error_pct_max_abs": 6.643806060014228e-07,
+      "total_mass_error_pct_max_abs": 3.169465009725114e-09,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
     },
-    "completion_claim": "Only the trace-form reference member of the paired short diagnostic is complete."
+    "interpretation": {
+      "finding": "Both hard-timestep members passed the Courant gates, but curvFromTr=false ended with a growing 1.549 m/s exterior-gas hotspot versus 0.949 m/s for curvFromTr=true.",
+      "comparison": "The divergence formula reduced the first written velocity from 1.317 to 1.121 m/s and the maximum surface force from 119 to 113 kPa/m, but increased the full-window velocity peak by 17.6 percent and the maximum exterior-gas pressure residual from 132 to 198 kPa/m.",
+      "decision": "Reject curvFromTr=false and retain the source-default trace formula. Neither short member is yet a passed hold.",
+      "next_action": "Repeat curvFromTr=true through 0.006 s under the same hard cap to verify that its later exterior-gas hotspot remains bounded before any extension toward 0.04 s."
+    },
+    "completion_claim": "This completes only the paired curvature-formula short diagnostic; it is not a passed hold, smoke run, or completed reproduction."
   }
 }

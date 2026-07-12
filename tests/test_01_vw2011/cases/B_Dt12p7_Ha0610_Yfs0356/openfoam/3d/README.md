@@ -199,9 +199,12 @@ zero-curvature diagnostic removed the deep hotspot and reduced its written
 velocity peak from 1.424 to 1.031 m/s.  Restoring physical RDF also kept all
 hotspots at the intended free surface, but global/interface Co still reached
 0.349/0.206 and velocity peaked at 1.805 m/s.  Collocated pressure-gravity and
-surface-tension maxima were 82/118 kPa/m.  The next screen therefore compares
-RDF `curvFromTr=true|false` under the same hard timestep cap; no hold extension
-is yet cleared.
+surface-tension maxima were 82/118 kPa/m.  A paired `maxDeltaT=1e-5` test then
+compared RDF `curvFromTr=true|false`.  Both passed the Courant gates, but the
+false member grew to 1.549 m/s and a 198 kPa/m exterior-gas pressure residual
+by 0.0035 s, versus 0.949 m/s and a 132 kPa/m maximum for true.  The divergence
+formula is rejected; the retained trace formula must first pass 0.006 s under
+the same cap before any longer hold extension.
 
 Thermophysical choices are:
 
