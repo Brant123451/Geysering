@@ -21,8 +21,6 @@ solvers
         vof2IsoTol      1e-8;
         isoFaceTol      1e-8;
         surfCellTol     1e-8;
-        tol             1e-6;
-        iterations      5;
         writeVTK        false;
         writeIsoFaces   false;
     }

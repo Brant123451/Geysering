@@ -321,9 +321,10 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
       0.0075，因此根因不是后期 timestep 放大，而是 near-interface mask 外的
       高度局部 pressure-corrected flux；
     - 首两个写出速度已为 1.239/1.207 m/s，也未保留旧运行的低峰值。
-    不得继续缩小 `maxDeltaT` 挽救 true 路径。下一步保留
-    `interpolateNormal=false`，物化并筛选静态 benchmark 的 plicRDF 收敛控制
-    `iterations=10`、`tol=1e-8`，先覆盖旧 false 候选约 0.003 s 的速度峰值。
+    不得继续缩小 `maxDeltaT` 挽救 true 路径。source 已物化 plicRDF
+    iteration/tolerance 控制；下一步保留 `interpolateNormal=false`，筛选静态
+    benchmark 的 `iterations=10`、`tol=1e-8`，先覆盖旧 false 候选约
+    0.003 s 的速度峰值。
 
 十、hold 验收
 
@@ -348,6 +349,8 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
 - CASEB_VALVE_OPEN_TIME=0|0.10|0.25|0.50|1.0
 - CASEB_ADVECTION_SCHEME=isoAdvection|MULESScheme
 - CASEB_RECONSTRUCTION_SCHEME=plicRDF|isoAlpha|gradAlpha
+- CASEB_RECONSTRUCTION_ITERATIONS=5|10
+- CASEB_RECONSTRUCTION_TOL=1e-6|1e-8
 - CASEB_INTERPOLATE_NORMAL=false|true
 - CASEB_CURVATURE_MODEL=RDF|fitParaboloid|gradAlpha
 - CASEB_C_ALPHA=0.5|1.0|1.5（仅与 MULESScheme 配合）

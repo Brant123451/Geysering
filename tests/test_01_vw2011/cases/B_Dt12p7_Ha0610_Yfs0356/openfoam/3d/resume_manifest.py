@@ -28,6 +28,8 @@ ENVIRONMENT_KEYS = {
     "c_alpha": "CASEB_C_ALPHA",
     "advection_scheme": "CASEB_ADVECTION_SCHEME",
     "reconstruction_scheme": "CASEB_RECONSTRUCTION_SCHEME",
+    "reconstruction_iterations": "CASEB_RECONSTRUCTION_ITERATIONS",
+    "reconstruction_tolerance": "CASEB_RECONSTRUCTION_TOL",
     "interpolate_normal": "CASEB_INTERPOLATE_NORMAL",
     "curvature_model": "CASEB_CURVATURE_MODEL",
     "n_alpha_bounds": "CASEB_N_ALPHA_BOUNDS",
@@ -50,6 +52,8 @@ NUMERIC_KEYS = {
     "max_delta_t_s",
     "field_write_interval_s",
     "c_alpha",
+    "reconstruction_iterations",
+    "reconstruction_tolerance",
     "n_alpha_bounds",
     "n_alpha_corr",
     "n_alpha_subcycles",
@@ -111,8 +115,11 @@ def read_manifest(path: Path) -> dict:
         value = float(manifest[key])
         if not math.isfinite(value):
             raise ValueError(f"Non-finite {key} in run manifest")
+    if float(manifest["reconstruction_tolerance"]) <= 0:
+        raise ValueError("reconstruction_tolerance must be positive")
     positive_integer_keys = {
         "n_alpha_bounds",
+        "reconstruction_iterations",
         "n_alpha_corr",
         "n_alpha_subcycles",
         "n_outer_correctors",

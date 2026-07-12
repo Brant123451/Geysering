@@ -175,10 +175,11 @@ controls (`iterations=10`, `tol=1e-8`).
 The scientific reproduction is **not complete**.  Continue in this order:
 
 1. Do not extend either existing `fitParaboloid` screen and do not retry
-   `interpolateNormal=true` with a smaller timestep cap.  Materialise and test
-   the static-benchmark plicRDF convergence controls (`iterations=10`,
-   `tol=1e-8`) with `interpolateNormal=false` through the previous 0.003 s
-   velocity-peak window.  Re-screen to 0.006 s only if it stays within the
+   `interpolateNormal=true` with a smaller timestep cap.  The source now
+   materialises plicRDF iteration and tolerance controls; test the
+   static-benchmark values (`iterations=10`, `tol=1e-8`) with
+   `interpolateNormal=false` through the previous 0.003 s velocity-peak
+   window.  Re-screen to 0.006 s only if it stays within the
    declared Courant limits and reduces peak velocity.  A candidate may then
    extend past the 0.04 s pressure-drift onset, and only \(H^*\) peak-to-peak
    at or below 0.02 may proceed to the full 1.0 s hold.  Opening runs retain

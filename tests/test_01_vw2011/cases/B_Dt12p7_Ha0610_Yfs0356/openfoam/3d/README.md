@@ -356,6 +356,8 @@ CASEB_MAX_CAPILLARY_NUM=0.5|1.0
 CASEB_VALVE_OPEN_TIME=0|0.10|0.25|0.50|1.0
 CASEB_ADVECTION_SCHEME=isoAdvection|MULESScheme
 CASEB_RECONSTRUCTION_SCHEME=plicRDF|isoAlpha|gradAlpha
+CASEB_RECONSTRUCTION_ITERATIONS=5|10
+CASEB_RECONSTRUCTION_TOL=1e-6|1e-8
 CASEB_INTERPOLATE_NORMAL=false|true
 CASEB_CURVATURE_MODEL=RDF|fitParaboloid|gradAlpha
 CASEB_C_ALPHA=0.5|1.0|1.5  # only with MULESScheme
@@ -375,6 +377,12 @@ CASEB_N_NON_ORTHOGONAL_CORRECTORS=0
 ```
 
 Changing any of these makes a non-baseline configuration.
+
+The reconstruction iteration/tolerance controls are materialised separately
+from the pressure and alpha corrector counts.  Their source defaults remain
+5 and \(10^{-6}\); 10 and \(10^{-8}\) reproduce the stricter plicRDF
+convergence settings used by TwoPhaseFlow's static curvature benchmark and are
+being screened as a numerical sensitivity, not silently promoted to baseline.
 
 `interpolateNormal=false` is the baseline plicRDF setting because it matches
 TwoPhaseFlow's static surface-tension benchmarks.  The former `true` setting

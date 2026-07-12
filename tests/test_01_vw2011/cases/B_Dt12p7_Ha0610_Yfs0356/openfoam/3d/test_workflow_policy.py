@@ -41,6 +41,8 @@ def baseline_manifest(mesh: str = "base") -> dict:
         ),
         "advection_scheme": "isoAdvection",
         "reconstruction_scheme": "plicRDF",
+        "reconstruction_iterations": 5,
+        "reconstruction_tolerance": 1e-6,
         "interpolate_normal": False,
         "curvature_model": "RDF",
         "max_co": 0.30,
@@ -81,6 +83,12 @@ class BaselinePolicyTests(unittest.TestCase):
         self.assertFalse(is_baseline_full_physics(manifest))
         manifest = baseline_manifest()
         manifest["interpolate_normal"] = True
+        self.assertFalse(is_baseline_full_physics(manifest))
+        manifest = baseline_manifest()
+        manifest["reconstruction_iterations"] = 10
+        self.assertFalse(is_baseline_full_physics(manifest))
+        manifest = baseline_manifest()
+        manifest["reconstruction_tolerance"] = 1e-8
         self.assertFalse(is_baseline_full_physics(manifest))
         manifest = baseline_manifest()
         manifest["n_outer_correctors"] = 2
@@ -186,9 +194,15 @@ class TwoPhaseFlowDeckTests(unittest.TestCase):
         ).read_text()
         self.assertIn("advectionScheme         isoAdvection;", settings)
         self.assertIn("reconstructionScheme    plicRDF;", settings)
+        self.assertIn("iterations              5;", settings)
+        self.assertIn("tol                     1e-6;", settings)
         self.assertIn("interpolateNormal       false;", settings)
+        self.assertNotIn("iterations      5;", solution)
+        self.assertNotIn("tol             1e-6;", solution)
         self.assertNotIn("interpolateNormal true;", solution)
         self.assertIn("CASEB_INTERPOLATE_NORMAL", prepare)
+        self.assertIn("CASEB_RECONSTRUCTION_ITERATIONS", prepare)
+        self.assertIn("CASEB_RECONSTRUCTION_TOL", prepare)
         self.assertIn("clip                    false;", settings)
         self.assertIn("surfaceTensionForceModel    RDF;", surface_forces)
         self.assertIn("nAlphaCorr      1;", alpha_correctors)

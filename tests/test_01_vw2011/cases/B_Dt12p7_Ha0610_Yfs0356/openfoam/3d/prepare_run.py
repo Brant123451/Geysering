@@ -65,6 +65,8 @@ def main() -> None:
     reconstruction_scheme = os.environ.get(
         "CASEB_RECONSTRUCTION_SCHEME", "plicRDF"
     )
+    reconstruction_iterations = env_int("CASEB_RECONSTRUCTION_ITERATIONS", 5)
+    reconstruction_tolerance = env_float("CASEB_RECONSTRUCTION_TOL", 1e-6)
     interpolate_normal = env_bool("CASEB_INTERPOLATE_NORMAL", False)
     curvature_model = os.environ.get("CASEB_CURVATURE_MODEL", "RDF")
     n_alpha_bounds = env_int("CASEB_N_ALPHA_BOUNDS", 5)
@@ -129,6 +131,7 @@ def main() -> None:
         max_delta_t,
         write_interval,
         c_alpha,
+        reconstruction_tolerance,
         initial_air_head,
         valve_seal_speed,
     )
@@ -141,11 +144,13 @@ def main() -> None:
         max_delta_t,
         write_interval,
         c_alpha,
+        reconstruction_tolerance,
         valve_seal_speed,
     )
     if any(value <= 0 for value in positive) or initial_air_head <= 0:
         raise SystemExit(
-            "Courant, timestep, output, cAlpha, seal speed and head must be positive"
+            "Courant, timestep, output, cAlpha, reconstruction tolerance, "
+            "seal speed and head must be positive"
         )
     if end_time < 0 or (stage != "mesh" and end_time <= 0):
         raise SystemExit("endTime must be positive for solver stages")
@@ -153,6 +158,8 @@ def main() -> None:
         raise SystemExit("CASEB_VALVE_OPEN_TIME cannot be negative")
     if n_alpha_bounds < 1:
         raise SystemExit("CASEB_N_ALPHA_BOUNDS must be positive")
+    if reconstruction_iterations < 1:
+        raise SystemExit("CASEB_RECONSTRUCTION_ITERATIONS must be positive")
     positive_correctors = {
         "CASEB_N_ALPHA_CORR": n_alpha_corr,
         "CASEB_N_ALPHA_SUBCYCLES": n_alpha_subcycles,
@@ -201,6 +208,8 @@ def main() -> None:
         f"cAlpha                  {c_alpha:.10g};\n"
         f"advectionScheme         {advection_scheme};\n"
         f"reconstructionScheme    {reconstruction_scheme};\n"
+        f"iterations              {reconstruction_iterations};\n"
+        f"tol                     {reconstruction_tolerance:.10g};\n"
         f"interpolateNormal       {str(interpolate_normal).lower()};\n"
         f"nAlphaBounds            {n_alpha_bounds};\n"
         f"clip                    {str(alpha_clip).lower()};\n"
@@ -264,6 +273,8 @@ def main() -> None:
         "two_phase_flow_commit": TWOPHASEFLOW_COMMIT,
         "advection_scheme": advection_scheme,
         "reconstruction_scheme": reconstruction_scheme,
+        "reconstruction_iterations": reconstruction_iterations,
+        "reconstruction_tolerance": reconstruction_tolerance,
         "interpolate_normal": interpolate_normal,
         "curvature_model": curvature_model,
         "max_co": max_co,
