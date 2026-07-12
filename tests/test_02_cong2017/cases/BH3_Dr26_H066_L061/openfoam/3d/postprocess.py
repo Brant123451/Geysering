@@ -22,6 +22,7 @@ RHO_WATER = 998.0
 GRAVITY = 9.81
 RIM_Z = 1.850
 INITIAL_FS = 0.660
+CLOSED_HOLD_MIN_DURATION = 1.0
 POCKET_TARGET = math.pi * 0.050**2 * 0.610 / 4.0
 PAPER_RISER_WATER_TARGET = math.pi * 0.026**2 * 0.660 / 4.0
 NONOVERLAP_RISER_WATER_TARGET = math.pi * 0.026**2 * 0.610 / 4.0
@@ -300,12 +301,16 @@ def main() -> None:
             )
         )
     )
+    closed_hold_thresholds_pass = bool(
+        fs_drift <= 0.01
+        and pocket_drift <= 0.01
+        and np.nanmax(water_weighted_speed) <= 0.02
+    )
+    closed_hold_duration_complete = bool(
+        time[-1] >= CLOSED_HOLD_MIN_DURATION - 1.0e-9
+    )
     closed_hold_pass = (
-        bool(
-            fs_drift <= 0.01
-            and pocket_drift <= 0.01
-            and np.nanmax(water_weighted_speed) <= 0.02
-        )
+        bool(closed_hold_duration_complete and closed_hold_thresholds_pass)
         if args.run_mode == "closed"
         else None
     )
@@ -400,6 +405,17 @@ def main() -> None:
         },
         "closed_hold": {
             "applicable": args.run_mode == "closed",
+            "minimum_duration_s": CLOSED_HOLD_MIN_DURATION,
+            "duration_complete": (
+                closed_hold_duration_complete
+                if args.run_mode == "closed"
+                else None
+            ),
+            "thresholds_pass": (
+                closed_hold_thresholds_pass
+                if args.run_mode == "closed"
+                else None
+            ),
             "free_surface_max_drift_m": fs_drift,
             "initial_pocket_zone_max_relative_volume_drift": pocket_drift,
             "pass": closed_hold_pass,
@@ -533,7 +549,11 @@ def main() -> None:
     plt.close(fig)
 
     print(json.dumps(metrics, indent=2, allow_nan=False))
-    if args.run_mode == "closed" and closed_hold_pass is not True:
+    if (
+        args.run_mode == "closed"
+        and closed_hold_duration_complete
+        and closed_hold_pass is not True
+    ):
         raise SystemExit("Closed-hold acceptance criteria failed")
 
 

@@ -60,6 +60,12 @@ def main() -> None:
                 "total_mass_residual_fraction": conservation[
                     "max_abs_total_mass_residual_fraction"
                 ],
+                "closed_hold_duration_complete": closed_hold.get(
+                    "duration_complete"
+                ),
+                "closed_hold_thresholds_pass": closed_hold.get(
+                    "thresholds_pass"
+                ),
                 "closed_hold_pass": closed_hold.get("pass"),
             }
         )
@@ -81,6 +87,8 @@ def main() -> None:
         "rim_ejected_l",
         "gas_mass_residual_fraction",
         "total_mass_residual_fraction",
+        "closed_hold_duration_complete",
+        "closed_hold_thresholds_pass",
         "closed_hold_pass",
     ]
     with (args.outputs / "sensitivity_summary.csv").open(
@@ -116,7 +124,9 @@ def main() -> None:
         "classification_values_across_completed_full_variants": classifications,
         "classification_changed_by_numerics": len(classifications) > 1,
         "closed_hold_passed": any(
-            row["closed_hold_pass"] is True for row in rows
+            row["closed_hold_duration_complete"] is True
+            and row["closed_hold_pass"] is True
+            for row in rows
         ),
         "experimental_classification": "GEYSER",
         "note": "No result is tuned to the experimental label.",

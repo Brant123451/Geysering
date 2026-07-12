@@ -140,6 +140,9 @@ python3 run_study.py --variant closed_sharp_sigma_zero
 # Measure mesh dependence of the better diffuse/zero-sigma diagnostic
 python3 run_study.py --variant closed_refined_sigma_zero
 
+# Restore the measured surface tension on the same refined mesh
+python3 run_study.py --variant closed_refined_sigma_072
+
 # Open-valve numerical smoke
 RUN_MODE=event VALVE_OPENING=instant END_TIME=0.02 ./Allrun
 
@@ -161,10 +164,16 @@ results into `outputs/`.
 It treats a failed closed hold as a hard error and refuses to start core or
 sensitivity event windows unless a passing `closed_base` result with the
 current source fingerprint exists.
+Only a closed run that reaches the full declared `1.0 s` minimum can set
+`closed_hold.pass=true`; short isolation diagnostics report threshold status
+separately and cannot release the event gate.
 The completed sharp/zero-surface-tension diagnostic failed more severely than
 the 15 mm diffuse diagnostic (`1.7366` versus `0.02387 m/s` maximum
 water-weighted speed at `0.05 s`). It is retained as negative evidence and is
-not eligible to replace the baseline.
+not eligible to replace the baseline. Refining the diffuse/zero-sigma case to
+456,068 cells reduced that speed to `0.01760 m/s` and the reconstructed
+initial force residual from `475.5` to `319.3`, but the speed was still rising
+at `0.05 s`; this is improvement evidence, not a 1 s hold pass.
 
 ## Required outputs
 

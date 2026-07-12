@@ -17,6 +17,7 @@ from pathlib import Path
 
 
 HERE = Path(__file__).resolve().parent
+FORMAL_HOLD_DURATION = 1.0
 PRODUCT_SUFFIXES = (
     "_metrics.json",
     "_timeseries.csv",
@@ -88,6 +89,15 @@ VARIANTS = (
         end_time=0.05,
         sample_interval=1.0e-3,
         surface_tension=0.0,
+    ),
+    Variant(
+        "closed_refined_sigma_072",
+        "diagnostic",
+        mesh="refined",
+        mode="closed",
+        valve="closed",
+        end_time=0.05,
+        sample_interval=1.0e-3,
     ),
     Variant("open_smoke", "smoke", end_time=0.02, sample_interval=1.0e-3),
     Variant("base_nominal", "core"),
@@ -254,7 +264,10 @@ def outputs_complete(
     )
     if not complete:
         return False
-    if variant.mode == "closed":
+    if (
+        variant.mode == "closed"
+        and variant.end_time >= FORMAL_HOLD_DURATION - 1.0e-9
+    ):
         return data.get("closed_hold", {}).get("pass") is True
     return True
 

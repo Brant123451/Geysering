@@ -29,6 +29,10 @@ Fig. 1 dimensions are referenced from the Valve #1/upstream test-pipe plane.
 The CFD coordinate convention places its constant-head boundary on that plane
 at `x = 0` and uses the horizontal-pipe invert as `z = 0`; absolute coordinates
 below are therefore model translations of the paper's relative dimensions.
+The embedded Fig. 1 image was also checked directly: it labels `3.47 m` from
+Valve #1 to the riser axis, `3.12 m - L0` from that axis to the selected valve,
+and `L0` from the selected valve to the cap. Thus B-H3's `L0=0.61 m` selects
+Valve #4 and closes the dimension chain without relying on text extraction.
 
 | Item | Primary-paper evidence | Audited B-H3 value | Status / consequence |
 |---|---|---:|---|
@@ -167,4 +171,11 @@ its maximum water-weighted speed is `1.7366 m/s`, maximum domain speed is
 `3.2103 m/s`, and the initial reconstructed force residual is
 `2198.8` versus `475.5` for the diffuse profile. The sharp profile is
 therefore rejected as a static-balance correction, not promoted to a
-baseline. Mesh dependence of this residual is the next controlled check.
+baseline. On the refined 456,068-cell mesh, the diffuse `sigma=0` diagnostic
+reduces the reconstructed residual to `319.3` and the maximum water-weighted
+speed over `0.05 s` to `0.01760 m/s`. The speed is still increasing at the
+end of that short diagnostic, so it is **not** a 1 s static-hold pass.
+Post-processing now requires the full declared `1.0 s` duration as well as
+the drift and velocity thresholds before writing `closed_hold.pass=true`.
+The next controlled check retains this refined mesh and restores the
+primary-paper surface tension `0.072 N/m`.

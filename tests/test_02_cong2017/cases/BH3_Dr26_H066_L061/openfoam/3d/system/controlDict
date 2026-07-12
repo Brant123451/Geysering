@@ -41,7 +41,7 @@ functions
         fields          (p p_rgh alpha.water U);
         probeLocations
         (
-            // PT1: one local cell inside the downstream-end soffit.
+            // PT1: one local cell inside the downstream-end crown.
             (6.582 0 0.047)
             // PT2: one local cell above the invert beneath the riser.
             (3.470 0 0.003)
