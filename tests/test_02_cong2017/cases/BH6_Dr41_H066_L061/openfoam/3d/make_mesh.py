@@ -520,9 +520,7 @@ def main() -> None:
         field.setNumber(
             wall_layer, "Thickness", args.riser_wall_thickness
         )
-        # Recombined annular layers sweep to near-orthogonal hexahedra; the
-        # triangular core still sweeps to prisms.
-        field.setNumber(wall_layer, "Quads", 1)
+        field.setNumber(wall_layer, "Quads", 0)
         field.setAsBoundaryLayer(wall_layer)
 
         gmsh.option.setNumber(
@@ -550,20 +548,14 @@ def main() -> None:
 
         element_types, element_tags, _ = gmsh.model.mesh.getElements(3)
         prism_type = gmsh.model.mesh.getElementType("Prism", 1)
-        hexahedron_type = gmsh.model.mesh.getElementType("Hexahedron", 1)
         for volume in prism_volumes:
             volume_types = {
                 int(value)
                 for value in gmsh.model.mesh.getElementTypes(3, volume)
             }
-            allowed_sweep_types = {prism_type, hexahedron_type}
-            if (
-                not volume_types
-                or prism_type not in volume_types
-                or not volume_types.issubset(allowed_sweep_types)
-            ):
+            if volume_types != {prism_type}:
                 raise RuntimeError(
-                    f"Swept riser volume {volume} is not prism/hex-only: "
+                    f"Swept riser volume {volume} is not prism-only: "
                     f"{sorted(volume_types)}"
                 )
 
@@ -642,7 +634,7 @@ def main() -> None:
             },
             "riser_sweep": {
                 "bottom_z_m": SWEEP_BOTTOM_Z,
-                "elements": "triangular-prism core, hexahedral wall layers",
+                "element": "triangular prism",
                 "lower_layers": layers_low,
                 "upper_layers": layers_high,
                 "free_surface_max_z_error_m": free_surface_z_error,
