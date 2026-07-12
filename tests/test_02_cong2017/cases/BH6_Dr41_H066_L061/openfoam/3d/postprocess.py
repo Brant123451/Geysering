@@ -326,6 +326,10 @@ def parse_check_mesh(path: Path) -> dict:
         "mesh_ok": "Mesh OK." in text,
         "failed_checks": integer(r"Failed\s+(\d+)\s+mesh checks"),
         "cells": int(cells_match.group(1)) if cells_match else None,
+        "hexahedra": integer(r"\bhexahedra:\s+(\d+)"),
+        "prisms": integer(r"\bprisms:\s+(\d+)"),
+        "tetrahedra": integer(r"\btetrahedra:\s+(\d+)"),
+        "polyhedra": integer(r"\bpolyhedra:\s+(\d+)"),
         "regions": integer(r"Number of regions:\s+(\d+)"),
         "duplicate_baffle_faces": integer(
             r"identical duplicate faces \(baffle faces\):\s+(\d+)"
@@ -612,7 +616,15 @@ def main() -> None:
     )
     pre_baffle_mesh = parse_check_mesh(case / "log.checkMesh.preBaffle")
     valve_baffle_mesh = parse_check_mesh(case / "log.checkMesh")
+    mesh_generation = {
+        "geometry": geometry.get("geometry"),
+        "element_types_3d": geometry.get("element_types_3d"),
+        "element_counts_3d": geometry.get("element_counts_3d"),
+        "riser_sweep": geometry.get("riser_sweep"),
+        "mesh_sizes_m": geometry.get("mesh_sizes_m"),
+    }
     mesh_audit = {
+        "generation": mesh_generation,
         "pre_baffle": pre_baffle_mesh,
         "with_valve_baffle": valve_baffle_mesh,
     }
@@ -670,6 +682,9 @@ def main() -> None:
     mesh_summary = {
         **valve_baffle_mesh,
         **geometry.get("mesh_sizes_m", {}),
+        "element_types_3d": geometry.get("element_types_3d"),
+        "element_counts_3d": geometry.get("element_counts_3d"),
+        "riser_sweep": geometry.get("riser_sweep"),
         "pre_baffle": pre_baffle_mesh,
         "with_valve_baffle": valve_baffle_mesh,
     }

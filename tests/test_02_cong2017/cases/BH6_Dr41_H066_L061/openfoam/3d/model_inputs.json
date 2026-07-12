@@ -54,6 +54,13 @@
     "external_air_top_z_m": 3.025,
     "external_air_width_m": 0.24
   },
+  "mesh": {
+    "junction_pipe_and_external_elements": "tetrahedra",
+    "straight_riser_elements": "vertically swept triangular prisms",
+    "riser_sweep_bottom_z_m": 0.061,
+    "initial_free_surface_is_exact_layer": true,
+    "physical_rim_is_exact_layer": true
+  },
   "initial_conditions": {
     "temperature_K": 296.15,
     "atmospheric_absolute_pressure_Pa": 101325.0,
@@ -61,6 +68,8 @@
     "upstream_head_above_invert_m": 0.66,
     "riser_water_level_above_invert_m": 0.66,
     "free_surface_z_m": 0.635,
+    "gravity_reference_height_m": 0.635,
+    "connected_gas_pressure_profile": "isothermal hydrostatic; 101325 Pa at z=0.635 m",
     "pocket_length_m": 0.61,
     "pocket_x_range_m": [
       5.98,
@@ -103,7 +112,7 @@
       "role": "external-domain top and sides",
       "U": "pressureInletOutletVelocity",
       "p": "calculated",
-      "p_rgh": "prghPressure; p=101325 Pa absolute",
+      "p_rgh": "fixedValue isothermal-hydrostatic reduced-pressure profile",
       "alpha.water": "inletOutlet; inletValue 0",
       "T": "inletOutlet; inletValue 296.15 K"
     }
@@ -128,6 +137,8 @@
   "wetting": {
     "surface_tension_N_m": 0.072,
     "static_contact_angle_deg": 90.0,
+    "nAlphaSmoothCurvature": 0,
+    "curvature_discretization": "stock unsmoothed OpenFOAM curvature on vertically aligned riser prisms",
     "paper_measured_contact_angle_available": false,
     "calibrated_to_outcome": false
   },

@@ -24,7 +24,7 @@ RIM_Z = SOFFIT_Z + 1.800
 FREE_SURFACE_Z = -PIPE_RADIUS + 0.660
 ATMOSPHERE_TOP_Z = SOFFIT_Z + 3.000
 ATMOSPHERE_WIDTH = 0.240
-BOOLEAN_OVERLAP = 0.0
+SWEEP_BOTTOM_Z = 0.061
 
 
 def parse_args() -> argparse.Namespace:
@@ -41,7 +41,7 @@ def parse_args() -> argparse.Namespace:
         "--riser-size",
         type=float,
         default=0.007,
-        help="Nominal tee/riser tetrahedron edge length [m]",
+        help="Nominal riser cross-section edge and axial layer length [m]",
     )
     parser.add_argument(
         "--jet-size",
@@ -120,6 +120,66 @@ def add_x_plane(
     return occ.addPlaneSurface([occ.addWire(lines)])
 
 
+def volume_tags(dim_tags: list[tuple[int, int]]) -> list[int]:
+    return [tag for dim, tag in dim_tags if dim == 3]
+
+
+def boundary_disk(
+    occ: gmsh.model.occ,
+    volumes: list[int],
+    z_coordinate: float,
+) -> int:
+    target_area = math.pi * RISER_RADIUS**2
+    candidates: list[int] = []
+    boundaries = gmsh.model.getBoundary(
+        [(3, tag) for tag in volumes],
+        combined=True,
+        oriented=False,
+        recursive=False,
+    )
+    for dim, tag in boundaries:
+        if dim != 2:
+            continue
+        _, _, zmin, _, _, zmax = gmsh.model.getBoundingBox(dim, tag)
+        cx, cy, _ = occ.getCenterOfMass(dim, tag)
+        area = occ.getMass(dim, tag)
+        if (
+            close(zmin, z_coordinate)
+            and close(zmax, z_coordinate)
+            and close(cx, TEE_X)
+            and close(cy, 0.0)
+            and abs(area - target_area) <= 1.0e-8
+        ):
+            candidates.append(tag)
+    if len(candidates) != 1:
+        raise RuntimeError(
+            f"Expected one riser disk at z={z_coordinate}: {candidates}"
+        )
+    return candidates[0]
+
+
+def layered_extrude(
+    occ: gmsh.model.occ,
+    surface: int,
+    z_start: float,
+    z_end: float,
+    nominal_dz: float,
+) -> tuple[int, int, int]:
+    layers = max(1, int(round((z_end - z_start) / nominal_dz)))
+    extruded = occ.extrude(
+        [(2, surface)],
+        0.0,
+        0.0,
+        z_end - z_start,
+        numElements=[layers],
+        heights=[1.0],
+        recombine=True,
+    )
+    if len(extruded) < 2 or extruded[0][0] != 2 or extruded[1][0] != 3:
+        raise RuntimeError(f"Unexpected extrusion result: {extruded}")
+    return extruded[0][1], extruded[1][1], layers
+
+
 def main() -> None:
     args = parse_args()
     validate_sizes(args)
@@ -132,29 +192,57 @@ def main() -> None:
         gmsh.model.add("Cong2017_BH6_3D")
         occ = gmsh.model.occ
 
+        gmsh.option.setNumber("Geometry.OCCBooleanPreserveNumbering", 1)
         pipe = occ.addCylinder(
             0.0, 0.0, 0.0, PIPE_LENGTH, 0.0, 0.0, PIPE_RADIUS
         )
-        # Starting on the main-pipe centreline makes a conventional circular
-        # tee fluid union while preserving the full circular branch area.
-        riser = occ.addCylinder(
+        # The lower stub retains the exact fused circular T-junction.  Above
+        # it, a triangular cross-section mesh is swept vertically so the
+        # initially flat interface has aligned normals and near-zero numerical
+        # curvature without changing the physical cylinder.
+        tee_stub = occ.addCylinder(
             TEE_X,
             0.0,
             0.0,
             0.0,
             0.0,
-            RIM_Z + BOOLEAN_OVERLAP,
+            SWEEP_BOTTOM_Z,
             RISER_RADIUS,
         )
-        apparatus, _ = occ.fuse([(3, pipe)], [(3, riser)])
+        lower, _ = occ.fuse([(3, pipe)], [(3, tee_stub)])
+
+        valve_plane = add_x_plane(
+            occ,
+            VALVE_X,
+            -PIPE_RADIUS - 0.005,
+            PIPE_RADIUS + 0.005,
+            -PIPE_RADIUS - 0.005,
+            PIPE_RADIUS + 0.005,
+        )
+        lower, _ = occ.fragment(lower, [(2, valve_plane)])
+        occ.synchronize()
+        lower_volumes = volume_tags(lower)
+        sweep_base = boundary_disk(occ, lower_volumes, SWEEP_BOTTOM_Z)
+
+        free_surface_face, prism_low, layers_low = layered_extrude(
+            occ,
+            sweep_base,
+            SWEEP_BOTTOM_Z,
+            FREE_SURFACE_Z,
+            args.riser_size,
+        )
+        rim_face, prism_high, layers_high = layered_extrude(
+            occ,
+            free_surface_face,
+            FREE_SURFACE_Z,
+            RIM_Z,
+            args.riser_size,
+        )
 
         half_width = ATMOSPHERE_WIDTH / 2.0
         atmosphere_min_x = TEE_X - half_width
         atmosphere_min_y = -half_width
-        # Join the external box exactly at the physical rim.  A former
-        # millimetre-scale Boolean overlap generated sliver tetrahedra on both
-        # sides of the retained rim partition.
-        atmosphere_min_z = RIM_Z - BOOLEAN_OVERLAP
+        atmosphere_min_z = RIM_Z
         atmosphere = occ.addBox(
             atmosphere_min_x,
             atmosphere_min_y,
@@ -163,44 +251,33 @@ def main() -> None:
             ATMOSPHERE_WIDTH,
             ATMOSPHERE_TOP_Z - atmosphere_min_z,
         )
-        fluid, _ = occ.fuse(apparatus, [(3, atmosphere)])
-
-        # Conformal internal faces remove stair-stepped initial interfaces and
-        # give createBaffles an exact valve plane without changing the fluid
-        # geometry.  The physical rim plane is retained for volume accounting.
-        partition_surfaces = [
-            add_x_plane(
-                occ,
-                VALVE_X,
-                -PIPE_RADIUS - 0.005,
-                PIPE_RADIUS + 0.005,
-                -PIPE_RADIUS - 0.005,
-                PIPE_RADIUS + 0.005,
-            ),
-            occ.addRectangle(
-                TEE_X - 0.030,
-                -0.030,
-                FREE_SURFACE_Z,
-                0.060,
-                0.060,
-            ),
-            occ.addRectangle(
-                TEE_X - ATMOSPHERE_WIDTH / 2.0,
-                -ATMOSPHERE_WIDTH / 2.0,
-                RIM_Z,
-                ATMOSPHERE_WIDTH,
-                ATMOSPHERE_WIDTH,
-            ),
-        ]
-        fluid, _ = occ.fragment(
-            fluid,
-            [(2, surface) for surface in partition_surfaces],
+        atmosphere_parts, _ = occ.fragment(
+            [(3, atmosphere)],
+            [(2, rim_face)],
+            removeObject=True,
+            removeTool=False,
         )
         occ.synchronize()
 
-        volumes = [tag for dim, tag in fluid if dim == 3]
+        atmosphere_volumes = volume_tags(atmosphere_parts)
+        prism_volumes = [prism_low, prism_high]
+        volumes = sorted(
+            set(lower_volumes + prism_volumes + atmosphere_volumes)
+        )
         if not volumes:
             raise RuntimeError("No fluid volumes remained after partitioning")
+
+        for label, surface in (
+            ("sweep base", sweep_base),
+            ("initial free surface", free_surface_face),
+            ("physical rim", rim_face),
+        ):
+            upward, _ = gmsh.model.getAdjacencies(2, surface)
+            if len(set(int(tag) for tag in upward)) != 2:
+                raise RuntimeError(
+                    f"{label} is not a conformal two-volume interface: "
+                    f"{list(upward)}"
+                )
 
         reservoir_surfaces: list[int] = []
         atmosphere_surfaces: list[int] = []
@@ -350,10 +427,46 @@ def main() -> None:
 
         gmsh.model.mesh.generate(3)
         gmsh.model.mesh.removeDuplicateNodes()
-        gmsh.write(str(args.output))
 
         element_types, element_tags, _ = gmsh.model.mesh.getElements(3)
+        prism_type = gmsh.model.mesh.getElementType("Prism", 1)
+        for volume in prism_volumes:
+            volume_types = {
+                int(value)
+                for value in gmsh.model.mesh.getElementTypes(3, volume)
+            }
+            if volume_types != {prism_type}:
+                raise RuntimeError(
+                    f"Swept riser volume {volume} is not prism-only: "
+                    f"{sorted(volume_types)}"
+                )
+
+        _, free_surface_nodes, _ = gmsh.model.mesh.getNodes(
+            2,
+            free_surface_face,
+            includeBoundary=True,
+            returnParametricCoord=False,
+        )
+        free_surface_z_error = max(
+            (
+                abs(float(z_value) - FREE_SURFACE_Z)
+                for z_value in free_surface_nodes[2::3]
+            ),
+            default=0.0,
+        )
+        if free_surface_z_error > 1.0e-12:
+            raise RuntimeError(
+                "Swept free-surface layer is not planar: "
+                f"max z error {free_surface_z_error}"
+            )
+
+        gmsh.write(str(args.output))
+
         cell_count = sum(len(tags) for tags in element_tags)
+        element_counts = {
+            str(int(element_type)): len(tags)
+            for element_type, tags in zip(element_types, element_tags)
+        }
         fluid_volume = sum(occ.getMass(3, tag) for tag in volumes)
         nominal_pocket_volume = (
             math.pi * PIPE_DIAMETER**2 * POCKET_LENGTH / 4.0
@@ -362,8 +475,12 @@ def main() -> None:
             math.pi * RISER_DIAMETER**2 * (0.660 - PIPE_DIAMETER) / 4.0
         )
         audit = {
-            "geometry": "3-D circular pipe, circular riser, fused external air",
+            "geometry": (
+                "3-D circular pipe and T-junction with a vertically swept "
+                "triangular-prism riser and conformal external air"
+            ),
             "element_types_3d": [int(value) for value in element_types],
+            "element_counts_3d": element_counts,
             "cells_3d": cell_count,
             "cad_fluid_volume_m3": fluid_volume,
             "pipe_diameter_m": PIPE_DIAMETER,
@@ -377,6 +494,13 @@ def main() -> None:
                 "valve_x": VALVE_X,
                 "initial_free_surface_z": FREE_SURFACE_Z,
                 "physical_rim_z": RIM_Z,
+            },
+            "riser_sweep": {
+                "bottom_z_m": SWEEP_BOTTOM_Z,
+                "element": "triangular prism",
+                "lower_layers": layers_low,
+                "upper_layers": layers_high,
+                "free_surface_max_z_error_m": free_surface_z_error,
             },
             "nominal_pocket_volume_m3": nominal_pocket_volume,
             "nominal_riser_water_above_soffit_m3": nominal_riser_water_volume,
