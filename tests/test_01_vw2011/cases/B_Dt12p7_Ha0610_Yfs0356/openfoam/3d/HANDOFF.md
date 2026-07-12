@@ -317,6 +317,21 @@ timestep controls.
     * alpha bounded and gas/total balance errors below
       \(1.6\times10^{-6}\%\).
     The remaining Umax cell is gas-dominant at the physical free surface.
+23. The fully-wet physical RDF rerun exited normally at 0.006 s but was
+    rejected:
+    * the deep y=0.184 m interface and force hotspot did not recur;
+    * all velocity and force hotspots were at the intended y=0.403 m free
+      surface;
+    * global/interface Courant maxima were 0.349/0.206;
+    * first, peak and final written velocities were 1.338, 1.805 and
+      1.056 m/s;
+    * collocated pressure-gravity and surface-tension maxima were 82 and
+      118 kPa/m at the same free-surface face;
+    * alpha and phase/total balances remained clean, with no rim water or gas
+      entry.
+    Surface tension is the larger remaining startup-force term.  The next
+    sensitivity must pair `curvFromTr=true|false` under the same hard
+    `maxDeltaT` so curvature discretisation is the only model change.
 
 ## Still required
 
@@ -331,12 +346,11 @@ The scientific reproduction is **not complete**.  Continue in this order:
    screen are also rejected.  The pressure split and corrected
    `constantCurvature=0` mechanism rerun and corrected physical RDF screen are
    complete, and the collocated logger has exposed an unintended deep
-   wall-adjacent interface.  The alpha repair and zero-curvature verification
-   are complete; now repeat physical RDF with the fully wet initializer and
-   collocated force diagnostics.  If the deep hotspot remains absent but
-   surface force dominates, screen `curvFromTr=false` with a hard timestep
-   cap.  If pressure-gravity dominates, use a discrete hydrostatic
-   initialization instead.  Extend a candidate past the 0.04 s
+   wall-adjacent interface.  The alpha repair, zero-curvature verification and
+   fully-wet physical RDF rerun are complete.  The deep hotspot is absent and
+   surface force is now the larger term; run a hard-timestep paired RDF screen
+   with `curvFromTr=true|false`.  Only a clearly improved physical curvature
+   discretisation may be extended.  Extend a candidate past the 0.04 s
    pressure-drift onset only if it stays within the declared Courant limits
    and reduces peak velocity, and only \(H^*\) peak-to-peak at or below 0.02
    may proceed to the full 1.0 s hold.  Opening runs retain the dissipative

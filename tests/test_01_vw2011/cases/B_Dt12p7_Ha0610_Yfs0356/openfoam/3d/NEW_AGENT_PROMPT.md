@@ -420,6 +420,17 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     - alpha 与质量界干净，Umax cell 是物理自由面上的近纯气体。
     下一步用 fully-wet initializer 复筛 physical RDF；若 surface force
     主导，则用 hard maxDeltaT 配对 `curvFromTr=false`，不得直接延长。
+20. fully-wet physical RDF 已正常运行至 0.006 s，但仍未通过：
+    - deep y=0.184 m interface/force hotspot 没有复现，全部热点都在
+      y=0.403 m 物理自由面；
+    - global/interface Co 最大值为 0.349/0.206，均超过 0.30/0.20；
+    - 首帧、峰值和末帧速度为 1.338、1.805、1.056 m/s；
+    - collocated pressure-gravity/surface-tension 最大值为 82/118 kPa/m，
+      且位于同一 free-surface face；
+    - alpha、质量界、rim water 和 gas-entry 仍干净。
+    表面张力离散项是剩余 startup 的较强贡献。下一步必须在相同硬
+    `maxDeltaT` 下配对 `curvFromTr=true|false`，只改变曲率离散；不得把
+    当前结果延长为 0.04 s 或 1.0 s hold。
 
 十、hold 验收
 

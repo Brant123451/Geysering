@@ -1021,5 +1021,85 @@
       "next_action": "Repeat physical RDF with the fully wet tower initializer and collocated force logger. If the deep interface remains absent but surface force dominates, test RDF curvFromTr=false with a hard maxDeltaT cap."
     },
     "completion_claim": "This validates the tower alpha-initialization repair, not a physical hold model or completed reproduction."
+  },
+  "fully_wet_tower_rdf_screen": {
+    "status": "rejected_surface_force_and_courant_limits",
+    "source_commit": "a3ebcd6",
+    "purpose": "Restore physical RDF curvature after fully wetting the tower-wall fluid cells and use collocated force diagnostics to select the next single-parameter sensitivity.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "reconstruction_iterations": 5,
+      "reconstruction_tolerance": 1e-06,
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "tower_water_selector_radius_m": 0.00735,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "write_interval_s": 0.0005,
+      "requested_end_time_s": 0.006
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.005971624406,
+      "postprocessed_probe_duration_s": 0.0050050022,
+      "execution_time_s": 248.16,
+      "clock_time_s": 262,
+      "final_delta_t_s": 6.8023372e-05,
+      "maximum_courant_number": 0.3491739,
+      "maximum_interface_courant_number": 0.20601834,
+      "maximum_capillary_number": 0.34111378,
+      "alpha_water_min": -2.2227941e-11,
+      "alpha_water_max": 1.0000000000000042,
+      "first_written_velocity_m_per_s": 1.3381459,
+      "first_written_velocity_time_s": 0.0004662800617,
+      "written_peak_velocity_m_per_s": 1.8053624,
+      "written_peak_velocity_time_s": 0.001507856941,
+      "written_peak_velocity_location_m": [
+        3.5163674,
+        0.4046661,
+        -0.0013608496
+      ],
+      "alpha_water_at_written_peak_velocity": 0.0,
+      "density_at_written_peak_velocity_kg_per_m3": 1.2033176,
+      "curvature_at_written_peak_velocity_per_m": 247.01823,
+      "final_written_velocity_m_per_s": 1.055855,
+      "maximum_hydrostatic_force_residual_pa_per_m": 82217.793,
+      "maximum_hydrostatic_force_residual_location_m": [
+        3.5145467,
+        0.4026696,
+        -0.0040576548
+      ],
+      "maximum_surface_tension_force_pa_per_m": 118214.0,
+      "maximum_surface_tension_force_location_m": [
+        3.5145467,
+        0.4026696,
+        -0.0040576548
+      ],
+      "maximum_total_force_residual_pa_per_m": 80456.67,
+      "maximum_total_force_residual_location_m": [
+        3.5114694,
+        0.40282223,
+        0.0026162649
+      ],
+      "gas_mass_error_pct_max_abs": 1.2005396995862066e-06,
+      "total_mass_error_pct_max_abs": 6.277027504837502e-09,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "interpretation": {
+      "finding": "The deep y=0.184 m artificial interface did not recur; velocity and all force maxima are confined to the intended y=0.403 m free surface. Physical RDF nevertheless failed both declared Courant limits and reached 1.805 m/s.",
+      "mechanism": "The maximum surface-tension force was 118 kPa/m, above the 82 kPa/m pressure-gravity residual, and both maxima were collocated. Variable-curvature force is therefore the dominant remaining startup contribution, although a pressure-gravity residual remains.",
+      "decision": "Do not extend this candidate beyond the short screen or start the 1.0 s hold.",
+      "next_action": "Run a hard-maxDeltaT paired RDF comparison with curvFromTr=true and false so the curvature discretisation is the only changed model setting."
+    },
+    "completion_claim": "This is a rejected fully-wet physical-curvature screen, not a passed hold, smoke run, full experiment, or accepted baseline."
   }
 }

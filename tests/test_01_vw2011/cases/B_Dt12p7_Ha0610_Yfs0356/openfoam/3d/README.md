@@ -192,9 +192,16 @@ velocity hotspot in nearly pure gas and 462/473 kPa/m pressure-gravity/surface
 forces at the same internal face at y=0.184 m, far below the intended
 y=0.403 m interface.  A nearby alpha probe changed from 1.0 to 0.437 by
 0.00649 s.  This nonphysical wall-adjacent interface points to the
-exact-radius tower cylinder used by geometric alpha initialization.  The next
-screen expands that selector into the known solid wall gap so all tower-fluid
-cells below the plane start fully wet without selecting exterior fluid.
+exact-radius tower cylinder used by geometric alpha initialization.  The
+tower-water selector now extends halfway into the known 2 mm solid wall gap,
+fully wetting tower-fluid cells without selecting exterior fluid.  A repeated
+zero-curvature diagnostic removed the deep hotspot and reduced its written
+velocity peak from 1.424 to 1.031 m/s.  Restoring physical RDF also kept all
+hotspots at the intended free surface, but global/interface Co still reached
+0.349/0.206 and velocity peaked at 1.805 m/s.  Collocated pressure-gravity and
+surface-tension maxima were 82/118 kPa/m.  The next screen therefore compares
+RDF `curvFromTr=true|false` under the same hard timestep cap; no hold extension
+is yet cleared.
 
 Thermophysical choices are:
 
