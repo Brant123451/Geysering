@@ -108,17 +108,48 @@ def extract_levels(alpha: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return yint, yfs
 
 
-def interp_rmse(x_model, y_model, x_obs, y_obs) -> float:
-    mask = (
-        np.isfinite(x_obs)
-        & np.isfinite(y_obs)
-        & (x_obs >= np.nanmin(x_model))
-        & (x_obs <= np.nanmax(x_model))
-    )
-    if not np.any(mask):
-        return float("nan")
-    pred = np.interp(x_obs[mask], x_model, y_model)
-    return float(np.sqrt(np.mean((pred - y_obs[mask]) ** 2)))
+def interp_rmse(x_model, y_model, x_obs, y_obs) -> tuple[float, int]:
+    """Return RMSE and coverage without interpolating across missing model data."""
+    x_model = np.asarray(x_model, dtype=float)
+    y_model = np.asarray(y_model, dtype=float)
+    finite_x = np.isfinite(x_model)
+    x_model = x_model[finite_x]
+    y_model = y_model[finite_x]
+    if not x_model.size:
+        return float("nan"), 0
+
+    residuals = []
+    for obs_x, obs_y in zip(x_obs, y_obs):
+        if (
+            not np.isfinite(obs_x)
+            or not np.isfinite(obs_y)
+            or obs_x < x_model[0]
+            or obs_x > x_model[-1]
+        ):
+            continue
+
+        right = int(np.searchsorted(x_model, obs_x, side="left"))
+        if right < len(x_model) and x_model[right] == obs_x:
+            prediction = y_model[right]
+        elif 0 < right < len(x_model):
+            left = right - 1
+            if not np.isfinite(y_model[left]) or not np.isfinite(y_model[right]):
+                continue
+            fraction = (obs_x - x_model[left]) / (
+                x_model[right] - x_model[left]
+            )
+            prediction = y_model[left] + fraction * (
+                y_model[right] - y_model[left]
+            )
+        else:
+            continue
+
+        if np.isfinite(prediction):
+            residuals.append(prediction - obs_y)
+
+    if not residuals:
+        return float("nan"), 0
+    return float(np.sqrt(np.mean(np.square(residuals)))), len(residuals)
 
 
 def first_time(time: np.ndarray, condition: np.ndarray) -> float:
@@ -158,19 +189,19 @@ def main() -> None:
     fs_mask = levels_exp["kind"] == "fs"
     int_mask = levels_exp["kind"] == "int"
 
-    pressure_rmse = interp_rmse(
+    pressure_rmse, pressure_samples = interp_rmse(
         tstar,
         hstar,
         pressure_exp["Tstar"],
         pressure_exp["Hstar_med"],
     )
-    fs_rmse = interp_rmse(
+    fs_rmse, fs_samples = interp_rmse(
         tstar_tower,
         yfs,
         levels_exp["Tstar"][fs_mask],
         levels_exp["Ystar"][fs_mask],
     )
-    int_rmse = interp_rmse(
+    int_rmse, int_samples = interp_rmse(
         tstar_tower,
         yint,
         levels_exp["Tstar"][int_mask],
@@ -190,6 +221,25 @@ def main() -> None:
         "free_surface_max_Ystar": float(np.nanmax(yfs)),
         "free_surface_RMSE_Ystar_no_shift": fs_rmse,
         "interface_RMSE_Ystar_no_shift": int_rmse,
+        "rmse_sample_coverage": {
+            "pressure": {
+                "used": pressure_samples,
+                "digitized_finite": int(
+                    np.count_nonzero(
+                        np.isfinite(pressure_exp["Tstar"])
+                        & np.isfinite(pressure_exp["Hstar_med"])
+                    )
+                ),
+            },
+            "free_surface": {
+                "used": fs_samples,
+                "digitized_finite": int(np.count_nonzero(fs_mask)),
+            },
+            "interface": {
+                "used": int_samples,
+                "digitized_finite": int(np.count_nonzero(int_mask)),
+            },
+        },
         "interface_liftoff_Tstar": liftoff,
         "interface_catch_Tstar": catch,
         "geysering": bool(np.nanmax(yfs) >= 0.98),
