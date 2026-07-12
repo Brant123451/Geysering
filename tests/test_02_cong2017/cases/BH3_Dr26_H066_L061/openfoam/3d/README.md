@@ -73,6 +73,10 @@ The separate `INITIAL_INTERFACE_THICKNESS=0` diagnostic uses the conformal
 `z=0.66 m` mesh partition as an exact sharp step. It is an initial-interface
 sensitivity, not a replacement for the declared baseline unless the contract
 and all paired BH3/BH4 runs are changed together.
+A second 15 mm diagnostic uses a symmetric cosine transition with zero slope
+at both band edges. It preserves the same analytic phase volume and thickness
+as the linear baseline while testing whether the baseline's derivative jumps
+are the source of the discrete CSF impulse.
 
 For the closed-hold gate, `balanceInitialPressure` then keeps `alpha.water`
 and `U=0` fixed while iterating both phase equations of state and projecting
@@ -143,6 +147,9 @@ python3 run_study.py --variant closed_refined_sigma_zero
 # Restore the measured surface tension on the same refined mesh
 python3 run_study.py --variant closed_refined_sigma_072
 
+# Isolate linear-band edge curvature with a volume-preserving cosine profile
+python3 run_study.py --variant closed_refined_sigma_072_cosine
+
 # Open-valve numerical smoke
 RUN_MODE=event VALVE_OPENING=instant END_TIME=0.02 ./Allrun
 
@@ -154,8 +161,9 @@ RUN_MODE=event VALVE_OPENING=instant END_TIME=13 ./Allrun
 `MAX_ALPHA_CO`, `MAX_DELTA_T`, `ALPHA_SMOOTH_CURVATURE`, and
 `SURFACE_TENSION` expose declared numerical controls.
 `INITIAL_INTERFACE_THICKNESS` accepts only the declared `0.015 m` baseline or
-the conformal sharp-step value `0`. The baseline uses zero curvature-smoothing
-passes:
+the conformal sharp-step value `0`; `INITIAL_INTERFACE_PROFILE` accepts
+`linear` or the declared `cosine` diagnostic for the 15 mm band. The baseline
+uses zero curvature-smoothing passes:
 controlled static tests found that extra passes increased water-side velocity
 for this mesh, while the explicit initial VOF transition reduced the startup
 impulse. Use clean runtime copies for independent variants;

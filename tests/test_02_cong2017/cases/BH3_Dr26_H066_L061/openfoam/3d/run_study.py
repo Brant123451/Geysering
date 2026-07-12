@@ -50,6 +50,7 @@ class Variant:
     sample_interval: float = 5.0e-3
     surface_tension: float = 0.072
     initial_interface_thickness: float = 0.015
+    initial_interface_profile: str = "linear"
 
 
 VARIANTS = (
@@ -99,6 +100,16 @@ VARIANTS = (
         end_time=0.05,
         sample_interval=1.0e-3,
     ),
+    Variant(
+        "closed_refined_sigma_072_cosine",
+        "diagnostic",
+        mesh="refined",
+        mode="closed",
+        valve="closed",
+        end_time=0.05,
+        sample_interval=1.0e-3,
+        initial_interface_profile="cosine",
+    ),
     Variant("open_smoke", "smoke", end_time=0.02, sample_interval=1.0e-3),
     Variant("base_nominal", "core"),
     Variant("refined_nominal", "core", mesh="refined"),
@@ -117,6 +128,7 @@ VARIANTS = (
         "initial_sharp",
         "sensitivity",
         initial_interface_thickness=0.0,
+        initial_interface_profile="sharp",
     ),
     Variant("sigma_zero", "sensitivity", surface_tension=0.0),
 )
@@ -282,6 +294,7 @@ def annotate_metrics(
         "mesh_profile": variant.mesh,
         "c_alpha": variant.c_alpha,
         "initial_interface_thickness_m": variant.initial_interface_thickness,
+        "initial_interface_profile": variant.initial_interface_profile,
         "alpha_smooth_curvature": variant.alpha_smooth_curvature,
         "max_co": variant.max_co,
         "max_alpha_co": variant.max_alpha_co,
@@ -362,6 +375,7 @@ def main() -> None:
                 "INITIAL_INTERFACE_THICKNESS": str(
                     variant.initial_interface_thickness
                 ),
+                "INITIAL_INTERFACE_PROFILE": variant.initial_interface_profile,
                 "MESH_PROFILE": variant.mesh,
                 "OPENFOAM_NP": str(args.np),
                 "REFERENCE_ROOT": str(HERE.parents[1]),

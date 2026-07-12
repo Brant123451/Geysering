@@ -46,6 +46,9 @@ def main() -> None:
                 "initial_interface_thickness_m": numerical_controls.get(
                     "initial_interface_thickness_m"
                 ),
+                "initial_interface_profile": numerical_controls.get(
+                    "initial_interface_profile"
+                ),
                 "end_time_s": data["simulated_end_time_s"],
                 "full_13s": int(data["full_13s_window_completed"]),
                 "geyser": int(data["geysering"]),
@@ -79,6 +82,7 @@ def main() -> None:
         "valve_opening",
         "surface_tension_n_m",
         "initial_interface_thickness_m",
+        "initial_interface_profile",
         "end_time_s",
         "full_13s",
         "geyser",

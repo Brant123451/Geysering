@@ -29,6 +29,8 @@
       "open_air_vertical_pressure_profile": "isothermal perfect-gas hydrostatic",
       "initial_vof_transition_thickness_m": 0.015,
       "initial_vof_transition_sensitivity_m": [0.015, 0.0],
+      "initial_vof_transition_profile": "linear",
+      "initial_vof_transition_profile_sensitivity": ["linear", "cosine", "sharp"],
       "initial_temperature_k": 296.15,
       "initial_velocity_m_per_s": [0.0, 0.0, 0.0],
       "initial_air_pocket_gauge_pressure_pa": 0.0,
