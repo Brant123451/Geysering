@@ -15,15 +15,64 @@ FoamFile
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 // The experiment starts at 293.15 K and its small pressure ratio cannot
-// physically approach these bounds.  This standard correction prevents an
-// isolated interface cell from passing an unphysical temperature to either
-// phase equation of state during the violent tower-entry transient.
-limitT
+// physically approach these bounds.  The stock limitTemperature option
+// expects a single-phase energy field, whereas compressibleInterFoam solves
+// the shared mixture T field.  Apply the equivalent correction directly.
+temperatureBounds
 {
-    type            limitTemperature;
-    min             250;
-    max             350;
-    selectionMode   all;
+    type            scalarCodedSource;
+
+    scalarCodedSourceCoeffs
+    {
+        selectionMode   all;
+        fields          (T);
+        name            caseATemperatureBounds;
+
+        codeCorrect
+        #{
+            scalarField& values = field.primitiveFieldRef();
+            scalar Tmin = min(values);
+            scalar Tmax = max(values);
+            reduce(Tmin, minOp<scalar>());
+            reduce(Tmax, maxOp<scalar>());
+
+            label lowerCells = 0;
+            label upperCells = 0;
+            forAll(values, celli)
+            {
+                if (values[celli] < 250.0)
+                {
+                    values[celli] = 250.0;
+                    ++lowerCells;
+                }
+                else if (values[celli] > 350.0)
+                {
+                    values[celli] = 350.0;
+                    ++upperCells;
+                }
+            }
+            reduce(lowerCells, sumOp<label>());
+            reduce(upperCells, sumOp<label>());
+            field.correctBoundaryConditions();
+
+            Info<< "CASEA_TEMPERATURE_LIMITER lower_cells " << lowerCells
+                << " upper_cells " << upperCells
+                << " Tmin " << Tmin
+                << " Tmax " << Tmax << endl;
+        #};
+
+        codeAddSup
+        #{
+            (void)eqn;
+            (void)fieldi;
+        #};
+
+        codeConstrain
+        #{
+            (void)eqn;
+            (void)fieldi;
+        #};
+    }
 }
 
 // ************************************************************************* //

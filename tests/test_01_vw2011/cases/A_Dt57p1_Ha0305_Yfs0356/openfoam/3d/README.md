@@ -67,11 +67,12 @@ samples to `outputs/openfoam_3d_water_mass.csv` and reports final and maximum
 relative mass drift in `outputs/openfoam_3d_metrics.json`; raw logs and fields
 remain untracked.
 
-`constant/fvOptions` applies OpenFOAM's standard temperature correction at
-`250–350 K`. The experiment starts at `293.15 K`, and its pressure ratio cannot
-physically approach either bound. This prevents an isolated interface cell
-from passing an invalid temperature to the phase equations of state during
-tower entry. The metrics record every actual limiter activation and the
+`constant/fvOptions` applies a coded correction equivalent to OpenFOAM's
+temperature limiter directly to the solver's shared mixture-temperature field
+at `250–350 K`. The experiment starts at `293.15 K`, and its pressure ratio
+cannot physically approach either bound. This prevents an isolated interface
+cell from passing an invalid temperature to the phase equations of state
+during tower entry. The metrics record every actual limiter activation and the
 unlimited extrema so this stabilization remains auditable.
 
 ## What “matched” means

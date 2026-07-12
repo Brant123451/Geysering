@@ -95,36 +95,30 @@ def parse_solver_provenance(log_path: Path) -> dict[str, object]:
                 current_execution = None
                 current_clock = None
 
-            lower_match = re.search(
-                r"limitTemperature=.*Type=Lower, LimitedCells=(\d+).*"
-                r"UnlimitedTmin=([-+0-9.eE]+)",
+            limiter_match = re.search(
+                r"CASEA_TEMPERATURE_LIMITER lower_cells (\d+) "
+                r"upper_cells (\d+) Tmin ([-+0-9.eE]+) "
+                r"Tmax ([-+0-9.eE]+)",
                 line,
             )
-            if lower_match:
-                limited = int(lower_match.group(1))
-                unlimited = float(lower_match.group(2))
-                lower_corrections += int(limited > 0)
-                lower_limited_cells += limited
+            if limiter_match:
+                lower_limited = int(limiter_match.group(1))
+                upper_limited = int(limiter_match.group(2))
+                unlimited_minimum = float(limiter_match.group(3))
+                unlimited_maximum = float(limiter_match.group(4))
+                lower_corrections += int(lower_limited > 0)
+                lower_limited_cells += lower_limited
                 minimum_unlimited_temperature = (
-                    unlimited
+                    unlimited_minimum
                     if minimum_unlimited_temperature is None
-                    else min(minimum_unlimited_temperature, unlimited)
+                    else min(minimum_unlimited_temperature, unlimited_minimum)
                 )
-
-            upper_match = re.search(
-                r"limitTemperature=.*Type=Upper, LimitedCells=(\d+).*"
-                r"UnlimitedTmax=([-+0-9.eE]+)",
-                line,
-            )
-            if upper_match:
-                limited = int(upper_match.group(1))
-                unlimited = float(upper_match.group(2))
-                upper_corrections += int(limited > 0)
-                upper_limited_cells += limited
+                upper_corrections += int(upper_limited > 0)
+                upper_limited_cells += upper_limited
                 maximum_unlimited_temperature = (
-                    unlimited
+                    unlimited_maximum
                     if maximum_unlimited_temperature is None
-                    else max(maximum_unlimited_temperature, unlimited)
+                    else max(maximum_unlimited_temperature, unlimited_maximum)
                 )
 
     if in_solver_segment and current_execution is not None:
