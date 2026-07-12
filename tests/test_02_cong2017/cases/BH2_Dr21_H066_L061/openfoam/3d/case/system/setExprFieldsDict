@@ -16,9 +16,8 @@ expressions
         dimensions  [1 -1 -2 0 0 0 0];
         expression
         #{
-            alpha.water*107541.8913
-          + (1-alpha.water)
-           *(101325 + 1.191912085*9.81*pos().z())
+            alpha.water*107534.4665
+          + (1-alpha.water)*101325
         #};
     }
 

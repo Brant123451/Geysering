@@ -21,22 +21,23 @@ paper evidence are defined in `PAPER_AUDIT.md`.
 
 Initially `U=(0 0 0)` everywhere and `T=296.15 K`.  Water fills the main for
 `x<5.98 m` and the riser below `z=0.635 m`.  Air fills the downstream pocket,
-riser headspace, and external domain.  The water hydrostatic reduced pressure
-is
+riser headspace, and external domain.  Absolute pressure is referenced as
+`p_ref=101325 Pa` at the main centreline `z=0`, where the initial pocket lies.
+The quiescent atmospheric profile is
+`p_atm(z)=p_ref-rho_air*g*z`.  The water hydrostatic reduced pressure is
 
 ```text
-p_rgh,w = p_atm + rho_w g zfs
-        = 101325 + 998*9.81*0.635
-        = 107541.8913 Pa.
+p_rgh,w = p_atm(zfs) + rho_w*g*zfs
+        = 101325 + (998-1.191912085)*9.81*0.635
+        = 107534.4665 Pa.
 ```
 
-The pocket, riser headspace, and external air start at uniform
-`p=101325 Pa`.  Their reduced pressure is initialized as
-`p_rgh=101325-rho_air*gh`, while water uses the constant hydrostatic
-`p_rgh=107541.8913 Pa`; mixed interface cells use the corresponding
-alpha-weighted expression.  This exactly matches the elevated
-`prghTotalPressure` far-field condition at zero velocity.  The water and
-pocket-air pressures are allowed to jump across the closed valve plane.
+The pocket, riser headspace, and external air start with this hydrostatic
+atmospheric profile and `p_rgh=101325 Pa`; water uses the constant hydrostatic
+`p_rgh=107534.4665 Pa`.  Mixed interface cells use the corresponding
+alpha-weighted expression, which gives continuous absolute pressure at the
+initial riser free surface.  The water and pocket-air pressures are allowed to
+jump across the closed valve plane.
 
 The analytic initial downstream-pocket audit is:
 
@@ -70,10 +71,10 @@ non-physical `T=-102 K` interface cell at `t=8.13985 s`; the run was rejected.
 
 | Patch | Physical meaning | `U` | `p_rgh` | `p` | `alpha.water` | `T` | `k/epsilon/alphat` |
 |---|---|---|---|---|---|---|---|
-| `inlet` | upstream constant-head tank at `x=0` | `pressureInletOutletVelocity` | `totalPressure`, reduced total `p0=107541.8913 Pa` | `calculated` | `inletOutlet`, inflow 1 | `inletOutlet`, 296.15 K | low-turbulence `inletOutlet` |
+| `inlet` | upstream constant-head tank at `x=0` | `pressureInletOutletVelocity` | `totalPressure`, reduced total `p0=107534.4665 Pa` | `calculated` | `inletOutlet`, inflow 1 | `inletOutlet`, 296.15 K | low-turbulence `inletOutlet` |
 | `downstreamCap` | plastic closed end | `noSlip` | `fixedFluxPressure` | `calculated` | 90° `constantAlphaContactAngle` | `zeroGradient` | wall functions |
 | `walls` | main, riser and external-domain floor | `noSlip` | `fixedFluxPressure` | `calculated` | 90° `constantAlphaContactAngle` | `zeroGradient` | wall functions |
-| `atmosphere` | open sides/top of external air domain | `pressureInletOutletVelocity` | `prghTotalPressure`, absolute `p0=101325 Pa` | `calculated` | `inletOutlet`, inflow 0 | `inletOutlet`, 296.15 K | low-turbulence `inletOutlet` |
+| `atmosphere` | open sides/top of external air domain | `pressureInletOutletVelocity` | `exprFixedValue`, local atmospheric static `p_rgh` | `calculated` | `inletOutlet`, inflow 0 | `inletOutlet`, 296.15 K | low-turbulence `inletOutlet` |
 | `valveCouple0/1` | coupled portion of opening valve | `cyclicACMI` | `cyclicACMI` | `cyclicACMI` | `cyclicACMI` | `cyclicACMI` | `cyclicACMI` |
 | `valveWall0/1` | still-blocked portion of opening valve | `noSlip` | `fixedFluxPressure` | `calculated` | 90° `constantAlphaContactAngle` | `zeroGradient` | wall functions |
 
@@ -83,23 +84,24 @@ total pressure and air on inflow (`alpha.water=0`).  The only downstream end of
 the horizontal main is a wall; it never acts as an outlet.
 
 The inlet intentionally prescribes a constant *reduced* total head with
-`totalPressure` on `p_rgh`.  The elevated external boundary instead uses
-`prghTotalPressure`: it subtracts the local hydrostatic term from `p_rgh`, so
-the reconstructed absolute pressure remains 101325 Pa when either air or
-ejected water reaches the patch.  A pre-production event run using
-`totalPressure` on this patch was stopped at `t=7.061 s`, before any water
-entered or crossed the external domain.  That setting would have imposed an
-unphysical 18--30 kPa pressure deficit on water at the elevated open boundary;
-no result from that run is accepted and all event/sensitivity runs start again
-from `t=0`.
+`totalPressure` on `p_rgh`.  At every elevated external-boundary face the
+pressure expression is
 
-A second pre-production run was stopped at `t=0.840 s` when field-extrema
-monitoring exposed a remaining initialization mismatch: the interior air had
-been initialized with a 20--35 Pa hydrostatic pressure decrease, while the
-corrected far field imposed uniform absolute pressure.  In low-density air
-that mismatch produced local velocities near 5 m/s.  `setExprFields` now
-initializes the gas `p_rgh` profile for uniform `p=101325 Pa`; this change was
-made before an air-arrival or geyser-classification result existed.
+```text
+p_rgh = 101325 + (rho - rho_air)*g*z,
+```
+
+so reconstructed absolute pressure is the quiescent atmospheric profile
+`101325-rho_air*g*z` for either air or ejected water.  This both avoids a
+water-phase pressure deficit and preserves static air under gravity.
+
+Two pre-production event runs were rejected while establishing this mapping.
+One using `totalPressure` on `p_rgh` was stopped at `t=7.061 s`, before water
+entered the external domain; it would have imposed an 18--30 kPa pressure
+deficit on ejected water.  A second using spatially uniform absolute pressure
+was stopped at `t=0.840 s`; that condition is not hydrostatic and drove local
+air velocities near 5 m/s.  Neither run produced an accepted air-arrival or
+geyser-classification result, and all validation variants restart from `t=0`.
 
 ## Ball-valve process
 
