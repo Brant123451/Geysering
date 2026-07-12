@@ -49,10 +49,27 @@ def numeric_time(path: Path) -> float:
 
 
 def data_files(case_dir: Path, function_name: str, filename: str) -> list[Path]:
-    files = list(
-        (case_dir / "postProcessing" / function_name).glob(f"*/{filename}")
+    function_dir = case_dir / "postProcessing" / function_name
+    requested = Path(filename)
+    patterns = [f"*/{requested.name}"]
+    if requested.suffix:
+        # OpenFOAM adds the restart time to an existing function-object file,
+        # for example volFieldValue_0.5.dat.  Omitting these files silently
+        # drops the resumed portion of an otherwise complete event.
+        patterns.append(f"*/{requested.stem}_*{requested.suffix}")
+    files = {
+        path
+        for pattern in patterns
+        for path in function_dir.glob(pattern)
+    }
+    return sorted(
+        files,
+        key=lambda path: (
+            path.stat().st_mtime_ns,
+            numeric_time(path),
+            path.name,
+        ),
     )
-    return sorted(files, key=numeric_time)
 
 
 def read_numeric_rows(files: list[Path]) -> np.ndarray:
