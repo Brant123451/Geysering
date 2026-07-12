@@ -10,8 +10,8 @@ This file is the cross-account continuation record for the agent named
 - Pull request: `https://github.com/brant123451/geysering/pull/8`
 - Working branch: `cursor/c9-openfoam-3d-bf97`
 - Base branch: `main`
-- Last complete smoke-evidence commit: `6d960ce`
-- Use the current remote branch tip, which also contains this handoff update.
+- Use the current remote branch tip; historical output artifacts are retained
+  as failed/qualified provenance, not as the current production result.
 
 All source changes and small validation artifacts are committed to the PR.
 OpenFOAM meshes, decomposed processor directories, time directories, logs, and
@@ -21,46 +21,55 @@ and rerun the stages from committed source.
 
 ## Completed work
 
-1. `PAPER_AUDIT.md` records the apparatus, C9 conditions, PT1–PT4 positions,
-   phase chronology, Eq. (7)/(8), and every unresolved air-pocket/tailgate
-   parameter with paper-page citations.
-2. `case_parameters.json`, `make_geometry.py`, and `prepare_case.py` generate a
-   full three-dimensional OpenFOAM v2512 case using
-   `compressibleInterFoam`, perfect-gas air, weakly compressible water, VOF,
-   gravity, surface tension, a resolved tailgate, and an atmospheric plume.
-3. The STL domain is topologically closed. The 142,343-cell base mesh passes
-   standard `checkMesh`; `checkMesh -allGeometry -allTopology` still reports
-   2,228 concave cells.
-4. The no-ramp initialization and the full paper-time 0–1.00 s smoke window
-   completed. Required CSV, JSON, and PNG artifacts are in `outputs/`.
-5. Conservation uses the actual `rhoPhi` mass-flux column and the conservative
-   MULES `alphaPhi0.water` flux. It does not use unavailable
-   `alphaRhoPhi.*` fields.
-6. A phase-1 continuation was started and deliberately stopped for this
-   account handoff. Local ignored data reached solver time 1.75 s (paper time
-   about 1.50 s); the committed post-processing histories end at paper time
-   1.504 s.
+1. `references/liu2020.pdf` was read directly. `PAPER_AUDIT.md` now records
+   the apparatus, C9 conditions, PT1–PT4 positions, boundary approximations,
+   Reynolds numbers, pressure-wave speed, phase chronology, Eq. (7)/(8), and
+   every unresolved air-pocket/tailgate parameter with page citations.
+2. The full reported geometry is reproduced. The default 481,874-cell
+   `cartesianMesh` passes standard and strict `checkMesh` with zero concave
+   cells; the 873,032-cell thin-layer-refined mesh also passes.
+3. Production velocity clipping is disabled. The historical 12 m/s limiter
+   changed the transient and affected 12.8% of the old mesh, so that trajectory
+   is retained only as failed evidence.
+4. The source initialization is hydrostatic and uses smooth constant-\(Q\)
+   chamber/gate streamtubes. A no-clipping diagnostic showed that the early
+   chamber-side gas signal is the paper's connected thin layer, while the
+   thick body remained near its initial nose.
+5. Direct inspection of OpenFOAM v2512 found a critical historical EOS error:
+   `perfectFluid` uses \(\rho=\rho_0+p/(RT)\), but the old generator used
+   `R=K/rho`. It produced an effective water-wave speed near 25.4 km/s.
+6. The corrected source uses the paper's approximately 305 m/s acrylic-pipe
+   wave speed as a rigid-wall effective modulus (92.86 MPa), preserves
+   998.2 kg/m³ at 101325 Pa and 293.15 K, defaults to RANS
+   \(k\)-\(\omega\) SST, and carries a conservative thick-body-only source
+   tracer. Intrinsic-water 2.2 GPa and laminar flow remain sensitivities.
+7. Resume scripts hash the initialized source schema and reject old
+   checkpoints. A new corrected run must start from `Allrun.initialize`;
+   historical fields cannot be resumed because they lack RANS and tracer
+   fields.
 
 ## Current evidence
 
-The authoritative machine-readable record is
-`outputs/openfoam_3d_metrics.json`.
+`outputs/openfoam_3d_metrics.json` remains the machine-readable record of the
+failed historical limiter/EOS generation until corrected smoke data replace
+it. Do not compare it as if it came from the current source.
 
-- Initialized PT2: 2.853 kPa gauge; target 2.970 kPa.
-- First PT2 peak: 10.818 kPa at 0.392 s; paper 10.690 kPa at 0.500 s.
-- First mixture rim crossing: 0.640 s; paper 0.730 s.
-- Total/gas conservation residual through 1.504 s:
-  `6.13e-6` / `4.06e-4`.
-- Operational main-pocket transfer: 0.620 s; paper arrival 6.46 s.
-- Upstream gas retained at 1.504 s: 8.20% (1.441 g of 17.557 g).
-- The 12 m/s limiter affected as many as 18,217 cells (12.8%).
-- Phase 1 is incomplete, phase 2 has not run, and eight eruptions have not
-  been reproduced.
+The latest local diagnostic was stopped safely at solver 0.5568 s (paper
+0.3068 s) after the EOS audit:
 
-The close first pressure peak does not validate phase 2. The baseline pocket
-leaves the upstream zone much too early, and the velocity limiter materially
-activates. These are unresolved model/numerical discrepancies, not results to
-hide or tune against the eruption count.
+- initialized PT2: 3.242 kPa gauge; target 2.970 kPa;
+- zero limiter activation; maximum 43.7 m/s was in low-density crown gas;
+- total/gas conservation residuals: `1.7e-6` / `3.4e-5`;
+- upstream gas-mass retention: 94.6%;
+- thick-body morphology front near \(x=-0.92\) m, while thin-layer gas had
+  reached the chamber-side deep probe.
+
+This supports the diagnosis that the old 0.620 s metric was not a coherent
+main-body arrival. It does not validate pressure chronology because the run
+used the erroneous 25.4 km/s EOS and laminar closure.
+
+Phase 1 is incomplete. Phase 2 and eight eruptions have not yet been
+reproduced.
 
 ## Reproduce and continue
 
@@ -79,23 +88,27 @@ cd case
 ./Allrun.postprocess
 ```
 
-Do not start at `phase1` after a fresh clone: ignored time directories are not
-in Git. Complete `mesh`, `initialize`, and `smoke` first. Long solver commands
-should run in a persistent session.
+Do not start at `phase1` after a fresh clone or reuse a pre-EOS-fix local
+checkpoint: ignored time directories are not in Git, and the resume script
+rejects source-schema mismatches. Complete `mesh`, fresh `initialize`, and
+corrected `smoke` first. Long solver commands should run in a persistent
+session.
 
 Before claiming a completed validation:
 
-1. Address or explicitly qualify the strict-mesh concave-cell failure.
-2. Run a control sensitivity that demonstrates whether the 12 m/s limiter
-   changes the pressure peak, rim crossing, pocket transport, or eruption
-   count.
-3. Treat pocket position/volume as unreported priors. Do not tune them
+1. Verify the corrected 305 m/s EOS, RANS fields, and body tracer in a fresh
+   serial/parallel initialization and restart smoke.
+2. Benchmark safe Courant/MPI settings before committing compute to phase 1;
+   do not reintroduce a velocity limiter for throughput.
+3. Complete the thin-layer mesh, 305 m/s versus intrinsic-water, and
+   RANS-versus-laminar sensitivities needed to qualify the production choice.
+4. Treat pocket position/volume as unreported priors. Do not tune them
    arbitrarily to eight eruptions. Any chronology-constrained case must be
    labelled calibration rather than independent validation.
-4. Complete paper time 6.50 s before reporting Eq. (8) period/phase 1.
-5. Complete paper time 20.00 s before reporting phase 2, final PT2/PT3/PT4, or
+5. Complete paper time 6.50 s before reporting Eq. (8) period/phase 1.
+6. Complete paper time 20.00 s before reporting phase 2, final PT2/PT3/PT4, or
    total eruption count.
-6. Commit and push updated artifacts, then update PR #8 without deleting the
+7. Commit and push updated artifacts, then update PR #8 without deleting the
    recorded failed/qualified baseline.
 
 ## Start from another Cursor account

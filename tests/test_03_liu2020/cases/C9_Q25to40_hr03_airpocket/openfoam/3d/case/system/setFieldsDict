@@ -12,6 +12,7 @@ FoamFile
 defaultFieldValues
 (
     volScalarFieldValue alpha.water 1
+    volScalarFieldValue pocketBodyTracer 0
     volScalarFieldValue p 108669.2565
     volScalarFieldValue p_rgh 108669.2565
     volScalarFieldValue T 293.15
@@ -53,6 +54,7 @@ regions
         fieldValues
         (
             volScalarFieldValue alpha.water 0
+            volScalarFieldValue pocketBodyTracer 1
             volScalarFieldValue p 104967.7512
             volScalarFieldValue p_rgh 104967.7512
             volVectorFieldValue U (0 0 0)

@@ -3,12 +3,39 @@ source /usr/lib/openfoam/openfoam2512/etc/bashrc
 set -eo pipefail
 cd "$(dirname "$0")"
 NP="${OPENFOAM_NP:-4}"
+SOURCE_SCHEMA_FILES=(
+    generated_case.json
+    0.orig/alpha.water 0.orig/pocketBodyTracer 0.orig/U 0.orig/p 0.orig/p_rgh
+    0.orig/T 0.orig/k 0.orig/omega 0.orig/nut 0.orig/alphat
+    constant/thermophysicalProperties
+    constant/thermophysicalProperties.water
+    constant/thermophysicalProperties.air
+    constant/turbulenceProperties
+    system/fvSchemes system/fvSolution system/fvOptions
+    system/setFieldsDict system/setExprFieldsDict
+    system/controlDict.initialize system/controlDict.smoke
+    system/controlDict.phase1 system/controlDict.full
+)
 STAGE="${1:-full}"
 case "$STAGE" in
     smoke|phase1|full) ;;
     *) echo "usage: $0 [smoke|phase1|full]" >&2; exit 2 ;;
 esac
 test -d processor0 || { echo "No decomposed run; use ./Allrun.initialize" >&2; exit 2; }
+test -f log.source.sha256 || {
+    echo "No initialized-source schema; rerun ./Allrun.initialize" >&2
+    exit 2
+}
+sha256sum -c log.source.sha256 >/dev/null || {
+    echo "Case source changed after initialization; rerun ./Allrun.initialize" >&2
+    exit 2
+}
+for field in pocketBodyTracer k omega; do
+    test -f "processor0/0/$field" || {
+        echo "Checkpoint schema lacks $field; rerun ./Allrun.initialize" >&2
+        exit 2
+    }
+done
 pgrep -f '[c]ompressibleInterFoam.*-parallel|[c]ompressibleInterIsoFoam.*-parallel' >/dev/null && {
     echo "A C9 solver is already running" >&2
     exit 2

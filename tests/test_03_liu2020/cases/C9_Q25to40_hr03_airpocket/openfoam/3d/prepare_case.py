@@ -54,6 +54,30 @@ boundaryField
     )
 
 
+def perfect_fluid_eos_parameters(
+    bulk_modulus: float,
+    reference_density: float,
+    reference_pressure: float,
+    reference_temperature: float,
+) -> tuple[float, float, float]:
+    """Map physical K/rho data to OpenFOAM's rho=rho0+p/(R*T) EOS."""
+    if min(
+        bulk_modulus,
+        reference_density,
+        reference_pressure,
+        reference_temperature,
+    ) <= 0:
+        raise ValueError("perfectFluid reference values must be positive")
+    fluid_constant = bulk_modulus / (reference_density * reference_temperature)
+    rho0 = reference_density - reference_pressure / (
+        fluid_constant * reference_temperature
+    )
+    if rho0 <= 0:
+        raise ValueError("perfectFluid rho0 must remain positive")
+    wave_speed = math.sqrt(fluid_constant * reference_temperature)
+    return fluid_constant, rho0, wave_speed
+
+
 def cap_area(radius: float, height: float) -> float:
     height = max(0.0, min(2.0 * radius, height))
     return radius**2 * math.acos((radius - height) / radius) - (radius - height) * math.sqrt(
@@ -124,6 +148,7 @@ def generate_set_fields(paper: dict, model: dict, pocket: dict) -> str:
         fieldValues
         (
             volScalarFieldValue alpha.water 0
+            volScalarFieldValue pocketBodyTracer 1
             volScalarFieldValue p {p_pocket:.10g}
             volScalarFieldValue p_rgh {p_pocket:.10g}
             volVectorFieldValue U (0 0 0)
@@ -162,6 +187,7 @@ def generate_set_fields(paper: dict, model: dict, pocket: dict) -> str:
 defaultFieldValues
 (
     volScalarFieldValue alpha.water 1
+    volScalarFieldValue pocketBodyTracer 0
     volScalarFieldValue p {p_water_rgh:.10g}
     volScalarFieldValue p_rgh {p_water_rgh:.10g}
     volScalarFieldValue T {paper['temperature_K']:.8g}
@@ -410,11 +436,32 @@ maxDeltaT       {max_dt:.8g};
 
 functions
 {{
+    pocketBodyTracerTransport
+    {{
+        type            scalarTransport;
+        libs            (solverFunctionObjects);
+        field           pocketBodyTracer;
+        phi             rhoPhi;
+        rho             rho;
+        schemesField    pocketBodyTracer;
+        bounded01       true;
+        D               0;
+        tolerance       1e-8;
+        nCorr           0;
+        resetOnStartUp  false;
+        enabled         true;
+        log             false;
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    writeTime;
+        writeInterval   1;
+    }}
+
     probesPT
     {{
         type            probes;
         libs            (sampling);
-        fields          (p p_rgh alpha.water U);
+        fields          (p p_rgh alpha.water U pocketBodyTracer);
         probeLocations
         (
             (0.15 -0.025 1.25)     // PT1: riser wall, +0.80 m
@@ -443,7 +490,7 @@ functions
     {{
         type            probes;
         libs            (sampling);
-        fields          (alpha.water p);
+        fields          (alpha.water p pocketBodyTracer);
         probeLocations
         (
 {os.linesep.join(crown_points)}
@@ -459,7 +506,7 @@ functions
         // connected crown layer.
         type            probes;
         libs            (sampling);
-        fields          (alpha.water p);
+        fields          (alpha.water p pocketBodyTracer);
         probeLocations
         (
 {os.linesep.join(deep_crown_points)}
@@ -581,6 +628,60 @@ functions
         writeFields     false;
     }}
 
+    totalPocketBodyTracerMass
+    {{
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        operation       weightedVolIntegrate;
+        weightField     rho;
+        fields          (pocketBodyTracer);
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+        writeFields     false;
+    }}
+
+    upstreamPocketBodyTracerMass
+    {{
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      cellZone;
+        name            upstreamPipe;
+        operation       weightedVolIntegrate;
+        weightField     rho;
+        fields          (pocketBodyTracer);
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+        writeFields     false;
+    }}
+
+    chamberPocketBodyTracerMass
+    {{
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      cellZone;
+        name            chamber;
+        operation       weightedVolIntegrate;
+        weightField     rho;
+        fields          (pocketBodyTracer);
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+        writeFields     false;
+    }}
+
+    riserPocketBodyTracerMass
+    {{
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      cellZone;
+        name            riser;
+        operation       weightedVolIntegrate;
+        weightField     rho;
+        fields          (pocketBodyTracer);
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+        writeFields     false;
+    }}
+
     inletFlux
     {{
         type            surfaceFieldValue;
@@ -667,7 +768,7 @@ functions
         type            fieldMinMax;
         libs            (fieldFunctionObjects);
         mode            magnitude;
-        fields          (p rho alpha.water U);
+        fields          (p rho alpha.water U pocketBodyTracer);
         writeControl    adjustableRunTime;
         writeInterval   0.01;
     }}
@@ -695,8 +796,17 @@ def generate(args: argparse.Namespace) -> dict:
         raise ValueError("cartesian thin-layer cell size must be positive")
     if args.air_cp is not None:
         model["air_Cp_J_kg_K"] = args.air_cp
-    if args.water_bulk_modulus is not None:
+    water_bulk_overridden = args.water_bulk_modulus is not None
+    if water_bulk_overridden:
         model["water_bulk_modulus_Pa"] = args.water_bulk_modulus
+    else:
+        model["water_bulk_modulus_Pa"] = (
+            model["water_density_kg_m3"]
+            * paper["downstream_pressure_wave_speed_m_s"] ** 2
+        )
+    if model["water_bulk_modulus_Pa"] <= 0:
+        raise ValueError("water bulk modulus must be positive")
+    turbulence_model = args.turbulence_model or model["turbulence_model"]
 
     gate_area = args.gate_area if args.gate_area is not None else model["tailgate_geometric_area_m2"]
     model["tailgate_geometric_area_m2"] = gate_area
@@ -1189,9 +1299,136 @@ actions
         ),
     )
 
+    write(
+        "0.orig/pocketBodyTracer",
+        field_file(
+            "pocketBodyTracer",
+            "volScalarField",
+            "[0 0 0 0 0 0 0]",
+            "uniform 0",
+            """    inlet
+    {
+        type fixedValue;
+        value uniform 0;
+    }
+    gateOutlet
+    {
+        type inletOutlet;
+        inletValue uniform 0;
+        value uniform 0;
+    }
+    atmosphere
+    {
+        type inletOutlet;
+        inletValue uniform 0;
+        value uniform 0;
+    }
+    walls { type zeroGradient; }
+    riserWall { type zeroGradient; }
+    gateWall { type zeroGradient; }
+    allBoundary { type zeroGradient; }""",
+        ),
+    )
+
     ramp = model["ramp_start_solver_s"]
     ramp_end = ramp + paper["flow_ramp_s"]
     q0, q1 = paper["initial_flow_m3_s"], paper["final_flow_m3_s"]
+    upstream_area = math.pi * paper["upstream_diameter_m"] ** 2 / 4.0
+    upstream_speed = q0 / upstream_area
+    turbulence_intensity = model["inlet_turbulence_intensity"]
+    turbulence_length = model["inlet_turbulence_mixing_length_m"]
+    k_initial = 1.5 * (turbulence_intensity * upstream_speed) ** 2
+    omega_initial = math.sqrt(k_initial) / (0.09**0.25 * turbulence_length)
+
+    def turbulence_inlet_outlet(value):
+        return f"""    gateOutlet
+    {{
+        type inletOutlet;
+        inletValue uniform {value:.10g};
+        value uniform {value:.10g};
+    }}
+    atmosphere
+    {{
+        type inletOutlet;
+        inletValue uniform {value:.10g};
+        value uniform {value:.10g};
+    }}"""
+
+    def turbulence_walls(boundary_type, value):
+        return "\n".join(
+            f"""    {name}
+    {{
+        type {boundary_type};
+        value uniform {value:.10g};
+    }}"""
+            for name in ("walls", "riserWall", "gateWall")
+        )
+
+    write(
+        "0.orig/k",
+        field_file(
+            "k",
+            "volScalarField",
+            "[0 2 -2 0 0 0 0]",
+            f"uniform {k_initial:.10g}",
+            f"""    inlet
+    {{
+        type turbulentIntensityKineticEnergyInlet;
+        intensity {turbulence_intensity:.10g};
+        value uniform {k_initial:.10g};
+    }}
+{turbulence_inlet_outlet(k_initial)}
+{turbulence_walls('kqRWallFunction', k_initial)}
+    allBoundary {{ type zeroGradient; }}""",
+        ),
+    )
+    write(
+        "0.orig/omega",
+        field_file(
+            "omega",
+            "volScalarField",
+            "[0 0 -1 0 0 0 0]",
+            f"uniform {omega_initial:.10g}",
+            f"""    inlet
+    {{
+        type turbulentMixingLengthFrequencyInlet;
+        mixingLength {turbulence_length:.10g};
+        value uniform {omega_initial:.10g};
+    }}
+{turbulence_inlet_outlet(omega_initial)}
+{turbulence_walls('omegaWallFunction', omega_initial)}
+    allBoundary {{ type zeroGradient; }}""",
+        ),
+    )
+    write(
+        "0.orig/nut",
+        field_file(
+            "nut",
+            "volScalarField",
+            "[0 2 -1 0 0 0 0]",
+            "uniform 0",
+            f"""    inlet {{ type calculated; value uniform 0; }}
+    gateOutlet {{ type calculated; value uniform 0; }}
+    atmosphere {{ type calculated; value uniform 0; }}
+{turbulence_walls('nutkWallFunction', 0)}
+    allBoundary {{ type calculated; value uniform 0; }}""",
+        ),
+    )
+    write(
+        "0.orig/alphat",
+        field_file(
+            "alphat",
+            "volScalarField",
+            "[1 -1 -1 0 0 0 0]",
+            "uniform 0",
+            f"""    inlet {{ type calculated; value uniform 0; }}
+    gateOutlet {{ type calculated; value uniform 0; }}
+    atmosphere {{ type calculated; value uniform 0; }}
+{turbulence_walls('compressible::alphatWallFunction', 0)}
+    allBoundary {{ type calculated; value uniform 0; }}""",
+        ),
+    )
+
     write(
         "0.orig/U",
         field_file(
@@ -1307,9 +1544,22 @@ dimensions [0 1 -2 0 0 0 0];
 value (0 0 -9.81);
 """,
     )
+    if turbulence_model == "kOmegaSST":
+        turbulence_properties = """
+simulationType RAS;
+
+RAS
+{
+    RASModel        kOmegaSST;
+    turbulence      on;
+    printCoeffs     on;
+}
+"""
+    else:
+        turbulence_properties = "\nsimulationType laminar;\n"
     write(
         "constant/turbulenceProperties",
-        foam_header("dictionary", "turbulenceProperties") + "\nsimulationType laminar;\n",
+        foam_header("dictionary", "turbulenceProperties") + turbulence_properties,
     )
     write(
         "constant/thermophysicalProperties",
@@ -1324,7 +1574,15 @@ sigma
 }}
 """,
     )
-    water_r = model["water_bulk_modulus_Pa"] / model["water_density_kg_m3"]
+    # OpenFOAM perfectFluid uses rho = rho0 + p/(R*T), so R must include
+    # temperature.  Keep the requested reference density at atmospheric
+    # pressure instead of treating rho0 as that reference density.
+    water_r, water_rho0, water_wave_speed = perfect_fluid_eos_parameters(
+        model["water_bulk_modulus_Pa"],
+        model["water_density_kg_m3"],
+        paper["atmospheric_pressure_Pa"],
+        paper["temperature_K"],
+    )
     write(
         "constant/thermophysicalProperties.water",
         foam_header("dictionary", "thermophysicalProperties")
@@ -1345,7 +1603,7 @@ mixture
     equationOfState
     {{
         R {water_r:.10g};
-        rho0 {model['water_density_kg_m3']};
+        rho0 {water_rho0:.10g};
     }}
     thermodynamics {{ Cp 4182; Hf 0; }}
     transport {{ mu {model['water_dynamic_viscosity_Pa_s']}; Pr 7.0; }}
@@ -1391,7 +1649,9 @@ divSchemes
     div(rhoPhi,T) Gauss upwind;
     div(rhoPhi,K) Gauss upwind;
     div(phi,p) Gauss upwind;
-    div(phi,k) Gauss upwind;
+    div(rhoPhi,k) Gauss upwind;
+    div(rhoPhi,omega) Gauss upwind;
+    div(phi,pocketBodyTracer) Gauss upwind;
     div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
 }
 laplacianSchemes { default Gauss linear corrected; }
@@ -1455,7 +1715,7 @@ solvers
         relTol 0.01;
         nSweeps 1;
     }}
-    "(T|k|B|nuTilda).*"
+    "(T|k|omega|pocketBodyTracer|B|nuTilda).*"
     {{
         solver smoothSolver;
         smoother symGaussSeidel;
@@ -1538,6 +1798,19 @@ source /usr/lib/openfoam/openfoam2512/etc/bashrc
 set -eo pipefail
 cd "$(dirname "$0")"
 NP="${{OPENFOAM_NP:-{args.np}}}"
+SOURCE_SCHEMA_FILES=(
+    generated_case.json
+    0.orig/alpha.water 0.orig/pocketBodyTracer 0.orig/U 0.orig/p 0.orig/p_rgh
+    0.orig/T 0.orig/k 0.orig/omega 0.orig/nut 0.orig/alphat
+    constant/thermophysicalProperties
+    constant/thermophysicalProperties.water
+    constant/thermophysicalProperties.air
+    constant/turbulenceProperties
+    system/fvSchemes system/fvSolution system/fvOptions
+    system/setFieldsDict system/setExprFieldsDict
+    system/controlDict.initialize system/controlDict.smoke
+    system/controlDict.phase1 system/controlDict.full
+)
 """
     surface_name = (
         "c9Rig.stl" if args.mesh_generator == "cartesian" else "diagnosticCombined.stl"
@@ -1596,13 +1869,14 @@ echo MESH_DONE
         "Allrun.initialize",
         bash_prefix
         + f"""rm -rf processor* postProcessing
-rm -f log.smoke log.phase1 log.full
+rm -f log.smoke log.phase1 log.full log.source.sha256
 foamListTimes -rm >/dev/null 2>&1 || true
 rm -rf 0
 cp -r 0.orig 0
 setFields > log.setFields 2>&1
 setExprFields > log.setExprFields 2>&1
 decomposePar -force > log.decomposePar 2>&1
+sha256sum "${{SOURCE_SCHEMA_FILES[@]}}" > log.source.sha256
 trap 'cp system/controlDict.full system/controlDict' EXIT
 cp system/controlDict.initialize system/controlDict
 mpirun -np "$NP" {application} -parallel > log.initialize 2>&1
@@ -1619,6 +1893,20 @@ case "$STAGE" in
     *) echo "usage: $0 [smoke|phase1|full]" >&2; exit 2 ;;
 esac
 test -d processor0 || {{ echo "No decomposed run; use ./Allrun.initialize" >&2; exit 2; }}
+test -f log.source.sha256 || {{
+    echo "No initialized-source schema; rerun ./Allrun.initialize" >&2
+    exit 2
+}}
+sha256sum -c log.source.sha256 >/dev/null || {{
+    echo "Case source changed after initialization; rerun ./Allrun.initialize" >&2
+    exit 2
+}}
+for field in pocketBodyTracer k omega; do
+    test -f "processor0/0/$field" || {{
+        echo "Checkpoint schema lacks $field; rerun ./Allrun.initialize" >&2
+        exit 2
+    }}
+done
 pgrep -f '[c]ompressibleInterFoam.*-parallel|[c]ompressibleInterIsoFoam.*-parallel' >/dev/null && {{
     echo "A C9 solver is already running" >&2
     exit 2
@@ -1735,9 +2023,38 @@ rm -f log.*
         "resolved_gate_discharge_coefficient": model["tailgate_resolved_discharge_coefficient"],
         "gate_area_is_paper_value": False,
         "contact_angle_deg": contact_angle,
+        "turbulence_model": turbulence_model,
+        "inlet_turbulence_intensity": turbulence_intensity,
+        "inlet_turbulence_mixing_length_m": turbulence_length,
+        "initial_turbulent_kinetic_energy_m2_s2": k_initial,
+        "initial_specific_dissipation_rate_s-1": omega_initial,
         "interface_compression": c_alpha,
         "air_Cp_J_kg_K": model["air_Cp_J_kg_K"],
         "water_bulk_modulus_Pa": model["water_bulk_modulus_Pa"],
+        "water_intrinsic_bulk_modulus_Pa": model["water_intrinsic_bulk_modulus_Pa"],
+        "water_perfect_fluid_R_J_kg_K": water_r,
+        "water_perfect_fluid_rho0_kg_m3": water_rho0,
+        "water_reference_density_kg_m3": model["water_density_kg_m3"],
+        "water_reference_pressure_Pa": paper["atmospheric_pressure_Pa"],
+        "water_reference_temperature_K": paper["temperature_K"],
+        "water_eos_wave_speed_m_s": water_wave_speed,
+        "water_bulk_modulus_closure": (
+            "command-line sensitivity override"
+            if water_bulk_overridden
+            else (
+                "effective rigid-wall fluid modulus from the paper's acrylic-pipe "
+                "wave speed; intrinsic water modulus is a sensitivity"
+            )
+        ),
+        "pocket_body_tracer": {
+            "field": "pocketBodyTracer",
+            "initial_support": "selected upstream main-body gas; thin layer excluded",
+            "transport": "conservative mixture mass fraction using rhoPhi",
+            "purpose": (
+                "main-pocket source identity; alpha.air alone cannot distinguish "
+                "the initial thin layer from the body"
+            ),
+        },
         "initial_field_correction": {
             "pressure": (
                 "smooth p_rgh ramp to the static tailwater boundary, then "
@@ -1783,6 +2100,11 @@ def main() -> None:
     )
     parser.add_argument("--air-cp", type=float)
     parser.add_argument("--water-bulk-modulus", type=float)
+    parser.add_argument(
+        "--turbulence-model",
+        choices=("laminar", "kOmegaSST"),
+        help="override the declared production turbulence closure",
+    )
     parser.add_argument("--gate-area", type=float)
     parser.add_argument("--contact-angle", type=float)
     parser.add_argument("--c-alpha", type=float)

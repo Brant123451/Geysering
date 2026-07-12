@@ -3,6 +3,19 @@ source /usr/lib/openfoam/openfoam2512/etc/bashrc
 set -eo pipefail
 cd "$(dirname "$0")"
 NP="${OPENFOAM_NP:-4}"
+SOURCE_SCHEMA_FILES=(
+    generated_case.json
+    0.orig/alpha.water 0.orig/pocketBodyTracer 0.orig/U 0.orig/p 0.orig/p_rgh
+    0.orig/T 0.orig/k 0.orig/omega 0.orig/nut 0.orig/alphat
+    constant/thermophysicalProperties
+    constant/thermophysicalProperties.water
+    constant/thermophysicalProperties.air
+    constant/turbulenceProperties
+    system/fvSchemes system/fvSolution system/fvOptions
+    system/setFieldsDict system/setExprFieldsDict
+    system/controlDict.initialize system/controlDict.smoke
+    system/controlDict.phase1 system/controlDict.full
+)
 test "$NP" -eq 4 || {
     echo "OPENFOAM_NP must match system/decomposeParDict (4)" >&2
     exit 2

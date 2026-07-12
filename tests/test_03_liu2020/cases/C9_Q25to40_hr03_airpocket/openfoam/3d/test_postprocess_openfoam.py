@@ -129,6 +129,46 @@ class ProbeParsingTests(unittest.TestCase):
 
         self.assertIsNone(detected)
 
+    def test_time_alignment_does_not_interpolate_across_missing_samples(self) -> None:
+        aligned = post.align_at_times(
+            np.array([0.0, 0.02]),
+            np.array([1.0, 3.0]),
+            np.array([0.0, 0.01, 0.02]),
+        )
+
+        np.testing.assert_allclose(aligned[[0, 2]], [1.0, 3.0])
+        self.assertTrue(np.isnan(aligned[1]))
+
+    def test_function_output_beyond_active_checkpoint_is_ignored(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            case = Path(directory)
+            post_dir = case / "postProcessing"
+            output = post_dir / "inventory" / "0" / "volFieldValue.dat"
+            output.parent.mkdir(parents=True)
+            output.write_text(
+                "# Time value\n0.10 1.0\n0.20 2.0\n",
+                encoding="utf-8",
+            )
+            (case / "processor0" / "0.15").mkdir(parents=True)
+
+            times, values, _ = post.parse_function(post_dir, "inventory")
+
+        np.testing.assert_allclose(times, [0.10])
+        np.testing.assert_allclose(values, [[1.0]])
+
+    def test_function_width_mismatch_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            post_dir = Path(directory)
+            output = post_dir / "inventory" / "0" / "volFieldValue.dat"
+            output.parent.mkdir(parents=True)
+            output.write_text(
+                "0.10 1.0\n0.20 2.0 3.0\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "row widths"):
+                post.parse_function(post_dir, "inventory")
+
 
 class LogParsingTests(unittest.TestCase):
     def test_strict_mesh_pass_reports_zero_concave_cells(self) -> None:

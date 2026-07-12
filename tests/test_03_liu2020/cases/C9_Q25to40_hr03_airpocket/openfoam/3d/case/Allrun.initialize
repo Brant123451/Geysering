@@ -3,14 +3,28 @@ source /usr/lib/openfoam/openfoam2512/etc/bashrc
 set -eo pipefail
 cd "$(dirname "$0")"
 NP="${OPENFOAM_NP:-4}"
+SOURCE_SCHEMA_FILES=(
+    generated_case.json
+    0.orig/alpha.water 0.orig/pocketBodyTracer 0.orig/U 0.orig/p 0.orig/p_rgh
+    0.orig/T 0.orig/k 0.orig/omega 0.orig/nut 0.orig/alphat
+    constant/thermophysicalProperties
+    constant/thermophysicalProperties.water
+    constant/thermophysicalProperties.air
+    constant/turbulenceProperties
+    system/fvSchemes system/fvSolution system/fvOptions
+    system/setFieldsDict system/setExprFieldsDict
+    system/controlDict.initialize system/controlDict.smoke
+    system/controlDict.phase1 system/controlDict.full
+)
 rm -rf processor* postProcessing
-rm -f log.smoke log.phase1 log.full
+rm -f log.smoke log.phase1 log.full log.source.sha256
 foamListTimes -rm >/dev/null 2>&1 || true
 rm -rf 0
 cp -r 0.orig 0
 setFields > log.setFields 2>&1
 setExprFields > log.setExprFields 2>&1
 decomposePar -force > log.decomposePar 2>&1
+sha256sum "${SOURCE_SCHEMA_FILES[@]}" > log.source.sha256
 trap 'cp system/controlDict.full system/controlDict' EXIT
 cp system/controlDict.initialize system/controlDict
 mpirun -np "$NP" compressibleInterFoam -parallel > log.initialize 2>&1

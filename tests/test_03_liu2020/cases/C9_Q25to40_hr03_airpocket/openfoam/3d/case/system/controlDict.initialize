@@ -30,11 +30,32 @@ maxDeltaT       0.0005;
 
 functions
 {
+    pocketBodyTracerTransport
+    {
+        type            scalarTransport;
+        libs            (solverFunctionObjects);
+        field           pocketBodyTracer;
+        phi             rhoPhi;
+        rho             rho;
+        schemesField    pocketBodyTracer;
+        bounded01       true;
+        D               0;
+        tolerance       1e-8;
+        nCorr           0;
+        resetOnStartUp  false;
+        enabled         true;
+        log             false;
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    writeTime;
+        writeInterval   1;
+    }
+
     probesPT
     {
         type            probes;
         libs            (sampling);
-        fields          (p p_rgh alpha.water U);
+        fields          (p p_rgh alpha.water U pocketBodyTracer);
         probeLocations
         (
             (0.15 -0.025 1.25)     // PT1: riser wall, +0.80 m
@@ -173,7 +194,7 @@ functions
     {
         type            probes;
         libs            (sampling);
-        fields          (alpha.water p);
+        fields          (alpha.water p pocketBodyTracer);
         probeLocations
         (
             (-5.750000 0 0.433500)
@@ -248,7 +269,7 @@ functions
         // connected crown layer.
         type            probes;
         libs            (sampling);
-        fields          (alpha.water p);
+        fields          (alpha.water p pocketBodyTracer);
         probeLocations
         (
             (-5.750000 0 0.425500)
@@ -429,6 +450,60 @@ functions
         writeFields     false;
     }
 
+    totalPocketBodyTracerMass
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        operation       weightedVolIntegrate;
+        weightField     rho;
+        fields          (pocketBodyTracer);
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+        writeFields     false;
+    }
+
+    upstreamPocketBodyTracerMass
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      cellZone;
+        name            upstreamPipe;
+        operation       weightedVolIntegrate;
+        weightField     rho;
+        fields          (pocketBodyTracer);
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+        writeFields     false;
+    }
+
+    chamberPocketBodyTracerMass
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      cellZone;
+        name            chamber;
+        operation       weightedVolIntegrate;
+        weightField     rho;
+        fields          (pocketBodyTracer);
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+        writeFields     false;
+    }
+
+    riserPocketBodyTracerMass
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      cellZone;
+        name            riser;
+        operation       weightedVolIntegrate;
+        weightField     rho;
+        fields          (pocketBodyTracer);
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+        writeFields     false;
+    }
+
     inletFlux
     {
         type            surfaceFieldValue;
@@ -515,7 +590,7 @@ functions
         type            fieldMinMax;
         libs            (fieldFunctionObjects);
         mode            magnitude;
-        fields          (p rho alpha.water U);
+        fields          (p rho alpha.water U pocketBodyTracer);
         writeControl    adjustableRunTime;
         writeInterval   0.01;
     }

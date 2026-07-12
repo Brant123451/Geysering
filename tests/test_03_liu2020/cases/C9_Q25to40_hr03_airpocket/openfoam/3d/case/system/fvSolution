@@ -67,7 +67,7 @@ solvers
         relTol 0.01;
         nSweeps 1;
     }
-    "(T|k|B|nuTilda).*"
+    "(T|k|omega|pocketBodyTracer|B|nuTilda).*"
     {
         solver smoothSolver;
         smoother symGaussSeidel;

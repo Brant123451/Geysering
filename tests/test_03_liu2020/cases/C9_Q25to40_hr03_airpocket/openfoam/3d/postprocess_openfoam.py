@@ -59,6 +59,45 @@ def numeric_dirs(root: Path) -> list[Path]:
     return sorted(out, key=lambda path: float(path.name))
 
 
+def latest_checkpoint_time(post: Path) -> float | None:
+    """Return the active field checkpoint, used to reject stale future output."""
+    case = post.parent
+    for root in (case / "processor0", case):
+        directories = numeric_dirs(root)
+        if directories:
+            return max(float(directory.name) for directory in directories)
+    return None
+
+
+def align_at_times(
+    source_t: np.ndarray,
+    source_y: np.ndarray,
+    target_t: np.ndarray,
+    *,
+    atol: float = 1e-7,
+) -> np.ndarray:
+    """Align restart output without interpolating across missing time samples."""
+    result = np.full(len(target_t), np.nan)
+    if not len(source_t) or not len(target_t):
+        return result
+    order = np.argsort(source_t)
+    times = np.asarray(source_t[order], dtype=float)
+    values = np.asarray(source_y[order], dtype=float)
+    for index, target in enumerate(target_t):
+        insertion = int(np.searchsorted(times, target))
+        candidates = [
+            candidate
+            for candidate in (insertion - 1, insertion)
+            if 0 <= candidate < len(times)
+        ]
+        if not candidates:
+            continue
+        nearest = min(candidates, key=lambda candidate: abs(times[candidate] - target))
+        if abs(times[nearest] - target) <= atol:
+            result[index] = values[nearest]
+    return result
+
+
 def parse_probe_scalar_with_locations(
     post: Path, name: str, field: str
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -122,6 +161,13 @@ def parse_probe_scalar_with_locations(
                     f"expected {expected_width}"
                 )
             rows[time] = row
+    checkpoint = latest_checkpoint_time(post)
+    if checkpoint is not None:
+        rows = {
+            time: row
+            for time, row in rows.items()
+            if time <= checkpoint + 1e-7
+        }
     if not rows:
         return np.empty(0), np.empty((0, 0)), np.empty((0, 3))
     times = np.array(sorted(rows), dtype=float)
@@ -167,11 +213,20 @@ def parse_function(post: Path, name: str) -> tuple[np.ndarray, np.ndarray, list[
                     continue
                 if values:
                     rows[time] = values
+    checkpoint = latest_checkpoint_time(post)
+    if checkpoint is not None:
+        rows = {
+            time: row
+            for time, row in rows.items()
+            if time <= checkpoint + 1e-7
+        }
     if not rows:
         return np.empty(0), np.empty((0, 0)), headers
     times = np.asarray(sorted(rows), dtype=float)
-    width = min(len(rows[time]) for time in times)
-    values = np.asarray([rows[time][:width] for time in times], dtype=float)
+    widths = {len(rows[time]) for time in times}
+    if len(widths) != 1:
+        raise ValueError(f"{post / name}: inconsistent function-object row widths")
+    values = np.asarray([rows[time] for time in times], dtype=float)
     return times, values, headers
 
 
@@ -505,10 +560,16 @@ def relative_error(value, target):
 
 
 def write_csv(path: Path, header: list[str], rows) -> None:
+    def csv_value(value):
+        if isinstance(value, (float, np.floating)) and not np.isfinite(value):
+            return ""
+        return value
+
     with path.open("w", newline="", encoding="utf-8") as stream:
         writer = csv.writer(stream, lineterminator="\n")
         writer.writerow(header)
-        writer.writerows(rows)
+        for row in rows:
+            writer.writerow([csv_value(value) for value in row])
 
 
 def main() -> None:
@@ -598,7 +659,7 @@ def main() -> None:
             & (main_body_span >= minimum_body_span)
             & (deep_t >= 0.0)
         )
-        arrival_time = first_sustained_time(
+        morphology_arrival_time = first_sustained_time(
             deep_t,
             connected_body_at_chamber,
             minimum_duration=0.05,
@@ -608,10 +669,11 @@ def main() -> None:
         main_body_front = np.empty(0)
         main_body_span = np.empty(0)
         furthest_deep_gas = np.empty(0)
+        connected_body_at_chamber = np.empty(0, dtype=bool)
         minimum_body_span = None
-        arrival_time = None
+        morphology_arrival_time = None
     probe_depth = metadata.get("main_body_probe_depth_below_crown_m")
-    arrival_definition = (
+    morphology_arrival_definition = (
         "first nonnegative paper time at which the longest contiguous "
         "alpha.air >= 0.50 component on the deep crown-probe line reaches "
         "x=-0.05 m for at least 0.05 s, while retaining a streamwise span of "
@@ -648,6 +710,160 @@ def main() -> None:
         post, "chamberWaterVolume", CHAMBER_VOLUME
     )
     chamber_air = chamber_zone_volume - interp_series(cv_t, chamber_water, uv_t_solver)
+
+    tracer_total_t, tracer_total_raw = first_column(post, "totalPocketBodyTracerMass")
+    tracer_upstream_t, tracer_upstream_raw = first_column(
+        post, "upstreamPocketBodyTracerMass"
+    )
+    tracer_chamber_t, tracer_chamber_raw = first_column(
+        post, "chamberPocketBodyTracerMass"
+    )
+    tracer_riser_t, tracer_riser_raw = first_column(post, "riserPocketBodyTracerMass")
+    tracer_data_present = bool(
+        len(tracer_total_t)
+        and len(tracer_upstream_t)
+        and len(tracer_chamber_t)
+    )
+    if tracer_data_present:
+        tracer_solver_t = tracer_total_t
+        tracer_t = tracer_solver_t - offset
+        tracer_total = tracer_total_raw
+        tracer_upstream = align_at_times(
+            tracer_upstream_t, tracer_upstream_raw, tracer_solver_t
+        )
+        tracer_chamber = align_at_times(
+            tracer_chamber_t, tracer_chamber_raw, tracer_solver_t
+        )
+        tracer_riser = (
+            align_at_times(tracer_riser_t, tracer_riser_raw, tracer_solver_t)
+            if len(tracer_riser_t)
+            else np.full(len(tracer_solver_t), np.nan)
+        )
+    else:
+        tracer_solver_t = np.empty(0)
+        tracer_t = np.empty(0)
+        tracer_total = np.empty(0)
+        tracer_upstream = np.empty(0)
+        tracer_chamber = np.empty(0)
+        tracer_riser = np.empty(0)
+
+    body_tracer_total = align_at_times(
+        tracer_solver_t, tracer_total, uv_t_solver
+    )
+    body_tracer_upstream = align_at_times(
+        tracer_solver_t, tracer_upstream, uv_t_solver
+    )
+    body_tracer_chamber = align_at_times(
+        tracer_solver_t, tracer_chamber, uv_t_solver
+    )
+    body_tracer_riser = align_at_times(
+        tracer_solver_t, tracer_riser, uv_t_solver
+    )
+    if not tracer_data_present:
+        body_tracer_total = np.full(len(uv_t_solver), np.nan)
+        body_tracer_upstream = np.full(len(uv_t_solver), np.nan)
+        body_tracer_chamber = np.full(len(uv_t_solver), np.nan)
+        body_tracer_riser = np.full(len(uv_t_solver), np.nan)
+
+    tracer_valid = False
+    tracer_status = "missing"
+    body_tracer_transfer_onset = None
+    body_tracer_transfer_20pct = None
+    body_tracer_baseline_time = None
+    body_tracer_domain_inventory_change = None
+    body_tracer_initial_mass = None
+    body_tracer_initial_upstream_mass = None
+    arrival_time = None
+    if tracer_data_present:
+        tracer_status = "invalid_paper_time_zero_baseline"
+        baseline_candidates = np.where(
+            (np.abs(tracer_t) <= 0.011)
+            & np.isfinite(tracer_total)
+            & np.isfinite(tracer_upstream)
+            & np.isfinite(tracer_chamber)
+            & (tracer_total > 1e-9)
+            & (tracer_upstream >= 0.99 * tracer_total)
+        )[0]
+        if len(baseline_candidates):
+            tracer_baseline_index = int(baseline_candidates[0])
+            tracer_valid = True
+            tracer_status = "valid"
+            body_tracer_baseline_time = float(tracer_t[tracer_baseline_index])
+            body_tracer_initial_mass = float(tracer_total[tracer_baseline_index])
+            body_tracer_initial_upstream_mass = float(
+                tracer_upstream[tracer_baseline_index]
+            )
+            baseline_chamber_tracer = float(tracer_chamber[tracer_baseline_index])
+            tracer_scale = abs(body_tracer_initial_mass)
+            transfer_started = (
+                (np.arange(len(tracer_t)) >= tracer_baseline_index)
+                & (
+                    tracer_chamber - baseline_chamber_tracer
+                    >= 0.01 * tracer_scale
+                )
+                & (
+                    tracer_upstream
+                    <= body_tracer_initial_upstream_mass - 0.01 * tracer_scale
+                )
+            )
+            transferred_20pct = (
+                (np.arange(len(tracer_t)) >= tracer_baseline_index)
+                & (
+                    tracer_chamber - baseline_chamber_tracer
+                    >= 0.20 * tracer_scale
+                )
+                & (
+                    tracer_upstream
+                    <= body_tracer_initial_upstream_mass - 0.20 * tracer_scale
+                )
+            )
+            body_tracer_transfer_onset = first_sustained_time(
+                tracer_t,
+                transfer_started,
+                minimum_duration=0.05,
+                maximum_gap=0.025,
+            )
+            body_tracer_transfer_20pct = first_sustained_time(
+                tracer_t,
+                transferred_20pct,
+                minimum_duration=0.05,
+                maximum_gap=0.025,
+            )
+            morphology_at_tracer = (
+                align_at_times(
+                    deep_t_solver,
+                    connected_body_at_chamber.astype(float),
+                    tracer_solver_t,
+                )
+                >= 0.5
+                if len(connected_body_at_chamber)
+                else np.zeros(len(tracer_t), dtype=bool)
+            )
+            source_identified_connected_arrival = (
+                transfer_started & morphology_at_tracer
+            )
+            arrival_time = first_sustained_time(
+                tracer_t,
+                source_identified_connected_arrival,
+                minimum_duration=0.05,
+                maximum_gap=0.025,
+            )
+            finite_total = tracer_total[np.isfinite(tracer_total)]
+            if len(finite_total):
+                body_tracer_domain_inventory_change = float(
+                    np.max(np.abs(finite_total - body_tracer_initial_mass))
+                    / tracer_scale
+                )
+
+    arrival_definition = (
+        "first nonnegative paper time for which both conditions persist for "
+        "at least 0.05 s: (1) at least 1% of the paper-time-zero thick-body "
+        "tracer mass has left the upstream zone and entered the chamber, and "
+        "(2) a gas-dominant connected component on the deep crown line reaches "
+        "the chamber-side probe while retaining the required body span. The "
+        "initially connected thin crown layer is excluded from the tracer. "
+        "Formal arrival remains null when either source is unavailable"
+    )
 
     gas_transfer_20pct = None
     transfer_baseline_time = None
@@ -699,6 +915,10 @@ def main() -> None:
             "main_body_front_x_m",
             "main_body_component_span_m",
             "furthest_deep_gas_x_m",
+            "total_body_tracer_mass_kg",
+            "upstream_body_tracer_mass_kg",
+            "chamber_body_tracer_mass_kg",
+            "riser_body_tracer_mass_kg",
         ],
         zip(
             uv_t,
@@ -708,6 +928,10 @@ def main() -> None:
             body_front_at_inventory_times,
             body_span_at_inventory_times,
             furthest_gas_at_inventory_times,
+            body_tracer_total,
+            body_tracer_upstream,
+            body_tracer_chamber,
+            body_tracer_riser,
         ),
     )
 
@@ -918,6 +1142,14 @@ def main() -> None:
         "experimental_geyser_count": PAPER["geyser_count"],
         "simulated_air_pocket_arrival_s": arrival_time,
         "air_pocket_arrival_definition": arrival_definition,
+        "air_pocket_arrival_method": (
+            "source_tracer_plus_line_morphology"
+            if tracer_valid and len(connected_body_at_chamber)
+            else "unavailable"
+        ),
+        "body_tracer_status": tracer_status,
+        "simulated_line_morphology_arrival_s": morphology_arrival_time,
+        "line_morphology_arrival_definition": morphology_arrival_definition,
         "air_pocket_arrival_proxy_plane_x_m": (
             float(deep_x[-1]) if deep_alpha.size else None
         ),
@@ -929,6 +1161,28 @@ def main() -> None:
         "simulated_gas_transfer_20pct_s": gas_transfer_20pct,
         "gas_transfer_20pct_definition": gas_transfer_definition,
         "gas_transfer_baseline_paper_time_s": transfer_baseline_time,
+        "simulated_body_tracer_transfer_20pct_s": body_tracer_transfer_20pct,
+        "simulated_body_tracer_transfer_onset_s": body_tracer_transfer_onset,
+        "body_tracer_baseline_paper_time_s": body_tracer_baseline_time,
+        "body_tracer_initial_mass_kg": body_tracer_initial_mass,
+        "body_tracer_initial_upstream_mass_kg": body_tracer_initial_upstream_mass,
+        "body_tracer_end_upstream_mass_kg": (
+            float(tracer_upstream[-1])
+            if tracer_valid and len(tracer_upstream) and np.isfinite(tracer_upstream[-1])
+            else None
+        ),
+        "body_tracer_upstream_retained_fraction": (
+            float(tracer_upstream[-1] / body_tracer_initial_upstream_mass)
+            if tracer_valid
+            and body_tracer_initial_upstream_mass is not None
+            and abs(body_tracer_initial_upstream_mass) > 1e-12
+            and len(tracer_upstream)
+            and np.isfinite(tracer_upstream[-1])
+            else None
+        ),
+        "body_tracer_domain_inventory_change_relative": (
+            body_tracer_domain_inventory_change
+        ),
         "experimental_air_pocket_arrival_s": PAPER["air_pocket_arrival_s"],
         "air_pocket_arrival_error_percent": relative_error(arrival_time, PAPER["air_pocket_arrival_s"]),
         "major_pressure_peak_error_percent": relative_error(p1m, PAPER["P1m_kPa"]),
@@ -1045,8 +1299,24 @@ def main() -> None:
     right = left.twinx()
     if len(uv_t):
         right.plot(uv_t, upstream_air_mass * 1000.0, color="#ea580c", label="upstream air mass")
-    right.set_ylabel("upstream air mass [g]")
+    if tracer_valid:
+        right.plot(
+            uv_t,
+            body_tracer_upstream * 1000.0,
+            color="#b45309",
+            ls=":",
+            label="upstream main-body tracer mass",
+        )
+    right.set_ylabel("upstream mass [g]")
     left.axvline(PAPER["air_pocket_arrival_s"], color="black", ls="--", lw=0.8)
+    if arrival_time is not None:
+        left.axvline(
+            arrival_time,
+            color="#16a34a",
+            ls=":",
+            lw=1.0,
+            label="simulated body-tracer arrival",
+        )
     handles = left.get_lines() + right.get_lines()
     left.legend(handles, [line.get_label() for line in handles], frameon=False, fontsize=8)
     if len(deep_t):
@@ -1096,11 +1366,14 @@ def main() -> None:
             "contact_angle_deg",
             "cAlpha",
             "air_Cp_J_kg_K",
+            "turbulence_model",
             "water_bulk_modulus_Pa",
+            "water_eos_wave_speed_m_s",
             "P1m_kPa",
             "first_top_s",
             "geyser_count",
             "air_arrival_s",
+            "air_arrival_method",
             "gas_transfer_20pct_s",
             "mass_error",
             "gas_mass_error",
@@ -1127,11 +1400,14 @@ def main() -> None:
                 metadata.get("contact_angle_deg"),
                 metadata.get("interface_compression"),
                 metadata.get("air_Cp_J_kg_K"),
+                metadata.get("turbulence_model"),
                 metadata.get("water_bulk_modulus_Pa"),
+                metadata.get("water_eos_wave_speed_m_s"),
                 p1m,
                 first_top,
                 len(geyser_rows),
                 arrival_time,
+                metrics["air_pocket_arrival_method"],
                 gas_transfer_20pct,
                 mass_error,
                 gas_error,

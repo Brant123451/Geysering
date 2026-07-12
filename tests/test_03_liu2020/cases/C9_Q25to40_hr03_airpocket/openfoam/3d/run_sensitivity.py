@@ -31,8 +31,10 @@ VARIANTS = {
     "pocket_large": ["--pocket-profile", "pocket_large"],
     "interface_iso_advector": ["--interface-solver", "iso-advector"],
     "air_near_isothermal": ["--air-cp", "10050"],
-    "water_bulk_low": ["--water-bulk-modulus", "1760000000"],
-    "water_bulk_high": ["--water-bulk-modulus", "2640000000"],
+    "turbulence_laminar": ["--turbulence-model", "laminar"],
+    "wave_speed_244": ["--water-bulk-modulus", "59428835.2"],
+    "wave_speed_366": ["--water-bulk-modulus", "133714879.2"],
+    "water_intrinsic_bulk": ["--water-bulk-modulus", "2200000000"],
     "gate_low": ["--gate-area", "0.008064"],
     "gate_high": ["--gate-area", "0.012096"],
     "contact_angle_60": ["--contact-angle", "60"],
@@ -42,6 +44,8 @@ VARIANTS = {
     "velocity_limit_12": ["--velocity-limit", "12"],
     "velocity_limit_20": ["--velocity-limit", "20"],
     "velocity_unlimited": ["--velocity-limit", "0"],
+    "max_co_070": ["--max-co", "0.70"],
+    "max_co_100": ["--max-co", "1.00"],
 }
 
 
@@ -75,6 +79,7 @@ def main():
     )
     parser.add_argument("--variants", default=",".join(VARIANTS))
     parser.add_argument("--fresh", action="store_true")
+    parser.add_argument("--np", type=int, default=4)
     args = parser.parse_args()
 
     selected = [name.strip() for name in args.variants.split(",") if name.strip()]
@@ -87,7 +92,13 @@ def main():
 
     try:
         for name in selected:
-            generator = [sys.executable, "prepare_case.py", "--np", "4", *VARIANTS[name]]
+            generator = [
+                sys.executable,
+                "prepare_case.py",
+                "--np",
+                str(args.np),
+                *VARIANTS[name],
+            ]
             run(generator, HERE)
             destination = RUNS / name
             if destination.exists() and args.fresh:
@@ -175,11 +186,14 @@ def main():
                     "contact_angle_deg": generated.get("contact_angle_deg"),
                     "cAlpha": generated.get("interface_compression"),
                     "air_Cp_J_kg_K": generated.get("air_Cp_J_kg_K"),
+                    "turbulence_model": generated.get("turbulence_model"),
                     "water_bulk_modulus_Pa": generated.get("water_bulk_modulus_Pa"),
+                    "water_eos_wave_speed_m_s": generated.get("water_eos_wave_speed_m_s"),
                     "P1m_kPa": phase1.get("P1m_kPa"),
                     "first_top_s": phase1.get("first_riser_top_s"),
                     "geyser_count": metrics.get("simulated_geyser_count"),
                     "air_arrival_s": metrics.get("simulated_air_pocket_arrival_s"),
+                    "air_arrival_method": metrics.get("air_pocket_arrival_method"),
                     "gas_transfer_20pct_s": metrics.get(
                         "simulated_gas_transfer_20pct_s"
                     ),
@@ -189,7 +203,7 @@ def main():
             )
     finally:
         # Keep the tracked source case deterministic after preparing variants.
-        run([sys.executable, "prepare_case.py", "--np", "4"], HERE)
+        run([sys.executable, "prepare_case.py", "--np", str(args.np)], HERE)
 
     fieldnames = [
         "variant",
@@ -216,11 +230,14 @@ def main():
         "contact_angle_deg",
         "cAlpha",
         "air_Cp_J_kg_K",
+        "turbulence_model",
         "water_bulk_modulus_Pa",
+        "water_eos_wave_speed_m_s",
         "P1m_kPa",
         "first_top_s",
         "geyser_count",
         "air_arrival_s",
+        "air_arrival_method",
         "gas_transfer_20pct_s",
         "mass_error",
         "gas_mass_error",

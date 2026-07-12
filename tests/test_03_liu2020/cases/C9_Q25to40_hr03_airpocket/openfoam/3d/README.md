@@ -8,9 +8,11 @@ For cross-account continuation, read `HANDOFF.md` and paste the complete
 `CONTINUATION_PROMPT.md` into the replacement Cloud Agent.
 
 The governing solver is `compressibleInterFoam`: two compressible phases,
-VOF interface capture, gravity, surface tension, laminar viscous stress,
-perfect-gas air, and weakly compressible water (`perfectFluid`, bulk modulus
-2.2 GPa). `compressibleInterIsoFoam` is available strictly as an
+VOF interface capture, gravity, surface tension, RANS \(k\)-\(\omega\) SST,
+perfect-gas air, and weakly compressible water. The rigid-wall
+`perfectFluid` closure uses the paper's approximately 305 m/s acrylic-pipe
+wave speed (\(K_{eff}=92.86\) MPa); intrinsic-water \(K=2.2\) GPa and laminar
+flow remain sensitivities. `compressibleInterIsoFoam` is available strictly as an
 isoAdvector-versus-MULES **interface transport** sensitivity; it is not
 misidentified as an isothermal gas solver. The model includes the full 5.80 m
 upstream pipe, 0.30 m junction
@@ -65,6 +67,11 @@ The time convention is deliberate:
 - phase 1 ends at solver time 6.75 s (paper time 6.50 s);
 - the full run ends at solver time 20.25 s (paper time 20.00 s).
 
+The paper's synchronization text calls the fully-open valve instant raw
+\(t=0\), while its analytical forcing starts the 0.4 s increase at \(t=0\).
+The source follows the analytical convention; ramp alignment is therefore a
+declared timing uncertainty.
+
 ## Initial and boundary conditions
 
 - The chamber/downstream HGL is 0.75 m: chamber roof 0.45 m plus the reported
@@ -73,9 +80,10 @@ The time convention is deliberate:
   `p_rgh`; the pocket is initialized at the local water pressure at its main
   interface. Air temperature is 293.15 K.
 - The inlet is pure water with a tabulated volumetric flow-rate boundary.
-- The downstream pipe is full. The tailgate is a resolved circular opening
-  against a 0.28 m tailwater HGL (`Dd`); the omitted experimental opening is
-  represented by the explicitly derived geometric/effective-area closure.
+- The downstream pipe is full. The paper's flat tailgate has an unreported
+  opening; the model uses an explicitly labelled equivalent circular opening
+  against a 0.28 m tailwater HGL (`Dd`) with a derived
+  geometric/effective-area closure.
 - The riser opens into a 0.6 × 0.6 × 1.0 m atmospheric plume region. Its side,
   top, and floor outside the riser use pressure/open boundaries, allowing
   expelled water and air to leave the computational domain.
@@ -110,7 +118,10 @@ The default transient limits are `maxCo=0.35`, `maxAlphaCo=0.20`, and
 `maxDeltaT=5e-4 s`; the tighter timestep case halves these limits. MULES uses
 one alpha correction with two subcycles. Two pressure correctors and one
 non-orthogonal corrector are used, following the supplied v2512
-`compressibleInterFoam` tutorial structure. A
+`compressibleInterFoam` tutorial structure. `max_co_070` and `max_co_100`
+are explicit throughput/stability sensitivities; they are not silently used
+to accelerate a production trajectory.
+
 The production default does not clip velocity: the experimental 5.75 m/s
 maximum is a liquid-jet observation and is not a defensible global bound for
 low-density gas. Positive `--velocity-limit` values remain explicit diagnostic
@@ -125,6 +136,9 @@ continuation, so the 12 m/s trajectory is not a production baseline.
 
 The solver records PT1–PT4, 111 riser-centreline probes, 60 upstream-crown
 probes, zone water/air inventories, boundary volume/mass fluxes, and extrema.
+A conservative `pocketBodyTracer` is initialized only in the thick initial
+body, excluding the connected thin layer. Its sustained transfer into the
+chamber is the preferred source-identity arrival metric.
 After a run:
 
 ```bash
@@ -145,47 +159,47 @@ The event table is generated only from actual `alpha.water` crossing the
 physical riser rim. Missing stages remain `not_run`, `initialization_only`,
 `partial_smoke`, `smoke_complete`, or `complete_phase1_only`; the
 postprocessor does not invent phase-2 eruptions. Main-pocket arrival uses the
-longest connected gas-dominant component on the deep crown-probe line.
+body tracer when available. The longest connected gas-dominant component on
+the deep crown-probe line remains an explicitly qualified morphology fallback.
 Detached bubbles or local thickening of the initially connected thin layer
-are reported separately as the furthest deep gas and cannot by themselves
-trigger main-body arrival.
+cannot establish source-identified main-body arrival.
 
 ## Current validation status
 
-The committed artifacts cover the initialization, the complete 1.00 s
-paper-time smoke window, and an interrupted phase-1 attempt through paper time
-1.504 s. They are **not** a completed phase-1 or phase-2 validation. Measured
-against the paper targets, the run gives:
+The committed output artifacts still describe the failed historical
+snappy/12 m/s-limiter generation through paper time 1.504 s. They are retained
+as provenance and do **not** validate the current source.
 
-- initialized PT2 = 2.853 kPa gauge versus 2.970 kPa;
-- first PT2 peak = 10.818 kPa at 0.392 s versus 10.690 kPa at 0.500 s;
-- first mixture crossing of the riser rim = 0.640 s versus 0.730 s;
-- total- and gas-mass residuals through 1.504 s =
-  \(6.13\times10^{-6}\) and \(4.06\times10^{-4}\);
-- mesh-integrated initial upstream gas volume = 14.065 L versus the
-  12.642 L analytic pocket construction;
-- upstream-zone gas mass falls from 17.557 g to 1.441 g by 1.504 s, showing
-  that the baseline pocket is transported/released much earlier than the
-  paper's 6.46 s main-pocket arrival. The declared 20%-mass-transfer criterion
-  gives 0.620 s (−90.4%).
+The zero-concave Cartesian, no-clipping diagnostic was stopped safely at
+solver time 0.5568 s (paper time 0.3068 s). It found:
 
-The historical velocity limiter activated during the transient and reached
-18,217 cells (12.8%) during the partial phase-1 continuation. That old
-trajectory remains failed/qualified evidence and is not overwritten by the
-new mesh work. Current Cartesian diagnostics place the dominant high-speed
-region in the upstream crown gas, not the atmospheric plume, and prove that
-the 12 m/s clipping changes pressure. The committed output artifacts have not
-yet been replaced because the new no-clipping smoke, phase 1, and phase 2
-histories are incomplete. No eight-eruption claim is made.
+- initialized PT2 = 3.242 kPa gauge versus 2.970 kPa;
+- upstream gas-mass retention = 94.6% at the last processed inventory;
+- deep main-body front near \(x=-0.92\) m, while detached/deep thin-layer gas
+  had reached the chamber-side probe;
+- zero limiter activation and maximum local velocity 43.7 m/s in
+  low-density crown gas, not in the liquid jet;
+- total/gas conservation residuals \(1.7\times10^{-6}\) and
+  \(3.4\times10^{-5}\).
+
+This diagnostic nevertheless used the erroneous historical
+`perfectFluid R=K/rho` mapping and laminar closure. Its effective water wave
+speed was about 25.4 km/s, so it is archived only as evidence that the old
+0.62 s signal conflated thin-layer gas with main-pocket transport. A corrected
+305 m/s, \(k\)-\(\omega\) SST, body-tracer smoke trajectory must replace it
+before phase 1 can be accepted.
+
+Phase 1 is incomplete. Phase 2 and eight eruptions have not yet been
+reproduced.
 
 ## Sensitivities
 
 The matrix covers mesh, timestep/Courant limits, small/base/large pocket
-volumes, MULES versus isoAdvector interface transport, adiabatic-like versus
-near-isothermal heat-capacity limits for pocket compression, liquid bulk
-modulus ±20%, gate area ±20%, contact angle 60°/120°, and interface
-compression 0.5/1.5. The thermal limits are declared closure sensitivities,
-not fitted air properties.
+volumes, MULES versus isoAdvector interface transport, \(k\)-\(\omega\) SST
+versus laminar closure, adiabatic-like versus near-isothermal heat-capacity
+limits, measured acrylic-pipe wave speed ±20%, intrinsic-water 2.2 GPa,
+gate area ±20%, contact angle 60°/120°, and interface compression 0.5/1.5.
+These are declared closure sensitivities, not fitted eruption parameters.
 
 ```bash
 # Materialize all source cases without running:

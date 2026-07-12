@@ -18,7 +18,7 @@ reported on pp. 2–3 and in Fig. 2 (p. 3):
 | invert drop | 0.18 m | upstream invert at the chamber is \(z=0.18\) m |
 | downstream acrylic pipe | \(L_d=5.95\) m, \(D_d=0.28\) m, horizontal | \(x=0.30\) to 6.25 m |
 | vertical riser | \(d_r=0.06\) m, length 1.22 m | chamber-top centre; \(z=0.45\) to 1.67 m |
-| downstream control | movable flat tailgate | equivalent resolved orifice; its unreported opening is uncertain |
+| downstream control | movable flat tailgate | circular sharp opening used only as an equivalent-area boundary; shape and opening are uncertain |
 | riser outlet | open laboratory atmosphere | resolved plume region with atmospheric open boundaries |
 
 The four pressure transducers and their stated positions are on p. 2
@@ -45,7 +45,21 @@ Table 1 (p. 4) identifies C9 as Series C with:
 
 The manual valve opening took 0.2–0.4 s (p. 3). The paper uses
 \(T_v=0.40\) s in Eq. (7)/Fig. 13 (pp. 11–12), so the CFD inlet ramps
-linearly over 0.40 s. All tests were at about 20 °C (p. 3).
+linearly over 0.40 s. The experimental synchronization paragraph defines raw
+\(t=0\) as the instant the ball valve was fully open (p. 2), whereas the
+analytical comparison treats \(t=0\) as the start of the imposed increase.
+The source currently follows the latter convention after a 0.25 s numerical
+initialization. Ramp-start versus ramp-end alignment must therefore be reported
+as a timing sensitivity, not silently treated as an unambiguous paper datum.
+All tests were at about 20 °C (p. 3).
+
+At \(Q_0=25\) L/s, the mean velocity in the 0.20 m upstream pipe is
+0.796 m/s. With the 20 °C model properties this gives
+\(Re=1.58\times10^5\); at \(Q_1\), \(Re=2.54\times10^5\). These values lie
+inside the paper's stated \(9.5\times10^4\)–\(3.2\times10^5\) range (p. 3)
+and are turbulent pipe-flow conditions. The production closure is therefore
+RANS \(k\)-\(\omega\) SST with wall functions; `laminar` is retained only as
+a declared sensitivity.
 
 Series C was prepared by first establishing steady free-surface flow at
 \(Q_0\), partly closing the tailgate so a surge filled the downstream pipe
@@ -61,6 +75,32 @@ The resolved sharp opening produced \(C_d=0.817\) in the no-ramp hydraulic
 check, so the source uses a 0.01008 m² geometric opening. This is a one-time
 initial-condition closure; it does not use any eruption count, timing, or
 pressure peak. Gate area remains a ±20% sensitivity.
+
+## Direct paper-to-model conformance
+
+| item | paper | generated 3-D source | assessment |
+|---|---:|---:|---|
+| upstream pipe | 5.80 m, 0.20 m, slope 1:100 | same | exact reported geometry |
+| chamber | 0.30 × 0.30 × 0.45 m | same | exact reported geometry |
+| invert drop | 0.18 m | same | exact reported geometry |
+| downstream pipe | 5.95 m, 0.28 m, horizontal | same | exact reported geometry |
+| riser | 0.06 m diameter, 1.22 m long | same, rim \(z=1.67\) m | exact reported geometry |
+| C9 flow | 25 to 40 L/s | same 0.40 s linear ramp | reported magnitude/duration; time alignment qualified above |
+| initial riser water | 0.30 m | HGL \(z=0.75\) m | exact reported height |
+| initial PT2/PT3 | 2.97/7.09 kPa gauge | initialization acceptance targets | reported targets |
+| PT locations | PT1–PT4 positions on p. 2 | nearest interior cells at the same taps | finite-cell approximation |
+| upstream supply | pressure tank plus ball valve | prescribed volumetric-flow inlet at \(x=-5.8\) m | boundary closure |
+| downstream apparatus | flat tailgate discharging to tank | equivalent circular opening plus fixed tailwater HGL | uncertain boundary closure |
+| open riser | laboratory atmosphere | 0.6 × 0.6 × 1.0 m open plume box | computational closure |
+| trapped gas topology | thick crown body plus connected thin crown layer | same qualitative topology | topology matches; all dimensions are priors |
+| preparation history | free-surface run, gate closure, filling surge | direct hydrostatic/steady-flow snapshot | preparation path not simulated |
+
+PT1 is at \(z=1.25\) m, PT3 at 0.02 m above the chamber bottom, and PT4
+at \(x=-0.30\) m. PT2 and PT4 probes are placed 10 mm below the chamber roof
+and 4 mm below the local pipe crown, respectively, to sample cell interiors;
+they must not be described as geometrically exact wall taps. The experimental
+data rate is 1,000 Hz; the default PT history is 500 Hz, so peak comparisons
+carry that temporal-resolution qualification.
 
 ## What the paper does and does not determine about the air pocket
 
@@ -165,8 +205,19 @@ Fig. 13 (p. 12) compares Eq. (7) with measured Series-C PT2 head. For C9,
 Eq. (8) gives 1.45 s (p. 12). The paper notes that Eq. (7) departs from the
 measurement near minimum pressure when an air cavity forms, violating its
 single-phase assumption (p. 12). It also estimates water-wave compressibility
-as only 0.6% of the first period term for this acrylic downstream pipe
-(pp. 11–12); that does not make gas compressibility negligible.
+using an acrylic-pipe wave speed of approximately 305 m/s and finds its period
+correction is only 0.6% of the first term (pp. 11–12). A rigid-wall CFD model
+can represent that measured pipe/fluid compliance by
+\(K_{eff}=\rho a^2=92.86\) MPa. The intrinsic-water value 2.2 GPa is retained
+as a sensitivity; neither choice makes gas compressibility negligible.
+
+OpenFOAM's `perfectFluid` law is
+\(\rho=\rho_0+p/(R T)\), not \(\rho=\rho_0+p/R\). Consequently the generator
+must use \(R=K/(\rho_{ref}T_{ref})\) and
+\(\rho_0=\rho_{ref}-p_{ref}/(RT_{ref})\). The earlier `R=K/rho` mapping missed
+the temperature factor and produced an effective wave speed near 25.4 km/s.
+The archived laminar trajectory through solver time 0.5568 s is therefore
+diagnostic evidence only and cannot qualify phase 1.
 
 ## Solver implication
 
@@ -175,11 +226,17 @@ the measured \(pV\) compression/expansion of a closed pocket. It is therefore
 not the final C9 solver. The source case uses OpenFOAM v2512
 `compressibleInterFoam`: VOF interface transport, perfect-gas air, and weakly
 compressible liquid water. This retains an energy equation and supports
-closed-pocket pressure/mass changes. `compressibleInterIsoFoam` is supplied
+closed-pocket pressure/mass changes. RANS \(k\)-\(\omega\) SST is the default
+because C9 is at \(Re=O(10^5)\); the laminar result is a model sensitivity.
+A conservative `pocketBodyTracer` is initialized only in the thick gas body,
+not in the thin connected crown layer. Its transfer into the chamber is the
+source-identity definition of main-pocket arrival; line-sampled `alpha.air`
+remains a morphology fallback only. `compressibleInterIsoFoam` is supplied
 only as an isoAdvector interface-transport sensitivity; despite its name, it
 is not an isothermal-gas solver. Thermal closure is instead bracketed by
-declared heat-capacity limits, and liquid compressibility by bulk-modulus
-limits. These are interface-capturing continuum models: they can advect and
+declared heat-capacity limits, and liquid/pipe compliance by wave-speed and
+intrinsic-bulk-modulus limits. These are interface-capturing continuum models:
+they can advect and
 break a resolved gas region, but subcell bubbles, coalescence, and entrainment
 are mesh/model dependent. Reproducing phase 1 does not by itself establish
 that phase 2 or eight eruptions were reproduced.

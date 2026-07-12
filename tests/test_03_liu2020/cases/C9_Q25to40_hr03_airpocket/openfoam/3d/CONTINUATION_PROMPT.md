@@ -76,10 +76,15 @@ et al. (2020) Test 3 / Series C / Case C9：
   resolved tailgate 和外部 atmospheric plume 的三维几何；
 - OpenFOAM v2512 `compressibleInterFoam` 模型；
 - perfect-gas air；
-- `perfectFluid` 弱可压缩水，默认 bulk modulus 2.2 GPa；
+- `perfectFluid` 弱可压缩水，默认用论文约 305 m/s 亚克力管波速对应的
+  92.86 MPa 全域等效模量，2.2 GPa 本征水体模量作为敏感性；
+- C9 \(Re=O(10^5)\) 的默认 RANS \(k\)-\(\omega\) SST 闭合，laminar
+  仅作敏感性；
+- 仅初始化于厚气囊主体、排除薄冠层的守恒 `pocketBodyTracer`；
 - VOF、重力、表面张力、接触角；
 - MULES 默认界面输运和 isoAdvector 敏感性入口；
-- `blockMesh` + `snappyHexMesh` 网格流程；
+- `cartesianMesh`/cfMesh 默认网格和保留的
+  `blockMesh` + `snappyHexMesh` 敏感性流程；
 - 初始化、smoke、phase1、full、重构和后处理脚本；
 - PT1–PT4、riser centreline、upstream crown、区域体积/质量、
   边界通量和极值诊断；
@@ -279,8 +284,9 @@ Courant number、alpha boundedness 和 limiter activation。
 - default vs tighter timestep/Courant；
 - pocket small/base/large；
 - MULES vs isoAdvector；
+- k-omega SST vs laminar；
 - near-adiabatic vs near-isothermal closure sensitivity；
-- water bulk modulus ±20%；
+- measured acrylic-pipe wave speed ±20% 与本征水体 2.2 GPa；
 - gate area ±20%；
 - contact angle 60°/90°/120°；
 - interface compression 0.5/1.0/1.5；
