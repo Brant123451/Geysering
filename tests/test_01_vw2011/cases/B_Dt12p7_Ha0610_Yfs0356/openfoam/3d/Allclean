@@ -9,7 +9,7 @@ for path in [0-9]*; do
     fi
 done
 rm -f caseB3d.msh log.*
-rm -f constant/airThermo constant/surfaceForces
+rm -f constant/airThermo constant/surfaceForces constant/cellToRegion
 rm -f system/alphaCorrectors system/decomposeParDict.runtime
 rm -f system/pimpleCorrectors system/runControl system/runSettings
 rm -f system/setFieldsDict.runtime
