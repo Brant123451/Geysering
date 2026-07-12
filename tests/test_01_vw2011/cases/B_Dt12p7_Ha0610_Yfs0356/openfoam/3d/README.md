@@ -171,9 +171,13 @@ fundamental defect: `p_rgh - (p + rho*9.81*y)` ranged from -453.5 to
 expression wrote an independent unregistered object to disk, so the final
 reduced-pressure expression still read the original cached `p`.  All startup
 screens prepared by that path are consequently initialization-defective.
-Absolute and reduced pressure initialization must run as separate processes,
-and both zero-curvature and physical RDF screens must be repeated before any
-hold extension.
+Commit `3a1777d` now runs absolute and reduced pressure initialization as
+separate processes.  A direct check over all 1,903,549 cells reduced the
+residual to exactly zero, and the corrected zero-curvature rerun lowered the
+first written velocity to 0.170 m/s.  It did not remove a delayed hotspot:
+velocity still peaked at 1.424 m/s near 0.00454 s and global Co reached 0.363.
+The initialization repair is retained, while physical RDF must be re-screened
+before any hold extension.
 
 Thermophysical choices are:
 

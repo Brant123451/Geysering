@@ -78,9 +78,15 @@ It exposed a more fundamental initialization error: a direct field check found
 up to 3946.5 Pa inconsistency between `p` and `p_rgh` at the initial tower free
 surface.  The single `setExprFields` process preloaded the original `p`, while
 its independent unregistered writes did not update that cached field before
-evaluating `p_rgh`.  All prior startup screens share this defect.  Absolute
-and reduced pressure initialization must be split into separate processes and
-re-screened before any hold extension.
+evaluating `p_rgh`.  All prior startup screens share this defect.  Commit
+`3a1777d` now splits the two fields into separate processes, and a direct
+1,903,549-cell check reduced the same residual from
+[-453.5,+3946.5] Pa to exactly [0,0] Pa.  The corrected zero-curvature rerun
+strongly reduced the first written velocity to 0.170 m/s, but a delayed
+free-surface hotspot still reached 1.424 m/s at 0.00454 s and global Co reached
+0.363.  The repair is valid, while the nonphysical mechanism candidate still
+cannot be extended.  Physical RDF must now be re-screened with the corrected
+initialization.
 
 ## Verified before handoff
 
@@ -238,6 +244,17 @@ re-screened before any hold extension.
     final expression still read the original preloaded `p`.  These screens
     cannot validate curvature behavior until this initialization defect is
     fixed.
+19. The split-pressure initialization repair is verified:
+    * the direct `p_rgh - (p + rho*9.81*y)` residual over all 1,903,549 cells
+      changed from [-453.5,+3946.5] Pa to [0,0] Pa;
+    * all 17 source/workflow tests pass;
+    * a corrected `constantCurvature=0` rerun reached 0.006 s with exit code 0;
+    * its first written velocity fell to 0.170 m/s at 0.00047 s, but a delayed
+      free-surface peak still reached 1.424 m/s at 0.00454 s;
+    * global/interface Co maxima were 0.363/0.186, alpha remained bounded, and
+      gas/total balance errors stayed below \(3.9\times10^{-6}\%\).
+    Thus the stale-pressure impulse was real but was not the sole source of
+    the delayed hotspot.  Zero curvature remains diagnostic-only.
 
 ## Still required
 
@@ -249,14 +266,13 @@ The scientific reproduction is **not complete**.  Continue in this order:
    static-benchmark values (`iterations=10`, `tol=1e-8`),
    `isoAlpha + fitParaboloid`, the nonphysical `constantCurvature=0`
    diagnostic, and the first `RDF + plicRDF + interpolateNormal=false`
-   screen are also rejected.  First split absolute-pressure and
-   reduced-pressure initialization into separate `setExprFields` processes,
-   verify the pre-solver residual is near roundoff, and repeat
-   `constantCurvature=0` as a mechanism check.  Then re-screen physical RDF.
-   Extend it past the 0.04 s pressure-drift onset only if it stays within the
-   declared Courant limits and reduces peak velocity, and only \(H^*\)
-   peak-to-peak at or below 0.02 may proceed to the full 1.0 s hold.  Opening
-   runs retain the dissipative resistance and must be tested separately.
+   screen are also rejected.  The pressure split and corrected
+   `constantCurvature=0` mechanism rerun are complete; now re-screen physical
+   RDF with the corrected initialization.  Extend it past the 0.04 s
+   pressure-drift onset only if it stays within the declared Courant limits
+   and reduces peak velocity, and only \(H^*\) peak-to-peak at or below 0.02
+   may proceed to the full 1.0 s hold.  Opening runs retain the dissipative
+   resistance and must be tested separately.
 2. Run the opened-valve 0.5 s smoke case.
 3. Run the 10.5 s base case through \(T^*\ge6\).
 4. Run the refined grid and required timestep/valve/compressibility

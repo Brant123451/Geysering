@@ -367,6 +367,18 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     startup 筛选均受此缺陷影响。下一步必须拆分 absolute `p` 与 `p_rgh`
     为两个独立 `setExprFields` 进程，先证明 residual 接近 roundoff，再复筛
     `constantCurvature=0` 和物理 RDF；不得直接开始完整 hold。
+16. commit `3a1777d` 已完成并验证上述压力初始化拆分：
+    - 全部 1,903,549 个 cell 的
+      `p_rgh - (p + rho*9.81*y)` 从 [-453.5,+3946.5] Pa 降至 [0,0] Pa；
+    - 17 项 source/workflow tests 全部通过；
+    - 修复后的 `constantCurvature=0` 已正常运行至 0.006 s；
+    - 首个写出速度降至 0.00047 s 的 0.170 m/s，但延迟自由面热点仍在
+      0.00454 s 达到 1.424 m/s；
+    - global/interface Co 分别为 0.363/0.186，alpha 和质量界仍干净。
+    因此旧 `p` 缓存确实制造了 startup impulse，但不是延迟热点的唯一来源。
+    该非物理模型仍不能延长。下一步用修复后的初始化复筛
+    `RDF + plicRDF + interpolateNormal=false`，再决定 timestep 或
+    pressure-coupling sensitivity。
 
 十、hold 验收
 

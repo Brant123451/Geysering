@@ -770,5 +770,71 @@
       "next_action": "Split absolute-pressure and reduced-pressure initialisation into separate setExprFields processes, verify the residual before decomposition, and repeat the zero-curvature mechanism screen before re-screening physical RDF."
     },
     "completion_claim": "This is a rejected 0.006 s physical screen with a confirmed initialization defect. It is not a passed hold, smoke run, full experiment, or accepted baseline."
+  },
+  "split_pressure_initialization_validation": {
+    "status": "pressure_residual_fixed_delayed_hotspot_remains",
+    "source_commit": "3a1777d",
+    "purpose": "Validate that a second setExprFields process reloads the final absolute pressure before constructing p_rgh, then repeat the zero-curvature mechanism screen.",
+    "field_validation": {
+      "residual_expression": "p_rgh - (p + rho(alpha,p,T)*9.81*y)",
+      "pre_fix_min_pa": -453.53142,
+      "pre_fix_max_pa": 3946.4994,
+      "post_fix_min_pa": 0.0,
+      "post_fix_max_pa": 0.0,
+      "cells_checked": 1903549,
+      "method": "OpenFOAM setExprFields residual field followed by fieldMinMax at time zero"
+    },
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "reconstruction_iterations": 5,
+      "reconstruction_tolerance": 1e-06,
+      "curvature_model": "constantCurvature",
+      "curvature_value_per_m": 0.0,
+      "interpolate_normal": false,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "write_interval_s": 0.0005,
+      "requested_end_time_s": 0.006
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.005963016232,
+      "postprocessed_probe_duration_s": 0.0050441966,
+      "execution_time_s": 263.01,
+      "clock_time_s": 274,
+      "final_delta_t_s": 0.00012967952,
+      "maximum_courant_number": 0.36343638,
+      "maximum_interface_courant_number": 0.18618996,
+      "maximum_capillary_number": 0.79167739,
+      "alpha_water_min": -2.646978e-22,
+      "alpha_water_max": 1.0000000000000624,
+      "written_peak_velocity_m_per_s": 1.4236098,
+      "written_peak_velocity_time_s": 0.0045358115,
+      "written_peak_velocity_location_m": [
+        3.5215963,
+        0.40414422,
+        -0.00081251441
+      ],
+      "first_written_velocity_m_per_s": 0.17041954,
+      "first_written_velocity_time_s": 0.00047098108,
+      "final_written_velocity_m_per_s": 0.75965456,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "gas_mass_error_pct_max_abs": 3.840865782467352e-06,
+      "total_mass_error_pct_max_abs": 1.8080075201188025e-08
+    },
+    "interpretation": {
+      "finding": "Reloading p eliminated the 3.95 kPa algebraic inconsistency and strongly reduced the first written startup velocity. A delayed free-surface hotspot nevertheless grew to 1.424 m/s by 0.00454 s, and global Co still exceeded 0.30.",
+      "decision": "The initialization repair is retained, but zero curvature remains a rejected nonphysical mechanism model and cannot be extended.",
+      "next_action": "Repeat the physical RDF plus plicRDF plus interpolateNormal=false 0.006 s screen with the corrected initialization before testing timestep or pressure-coupling controls."
+    },
+    "completion_claim": "This validates the pressure-field repair, not the closed-valve hold or experimental reproduction."
   }
 }
