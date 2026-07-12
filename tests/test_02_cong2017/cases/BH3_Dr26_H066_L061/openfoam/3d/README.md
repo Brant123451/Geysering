@@ -185,7 +185,9 @@ at `0.05 s`; this is improvement evidence, not a 1 s hold pass. Restoring
 the measured `0.072 N/m` on that refined mesh increases the `0.05 s`
 water-weighted maximum to `0.12539 m/s` and the reconstructed residual to
 `1681.4`. Thus mesh refinement alone does not cure the CSF imbalance, and the
-physical-sigma event gate remains closed.
+physical-sigma event gate remains closed. The matched cosine-band diagnostic
+is not an improvement (`0.12721 m/s`, residual `2171.2`), so the linear
+band-edge derivative jumps are not the controlling defect.
 
 ## Required outputs
 

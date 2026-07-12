@@ -186,3 +186,9 @@ residual. The physical-sigma static gate remains failed, so no 13 s event run
 is released. The next isolation check keeps the refined mesh, thickness,
 surface tension, and all physical inputs fixed and changes only the 15 mm
 initial band from linear to a symmetric volume-preserving cosine profile.
+That check also fails: its maximum water-weighted speed is `0.12721 m/s`
+and reconstructed initial force residual is `2171.2`, versus `0.12539 m/s`
+and `1681.4` for the refined linear profile. Removing the band-edge derivative
+jumps therefore does not cure the physical-sigma imbalance. Further event
+work remains blocked pending a mesh/operator treatment that passes the static
+gate without changing the measured physics.
