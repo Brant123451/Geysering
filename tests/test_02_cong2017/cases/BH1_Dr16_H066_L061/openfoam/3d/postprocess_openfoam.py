@@ -23,6 +23,7 @@ RHO_AIR_ATM = PATM / (R_AIR * T0)
 RHO_WATER = 998.2
 GRAVITY = 9.81
 H0 = 0.66
+PIPE_DIAMETER = 0.050
 RIM_HEIGHT = 1.80
 POCKET_VOLUME_TARGET = math.pi * 0.050**2 * 0.610 / 4
 POCKET_MASS_TARGET = POCKET_VOLUME_TARGET * RHO_AIR_ATM
@@ -310,11 +311,20 @@ def main() -> None:
     net_air_mass_out = net_total_mass_out - net_water_mass_out
     cumulative_water_out_mass = trapz_flux(time, net_water_mass_out)
     cumulative_air_out_mass = trapz_flux(time, net_air_mass_out)
+    cumulative_total_out_mass = trapz_flux(time, net_total_mass_out)
+    cumulative_rim_water_net = trapz_flux(
+        time, boundary_flux["rim_water_phi"]
+    )
+    cumulative_rim_water_ejected = trapz_flux(
+        time, np.maximum(boundary_flux["rim_water_phi"], 0.0)
+    )
 
     water_mass = series["water_mass"]
     gas_mass = series["gas_mass"]
+    total_mass = water_mass + gas_mass
     water_budget = water_mass + cumulative_water_out_mass
     gas_budget = gas_mass + cumulative_air_out_mass
+    total_budget = total_mass + cumulative_total_out_mass
     water_budget_error = (
         float(water_budget[-1] - water_budget[0])
         if np.all(np.isfinite(water_budget[[0, -1]]))
@@ -323,6 +333,11 @@ def main() -> None:
     gas_budget_error = (
         float(gas_budget[-1] - gas_budget[0])
         if np.all(np.isfinite(gas_budget[[0, -1]]))
+        else math.nan
+    )
+    total_budget_error = (
+        float(total_budget[-1] - total_budget[0])
+        if np.all(np.isfinite(total_budget[[0, -1]]))
         else math.nan
     )
 
@@ -343,10 +358,15 @@ def main() -> None:
         "atmosphere_total_mass_flow_kg_s",
         "inlet_total_mass_flow_kg_s",
         "net_air_mass_flow_kg_s",
+        "net_total_mass_flow_kg_s",
+        "cumulative_rim_water_net_m3",
+        "cumulative_rim_water_ejected_m3",
         "water_mass_kg",
         "gas_mass_kg",
+        "total_mass_kg",
         "water_mass_budget_kg",
         "gas_mass_budget_kg",
+        "total_mass_budget_kg",
     ]
     matrix = np.column_stack(
         [
@@ -365,10 +385,15 @@ def main() -> None:
             boundary_flux["atmosphere_mass_phi"],
             boundary_flux["inlet_mass_phi"],
             net_air_mass_out,
+            net_total_mass_out,
+            cumulative_rim_water_net,
+            cumulative_rim_water_ejected,
             water_mass,
             gas_mass,
+            total_mass,
             water_budget,
             gas_budget,
+            total_budget,
         ]
     )
     with output_csv.open("w", newline="", encoding="utf-8") as handle:
@@ -410,6 +435,11 @@ def main() -> None:
         "PT1_peak_over_H0": float(np.nanmax(pt1_head / H0)),
         "pocket_peak_over_H0": float(np.nanmax(pocket_head / H0)),
         "ejected_water_max_m3": float(np.nanmax(series["ejected_water"])),
+        "exterior_water_max_m3": float(np.nanmax(series["ejected_water"])),
+        "ejected_water_cumulative_positive_m3": float(
+            cumulative_rim_water_ejected[-1]
+        ),
+        "rim_water_net_transfer_m3": float(cumulative_rim_water_net[-1]),
         "rim_water_flow_peak_m3_s": float(
             np.nanmax(np.abs(boundary_flux["rim_water_phi"]))
         ),
@@ -432,6 +462,13 @@ def main() -> None:
                 pocket_volume_error, POCKET_VOLUME_TARGET
             ),
             "analytic_pocket_air_mass_kg": POCKET_MASS_TARGET,
+            "mesh_pocket_air_mass_at_initial_state_kg": (
+                initial_tunnel_gas * RHO_AIR_ATM
+            ),
+            "pocket_air_mass_relative_error": finite_relative(
+                initial_tunnel_gas * RHO_AIR_ATM - POCKET_MASS_TARGET,
+                POCKET_MASS_TARGET,
+            ),
             "total_domain_gas_mass_kg": float(gas_mass[0]),
         },
         "conservation": {
@@ -443,9 +480,16 @@ def main() -> None:
             "gas_budget_relative_error": finite_relative(
                 gas_budget_error, float(gas_budget[0])
             ),
+            "total_budget_error_kg": total_budget_error,
+            "total_budget_relative_error": finite_relative(
+                total_budget_error, float(total_budget[0])
+            ),
             "budget_definition": "final inventory + integrated outward boundary flux - initial inventory",
             "gas_flux_definition": (
                 "solver rhoPhi minus alphaPhi0.water times 998.2 kg/m3"
+            ),
+            "total_flux_definition": (
+                "solver rhoPhi summed directly over atmosphere and inlet"
             ),
         },
         "experimental_targets": {
@@ -454,14 +498,36 @@ def main() -> None:
             "vfs_m_per_s": 0.924,
             "vint_m_per_s": 1.231,
         },
+        "comparison_to_experiment": {
+            "classification_match": bool(np.nanmax(yfs) >= 0.98 * RIM_HEIGHT),
+            "Ta_error_s": None if ta is None else ta - 8.07,
+            "Ta_relative_error": (
+                None if ta is None else finite_relative(ta - 8.07, 8.07)
+            ),
+            "vfs_error_m_per_s": None if vfs is None else vfs - 0.924,
+            "vfs_relative_error": (
+                None if vfs is None else finite_relative(vfs - 0.924, 0.924)
+            ),
+            "vint_error_m_per_s": None if vint is None else vint - 1.231,
+            "vint_relative_error": (
+                None if vint is None else finite_relative(vint - 1.231, 1.231)
+            ),
+        },
         "comparison_warning": (
             "Fig.10(a) is the same nominal B-1 condition; PT1 exact axial "
             "offset was not reported, so the 3-D curve is labelled PT1_proxy."
+        ),
+        "one_d_comparison_warning": (
+            "The frozen 1-D model uses a 6.0 m effective pipe and x_tee=2.88 m, "
+            "not the audited 3-D geometry. Its riser coordinates are shifted "
+            "down by D=0.05 m in the plot to share the above-crown datum; the "
+            "comparison is qualitative."
         ),
     }
 
     water_rel = metrics["conservation"]["water_budget_relative_error"]
     gas_rel = metrics["conservation"]["gas_budget_relative_error"]
+    total_rel = metrics["conservation"]["total_budget_relative_error"]
     completed = reached_end >= {
         "static": 0.50,
         "smoke": 0.05,
@@ -478,6 +544,8 @@ def main() -> None:
                 and abs(water_rel) <= 1e-3
                 and gas_rel is not None
                 and abs(gas_rel) <= 1e-3
+                and total_rel is not None
+                and abs(total_rel) <= 1e-3
                 and thermal_pass
             ),
         }
@@ -489,8 +557,25 @@ def main() -> None:
                 and abs(water_rel) <= 1e-2
                 and gas_rel is not None
                 and abs(gas_rel) <= 1e-2
+                and total_rel is not None
+                and abs(total_rel) <= 1e-2
                 and thermal_pass
             )
+        }
+    elif args.mode == "full":
+        metrics["full_event"] = {
+            "minimum_end_time_s": 13.0,
+            "maximum_mass_budget_relative_error": 1e-2,
+            "pass": bool(
+                completed
+                and water_rel is not None
+                and abs(water_rel) <= 1e-2
+                and gas_rel is not None
+                and abs(gas_rel) <= 1e-2
+                and total_rel is not None
+                and abs(total_rel) <= 1e-2
+                and thermal_pass
+            ),
         }
 
     metrics_path = args.output_dir / f"{run_name}-metrics.json"
@@ -502,13 +587,37 @@ def main() -> None:
     exp_levels = read_csv_columns(args.experimental_levels)
     exp_pressure = read_csv_columns(args.experimental_pressure)
     one_d = read_csv_columns(args.one_d)
+    one_d_yfs = (
+        np.maximum(one_d["Yfs_m"] - PIPE_DIAMETER, 0.0)
+        if "Yfs_m" in one_d
+        else np.array([])
+    )
+    one_d_yint = (
+        np.maximum(one_d["Yint_m"] - PIPE_DIAMETER, 0.0)
+        if "Yint_m" in one_d
+        else np.array([])
+    )
     figure, axes = plt.subplots(3, 1, figsize=(8.0, 9.0), constrained_layout=True)
 
     axes[0].plot(time, yfs, label="3-D Yfs", color="#d62728")
     axes[0].plot(time, yint, label="3-D Yint", color="#1f77b4")
-    if one_d:
-        axes[0].plot(one_d["t_s"], one_d["Yfs_m"], "--", color="#d62728", alpha=0.5, label="1-D Yfs")
-        axes[0].plot(one_d["t_s"], one_d["Yint_m"], "--", color="#1f77b4", alpha=0.5, label="1-D Yint")
+    if one_d_yfs.size and one_d_yint.size:
+        axes[0].plot(
+            one_d["t_s"],
+            one_d_yfs,
+            "--",
+            color="#d62728",
+            alpha=0.5,
+            label="legacy 1-D Yfs (shifted -D)",
+        )
+        axes[0].plot(
+            one_d["t_s"],
+            one_d_yint,
+            "--",
+            color="#1f77b4",
+            alpha=0.5,
+            label="legacy 1-D Yint (shifted -D)",
+        )
     if exp_levels:
         fs = exp_levels["kind"] == "fs"
         interface = exp_levels["kind"] == "int"
@@ -560,6 +669,8 @@ def main() -> None:
         raise SystemExit("Open-valve smoke acceptance criteria failed")
     if not thermal_pass:
         raise SystemExit("Temperature validity acceptance failed")
+    if args.mode == "full" and not metrics["full_event"]["pass"]:
+        raise SystemExit("Full-event completion or conservation acceptance failed")
 
 
 if __name__ == "__main__":

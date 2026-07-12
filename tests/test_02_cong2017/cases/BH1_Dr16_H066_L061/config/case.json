@@ -22,9 +22,10 @@
   },
   "openfoam_3d": {
     "directory": "openfoam/3d",
-    "solver": "compressibleInterFoam",
+    "solver": "bh1CompressibleInterFoam",
+    "base_solver": "compressibleInterFoam",
     "minimum_event_window_s": 13.0,
     "initial_pocket_pressure_absolute_Pa": 101325.0,
-    "status": "source_ready_pending_runtime_validation"
+    "status": "runtime_validation_in_progress"
   }
 }

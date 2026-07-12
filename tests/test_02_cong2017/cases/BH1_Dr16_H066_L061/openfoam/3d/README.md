@@ -158,16 +158,27 @@ The runtime function objects record:
 highest centreline point with `alpha.water>=0.5`; `Yint` is the top of the
 `alpha.water<0.5` gas core connected to the tee. The plots compare these
 against this Case's digitized Fig.9(a), the explicitly labelled
-`PT1_proxy` against Fig.10(a), and the frozen existing 1-D result.
+`PT1_proxy` against Fig.10(a), and the frozen existing 1-D result. The 1-D
+heights are shifted by `-D=-0.05 m` only for display so that all level curves
+share the above-crown datum. That comparison remains qualitative because the
+frozen 1-D effective pipe and tee geometry differ from the audited 3-D model.
 
-Gas and water conservation use
+Water, gas, and total-mass conservation use
 
 `final inventory + integrated outward boundary flux - initial inventory`.
 
 The external atmosphere is open, so raw gas inventory alone is not a
 conservation test. The gas boundary budget uses the solver's compressible
 `rhoPhi` minus the water-volume flux times `998.2 kg/m3`; it does not assume
-that expelled or ingested air remains at atmospheric density.
+that expelled or ingested air remains at atmospheric density. The independent
+total-mass budget integrates `rhoPhi` directly. Static-hold relative errors
+must not exceed `0.1%`; smoke and each complete 13 s event must not exceed
+`1%` for any of the three budgets.
+
+The CSV distinguishes instantaneous exterior water inventory from water
+ejected through the physical rim. The latter is the time integral of the
+positive upward `alphaPhi0.water` flux through `riserMouth`; the net integral
+is also retained so fallback is not counted as additional ejection.
 
 Generated `processor*`, `polyMesh`, time directories, `postProcessing`, logs,
 and `.msh` files are ignored and must never be committed.

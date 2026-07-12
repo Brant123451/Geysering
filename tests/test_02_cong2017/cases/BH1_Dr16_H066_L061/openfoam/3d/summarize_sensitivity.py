@@ -26,7 +26,8 @@ FIELDS = (
     "vfs_fit_m_per_s",
     "vint_fit_m_per_s",
     "PT1_peak_over_H0",
-    "ejected_water_max_m3",
+    "exterior_water_max_m3",
+    "ejected_water_cumulative_positive_m3",
 )
 
 
@@ -47,6 +48,8 @@ def main() -> None:
         if not path.exists():
             raise SystemExit(f"Missing completed sensitivity result: {path}")
         records[run] = json.loads(path.read_text(encoding="utf-8"))
+        if not records[run].get("full_event", {}).get("pass", False):
+            raise SystemExit(f"Sensitivity result failed full-event acceptance: {path}")
 
     csv_path = args.output_dir / "sensitivity-summary.csv"
     with csv_path.open("w", newline="", encoding="utf-8") as handle:
@@ -57,9 +60,11 @@ def main() -> None:
                 "mesh",
                 "valve_duration_s",
                 "geyser",
+                "full_event_pass",
                 *FIELDS,
                 "water_mass_budget_relative_error",
                 "gas_mass_budget_relative_error",
+                "total_mass_budget_relative_error",
             ]
         )
         for run in RUNS:
@@ -70,9 +75,11 @@ def main() -> None:
                     "refined" if run.startswith("refined") else "base",
                     item["valve_duration_s"],
                     int(item["observed_3d_geyser"]),
+                    int(item["full_event"]["pass"]),
                     *[item.get(field) for field in FIELDS],
                     item["conservation"]["water_budget_relative_error"],
                     item["conservation"]["gas_budget_relative_error"],
+                    item["conservation"]["total_budget_relative_error"],
                 ]
             )
 
