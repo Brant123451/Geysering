@@ -17,7 +17,6 @@ from pathlib import Path
 
 
 HERE = Path(__file__).resolve().parent
-INITIAL_INTERFACE_THICKNESS_M = 0.015
 PRODUCT_SUFFIXES = (
     "_metrics.json",
     "_timeseries.csv",
@@ -49,6 +48,7 @@ class Variant:
     alpha_smooth_curvature: int = 0
     sample_interval: float = 5.0e-3
     surface_tension: float = 0.072
+    initial_interface_thickness: float = 0.015
 
 
 VARIANTS = (
@@ -69,6 +69,16 @@ VARIANTS = (
         sample_interval=1.0e-3,
         surface_tension=0.0,
     ),
+    Variant(
+        "closed_sharp_sigma_zero",
+        "diagnostic",
+        mode="closed",
+        valve="closed",
+        end_time=0.05,
+        sample_interval=1.0e-3,
+        surface_tension=0.0,
+        initial_interface_thickness=0.0,
+    ),
     Variant("open_smoke", "smoke", end_time=0.02, sample_interval=1.0e-3),
     Variant("base_nominal", "core"),
     Variant("refined_nominal", "core", mesh="refined"),
@@ -83,6 +93,11 @@ VARIANTS = (
     Variant("valve_0p5", "sensitivity", valve="0.5"),
     Variant("interface_diffuse", "sensitivity", c_alpha=0.5),
     Variant("interface_sharp", "sensitivity", c_alpha=2.0),
+    Variant(
+        "initial_sharp",
+        "sensitivity",
+        initial_interface_thickness=0.0,
+    ),
     Variant("sigma_zero", "sensitivity", surface_tension=0.0),
 )
 
@@ -243,7 +258,7 @@ def annotate_metrics(
     data["numerical_controls"] = {
         "mesh_profile": variant.mesh,
         "c_alpha": variant.c_alpha,
-        "initial_interface_thickness_m": INITIAL_INTERFACE_THICKNESS_M,
+        "initial_interface_thickness_m": variant.initial_interface_thickness,
         "alpha_smooth_curvature": variant.alpha_smooth_curvature,
         "max_co": variant.max_co,
         "max_alpha_co": variant.max_alpha_co,
@@ -321,6 +336,9 @@ def main() -> None:
                     variant.alpha_smooth_curvature
                 ),
                 "SURFACE_TENSION": str(variant.surface_tension),
+                "INITIAL_INTERFACE_THICKNESS": str(
+                    variant.initial_interface_thickness
+                ),
                 "MESH_PROFILE": variant.mesh,
                 "OPENFOAM_NP": str(args.np),
                 "REFERENCE_ROOT": str(HERE.parents[1]),

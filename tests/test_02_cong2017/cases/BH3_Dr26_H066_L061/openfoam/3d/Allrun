@@ -9,6 +9,7 @@ VALVE_OPENING="${VALVE_OPENING:-instant}"
 END_TIME="${END_TIME:-13}"
 RUN_ID="${RUN_ID:-${RUN_MODE}_${VALVE_OPENING}}"
 NP="${OPENFOAM_NP:-4}"
+INITIAL_INTERFACE_THICKNESS="${INITIAL_INTERFACE_THICKNESS:-0.015}"
 
 if [[ "$RUN_MODE" != "event" && "$RUN_MODE" != "closed" ]]; then
     echo "RUN_MODE must be event or closed" >&2
@@ -54,12 +55,25 @@ python3 make_runtime_config.py \
 cp -a 0.orig 0
 setFields > log.setFields 2>&1
 
-# Initialize the horizontal free surface as a three-base-cell linear VOF band.
-# The 15 mm transition preserves the analytic water volume because it is
-# symmetric about H0, while avoiding a one-face curvature impulse on tets.
+# The experimental interface is sharp.  The paired-CFD-style sharp profile and
+# the declared three-base-cell diffuse profile are kept as explicit controls.
+case "$INITIAL_INTERFACE_THICKNESS" in
+    0|0.0|0.000)
+        PHASE_EXPRESSION="(pos().x()>=5.98 ? 0 : (pos().z()<=0.66 ? 1 : 0))"
+        PHASE_BOUNDARY_DICT="system/setExprBoundaryFieldsDict.sharp"
+        ;;
+    0.015|.015)
+        PHASE_EXPRESSION="(pos().x()>=5.98 ? 0 : (pos().z()<=0.6525 ? 1 : (pos().z()>=0.6675 ? 0 : (0.6675-pos().z())/0.015)))"
+        PHASE_BOUNDARY_DICT="system/setExprBoundaryFieldsDict"
+        ;;
+    *)
+        echo "INITIAL_INTERFACE_THICKNESS must be 0 or 0.015 m" >&2
+        exit 2
+        ;;
+esac
 setExprFields -time 0 \
     -field alpha.water \
-    -expression "(pos().x()>=5.98 ? 0 : (pos().z()<=0.6525 ? 1 : (pos().z()>=0.6675 ? 0 : (0.6675-pos().z())/0.015)))" \
+    -expression "$PHASE_EXPRESSION" \
     -keepPatches \
     > log.initializePhase 2>&1
 
@@ -83,7 +97,8 @@ setExprFields -time 0 \
     -load-fields "(alpha.water p)" \
     -keepPatches \
     > log.initializeHydrostaticPrgh 2>&1
-setExprBoundaryFields -time 0 > log.initializeBoundaryFields 2>&1
+setExprBoundaryFields -time 0 -dict "$PHASE_BOUNDARY_DICT" \
+    > log.initializeBoundaryFields 2>&1
 postProcess \
     -dict system/initialVolumeAuditDict \
     -time 0 \

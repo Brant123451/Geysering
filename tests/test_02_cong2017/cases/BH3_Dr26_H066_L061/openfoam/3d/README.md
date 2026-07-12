@@ -69,6 +69,10 @@ the gravitational free fall that would result from a height-independent gas
 pressure. `setExprBoundaryFields` applies the same phase, `p`, and `p_rgh`
 state to every wall face, including the water/air transitions along the riser
 wall and downstream pocket.
+The separate `INITIAL_INTERFACE_THICKNESS=0` diagnostic uses the conformal
+`z=0.66 m` mesh partition as an exact sharp step. It is an initial-interface
+sensitivity, not a replacement for the declared baseline unless the contract
+and all paired BH3/BH4 runs are changed together.
 
 For the closed-hold gate, `balanceInitialPressure` then keeps `alpha.water`
 and `U=0` fixed while iterating both phase equations of state and projecting
@@ -130,6 +134,9 @@ RUN_MODE=closed END_TIME=1.0 ./Allrun
 # Paired-CFD surface-tension omission diagnostic (not the experiment baseline)
 python3 run_study.py --variant closed_sigma_zero
 
+# Isolate the initial diffuse-band defect with both a sharp step and sigma=0
+python3 run_study.py --variant closed_sharp_sigma_zero
+
 # Open-valve numerical smoke
 RUN_MODE=event VALVE_OPENING=instant END_TIME=0.02 ./Allrun
 
@@ -139,8 +146,10 @@ RUN_MODE=event VALVE_OPENING=instant END_TIME=13 ./Allrun
 
 `VALVE_OPENING` accepts `instant`, `0.2`, or `0.5`. `C_ALPHA`, `MAX_CO`,
 `MAX_ALPHA_CO`, `MAX_DELTA_T`, `ALPHA_SMOOTH_CURVATURE`, and
-`SURFACE_TENSION` expose declared numerical controls. The baseline uses zero
-curvature-smoothing passes:
+`SURFACE_TENSION` expose declared numerical controls.
+`INITIAL_INTERFACE_THICKNESS` accepts only the declared `0.015 m` baseline or
+the conformal sharp-step value `0`. The baseline uses zero curvature-smoothing
+passes:
 controlled static tests found that extra passes increased water-side velocity
 for this mesh, while the explicit initial VOF transition reduced the startup
 impulse. Use clean runtime copies for independent variants;

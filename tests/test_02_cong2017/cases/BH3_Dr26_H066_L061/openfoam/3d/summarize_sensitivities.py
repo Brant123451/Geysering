@@ -42,6 +42,9 @@ def main() -> None:
                 "surface_tension_n_m": numerical_controls.get(
                     "surface_tension_n_per_m"
                 ),
+                "initial_interface_thickness_m": numerical_controls.get(
+                    "initial_interface_thickness_m"
+                ),
                 "end_time_s": data["simulated_end_time_s"],
                 "full_13s": int(data["full_13s_window_completed"]),
                 "geyser": int(data["geysering"]),
@@ -66,6 +69,7 @@ def main() -> None:
         "run_mode",
         "valve_opening",
         "surface_tension_n_m",
+        "initial_interface_thickness_m",
         "end_time_s",
         "full_13s",
         "geyser",
@@ -98,6 +102,7 @@ def main() -> None:
         "valve_0p5",
         "interface_diffuse",
         "interface_sharp",
+        "initial_sharp",
         "sigma_zero",
     }
     completed = {row["run_id"] for row in full}
