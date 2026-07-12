@@ -149,10 +149,15 @@ the plicRDF reconstruction iteration from the candidate rather than tightening
 it further.  That pairing was also rejected: global Co reached 1.206, a later
 global/interface spike reached 0.705, and velocity rose to 1.667 m/s by
 0.001 s.  It also removes the plicRDF contact-angle ghost geometry on which
-the current fit implementation depends.  Before another physical curvature
-candidate, a recorded `constantCurvature=0` diagnostic retains the real
-surface tension coefficient while removing only the erroneous variable
-curvature force.  This is a mechanism test, not a full-run model.
+the current fit implementation depends.  The subsequent
+`constantCurvature=0` mechanism diagnostic retained the real surface-tension
+coefficient while removing the variable-curvature force.  It exited normally
+at 0.006 s and reduced the reference-RDF peak/final velocities to
+1.437/0.770 m/s, but global/interface Courant maxima still reached
+0.393/0.214 and the hotspot remained at the initial tower free surface.
+Variable curvature is therefore not the sole source of the startup imbalance.
+This nonphysical diagnostic is rejected for extension; the next physical
+screen is `RDF + plicRDF + interpolateNormal=false`.
 
 Thermophysical choices are:
 

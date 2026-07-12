@@ -643,5 +643,62 @@
       "next_action": "Run a zero-curvature constantCurvature mechanism diagnostic with real sigma retained, then screen the missing physical RDF plus plicRDF plus interpolateNormal=false combination."
     },
     "completion_claim": "This is an intentionally stopped reconstruction-model sensitivity. It is not a passed hold, smoke run, full experiment, or accepted baseline."
+  },
+  "constant_curvature_zero_baffle_screen": {
+    "status": "rejected_joint_courant_and_velocity_gate",
+    "source_commit": "0f04383",
+    "purpose": "Remove only the variable-curvature surface-tension force while retaining sigma=0.072 N/m, the conformal closed-valve baffle, plicRDF reconstruction and all other startup controls.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "reconstruction_iterations": 5,
+      "reconstruction_tolerance": 1e-06,
+      "curvature_model": "constantCurvature",
+      "curvature_value_per_m": 0.0,
+      "interpolate_normal": false,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "requested_end_time_s": 0.006
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.006020481162,
+      "postprocessed_probe_duration_s": 0.0049782482,
+      "execution_time_s": 286.4,
+      "clock_time_s": 298,
+      "final_delta_t_s": 0.00013072713,
+      "maximum_courant_number": 0.39301985,
+      "maximum_interface_courant_number": 0.21407603,
+      "maximum_capillary_number": 0.68272038,
+      "alpha_water_min": -2.5083868e-11,
+      "alpha_water_max": 1.0000000000518048,
+      "peak_velocity_m_per_s": 1.437296,
+      "final_written_velocity_m_per_s": 0.76953222,
+      "peak_velocity_location_m": [
+        3.5215963,
+        0.40414422,
+        -0.00081251441
+      ],
+      "liquid_mass_error_pct_max_abs": 0.0,
+      "gas_mass_error_pct_max_abs": 3.821064228269001e-06,
+      "total_mass_error_pct_max_abs": 1.841517436347643e-08,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "pressure_probe_samples": 1,
+      "hstar_evaluable": false
+    },
+    "interpretation": {
+      "finding": "Removing variable curvature reduced the reference-corrector RDF peak from 1.682 to 1.437 m/s and the final written velocity from 1.285 to 0.770 m/s, but it did not remove the free-surface startup hotspot. Global and interface Courant maxima still exceeded their declared 0.30 and 0.20 limits.",
+      "mechanism_limit": "The result shows that erroneous variable curvature is not the sole source of the startup imbalance. It does not identify the remaining pressure, gravity or phase-property coupling contribution.",
+      "decision": "This nonphysical mechanism diagnostic must not be extended beyond the short screen or promoted to a full-run model.",
+      "next_action": "Run the missing physical RDF plus plicRDF plus interpolateNormal=false screen with the same baffle and startup controls."
+    },
+    "completion_claim": "This is a rejected 0.006 s mechanism diagnostic. It is not a passed hold, smoke run, full experiment, or accepted baseline."
   }
 }

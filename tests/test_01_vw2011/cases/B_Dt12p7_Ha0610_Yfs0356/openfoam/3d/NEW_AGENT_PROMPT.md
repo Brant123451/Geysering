@@ -339,9 +339,20 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     - 写出速度从 0.00047 s 的 1.233 增至 0.00101 s 的 1.667 m/s；
     - alpha 仍 bounded，无 rim 水量或 gas-entry。
     该配对还失去 fitParaboloid 依赖的 plicRDF wall ghost contact-angle
-    geometry，因此不再延长。下一步先运行保留真实 sigma 的
-    `constantCurvature=0` 机制诊断（不能作为 full-run 物理模型），再筛缺失的
-    `RDF + plicRDF + interpolateNormal=false` 物理组合。
+    geometry，因此不再延长。
+14. 保留真实 sigma 的 `constantCurvature=0` 机制诊断已正常运行至
+    0.006 s：
+    - global/interface Co 分别达到 0.393/0.214，仍超过 0.30/0.20 门槛；
+    - 写出峰值和末帧速度为 1.437/0.770 m/s，热点仍在 tower 初始自由面；
+    - alpha 约在
+      \([-2.51\times10^{-11},1+5.18\times10^{-11}]\)，gas/total balance
+      误差低于 \(3.9\times10^{-6}\%\)，无 rim 水量或 gas-entry；
+    - 只有一个 pressure sample，Hstar=0 没有稳定性意义。
+    移除 variable-curvature force 并未消除 startup imbalance，因此该非物理
+    机制诊断不能延长或作为 full-run 模型。下一步筛缺失的
+    `RDF + plicRDF + interpolateNormal=false` 物理组合；只有同时满足
+    Courant 和速度门槛才可超过旧 0.04 s pressure-drift 窗口，且只有
+    Hstar peak-to-peak 不超过 0.02 才能开始完整 1.0 s hold。
 
 十、hold 验收
 

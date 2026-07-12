@@ -66,9 +66,13 @@ first written velocity rose to 1.905 m/s and global/interface Co reached
 reconstruction algorithm instead of further tightening rejected plicRDF
 iterations.  It was also rejected: global Co reached 1.206, a later
 global/interface event reached 0.705, and velocity rose to 1.667 m/s by
-0.001 s.  The next step is a recorded `constantCurvature=0` mechanism
-diagnostic with real sigma retained, followed by the missing physical
-`RDF + plicRDF + interpolateNormal=false` combination.
+0.001 s.  The subsequent `constantCurvature=0` mechanism diagnostic exited
+normally at 0.006 s.  It reduced the reference-RDF peak/final velocities to
+1.437/0.770 m/s, but global/interface Courant maxima still reached
+0.393/0.214, above their declared limits.  Removing variable curvature
+therefore did not remove the startup free-surface imbalance, and this
+nonphysical mechanism test must not be extended.  The next screen is the
+missing physical `RDF + plicRDF + interpolateNormal=false` combination.
 
 ## Verified before handoff
 
@@ -196,6 +200,19 @@ diagnostic with real sigma retained, followed by the missing physical
     `isoAlpha` also lacks the plicRDF wall ghost geometry on which
     `fitParaboloid` relies for contact-angle information, so this pairing is
     not retained.
+17. The recorded `constantCurvature=0` mechanism diagnostic exited normally
+    at 0.006 s:
+    * global and interface Courant maxima were 0.393 and 0.214, above the
+      declared 0.30 and 0.20 limits;
+    * written peak and final velocities were 1.437 and 0.770 m/s, with the
+      peak still at the initial tower free surface;
+    * alpha stayed within
+      \([-2.51\times10^{-11},1+5.18\times10^{-11}]\);
+    * gas and total balance errors remained below
+      \(3.9\times10^{-6}\%\), with no rim water or gas entry.
+    The test shows that variable curvature is not the sole source of the
+    startup imbalance.  It is not a physical hold candidate and is not
+    cleared for extension.
 
 ## Still required
 
@@ -204,16 +221,15 @@ The scientific reproduction is **not complete**.  Continue in this order:
 1. Do not extend either existing `fitParaboloid` screen and do not retry
    `interpolateNormal=true` with a smaller timestep cap.  The source
    materialises plicRDF iteration and tolerance controls, and the
-   static-benchmark values (`iterations=10`, `tol=1e-8`) and
-   `isoAlpha + fitParaboloid` are also rejected.  First run a recorded
-   `constantCurvature=0` mechanism diagnostic while retaining real sigma;
-   this is not a physical full-run candidate.  Then screen the missing
-   `RDF + plicRDF + interpolateNormal=false` combination.  Re-screen to
-   0.006 s only if it stays within the declared Courant limits and reduces
-   peak velocity.  A candidate may then extend past the 0.04 s pressure-drift
-   onset, and only \(H^*\) peak-to-peak at or below 0.02 may proceed to the
-   full 1.0 s hold.  Opening runs retain the dissipative resistance and must
-   be tested separately.
+   static-benchmark values (`iterations=10`, `tol=1e-8`),
+   `isoAlpha + fitParaboloid`, and the nonphysical `constantCurvature=0`
+   mechanism diagnostic are also rejected.  Screen the missing
+   `RDF + plicRDF + interpolateNormal=false` physical combination to
+   0.006 s.  Extend it past the 0.04 s pressure-drift onset only if it stays
+   within the declared Courant limits and reduces peak velocity, and only
+   \(H^*\) peak-to-peak at or below 0.02 may proceed to the full 1.0 s hold.
+   Opening runs retain the dissipative resistance and must be tested
+   separately.
 2. Run the opened-valve 0.5 s smoke case.
 3. Run the 10.5 s base case through \(T^*\ge6\).
 4. Run the refined grid and required timestep/valve/compressibility
