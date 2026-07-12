@@ -137,6 +137,9 @@ python3 run_study.py --variant closed_sigma_zero
 # Isolate the initial diffuse-band defect with both a sharp step and sigma=0
 python3 run_study.py --variant closed_sharp_sigma_zero
 
+# Measure mesh dependence of the better diffuse/zero-sigma diagnostic
+python3 run_study.py --variant closed_refined_sigma_zero
+
 # Open-valve numerical smoke
 RUN_MODE=event VALVE_OPENING=instant END_TIME=0.02 ./Allrun
 
