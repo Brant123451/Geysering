@@ -23,8 +23,8 @@ RUNS = (
 FIELDS = (
     "Ta_gas_enters_riser_s",
     "t_free_surface_at_rim_s",
-    "vfs_fit_m_per_s",
-    "vint_fit_m_per_s",
+    "vfs_first_passage_m_per_s",
+    "vint_first_passage_m_per_s",
     "PT1_peak_over_H0",
     "exterior_water_max_m3",
     "ejected_water_cumulative_positive_m3",

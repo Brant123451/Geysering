@@ -140,6 +140,18 @@
     "riser_height_datum": "height above horizontal-pipe crown",
     "legacy_1d_height_shift_m": -0.05,
     "legacy_1d_comparison": "tracked frozen CSV, consumed without regeneration; qualitative only because its effective pipe and tee geometry differ",
+    "velocity_metric": {
+      "method": "height interval divided by interpolated first-passage time",
+      "Yfs_height_window_m": [
+        0.65,
+        1.7
+      ],
+      "Yint_height_window_m": [
+        0.05,
+        1.65
+      ]
+    },
+    "geyser_detection": "Yfs reaches 98% of the physical rim height or cumulative positive rim water transfer reaches 1e-9 m3",
     "ejected_water": "time integral of positive upward water flux through the physical riser mouth",
     "exterior_water": "instantaneous water inventory above the physical rim"
   },

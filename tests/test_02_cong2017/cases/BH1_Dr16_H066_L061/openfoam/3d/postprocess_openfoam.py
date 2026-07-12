@@ -137,8 +137,19 @@ def interp(source_t: np.ndarray, source_y: np.ndarray, target_t: np.ndarray) -> 
 
 
 def first_crossing(t: np.ndarray, y: np.ndarray, threshold: float) -> float | None:
-    indices = np.flatnonzero(np.isfinite(y) & (y >= threshold))
-    return float(t[indices[0]]) if indices.size else None
+    valid = np.isfinite(t) & np.isfinite(y)
+    indices = np.flatnonzero(valid & (y >= threshold))
+    if not indices.size:
+        return None
+    index = int(indices[0])
+    previous = np.flatnonzero(valid[:index])
+    if not previous.size:
+        return float(t[index])
+    prior = int(previous[-1])
+    if y[prior] >= threshold or y[index] == y[prior] or t[index] == t[prior]:
+        return float(t[index])
+    fraction = (threshold - y[prior]) / (y[index] - y[prior])
+    return float(t[prior] + np.clip(fraction, 0.0, 1.0) * (t[index] - t[prior]))
 
 
 def trapz_flux(t: np.ndarray, q: np.ndarray) -> np.ndarray:
@@ -173,11 +184,15 @@ def finite_relative(error: float, reference: float) -> float | None:
     return error / reference
 
 
-def linear_speed(t: np.ndarray, y: np.ndarray, low: float, high: float) -> float | None:
-    mask = np.isfinite(y) & (y >= low) & (y <= high)
-    if np.count_nonzero(mask) < 3:
+def first_passage_speed(
+    t: np.ndarray, y: np.ndarray, low: float, high: float
+) -> float | None:
+    """Average speed between first upward crossings of fixed height bounds."""
+    low_time = first_crossing(t, y, low)
+    high_time = first_crossing(t, y, high)
+    if low_time is None or high_time is None or high_time <= low_time:
         return None
-    return float(np.polyfit(t[mask], y[mask], 1)[0])
+    return (high - low) / (high_time - low_time)
 
 
 def profile_interfaces(profile: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -405,11 +420,16 @@ def main() -> None:
 
     ta = first_crossing(time, yint, 0.02)
     t_rim = first_crossing(time, yfs, 0.98 * RIM_HEIGHT)
-    vfs = linear_speed(time, yfs, 0.65, 1.70)
-    vint = linear_speed(time, yint, 0.05, 1.65)
+    vfs = first_passage_speed(time, yfs, 0.65, 1.70)
+    vint = first_passage_speed(time, yint, 0.05, 1.65)
     initial_tunnel_gas = float(series["tunnel_gas_volume"][0])
     pocket_volume_error = initial_tunnel_gas - POCKET_VOLUME_TARGET
     reached_end = float(time[-1])
+    cumulative_ejected_water = float(cumulative_rim_water_ejected[-1])
+    observed_geyser = bool(
+        np.nanmax(yfs) >= 0.98 * RIM_HEIGHT
+        or cumulative_ejected_water >= 1e-9
+    )
     temperature_min, temperature_max = field_extrema(
         newest_data_file(args.run_dir, "extrema", "fieldMinMax.dat"), "T"
     )
@@ -425,20 +445,27 @@ def main() -> None:
         "solver": "bh1CompressibleInterFoam",
         "valve_duration_s": args.valve_duration,
         "reached_time_s": reached_end,
-        "observed_3d_geyser": bool(np.nanmax(yfs) >= 0.98 * RIM_HEIGHT),
+        "observed_3d_geyser": observed_geyser,
+        "geyser_ejection_threshold_m3": 1e-9,
         "Ta_gas_enters_riser_s": ta,
         "t_free_surface_at_rim_s": t_rim,
+        "vfs_first_passage_m_per_s": vfs,
+        "vint_first_passage_m_per_s": vint,
+        # Compatibility aliases for early BH1 output readers.
         "vfs_fit_m_per_s": vfs,
         "vint_fit_m_per_s": vint,
+        "velocity_metric": {
+            "method": "height interval divided by interpolated first-passage time",
+            "Yfs_height_window_m": [0.65, 1.70],
+            "Yint_height_window_m": [0.05, 1.65],
+        },
         "Yfs_max_m": float(np.nanmax(yfs)),
         "Yint_max_m": float(np.nanmax(yint)),
         "PT1_peak_over_H0": float(np.nanmax(pt1_head / H0)),
         "pocket_peak_over_H0": float(np.nanmax(pocket_head / H0)),
         "ejected_water_max_m3": float(np.nanmax(series["ejected_water"])),
         "exterior_water_max_m3": float(np.nanmax(series["ejected_water"])),
-        "ejected_water_cumulative_positive_m3": float(
-            cumulative_rim_water_ejected[-1]
-        ),
+        "ejected_water_cumulative_positive_m3": cumulative_ejected_water,
         "rim_water_net_transfer_m3": float(cumulative_rim_water_net[-1]),
         "rim_water_flow_peak_m3_s": float(
             np.nanmax(np.abs(boundary_flux["rim_water_phi"]))
@@ -499,7 +526,7 @@ def main() -> None:
             "vint_m_per_s": 1.231,
         },
         "comparison_to_experiment": {
-            "classification_match": bool(np.nanmax(yfs) >= 0.98 * RIM_HEIGHT),
+            "classification_match": observed_geyser,
             "Ta_error_s": None if ta is None else ta - 8.07,
             "Ta_relative_error": (
                 None if ta is None else finite_relative(ta - 8.07, 8.07)
