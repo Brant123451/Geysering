@@ -475,6 +475,19 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     该 adaptive 候选被拒绝。下一项只改变 `maxDeltaT=1e-5`，与既有
     analytic hard-cap trace 运行直接配对，确认 discrete projection 是否
     消除其增长的 exterior-gas 热点；不得直接延长到 0.04 s。
+25. 离散初场的 hard-cap 直接配对已完成，结果更差：
+    - global/interface Co 为 0.214/0.024，仍在门槛内；
+    - 写出速度在 0.0045 s 的 pure exterior gas 增至 2.173 m/s，末帧仍
+      为 1.909 m/s；
+    - 同位 curvature=0，pressure-gravity residual 达 266 kPa/m；
+    - analytic hard-cap 对照仅为 1.481 m/s 和 208 kPa/m，而两者最大
+      surface force 均约 119 kPa/m；
+    - alpha、质量界、rim water 与 gas-entry 仍干净。
+    因此该模式是动态再生，不是初始 hydrostatic residual 的残留。日志中
+    `p_rghFinal` 在 initial residual 小于当前 \(10^{-7}\) absolute
+    tolerance 时经常 0 iteration。下一项只收紧 pressure linear-solver
+    tolerance 后复跑同一 hard-cap screen；不得更改物性或曲率模型，也不得
+    进入 0.04 s。
 
 十、hold 验收
 

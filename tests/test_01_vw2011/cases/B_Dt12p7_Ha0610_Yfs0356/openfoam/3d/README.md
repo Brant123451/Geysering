@@ -214,8 +214,15 @@ correctors reduced the pre-solver maximum face residual from 1.661 MPa/m to
 adaptive RDF rerun kept all hotspots at the physical free surface, but still
 reached global/interface Co=0.365/0.204 and a 1.798 m/s peak, essentially
 unchanged from the analytic initializer.  It is rejected.  The next direct
-comparison uses the discrete initializer with the same `maxDeltaT=1e-5` as the
-analytic hard-cap trace run; no longer hold extension is cleared.
+comparison used the discrete initializer with the same `maxDeltaT=1e-5` as the
+analytic hard-cap trace run.  It was worse: written velocity reached 2.173 m/s
+in pure exterior gas and the collocated pressure-gravity residual reached
+266 kPa/m, versus 1.481 m/s and 208 kPa/m for the analytic member, while maximum
+surface force remained 119 kPa/m.  The mode is dynamically regenerated rather
+than inherited from the initial hydrostatic field.  Since `p_rghFinal`
+frequently performs zero iterations below its current \(10^{-7}\) absolute
+tolerance, the next isolated screen tightens pressure-solver convergence.  No
+longer hold extension is cleared.
 
 Thermophysical choices are:
 

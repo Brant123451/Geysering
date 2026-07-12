@@ -386,6 +386,20 @@ timestep controls.
     adaptive-timestep RDF run and is rejected.  Pair the discrete initializer
     with `maxDeltaT=1e-5` through 0.006 s to test directly whether it removes
     the analytic hard-cap run's growing exterior-gas hotspot.
+28. That direct hard-cap pair is complete and the discrete member is worse:
+    * global/interface Courant maxima passed at 0.214/0.024;
+    * written velocity peaked at 2.173 m/s at 0.0045 s in pure exterior gas and
+      remained 1.909 m/s at the end;
+    * the collocated pressure-gravity residual reached 266 kPa/m with zero
+      curvature, versus 208 kPa/m and 1.481 m/s for the analytic hard-cap run;
+    * maximum surface force was unchanged at 119 kPa/m;
+    * alpha and mass balances remained clean, with no rim water or gas entry.
+    The initial projection therefore does not cure the dynamically regenerated
+    gas-pressure mode.  The final `p_rgh` correction frequently performs zero
+    iterations when its initial residual is below the current \(10^{-7}\)
+    absolute tolerance.  Materialise a pressure-solver tolerance control and
+    repeat this exact hard-cap screen with tighter `p_rghFinal` convergence
+    before changing any physical or curvature setting.
 
 ## Still required
 
@@ -407,8 +421,10 @@ The scientific reproduction is **not complete**.  Continue in this order:
    pressure-gravity hotspot.  Discrete hydrostatic initialization strongly
    reduces its pre-solver force residual, but the adaptive RDF rerun still
    fails both Courant gates and has essentially unchanged free-surface startup
-   velocity.  Complete the directly paired hard-cap discrete run before any
-   0.04 s pressure-drift window.  Extend a candidate past the 0.04 s
+   velocity.  Its directly paired hard-cap run amplifies, rather than removes,
+   the dynamically regenerated exterior-gas pressure mode.  Isolate
+   `p_rghFinal` linear-solver tolerance next; do not enter the 0.04 s
+   pressure-drift window.  Extend a candidate past the 0.04 s
    pressure-drift onset only if it stays within the declared Courant limits
    and reduces peak velocity, and only \(H^*\) peak-to-peak at or below 0.02
    may proceed to the full 1.0 s hold.  Opening runs retain the dissipative
