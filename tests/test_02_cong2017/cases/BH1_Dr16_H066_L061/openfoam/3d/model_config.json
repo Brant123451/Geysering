@@ -2,6 +2,19 @@
   "schema_version": 1,
   "case": "BH1_Dr16_H066_L061",
   "run": "B-H1",
+  "sources": {
+    "primary_experiment": {
+      "citation": "Cong, Chan & Lee (2017), J. Hydraul. Eng. 143(9), 04017039",
+      "doi": "10.1061/(ASCE)HY.1943-7900.0001332",
+      "repository_file": "../../../../_shared/reference/paper_source/cong2017_JHE2017_offprint.pdf",
+      "sha256": "6a2fd77ae65f6361ec5479780a3226e5f5cf69fde643866f692279588c16aa3e"
+    },
+    "companion_cfd": {
+      "citation": "Chan, Cong & Lee (2018), J. Hydraul. Eng. 144(3), 04017071",
+      "doi": "10.1061/(ASCE)HY.1943-7900.0001416",
+      "role": "methodological cross-check; its fine-grid B1 uses H0=0.88 m and is not B-H1"
+    }
+  },
   "coordinate_system": {
     "x": "horizontal pipe axis, upstream to capped end",
     "y": "vertical, upward",
@@ -99,7 +112,11 @@
     "refined": {
       "pipe_size_m": 0.003125,
       "riser_size_m": 0.00078125,
-      "plume_size_m": 0.00625
+      "plume_size_m": 0.00625,
+      "riser_wall_layers": 4,
+      "riser_wall_first_layer_thickness_m": 0.0001,
+      "riser_wall_total_layer_thickness_m": 0.00065,
+      "purpose": "resolve the approximately 0.55 mm Dr=16 mm falling film reported by Chan et al. (2018)"
     },
     "riser_refinement_extension_above_rim_m": 0.05,
     "quality_acceptance": {
@@ -120,6 +137,11 @@
     "energy_formulation": "total sensible enthalpy with pressure-time-derivative work and kinetic-energy transport",
     "energy_formulation_reference": "standard OpenFOAM compressible total-enthalpy transformation used by rhoPimpleFoam",
     "simulation_type": "laminar",
+    "turbulence_closure": {
+      "choice": "laminar preregistered OpenFOAM baseline",
+      "companion_cfd_difference": "Chan et al. (2018) used standard k-epsilon but did not report initial or inlet turbulence quantities",
+      "interpretation": "not a line-by-line reproduction of the companion FLUENT model; retain as a declared non-fitted closure rather than infer missing turbulence inputs from B-H1 outcomes"
+    },
     "end_time_s": 13.0,
     "max_Courant": 0.5,
     "max_alpha_Courant": 0.5,
@@ -140,6 +162,7 @@
         "gas",
         "total"
       ],
+      "phase_mass_fluxes": "registered solver waterRhoPhi and airRhoPhi with exact sum rhoPhi",
       "total_mass_flux": "direct sum of solver rhoPhi over atmosphere and inlet"
     },
     "bounded_startup_numerics": {
@@ -156,6 +179,7 @@
     "riser_height_datum": "height above horizontal-pipe crown",
     "legacy_1d_height_shift_m": -0.05,
     "legacy_1d_comparison": "tracked frozen CSV, consumed without regeneration; qualitative only because its effective pipe and tee geometry differ",
+    "pressure_comparison": "Fig.10(a) is Run B-1, not the B-H1 high-speed realization; same nominal Dr/H0/L0, morphology-only cross-run comparison using PT1_proxy",
     "velocity_metric": {
       "method": "height interval divided by interpolated first-passage time after gas first enters the riser",
       "Yfs_height_window_m": [
@@ -177,6 +201,7 @@
     "vfs_m_per_s": 0.924,
     "vint_m_per_s": 1.231,
     "levels_csv": "../../data/digitized/fig9a_levels.csv",
-    "pressure_csv": "../../data/digitized/fig10a_pt1.csv"
+    "pressure_csv": "../../data/digitized/fig10a_pt1.csv",
+    "pressure_csv_run": "B-1 (different realization; not pointwise B-H1 validation)"
   }
 }

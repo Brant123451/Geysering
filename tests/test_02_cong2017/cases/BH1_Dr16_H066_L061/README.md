@@ -1,6 +1,8 @@
 # Case A — Cong, Chan & Lee (2017) Run B-H1（喷发分支，高速摄像）
 
-论文 Campaign 2 的喷发分支代表工况。对应论文 `papers/cong2017.pdf`（JHE 143(9):04017039）
+论文 Campaign 2 的喷发分支代表工况。对应原文
+`../../_shared/reference/paper_source/cong2017_JHE2017_offprint.pdf`
+（JHE 143(9):04017039）
 Series B 高速摄像组的 **Run B-H1**。
 
 ## 工况参数（Table 2, High speed camera 组）
@@ -33,9 +35,14 @@ Series B 高速摄像组的 **Run B-H1**。
 
 `openfoam/3d/` 是 B-H1 的公共三维模板：真圆主管、真圆 `Dr=16 mm` 竖管、
 共形三维 T 接口、物理 `1.8 m` 竖管及独立外部空气域。求解器为
-`compressibleInterFoam`，初始气囊保持 `101325 Pa`，不使用人工压强/速度源。
+`bh1CompressibleInterFoam`（基于 `compressibleInterFoam`），初始气囊保持
+`101325 Pa`，不使用人工压强/速度源。
 该目录包含两档网格、闭阀静态保持、开阀 smoke、13 s 完整事件、`0/0.2/0.5 s`
 阀时敏感性，以及 Fig.9(a)/Fig.10(a)/既有 1D 对比和质量守恒后处理。
+
+原文归属必须区分：Table 2 B-H1 与 Fig.9(a) 是本高速摄像工况，可直接定量
+对比；Fig.10(a) 标注的是 **Run B-1**。B-1 与 B-H1 的 `Dr/H0/L0` 名义参数相同，
+但不是同次记录，因此压力曲线只作跨次形态对照，不计算点对点 B-H1 误差。
 
 ## 文件夹自包含（代码冻结）
 

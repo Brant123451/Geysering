@@ -52,6 +52,11 @@ python3 "$MODEL_DIR/make_geometry.py" \
     --output-dir constant/triSurface \
     --metadata "$OUTPUT_DIR/mesh-${RUN_NAME}.json" \
     > log.gmsh 2>&1
+python3 "$MODEL_DIR/validate_paper_case.py" \
+    --case-dir "$RUN_DIR" \
+    --geometry "$OUTPUT_DIR/mesh-${RUN_NAME}.json" \
+    --output "$OUTPUT_DIR/paper-audit-${RUN_NAME}.json" \
+    > log.paperAudit 2>&1
 
 cp "system/snappyHexMeshDict.${MESH_LEVEL}" system/snappyHexMeshDict
 blockMesh > log.blockMesh 2>&1

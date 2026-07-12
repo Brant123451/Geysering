@@ -24,7 +24,9 @@ define a computational extension:
 - Chan, S. N., Cong, J., and Lee, J. H. W. (2018), *3D Numerical Modeling
   of Geyser Formation by Release of Entrapped Air from Horizontal Pipe into
   Vertical Shaft*, J. Hydraul. Eng. 144(3), 04017071, DOI
-  `10.1061/(ASCE)HY.1943-7900.0001416`.
+  `10.1061/(ASCE)HY.1943-7900.0001416`; the HKUST author PDF
+  (`ias.ust.hk/ias/files/pdf/1537407582_b2.pdf`) was read directly, SHA-256
+  `a1f8874ba3b2bd6867d11222abfb235a6dadad726bb13a56008b0c28714124b7`.
 
 For the audit, `x = 0` is the upstream end of the horizontal test pipe and
 positive `x` points toward the capped end. `z = 0` is the horizontal-pipe
@@ -43,8 +45,10 @@ invert. Thus the pipe crown/soffit is at `z = D = 0.050 m`.
 | Physical riser height | PDF p.2, Experiments; p.7, Observation of Geysers: `1.8 m`, measured from the horizontal-pipe soffit | Physical rim is `1.80 m` above the crown, i.e. `z_rim = 1.85 m` under the stated coordinate convention. | RESOLVED |
 | Upstream head for the high-speed Series-B set | PDF p.3, Table 2, rows B-H1 through B-H7; p.12 notation says Series-B `H0` is measured from tunnel invert | `H0 = 0.66 m` above pipe invert for all B-H1…B-H7. Values `0.77/0.88 m` belong to other Series-B runs, not this fixed high-speed set. | RESOLVED |
 | Initial riser water level | PDF p.3: pressurized-pipe Series B has the initial riser water depth at the same level; p.12 defines `H0` | Free surface initially at `z = H0 = 0.66 m`. `L0=0.61 m` is the horizontal air-pocket length, not a riser water level. | RESOLVED |
-| Experimental valve opening time | PDF p.3, Experimental Procedure: manual operation “takes approximately `0.2 s`” | Experimental baseline duration is approximately `0.2 s`. The companion CFD paper says `0.5 s` and used instantaneous opening; that discrepancy belongs in the requested sensitivity study, not in the baseline geometry. | RESOLVED for duration; opening law unresolved below |
+| Experimental valve opening time | PDF p.3, Experimental Procedure: manual operation “takes approximately `0.2 s`” | Experimental baseline duration is approximately `0.2 s`. The companion CFD paper says `0.5 s` and used instantaneous opening; that discrepancy belongs in the requested sensitivity study, not in the baseline geometry. | RESOLVED; the unmeasured opening law is isolated as a named numerical closure below |
 | Pressure taps | PDF p.4, Measurements; Fig. 1: PT1 at pipe crown near the capped end, PT2 at pipe invert directly beneath the riser | PT2/Point B: `x=3.47 m`, invert. PT1/Point A: crown/soffit near the downstream end. Because the exact PT1 offset is not reported, 3-D output must label a reproducible end-pocket proxy and a pocket-volume average rather than claim the experimental coordinate. | RESOLVED as a bounded measurement operator |
+| Laboratory thermal/material state | PDF p.4 reports `23 degC` and `rho_w=998 kg/m3`; p.5 reports `sigma=0.072 N/m` | Initialize `296.15 K`, use `rho_w=998.2 kg/m3` and `sigma=0.072 N/m`. | RESOLVED |
+| Pressure trace assigned to B-H1 | PDF Fig. 9 is explicitly B-H1; Fig. 10(a) is explicitly Run B-1 | Fig. 9(a) and Table 2 B-H1 are direct quantitative validation. Fig. 10(a) has the same nominal `Dr/H0/L0` but is a different realization and is used only for pressure morphology, never pointwise B-H1 error. | RESOLVED as cross-run evidence |
 
 ## Conflict adjudication
 
@@ -62,6 +66,22 @@ invert. Thus the pipe crown/soffit is at `z = D = 0.050 m`.
 - **`H0=0.66 m` versus `0.88 m`:** every B-H high-speed row uses
   `0.66 m`; `0.88 m` belongs to other Series-B runs and to the fine-mesh
   companion-CFD Run B1.
+- **B-H1 versus companion-CFD B1:** these are not the same run. B-H1 in the
+  2017 high-speed table has `H0=0.66 m`; the 2018 fine-grid B1 has
+  `H0=0.88 m`. The companion paper supplies numerical-method context only;
+  its B1 result is not substituted for the requested target.
+- **Valve duration `0.2 s` versus `0.5 s`:** the 2017 experimental procedure
+  reports approximately `0.2 s`; the 2018 paper describes the experiment as
+  approximately `0.5 s` and its own simulation as instantaneous. These are
+  retained as `0`, `0.2`, and `0.5 s` cases, with only the duration—not an
+  angle-time law—treated as source evidence.
+- **Turbulence treatment:** Chan et al. (2018) used standard `k-epsilon`, but
+  did not publish initial/inlet turbulence quantities and also states that
+  details differ because the turbulence model cannot accurately represent the
+  complex two-phase flow. The preregistered OpenFOAM baseline remains laminar
+  rather than inferring missing values from the known B-H1 outcome. This is a
+  declared methodological difference, not a claim to reproduce the FLUENT
+  closure line by line.
 
 ## Direct initial-pocket check
 
@@ -150,6 +170,18 @@ measurements exist:
    equation with phase `Cp`. It remains non-isothermal and compressible; no
    temperature clipping is applied. The choice precedes all mesh/valve
    comparisons and is not selected from the known B-H1 outcome.
+10. **Riser-film mesh:** the companion paper reports about 50 cells across the
+    riser, a `0.1 mm` smallest cell, and a `0.55 mm` theoretical film for
+    `Dr=16 mm`. The base mesh is intentionally coarse. The refined mesh adds
+    four absolute prism layers on the riser wall, with `0.1 mm` first-layer
+    thickness and `0.65 mm` total thickness, so the requested mesh comparison
+    tests the film-sensitive region without an unaffordable `0.1 mm` isotropic
+    mesh over the full 1.8 m riser.
+11. **Phase conservation:** the solver registers transported
+    `waterRhoPhi` and `airRhoPhi` at every boundary, defined so their sum is
+    identically `rhoPhi`. Accepted new runs must close separate water, gas, and
+    total mass budgets using these mass fluxes; multiplying gas volume flux by
+    a fixed atmospheric density is not accepted.
 
 With these declarations, all model-affecting paper conflicts are either
 resolved by primary evidence or isolated as named numerical sensitivities.

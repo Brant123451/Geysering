@@ -4,11 +4,12 @@
     D = 0.05 m, Dr = 0.016 m (Dr/D = 0.32), H0 = 0.66 m, L0 = 0.61 m,
     V*air = 9.03  ->  experiment: GEYSER in the high-speed-camera run.
 
-Layout (Series B, Fig. 1b): constant-head tank -- 2.88 m pipe -- tee/riser
-(1.8 m tall) -- 2.51 m pipe -- ball valve -- 0.61 m ATMOSPHERIC air pocket --
-closed cap.  The tee position follows Table 2's own kinematic pair for B-H1
-(Ta = 8.07 s at Uf = 0.444*sqrt(gD) = 0.311 m/s -> valve-to-tee = 2.51 m);
-the "~1.8 m" in the text is the camera field of view, not the full distance.
+Paper layout (Series B, Fig. 1b): constant-head tank -- 3.47 m pipe --
+tee/riser (1.8 m tall above the pipe crown) -- (3.12-L0)=2.51 m pipe --
+ball valve -- 0.61 m ATMOSPHERIC air pocket -- closed cap.  The frozen 1-D
+snapshot below predates that direct Fig. 1 audit and retains an effective
+2.88 m tee coordinate inferred from Ta*Uf; it is qualitative only and must
+not be used as 3-D geometry evidence.
 
 Opening the valve releases the pocket: it migrates along the crown toward the
 riser, partially enters, the supply slug arrests and COMPRESSES the pocket
@@ -221,7 +222,7 @@ def main():
     ax.fill_between(p10["t"], p10["lo"], p10["hi"], color=C_PAPER_BAND, alpha=0.45,
                     label="Run B-1 PT1, digitized pixel envelope (Fig.10a)")
     ax.plot(p10["t"], p10["med"], color="#374151", lw=1.3,
-            label="Run B-1 PT1, digitized median (video series, same condition)")
+            label="Run B-1 PT1 (same nominal inputs; different realization)")
     ax.plot(t, pk_avg, color=C_MODEL, lw=1.8,
             label="model: trapped-pocket EOS gauge head / $H_0$ (0.5 s cycle-avg)")
     ax.plot(t, pk_over, color=C_MODEL, lw=0.7, alpha=0.35,
@@ -234,8 +235,8 @@ def main():
     ax.set_ylabel("$H/H_0$")
     ax.grid(alpha=0.3)
     ax.legend(frameon=False, fontsize=8, loc="upper right")
-    ax.set_title("Run B-H1 pocket pressure vs PT1 (pipe crown near the closed end)\n"
-                 "model (decoupled two-fluid, frozen copy) vs Cong et al. (2017) Fig.10(a), digitized",
+    ax.set_title("Frozen B-H1 model pocket vs Fig.10(a) Run B-1 PT1\n"
+                 "same nominal parameters, different realization; morphology only",
                  fontsize=10)
     fig.tight_layout()
     fig.savefig(OUT / "caseA_comparison_pressure.png", dpi=150)
@@ -278,14 +279,15 @@ def main():
             fig9a_vint_climb_fit_mps=v_int_exp_chk,
         ),
         notes=[
-            "Geometry: tee at x=2.88 m from Table 2's own Ta*Uf kinematics "
-            "(8.07 s x 0.444 sqrt(gD) = 2.51 m valve-to-tee); the '~1.8 m' in "
-            "the text is the camera field of view.",
-            "PT1 datum: the digitized Fig.10(a) trace is Run B-1 (video series, "
-            "same nominal condition); its pre-arrival plateau reads ~1.3 H0, "
+            "Legacy 1-D geometry only: tee x=2.88 m was inferred from Ta*Uf. "
+            "Primary Fig.1 directly gives x_tee=3.47 m and a 6.59 m dimension "
+            "chain; the audited 3-D model uses 3.47/6.60 m.",
+            "PT1 scope: digitized Fig.10(a) is Run B-1, not the B-H1 high-speed "
+            "realization. It has the same nominal Dr/H0/L0; its pre-arrival "
+            "plateau reads ~1.3 H0, "
             "above the static reservoir head -- transducer datum/calibration "
-            "uncertainty ~0.3 H0; shape anchors (release oscillation, plateau, "
-            "pre-geyser dip, surge) are the meaningful comparison.",
+            "uncertainty ~0.3 H0. Only shape anchors (release oscillation, "
+            "plateau, pre-geyser dip, surge) are compared.",
             "Model pocket head is the trapped-pocket EOS gauge head (the gas "
             "pressure PT1 sits in once the pocket surrounds the port).",
         ],
@@ -349,9 +351,10 @@ p{{line-height:1.55;color:#374151}}
 </style></head><body><div class="wrap">
 <h1>Case A — Cong, Chan &amp; Lee (2017) Run B-H1（喷发分支，高速摄像）</h1>
 <p>工况：<code>D=50 mm</code>、<code>Dr=16 mm</code>（Dr/D=0.32）、<code>H0=0.66 m</code>（上游定水头）、
-<code>L0=0.61 m</code>（初始常压气囊，V*air=9.03）。布置：定水头水箱 — 2.88 m 水平管 — T 型三通
-（上接 1.8 m 竖管）— 2.51 m 水平管 — 球阀 — 0.61 m 气囊 — 封闭端（三通位置由 Table 2 自身的
-Ta×Uf 运动学定出：8.07 s × 0.444√(gD) = 2.51 m 阀-三通距离）。开阀后气囊沿管顶向竖管迁移
+<code>L0=0.61 m</code>（初始常压气囊，V*air=9.03）。论文 Fig.1 直接布置：定水头水箱 —
+3.47 m 水平管 — T 型三通（上接自管顶起量的 1.8 m 竖管）— 2.51 m 水平管 — 球阀 —
+0.61 m 气囊 — 封闭端，总尺寸链 6.59 m。下述冻结 1-D 快照仍使用旧的 2.88/6.0 m
+有效几何，只作定性参照；三维模型使用审计后的 3.47/6.60 m。开阀后气囊沿管顶向竖管迁移
 （实测 Ta=8.07 s）、部分进入竖管，供给水柱受阻并<b>压缩气囊</b>（实测压头冲至 ~1.9H0），
 把竖管水柱整体喷出（t≈9.55 s 喷发）。</p>
 <div class="panel">
@@ -360,15 +363,15 @@ Ta×Uf 运动学定出：8.07 s × 0.444√(gD) = 2.51 m 阀-三通距离）。�
     <tr><th>论文图表</th><th>内容</th><th>与本工况的关系</th><th>本报告中的对照</th></tr>
     <tr><td><b>Table 2</b>（p7）</td><td>Series B 全部工况参数与结果汇总</td>
         <td><b>B-H1 行</b>：Ta=8.07 s、Uf=0.444√(gD)、v_fs=0.924、v_int=1.231 m/s、GEYSER</td>
-        <td>指标对照表 + 三通位置的运动学依据</td></tr>
+        <td>指标对照表；不用于反推论文已直接给出的三通坐标</td></tr>
     <tr><td><b>Fig. 8</b>（p8）</td><td>B-H1 竖管内气囊上升的高速摄像瞬时帧（t=8.67/9.07/9.47/9.55 s）</td>
         <td><b>正是本工况</b></td><td>下方原图收录，可与帧查看器对照</td></tr>
     <tr><td><b>Fig. 9</b>（p9）</td><td>B-H1 的 Yfs/Yint/速度/气囊压头四联图（高速摄像）</td>
         <td><b>正是本工况</b>；(a) 面板已数字化</td>
         <td>水位叠加图</td></tr>
     <tr><td><b>Fig. 10(a)</b>（p10）</td><td>PT1/PT2 压力时程（Run B-1，同名义工况的录像系列）</td>
-        <td>同 Dr=16 mm、H0=0.66、L0=0.61 的重复（视频采样）</td>
-        <td>压力叠加图</td></tr>
+        <td>同 Dr=16 mm、H0=0.66、L0=0.61，但不是 B-H1 同次记录</td>
+        <td>仅作跨次压力形态叠加，不计算点对点误差</td></tr>
     <tr><td class="muted">Fig. 12/13</td><td class="muted">喷发机理示意 / B-1 水平管前沿与反射波（气量分配）</td>
         <td class="muted">机理背景（前沿受阻→压缩→喷发）</td><td class="muted">正文引用</td></tr>
   </table>

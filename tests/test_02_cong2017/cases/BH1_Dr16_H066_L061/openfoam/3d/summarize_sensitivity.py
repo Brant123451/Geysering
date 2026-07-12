@@ -50,6 +50,10 @@ def main() -> None:
         records[run] = json.loads(path.read_text(encoding="utf-8"))
         if not records[run].get("full_event", {}).get("pass", False):
             raise SystemExit(f"Sensitivity result failed full-event acceptance: {path}")
+        if not records[run].get("conservation", {}).get(
+            "exact_phase_mass_fluxes_recorded", False
+        ):
+            raise SystemExit(f"Sensitivity result lacks exact phase mass fluxes: {path}")
 
     csv_path = args.output_dir / "sensitivity-summary.csv"
     with csv_path.open("w", newline="", encoding="utf-8") as handle:
@@ -61,6 +65,7 @@ def main() -> None:
                 "valve_duration_s",
                 "geyser",
                 "full_event_pass",
+                "exact_phase_mass_fluxes",
                 *FIELDS,
                 "water_mass_budget_relative_error",
                 "gas_mass_budget_relative_error",
@@ -76,6 +81,7 @@ def main() -> None:
                     item["valve_duration_s"],
                     int(item["observed_3d_geyser"]),
                     int(item["full_event"]["pass"]),
+                    int(item["conservation"]["exact_phase_mass_fluxes_recorded"]),
                     *[item.get(field) for field in FIELDS],
                     item["conservation"]["water_budget_relative_error"],
                     item["conservation"]["gas_budget_relative_error"],

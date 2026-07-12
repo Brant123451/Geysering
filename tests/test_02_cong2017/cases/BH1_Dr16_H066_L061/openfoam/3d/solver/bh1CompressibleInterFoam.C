@@ -189,6 +189,30 @@ int main(int argc, char *argv[])
         mesh,
         dimensionedScalar(p.dimensions()/dimTime, Zero)
     );
+    surfaceScalarField waterRhoPhi
+    (
+        IOobject
+        (
+            "waterRhoPhi",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        alphaPhi10*fvc::interpolate(rho1)
+    );
+    surfaceScalarField airRhoPhi
+    (
+        IOobject
+        (
+            "airRhoPhi",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        rhoPhi - waterRhoPhi
+    );
 
     if (!LTS)
     {
@@ -222,6 +246,12 @@ int main(int argc, char *argv[])
         {
             #include "alphaControls.H"
             #include "compressibleAlphaEqnSubCycle.H"
+
+            // Register the transported phase mass fluxes for exact open-boundary
+            // water and gas budgets.  Defining the air flux as the residual makes
+            // their sum identically equal to the solver's mixture rhoPhi.
+            waterRhoPhi = alphaPhi1*fvc::interpolate(rho1);
+            airRhoPhi = rhoPhi - waterRhoPhi;
 
             turbulence.correctPhasePhi();
 

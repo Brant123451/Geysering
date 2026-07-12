@@ -312,6 +312,8 @@ def main() -> None:
             ("total_phi", "sum(phi)"),
             ("water_phi", "alphaPhi0.water"),
             ("air_phi", "airPhi"),
+            ("water_mass_phi", "waterRhoPhi"),
+            ("air_mass_phi", "airRhoPhi"),
             ("mass_phi", "rhoPhi"),
         ):
             values = column(header, data, needle)
@@ -327,11 +329,45 @@ def main() -> None:
     net_total_mass_out = (
         boundary_flux["atmosphere_mass_phi"] + boundary_flux["inlet_mass_phi"]
     )
-    # rhoPhi is the solver's compressible mixture mass flux.  Subtracting the
-    # nearly incompressible water contribution preserves the varying air
-    # density instead of multiplying air volume flux by atmospheric density.
-    net_water_mass_out = net_water_volume_out * RHO_WATER
-    net_air_mass_out = net_total_mass_out - net_water_mass_out
+    exact_phase_mass_flux = bool(
+        np.all(
+            np.isfinite(
+                np.column_stack(
+                    [
+                        boundary_flux["atmosphere_water_mass_phi"],
+                        boundary_flux["inlet_water_mass_phi"],
+                        boundary_flux["atmosphere_air_mass_phi"],
+                        boundary_flux["inlet_air_mass_phi"],
+                    ]
+                )
+            )
+        )
+    )
+    if exact_phase_mass_flux:
+        net_water_mass_out = (
+            boundary_flux["atmosphere_water_mass_phi"]
+            + boundary_flux["inlet_water_mass_phi"]
+        )
+        net_air_mass_out = (
+            boundary_flux["atmosphere_air_mass_phi"]
+            + boundary_flux["inlet_air_mass_phi"]
+        )
+        phase_flux_method = (
+            "registered solver waterRhoPhi and airRhoPhi; "
+            "waterRhoPhi+airRhoPhi=rhoPhi by construction"
+        )
+    else:
+        # Compatibility fallback for runs made before exact phase mass fluxes
+        # were registered.  New acceptance runs require exact_phase_mass_flux.
+        net_water_mass_out = net_water_volume_out * RHO_WATER
+        net_air_mass_out = net_total_mass_out - net_water_mass_out
+        phase_flux_method = (
+            "legacy fallback: alphaPhi0.water times 998.2 kg/m3 and "
+            "air residual from rhoPhi"
+        )
+    phase_mass_flux_closure = (
+        net_water_mass_out + net_air_mass_out - net_total_mass_out
+    )
     cumulative_water_out_mass = trapz_flux(time, net_water_mass_out)
     cumulative_air_out_mass = trapz_flux(time, net_air_mass_out)
     cumulative_total_out_mass = trapz_flux(time, net_total_mass_out)
@@ -380,6 +416,7 @@ def main() -> None:
         "atmosphere_air_flow_m3_s",
         "atmosphere_total_mass_flow_kg_s",
         "inlet_total_mass_flow_kg_s",
+        "net_water_mass_flow_kg_s",
         "net_air_mass_flow_kg_s",
         "net_total_mass_flow_kg_s",
         "cumulative_rim_water_net_m3",
@@ -407,6 +444,7 @@ def main() -> None:
             boundary_flux["atmosphere_air_phi"],
             boundary_flux["atmosphere_mass_phi"],
             boundary_flux["inlet_mass_phi"],
+            net_water_mass_out,
             net_air_mass_out,
             net_total_mass_out,
             cumulative_rim_water_net,
@@ -515,6 +553,11 @@ def main() -> None:
             "total_domain_gas_mass_kg": float(gas_mass[0]),
         },
         "conservation": {
+            "exact_phase_mass_fluxes_recorded": exact_phase_mass_flux,
+            "phase_mass_flux_method": phase_flux_method,
+            "maximum_phase_flux_closure_kg_per_s": float(
+                np.nanmax(np.abs(phase_mass_flux_closure))
+            ),
             "water_budget_error_kg": water_budget_error,
             "water_budget_relative_error": finite_relative(
                 water_budget_error, float(water_budget[0])
@@ -528,9 +571,8 @@ def main() -> None:
                 total_budget_error, float(total_budget[0])
             ),
             "budget_definition": "final inventory + integrated outward boundary flux - initial inventory",
-            "gas_flux_definition": (
-                "solver rhoPhi minus alphaPhi0.water times 998.2 kg/m3"
-            ),
+            "water_flux_definition": phase_flux_method,
+            "gas_flux_definition": phase_flux_method,
             "total_flux_definition": (
                 "solver rhoPhi summed directly over atmosphere and inlet"
             ),
@@ -557,8 +599,10 @@ def main() -> None:
             ),
         },
         "comparison_warning": (
-            "Fig.10(a) is the same nominal B-1 condition; PT1 exact axial "
-            "offset was not reported, so the 3-D curve is labelled PT1_proxy."
+            "Fig.10(a) is Run B-1, not the B-H1 high-speed realization. It has "
+            "the same nominal Dr/H0/L0 and is used only for pressure morphology. "
+            "The exact PT1 axial offset was not reported, so the 3-D curve is "
+            "labelled PT1_proxy; no pointwise pressure error is claimed."
         ),
         "one_d_comparison_warning": (
             "The frozen 1-D model uses a 6.0 m effective pipe and x_tee=2.88 m, "
@@ -583,6 +627,7 @@ def main() -> None:
             "PT1_max_drift_m_water": pt1_drift,
             "pass": bool(
                 completed
+                and exact_phase_mass_flux
                 and pt1_drift <= 0.01
                 and water_rel is not None
                 and abs(water_rel) <= 1e-3
@@ -597,6 +642,7 @@ def main() -> None:
         metrics["smoke"] = {
             "pass": bool(
                 completed
+                and exact_phase_mass_flux
                 and water_rel is not None
                 and abs(water_rel) <= 1e-2
                 and gas_rel is not None
@@ -612,6 +658,7 @@ def main() -> None:
             "maximum_mass_budget_relative_error": 1e-2,
             "pass": bool(
                 completed
+                and exact_phase_mass_flux
                 and water_rel is not None
                 and abs(water_rel) <= 1e-2
                 and gas_rel is not None
@@ -692,7 +739,13 @@ def main() -> None:
             color="#2ca02c",
             alpha=0.18,
         )
-        axes[1].plot(exp_pressure["t_s"], exp_pressure["HoverH0_med"], color="#2ca02c", linewidth=1.0, label="Fig.10(a)")
+        axes[1].plot(
+            exp_pressure["t_s"],
+            exp_pressure["HoverH0_med"],
+            color="#2ca02c",
+            linewidth=1.0,
+            label="Fig.10(a) Run B-1 (cross-run morphology)",
+        )
     axes[1].set_ylabel("pressure head / H0")
     axes[1].legend(ncol=2, fontsize=8)
 

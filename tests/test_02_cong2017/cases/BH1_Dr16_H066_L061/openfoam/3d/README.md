@@ -9,6 +9,12 @@ outcome-dependent parameter is present.
 The repository-wide source adjudication is in
 `../../../../../../openfoam/3d/PAPER_AUDIT.md`. Machine-readable values and
 all non-paper numerical choices are in `model_config.json`.
+`validate_paper_case.py` independently checks every generated run against the
+primary PDF and writes `paper-audit-<run>.json` before meshing can continue.
+
+The target is the 2017 **B-H1** high-speed experiment (`H0=0.66 m`), not the
+2018 companion CFD paper's fine-grid B1 (`H0=0.88 m`). The companion paper is
+used only to cross-check the numerical method and mesh requirements.
 
 ## Geometry and coordinates
 
@@ -89,6 +95,11 @@ described as a measured `90 deg` contact angle.
    also checks that the selected zone volume represents `25 mm` of the 50 mm
    pipe within `20%`, so the integrated loss is consistent on both meshes.
 
+The primary 2017 procedure reports an approximately `0.2 s` manual operation;
+the 2018 paper calls it approximately `0.5 s` while itself using instantaneous
+opening. Only those durations are source evidence. The `sin^2` area history is
+an explicitly numerical uncertainty envelope.
+
 The baffle is a passive loss, not a pressure or velocity source. No pressure,
 velocity, or thermal forcing is used. No result is tuned to the known
 `GEYSER` classification.
@@ -100,10 +111,14 @@ The declared nominal sizes are:
 | Mesh | Main | 16 mm riser | Exterior far field |
 |---|---:|---:|---:|
 | base | `6.25 mm` | `1.5625 mm` | `12.5 mm` plume |
-| refined | `3.125 mm` | `0.78125 mm` | `6.25 mm` plume |
+| refined | `3.125 mm` | `0.78125 mm` core + four wall layers | `6.25 mm` plume |
 
 Riser-resolution cells continue `50 mm` above the physical rim so that its
 sharp edge is not colocated with a three-level refinement transition.
+The refined mesh has a `0.1 mm` first wall layer and `0.65 mm` total layer
+thickness. This resolves the companion paper's `0.55 mm` theoretical falling
+film and matches its reported smallest-cell scale without imposing a
+`0.1 mm` isotropic mesh over the entire riser.
 
 Every mesh runs both standard `checkMesh` and
 `checkMesh -allGeometry -allTopology`. Standard checks must report `Mesh OK`.
@@ -120,6 +135,13 @@ momentum transport, uncorrected Laplacian/normal gradients, one outer
 corrector, two pressure correctors, and `maxCo=maxAlphaCo=0.5`. This declared
 baseline and the total-enthalpy equation are used unchanged for all meshes and
 valve cases.
+
+Chan et al. (2018) used standard `k-epsilon`, but did not publish its initial
+or inlet turbulence quantities and explicitly notes limitations of that
+closure for the two-phase flow. This OpenFOAM campaign retains its
+preregistered laminar closure rather than infer those missing values from the
+known B-H1 result. It is therefore an independent physical-case reproduction,
+not a line-by-line reproduction of the companion FLUENT setup.
 
 Each run is created under ignored `runs/`; source templates remain clean.
 OpenFOAM v2512, Gmsh, NumPy, and Matplotlib are required.
@@ -164,7 +186,11 @@ The runtime function objects record:
 highest centreline point with `alpha.water>=0.5`; `Yint` is the top of the
 `alpha.water<0.5` gas core connected to the tee. The plots compare these
 against this Case's digitized Fig.9(a), the explicitly labelled
-`PT1_proxy` against Fig.10(a), and the frozen existing 1-D result. The 1-D
+`PT1_proxy` against Fig.10(a), and the frozen existing 1-D result. Fig.9(a)
+is the B-H1 high-speed realization and is directly quantitative. Fig.10(a)
+is **Run B-1**, with the same nominal `Dr/H0/L0` but from a different
+realization; it is retained only as a pressure-morphology comparison and no
+pointwise B-H1 pressure error is claimed. The 1-D
 heights are shifted by `-D=-0.05 m` only for display so that all level curves
 share the above-crown datum. That comparison remains qualitative because the
 frozen 1-D effective pipe and tee geometry differ from the audited 3-D model.
@@ -186,12 +212,12 @@ Water, gas, and total-mass conservation use
 `final inventory + integrated outward boundary flux - initial inventory`.
 
 The external atmosphere is open, so raw gas inventory alone is not a
-conservation test. The gas boundary budget uses the solver's compressible
-`rhoPhi` minus the water-volume flux times `998.2 kg/m3`; it does not assume
-that expelled or ingested air remains at atmospheric density. The independent
-total-mass budget integrates `rhoPhi` directly. Static-hold relative errors
-must not exceed `0.1%`; smoke and each complete 13 s event must not exceed
-`1%` for any of the three budgets.
+conservation test. The solver registers transported `waterRhoPhi` and
+`airRhoPhi` on every open boundary and enforces
+`waterRhoPhi + airRhoPhi = rhoPhi`; accepted new runs must contain these exact
+phase mass fluxes. The independent total-mass budget integrates `rhoPhi`
+directly. Static-hold relative errors must not exceed `0.1%`; smoke and each
+complete 13 s event must not exceed `1%` for any of the three budgets.
 
 The CSV distinguishes instantaneous exterior water inventory from water
 ejected through the physical rim. The latter is the time integral of the

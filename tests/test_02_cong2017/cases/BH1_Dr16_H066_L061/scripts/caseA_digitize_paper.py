@@ -3,9 +3,10 @@
 
   * Fig. 9(a)  -- Yfs (red filled squares) and Yint (blue open squares) vs t,
                   axes t = 8..10 s, Y = 0..2.0 m;
-  * Fig. 10(a) -- PT1 pressure trace H/H0 vs t (Run B-1, same condition as
-                  B-H1 on the video-camera series), axes t = 0..13 s(x ticks
-                  0,2,...,12; box spans 0..13), H/H0 = 0..4 (red line = PT1).
+  * Fig. 10(a) -- PT1 pressure trace H/H0 vs t (Run B-1, same nominal
+                  Dr/H0/L0 as B-H1 but a different realization), axes
+                  t = 0..13 s (x ticks 0,2,...,12; box spans 0..13),
+                  H/H0 = 0..4 (red line = PT1). It is morphology-only evidence.
 
 Outputs data/digitized/fig9a_levels.csv, data/digitized/fig10a_pt1.csv and
 debug overlays from reference/paper_scans/.

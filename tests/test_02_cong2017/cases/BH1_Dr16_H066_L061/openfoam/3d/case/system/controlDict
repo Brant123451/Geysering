@@ -182,7 +182,7 @@ functions
         libs            (fieldFunctionObjects);
         regionType      patch;
         name            atmosphere;
-        fields          (phi alphaPhi0.water airPhi rhoPhi);
+        fields          (phi alphaPhi0.water airPhi waterRhoPhi airRhoPhi rhoPhi);
         operation       sum;
         writeFields     false;
         writeControl    adjustableRunTime;
@@ -195,7 +195,7 @@ functions
         libs            (fieldFunctionObjects);
         regionType      patch;
         name            inlet;
-        fields          (phi alphaPhi0.water airPhi rhoPhi);
+        fields          (phi alphaPhi0.water airPhi waterRhoPhi airRhoPhi rhoPhi);
         operation       sum;
         writeFields     false;
         writeControl    adjustableRunTime;
@@ -208,7 +208,7 @@ functions
         libs            (fieldFunctionObjects);
         regionType      faceZone;
         name            riserMouth;
-        fields          (phi alphaPhi0.water airPhi rhoPhi);
+        fields          (phi alphaPhi0.water airPhi waterRhoPhi airRhoPhi rhoPhi);
         // Face-zone flipMap supplies a common upward orientation for oriented
         // surface fields; "sum" is the valid v2512 scalar-flux operation.
         operation       sum;
