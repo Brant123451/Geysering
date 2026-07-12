@@ -332,6 +332,17 @@ timestep controls.
     Surface tension is the larger remaining startup-force term.  The next
     sensitivity must pair `curvFromTr=true|false` under the same hard
     `maxDeltaT` so curvature discretisation is the only model change.
+24. The `curvFromTr=true` reference member of that pair completed 0.0035 s
+    with `maxDeltaT=1e-5`:
+    * global/interface Courant maxima were 0.115/0.021;
+    * peak/final written velocities were 1.317/0.949 m/s;
+    * the 119 kPa/m surface-force maximum remained at the physical interface;
+    * a later 132 kPa/m pressure-gravity residual and transient velocity
+      hotspot appeared in exterior gas at y=0.463 m;
+    * alpha and mass balances remained clean.
+    The cap itself materially changes the response, so this member cannot be
+    compared directly with the adaptive-timestep result.  Complete the
+    otherwise identical `curvFromTr=false` member before choosing a formula.
 
 ## Still required
 

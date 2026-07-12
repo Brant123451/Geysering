@@ -431,6 +431,15 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     表面张力离散项是剩余 startup 的较强贡献。下一步必须在相同硬
     `maxDeltaT` 下配对 `curvFromTr=true|false`，只改变曲率离散；不得把
     当前结果延长为 0.04 s 或 1.0 s hold。
+21. 硬 timestep 配对的 `curvFromTr=true` reference 已运行至 0.0035 s：
+    - `maxDeltaT=1e-5` 下 global/interface Co 为 0.115/0.021；
+    - 写出峰值/末值速度为 1.317/0.949 m/s；
+    - surface-force 最大值仍在真实自由面，为 119 kPa/m；
+    - 后期在 y=0.463 m exterior gas 出现 132 kPa/m pressure-gravity
+      residual，且短暂成为 Umax 区域；
+    - alpha 与质量界仍干净。
+    这只证明硬 timestep 本身显著影响峰值，不能据此选择 curvature formula。
+    下一步必须用完全相同控制运行 `curvFromTr=false`，完成配对后再决策。
 
 十、hold 验收
 
