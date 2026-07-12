@@ -51,8 +51,9 @@ OpenFOAM.com v2512 `interFoam`、4 个 MPI ranks 从源码完成 base/refined �
 上述数值属于已判定失真的旧固定水位模型。现已从同一实验的开放获取硕士论文
 （Liu 2018，DOI 10.7939/R30R9MK98）核实下游水箱为
 0.57×0.61×0.89 m、圆形活动溢流堰直径 0.30 m/高度 0.40 m，并据此替换
-固定水位边界；堰顶仅由已报告的 `Q0=20 L/s、hd=0.070 m` 初始工况确定，
-不使用压力曲线或 no-geyser 结果拟合。新 base/refined 完整运行完成前，
+固定水位边界；同一论文的 A2 试验表还给出竖管精确内径 57 mm（期刊取整为
+0.06 m）。堰顶仅用 `Q0=20 L/s、hd=0.070 m` 的 Q0 水力试算校准，
+不使用瞬变压力曲线或 no-geyser 结果拟合。新 base/refined 完整运行完成前，
 不得把旧表格当作修正模型结论。完整数据、误差、网格敏感性和限制见
 [`openfoam/3d/README.md`](openfoam/3d/README.md) 与
 [`openfoam/3d/PAPER_AUDIT.md`](openfoam/3d/PAPER_AUDIT.md)。
@@ -127,7 +128,7 @@ downstream condition"）——A2/B3 构成同一流量阶跃下"下游泄流能�
 | 上游管 | L=5.80 m, D=0.20 m, 坡度 1:100 |
 | 交汇室 | 0.30×0.30×0.45 m，invert drop 0.18 m |
 | 下游管 | Ld=5.95 m, Dd=0.28 m |
-| 竖管 | dr=0.06 m, 高 1.22 m，顶部敞开 |
+| 竖管 | 期刊 dr=0.06 m；同工况试验表精确值 0.057 m，高 1.22 m，顶部敞开 |
 | 试验结果 | **无 geyser**：竖管内混合物最大高度 h < 1.22 m |
 
 ## 对标论文图表

@@ -88,8 +88,8 @@ regions
         ); }
 
     // Receiving tank initial stage.  The movable circular weir crest is
-    // z=0.019 m, giving the head needed to pass Q0 at hd=0.070 m.
-    boxToCell { box (6.249 -0.306 -0.382) (6.821 0.306 0.070);
+    // z=0.036 m, calibrated only to pass Q0 at the reported hd=0.070 m.
+    boxToCell { box (6.249 -0.306 -0.365) (6.821 0.306 0.070);
         fieldValues
         (
             volScalarFieldValue alpha.water 1
@@ -100,7 +100,7 @@ regions
     // and drain flow during the pre-ramp interval.
     cylinderToCell
     {
-        point1 (6.535 0 -0.382);
+        point1 (6.535 0 -0.365);
         point2 (6.535 0  0.070);
         radius 0.140;
         fieldValues

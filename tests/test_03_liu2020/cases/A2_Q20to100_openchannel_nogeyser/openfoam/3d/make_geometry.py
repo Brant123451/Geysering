@@ -44,12 +44,14 @@ NSEG_WEIR = 64         # reported 0.30 m circular overflow perimeter
 # ---- rig dimensions (LiuCase) ----
 Lu, Du, slope = 5.80, 0.20, 0.01
 Lc, Wc, Hc, drop = 0.30, 0.30, 0.45, 0.18
-dr, Hr = 0.06, 1.22
+# The journal rounds this to 0.06 m; Liu (2018) Table 3.1 reports Dr=57 mm
+# for A2.
+dr, Hr = 0.057, 1.22
 Ld, Dd = 5.95, 0.28
 # Liu (2018 thesis), Sec. 3.1.
 Lt, Wt, Ht = 0.57, 0.61, 0.89
 Dw, Hw = 0.30, 0.40
-z_weir_crest = 0.019
+z_weir_crest = 0.036
 weir_wall_thickness = 0.010
 
 ru, rd, rr = Du / 2, Dd / 2, dr / 2
@@ -61,10 +63,12 @@ xr, yr = Lc / 2, 0.0              # riser axis
 z_lid = Hc
 z_rtop = Hc + Hr
 
-# The movable crest is positioned so that the standard circular-overflow
-# estimate passes Q0=20 L/s at the reported hd=0.070 m.  This is an initial
-# stage datum, not a fit to the pressure curves.  The 10 mm wall is a
-# mesh-resolved numerical thickness; the reported outside diameter is exact.
+# A preliminary circular-overflow estimate gave zcrest=0.019 m.  The
+# mesh-resolved Q0 pilot placed this numerical weir's 20 L/s operating stage
+# at about 0.0535 m, so the movable crest is translated 0.0165 m upward to
+# recover the reported hd=0.070 m.  No transient pressure or outcome is used.
+# The 10 mm wall is a mesh-resolved numerical thickness; the reported outside
+# diameter is exact.
 TANK = dict(
     x0=x_dn1,
     x1=x_dn1 + Lt,

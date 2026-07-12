@@ -34,19 +34,23 @@ def main() -> None:
     lu, du, slope = 5.80, 0.20, 0.01
     lc, wc, hc, drop = 0.30, 0.30, 0.45, 0.18
     ld, dd = 5.95, 0.28
-    dr, hr = 0.06, 1.22
+    # The journal rounds the riser to 0.06 m.  Liu's thesis Sec. 3.3.1 and
+    # Table 3.1 give the actual A2 test riser as Dr=57 mm.
+    dr, hr = 0.057, 1.22
     ru, rd, rr = du / 2.0, dd / 2.0, dr / 2.0
     z_up = lambda x: drop + ru - slope * x
 
     # Liu (2018 thesis), Sec. 3.1: receiving tank and circular movable weir.
     # The experimenters adjusted the crest to obtain hd=0.070 m at Q0.  A
-    # standard circular sharp-crested estimate gives 0.051 m head at 20 L/s,
-    # hence zcrest=0.019 m.  This datum is calibrated only to the reported
-    # initial stage, never to the transient pressure or no-geyser outcome.
+    # preliminary circular sharp-crested estimate gave zcrest=0.019 m.  A
+    # mesh-resolved Q0-only pilot showed that this numerical weir's 20 L/s
+    # rating occurs at stage ~=0.0535 m, so translating the movable crest by
+    # 0.0165 m recovers the reported 0.070 m operating stage.  No transient
+    # pressure, riser response, or no-geyser result enters this calibration.
     tank_l, tank_w, tank_h = 0.57, 0.61, 0.89
     weir_d, weir_h = 0.30, 0.40
     weir_ro, weir_ri = weir_d / 2.0, weir_d / 2.0 - 0.010
-    weir_crest = 0.019
+    weir_crest = 0.036
     tank_z0, tank_z1 = weir_crest - weir_h, weir_crest - weir_h + tank_h
     tank_x0, tank_x1 = lc + ld, lc + ld + tank_l
     tank_y0, tank_y1 = -tank_w / 2.0, tank_w / 2.0
@@ -205,7 +209,7 @@ def main() -> None:
         else:
             # Uniform 15% reduction in the governing target sizes.  This is a
             # systematic resolution sensitivity while keeping the complete
-            # 18.4 s (-4 to 14.4 s) transient tractable on four MPI ranks.
+            # 22.4 s (-8 to 14.4 s) transient tractable on four MPI ranks.
             size_max, size_chamber, size_riser = 0.0425, 0.0153, 0.0102
             size_upstream, size_downstream = 0.0238, 0.034
             size_tank, size_weir = 0.034, 0.0153

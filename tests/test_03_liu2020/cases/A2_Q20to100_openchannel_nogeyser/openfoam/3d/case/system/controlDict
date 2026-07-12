@@ -81,6 +81,22 @@ functions
         );
     }
 
+    // Two upstream stations x 5 initially dry samples.  The downstream
+    // station is 10 mm before the chamber and measures filling-bore arrival
+    // from alpha rather than inferring it from a delayed pressure response.
+    boreAlpha
+    {
+        type            probes;
+        libs            (sampling);
+        writeControl    timeStep;
+        writeInterval   10;
+        fields          (alpha.water);
+        probeLocations
+        (
+            #include "boreProbeLocations"
+        );
+    }
+
     // Vertical stage samples in the receiving tank, away from the inflow jet
     // and circular weir.  Generated with the riser samples.
     tankLevel

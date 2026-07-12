@@ -11,8 +11,9 @@ are intentionally not versioned.
 * Solver: OpenFOAM v2512 `interFoam`, VOF water–air, transient RANS
   `kOmegaSST`.
 * Domain: full circular upstream/downstream pipes, full 0.30 m-wide chamber,
-  full circular riser, and the reported receiving tank/circular overflow weir;
-  no symmetry, thin-layer, or 2-D approximation.
+  the 0.057 m A2 riser (rounded to 0.06 m in the journal), and the reported
+  receiving tank/circular overflow weir; no symmetry, thin-layer, or 2-D
+  approximation.
 * Mesh: conformal first-order tetrahedra generated with Gmsh/OpenCASCADE.
   `base` and `refined` profiles change the chamber/riser and far-field sizes.
 * Gravity: `(0 0 -9.81) m/s²`.
@@ -24,8 +25,9 @@ are intentionally not versioned.
   `hd=Dd/4=0.070 m`. The simulation allocates `t=-8…0 s` to establish Q0.
 * Downstream: the 0.57 × 0.61 × 0.89 m tank and 0.30 m-diameter, 0.40 m-high
   movable circular weir reported in Liu's 2018 thesis for this apparatus.
-  Its crest is set from the reported `(Q0, hd)` operating point, not from any
-  transient pressure or geyser result; tank stage then evolves freely.
+  Its crest is calibrated with a Q0-only hydraulic pilot to reproduce the
+  reported `(Q0=20 L/s, hd=0.070 m)` operating point, not from any transient
+  pressure or geyser result; tank stage then evolves freely.
 * Vents: receiving-tank atmosphere, weir drain, and physical riser outlet are
   distinct patches. Water crossing each opening is audited independently.
 * Pressure comparison: sampled reconstructed gauge `p`, not `p_rgh`.
@@ -127,7 +129,8 @@ base/refined grid-sensitivity block.
 
 * PT1, PT2, and PT3 `p`, `p_rgh`, and phase fraction;
 * 61 riser elevations with five radial samples at each elevation;
-* chamber phase probes and a vertical receiving-tank stage line;
+* two five-point filling-bore stations, chamber phase probes, and a vertical
+  receiving-tank stage line;
 * water volume and phase-weighted water flux through every open boundary.
 
 Riser results distinguish water-equivalent height, contiguous mixture-column

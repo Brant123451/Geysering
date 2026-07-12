@@ -25,7 +25,7 @@ identified explicitly below rather than treated as article measurements.
 | Junction chamber | 0.30 × 0.30 × 0.45 m clear cuboid | p. 04019055-2 |
 | Pipe invert drop | upstream invert 0.18 m above downstream invert | p. 04019055-2 |
 | Downstream pipe | length 5.95 m; diameter 0.28 m; horizontal | p. 04019055-2 |
-| Riser | diameter 0.06 m; length 1.22 m; centered on chamber top | p. 04019055-2; Fig. 2 |
+| Riser | inside diameter 0.057 m; length 1.22 m; centered on chamber top | The journal rounds the diameter to 0.06 m (p. 04019055-2); Liu (2018) Sec. 3.3.1 and Table 3.1 identify the A2 test riser as `Dr=57 mm` |
 | Riser opening | open to the laboratory atmosphere | Fig. 2 and the description of PT1/PT2 initially exposed to open air, pp. 04019055-2 and -4 |
 | Receiving tank | 0.57 × 0.61 × 0.89 m, open top | Liu (2018), Sec. 3.1, p. 10; Fig. 3.1 |
 | Circular overflow weir | diameter 0.30 m; height 0.40 m; movable at tank-bottom center | Liu (2018), Sec. 3.1, p. 10; Fig. 3.1 |
@@ -45,6 +45,10 @@ Two numerical details are not apparatus measurements:
 2. The thesis reports the overflow weir outside diameter but not its wall
    thickness. The mesh uses a 10 mm wall solely to resolve separate outer and
    inner wetted surfaces; the reported 0.30 m overflow perimeter is unchanged.
+3. Neither source dimensions the tank floor relative to the downstream-pipe
+   invert. Its absolute vertical placement is inferred from the reported
+   0.40 m movable-weir height and the calibrated initial crest position; this
+   does not change the reported tank dimensions.
 
 The earlier unreported upstream headbox has been removed. `Q(t)` is now applied
 at the reported upstream-pipe end immediately downstream of the ball valve,
@@ -68,12 +72,15 @@ fluid volume by `make_gmsh_mesh.py`.
 The journal article alone does **not** report the tank or weir dimensions. The
 thesis resolves that omission and also states that the crest was adjusted to
 hold `hd/Dd=1/4` for Series A. It still does not tabulate the crest elevation
-or a rating curve. The movable crest is therefore positioned from the reported
-operating point only: a standard circular sharp-crested estimate for the
-reported 0.30 m perimeter gives 0.051 m head at 20 L/s, hence
-`z_crest=0.070-0.051=0.019 m`. The 3-D solution then resolves overflow and lets
-the tank stage evolve; no transient pressure, riser response, or no-geyser
-outcome enters this one-point initial-stage closure.
+or a rating curve. A standard circular sharp-crested estimate for the reported
+0.30 m perimeter first gave `z_crest=0.019 m`. A mesh-resolved Q0-only pilot
+then showed that the numerical weir's 20 L/s rating extrapolated to a tank
+stage of about 0.0535 m: over its final 0.5 s at `t≈-6.46 s`, mean inlet,
+weir outflow, and volume loss were 19.55, 21.28, and 1.78 L/s, respectively,
+with the outflow approaching the inlet. Translating the movable crest by
+`0.070-0.0535=0.0165 m` gives `z_crest=0.0355 m`, represented as 0.036 m.
+The full `-8…0 s` initialization must independently verify this closure. No
+transient pressure, riser response, or no-geyser outcome enters it.
 
 The initial chamber condition needs special care. The paper states that
 PT3 measured 0.99 kPa and that this “indicated a water depth of 0.10 m”
@@ -88,7 +95,7 @@ interpretation is a 20 mm initial-level uncertainty.
 
 | Probe | Reported location | 3-D sample |
 |---|---|---|
-| PT1 | riser wall, 0.80 m above chamber top | `(0.15, 0.025, 1.25)`, 5 mm inside the 0.03 m-radius wall |
+| PT1 | riser wall, 0.80 m above chamber top | `(0.15, 0.025, 1.25)`, 3.5 mm inside the 0.0285 m-radius wall |
 | PT2 | chamber top | `(0.08, 0.080, 0.445)`, 5 mm below the lid |
 | PT3 | chamber front wall, 0.02 m above bottom | `(0.15, -0.145, 0.020)`, 5 mm inside the wall |
 
@@ -120,6 +127,13 @@ Thus the directly reported 1.20 s bore arrival is a 1.60 s target on the
 required ramp-start clock. Output CSVs and plots use the ramp-start clock and
 shift the digitized experimental traces by +0.4 s. Both values are retained
 in the metrics JSON.
+
+The simulation measures bore arrival from five initially dry phase probes
+10 mm upstream of the chamber; at least 80% of a 0.02 s window must have a
+five-probe mean `alpha.water>=0.5`. A second five-probe station at `x=-0.30 m`
+provides a local propagation-speed check. The older PT3 threshold is retained
+separately as a pressure-response time and is not called the visual bore
+arrival.
 
 ## Direct experimental outcomes
 

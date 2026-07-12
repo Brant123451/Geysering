@@ -16,11 +16,14 @@ The University of Alberta open-access MSc thesis for the same apparatus
 (Liu 2018, DOI 10.7939/R30R9MK98) was recovered after the fixed-stage runs.
 Unlike the condensed journal article, Sec. 3.1 reports a
 0.57 × 0.61 × 0.89 m downstream tank and a 0.30 m-diameter, 0.40 m-high
-movable circular overflow weir. The source case now includes that geometry,
-removes the unreported upstream headbox, applies `Q(t)` at the reported pipe
-end, and extends the Q0 initialization to eight seconds. The movable crest is
-set only from the reported `Q0=20 L/s, hd=0.070 m` operating point; no pressure
-or no-geyser result is used.
+movable circular overflow weir. Its A2 test table also gives the exact riser
+inside diameter as 57 mm, which the journal rounds to 0.06 m. The source case
+now includes that geometry, removes the unreported upstream headbox, applies
+`Q(t)` at the reported pipe end, and extends the Q0 initialization to eight
+seconds. A Q0-only pilot translated the movable crest from the preliminary
+0.019 m estimate to 0.036 m so the numerical weir reproduces the reported
+`Q0=20 L/s, hd=0.070 m` operating point; no transient pressure or no-geyser
+result is used.
 
 The old metrics below are therefore a superseded diagnostic baseline. New
 base/refined strict meshes and full transients are required before completion.

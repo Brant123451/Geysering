@@ -31,10 +31,13 @@ RISER_LEVELS = np.arange(0.46, 1.66001, 0.02)
 RISER_SAMPLES_PER_LEVEL = 5
 MIXTURE_ALPHA_THRESHOLD = 0.10
 TANK_LEVELS = np.arange(-0.36, 0.48001, 0.01)
+BORE_SAMPLES_PER_STATION = 5
 PAPER = {
     "PT3_initial_kPa": 0.99,
     "PT2_final_kPa": 2.15,
     "PT3_final_kPa": 4.99,
+    "downstream_initial_stage_m": 0.070,
+    "riser_diameter_m": 0.057,
     "bore_reach_paper_clock_s": 1.20,
     "bore_reach_ramp_clock_s": 1.60,
     "first_mixture_column_m": 0.13,
@@ -171,10 +174,45 @@ def tank_stage(alpha_samples: np.ndarray) -> np.ndarray:
         )
     stage = np.full(len(alpha_samples), TANK_LEVELS[0])
     for row_index, row in enumerate(alpha_samples):
+        crossings = np.flatnonzero((row[:-1] >= 0.5) & (row[1:] < 0.5))
+        if len(crossings):
+            # Use the first interface connected to the tank floor so an
+            # isolated droplet above the surface cannot become the stage.
+            index = int(crossings[0])
+            alpha_drop = row[index] - row[index + 1]
+            fraction = (
+                (row[index] - 0.5) / alpha_drop if alpha_drop > 1.0e-12 else 0.5
+            )
+            stage[row_index] = TANK_LEVELS[index] + 0.01 * float(fraction)
+            continue
         wet = np.flatnonzero(row >= 0.5)
         if len(wet):
             stage[row_index] = TANK_LEVELS[int(wet[-1])] + 0.005
     return stage
+
+
+def phase_bore_arrivals(
+    time: np.ndarray, alpha_samples: np.ndarray
+) -> tuple[float | None, float | None]:
+    stations = 2
+    expected = stations * BORE_SAMPLES_PER_STATION
+    if alpha_samples.shape[1] != expected:
+        raise RuntimeError(f"expected {expected} bore probes, got {alpha_samples.shape[1]}")
+    station_alpha = alpha_samples.reshape(
+        -1, stations, BORE_SAMPLES_PER_STATION
+    ).mean(axis=2)
+
+    arrivals: list[float | None] = []
+    for values in station_alpha.T:
+        above = (time >= RAMP_DURATION_S) & (values >= 0.5)
+        arrival = None
+        for index in np.flatnonzero(above):
+            end = np.searchsorted(time, time[index] + 0.02)
+            if end > index and np.mean(above[index:end]) >= 0.8:
+                arrival = float(time[index])
+                break
+        arrivals.append(arrival)
+    return arrivals[0], arrivals[1]
 
 
 def parse_run_metadata(case: Path) -> dict[str, object]:
@@ -320,6 +358,7 @@ def main() -> None:
     pressure_time, pressure_pa = read_segments(case, "probesPT", "p")
     alpha_time, alpha_samples = read_segments(case, "riserAlpha", "alpha.water")
     tank_time, tank_alpha = read_segments(case, "tankLevel", "alpha.water")
+    bore_time, bore_alpha = read_segments(case, "boreAlpha", "alpha.water")
     if pressure_time.max() < 14.39 and not args.allow_incomplete:
         raise RuntimeError(f"3-D run incomplete: last pressure time {pressure_time.max():.6g} s")
     pt3d = {
@@ -329,6 +368,14 @@ def main() -> None:
     }
     riser = riser_measures(alpha_samples)
     tank_water_level = tank_stage(tank_alpha)
+    bore_upstream, bore_chamber = phase_bore_arrivals(bore_time, bore_alpha)
+    bore_local_velocity = (
+        0.29 / (bore_chamber - bore_upstream)
+        if bore_upstream is not None
+        and bore_chamber is not None
+        and bore_chamber > bore_upstream
+        else None
+    )
 
     sys.path.insert(0, str(MODEL))
     from liu2020_network_twofluid import LiuCase, run_case
@@ -469,7 +516,11 @@ def main() -> None:
             "tank_stage_paper_window_m": window_mean(
                 tank_time, tank_water_level, steady_start, PAPER_END_S
             ),
-            "bore_arrival_ramp_clock_s": bore_arrival(pressure_time, pt3d["PT3"]),
+            "bore_arrival_ramp_clock_s": bore_chamber,
+            "bore_local_velocity_mps": bore_local_velocity,
+            "PT3_pressure_response_ramp_clock_s": bore_arrival(
+                pressure_time, pt3d["PT3"]
+            ),
             "first_contiguous_mixture_column_m": first_column,
             "maximum_contiguous_mixture_column_m": max_column,
             "maximum_mixture_front_m": max_front,
@@ -525,6 +576,10 @@ def main() -> None:
             )
             - PAPER["PT3_final_kPa"],
             "first_column_minus_paper_m": first_column - PAPER["first_mixture_column_m"],
+            "tank_stage_initial_minus_paper_m": window_mean(
+                tank_time, tank_water_level, -0.5, 0.0
+            )
+            - PAPER["downstream_initial_stage_m"],
             "PT1_RMSE_vs_digitized_kPa": rmse(p3_grid["PT1"], exp_interp["PT1"]),
             "PT2_RMSE_vs_digitized_kPa": rmse(p3_grid["PT2"], exp_interp["PT2"]),
             "PT3_RMSE_vs_digitized_kPa": rmse(p3_grid["PT3"], exp_interp["PT3"]),
@@ -532,7 +587,9 @@ def main() -> None:
         },
         "limitations": [
             "The journal article omits the receiving tank/weir geometry; dimensions come from Liu's open-access 2018 thesis describing the same rig.",
-            "The movable-weir crest is positioned from the reported Q0 and hd using a standard circular-overflow estimate; it is not fitted to the transient pressures.",
+            "The journal rounds the riser diameter to 0.06 m; the model uses the thesis A2 test-table value of 0.057 m.",
+            "The movable-weir crest is calibrated only to the reported Q0=20 L/s and hd=0.070 m operating point; it is not fitted to transient pressures or geyser outcome.",
+            "The tank's absolute vertical placement is inferred because neither source dimensions its floor relative to the downstream-pipe invert.",
             "A 10 mm mesh-resolved weir wall thickness is numerical because the thesis reports only the 0.30 m outside diameter.",
             "Probe circumferential/in-plane coordinates are not reported by Liu et al.",
             "interFoam omits acoustic water hammer, air compressibility, bubble slip, breakup and coalescence.",
