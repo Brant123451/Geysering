@@ -151,6 +151,13 @@ def aggregate(
                 }
             )
 
+    rows_by_profile = {row["profile"]: row for row in rows}
+    incomplete_profiles = [
+        profile
+        for profile in requested_profiles
+        if profile not in rows_by_profile
+        or not rows_by_profile[profile]["run_completed"]
+    ]
     summary = {
         "case": "BH6_Dr41_H066_L061",
         "work_root": str(work_root),
@@ -164,9 +171,7 @@ def aggregate(
         ),
         "profiles_requested": requested_profiles,
         "profiles_completed": [row["profile"] for row in rows],
-        "profiles_incomplete": [
-            row["profile"] for row in rows if not row["run_completed"]
-        ],
+        "profiles_incomplete": incomplete_profiles,
         "results": rows,
     }
     results_root.mkdir(parents=True, exist_ok=True)
