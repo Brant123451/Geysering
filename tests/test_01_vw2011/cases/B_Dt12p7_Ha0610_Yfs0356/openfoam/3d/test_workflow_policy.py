@@ -62,6 +62,7 @@ def baseline_manifest(mesh: str = "base") -> dict:
         "n_alpha_subcycles": 2,
         "n_outer_correctors": 1,
         "n_pressure_correctors": 2,
+        "pressure_final_tolerance": 1e-7,
         "n_non_orthogonal_correctors": 0,
         "alpha_clip": False,
     }
@@ -97,6 +98,9 @@ class BaselinePolicyTests(unittest.TestCase):
         self.assertFalse(is_baseline_full_physics(manifest))
         manifest = baseline_manifest()
         manifest["reconstruction_tolerance"] = 1e-8
+        self.assertFalse(is_baseline_full_physics(manifest))
+        manifest = baseline_manifest()
+        manifest["pressure_final_tolerance"] = 1e-10
         self.assertFalse(is_baseline_full_physics(manifest))
         manifest = baseline_manifest()
         manifest["n_outer_correctors"] = 2
@@ -281,6 +285,8 @@ class TwoPhaseFlowDeckTests(unittest.TestCase):
         self.assertIn("CASEB_RECONSTRUCTION_TOL", prepare)
         self.assertIn("CASEB_CURVATURE_VALUE", prepare)
         self.assertIn("CASEB_CURV_FROM_TR", prepare)
+        self.assertIn("CASEB_PRESSURE_FINAL_TOLERANCE", prepare)
+        self.assertIn('#include "pressureFinalTolerance"', solution)
         self.assertIn('"constantCurvature"', prepare)
         self.assertIn("clip                    false;", settings)
         self.assertIn("surfaceTensionForceModel    RDF;", surface_forces)

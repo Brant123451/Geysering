@@ -76,6 +76,9 @@ def main() -> None:
     n_alpha_subcycles = env_int("CASEB_N_ALPHA_SUBCYCLES", 2)
     n_outer_correctors = env_int("CASEB_N_OUTER_CORRECTORS", 1)
     n_pressure_correctors = env_int("CASEB_N_CORRECTORS", 2)
+    pressure_final_tolerance = env_float(
+        "CASEB_PRESSURE_FINAL_TOLERANCE", 1e-7
+    )
     n_non_orthogonal_correctors = env_int(
         "CASEB_N_NON_ORTHOGONAL_CORRECTORS", 0
     )
@@ -152,6 +155,7 @@ def main() -> None:
         write_interval,
         c_alpha,
         reconstruction_tolerance,
+        pressure_final_tolerance,
         curvature_value,
         initial_air_head,
         valve_seal_speed,
@@ -166,12 +170,13 @@ def main() -> None:
         write_interval,
         c_alpha,
         reconstruction_tolerance,
+        pressure_final_tolerance,
         valve_seal_speed,
     )
     if any(value <= 0 for value in positive) or initial_air_head <= 0:
         raise SystemExit(
             "Courant, timestep, output, cAlpha, reconstruction tolerance, "
-            "seal speed and head must be positive"
+            "pressure tolerance, seal speed and head must be positive"
         )
     if end_time < 0 or (stage != "mesh" and end_time <= 0):
         raise SystemExit("endTime must be positive for solver stages")
@@ -246,6 +251,9 @@ def main() -> None:
         f"nOuterCorrectors         {n_outer_correctors};\n"
         f"nCorrectors              {n_pressure_correctors};\n"
         f"nNonOrthogonalCorrectors {n_non_orthogonal_correctors};\n"
+    )
+    (SYSTEM / "pressureFinalTolerance").write_text(
+        f"tolerance       {pressure_final_tolerance:.10g};\n"
     )
     curvature_controls = (
         f"    curvFromTr                  {str(curv_from_tr).lower()};\n"
@@ -333,6 +341,7 @@ def main() -> None:
         "n_alpha_subcycles": n_alpha_subcycles,
         "n_outer_correctors": n_outer_correctors,
         "n_pressure_correctors": n_pressure_correctors,
+        "pressure_final_tolerance": pressure_final_tolerance,
         "n_non_orthogonal_correctors": n_non_orthogonal_correctors,
         "alpha_clip": alpha_clip,
         "tower_probe_lines": 5,

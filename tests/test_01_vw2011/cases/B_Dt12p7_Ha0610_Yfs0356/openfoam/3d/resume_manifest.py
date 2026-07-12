@@ -41,6 +41,7 @@ ENVIRONMENT_KEYS = {
     "n_alpha_subcycles": "CASEB_N_ALPHA_SUBCYCLES",
     "n_outer_correctors": "CASEB_N_OUTER_CORRECTORS",
     "n_pressure_correctors": "CASEB_N_CORRECTORS",
+    "pressure_final_tolerance": "CASEB_PRESSURE_FINAL_TOLERANCE",
     "n_non_orthogonal_correctors": "CASEB_N_NON_ORTHOGONAL_CORRECTORS",
     "alpha_clip": "CASEB_ALPHA_CLIP",
 }
@@ -65,6 +66,7 @@ NUMERIC_KEYS = {
     "n_alpha_subcycles",
     "n_outer_correctors",
     "n_pressure_correctors",
+    "pressure_final_tolerance",
     "n_non_orthogonal_correctors",
 }
 
@@ -76,6 +78,7 @@ def read_manifest(path: Path) -> dict:
     # Manifests predating the discrete initializer used the analytic fields.
     manifest.setdefault("hydrostatic_initialization", "analytic")
     manifest.setdefault("n_hydrostatic_correctors", 5)
+    manifest.setdefault("pressure_final_tolerance", 1e-7)
     required = set(ENVIRONMENT_KEYS) | {
         "solver",
         "two_phase_flow_commit",
@@ -140,6 +143,8 @@ def read_manifest(path: Path) -> dict:
             raise ValueError(f"Non-finite {key} in run manifest")
     if float(manifest["reconstruction_tolerance"]) <= 0:
         raise ValueError("reconstruction_tolerance must be positive")
+    if float(manifest["pressure_final_tolerance"]) <= 0:
+        raise ValueError("pressure_final_tolerance must be positive")
     positive_integer_keys = {
         "n_alpha_bounds",
         "reconstruction_iterations",

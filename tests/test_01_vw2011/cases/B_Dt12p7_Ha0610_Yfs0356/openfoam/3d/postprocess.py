@@ -74,6 +74,7 @@ def configuration_id(manifest: dict) -> str:
             "n_alpha_subcycles",
             "n_outer_correctors",
             "n_pressure_correctors",
+            "pressure_final_tolerance",
             "n_non_orthogonal_correctors",
             "alpha_clip",
             "alpha_smooth_curvature_iterations",
@@ -107,6 +108,9 @@ def is_baseline_numerics(manifest: dict) -> bool:
         and int(manifest.get("n_alpha_subcycles", -1)) == 2
         and int(manifest.get("n_outer_correctors", -1)) == 1
         and int(manifest.get("n_pressure_correctors", -1)) == 2
+        and math.isclose(
+            float(manifest.get("pressure_final_tolerance", -1)), 1e-7
+        )
         and int(manifest.get("n_non_orthogonal_correctors", -1)) == 0
         and manifest.get("alpha_clip") is False
         and manifest.get("time_control") == "runTime"
@@ -206,6 +210,7 @@ def mesh_pair_compatible(first: dict, second: dict) -> bool:
         "n_alpha_subcycles",
         "n_outer_correctors",
         "n_pressure_correctors",
+        "pressure_final_tolerance",
         "n_non_orthogonal_correctors",
         "alpha_clip",
         "alpha_smooth_curvature_iterations",
@@ -360,6 +365,7 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "gas_eos",
         "hydrostaticInitialization",
         "nHydrostaticCorrectors",
+        "pressureFinalTolerance",
         "initial_air_head_m",
         "valve_mode",
         "valve_representation",
@@ -432,6 +438,9 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         ),
         "nHydrostaticCorrectors": manifest.get(
             "n_hydrostatic_correctors"
+        ),
+        "pressureFinalTolerance": manifest.get(
+            "pressure_final_tolerance"
         ),
         "initial_air_head_m": manifest.get("initial_air_head_m"),
         "valve_mode": manifest.get("valve_mode"),
@@ -539,6 +548,7 @@ def update_sensitivity_csv(metrics: dict) -> None:
         "gas_eos",
         "hydrostaticInitialization",
         "nHydrostaticCorrectors",
+        "pressureFinalTolerance",
         "initial_air_head_m",
         "valve_mode",
         "valve_representation",
@@ -595,6 +605,9 @@ def update_sensitivity_csv(metrics: dict) -> None:
         ),
         "nHydrostaticCorrectors": manifest.get(
             "n_hydrostatic_correctors"
+        ),
+        "pressureFinalTolerance": manifest.get(
+            "pressure_final_tolerance"
         ),
         "initial_air_head_m": manifest.get("initial_air_head_m"),
         "valve_mode": manifest.get("valve_mode"),

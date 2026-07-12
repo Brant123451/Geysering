@@ -455,6 +455,7 @@ CASEB_N_ALPHA_CORR=1
 CASEB_N_ALPHA_SUBCYCLES=2
 CASEB_N_OUTER_CORRECTORS=1
 CASEB_N_CORRECTORS=2
+CASEB_PRESSURE_FINAL_TOLERANCE=1e-7
 CASEB_N_NON_ORTHOGONAL_CORRECTORS=0
 ```
 
@@ -465,6 +466,9 @@ from the pressure and alpha corrector counts.  Their source defaults remain
 5 and \(10^{-6}\); 10 and \(10^{-8}\) reproduce the stricter plicRDF
 convergence settings used by TwoPhaseFlow's static curvature benchmark and are
 being screened as a numerical sensitivity, not silently promoted to baseline.
+`CASEB_PRESSURE_FINAL_TOLERANCE` controls only the absolute tolerance of the
+last pressure correction; its \(10^{-7}\) baseline is retained unless an
+explicit pressure-convergence diagnostic is requested.
 
 `interpolateNormal=false` is the baseline plicRDF setting because it matches
 TwoPhaseFlow's static surface-tension benchmarks.  The former `true` setting

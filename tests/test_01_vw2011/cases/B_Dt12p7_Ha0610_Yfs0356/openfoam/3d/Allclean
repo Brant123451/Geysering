@@ -11,7 +11,8 @@ done
 rm -f caseB3d.msh log.*
 rm -f constant/airThermo constant/surfaceForces constant/cellToRegion
 rm -f system/alphaCorrectors system/decomposeParDict.runtime
-rm -f system/pimpleCorrectors system/runControl system/runSettings
+rm -f system/pimpleCorrectors system/pressureFinalTolerance
+rm -f system/runControl system/runSettings
 rm -f system/setFieldsDict.runtime
 rm -f system/setExprFieldsDict.runtime system/setExprFieldsReducedPressureDict.runtime
 rm -f system/towerProbeLocations system/plumeProbeLocations

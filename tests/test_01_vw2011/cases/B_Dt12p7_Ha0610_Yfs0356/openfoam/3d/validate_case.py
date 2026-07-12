@@ -51,6 +51,7 @@ solver_sources = "\n".join(
         (HERE / "system" / "alphaCorrectors.default").read_text(),
         (HERE / "system" / "pimpleCorrectors.default").read_text(),
         (HERE / "system" / "runControl.default").read_text(),
+        (HERE / "system" / "fvSolution").read_text(),
         (HERE / "system" / "createBafflesDict.hold").read_text(),
         (HERE / "constant" / "thermophysicalProperties").read_text(),
         (HERE / "constant" / "fvOptions").read_text(),
@@ -60,6 +61,7 @@ solver_sources = "\n".join(
             / "caseBHydrostaticInit"
             / "caseBHydrostaticInit.C"
         ).read_text(),
+        (HERE / "prepare_run.py").read_text(),
         (HERE / "Allrun").read_text(),
     )
 )
@@ -76,6 +78,8 @@ required_solver_fragments = [
     "nOuterCorrectors         1",
     "nCorrectors              2",
     "nNonOrthogonalCorrectors 0",
+    '#include "pressureFinalTolerance"',
+    "CASEB_PRESSURE_FINAL_TOLERANCE",
     "writeControl    runTime",
     "alphaAtMax",
     "CASEB_FORCE_BALANCE",

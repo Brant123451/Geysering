@@ -65,7 +65,7 @@ solvers
             smoother        DICGaussSeidel;
             nPreSweeps      2;
         }
-        tolerance       1e-7;
+        #include "pressureFinalTolerance"
         relTol          0;
         maxIter         60;
     }
