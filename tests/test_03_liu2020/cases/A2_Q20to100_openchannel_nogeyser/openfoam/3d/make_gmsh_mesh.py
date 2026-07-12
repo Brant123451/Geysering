@@ -158,7 +158,9 @@ def main() -> None:
             if dim != 2:
                 continue
             xmin, ymin, zmin, xmax, ymax, zmax = gmsh.model.getBoundingBox(dim, tag)
-            if near(xmin, -lu) and near(xmax, -lu):
+            # OCC cylinder end planes are normal to the 1:100 pipe axis, so
+            # the inlet disk spans about 2 mm in x instead of being vertical.
+            if xmax < -lu + 0.01:
                 patch = "inlet"
             elif near(zmin, hc + hr) and near(zmax, hc + hr):
                 patch = "riserOutlet"
