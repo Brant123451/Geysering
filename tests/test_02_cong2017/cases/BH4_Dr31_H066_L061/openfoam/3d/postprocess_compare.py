@@ -212,6 +212,65 @@ def safe_float(value: float | None) -> float | None:
     return float(value)
 
 
+def read_numerical_health(log_path: Path) -> dict[str, float | bool]:
+    """Reduce solver-log extrema without retaining or publishing the log."""
+    if not log_path.exists():
+        return {"log_available": False}
+
+    number = r"[-+]?(?:\d+\.\d*|\.\d+|\d+)(?:[eE][-+]?\d+)?"
+    patterns = {
+        "temperature_min_K": (re.compile(rf"\bmin\(T\)\s*=\s*({number})"), min),
+        "temperature_max_K": (re.compile(rf"\bmax\(T\)\s*=\s*({number})"), max),
+        "velocity_max_m_per_s": (
+            re.compile(rf"\bmax\(mag\(U\)\)\s*=\s*({number})"),
+            max,
+        ),
+        "alpha_water_min": (
+            re.compile(rf"\bmin\(alpha\.water\)\s*=\s*({number})"),
+            min,
+        ),
+        "alpha_water_max": (
+            re.compile(rf"\bmax\(alpha\.water\)\s*=\s*({number})"),
+            max,
+        ),
+        "pressure_min_Pa": (re.compile(rf"\bmin\(p\)\s*=\s*({number})"), min),
+        "pressure_max_Pa": (re.compile(rf"\bmax\(p\)\s*=\s*({number})"), max),
+        "courant_max": (
+            re.compile(rf"^\s*Courant Number mean:.*\bmax:\s*({number})"),
+            max,
+        ),
+        "interface_courant_max": (
+            re.compile(
+                rf"^\s*Interface Courant Number mean:.*\bmax:\s*({number})"
+            ),
+            max,
+        ),
+    }
+    extrema: dict[str, float] = {}
+    fatal_error = False
+    with log_path.open(errors="replace") as handle:
+        for line in handle:
+            if "FOAM FATAL ERROR" in line or "Negative initial temperature" in line:
+                fatal_error = True
+            for name, (pattern, operation) in patterns.items():
+                match = pattern.search(line)
+                if not match:
+                    continue
+                value = float(match.group(1))
+                if not math.isfinite(value):
+                    continue
+                extrema[name] = (
+                    value
+                    if name not in extrema
+                    else operation(extrema[name], value)
+                )
+    return {
+        "log_available": True,
+        "fatal_error_detected": fatal_error,
+        **extrema,
+    }
+
+
 def read_experiment() -> dict[str, str]:
     path = CASE_ROOT / "data" / "series_b_measurement.csv"
     with path.open(newline="") as handle:
@@ -385,6 +444,9 @@ def main() -> None:
     )
     max_water_balance = float(np.nanmax(np.abs(water_balance)))
     max_gas_balance = float(np.nanmax(np.abs(gas_balance)))
+    numerical_health = read_numerical_health(
+        case_dir / "log.compressibleInterFoam"
+    )
     metrics = {
         "case": "B-H4",
         "label": args.label,
@@ -452,6 +514,7 @@ def main() -> None:
         "max_gas_mass_balance_relative": safe_float(
             max_gas_balance / max(abs(initial_gas_mass), 1e-30)
         ),
+        "numerical_health": numerical_health,
         "existing_1d": one_d,
         "mesh": mesh_metadata,
         "notes": [

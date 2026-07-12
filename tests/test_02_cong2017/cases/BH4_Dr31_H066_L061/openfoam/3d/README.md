@@ -174,3 +174,17 @@ no-geyser classification.
 For this critical no-geyser case, a matching classification is insufficient:
 base/refined agreement, an unblocked external atmosphere, bounded mixed
 interface volume, and water/gas conservation must all be reported.
+
+`summarize_study.py` applies criteria fixed before inspecting the complete
+events.  All four required runs must reach 13 s and remain below the physical
+rim.  The base/refined rim clearance must exceed twice their `Yfs` difference
+plus one 0.02 m probe interval.  Water and open-domain gas balance errors must
+each remain below 0.5%; mixed-interface volume must remain below 2% of the
+initial pocket volume.  The compact solver-health record must show no fatal
+error, `250 <= T <= 500 K`, `alpha.water` within `1 +/- 1e-5`, and both global
+and interface Courant numbers below 1.  Nontrivial valve flux, at least 5%
+pocket compression, and air arrival on both base and refined meshes guard
+against a numerically blocked release.  The gate also verifies van-Leer VOF,
+higher-order momentum advection, laminar closure, and absence of an artificial
+`fvOptions` source.  Failure of any criterion is reported as
+`NOT_CONFIRMED`; it is not repaired by tuning the model.
