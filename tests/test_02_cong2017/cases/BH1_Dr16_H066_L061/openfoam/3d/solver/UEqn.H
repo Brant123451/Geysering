@@ -17,7 +17,10 @@
         const scalar normalizedTime =
             min(max(runTime.value()/valveOpeningDuration, scalar(0)), scalar(1));
         const scalar openingSine =
-            sin(0.5*constant::mathematical::pi*normalizedTime);
+            Foam::sin
+            (
+                scalar(0.5*constant::mathematical::pi*normalizedTime)
+            );
         const scalar areaFraction =
             max(valveMinimumAreaFraction, sqr(openingSine));
         const scalar lossCoefficient =
