@@ -660,11 +660,11 @@ def main() -> None:
     one_d_yint_entrance = np.maximum(one_d["Yint_m"] - PIPE_D, 0.0)
     fs_mask = levels_exp["kind"] == "fs"
     int_mask = levels_exp["kind"] == "int"
-    level_validation_covered = (
+    level_validation_covered = bool(
         valve_event_started
         and riser_time[-1] >= float(np.nanmax(levels_exp["t_s"])) - 1.0e-6
     )
-    pressure_proxy_covered = (
+    pressure_proxy_covered = bool(
         valve_event_started
         and pt1_time[-1] >= float(np.nanmax(pressure_exp["t_s"])) - 1.0e-6
     )
