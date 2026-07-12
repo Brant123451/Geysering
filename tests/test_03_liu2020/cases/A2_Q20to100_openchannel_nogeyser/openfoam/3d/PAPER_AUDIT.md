@@ -73,12 +73,12 @@ The journal article alone does **not** report the tank or weir dimensions. The
 thesis resolves that omission and also states that the crest was adjusted to
 hold `hd/Dd=1/4` for Series A. It still does not tabulate the crest elevation
 or a rating curve. A standard circular sharp-crested estimate for the reported
-0.30 m perimeter first gave `z_crest=0.019 m`. A mesh-resolved Q0-only pilot
-then showed that the numerical weir's 20 L/s rating extrapolated to a tank
-stage of about 0.0535 m: over its final 0.5 s at `t≈-6.46 s`, mean inlet,
-weir outflow, and volume loss were 19.55, 21.28, and 1.78 L/s, respectively,
-with the outflow approaching the inlet. Translating the movable crest by
-`0.070-0.0535=0.0165 m` gives `z_crest=0.0355 m`, represented as 0.036 m.
+0.30 m perimeter first gave `z_crest=0.019 m`. Short Q0-only mesh pilots were
+then used exactly as the experimenters used the movable weir: to set the known
+initial stage. The first translation to 0.036 m settled toward a 0.0754 m
+stage; its final 1 s had 19.998 L/s inlet, 19.833 L/s weir outflow, and
+0.224 L/s volume rise. Translating the crest by
+`0.0700-0.0754=-0.0054 m` gives `z_crest=0.0306 m`, represented as 0.031 m.
 The full `-8…0 s` initialization must independently verify this closure. No
 transient pressure, riser response, or no-geyser outcome enters it.
 
@@ -90,6 +90,12 @@ initial free surface is therefore `z=0.12 m`, an explicitly documented
 inference that gives 0.10 m pressure head above the actual PT3 elevation and
 honors the requested 0.99 kPa observable. The alternative literal-depth
 interpretation is a 20 mm initial-level uncertainty.
+
+The near-balanced Q0 pilot relaxed PT3 to about 0.72 kPa while preserving the
+reported downstream stage. That is closer to the paper's literal 0.10 m
+floor-depth interpretation than to its 0.99 kPa pressure. The crest is not
+altered to hide this inconsistency; the final initialization reports both
+observables independently.
 
 ## Measurement locations and pressure definition
 

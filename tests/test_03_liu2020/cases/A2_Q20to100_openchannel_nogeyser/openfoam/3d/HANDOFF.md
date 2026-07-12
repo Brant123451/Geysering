@@ -20,10 +20,12 @@ movable circular overflow weir. Its A2 test table also gives the exact riser
 inside diameter as 57 mm, which the journal rounds to 0.06 m. The source case
 now includes that geometry, removes the unreported upstream headbox, applies
 `Q(t)` at the reported pipe end, and extends the Q0 initialization to eight
-seconds. A Q0-only pilot translated the movable crest from the preliminary
-0.019 m estimate to 0.036 m so the numerical weir reproduces the reported
+seconds. Q0-only mesh pilots translated the movable crest from the preliminary
+0.019 m estimate to 0.031 m so the numerical weir reproduces the reported
 `Q0=20 L/s, hd=0.070 m` operating point; no transient pressure or no-geyser
-result is used.
+result is used. The near-balanced pilot also exposed an unresolved source
+inconsistency: PT3 relaxed to about 0.72 kPa, whereas the paper reports
+0.99 kPa but describes that value as a 0.10 m chamber depth.
 
 The old metrics below are therefore a superseded diagnostic baseline. New
 base/refined strict meshes and full transients are required before completion.

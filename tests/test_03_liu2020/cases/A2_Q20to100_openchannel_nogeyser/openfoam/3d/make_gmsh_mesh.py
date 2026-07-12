@@ -42,15 +42,15 @@ def main() -> None:
 
     # Liu (2018 thesis), Sec. 3.1: receiving tank and circular movable weir.
     # The experimenters adjusted the crest to obtain hd=0.070 m at Q0.  A
-    # preliminary circular sharp-crested estimate gave zcrest=0.019 m.  A
-    # mesh-resolved Q0-only pilot showed that this numerical weir's 20 L/s
-    # rating occurs at stage ~=0.0535 m, so translating the movable crest by
-    # 0.0165 m recovers the reported 0.070 m operating stage.  No transient
-    # pressure, riser response, or no-geyser result enters this calibration.
+    # preliminary circular sharp-crested estimate gave zcrest=0.019 m.  Q0-only
+    # mesh pilots then resolved the numerical rating: zcrest=0.036 m settled
+    # toward stage=0.0754 m at 19.998/19.833 L/s inlet/outlet.  Translating the
+    # movable crest by -0.0054 m gives the reported 0.070 m operating stage.
+    # No transient pressure, riser response, or outcome enters this calibration.
     tank_l, tank_w, tank_h = 0.57, 0.61, 0.89
     weir_d, weir_h = 0.30, 0.40
     weir_ro, weir_ri = weir_d / 2.0, weir_d / 2.0 - 0.010
-    weir_crest = 0.036
+    weir_crest = 0.031
     tank_z0, tank_z1 = weir_crest - weir_h, weir_crest - weir_h + tank_h
     tank_x0, tank_x1 = lc + ld, lc + ld + tank_l
     tank_y0, tank_y1 = -tank_w / 2.0, tank_w / 2.0

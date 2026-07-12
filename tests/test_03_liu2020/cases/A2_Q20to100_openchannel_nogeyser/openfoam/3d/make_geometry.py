@@ -51,7 +51,7 @@ Ld, Dd = 5.95, 0.28
 # Liu (2018 thesis), Sec. 3.1.
 Lt, Wt, Ht = 0.57, 0.61, 0.89
 Dw, Hw = 0.30, 0.40
-z_weir_crest = 0.036
+z_weir_crest = 0.031
 weir_wall_thickness = 0.010
 
 ru, rd, rr = Du / 2, Dd / 2, dr / 2
@@ -63,10 +63,11 @@ xr, yr = Lc / 2, 0.0              # riser axis
 z_lid = Hc
 z_rtop = Hc + Hr
 
-# A preliminary circular-overflow estimate gave zcrest=0.019 m.  The
-# mesh-resolved Q0 pilot placed this numerical weir's 20 L/s operating stage
-# at about 0.0535 m, so the movable crest is translated 0.0165 m upward to
-# recover the reported hd=0.070 m.  No transient pressure or outcome is used.
+# A preliminary circular-overflow estimate gave zcrest=0.019 m.  Q0-only mesh
+# pilots then resolved the numerical rating: zcrest=0.036 m settled toward
+# stage=0.0754 m at 19.998/19.833 L/s inlet/outlet, so translating the movable
+# crest by -0.0054 m recovers the reported hd=0.070 m.  No transient pressure
+# or outcome is used.
 # The 10 mm wall is a mesh-resolved numerical thickness; the reported outside
 # diameter is exact.
 TANK = dict(
