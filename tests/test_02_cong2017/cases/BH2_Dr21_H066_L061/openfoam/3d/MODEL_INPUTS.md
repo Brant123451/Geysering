@@ -30,9 +30,13 @@ p_rgh,w = p_atm + rho_w g zfs
         = 107541.8913 Pa.
 ```
 
-The pocket and atmospheric air start at `p=101325 Pa`; its `p_rgh` is
-initialized consistently with hydrostatic air.  The two initial pressures are
-allowed to jump across the closed valve plane.
+The pocket, riser headspace, and external air start at uniform
+`p=101325 Pa`.  Their reduced pressure is initialized as
+`p_rgh=101325-rho_air*gh`, while water uses the constant hydrostatic
+`p_rgh=107541.8913 Pa`; mixed interface cells use the corresponding
+alpha-weighted expression.  This exactly matches the elevated
+`prghTotalPressure` far-field condition at zero velocity.  The water and
+pocket-air pressures are allowed to jump across the closed valve plane.
 
 The analytic initial downstream-pocket audit is:
 
@@ -88,6 +92,14 @@ entered or crossed the external domain.  That setting would have imposed an
 unphysical 18--30 kPa pressure deficit on water at the elevated open boundary;
 no result from that run is accepted and all event/sensitivity runs start again
 from `t=0`.
+
+A second pre-production run was stopped at `t=0.840 s` when field-extrema
+monitoring exposed a remaining initialization mismatch: the interior air had
+been initialized with a 20--35 Pa hydrostatic pressure decrease, while the
+corrected far field imposed uniform absolute pressure.  In low-density air
+that mismatch produced local velocities near 5 m/s.  `setExprFields` now
+initializes the gas `p_rgh` profile for uniform `p=101325 Pa`; this change was
+made before an air-arrival or geyser-classification result existed.
 
 ## Ball-valve process
 

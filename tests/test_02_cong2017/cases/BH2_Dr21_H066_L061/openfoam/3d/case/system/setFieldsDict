@@ -7,6 +7,8 @@ FoamFile
 
 defaultFieldValues
 (
+    // Pressure values here are geometry-selection seeds.  setExprFields later
+    // constructs the final alpha-consistent p_rgh and absolute p fields.
     volScalarFieldValue alpha.water 1
     volScalarFieldValue p_rgh 107541.8913
     volScalarFieldValue p 107541.8913
