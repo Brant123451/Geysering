@@ -595,5 +595,53 @@
       "next_action": "Screen isoAlpha reconstruction with fitParaboloid so that the next test changes the reconstruction algorithm instead of further tightening the rejected plicRDF iteration."
     },
     "completion_claim": "This is an intentionally stopped reconstruction-convergence sensitivity. It is not a passed hold, smoke run, full experiment, or accepted baseline."
+  },
+  "fit_paraboloid_isoalpha_screen": {
+    "status": "rejected_early_flux_and_velocity_spikes",
+    "source_commit": "fcb7972",
+    "purpose": "Test fitParaboloid with isoAlpha reconstruction after both plicRDF normal-initialisation paths and stricter plicRDF convergence failed.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "isoAlpha",
+      "curvature_model": "fitParaboloid",
+      "interpolate_normal": false,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "requested_end_time_s": 0.0035
+    },
+    "interrupted_result": {
+      "solver_exit_code_after_sigint": 1,
+      "latest_completed_solver_time_s": 0.00100878764,
+      "execution_time_s": 115.07,
+      "clock_time_s": 124,
+      "maximum_courant_number": 1.2059915,
+      "maximum_interface_courant_number": 0.7053029,
+      "secondary_global_courant_spike": 0.7053029,
+      "written_velocity_m_per_s": {
+        "0.0004697661": 1.2327307,
+        "0.0010087876": 1.6668712
+      },
+      "latest_peak_velocity_location_m": [
+        3.5104889,
+        0.20725889,
+        -0.00098690542
+      ],
+      "alpha_water_min_observed": 0.0,
+      "alpha_water_max_observed": 1.0000000000000049,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "rejection": {
+      "finding": "isoAlpha did not remove the early pure-cell pressure-flux excursion and later produced a second interface Courant spike. Velocity increased to 1.667 m/s by the second written sample.",
+      "wall_model_caveat": "Unlike plicRDF, isoAlpha does not provide contact-angle ghost reconstruction to fitParaboloid; this is not a clean transport-only sensitivity at the tower wall.",
+      "decision": "The run was stopped after both Courant and velocity limits failed. fitParaboloid is rejected for the current tetrahedral hold screen.",
+      "next_action": "Run a zero-curvature constantCurvature mechanism diagnostic with real sigma retained, then screen the missing physical RDF plus plicRDF plus interpolateNormal=false combination."
+    },
+    "completion_claim": "This is an intentionally stopped reconstruction-model sensitivity. It is not a passed hold, smoke run, full experiment, or accepted baseline."
   }
 }

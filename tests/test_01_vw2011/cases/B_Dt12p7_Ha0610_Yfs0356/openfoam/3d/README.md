@@ -146,7 +146,13 @@ static benchmark's stricter plicRDF convergence controls
 velocity rose to 1.905 m/s and global/interface Co reached 0.487, so it was
 stopped at 0.0018 s.  The next screen uses `isoAlpha + fitParaboloid` to remove
 the plicRDF reconstruction iteration from the candidate rather than tightening
-it further.
+it further.  That pairing was also rejected: global Co reached 1.206, a later
+global/interface spike reached 0.705, and velocity rose to 1.667 m/s by
+0.001 s.  It also removes the plicRDF contact-angle ghost geometry on which
+the current fit implementation depends.  Before another physical curvature
+candidate, a recorded `constantCurvature=0` diagnostic retains the real
+surface tension coefficient while removing only the erroneous variable
+curvature force.  This is a mechanism test, not a full-run model.
 
 Thermophysical choices are:
 

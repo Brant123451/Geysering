@@ -333,6 +333,15 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     因峰值门槛已不可逆失败，运行在 0.0018 s 停止。不得继续增加 plicRDF
     iterations；下一项是 `CASEB_RECONSTRUCTION_SCHEME=isoAlpha` 配合
     `fitParaboloid`，先筛到超过旧 0.003 s 速度峰窗口。
+13. `isoAlpha + fitParaboloid` 也已在约 0.001 s 主动停止：
+    - early pure-cell global Co=1.206；
+    - 后续 global/interface Co 均达到 0.705；
+    - 写出速度从 0.00047 s 的 1.233 增至 0.00101 s 的 1.667 m/s；
+    - alpha 仍 bounded，无 rim 水量或 gas-entry。
+    该配对还失去 fitParaboloid 依赖的 plicRDF wall ghost contact-angle
+    geometry，因此不再延长。下一步先运行保留真实 sigma 的
+    `constantCurvature=0` 机制诊断（不能作为 full-run 物理模型），再筛缺失的
+    `RDF + plicRDF + interpolateNormal=false` 物理组合。
 
 十、hold 验收
 
