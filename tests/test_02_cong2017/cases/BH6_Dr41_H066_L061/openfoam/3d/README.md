@@ -147,6 +147,13 @@ including open-boundary fluxes.  Paper Figure-7 and 3-D levels use distance
 above the riser entrance (pipe soffit); the frozen 1-D curves are explicitly
 shifted from their native pipe-invert datum before plotting.  Mesh audits are
 reported both before and after the duplicate ACMI baffle faces are created.
+The literal `checkMesh -allGeometry -allTopology` status is retained: the
+pre-baffle mesh reports boundary tetrahedra with only two internal faces, and
+the post-baffle mesh additionally reports the expected ACMI-adjacent
+polyhedra.  The separate solver-quality gate only classifies those warnings
+when their counts match exactly and still requires positive cell volumes,
+single/expected regions, non-orthogonality below `70 deg`, skewness below `4`,
+and no low-weight faces; it never rewrites the strict `checkMesh` result.
 Every required probe and conservation stream must cover the requested end
 time; incomplete runs fail instead of being extrapolated into apparently
 complete CSV or metrics.

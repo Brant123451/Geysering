@@ -122,6 +122,12 @@ def aggregate(
                     "simulation_end_s": metrics.get("simulation_end_s"),
                     "run_completed": metrics.get("run_completed"),
                     "cells": metrics.get("mesh", {}).get("cells"),
+                    "strict_checkMesh_pass": metrics.get("mesh", {})
+                    .get("acceptance", {})
+                    .get("strict_checkMesh_pass"),
+                    "solver_mesh_gate_pass": metrics.get("mesh", {})
+                    .get("acceptance", {})
+                    .get("solver_quality_gate_pass"),
                     "maxCo": metrics.get("time_stepping", {}).get("maxCo"),
                     "maxAlphaCo": metrics.get("time_stepping", {}).get(
                         "maxAlphaCo"
@@ -135,6 +141,15 @@ def aggregate(
                     ),
                     "Yfs_max_3d_m": metrics.get("events", {}).get(
                         "Yfs_max_3d_m"
+                    ),
+                    "vfs_average_3d_m_s": metrics.get("events", {}).get(
+                        "vfs_average_rise_3d_m_s"
+                    ),
+                    "vint_average_3d_m_s": metrics.get("events", {}).get(
+                        "vint_average_rise_3d_m_s"
+                    ),
+                    "vnet_average_3d_m_s": metrics.get("events", {}).get(
+                        "vnet_average_rise_3d_m_s"
                     ),
                     "PT1_post_arrival_peak_H_over_H0": metrics.get(
                         "pressure", {}
@@ -206,7 +221,12 @@ def aggregate(
     axes[0].tick_params(axis="x", rotation=25)
     axes[0].legend(frameon=False, fontsize=8)
     axes[1].bar(labels, pressure, color="#f58518")
-    axes[1].axhline(1.4, color="0.2", ls="--", label="experiment")
+    axes[1].axhline(
+        1.4,
+        color="0.2",
+        ls="--",
+        label="B-32 same-condition proxy",
+    )
     axes[1].set_ylabel("post-arrival PT1 peak $H/H_0$")
     axes[1].tick_params(axis="x", rotation=25)
     axes[1].legend(frameon=False, fontsize=8)

@@ -355,6 +355,9 @@ def parse_check_mesh(path: Path) -> dict:
         "tetrahedra": integer(r"\btetrahedra:\s+(\d+)"),
         "polyhedra": integer(r"\bpolyhedra:\s+(\d+)"),
         "regions": integer(r"Number of regions:\s+(\d+)"),
+        "two_internal_face_cells": integer(
+            r"Writing\s+(\d+)\s+cells with two non-boundary faces"
+        ),
         "duplicate_baffle_faces": integer(
             r"identical duplicate faces \(baffle faces\):\s+(\d+)"
         ),
@@ -366,6 +369,9 @@ def parse_check_mesh(path: Path) -> dict:
             r"severely non-orthogonal \(> 70 degrees\) faces:\s+(\d+)"
         ),
         "max_skewness": number(r"Max skewness\s*=\s*([0-9.eE+-]+)"),
+        "minimum_cell_volume_m3": number(
+            r"Min volume\s*=\s*([0-9.eE+-]+)"
+        ),
         "underdetermined_cells": integer(
             r"Cells with small determinant .* number of cells:\s+(\d+)"
         ),
@@ -699,6 +705,54 @@ def main() -> None:
     )
     pre_baffle_mesh = parse_check_mesh(case / "log.checkMesh.preBaffle")
     valve_baffle_mesh = parse_check_mesh(case / "log.checkMesh")
+    pre_warning_is_boundary_tets = (
+        pre_baffle_mesh["failed_checks"] == 1
+        and pre_baffle_mesh["two_internal_face_cells"]
+        == pre_baffle_mesh["underdetermined_cells"]
+    )
+    valve_warnings_are_baffle_cells = (
+        valve_baffle_mesh["failed_checks"] == 2
+        and valve_baffle_mesh["two_internal_face_cells"]
+        == valve_baffle_mesh["underdetermined_cells"]
+        and valve_baffle_mesh["concave_cells"]
+        == valve_baffle_mesh["polyhedra"]
+    )
+    common_quality_gate = all(
+        (
+            pre_baffle_mesh["regions"] == 1,
+            valve_baffle_mesh["regions"] == 2,
+            (pre_baffle_mesh["minimum_cell_volume_m3"] or -1.0) > 0.0,
+            (valve_baffle_mesh["minimum_cell_volume_m3"] or -1.0) > 0.0,
+            (pre_baffle_mesh["max_non_orthogonality_deg"] or math.inf) < 70.0,
+            (valve_baffle_mesh["max_non_orthogonality_deg"] or math.inf) < 70.0,
+            (pre_baffle_mesh["max_skewness"] or math.inf) < 4.0,
+            (valve_baffle_mesh["max_skewness"] or math.inf) < 4.0,
+            pre_baffle_mesh["severely_non_orthogonal_faces"] in (None, 0),
+            valve_baffle_mesh["severely_non_orthogonal_faces"] in (None, 0),
+            pre_baffle_mesh["low_weight_faces"] in (None, 0),
+            valve_baffle_mesh["low_weight_faces"] in (None, 0),
+        )
+    )
+    mesh_acceptance = {
+        "strict_checkMesh_pass": bool(
+            pre_baffle_mesh["mesh_ok"] and valve_baffle_mesh["mesh_ok"]
+        ),
+        "solver_quality_gate_pass": bool(
+            common_quality_gate
+            and pre_warning_is_boundary_tets
+            and valve_warnings_are_baffle_cells
+        ),
+        "pre_baffle_warning_classification": (
+            "boundary tetrahedra with exactly two internal faces"
+            if pre_warning_is_boundary_tets
+            else "unclassified"
+        ),
+        "post_baffle_warning_classification": (
+            "cyclicACMI-adjacent polyhedra"
+            if valve_warnings_are_baffle_cells
+            else "unclassified"
+        ),
+    }
     mesh_generation = {
         "geometry": geometry.get("geometry"),
         "element_types_3d": geometry.get("element_types_3d"),
@@ -708,6 +762,7 @@ def main() -> None:
     }
     mesh_audit = {
         "generation": mesh_generation,
+        "acceptance": mesh_acceptance,
         "pre_baffle": pre_baffle_mesh,
         "with_valve_baffle": valve_baffle_mesh,
     }
@@ -802,6 +857,7 @@ def main() -> None:
         "element_types_3d": geometry.get("element_types_3d"),
         "element_counts_3d": geometry.get("element_counts_3d"),
         "riser_sweep": geometry.get("riser_sweep"),
+        "acceptance": mesh_acceptance,
         "pre_baffle": pre_baffle_mesh,
         "with_valve_baffle": valve_baffle_mesh,
     }
