@@ -1475,7 +1475,7 @@
     "completion_claim": "This is a rejected hard-timestep discrete-hydrostatic diagnostic, not a passed hold, smoke run, or completed reproduction."
   },
   "tight_final_pressure_hard_timestep_screen_0p006_s": {
-    "status": "passed_short_screen_adaptive_timestep_pair_pending",
+    "status": "passed_short_screen_hard_cap_required_at_default_courant_target",
     "source_commit": "7318931",
     "purpose": "Test whether forcing the final pressure correction below the previous 1e-7 zero-iteration threshold removes the dynamically regenerated exterior-gas mode.",
     "configuration": {
@@ -1557,9 +1557,87 @@
     "interpretation": {
       "finding": "Tight final-pressure convergence eliminated the exterior-gas mode. Every written velocity and force hotspot remained at the physical free surface; velocity peaked in the first frame at 1.510 m/s and remained bounded through 0.006 s.",
       "mechanism": "The final pressure correction now performs one or two iterations and reaches approximately 1e-11 residual instead of accepting an approximately 1e-8 residual with zero iterations. Peak velocity fell by 30.5 percent and maximum pressure-gravity residual by 64.9 percent relative to the otherwise identical default-tolerance run.",
-      "decision": "This is the first physical RDF candidate to pass the 0.006 s Courant and hotspot screen, but it is not yet a hold.",
-      "next_action": "Repeat with the same 1e-10 pressure tolerance and adaptive maxDeltaT=2.5e-4 to isolate whether the hard timestep cap is still required before entering the 0.04 s drift window."
+      "decision": "This is the first physical RDF candidate to pass the 0.006 s Courant and hotspot screen, but it is not yet a hold. The paired adaptive run subsequently showed that a tighter timestep control remains necessary.",
+      "next_action": "Use the required maxCo=0.15 timestep-sensitivity member to test whether adaptive control can satisfy the immutable 0.30/0.20 observed-Courant gates without the much more restrictive maxDeltaT=1e-5 cap."
     },
     "completion_claim": "This passes only the short pressure-convergence screen; it is not a passed 0.04 s drift check, 1.0 s hold, smoke run, or completed reproduction."
+  },
+  "tight_final_pressure_adaptive_timestep_screen_0p006_s": {
+    "status": "rejected_courant_limits_hard_cap_still_required",
+    "source_commit": "1664761",
+    "purpose": "Pair the passing tight-pressure hard-cap screen with the source-default adaptive maxDeltaT=2.5e-4 control while changing no physical, curvature, pressure, or initialization setting.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "reconstruction_iterations": 5,
+      "reconstruction_tolerance": 1e-06,
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "tower_water_selector_radius_m": 0.00735,
+      "hydrostatic_initialization": "discrete",
+      "hydrostatic_correctors": 10,
+      "pressure_final_tolerance": 1e-10,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "write_interval_s": 0.0005,
+      "requested_end_time_s": 0.006
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.00601349955,
+      "postprocessed_probe_duration_s": 0.0049774311,
+      "execution_time_s": 285.41,
+      "clock_time_s": 297,
+      "final_delta_t_s": 6.7027399e-05,
+      "maximum_courant_number": 0.34657711,
+      "maximum_interface_courant_number": 0.20656408,
+      "maximum_capillary_number": 0.34000512,
+      "alpha_water_min": -7.8527893e-16,
+      "alpha_water_max": 1.000000000000005,
+      "first_written_velocity_m_per_s": 1.3665772,
+      "first_written_velocity_time_s": 0.00046527252,
+      "written_peak_velocity_m_per_s": 1.8138409,
+      "written_peak_velocity_time_s": 0.0014998478,
+      "written_peak_velocity_location_m": [
+        3.5163674,
+        0.4046661,
+        -0.0013608496
+      ],
+      "alpha_water_at_written_peak_velocity": 0.0,
+      "density_at_written_peak_velocity_kg_per_m3": 1.2041595,
+      "curvature_at_written_peak_velocity_per_m": 246.19056,
+      "final_written_velocity_m_per_s": 1.0505799,
+      "maximum_hydrostatic_force_residual_pa_per_m": 82256.461,
+      "maximum_surface_tension_force_pa_per_m": 118197.15,
+      "maximum_total_force_residual_pa_per_m": 79987.301,
+      "gas_mass_error_pct_max_abs": 1.1896143985601068e-06,
+      "total_mass_error_pct_max_abs": 5.698569899977619e-09,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "comparison_to_tight_pressure_hard_cap": {
+      "hard_cap_written_peak_velocity_m_per_s": 1.5099633,
+      "adaptive_written_peak_velocity_m_per_s": 1.8138409,
+      "hard_cap_maximum_courant_number": 0.041144088,
+      "adaptive_maximum_courant_number": 0.34657711,
+      "hard_cap_maximum_interface_courant_number": 0.021004435,
+      "adaptive_maximum_interface_courant_number": 0.20656408,
+      "hard_cap_maximum_hydrostatic_force_residual_pa_per_m": 93435.513,
+      "adaptive_maximum_hydrostatic_force_residual_pa_per_m": 82256.461
+    },
+    "interpretation": {
+      "finding": "Tight pressure convergence continued to suppress the exterior-gas pressure mode, but restoring adaptive maxDeltaT raised the written velocity peak by 20.1 percent and exceeded both immutable observed-Courant gates.",
+      "mechanism": "The remaining hotspot stayed at the physical free surface and the pressure-gravity residual did not grow. The failures are the known one-step timestep-controller overshoots, not recurrence of the pure exterior-gas pressure mode.",
+      "decision": "Reject the maxCo=0.30 adaptive member and do not extend it to 0.04 s. The hard cap remains the only passing member of this pair.",
+      "next_action": "Screen the required maxCo=0.15 timestep-sensitivity member with maxDeltaT=2.5e-4 and all other controls fixed. If its observed Courant maxima remain at or below 0.30/0.20 and its velocity stays bounded, use it for the 0.04 s drift window; otherwise retain maxDeltaT=1e-5."
+    },
+    "completion_claim": "This is a rejected adaptive-timestep startup screen, not a passed drift check, hold, smoke run, or completed reproduction."
   }
 }

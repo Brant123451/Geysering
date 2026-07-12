@@ -227,9 +227,14 @@ surface, written velocity peaked in the first frame at 1.510 m/s and ended at
 1.187 m/s, and the maximum pressure-gravity residual fell from 266 to
 93.4 kPa/m.  Alpha and mass balances remained clean.  This is the first
 physical RDF candidate to pass the 0.006 s Courant and hotspot screen, but it
-is not a hold.  The next isolated screen retains the \(10^{-10}\) pressure
-tolerance and restores adaptive `maxDeltaT=2.5e-4`; no 0.04 s or longer hold
-extension is cleared until that pair is complete.
+is not a hold.  Its paired adaptive `maxDeltaT=2.5e-4` run retained the physical
+free-surface hotspot and clean balances, but raised the written velocity peak
+to 1.814 m/s and reached global/interface Co=0.347/0.207.  It therefore fails
+both immutable observed-Courant gates and confirms that tighter timestep
+control is still required.  The next screen uses the required adaptive
+`maxCo=0.15` sensitivity with all other controls fixed; only if it stays below
+the 0.30/0.20 observed limits may it replace the costly hard cap for the
+0.04 s drift window.
 
 Thermophysical choices are:
 

@@ -502,6 +502,17 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     这是通过 Courant 与热点门槛的短候选，不是 0.04 s drift 或 1.0 s hold。
     下一项保持 \(10^{-10}\) pressure tolerance，只恢复 adaptive
     `maxDeltaT=2.5e-4` 完成配对；在该配对通过前不得进入 0.04 s。
+27. 上述 tight-pressure adaptive 配对正常运行至 0.006 s，但仍被拒绝：
+    - global/interface Co 为 0.347/0.207，略超不可变的 0.30/0.20 实测门槛；
+    - 写出速度在 0.00150 s 达 1.814 m/s，末帧为 1.051 m/s；hard-cap
+      配对对应为 1.510/1.187 m/s；
+    - 所有速度与力热点仍在物理自由面，pressure-gravity/surface force
+      最大值为 82/118 kPa/m，外部纯气压力模式没有复发；
+    - alpha、质量界、rim water 与 gas-entry 干净。
+    这确认 tight pressure solve 有效，但默认目标的 adaptive controller
+    仍有一步延迟超限。下一项复用必做的 `CASEB_MAX_CO=0.15` 时间步敏感性，
+    其余设置不变；只有实测 global/interface Co 不超过 0.30/0.20 且速度有界
+    才可进入 0.04 s，否则保留已通过的 `maxDeltaT=1e-5` hard cap。
 
 十、hold 验收
 

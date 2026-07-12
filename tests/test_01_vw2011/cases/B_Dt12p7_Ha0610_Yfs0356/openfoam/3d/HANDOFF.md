@@ -416,6 +416,21 @@ timestep controls.
     hotspot screen, not a passed drift window or hold.  Repeat the same
     \(10^{-10}\) configuration with adaptive `maxDeltaT=2.5e-4` before any
     extension to 0.04 s.
+30. The paired tight-pressure adaptive-timestep screen completed normally but
+    was rejected:
+    * global/interface Courant maxima were 0.347/0.207, above the immutable
+      0.30/0.20 observed limits;
+    * written velocity peaked at 1.814 m/s at 0.00150 s and ended at
+      1.051 m/s, versus 1.510/1.187 m/s under the hard cap;
+    * every velocity and force hotspot stayed at the physical free surface,
+      and maximum pressure-gravity/surface forces were 82/118 kPa/m;
+    * alpha and mass balances remained clean, with no rim water or gas entry.
+    The tight pressure solve continues to suppress the exterior-gas mode, but
+    default-target adaptive stepping still has one-step Courant overshoots.
+    Screen the already-required `maxCo=0.15` timestep-sensitivity member with
+    all other settings fixed.  It may enter the 0.04 s drift window only if
+    observed global/interface Co stay at or below 0.30/0.20 and velocity
+    remains bounded; otherwise retain `maxDeltaT=1e-5`.
 
 ## Still required
 
@@ -440,8 +455,10 @@ The scientific reproduction is **not complete**.  Continue in this order:
    velocity.  Its directly paired hard-cap run amplifies, rather than removes,
    the dynamically regenerated exterior-gas pressure mode.  Tightening
    `p_rghFinal` to \(10^{-10}\) removes that mode and passes the hard-cap
-   0.006 s screen.  Repeat that candidate with adaptive `maxDeltaT=2.5e-4`;
-   do not enter the 0.04 s pressure-drift window until the pair passes.
+   0.006 s screen.  The paired default-target adaptive run fails both observed
+   Courant gates but does not regenerate the gas hotspot.  Screen the required
+   `maxCo=0.15` adaptive timestep member next; do not enter the 0.04 s
+   pressure-drift window until it passes, or use the already-passing hard cap.
    Extend a candidate past the 0.04 s
    pressure-drift onset only if it stays within the declared Courant limits
    and reduces peak velocity, and only \(H^*\) peak-to-peak at or below 0.02
