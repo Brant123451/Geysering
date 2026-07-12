@@ -70,24 +70,49 @@ def probe_table(run: Path, name: str, field: str) -> np.ndarray:
     return data[np.sort(len(data) - 1 - reverse_index)]
 
 
-def interp(table: np.ndarray, times: np.ndarray, column: int, default: float = math.nan) -> np.ndarray:
+def interp(
+    table: np.ndarray,
+    times: np.ndarray,
+    column: int,
+    default: float = math.nan,
+    *,
+    finite_only: bool = False,
+) -> np.ndarray:
     if table.size == 0 or table.shape[1] <= column:
         return np.full_like(times, default, dtype=float)
-    return np.interp(times, table[:, 0], table[:, column])
+    source_t = table[:, 0]
+    source_y = table[:, column]
+    if not finite_only:
+        return np.interp(times, source_t, source_y)
+    valid = np.isfinite(source_t) & np.isfinite(source_y)
+    if not np.any(valid):
+        return np.full_like(times, default, dtype=float)
+    source_t = source_t[valid]
+    source_y = source_y[valid]
+    output = np.full_like(times, default, dtype=float)
+    inside = (times >= source_t[0]) & (times <= source_t[-1])
+    output[inside] = np.interp(times[inside], source_t, source_y)
+    return output
 
 
-def alpha_crossings(z: np.ndarray, alpha: np.ndarray) -> list[float]:
-    crossings: list[float] = []
+def alpha_crossings(
+    z: np.ndarray, alpha: np.ndarray
+) -> tuple[list[float], list[float]]:
+    water_to_air: list[float] = []
+    air_to_water: list[float] = []
     for i in range(len(z) - 1):
         a0, a1 = alpha[i], alpha[i + 1]
         if not np.isfinite(a0 + a1) or (a0 - 0.5) * (a1 - 0.5) > 0:
             continue
         if a1 == a0:
-            crossings.append(float(0.5 * (z[i] + z[i + 1])))
+            continue
+        f = (0.5 - a0) / (a1 - a0)
+        crossing = float(z[i] + f * (z[i + 1] - z[i]))
+        if a1 < a0:
+            water_to_air.append(crossing)
         else:
-            f = (0.5 - a0) / (a1 - a0)
-            crossings.append(float(z[i] + f * (z[i + 1] - z[i])))
-    return crossings
+            air_to_water.append(crossing)
+    return water_to_air, air_to_water
 
 
 def level_series(run: Path) -> np.ndarray:
@@ -105,14 +130,22 @@ def level_series(run: Path) -> np.ndarray:
         distance = data[order, 0]
         alpha = data[order, 1]
         z = 0.026 + distance
-        crossings = alpha_crossings(z, alpha)
-        if crossings:
-            yfs = max(crossings) - 0.025
-            yint = min(crossings) - 0.025 if len(crossings) >= 2 else math.nan
-        elif alpha[-1] >= 0.5:
-            yfs, yint = 1.8, math.nan
-        else:
-            yfs, yint = math.nan, math.nan
+        water_to_air, air_to_water = alpha_crossings(z, alpha)
+        # Yfs is the highest water-to-air transition, or the physical rim
+        # when the centreline is still water-wet at its upper endpoint.
+        yfs = (
+            1.8
+            if alpha[-1] >= 0.5
+            else (
+                max(water_to_air) - 0.025
+                if water_to_air
+                else math.nan
+            )
+        )
+        # The pocket nose is an upward air-to-water transition.  Direction,
+        # rather than simply the lowest crossing, avoids treating the initial
+        # free surface as an air-pocket front.
+        yint = min(air_to_water) - 0.025 if air_to_water else math.nan
         rows.append((time, yfs, yint))
     if not rows:
         return np.empty((0, 3))
@@ -129,36 +162,65 @@ def cumulative_integral(t: np.ndarray, values: np.ndarray) -> np.ndarray:
     return out
 
 
-def first_crossing(t: np.ndarray, y: np.ndarray, threshold: float) -> float | None:
+def first_crossing(
+    t: np.ndarray,
+    y: np.ndarray,
+    threshold: float,
+    *,
+    missing_previous: float | None = None,
+) -> float | None:
     valid = np.isfinite(y)
     indices = np.flatnonzero(valid & (y >= threshold))
     if len(indices) == 0:
         return None
     i = int(indices[0])
-    if i == 0 or not np.isfinite(y[i - 1]) or y[i] == y[i - 1]:
+    if i == 0:
         return float(t[i])
-    f = (threshold - y[i - 1]) / (y[i] - y[i - 1])
+    previous = y[i - 1]
+    if not np.isfinite(previous):
+        if missing_previous is None:
+            return float(t[i])
+        previous = missing_previous
+    if y[i] == previous:
+        return float(t[i])
+    f = float(np.clip((threshold - previous) / (y[i] - previous), 0.0, 1.0))
     return float(t[i - 1] + f * (t[i] - t[i - 1]))
 
 
-def max_window_slope(
-    t: np.ndarray, y: np.ndarray, start: float | None, window: float = 0.6
+def max_climb_rate(
+    t: np.ndarray,
+    y: np.ndarray,
+    start: float | None,
+    stop: float | None,
+    window: float = 0.6,
 ) -> float | None:
-    if start is None:
+    if start is None or stop is None or stop < start:
+        return None
+    mask = (t >= start) & (t <= stop) & np.isfinite(y)
+    selected_t = t[mask]
+    selected_y = y[mask]
+    if len(selected_t) < 4:
         return None
     best: float | None = None
-    for i in range(len(t)):
-        if t[i] < start or not np.isfinite(y[i]):
-            continue
-        targets = np.flatnonzero((t >= t[i] + 0.5 * window) & np.isfinite(y))
-        if len(targets) == 0:
-            continue
-        j = int(targets[0])
-        if t[j] - t[i] > 1.5 * window:
-            continue
-        slope = float((y[j] - y[i]) / (t[j] - t[i]))
-        best = slope if best is None else max(best, slope)
+    first = 0
+    for last in range(len(selected_t)):
+        while selected_t[last] - selected_t[first] > window:
+            first += 1
+        if last - first >= 2 and selected_t[last] > selected_t[first]:
+            slope = float(
+                (selected_y[last] - selected_y[first])
+                / (selected_t[last] - selected_t[first])
+            )
+            best = slope if best is None else max(best, slope)
     return best
+
+
+def time_of_finite_max(t: np.ndarray, values: np.ndarray) -> float | None:
+    valid = np.flatnonzero(np.isfinite(values))
+    if len(valid) == 0:
+        return None
+    index = int(valid[np.argmax(values[valid])])
+    return float(t[index])
 
 
 def finite_max(values: np.ndarray) -> float | None:
@@ -178,6 +240,7 @@ def reduce_run(run_id: str) -> dict:
     run = HERE / "runs" / run_id
     if not run.is_dir():
         raise FileNotFoundError(run)
+    mesh_name, valve_name = run_id.split("_", 1)
 
     pressure = probe_table(run, "pressureProbes", "p")
     levels = level_series(run)
@@ -190,6 +253,8 @@ def reduce_run(run_id: str) -> dict:
     inlet_water = object_table(run, "inletWaterFlux")
     atmosphere = object_table(run, "atmosphereFlux")
     atmosphere_water = object_table(run, "atmosphereWaterFlux")
+    if valve_name != "closed" and levels.size == 0:
+        raise RuntimeError(f"Missing riserLine output in event run {run}")
 
     candidates = [table[:, 0] for table in (pressure, levels, total) if table.size]
     if not candidates:
@@ -198,8 +263,8 @@ def reduce_run(run_id: str) -> dict:
 
     p_pt1 = interp(pressure, t, 1)
     p_pt2 = interp(pressure, t, 2)
-    yfs = interp(levels, t, 1)
-    yint = interp(levels, t, 2)
+    yfs = interp(levels, t, 1, finite_only=True)
+    yint = interp(levels, t, 2, finite_only=True)
     total_mass = interp(total, t, 1)
     water_volume = interp(total, t, 2)
     pocket_mass = interp(pocket, t, 1)
@@ -230,14 +295,29 @@ def reduce_run(run_id: str) -> dict:
     mass_closure = total_mass - total_mass[0] + cumulative_integral(t, net_mdot_out)
     water_closure = water_mass - water_mass[0] + cumulative_integral(t, net_water_mdot_out)
     gas_closure = gas_mass - gas_mass[0] + cumulative_integral(t, net_gas_mdot_out)
-    escaped_water = cumulative_integral(t, np.maximum(q_water_atm, 0.0))
-    eject_volume = np.maximum(external_water - external_water[0], 0.0) + escaped_water
+    # Conservation over the external cell zone: water that crossed the
+    # physical rim is either still in that zone or has crossed its far-field
+    # atmosphere patch.  The signed patch integral handles possible re-entry.
+    escaped_water_net = cumulative_integral(t, q_water_atm)
+    eject_volume = np.maximum(
+        external_water - external_water[0] + escaped_water_net, 0.0
+    )
 
-    ta = first_crossing(t, yint, 0.02)
-    t_rim = first_crossing(t, yfs, 0.98 * 1.8)
+    level_t = levels[:, 0] if levels.size else np.empty(0)
+    level_yfs = levels[:, 1] if levels.size else np.empty(0)
+    level_yint = levels[:, 2] if levels.size else np.empty(0)
+    ta = first_crossing(
+        level_t, level_yint, 0.02, missing_previous=0.0
+    )
+    t_rim = first_crossing(level_t, level_yfs, 0.98 * 1.8)
     geyser = t_rim is not None
-    vfs = max_window_slope(t, yfs, ta)
-    vint = max_window_slope(t, yint, ta)
+    velocity_stop = (
+        t_rim
+        if t_rim is not None
+        else time_of_finite_max(level_t, level_yint)
+    )
+    vfs = max_climb_rate(level_t, level_yfs, ta, velocity_stop)
+    vint = max_climb_rate(level_t, level_yint, ta, velocity_stop)
 
     head_pt1 = (p_pt1 - p_atm) / (rho_w * g)
     head_pt2 = (p_pt2 - p_atm) / (rho_w * g)
@@ -296,7 +376,6 @@ def reduce_run(run_id: str) -> dict:
 
     mesh_stats = json.loads((run / "mesh_stats.json").read_text(encoding="utf-8"))
     initial_audit = json.loads((run / "initial_audit.json").read_text(encoding="utf-8"))
-    mesh_name, valve_name = run_id.split("_", 1)
     metrics = {
         "schema_version": 1,
         "run_id": run_id,
@@ -312,6 +391,12 @@ def reduce_run(run_id: str) -> dict:
         "Yint_max_m": finite_max(yint),
         "vfs_m_s": vfs,
         "vint_m_s": vint,
+        "velocity_metric": {
+            "method": "maximum rolling climb rate",
+            "window_s": 0.6,
+            "start_s": ta,
+            "stop_s": velocity_stop,
+        },
         "p_pt1_peak_over_H0": finite_max(head_pt1 / h0),
         "p_pocket_peak_over_H0": finite_max(head_pocket / h0),
         "ejected_water_final_m3": float(eject_volume[-1]),
@@ -340,7 +425,9 @@ def reduce_run(run_id: str) -> dict:
         "notes": [
             "No experimental classification was used as a model input.",
             "PT1 millimetre offset is unreported; pocket gas-weighted pressure is also provided.",
-            "Yfs/Yint use alpha.water=0.5 centreline crossings.",
+            "Yfs uses upward water-to-air and Yint upward air-to-water alpha.water=0.5 centreline crossings.",
+            "Ejected volume is external-domain water inventory plus signed cumulative far-field water outflow.",
+            "Water density is exactly constant in this configured model, so total minus water mass gives gas mass.",
         ],
     }
     metrics_path = RESULTS / f"openfoam_{run_id}_metrics.json"
@@ -497,6 +584,53 @@ def plot_outputs(metrics: dict[str, dict]) -> None:
         fig.savefig(RESULTS / "variant_sensitivity.png", dpi=160)
         plt.close(fig)
 
+    experiment = read_experiment()
+    model_1d = read_1d()
+    base = metrics.get("base_baseline")
+    labels = ["experiment", "legacy 1-D"]
+    records: list[tuple[dict, str]] = [
+        (experiment, "geyser"),
+        (model_1d, "geyser"),
+    ]
+    if base:
+        labels.append("3-D base")
+        records.append((base, "geyser_model"))
+    fig, axes = plt.subplots(1, 4, figsize=(11.0, 3.7))
+    values_by_panel = (
+        [float(record[key]) for record, key in records],
+        [
+            record.get("Ta_s", np.nan)
+            if record.get("Ta_s") is not None
+            else np.nan
+            for record, _ in records
+        ],
+        [
+            record.get("vfs_m_s", np.nan)
+            if record.get("vfs_m_s") is not None
+            else np.nan
+            for record, _ in records
+        ],
+        [
+            record.get("vint_m_s", np.nan)
+            if record.get("vint_m_s") is not None
+            else np.nan
+            for record, _ in records
+        ],
+    )
+    for ax, values, title in zip(
+        axes,
+        values_by_panel,
+        ("geyser", "Ta (s)", "vfs (m/s)", "vint (m/s)"),
+    ):
+        ax.bar(range(len(labels)), values)
+        ax.set_xticks(range(len(labels)), labels, rotation=30, ha="right", fontsize=7)
+        ax.set_title(title)
+        ax.grid(axis="y", alpha=0.25)
+    axes[0].set_yticks((0, 1), ("no", "yes"))
+    fig.tight_layout()
+    fig.savefig(RESULTS / "experiment_1d_3d.png", dpi=160)
+    plt.close(fig)
+
 
 def aggregate() -> None:
     metrics = load_metrics()
@@ -511,6 +645,26 @@ def aggregate() -> None:
             return None
         return float(a[key] - b[key])
 
+    def compare_with_experiment(
+        model: dict | None, geyser_key: str
+    ) -> dict:
+        def error(key: str) -> float | None:
+            if not model or model.get(key) is None:
+                return None
+            return float(model[key] - experiment[key])
+
+        return {
+            "available": model is not None,
+            "geyser_match": (
+                bool(model[geyser_key]) == experiment["geyser"]
+                if model and model.get(geyser_key) is not None
+                else None
+            ),
+            "Ta_delta_s": error("Ta_s"),
+            "vfs_delta_m_s": error("vfs_m_s"),
+            "vint_delta_m_s": error("vint_m_s"),
+        }
+
     comparison = {
         "schema_version": 1,
         "case": {
@@ -522,6 +676,10 @@ def aggregate() -> None:
         "experiment": experiment,
         "model_1d": model_1d,
         "openfoam_3d": metrics,
+        "experiment_comparison": {
+            "legacy_1d": compare_with_experiment(model_1d, "geyser"),
+            "base_3d": compare_with_experiment(base, "geyser_model"),
+        },
         "sensitivity": {
             "refined_minus_base_Ta_s": delta(refined, base, "Ta_s"),
             "refined_minus_base_Yfs_max_m": delta(refined, base, "Yfs_max_m"),

@@ -66,12 +66,15 @@ BH2_NP=4 ./Allrun solve base baseline
 `postprocess.py` writes only compact files below `results/`.  It reports:
 
 - downstream crown pressure and downstream-pocket gas-weighted pressure;
-- `Yfs` and `Yint` from the riser centreline alpha profile;
+- directional `Yfs` and `Yint` crossings from the riser centreline alpha
+  profile, with `Ta`, `vfs`, and `vint` reduced using the same operational
+  definitions as the existing 1-D comparison;
 - inlet and atmospheric volume/mass flow;
 - cumulative water volume entering the external domain;
 - water and gas mass balances;
 - mesh and valve-opening sensitivity;
-- experiment, existing 1-D model, and 3-D metrics side by side.
+- experiment, existing 1-D model, and 3-D metrics side by side, including
+  scalar errors and classification matches.
 
 The experiment reports only scalar B-H2 metrics (`Ta=7.84 s`,
 `vfs=0.768 m/s`, `vint=1.022 m/s`, geyser).  It does not provide a digitized

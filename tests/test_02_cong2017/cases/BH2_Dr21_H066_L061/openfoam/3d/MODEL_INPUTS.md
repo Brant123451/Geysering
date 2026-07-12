@@ -121,8 +121,16 @@ ejected water.
   reported.
 - PT2: the nearest valid cell above the main invert directly below the riser,
   `(3.47, 0, -0.024) m`.
-- `Yint` and `Yfs`: lower and upper `alpha.water=0.5` crossings along the
-  riser centreline, reported from the main soffit (`z=0.025 m`).
-- outlet flow and spray volume: atmospheric patch flux plus water volume in
-  the external-domain cell zone.  Water is not numerically removed at the
-  physical rim.
+- `Yint` is the lowest upward air-to-water `alpha.water=0.5` crossing and
+  `Yfs` the highest water-to-air crossing (or the rim while its centreline is
+  water-wet), reported from the main soffit (`z=0.025 m`).  This directional
+  definition does not misidentify the initial free surface as an air-pocket
+  nose when only one interface exists.
+- `Ta` is the interpolated first crossing of `Yint=0.02 m`.  `vfs` and `vint`
+  use the same maximum 0.6 s rolling climb-rate operation as the existing 1-D
+  comparison, between `Ta` and either rim arrival or the maximum `Yint`.
+- outlet flow and spray volume: the signed atmospheric-patch water flux is
+  reported directly.  Cumulative water crossing the physical rim is obtained
+  by external-domain water inventory plus signed cumulative far-field
+  outflow; these are complementary stock and flux terms, not two independent
+  ejection estimates.  Water is not numerically removed at the physical rim.
