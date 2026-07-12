@@ -3,6 +3,8 @@ EXE_INC = \
     -I$(LIB_SRC)/meshTools/lnInclude \
     -I$(LIB_SRC)/thermophysicalModels/basic/lnInclude \
     -I$(LIB_SRC)/transportModels/compressible/lnInclude \
+    -I$(LIB_SRC)/transportModels/twoPhaseMixture/lnInclude \
+    -I$(LIB_SRC)/transportModels/interfaceProperties/lnInclude \
     -I$(WM_PROJECT_USER_DIR)/TwoPhaseFlow/src/thermoDynamics/twoPhaseModelThermo/lnInclude
 
 EXE_LIBS = \
@@ -11,5 +13,7 @@ EXE_LIBS = \
     -lcompressibleTransportModels \
     -lfluidThermophysicalModels \
     -lspecie \
+    -ltwoPhaseMixture \
+    -linterfaceProperties \
     -lmeshTools \
     -lfiniteVolume
