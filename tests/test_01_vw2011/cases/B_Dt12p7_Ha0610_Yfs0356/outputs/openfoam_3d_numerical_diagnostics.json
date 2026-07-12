@@ -231,5 +231,66 @@
       "clean_rerun_exit_code": 0
     },
     "completion_claim": "This passed the 0.006 s RDF screening only. It is not the canonical hold, smoke run, full experiment, or accepted baseline."
+  },
+  "penalty_valve_full_hold_attempt": {
+    "status": "rejected_at_0p06_s",
+    "source_commit": "f6336b0",
+    "purpose": "Test the TwoPhaseFlow-reference correctors in the requested 1.0 s closed-valve hold using the connected-domain K=1e8 penalty valve.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "RDF",
+      "valve_representation": "connected-domain purely dissipative coded resistance",
+      "valve_mode": "closed",
+      "valve_loss_coefficient_cap": 100000000.0,
+      "valve_seal_speed_m_per_s": 1.0,
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "n_alpha_corr": 1,
+      "n_alpha_subcycles": 2,
+      "n_outer_correctors": 1,
+      "n_pressure_correctors": 2,
+      "n_non_orthogonal_correctors": 0
+    },
+    "interrupted_result": {
+      "requested_end_time_s": 1.0,
+      "postprocessed_duration_s": 0.06,
+      "latest_solver_time_s": 0.068,
+      "execution_time_s": 8122.65,
+      "clock_time_s": 15031,
+      "pressure_probe_peak_to_peak_Pa": 340.54,
+      "Hstar_peak_to_peak": 0.0570100896273823,
+      "Hstar_acceptance_limit": 0.02,
+      "Yfs_star_max_drift": 0.0024590163934427034,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "minimum_alpha_water": -6.4270186e-09,
+      "maximum_alpha_water": 1.0000000000382312,
+      "liquid_mass_error_pct_max_abs": 4.187644326231716e-06,
+      "gas_mass_error_pct_max_abs": 1.6295326070222793e-05,
+      "total_mass_error_pct_max_abs": 4.154317412025904e-06,
+      "final_delta_t_s": 2.7902313e-05,
+      "maximum_courant_number": 0.3718721,
+      "valve_edge_velocity_history_m_per_s": {
+        "0.04": 1.4144322,
+        "0.05": 1.6744465,
+        "0.06": 1.8249512
+      },
+      "valve_edge_hotspot_location_m": [
+        0.53953637,
+        -0.014712151,
+        -0.026741719
+      ]
+    },
+    "rejection": {
+      "irreversible_acceptance_failure": "The raw pressure-probe peak-to-peak value already exceeded the full-window Hstar limit, so later samples could not make this run pass.",
+      "mechanism": "The velocity maximum moved from the tower free surface to one cell immediately upstream of the sharp valve resistance zone and grew monotonically at the recorded 0.04, 0.05 and 0.06 s samples. The connected porous penalty cannot support a finite pressure jump at exactly zero velocity and creates a severe rAU discontinuity at its cell-zone edge.",
+      "performance_consequence": "Global Courant control, rather than interface or capillary control, reduced deltaT below 3e-5 s. Continuing the rejected run would not produce admissible hold evidence.",
+      "next_action": "Use a conformal valve-plane face zone and a two-sided no-slip baffle for CASEB_VALVE_MODE=closed, retain the dissipative resistance for opening runs, and replace adjustableRunTime output controls with runTime before re-screening."
+    },
+    "completion_claim": "This is a failed partial hold diagnostic. It is not a passed hold, smoke run, full experiment, or accepted baseline."
   }
 }

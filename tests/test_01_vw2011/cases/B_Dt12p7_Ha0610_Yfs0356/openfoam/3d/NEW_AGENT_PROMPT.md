@@ -151,13 +151,16 @@ Copy the full block below into the new Cursor account's Cloud Agent.
     TwoPhaseFlow 自带表面张力算例常用的 1 次 alpha correction、2 次 alpha
     subcycle、1 outer、2 pressure corrector、0 non-orthogonal corrector。
     这些值已写入 manifest，并通过 0.006 s 复筛：wall time 587 s，峰值速度
-    1.682 m/s，末帧 1.285 m/s，alpha 和质量守恒仍稳定。该结果只允许继续
-    完整 hold，不能仅因更快就接受为 baseline。
+    1.682 m/s，末帧 1.285 m/s，alpha 和质量守恒仍稳定。但随后完整 hold
+    尝试在 0.06 s 已不可通过：Hstar peak-to-peak=0.0570，且阀区上游相邻
+    单元速度持续增长。短筛选不能替代超过该延迟热点的筛选。
 
 六、阀门
 
 1. 阀位于 x = 0.546 m 附近，当前 valveZone 长度 0.012 m。
-2. 使用纯耗散 coded fvOption resistance，不得产生压力、速度或质量。
+2. opening/instant 模式使用纯耗散 coded fvOption resistance，不得产生压力、
+   速度或质量。connected-domain penalty 的 closed 模式已被 0.06 s 诊断拒绝；
+   下一候选在同一阀面使用两侧 no-slip conformal baffle 来支撑真实闭阀压差。
 3. baseline opening time = 0.25 s；论文只说明 less than 1 s，因此这是显式假设。
 4. fully-open loss coefficient K = 2；closed-state K cap = 1e8，仅作为数值
    impermeability device。
@@ -265,7 +268,16 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
    - gas/total balance 最大误差分别约
      \(3.16\times10^{-6}\%\) 和 \(1.80\times10^{-8}\%\)；
    - 无 rim 以上水量或 gas-entry。
-7. 下一项工作必须是完整 1.0 s closed-valve hold。
+7. connected-domain penalty 完整 hold 尝试已在 0.06 s 主动停止：
+   - Hstar peak-to-peak = 0.0570，已超过 0.02，后续运行无法消除该超限；
+   - 同一阀区上游单元 `|U|max` 从 0.04 s 的 1.414 m/s 增至
+     0.06 s 的 1.825 m/s；
+   - global Co 而非 interface/capillary Co 把 timestep 降至
+     \(2.79\times10^{-5}\) s；
+   - alpha、相/总质量守恒、rim 水量和 gas-entry 仍干净。
+   该结果证明问题是闭阀压差支撑和 sharp porous edge，不是 RDF 输运发散。
+8. 下一步必须先用 conformal two-sided no-slip closed baffle 和 `runTime`
+   输出控制复筛到至少 0.08 s；通过后才重新开始完整 1.0 s hold。
 
 十、hold 验收
 

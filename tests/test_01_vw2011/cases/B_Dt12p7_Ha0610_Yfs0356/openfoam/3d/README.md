@@ -92,7 +92,14 @@ screen exited normally in 587 s, 47.5% faster than the legacy-corrector RDF
 screen.  Peak velocity increased by 22.6%, but the final velocity remained
 66.5% below the stock-solver diagnostic, while alpha and mass bounds remained
 tight.  The candidate is therefore cleared for the full hold; reduced cost
-alone is not treated as hold evidence.
+alone is not treated as hold evidence.  That full-hold attempt was rejected
+after 0.06 s: raw pressure drift had already reached \(H^*=0.0570\), above the
+0.02 acceptance limit, and one cell immediately upstream of the sharp
+penalty-zone edge grew from 1.414 m/s at 0.04 s to 1.825 m/s at 0.06 s.
+Global Courant control reduced the timestep below \(3\times10^{-5}\) s;
+interface and capillary limits were inactive.  Alpha, mass and rim-water
+checks remained clean, so this is a localized closed-valve pressure-support
+failure rather than an RDF transport failure.
 
 Thermophysical choices are:
 
@@ -160,7 +167,7 @@ at a generic fully-open loss coefficient \(K=2\).  It never adds pressure,
 velocity or mass.  The baseline opening time is 0.25 s; the experiment only
 reports “less than 1 s,” so this is an explicit assumption and is varied in
 sensitivity runs.  `CASEB_VALVE_MODE=instant` supplies the paper-model
-instantaneous-connection limit, while `closed` is used for the hold test.
+instantaneous-connection limit.
 
 The numerical closed-state cap \(K\le10^8\) is an impermeability device, not a
 geyser calibration.  A quadratic loss has a zero Jacobian at zero velocity and
@@ -169,8 +176,14 @@ valve.  The same dissipative loss is therefore linearised with a 1.0 m/s
 seal-speed floor at fully closed state; the floor decreases smoothly to zero
 as the valve opens and never prescribes pressure, velocity, or mass.
 `CASEB_VALVE_SEAL_SPEED` exposes this numerical penalty for diagnostics.  Its
-adequacy must be judged from the static-hold leakage and drift, which are not
-optional completion evidence.
+first extended static test failed because a connected porous zone cannot
+support the finite closed-valve pressure jump at exactly zero velocity and
+creates a sharp pressure-correction coefficient jump at its cell-zone edge.
+The next closed-mode candidate therefore uses a conformal two-sided no-slip
+baffle at the valve plane, while opening/instant modes retain the purely
+dissipative resistance.  The baffle must pass the same leakage, drift and
+conservation hold criteria; it is not accepted merely because it is exactly
+impermeable.
 
 ## Mesh
 

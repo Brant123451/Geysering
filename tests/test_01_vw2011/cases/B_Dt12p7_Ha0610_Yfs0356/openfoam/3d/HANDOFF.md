@@ -33,7 +33,10 @@ corrector).  This lower-cost candidate passed its repeat 0.006 s screen in
 587 s wall time.  Its peak velocity rose from 1.371 to 1.682 m/s relative to
 the legacy-corrector RDF screen, but the 0.006 s value remained 66.5% below
 stock `compressibleInterFoam`; alpha and mass bounds remained tight.  It is
-therefore cleared for the full hold, not accepted as a baseline.
+therefore a valid startup screen, not an accepted hold baseline.  The ensuing
+full-hold attempt was rejected at 0.06 s: pressure drift had already exceeded
+the immutable acceptance limit, and a growing velocity hotspot had moved to
+the first cell upstream of the sharp penalty-valve zone.
 
 ## Verified before handoff
 
@@ -82,13 +85,29 @@ therefore cleared for the full hold, not accepted as a baseline.
      \([-5.77\times10^{-9}, 1+3.52\times10^{-12}]\);
    * maximum gas and total balance errors \(3.16\times10^{-6}\%\) and
      \(1.80\times10^{-8}\%\), with no water above the rim.
+10. The connected-domain penalty-valve hold was intentionally stopped and
+    postprocessed after it became impossible to pass:
+    * duration 0.06 s and requested duration 1.0 s;
+    * pressure peak-to-peak \(H^*=0.0570\), already above the 0.02 limit;
+    * the same cell immediately upstream of `valveZone` grew from
+      1.414 m/s at 0.04 s to 1.825 m/s at 0.06 s;
+    * global Courant control reduced the timestep to \(2.79\times10^{-5}\) s,
+      while interface and capillary controls were inactive;
+    * phase/total balances remained below \(1.7\times10^{-5}\%\), alpha
+      remained tightly bounded, and no rim water or gas entry occurred.
+    This separates a local closed-valve pressure-support defect from the RDF
+    free-surface screening result.
 
 ## Still required
 
 The scientific reproduction is **not complete**.  Continue in this order:
 
-1. Run the full 1.0 s closed-valve hold and assess leakage, interface drift,
-   pressure drift, alpha bounds and mass balance.
+1. Replace the connected porous closed-valve limit with a conformal,
+   two-sided no-slip baffle for `CASEB_VALVE_MODE=closed`, remove
+   `adjustableRunTime` timestep enlargement, re-screen beyond the previous
+   0.04 s onset, then run the full 1.0 s hold and assess leakage, interface
+   drift, pressure drift, alpha bounds and mass balance.  Opening runs retain
+   the dissipative resistance and must be tested separately.
 2. Run the opened-valve 0.5 s smoke case.
 3. Run the 10.5 s base case through \(T^*\ge6\).
 4. Run the refined grid and required timestep/valve/compressibility

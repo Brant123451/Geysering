@@ -19,7 +19,7 @@
   },
   "run_configuration": {
     "stage": "hold",
-    "end_time_s": 0.006,
+    "end_time_s": 1.0,
     "mesh_preset": "base",
     "valve_mode": "closed",
     "valve_open_time_s": 0.25,
@@ -36,10 +36,10 @@
     "max_alpha_co": 0.2,
     "max_capillary_num": 1.0,
     "max_delta_t_s": 0.00025,
-    "field_write_interval_s": 0.001,
+    "field_write_interval_s": 0.1,
     "probe_write_interval_s": 0.005,
-    "plume_write_interval_s": 0.006,
-    "accounting_interval_s": 0.006,
+    "plume_write_interval_s": 0.01,
+    "accounting_interval_s": 0.01,
     "c_alpha": 1.0,
     "n_alpha_bounds": 5,
     "n_alpha_corr": 1,
@@ -103,11 +103,11 @@
   },
   "openfoam_3d": {
     "completion_status": "incomplete",
-    "end_Tstar": 0.00289318718976544,
+    "end_Tstar": 0.034718246277185276,
     "stream_end_Tstar": {
-      "pressure": 0.00289318718976544,
-      "levels": 0.00289318718976544,
-      "accounting": 0.0034718246277185283
+      "pressure": 0.03761143346695072,
+      "levels": 0.03761143346695072,
+      "accounting": 0.034718246277185276
     },
     "geyser": false,
     "geyser_criterion": {
@@ -129,28 +129,28 @@
     "overflow_volume_m3": 0.0,
     "overflow_volume_method": "maximum liquid inventory above physical rim",
     "numerical_diagnostics": {
-      "max_courant_number": 0.44986716,
-      "max_interface_courant_number": 0.25081351,
-      "max_capillary_number": 0.40956045,
-      "minimum_alpha_water": -5.7692016e-09,
-      "maximum_alpha_water": 1.0000000000035136,
-      "final_delta_t_s": 6.875e-05,
-      "execution_time_s": 576.71,
-      "clock_time_s": 587.0,
-      "max_velocity_m_per_s": 1.6815591,
+      "max_courant_number": 0.3718721,
+      "max_interface_courant_number": 0.24137145,
+      "max_capillary_number": 0.41993724,
+      "minimum_alpha_water": -6.4270186e-09,
+      "maximum_alpha_water": 1.0000000000382312,
+      "final_delta_t_s": 2.7902313e-05,
+      "execution_time_s": 8122.65,
+      "clock_time_s": 15031.0,
+      "max_velocity_m_per_s": 1.8249512,
       "max_velocity_location_m": [
-        3.5163674,
-        0.4046661,
-        -0.0013608496
+        0.53953637,
+        -0.014712151,
+        -0.026741719
       ],
-      "last_written_velocity_max_m_per_s": 1.2850141
+      "last_written_velocity_max_m_per_s": 1.8249512
     },
-    "liquid_mass_error_pct_final": 0.0,
-    "liquid_mass_error_pct_max_abs": 0.0,
-    "gas_mass_error_pct_final": -3.1558798385199068e-06,
-    "gas_mass_error_pct_max_abs": 3.1558798385199068e-06,
-    "total_mass_error_pct_final": -1.799348407386692e-08,
-    "total_mass_error_pct_max_abs": 1.799348407386692e-08,
+    "liquid_mass_error_pct_final": -4.187644326231716e-06,
+    "liquid_mass_error_pct_max_abs": 4.187644326231716e-06,
+    "gas_mass_error_pct_final": 1.4637315949912789e-05,
+    "gas_mass_error_pct_max_abs": 1.6295326070222793e-05,
+    "total_mass_error_pct_final": -4.1167157425406345e-06,
+    "total_mass_error_pct_max_abs": 4.154317412025904e-06,
     "mass_balance_method": {
       "total": "solver rho and rhoPhi (signed atmosphere flux)",
       "phases": "registered thermo:rho phase densities and geometric alphaPhi.water boundary flux; transported alpha is not clipped"
@@ -181,14 +181,14 @@
     "reason": "This run is not the declared baseline configuration"
   },
   "hold_test": {
-    "duration_s": 0.005,
-    "requested_duration_s": 0.006,
-    "Hstar_peak_to_peak": 0.0,
+    "duration_s": 0.06,
+    "requested_duration_s": 1.0,
+    "Hstar_peak_to_peak": 0.0570100896273823,
     "Yfs_star_max_drift": 0.0024590163934427034,
     "max_water_above_rim_m3": 0.0,
     "gas_entry_detected": false,
-    "liquid_mass_error_pct_max_abs": 0.0,
-    "gas_mass_error_pct_max_abs": 3.1558798385199068e-06,
+    "liquid_mass_error_pct_max_abs": 4.187644326231716e-06,
+    "gas_mass_error_pct_max_abs": 1.6295326070222793e-05,
     "passed": false
   }
 }
