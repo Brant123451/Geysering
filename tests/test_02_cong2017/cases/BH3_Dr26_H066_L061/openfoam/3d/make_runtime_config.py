@@ -17,6 +17,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--alpha-smooth-curvature", type=int, default=0)
     parser.add_argument("--sample-interval", type=float, default=0.005)
     parser.add_argument("--write-interval", type=float, default=0.05)
+    parser.add_argument("--surface-tension", type=float, default=0.072)
     return parser.parse_args()
 
 
@@ -46,11 +47,15 @@ def main() -> None:
         raise ValueError("all runtime controls must be positive")
     if args.alpha_smooth_curvature < 0:
         raise ValueError("alpha curvature smoothing iterations cannot be negative")
+    if args.surface_tension < 0:
+        raise ValueError("surface tension cannot be negative")
     if args.initial_delta_t > args.max_delta_t:
         raise ValueError("initial deltaT cannot exceed maxDeltaT")
 
     system = Path("system")
     system.mkdir(exist_ok=True)
+    constant = Path("constant")
+    constant.mkdir(exist_ok=True)
     (system / "runControl.runtime").write_text(
         "\n".join(
             (
@@ -68,6 +73,10 @@ def main() -> None:
         ),
         encoding="utf-8",
     )
+    (constant / "surfaceTension.runtime").write_text(
+        f"surfaceTensionValue {args.surface_tension:.12g};\n",
+        encoding="utf-8",
+    )
     write_locations(
         system / "riserProbeLocations.runtime",
         locations(0.060, 1.840, 0.010),
@@ -81,7 +90,8 @@ def main() -> None:
         f"end={args.end_time:g} maxCo={args.max_co:g} "
         f"maxAlphaCo={args.max_alpha_co:g} maxDeltaT={args.max_delta_t:g} "
         f"cAlpha={args.c_alpha:g} "
-        f"alphaSmoothCurvature={args.alpha_smooth_curvature}"
+        f"alphaSmoothCurvature={args.alpha_smooth_curvature} "
+        f"sigma={args.surface_tension:g}"
     )
 
 

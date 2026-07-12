@@ -48,6 +48,7 @@ class Variant:
     max_delta_t: float = 5.0e-4
     alpha_smooth_curvature: int = 0
     sample_interval: float = 5.0e-3
+    surface_tension: float = 0.072
 
 
 VARIANTS = (
@@ -73,6 +74,7 @@ VARIANTS = (
     Variant("valve_0p5", "sensitivity", valve="0.5"),
     Variant("interface_diffuse", "sensitivity", c_alpha=0.5),
     Variant("interface_sharp", "sensitivity", c_alpha=2.0),
+    Variant("sigma_zero", "sensitivity", surface_tension=0.0),
 )
 
 
@@ -110,6 +112,7 @@ def copy_source(destination: Path) -> None:
             "outputs",
             "_work",
             "__pycache__",
+            "*.runtime",
         ),
     )
 
@@ -134,6 +137,16 @@ def source_fingerprint() -> str:
         if path.is_file()
         and "outputs" not in path.relative_to(HERE).parts
         and "__pycache__" not in path.relative_to(HERE).parts
+        and "polyMesh" not in path.relative_to(HERE).parts
+        and "triSurface" not in path.relative_to(HERE).parts
+        and "postProcessing" not in path.relative_to(HERE).parts
+        and not any(
+            part == "0" or part.startswith("processor")
+            for part in path.relative_to(HERE).parts
+        )
+        and not path.name.endswith(".runtime")
+        and not path.name.startswith("log.")
+        and path.suffix != ".msh"
     ]
     return fingerprint(paths)
 
@@ -196,12 +209,17 @@ def outputs_complete(
         data = json.loads(products[0].read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
         return False
-    return (
+    complete = (
         data.get("run_id") == variant.run_id
         and data.get("run_mode") == variant.mode
         and float(data.get("simulated_end_time_s", -1.0)) >= variant.end_time - 1.0e-9
         and data.get("source_fingerprint") == expected_fingerprint
     )
+    if not complete:
+        return False
+    if variant.mode == "closed":
+        return data.get("closed_hold", {}).get("pass") is True
+    return True
 
 
 def annotate_metrics(
@@ -219,6 +237,7 @@ def annotate_metrics(
         "max_alpha_co": variant.max_alpha_co,
         "max_delta_t_s": variant.max_delta_t,
         "sample_interval_s": variant.sample_interval,
+        "surface_tension_n_per_m": variant.surface_tension,
     }
     path.write_text(json.dumps(data, indent=2, allow_nan=False) + "\n", encoding="utf-8")
 
@@ -238,6 +257,21 @@ def main() -> None:
     args.work_root.mkdir(parents=True, exist_ok=True)
     source_output = HERE / "outputs"
     expected_fingerprint = source_fingerprint()
+    closed_variant = next(item for item in VARIANTS if item.run_id == "closed_base")
+    needs_closed_gate = any(
+        item.group in {"core", "sensitivity"} for item in selected
+    )
+    if (
+        needs_closed_gate
+        and closed_variant not in selected
+        and not outputs_complete(
+            source_output, closed_variant, expected_fingerprint
+        )
+    ):
+        raise RuntimeError(
+            "Current-source closed_base output is absent or failed; "
+            "run --variant closed_base and pass the static gate first"
+        )
 
     for variant in selected:
         if (
@@ -274,13 +308,28 @@ def main() -> None:
                 "ALPHA_SMOOTH_CURVATURE": str(
                     variant.alpha_smooth_curvature
                 ),
+                "SURFACE_TENSION": str(variant.surface_tension),
+                "MESH_PROFILE": variant.mesh,
                 "OPENFOAM_NP": str(args.np),
                 "REFERENCE_ROOT": str(HERE.parents[1]),
             }
         )
-        run(["bash", "./Allrun"], runtime, env)
+        try:
+            run(["bash", "./Allrun"], runtime, env)
+        except subprocess.CalledProcessError:
+            metrics_path = runtime / "outputs" / f"{variant.run_id}_metrics.json"
+            if metrics_path.is_file():
+                annotate_metrics(runtime, variant, expected_fingerprint)
+                copy_products(runtime, source_output, variant.run_id)
+            raise
         annotate_metrics(runtime, variant, expected_fingerprint)
         copy_products(runtime, source_output, variant.run_id)
+        if variant.mode == "closed" and not outputs_complete(
+            source_output, variant, expected_fingerprint
+        ):
+            raise RuntimeError(
+                f"{variant.run_id} completed but failed the closed-hold gate"
+            )
 
     subprocess.run(
         ["python3", "summarize_sensitivities.py", "--outputs", "outputs"],

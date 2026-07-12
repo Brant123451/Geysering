@@ -10,11 +10,13 @@ case "$PROFILE" in
         PIPE_SIZE=0.012
         RISER_SIZE=0.005
         ATMOSPHERE_SIZE=0.030
+        CURVATURE_ELEMENTS=40
         ;;
     refined)
         PIPE_SIZE=0.009
         RISER_SIZE=0.004
         ATMOSPHERE_SIZE=0.025
+        CURVATURE_ELEMENTS=64
         ;;
     *)
         echo "MESH_PROFILE must be base or refined" >&2
@@ -36,6 +38,7 @@ python3 make_geometry.py \
     --pipe-size "$PIPE_SIZE" \
     --riser-size "$RISER_SIZE" \
     --atmosphere-size "$ATMOSPHERE_SIZE" \
+    --curvature-elements "$CURVATURE_ELEMENTS" \
     > log.geometry 2>&1
 
 gmshToFoam bh3.msh > log.gmshToFoam 2>&1

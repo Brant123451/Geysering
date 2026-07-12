@@ -10,6 +10,7 @@ system/decomposeParDict.runtime
 system/runControl.runtime
 system/riserProbeLocations.runtime
 system/plumeProbeLocations.runtime
+constant/surfaceTension.runtime
 log.*
 *.foam
 *.msh

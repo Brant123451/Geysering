@@ -440,7 +440,7 @@ def main() -> None:
 
     timeseries_path = prefix.with_name(prefix.name + "_timeseries.csv")
     with timeseries_path.open("w", newline="", encoding="utf-8") as stream:
-        writer = csv.writer(stream)
+        writer = csv.writer(stream, lineterminator="\n")
         writer.writerow(
             [
                 "time_s",
@@ -502,7 +502,7 @@ def main() -> None:
         ("Yfs_max", "", model_1d["Yfs_max_m"], yfs_max, "m"),
     )
     with comparison_path.open("w", newline="", encoding="utf-8") as stream:
-        writer = csv.writer(stream)
+        writer = csv.writer(stream, lineterminator="\n")
         writer.writerow(["metric", "experiment", "existing_1d", "openfoam_3d", "unit"])
         writer.writerows(comparison_rows)
 
@@ -533,6 +533,8 @@ def main() -> None:
     plt.close(fig)
 
     print(json.dumps(metrics, indent=2, allow_nan=False))
+    if args.run_mode == "closed" and closed_hold_pass is not True:
+        raise SystemExit("Closed-hold acceptance criteria failed")
 
 
 if __name__ == "__main__":

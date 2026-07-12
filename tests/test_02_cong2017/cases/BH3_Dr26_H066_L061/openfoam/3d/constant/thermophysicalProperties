@@ -9,8 +9,10 @@ FoamFile
 phases          (water air);
 pMin            50000;
 
+#include "surfaceTension.runtime"
+
 sigma
 {
     type        constant;
-    sigma       0.072;
+    sigma       $surfaceTensionValue;
 }

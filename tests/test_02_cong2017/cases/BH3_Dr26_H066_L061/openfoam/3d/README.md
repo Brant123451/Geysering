@@ -31,7 +31,9 @@ computational extension is not represented as a longer physical riser.
 - Water: weakly compressible `perfectFluid` with physical `2.2 GPa` bulk
   modulus and density `998 kg/m3` at `101325 Pa`, `296.15 K`.
 - Initial temperature: `296.15 K` (the measured laboratory `23 degC`).
-- Surface tension: `0.072 N/m`.
+- Surface tension: primary-paper baseline `0.072 N/m`; `sigma=0` is a
+  separately labeled diagnostic sensitivity because the paired CFD momentum
+  equation omits a surface-tension term.
 - Standard `kEpsilon`, matching the paired 2018 CFD study.
 - Acrylic wall roughness: `Ks=1e-6 m`.
 - Static contact angle: neutral `90 deg`; neither source paper reports or
@@ -55,15 +57,18 @@ the analytic water volume while avoiding the discrete curvature impulse of a
 one-face jump on tetrahedra; transported-interface diffusion/compression is
 still checked through the declared `cAlpha` sensitivities. It is a numerical
 control, not a measured interface thickness, and it must pass the closed-hold
-gate before event results are accepted. A second pair of
-expressions imposes the exact isothermal hydrostatic `p(z)` for the configured
+gate before event results are accepted. A second pair of expressions imposes
+the phase-specific isothermal hydrostatic `p(z)` for the configured
 `perfectFluid` water and `perfectGas` air equations of state, followed by
-`p_rgh=p-rhoMix*(g dot x)`. The open air column is referenced to `101325 Pa`
-at `H0=0.66 m`; the initially isolated pocket is referenced to the same
-pressure at the pipe centreline. This avoids the gravitational free fall that
-would result from a height-independent gas pressure. `setExprBoundaryFields`
-applies the same phase, `p`, and `p_rgh` state to every wall face, including
-the water/air transitions along the riser wall and downstream pocket.
+`p_rgh=p-rhoMix*(g dot x)`. The pure-phase regions are hydrostatic; the
+alpha-weighted pressure inside the 15 mm transition remains a numerical
+initialization and is therefore covered by the closed-hold gate. The open air
+column is referenced to `101325 Pa` at `H0=0.66 m`; the initially isolated
+pocket is referenced to the same pressure at the pipe centreline. This avoids
+the gravitational free fall that would result from a height-independent gas
+pressure. `setExprBoundaryFields` applies the same phase, `p`, and `p_rgh`
+state to every wall face, including the water/air transitions along the riser
+wall and downstream pocket.
 
 Analytic pocket target: `1.1977322 L`; ideal-gas mass target at the stated
 pressure and temperature: `1.427641 g`. `initialVolumeAuditDict` samples the
@@ -85,13 +90,14 @@ sample.
 ## Mesh profiles
 
 `make_geometry.py` builds one exact OpenCASCADE Boolean fluid volume and
-generates a boundary-fitted Delaunay tetrahedral mesh with named inlet, cap, wall,
-riser-wall, and atmosphere physical groups. The base and refined profiles use
-independent pipe/riser/atmosphere target sizes; no cut-cell background or
-rectangular equivalent flow area enters the solution. Both the initial free
-surface and the Valve #4 circular cross-section are conformal internal mesh
-surfaces. Every run repeats the strict mesh check after creating its valve
-baffle and aborts before solving unless that final mesh reports `Mesh OK`.
+generates a boundary-fitted Delaunay tetrahedral mesh with named inlet, cap,
+wall, riser-wall, and atmosphere physical groups. The base and refined profiles
+use independent pipe/riser/atmosphere target sizes and 40/64 curvature elements
+per full circle; no cut-cell background or rectangular equivalent flow area
+enters the solution. Both the initial free surface and the Valve #4 circular
+cross-section are conformal internal mesh surfaces. Every run repeats the
+strict mesh check after creating its valve baffle and aborts before solving
+unless that final mesh reports `Mesh OK`.
 The paired FLUENT study used a much finer wall-resolved hybrid mesh; the present
 tetrahedral profiles are accepted only through their reported base/refined
 sensitivity and must not be described as resolving the reported sub-millimetre
@@ -118,13 +124,17 @@ RUN_MODE=event VALVE_OPENING=instant END_TIME=13 ./Allrun
 ```
 
 `VALVE_OPENING` accepts `instant`, `0.2`, or `0.5`. `C_ALPHA`, `MAX_CO`,
-`MAX_ALPHA_CO`, `MAX_DELTA_T`, and `ALPHA_SMOOTH_CURVATURE` expose declared
-numerical controls. The baseline uses zero curvature-smoothing passes:
+`MAX_ALPHA_CO`, `MAX_DELTA_T`, `ALPHA_SMOOTH_CURVATURE`, and
+`SURFACE_TENSION` expose declared numerical controls. The baseline uses zero
+curvature-smoothing passes:
 controlled static tests found that extra passes increased water-side velocity
 for this mesh, while the explicit initial VOF transition reduced the startup
 impulse. Use clean runtime copies for independent variants;
 `run_study.py` manages these copies and writes only compact CSV/JSON/PNG
 results into `outputs/`.
+It treats a failed closed hold as a hard error and refuses to start core or
+sensitivity event windows unless a passing `closed_base` result with the
+current source fingerprint exists.
 
 ## Required outputs
 

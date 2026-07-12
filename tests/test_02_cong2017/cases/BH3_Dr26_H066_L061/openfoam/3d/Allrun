@@ -48,6 +48,7 @@ python3 make_runtime_config.py \
     --alpha-smooth-curvature "${ALPHA_SMOOTH_CURVATURE:-0}" \
     --sample-interval "${SAMPLE_INTERVAL:-0.005}" \
     --write-interval "${WRITE_INTERVAL:-0.05}" \
+    --surface-tension "${SURFACE_TENSION:-0.072}" \
     > log.runtimeConfig 2>&1
 
 cp -a 0.orig 0
@@ -62,7 +63,7 @@ setExprFields -time 0 \
     -keepPatches \
     > log.initializePhase 2>&1
 
-# Exact isothermal hydrostatic profiles for the two equations of state.
+# Phase-specific isothermal hydrostatic profiles for the two equations of state.
 # The open air column is referenced to atmospheric pressure at H0; the
 # initially isolated downstream pocket is referenced at the pipe centreline.
 WATER_PRESSURE_EXPR="(101325+997.954035295*7443.55501481*296.15)*exp(9.81*(0.66-pos().z())/(7443.55501481*296.15))-997.954035295*7443.55501481*296.15"

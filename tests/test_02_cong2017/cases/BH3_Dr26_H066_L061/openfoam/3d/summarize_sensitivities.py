@@ -32,11 +32,16 @@ def main() -> None:
     for data in metrics:
         conservation = data["conservation"]
         ejection = data["ejection"]
+        numerical_controls = data.get("numerical_controls", {})
+        closed_hold = data.get("closed_hold", {})
         rows.append(
             {
                 "run_id": data["run_id"],
                 "run_mode": data["run_mode"],
                 "valve_opening": data["valve_opening"],
+                "surface_tension_n_m": numerical_controls.get(
+                    "surface_tension_n_per_m"
+                ),
                 "end_time_s": data["simulated_end_time_s"],
                 "full_13s": int(data["full_13s_window_completed"]),
                 "geyser": int(data["geysering"]),
@@ -52,6 +57,7 @@ def main() -> None:
                 "total_mass_residual_fraction": conservation[
                     "max_abs_total_mass_residual_fraction"
                 ],
+                "closed_hold_pass": closed_hold.get("pass"),
             }
         )
 
@@ -59,6 +65,7 @@ def main() -> None:
         "run_id",
         "run_mode",
         "valve_opening",
+        "surface_tension_n_m",
         "end_time_s",
         "full_13s",
         "geyser",
@@ -70,11 +77,14 @@ def main() -> None:
         "rim_ejected_l",
         "gas_mass_residual_fraction",
         "total_mass_residual_fraction",
+        "closed_hold_pass",
     ]
     with (args.outputs / "sensitivity_summary.csv").open(
         "w", newline="", encoding="utf-8"
     ) as stream:
-        writer = csv.DictWriter(stream, fieldnames=fields)
+        writer = csv.DictWriter(
+            stream, fieldnames=fields, lineterminator="\n"
+        )
         writer.writeheader()
         writer.writerows(rows)
 
@@ -88,6 +98,7 @@ def main() -> None:
         "valve_0p5",
         "interface_diffuse",
         "interface_sharp",
+        "sigma_zero",
     }
     completed = {row["run_id"] for row in full}
     summary = {
@@ -99,6 +110,9 @@ def main() -> None:
         "all_required_full_variants_complete": required <= completed,
         "classification_values_across_completed_full_variants": classifications,
         "classification_changed_by_numerics": len(classifications) > 1,
+        "closed_hold_passed": any(
+            row["closed_hold_pass"] is True for row in rows
+        ),
         "experimental_classification": "GEYSER",
         "note": "No result is tuned to the experimental label.",
     }

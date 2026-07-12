@@ -57,7 +57,8 @@
       "event_end_time_s": 13.0,
       "baseline_max_courant": 0.25,
       "baseline_max_alpha_courant": 0.15,
-      "baseline_max_delta_t_s": 0.0005
+      "baseline_max_delta_t_s": 0.0005,
+      "surface_tension_sensitivity_n_per_m": [0.072, 0.0]
     },
     "valve_sensitivity": {
       "published_cfd_baseline_s": 0.0,
@@ -69,12 +70,14 @@
       "base": {
         "pipe_tetrahedron_target_m": 0.012,
         "riser_tetrahedron_target_m": 0.005,
-        "atmosphere_tetrahedron_target_m": 0.03
+        "atmosphere_tetrahedron_target_m": 0.03,
+        "curvature_elements_per_2pi": 40
       },
       "refined": {
         "pipe_tetrahedron_target_m": 0.009,
         "riser_tetrahedron_target_m": 0.004,
-        "atmosphere_tetrahedron_target_m": 0.025
+        "atmosphere_tetrahedron_target_m": 0.025,
+        "curvature_elements_per_2pi": 64
       }
     },
     "classification": {

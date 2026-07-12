@@ -52,6 +52,9 @@ def main() -> None:
         ),
         "max_skewness": first(r"Max skewness\s*=\s*([0-9.eE+-]+)", check),
         "minimum_volume_m3": first(r"Min volume\s*=\s*([0-9.eE+-]+)", check),
+        "mesh_volume_m3": first(
+            r"Total volume\s*=\s*([0-9.eE+-]+)", check
+        ),
         "minimum_cell_determinant": first(
             r"Cell determinant.*minimum:\s*([0-9.eE+-]+)", check
         ),
@@ -71,7 +74,16 @@ def main() -> None:
         "analytic_initial_pocket_m3": first(
             r"^analytic_initial_pocket_m3=([0-9.eE+-]+)", geometry
         ),
+        "curvature_elements_per_2pi": first(
+            r"^curvature_elements_per_2pi=(\d+)", geometry, int
+        ),
     }
+    if data["mesh_volume_m3"] is not None and data["fluid_geometry_volume_m3"]:
+        data["mesh_to_cad_volume_relative_error"] = (
+            data["mesh_volume_m3"] / data["fluid_geometry_volume_m3"] - 1.0
+        )
+    else:
+        data["mesh_to_cad_volume_relative_error"] = None
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(data, indent=2))

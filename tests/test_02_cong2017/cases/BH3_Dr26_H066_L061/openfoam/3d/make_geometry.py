@@ -48,6 +48,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--pipe-size", type=float, default=0.012)
     parser.add_argument("--riser-size", type=float, default=0.005)
     parser.add_argument("--atmosphere-size", type=float, default=0.030)
+    parser.add_argument("--curvature-elements", type=int, default=40)
     return parser.parse_args()
 
 
@@ -75,6 +76,8 @@ def main() -> None:
         raise ValueError("mesh sizes must be positive")
     if args.riser_size > args.pipe_size:
         raise ValueError("riser-size must not exceed pipe-size")
+    if args.curvature_elements < 20:
+        raise ValueError("curvature-elements must be at least 20")
 
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=True)
@@ -271,7 +274,9 @@ def main() -> None:
         gmsh.option.setNumber("Mesh.MeshSizeMax", args.atmosphere_size)
         gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
         gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
-        gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 20)
+        gmsh.option.setNumber(
+            "Mesh.MeshSizeFromCurvature", args.curvature_elements
+        )
         gmsh.option.setNumber("Mesh.Algorithm", 6)
         # The classic Delaunay tetrahedralizer avoids the under-determined
         # boundary tets produced by HXT for this long pipe/box union.
@@ -307,6 +312,7 @@ def main() -> None:
         print(f"pipe_size_m={args.pipe_size}")
         print(f"riser_size_m={args.riser_size}")
         print(f"atmosphere_size_m={args.atmosphere_size}")
+        print(f"curvature_elements_per_2pi={args.curvature_elements}")
         for name, surfaces in patches.items():
             print(f"{name}_surfaces={len(surfaces)}")
     finally:
