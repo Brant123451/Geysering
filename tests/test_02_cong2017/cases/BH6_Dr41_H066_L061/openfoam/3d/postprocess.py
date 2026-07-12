@@ -370,7 +370,7 @@ def parse_check_mesh(path: Path) -> dict:
         ),
         "max_skewness": number(r"Max skewness\s*=\s*([0-9.eE+-]+)"),
         "minimum_cell_volume_m3": number(
-            r"Min volume\s*=\s*([0-9.eE+-]+)"
+            r"Min volume\s*=\s*([0-9.eE+-]*[0-9])"
         ),
         "underdetermined_cells": integer(
             r"Cells with small determinant .* number of cells:\s+(\d+)"
