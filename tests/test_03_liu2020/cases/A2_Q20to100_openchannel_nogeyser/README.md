@@ -53,7 +53,11 @@ OpenFOAM.com v2512 `interFoam`、4 个 MPI ranks 从源码完成 base/refined �
 0.57×0.61×0.89 m、圆形活动溢流堰直径 0.30 m/高度 0.40 m，并据此替换
 固定水位边界；同一论文的 A2 试验表还给出竖管精确内径 57 mm（期刊取整为
 0.06 m）。堰顶仅用 `Q0=20 L/s、hd=0.070 m` 的 Q0 水力试算校准，
-不使用瞬变压力曲线或 no-geyser 结果拟合。新 base/refined 完整运行完成前，
+不使用瞬变压力曲线或 no-geyser 结果拟合。12 s Q0 试算末 1 s 的入口/堰流量
+为 19.987/20.091 L/s，液量斜率 -0.058 L/s；下游管
+`x=0.60/3.25/6.00 m` 的等效水深为 0.0627/0.0710/0.0781 m。由于文献未给
+`hd` 的轴向测点，三个截面都将保留，不能用水箱液位冒充管内水深。新
+base/refined 完整运行完成前，
 不得把旧表格当作修正模型结论。完整数据、误差、网格敏感性和限制见
 [`openfoam/3d/README.md`](openfoam/3d/README.md) 与
 [`openfoam/3d/PAPER_AUDIT.md`](openfoam/3d/PAPER_AUDIT.md)。

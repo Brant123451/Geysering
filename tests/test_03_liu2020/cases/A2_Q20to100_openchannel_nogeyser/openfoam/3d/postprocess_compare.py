@@ -31,12 +31,13 @@ RISER_LEVELS = np.arange(0.46, 1.66001, 0.02)
 RISER_SAMPLES_PER_LEVEL = 5
 MIXTURE_ALPHA_THRESHOLD = 0.10
 TANK_LEVELS = np.arange(-0.36, 0.48001, 0.01)
+DOWNSTREAM_PIPE_RADIUS_M = 0.14
 BORE_SAMPLES_PER_STATION = 5
 PAPER = {
     "PT3_initial_kPa": 0.99,
     "PT2_final_kPa": 2.15,
     "PT3_final_kPa": 4.99,
-    "downstream_initial_stage_m": 0.070,
+    "downstream_initial_depth_m": 0.070,
     "riser_diameter_m": 0.057,
     "bore_reach_paper_clock_s": 1.20,
     "bore_reach_ramp_clock_s": 1.60,
@@ -189,6 +190,23 @@ def tank_stage(alpha_samples: np.ndarray) -> np.ndarray:
         if len(wet):
             stage[row_index] = TANK_LEVELS[int(wet[-1])] + 0.005
     return stage
+
+
+def circular_segment_depth(wet_area: np.ndarray) -> np.ndarray:
+    """Convert integrated wet area to equivalent depth in the 0.28 m pipe."""
+    radius = DOWNSTREAM_PIPE_RADIUS_M
+    target = np.clip(np.asarray(wet_area, dtype=float), 0.0, np.pi * radius**2)
+    lower = np.zeros_like(target)
+    upper = np.full_like(target, 2.0 * radius)
+    for _ in range(60):
+        middle = 0.5 * (lower + upper)
+        offset = radius - middle
+        area = radius**2 * np.arccos(
+            np.clip(offset / radius, -1.0, 1.0)
+        ) - offset * np.sqrt(np.maximum(0.0, 2.0 * radius * middle - middle**2))
+        lower = np.where(area < target, middle, lower)
+        upper = np.where(area >= target, middle, upper)
+    return 0.5 * (lower + upper)
 
 
 def phase_bore_arrivals(
@@ -368,6 +386,17 @@ def main() -> None:
     }
     riser = riser_measures(alpha_samples)
     tank_water_level = tank_stage(tank_alpha)
+    downstream_depth: dict[str, tuple[np.ndarray, np.ndarray]] = {}
+    for station, function_name in (
+        ("x_0p60_m", "downstreamWetAreaX060"),
+        ("x_3p25_m", "downstreamWetAreaX325"),
+        ("x_6p00_m", "downstreamWetAreaX600"),
+    ):
+        depth_time, wet_area = read_function_scalar(case, function_name)
+        downstream_depth[station] = (
+            depth_time,
+            circular_segment_depth(wet_area),
+        )
     bore_upstream, bore_chamber = phase_bore_arrivals(bore_time, bore_alpha)
     bore_local_velocity = (
         0.29 / (bore_chamber - bore_upstream)
@@ -516,6 +545,10 @@ def main() -> None:
             "tank_stage_paper_window_m": window_mean(
                 tank_time, tank_water_level, steady_start, PAPER_END_S
             ),
+            "downstream_depth_initial_m": {
+                station: window_mean(time, depth, -0.5, 0.0)
+                for station, (time, depth) in downstream_depth.items()
+            },
             "bore_arrival_ramp_clock_s": bore_chamber,
             "bore_local_velocity_mps": bore_local_velocity,
             "PT3_pressure_response_ramp_clock_s": bore_arrival(
@@ -576,10 +609,13 @@ def main() -> None:
             )
             - PAPER["PT3_final_kPa"],
             "first_column_minus_paper_m": first_column - PAPER["first_mixture_column_m"],
-            "tank_stage_initial_minus_paper_m": window_mean(
-                tank_time, tank_water_level, -0.5, 0.0
+            "downstream_midpipe_depth_initial_minus_paper_m": window_mean(
+                downstream_depth["x_3p25_m"][0],
+                downstream_depth["x_3p25_m"][1],
+                -0.5,
+                0.0,
             )
-            - PAPER["downstream_initial_stage_m"],
+            - PAPER["downstream_initial_depth_m"],
             "PT1_RMSE_vs_digitized_kPa": rmse(p3_grid["PT1"], exp_interp["PT1"]),
             "PT2_RMSE_vs_digitized_kPa": rmse(p3_grid["PT2"], exp_interp["PT2"]),
             "PT3_RMSE_vs_digitized_kPa": rmse(p3_grid["PT3"], exp_interp["PT3"]),
@@ -589,6 +625,7 @@ def main() -> None:
             "The journal article omits the receiving tank/weir geometry; dimensions come from Liu's open-access 2018 thesis describing the same rig.",
             "The journal rounds the riser diameter to 0.06 m; the model uses the thesis A2 test-table value of 0.057 m.",
             "The movable-weir crest is calibrated only to the reported Q0=20 L/s and hd=0.070 m operating point; it is not fitted to transient pressures or geyser outcome.",
+            "The sources prescribe downstream-pipe depth but do not report its axial measurement station; three cross-sectional wet areas are therefore reported instead of treating the receiving-tank stage as hd.",
             "The tank's absolute vertical placement is inferred because neither source dimensions its floor relative to the downstream-pipe invert.",
             "A 10 mm mesh-resolved weir wall thickness is numerical because the thesis reports only the 0.30 m outside diameter.",
             "Probe circumferential/in-plane coordinates are not reported by Liu et al.",

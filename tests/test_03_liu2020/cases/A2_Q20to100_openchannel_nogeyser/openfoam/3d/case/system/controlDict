@@ -1,6 +1,6 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | Liu2020 A2: full 3-D interFoam validation                                  |
-| t=-8..0 s Q0 initialization; t=0..0.4 s Q0->Q1; end t=14.4 s              |
+| t=-12..0 s Q0 initialization; t=0..0.4 s Q0->Q1; end t=14.4 s             |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
@@ -12,7 +12,7 @@ FoamFile
 
 application     interFoam;
 startFrom       startTime;
-startTime       -8;
+startTime       -12;
 stopAt          endTime;
 endTime         14.4;
 deltaT          0.00005;
@@ -110,6 +110,57 @@ functions
         (
             #include "tankProbeLocations"
         );
+    }
+
+    // The paper prescribes hd/Dd=1/4 in the downstream pipe but does not
+    // report an axial measurement station.  Integrating alpha on three
+    // cross-sections records the gradually varied Q0 depth without equating
+    // the receiving-tank stage to the pipe depth.
+    downstreamWetAreaX060
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        writeControl    timeStep;
+        writeInterval   20;
+        log             false;
+        writeFields     false;
+        regionType      sampledSurface;
+        name            x060;
+        sampledSurfaceDict
+        {
+            type        cuttingPlane;
+            point       (0.60 0 0.14);
+            normal      (1 0 0);
+            interpolate true;
+        }
+        operation       areaIntegrate;
+        fields          (alpha.water);
+    }
+
+    downstreamWetAreaX325
+    {
+        $downstreamWetAreaX060;
+        name            x325;
+        sampledSurfaceDict
+        {
+            type        cuttingPlane;
+            point       (3.25 0 0.14);
+            normal      (1 0 0);
+            interpolate true;
+        }
+    }
+
+    downstreamWetAreaX600
+    {
+        $downstreamWetAreaX060;
+        name            x600;
+        sampledSurfaceDict
+        {
+            type        cuttingPlane;
+            point       (6.00 0 0.14);
+            normal      (1 0 0);
+            interpolate true;
+        }
     }
 
     // Interpolate alpha to faces, then integrate phase-weighted boundary

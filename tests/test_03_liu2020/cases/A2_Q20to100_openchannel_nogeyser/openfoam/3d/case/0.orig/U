@@ -19,7 +19,7 @@ boundaryField
         type            variableHeightFlowRateInletVelocity;
         flowRate table
         (
-            (-8.0  0.020)
+            (-12.0 0.020)
             ( 0.0  0.020)
             ( 0.4  0.100)
             (14.4  0.100)

@@ -22,7 +22,7 @@ are intentionally not versioned.
   unreported numerical headbox is removed.
 * Initialization: approximate steady `Q0` velocities, 0.08 m upstream depth,
   chamber surface `z=0.12 m` inferred from PT3=0.99 kPa, and downstream
-  `hd=Dd/4=0.070 m`. The simulation allocates `t=-8…0 s` to establish Q0.
+  `hd=Dd/4=0.070 m`. The simulation allocates `t=-12…0 s` to establish Q0.
 * Downstream: the 0.57 × 0.61 × 0.89 m tank and 0.30 m-diameter, 0.40 m-high
   movable circular weir reported in Liu's 2018 thesis for this apparatus.
   Its crest is calibrated with a Q0-only hydraulic pilot to reproduce the
@@ -81,7 +81,7 @@ checkMesh -allGeometry -allTopology
 ```
 
 The smoke run is a fresh 0.2 s `Q0` run. `Allrun.solve full` deliberately
-starts fresh afterward, performs the complete `-8…14.4 s` run, and keeps only
+starts fresh afterward, performs the complete `-12…14.4 s` run, and keeps only
 three field checkpoints while retaining high-frequency compact function
 outputs.
 
@@ -131,6 +131,8 @@ base/refined grid-sensitivity block.
 * 61 riser elevations with five radial samples at each elevation;
 * two five-point filling-bore stations, chamber phase probes, and a vertical
   receiving-tank stage line;
+* integrated wet area at three downstream-pipe cross-sections, converted to
+  equivalent circular-segment depths so `hd` is not confused with tank stage;
 * water volume and phase-weighted water flux through every open boundary.
 
 Riser results distinguish water-equivalent height, contiguous mixture-column
@@ -140,9 +142,29 @@ Liquid continuity is checked independently as
 
 `V(t)-V(t0)+integral(sum(outward water fluxes) dt)`.
 
-Bore arrival is a reproducible pressure diagnostic: after `t=0.4 s`, PT3 must
-remain at least 0.20 kPa above its `-0.5…0 s` baseline for at least 80% of a
-20 ms interval. The experimental target is 1.60 s on the ramp-start clock.
+Bore arrival uses the five phase probes 10 mm before the chamber: their mean
+`alpha.water` must remain at least 0.5 for 80% of a 20 ms window. The
+experimental target is 1.60 s on the ramp-start clock. A PT3 rise of 0.20 kPa
+is retained separately as a pressure-response time, not relabeled as visual
+bore arrival.
+
+## Replacement-model Q0 check
+
+A base-grid Q0-only `-8…0 s` initialization followed by a four-second restart
+was used to decide the required source initialization length. Over its final
+one second, the inlet and weir flows were 19.987 and 20.091 L/s and the water
+volume slope was -0.058 L/s. The 0.5% flow mismatch is much smaller than at
+eight seconds and supports a canonical `-12…0 s` initialization.
+
+At the same endpoint, integrated wet areas gave equivalent downstream-pipe
+depths of 0.0627, 0.0710, and 0.0781 m at `x=0.60`, `3.25`, and `6.00 m`.
+The source prescribes `hd=0.070 m` but does not identify an axial measurement
+station; the full result therefore reports all three sections rather than
+calling the 0.0749 m receiving-tank stage `hd`. PT3 was 0.793 kPa, consistent
+with the paper's literal 0.10 m chamber depth but below its internally
+inconsistent 0.99 kPa pressure statement. No transient pressure, riser
+response, or geyser classification was used in this Q0 check. The fresh full
+run must reproduce these initialization diagnostics before acceptance.
 
 ## Superseded fixed-stage run results
 

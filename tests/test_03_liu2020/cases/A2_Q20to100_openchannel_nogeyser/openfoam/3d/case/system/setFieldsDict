@@ -12,7 +12,7 @@ FoamFile
 //   downstream depth hd=Dd/4=0.070 m (Table 1).
 // The Liu (2018) thesis adds the 0.57 x 0.61 x 0.89 m receiving tank and
 // 0.30 m diameter, 0.40 m high overflow weir used in the same experiment.
-// Six boxes approximate the upstream 1:100 free surface.  The -8..0 s Q0
+// Six boxes approximate the upstream 1:100 free surface.  The -12..0 s Q0
 // interval establishes the experimental steady initial flow before the ramp.
 
 defaultFieldValues

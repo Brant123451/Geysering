@@ -75,12 +75,19 @@ hold `hd/Dd=1/4` for Series A. It still does not tabulate the crest elevation
 or a rating curve. A standard circular sharp-crested estimate for the reported
 0.30 m perimeter first gave `z_crest=0.019 m`. Short Q0-only mesh pilots were
 then used exactly as the experimenters used the movable weir: to set the known
-initial stage. The first translation to 0.036 m settled toward a 0.0754 m
-stage; its final 1 s had 19.998 L/s inlet, 19.833 L/s weir outflow, and
-0.224 L/s volume rise. Translating the crest by
+initial downstream-pipe depth. The first translation to 0.036 m settled toward
+a 0.0754 m tank stage; its final 1 s had 19.998 L/s inlet, 19.833 L/s weir
+outflow, and 0.224 L/s volume rise. Translating the crest by
 `0.0700-0.0754=-0.0054 m` gives `z_crest=0.0306 m`, represented as 0.031 m.
-The full `-8…0 s` initialization must independently verify this closure. No
-transient pressure, riser response, or no-geyser outcome enters it.
+After 12 s at Q0, that geometry had 19.987 L/s inlet, 20.091 L/s weir
+outflow, and a -0.058 L/s water-volume slope over the final second. Integrated
+wet areas at downstream-pipe `x=0.60`, `3.25`, and `6.00 m` corresponded to
+equivalent depths 0.0627, 0.0710, and 0.0781 m. The source does not identify
+the axial `hd` station, so all three are retained; the 0.0749 m receiving-tank
+stage is not silently treated as pipe depth. The canonical full calculation
+therefore uses a fresh `-12…0 s` initialization and must independently
+reproduce this closure. No transient pressure, riser response, or no-geyser
+outcome enters the calibration.
 
 The initial chamber condition needs special care. The paper states that
 PT3 measured 0.99 kPa and that this “indicated a water depth of 0.10 m”
@@ -91,11 +98,11 @@ inference that gives 0.10 m pressure head above the actual PT3 elevation and
 honors the requested 0.99 kPa observable. The alternative literal-depth
 interpretation is a 20 mm initial-level uncertainty.
 
-The near-balanced Q0 pilot relaxed PT3 to about 0.72 kPa while preserving the
-reported downstream stage. That is closer to the paper's literal 0.10 m
-floor-depth interpretation than to its 0.99 kPa pressure. The crest is not
-altered to hide this inconsistency; the final initialization reports both
-observables independently.
+The near-balanced 12 s Q0 pilot relaxed PT3 to about 0.793 kPa while preserving
+the reported downstream depth at the pipe midpoint. That agrees closely with
+the paper's literal 0.10 m floor-depth interpretation but not with its
+0.99 kPa pressure. The crest is not altered to hide this inconsistency; the
+final initialization reports both observables independently.
 
 ## Measurement locations and pressure definition
 
@@ -280,5 +287,5 @@ The strongest evidence-based explanation was the fixed 0.070 m terminal stage,
 which prevented the receiving-tank level from responding as flow rose
 fivefold. The unreported-headbox inlet and unconverged pre-ramp state were
 additional independent defects. The replacement uses primary-source geometry
-and an eight-second Q0 initialization; no pressure or geyser classification is
-used to set its parameters.
+and a twelve-second Q0 initialization; no transient pressure or geyser
+classification is used to set its parameters.
