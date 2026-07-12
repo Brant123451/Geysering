@@ -205,6 +205,11 @@ def main() -> None:
         case, "initialRiserWaterVolume", "volFieldValue.dat"
     )
     internal_air_pt_table = read_function(case, "internalAirPT", "volFieldValue.dat")
+    all_speed_table = read_function(case, "allSpeedMaximum", "volFieldValue.dat")
+    water_speed_table = read_function(
+        case, "waterSpeedMaximum", "volFieldValue.dat"
+    )
+    gas_speed_table = read_function(case, "gasSpeedMaximum", "volFieldValue.dat")
     inlet_water_flux_table = read_function(
         case, "inletWaterFlux", "surfaceFieldValue.dat"
     )
@@ -222,6 +227,9 @@ def main() -> None:
     total_mass = interpolate(total_mass_table, time)
     air_mass = interpolate(air_pt_table, time) / R_AIR
     internal_air_mass = interpolate(internal_air_pt_table, time) / R_AIR
+    all_domain_speed = interpolate(all_speed_table, time)
+    water_weighted_speed = interpolate(water_speed_table, time)
+    gas_weighted_speed = interpolate(gas_speed_table, time)
     q_inlet_water = interpolate(inlet_water_flux_table, time)
     q_atmos_water = interpolate(atmosphere_water_flux_table, time)
     q_atmos_air_mass = interpolate(atmosphere_air_pt_flux_table, time) / R_AIR
@@ -292,6 +300,15 @@ def main() -> None:
         "vfs_3d_m_per_s": vfs,
         "vint_3d_m_per_s": vint,
         "maximum_sampled_speed_m_per_s": float(np.nanmax(max_probe_speed)),
+        "maximum_all_domain_speed_m_per_s": float(
+            np.nanmax(all_domain_speed)
+        ),
+        "maximum_water_weighted_speed_m_per_s": float(
+            np.nanmax(water_weighted_speed)
+        ),
+        "maximum_gas_weighted_speed_m_per_s": float(
+            np.nanmax(gas_weighted_speed)
+        ),
         "initial_volume_audit": {
             "pocket_target_m3": POCKET_TARGET,
             "pocket_mesh_m3": initial_pocket_mesh,
@@ -340,14 +357,19 @@ def main() -> None:
                 or (
                     fs_drift <= 0.01
                     and pocket_drift <= 0.01
-                    and np.nanmax(max_probe_speed) <= 0.02
+                    and np.nanmax(water_weighted_speed) <= 0.02
                 )
             ),
             "criteria": {
                 "free_surface_drift_m": 0.01,
                 "pocket_relative_volume_drift": 0.01,
-                "sampled_speed_m_per_s": 0.02,
+                "water_weighted_speed_m_per_s": 0.02,
             },
+            "all_domain_and_gas_speed_are_reported_but_not_gates": (
+                "Low-density gas-side CSF velocity is monitored separately; "
+                "the hold gate uses phase-weighted water speed plus interface "
+                "and pocket-volume drift."
+            ),
         },
         "experiment": {
             "geyser": bool(int(measured["geyser_meas"])),
@@ -389,6 +411,9 @@ def main() -> None:
                 "internal_air_mass_kg",
                 "water_volume_m3",
                 "total_mass_kg",
+                "all_domain_speed_max_m_per_s",
+                "water_weighted_speed_max_m_per_s",
+                "gas_weighted_speed_max_m_per_s",
                 "rim_water_flow_m3_s",
                 "atmosphere_water_flow_m3_s",
                 "cumulative_rim_ejected_m3",
@@ -409,6 +434,9 @@ def main() -> None:
             internal_air_mass,
             water_volume,
             total_mass,
+            all_domain_speed,
+            water_weighted_speed,
+            gas_weighted_speed,
             q_rim_water,
             q_atmos_water,
             ejected_volume,

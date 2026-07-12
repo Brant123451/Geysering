@@ -17,6 +17,7 @@ from pathlib import Path
 
 
 HERE = Path(__file__).resolve().parent
+INITIAL_INTERFACE_THICKNESS_M = 0.015
 PRODUCT_SUFFIXES = (
     "_metrics.json",
     "_timeseries.csv",
@@ -45,7 +46,7 @@ class Variant:
     max_co: float = 0.25
     max_alpha_co: float = 0.15
     max_delta_t: float = 5.0e-4
-    alpha_smooth_curvature: int = 1
+    alpha_smooth_curvature: int = 0
 
 
 VARIANTS = (
@@ -204,6 +205,7 @@ def annotate_metrics(
     data["numerical_controls"] = {
         "mesh_profile": variant.mesh,
         "c_alpha": variant.c_alpha,
+        "initial_interface_thickness_m": INITIAL_INTERFACE_THICKNESS_M,
         "alpha_smooth_curvature": variant.alpha_smooth_curvature,
         "max_co": variant.max_co,
         "max_alpha_co": variant.max_alpha_co,

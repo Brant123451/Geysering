@@ -118,6 +118,48 @@ functions
         writeControl    none;
     }
 
+    speedAudit
+    {
+        type            exprField;
+        libs            (fieldFunctionObjects);
+        field           speedAudit;
+        action          new;
+        useNamePrefix   false;
+        expression      "mag(U)";
+        dimensions      [0 1 -1 0 0 0 0];
+        executeControl  adjustableRunTime;
+        executeInterval $sampleInterval;
+        writeControl    none;
+    }
+
+    waterSpeedAudit
+    {
+        type            exprField;
+        libs            (fieldFunctionObjects);
+        field           waterSpeedAudit;
+        action          new;
+        useNamePrefix   false;
+        expression      "alpha.water*mag(U)";
+        dimensions      [0 1 -1 0 0 0 0];
+        executeControl  adjustableRunTime;
+        executeInterval $sampleInterval;
+        writeControl    none;
+    }
+
+    gasSpeedAudit
+    {
+        type            exprField;
+        libs            (fieldFunctionObjects);
+        field           gasSpeedAudit;
+        action          new;
+        useNamePrefix   false;
+        expression      "(1-alpha.water)*mag(U)";
+        dimensions      [0 1 -1 0 0 0 0];
+        executeControl  adjustableRunTime;
+        executeInterval $sampleInterval;
+        writeControl    none;
+    }
+
     airPTVelocityAudit
     {
         type            exprField;
@@ -202,6 +244,42 @@ functions
         operation       volIntegrate;
         regionType      cellZone;
         name            internalSystem;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   $sampleInterval;
+    }
+
+    allSpeedMaximum
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        fields          (speedAudit);
+        operation       max;
+        regionType      all;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   $sampleInterval;
+    }
+
+    waterSpeedMaximum
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        fields          (waterSpeedAudit);
+        operation       max;
+        regionType      all;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   $sampleInterval;
+    }
+
+    gasSpeedMaximum
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        fields          (gasSpeedAudit);
+        operation       max;
+        regionType      all;
         writeFields     false;
         writeControl    adjustableRunTime;
         writeInterval   $sampleInterval;

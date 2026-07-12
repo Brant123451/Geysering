@@ -14,7 +14,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-alpha-co", type=float, default=0.15)
     parser.add_argument("--max-delta-t", type=float, default=5.0e-4)
     parser.add_argument("--c-alpha", type=float, default=1.0)
-    parser.add_argument("--alpha-smooth-curvature", type=int, default=1)
+    parser.add_argument("--alpha-smooth-curvature", type=int, default=0)
     parser.add_argument("--sample-interval", type=float, default=0.005)
     parser.add_argument("--write-interval", type=float, default=0.05)
     return parser.parse_args()

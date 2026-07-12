@@ -21,7 +21,7 @@ regions
     // Atmospheric initial pocket behind Valve #4.
     boxToCell
     {
-        box (5.979 -0.04 -0.01) (6.591 0.04 0.06);
+        box (5.980 -0.04 -0.01) (6.591 0.04 0.06);
         fieldValues
         (
             volScalarFieldValue alpha.water 0

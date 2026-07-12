@@ -45,13 +45,22 @@ python3 make_runtime_config.py \
     --max-alpha-co "${MAX_ALPHA_CO:-0.15}" \
     --max-delta-t "${MAX_DELTA_T:-0.0005}" \
     --c-alpha "${C_ALPHA:-1.0}" \
-    --alpha-smooth-curvature "${ALPHA_SMOOTH_CURVATURE:-1}" \
+    --alpha-smooth-curvature "${ALPHA_SMOOTH_CURVATURE:-0}" \
     --sample-interval "${SAMPLE_INTERVAL:-0.005}" \
     --write-interval "${WRITE_INTERVAL:-0.05}" \
     > log.runtimeConfig 2>&1
 
 cp -a 0.orig 0
 setFields > log.setFields 2>&1
+
+# Initialize the horizontal free surface as a three-base-cell linear VOF band.
+# The 15 mm transition preserves the analytic water volume because it is
+# symmetric about H0, while avoiding a one-face curvature impulse on tets.
+setExprFields -time 0 \
+    -field alpha.water \
+    -expression "(pos().x()>=5.98 ? 0 : (pos().z()<=0.6525 ? 1 : (pos().z()>=0.6675 ? 0 : (0.6675-pos().z())/0.015)))" \
+    -keepPatches \
+    > log.initializePhase 2>&1
 
 # Exact isothermal hydrostatic profiles for the two equations of state.
 # The open air column is referenced to atmospheric pressure at H0; the

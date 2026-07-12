@@ -45,13 +45,17 @@ compressible initial air pocket.
 
 | Region | `U` | `p_rgh` / absolute `p` | `alpha.water` | `T` |
 |---|---|---|---:|---:|
-| Water-filled pipe and riser below `z=0.66 m` | `(0 0 0)` | hydrostatic from `H0=0.66 m` | 1 | 296.15 K |
+| Water-filled pipe and riser below `z=0.66 m` | `(0 0 0)` | hydrostatic from `H0=0.66 m` | linear 15 mm transition centred at `z=0.66 m` | 296.15 K |
 | Pocket `5.98<=x<=6.59 m` | `(0 0 0)` | isothermal hydrostatic air, `101325 Pa` at pipe centreline | 0 | 296.15 K |
 | Riser headspace and external atmosphere | `(0 0 0)` | isothermal hydrostatic air, `101325 Pa` at `H0` | 0 | 296.15 K |
 
-After `setFields`, `setExprFields` imposes
-the exact isothermal hydrostatic `p(z)` for the configured `perfectFluid`
-water and `perfectGas` air equations of state, followed by
+After `setFields`, `setExprFields` first imposes a three-base-cell (`15 mm`)
+linear VOF transition centred at the measured free-surface level. It preserves
+the analytic water volume while avoiding the discrete curvature impulse of a
+one-face jump on tetrahedra; transported-interface diffusion/compression is
+still checked through the declared `cAlpha` sensitivities. A second pair of
+expressions imposes the exact isothermal hydrostatic `p(z)` for the configured
+`perfectFluid` water and `perfectGas` air equations of state, followed by
 `p_rgh=p-rhoMix*(g dot x)`. The open air column is referenced to `101325 Pa`
 at `H0=0.66 m`; the initially isolated pocket is referenced to the same
 pressure at the pipe centreline. This avoids the gravitational free fall that
@@ -106,9 +110,10 @@ RUN_MODE=event VALVE_OPENING=instant END_TIME=13 ./Allrun
 
 `VALVE_OPENING` accepts `instant`, `0.2`, or `0.5`. `C_ALPHA`, `MAX_CO`,
 `MAX_ALPHA_CO`, `MAX_DELTA_T`, and `ALPHA_SMOOTH_CURVATURE` expose declared
-numerical controls. The baseline uses one OpenFOAM curvature-smoothing pass
-to reduce CSF parasitic currents without smoothing the transported
-`alpha.water` field. Use clean runtime copies for independent variants;
+numerical controls. The baseline uses zero curvature-smoothing passes:
+controlled static tests found that extra passes increased water-side velocity
+for this mesh, while the explicit initial VOF transition reduced the startup
+impulse. Use clean runtime copies for independent variants;
 `run_study.py` manages these copies and writes only compact CSV/JSON/PNG
 results into `outputs/`.
 
@@ -120,3 +125,6 @@ phase-volume errors, total mass residual, gas-mass residual, and an
 experiment--existing-1D--3D summary. A geyser is detected only when
 `alpha.water >= 0.05` occurs above the physical rim; the known experimental
 classification is never supplied to the solver or used to alter parameters.
+Closed-hold acceptance uses free-surface drift, isolated-pocket volume drift,
+and the all-domain maximum of `alpha.water*|U|`; unweighted and gas-weighted
+speed maxima are retained as explicit diagnostics.
