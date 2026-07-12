@@ -15,6 +15,9 @@ solvers
         nAlphaCorr      2;
         nAlphaSubCycles 2;
         cAlpha          $interfaceCompression;
+        // OpenFOAM's curvature-only smoothing reduces CSF parasitic currents
+        // without diffusing the transported alpha.water field.
+        nAlphaSmoothCurvature $alphaSmoothCurvature;
         MULESCorr       no;
         nLimiterIter    5;
         solver          smoothSolver;

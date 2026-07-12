@@ -45,6 +45,7 @@ class Variant:
     max_co: float = 0.25
     max_alpha_co: float = 0.15
     max_delta_t: float = 5.0e-4
+    alpha_smooth_curvature: int = 1
 
 
 VARIANTS = (
@@ -194,10 +195,20 @@ def outputs_complete(
     )
 
 
-def annotate_metrics(runtime: Path, run_id: str, expected_fingerprint: str) -> None:
-    path = runtime / "outputs" / f"{run_id}_metrics.json"
+def annotate_metrics(
+    runtime: Path, variant: Variant, expected_fingerprint: str
+) -> None:
+    path = runtime / "outputs" / f"{variant.run_id}_metrics.json"
     data = json.loads(path.read_text(encoding="utf-8"))
     data["source_fingerprint"] = expected_fingerprint
+    data["numerical_controls"] = {
+        "mesh_profile": variant.mesh,
+        "c_alpha": variant.c_alpha,
+        "alpha_smooth_curvature": variant.alpha_smooth_curvature,
+        "max_co": variant.max_co,
+        "max_alpha_co": variant.max_alpha_co,
+        "max_delta_t_s": variant.max_delta_t,
+    }
     path.write_text(json.dumps(data, indent=2, allow_nan=False) + "\n", encoding="utf-8")
 
 
@@ -248,12 +259,15 @@ def main() -> None:
                 "MAX_CO": str(variant.max_co),
                 "MAX_ALPHA_CO": str(variant.max_alpha_co),
                 "MAX_DELTA_T": str(variant.max_delta_t),
+                "ALPHA_SMOOTH_CURVATURE": str(
+                    variant.alpha_smooth_curvature
+                ),
                 "OPENFOAM_NP": str(args.np),
                 "REFERENCE_ROOT": str(HERE.parents[1]),
             }
         )
         run(["bash", "./Allrun"], runtime, env)
-        annotate_metrics(runtime, variant.run_id, expected_fingerprint)
+        annotate_metrics(runtime, variant, expected_fingerprint)
         copy_products(runtime, source_output, variant.run_id)
 
     subprocess.run(

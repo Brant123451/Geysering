@@ -52,6 +52,7 @@
       "turbulence_model": "standard_kEpsilon",
       "interface_scheme": "MULES_vanLeer",
       "baseline_c_alpha": 1.0,
+      "alpha_curvature_smoothing_iterations": 1,
       "event_end_time_s": 13.0,
       "baseline_max_courant": 0.25,
       "baseline_max_alpha_courant": 0.15,

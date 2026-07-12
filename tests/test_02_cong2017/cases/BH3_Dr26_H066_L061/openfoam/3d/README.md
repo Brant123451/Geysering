@@ -105,9 +105,12 @@ RUN_MODE=event VALVE_OPENING=instant END_TIME=13 ./Allrun
 ```
 
 `VALVE_OPENING` accepts `instant`, `0.2`, or `0.5`. `C_ALPHA`, `MAX_CO`,
-`MAX_ALPHA_CO`, and `MAX_DELTA_T` expose declared sensitivity controls.
-Use clean runtime copies for independent variants; `run_study.py` manages
-these copies and writes only compact CSV/JSON/PNG results into `outputs/`.
+`MAX_ALPHA_CO`, `MAX_DELTA_T`, and `ALPHA_SMOOTH_CURVATURE` expose declared
+numerical controls. The baseline uses one OpenFOAM curvature-smoothing pass
+to reduce CSF parasitic currents without smoothing the transported
+`alpha.water` field. Use clean runtime copies for independent variants;
+`run_study.py` manages these copies and writes only compact CSV/JSON/PNG
+results into `outputs/`.
 
 ## Required outputs
 

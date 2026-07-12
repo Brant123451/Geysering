@@ -14,6 +14,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-alpha-co", type=float, default=0.15)
     parser.add_argument("--max-delta-t", type=float, default=5.0e-4)
     parser.add_argument("--c-alpha", type=float, default=1.0)
+    parser.add_argument("--alpha-smooth-curvature", type=int, default=1)
     parser.add_argument("--sample-interval", type=float, default=0.005)
     parser.add_argument("--write-interval", type=float, default=0.05)
     return parser.parse_args()
@@ -43,6 +44,8 @@ def main() -> None:
     )
     if any(value <= 0 for value in positive):
         raise ValueError("all runtime controls must be positive")
+    if args.alpha_smooth_curvature < 0:
+        raise ValueError("alpha curvature smoothing iterations cannot be negative")
     if args.initial_delta_t > args.max_delta_t:
         raise ValueError("initial deltaT cannot exceed maxDeltaT")
 
@@ -57,6 +60,7 @@ def main() -> None:
                 f"maxAlphaCoValue {args.max_alpha_co:.12g};",
                 f"maxDeltaTValue {args.max_delta_t:.12g};",
                 f"interfaceCompression {args.c_alpha:.12g};",
+                f"alphaSmoothCurvature {args.alpha_smooth_curvature};",
                 f"sampleInterval {args.sample_interval:.12g};",
                 f"fieldWriteInterval {args.write_interval:.12g};",
                 "",
@@ -76,7 +80,8 @@ def main() -> None:
         "runtime "
         f"end={args.end_time:g} maxCo={args.max_co:g} "
         f"maxAlphaCo={args.max_alpha_co:g} maxDeltaT={args.max_delta_t:g} "
-        f"cAlpha={args.c_alpha:g}"
+        f"cAlpha={args.c_alpha:g} "
+        f"alphaSmoothCurvature={args.alpha_smooth_curvature}"
     )
 
 

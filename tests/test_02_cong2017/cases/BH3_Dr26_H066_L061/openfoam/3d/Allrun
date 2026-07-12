@@ -45,6 +45,7 @@ python3 make_runtime_config.py \
     --max-alpha-co "${MAX_ALPHA_CO:-0.15}" \
     --max-delta-t "${MAX_DELTA_T:-0.0005}" \
     --c-alpha "${C_ALPHA:-1.0}" \
+    --alpha-smooth-curvature "${ALPHA_SMOOTH_CURVATURE:-1}" \
     --sample-interval "${SAMPLE_INTERVAL:-0.005}" \
     --write-interval "${WRITE_INTERVAL:-0.05}" \
     > log.runtimeConfig 2>&1
