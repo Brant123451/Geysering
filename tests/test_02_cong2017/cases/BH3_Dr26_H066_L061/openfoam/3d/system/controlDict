@@ -327,6 +327,32 @@ functions
         writeInterval   $sampleInterval;
     }
 
+    inletMassFlux
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            inlet;
+        fields          (rhoPhi);
+        operation       sum;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   $sampleInterval;
+    }
+
+    atmosphereMassFlux
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            atmosphere;
+        fields          (rhoPhi);
+        operation       sum;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   $sampleInterval;
+    }
+
     rimWaterFlux
     {
         type            surfaceFieldValue;

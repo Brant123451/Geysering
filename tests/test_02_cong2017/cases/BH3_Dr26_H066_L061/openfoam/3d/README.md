@@ -53,7 +53,9 @@ After `setFields`, `setExprFields` first imposes a three-base-cell (`15 mm`)
 linear VOF transition centred at the measured free-surface level. It preserves
 the analytic water volume while avoiding the discrete curvature impulse of a
 one-face jump on tetrahedra; transported-interface diffusion/compression is
-still checked through the declared `cAlpha` sensitivities. A second pair of
+still checked through the declared `cAlpha` sensitivities. It is a numerical
+control, not a measured interface thickness, and it must pass the closed-hold
+gate before event results are accepted. A second pair of
 expressions imposes the exact isothermal hydrostatic `p(z)` for the configured
 `perfectFluid` water and `perfectGas` air equations of state, followed by
 `p_rgh=p-rhoMix*(g dot x)`. The open air column is referenced to `101325 Pa`
@@ -64,7 +66,10 @@ applies the same phase, `p`, and `p_rgh` state to every wall face, including
 the water/air transitions along the riser wall and downstream pocket.
 
 Analytic pocket target: `1.1977322 L`; ideal-gas mass target at the stated
-pressure and temperature: `1.427641 g`.
+pressure and temperature: `1.427641 g`. `initialVolumeAuditDict` samples the
+mesh-integrated pocket and non-overlap riser water volumes at exactly `t=0`,
+before valve opening, so the audit is not contaminated by the first runtime
+sample.
 
 ## Patch contract
 
@@ -87,6 +92,10 @@ rectangular equivalent flow area enters the solution. Both the initial free
 surface and the Valve #4 circular cross-section are conformal internal mesh
 surfaces. Every run repeats the strict mesh check after creating its valve
 baffle and aborts before solving unless that final mesh reports `Mesh OK`.
+The paired FLUENT study used a much finer wall-resolved hybrid mesh; the present
+tetrahedral profiles are accepted only through their reported base/refined
+sensitivity and must not be described as resolving the reported sub-millimetre
+falling film a priori.
 
 ```bash
 MESH_PROFILE=base ./Allmesh
@@ -121,10 +130,18 @@ results into `outputs/`.
 
 `postprocess.py` produces pressure, `Yfs`, `Yint`, pocket/total gas metrics,
 physical-rim and atmosphere water flow, cumulative ejected volume, initial
-phase-volume errors, total mass residual, gas-mass residual, and an
+phase-volume errors, the paper-defined `Vair/Vw`, total mass residual from
+direct `rhoPhi` boundary fluxes, gas-mass residual, and an
 experiment--existing-1D--3D summary. A geyser is detected only when
 `alpha.water >= 0.05` occurs above the physical rim; the known experimental
 classification is never supplied to the solver or used to alter parameters.
 Closed-hold acceptance uses free-surface drift, isolated-pocket volume drift,
 and the all-domain maximum of `alpha.water*|U|`; unweighted and gas-weighted
-speed maxima are retained as explicit diagnostics.
+speed maxima are retained as explicit diagnostics. For event runs,
+`closed_hold.pass` is `null`; an open-valve smoke can never be mistaken for a
+closed-hold pass.
+
+At the current revision, the base mesh passes strict `checkMesh` and the
+`0.02 s` event smoke completes, but the 1 s closed hold has not passed. No
+13 s result is accepted until that gate is resolved without changing the
+experimental classification target.

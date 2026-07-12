@@ -83,6 +83,11 @@ setExprFields -time 0 \
     -keepPatches \
     > log.initializeHydrostaticPrgh 2>&1
 setExprBoundaryFields -time 0 > log.initializeBoundaryFields 2>&1
+postProcess \
+    -dict system/initialVolumeAuditDict \
+    -time 0 \
+    -fields "(alpha.water)" \
+    > log.initialVolumeAudit 2>&1
 topoSet -dict system/topoSetDict.valve > log.topoSet.valve 2>&1
 python3 make_valve_dict.py \
     --mode "$VALVE_OPENING" \

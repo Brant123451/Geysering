@@ -23,7 +23,8 @@ GRAVITY = 9.81
 RIM_Z = 1.850
 INITIAL_FS = 0.660
 POCKET_TARGET = math.pi * 0.050**2 * 0.610 / 4.0
-RISER_WATER_TARGET = math.pi * 0.026**2 * 0.610 / 4.0
+PAPER_RISER_WATER_TARGET = math.pi * 0.026**2 * 0.660 / 4.0
+NONOVERLAP_RISER_WATER_TARGET = math.pi * 0.026**2 * 0.610 / 4.0
 AIR_MASS_TARGET = 101325.0 * POCKET_TARGET / (R_AIR * 296.15)
 RISER_Z = np.arange(0.060, 1.840 + 0.0001, 0.010)
 PLUME_Z = np.arange(1.860, 2.980 + 0.0001, 0.020)
@@ -204,6 +205,12 @@ def main() -> None:
     riser_volume_table = read_function(
         case, "initialRiserWaterVolume", "volFieldValue.dat"
     )
+    initial_pocket_t0_table = read_function(
+        case, "initialPocketVolumeAtT0", "volFieldValue.dat"
+    )
+    initial_riser_t0_table = read_function(
+        case, "initialRiserWaterVolumeAtT0", "volFieldValue.dat"
+    )
     internal_air_pt_table = read_function(case, "internalAirPT", "volFieldValue.dat")
     all_speed_table = read_function(case, "allSpeedMaximum", "volFieldValue.dat")
     water_speed_table = read_function(
@@ -219,6 +226,12 @@ def main() -> None:
     atmosphere_air_pt_flux_table = read_function(
         case, "atmosphereAirPTFlux", "surfaceFieldValue.dat"
     )
+    inlet_mass_flux_table = read_function(
+        case, "inletMassFlux", "surfaceFieldValue.dat"
+    )
+    atmosphere_mass_flux_table = read_function(
+        case, "atmosphereMassFlux", "surfaceFieldValue.dat"
+    )
     rim_water_flux_table = read_function(
         case, "rimWaterFlux", "surfaceFieldValue.dat"
     )
@@ -233,9 +246,17 @@ def main() -> None:
     q_inlet_water = interpolate(inlet_water_flux_table, time)
     q_atmos_water = interpolate(atmosphere_water_flux_table, time)
     q_atmos_air_mass = interpolate(atmosphere_air_pt_flux_table, time) / R_AIR
+    q_inlet_mass = interpolate(inlet_mass_flux_table, time)
+    q_atmos_mass = interpolate(atmosphere_mass_flux_table, time)
     q_rim_water = interpolate(rim_water_flux_table, time)
 
-    finite = np.isfinite(q_inlet_water + q_atmos_water + q_atmos_air_mass)
+    finite = np.isfinite(
+        q_inlet_water
+        + q_atmos_water
+        + q_atmos_air_mass
+        + q_inlet_mass
+        + q_atmos_mass
+    )
     if not np.all(finite):
         raise RuntimeError("Flux function objects did not span the probe interval")
 
@@ -244,8 +265,7 @@ def main() -> None:
     )
     gas_boundary_integral = cumulative_trapezoid(time, q_atmos_air_mass)
     total_boundary_integral = cumulative_trapezoid(
-        time,
-        RHO_WATER * (q_inlet_water + q_atmos_water) + q_atmos_air_mass,
+        time, q_inlet_mass + q_atmos_mass
     )
     water_residual = water_volume - water_volume[0] + water_boundary_integral
     gas_residual = air_mass - air_mass[0] + gas_boundary_integral
@@ -268,8 +288,8 @@ def main() -> None:
     )
 
     measured, model_1d = load_reference(reference_root)
-    initial_pocket_mesh = float(scalar_from_file(pocket_volume_table)[0])
-    initial_riser_mesh = float(scalar_from_file(riser_volume_table)[0])
+    initial_pocket_mesh = float(scalar_from_file(initial_pocket_t0_table)[0])
+    initial_riser_mesh = float(scalar_from_file(initial_riser_t0_table)[0])
     fs_drift = float(np.nanmax(np.abs(y_fs - y_fs[0])))
     pocket_drift = float(
         np.nanmax(
@@ -279,6 +299,15 @@ def main() -> None:
                 - 1.0
             )
         )
+    )
+    closed_hold_pass = (
+        bool(
+            fs_drift <= 0.01
+            and pocket_drift <= 0.01
+            and np.nanmax(water_weighted_speed) <= 0.02
+        )
+        if args.run_mode == "closed"
+        else None
     )
 
     metrics = {
@@ -313,10 +342,24 @@ def main() -> None:
             "pocket_target_m3": POCKET_TARGET,
             "pocket_mesh_m3": initial_pocket_mesh,
             "pocket_relative_error": initial_pocket_mesh / POCKET_TARGET - 1.0,
-            "riser_nonoverlap_water_target_m3": RISER_WATER_TARGET,
-            "riser_mesh_m3": initial_riser_mesh,
-            "riser_relative_error": initial_riser_mesh / RISER_WATER_TARGET - 1.0,
+            "paper_riser_water_target_m3": PAPER_RISER_WATER_TARGET,
+            "paper_vair_over_vw_target": (
+                POCKET_TARGET / PAPER_RISER_WATER_TARGET
+            ),
+            "mesh_pocket_over_paper_vw": (
+                initial_pocket_mesh / PAPER_RISER_WATER_TARGET
+            ),
+            "riser_nonoverlap_water_target_m3": (
+                NONOVERLAP_RISER_WATER_TARGET
+            ),
+            "riser_nonoverlap_water_mesh_m3": initial_riser_mesh,
+            "riser_nonoverlap_relative_error": (
+                initial_riser_mesh / NONOVERLAP_RISER_WATER_TARGET - 1.0
+            ),
             "pocket_ideal_gas_mass_target_kg": AIR_MASS_TARGET,
+            "pocket_ideal_gas_mass_from_mesh_volume_kg": (
+                101325.0 * initial_pocket_mesh / (R_AIR * 296.15)
+            ),
         },
         "conservation": {
             "max_abs_water_volume_residual_m3": float(
@@ -339,6 +382,12 @@ def main() -> None:
             ),
             "internal_air_mass_initial_kg": float(internal_air_mass[0]),
             "internal_air_mass_final_kg": float(internal_air_mass[-1]),
+            "total_mass_boundary_flux": (
+                "direct sum(rhoPhi) on inlet and atmosphere"
+            ),
+            "residual_reference": (
+                "first common runtime sample; t=0 volumes are audited separately"
+            ),
         },
         "ejection": {
             "cumulative_positive_rim_water_volume_m3": float(ejected_volume[-1]),
@@ -350,16 +399,10 @@ def main() -> None:
             ),
         },
         "closed_hold": {
+            "applicable": args.run_mode == "closed",
             "free_surface_max_drift_m": fs_drift,
             "initial_pocket_zone_max_relative_volume_drift": pocket_drift,
-            "pass": bool(
-                args.run_mode != "closed"
-                or (
-                    fs_drift <= 0.01
-                    and pocket_drift <= 0.01
-                    and np.nanmax(water_weighted_speed) <= 0.02
-                )
-            ),
+            "pass": closed_hold_pass,
             "criteria": {
                 "free_surface_drift_m": 0.01,
                 "pocket_relative_volume_drift": 0.01,
@@ -414,6 +457,8 @@ def main() -> None:
                 "all_domain_speed_max_m_per_s",
                 "water_weighted_speed_max_m_per_s",
                 "gas_weighted_speed_max_m_per_s",
+                "inlet_total_mass_flow_kg_s",
+                "atmosphere_total_mass_flow_kg_s",
                 "rim_water_flow_m3_s",
                 "atmosphere_water_flow_m3_s",
                 "cumulative_rim_ejected_m3",
@@ -437,6 +482,8 @@ def main() -> None:
             all_domain_speed,
             water_weighted_speed,
             gas_weighted_speed,
+            q_inlet_mass,
+            q_atmos_mass,
             q_rim_water,
             q_atmos_water,
             ejected_volume,

@@ -47,11 +47,19 @@ class Variant:
     max_alpha_co: float = 0.15
     max_delta_t: float = 5.0e-4
     alpha_smooth_curvature: int = 0
+    sample_interval: float = 5.0e-3
 
 
 VARIANTS = (
-    Variant("closed_base", "smoke", mode="closed", valve="closed", end_time=1.0),
-    Variant("open_smoke", "smoke", end_time=0.02),
+    Variant(
+        "closed_base",
+        "smoke",
+        mode="closed",
+        valve="closed",
+        end_time=1.0,
+        sample_interval=1.0e-3,
+    ),
+    Variant("open_smoke", "smoke", end_time=0.02, sample_interval=1.0e-3),
     Variant("base_nominal", "core"),
     Variant("refined_nominal", "core", mesh="refined"),
     Variant(
@@ -210,6 +218,7 @@ def annotate_metrics(
         "max_co": variant.max_co,
         "max_alpha_co": variant.max_alpha_co,
         "max_delta_t_s": variant.max_delta_t,
+        "sample_interval_s": variant.sample_interval,
     }
     path.write_text(json.dumps(data, indent=2, allow_nan=False) + "\n", encoding="utf-8")
 
@@ -261,6 +270,7 @@ def main() -> None:
                 "MAX_CO": str(variant.max_co),
                 "MAX_ALPHA_CO": str(variant.max_alpha_co),
                 "MAX_DELTA_T": str(variant.max_delta_t),
+                "SAMPLE_INTERVAL": str(variant.sample_interval),
                 "ALPHA_SMOOTH_CURVATURE": str(
                     variant.alpha_smooth_curvature
                 ),
