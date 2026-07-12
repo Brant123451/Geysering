@@ -203,8 +203,12 @@ surface-tension maxima were 82/118 kPa/m.  A paired `maxDeltaT=1e-5` test then
 compared RDF `curvFromTr=true|false`.  Both passed the Courant gates, but the
 false member grew to 1.549 m/s and a 198 kPa/m exterior-gas pressure residual
 by 0.0035 s, versus 0.949 m/s and a 132 kPa/m maximum for true.  The divergence
-formula is rejected; the retained trace formula must first pass 0.006 s under
-the same cap before any longer hold extension.
+formula is rejected.  The retained trace formula was then repeated to 0.006 s
+under the same cap: Courant limits passed, but the final pure-gas velocity was
+the run maximum at 1.481 m/s and its collocated pressure-gravity residual
+reached 208 kPa/m, while curvature and surface force were zero there.  This
+selects a discrete hydrostatic-pressure initialization check before any longer
+hold extension.
 
 Thermophysical choices are:
 

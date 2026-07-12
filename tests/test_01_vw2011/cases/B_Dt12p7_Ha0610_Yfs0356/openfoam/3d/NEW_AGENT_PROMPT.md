@@ -449,6 +449,17 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     - 最大 surface force 小幅从 119 降至 113 kPa/m，不能抵消后期恶化。
     因此保留 source-default `curvFromTr=true`。先以同一 `maxDeltaT=1e-5`
     复跑至 0.006 s，确认 exterior-gas 热点有界；不得直接跨到 0.04 s。
+23. 保留的 trace formula 已在同一硬 timestep 下复跑至 0.006 s，但热点
+    没有保持有界：
+    - global/interface Co 为 0.152/0.024，仍通过门槛；
+    - 末帧速度是全程最大值 1.481 m/s，位于 y=0.463 m pure exterior gas；
+    - 同位 curvature=0，surface force 不在该处；
+    - pressure-gravity/total residual 在同一位置达到 208 kPa/m，已超过
+      free-surface surface-force 最大值 119 kPa/m；
+    - alpha、质量界、rim water 和 gas-entry 仍干净。
+    该候选不得延长到 0.04 s。下一项是用 solver 相同 gravity-force operator
+    构造离散 hydrostatic `p_rgh`，先验证 pre-solver face residual，再复筛
+    source-default RDF。
 
 十、hold 验收
 

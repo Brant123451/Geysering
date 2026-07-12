@@ -354,6 +354,18 @@ timestep controls.
     Retain source-default `curvFromTr=true`.  Repeat it to 0.006 s under the
     same hard cap to verify that the exterior-gas hotspot stays bounded before
     considering the 0.04 s pressure-drift window.
+26. The retained trace formula completed that capped 0.006 s rerun, but the
+    exterior-gas hotspot did not remain bounded:
+    * global/interface Courant maxima passed at 0.152/0.024;
+    * the final written velocity was the run maximum, 1.481 m/s, in pure gas
+      at y=0.463 m;
+    * curvature and surface force were zero at that velocity hotspot;
+    * the collocated pressure-gravity/total residual reached 208 kPa/m, above
+      the 119 kPa/m maximum free-surface force;
+    * alpha and mass balances remained clean, with no rim water or gas entry.
+    Do not extend to 0.04 s.  Construct a discrete hydrostatic `p_rgh` field
+    using the solver's gravity-force operator, verify the pre-solver face
+    residual, and then repeat source-default RDF.
 
 ## Still required
 
@@ -370,10 +382,11 @@ The scientific reproduction is **not complete**.  Continue in this order:
    complete, and the collocated logger has exposed an unintended deep
    wall-adjacent interface.  The alpha repair, zero-curvature verification and
    fully-wet physical RDF rerun and hard-timestep curvature-formula pair are
-   complete.  `curvFromTr=false` is worse and rejected.  Repeat the retained
-   trace formula to 0.006 s under the same cap and verify its later gas hotspot
-   remains bounded.  Only then may it approach the 0.04 s pressure-drift
-   window.  Extend a candidate past the 0.04 s
+   complete.  `curvFromTr=false` is worse and rejected.  The retained trace
+   formula's capped 0.006 s extension then exposed a growing pure-gas
+   pressure-gravity hotspot.  Add and verify discrete hydrostatic pressure
+   initialization before repeating RDF; do not approach the 0.04 s
+   pressure-drift window yet.  Extend a candidate past the 0.04 s
    pressure-drift onset only if it stays within the declared Courant limits
    and reduces peak velocity, and only \(H^*\) peak-to-peak at or below 0.02
    may proceed to the full 1.0 s hold.  Opening runs retain the dissipative
