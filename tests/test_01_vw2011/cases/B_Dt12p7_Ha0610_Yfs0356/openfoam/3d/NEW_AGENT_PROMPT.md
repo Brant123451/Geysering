@@ -154,14 +154,20 @@ Copy the full block below into the new Cursor account's Cloud Agent.
     1.682 m/s，末帧 1.285 m/s，alpha 和质量守恒仍稳定。但随后完整 hold
     尝试在 0.06 s 已不可通过：Hstar peak-to-peak=0.0570，且阀区上游相邻
     单元速度持续增长。短筛选不能替代超过该延迟热点的筛选。
+18. conformal baffle 消除了上述阀区热点，但 `plicRDF + RDF` 的扩展筛选仍在
+    0.04 s 被拒绝：速度热点留在 tower 初始自由面，末帧为 1.362 m/s；
+    transducer 范围已达 Hstar peak-to-peak=0.05658。alpha、质量、rim 水量和
+    gas-entry 仍干净。因此闭阀拓扑保留，但 RDF 不再是已通过 hold 候选；
+    下一项数值筛选是库支持的 `fitParaboloid` 曲率。
 
 六、阀门
 
 1. 阀位于 x = 0.546 m 附近，当前 valveZone 长度 0.012 m。
 2. opening/instant 模式使用纯耗散 coded fvOption resistance，不得产生压力、
    速度或质量。connected-domain penalty 的 closed 模式已被 0.06 s 诊断拒绝；
-   当前 source candidate 在同一阀面使用两侧 no-slip conformal baffle 来支撑
-   真实闭阀压差；opening/instant 仍使用耗散 resistance。
+   closed 模式在同一阀面使用两侧 no-slip conformal baffle 来支撑真实闭阀
+   压差；它已验证无阀区热点或泄漏，但仍需配合能通过自由面压力漂移筛选的
+   曲率模型。opening/instant 仍使用耗散 resistance。
 3. baseline opening time = 0.25 s；论文只说明 less than 1 s，因此这是显式假设。
 4. fully-open loss coefficient K = 2；closed-state K cap = 1e8，仅作为数值
    impermeability device。
@@ -177,8 +183,8 @@ Copy the full block below into the new Cursor account's Cloud Agent.
 3. 当前 mesh-size box 使用 40 mm linear transition，并在整个外部 casing 周围
    保留 4 mm corridor，避免 1.05 mm wall triangles 直接连接 25 mm atmosphere
    cells。
-4. baseline base preset 当前证据：
-   - 1,904,269 tetrahedra
+4. baseline base preset 当前 conformal-valve mesh 证据：
+   - 1,903,549 tetrahedra
    - tower edge 1.05 mm
    - 12.1 nominal edges across Dt
    - Gmsh 4.12.1, HXT, explicit Gmsh optimizer
@@ -186,17 +192,17 @@ Copy the full block below into the new Cursor account's Cloud Agent.
 6. 每次还必须运行 checkMesh -allTopology -allGeometry 并保留严格审计。
 7. 当前严格审计的唯一失败是 OpenFOAM v2512 对 sharp-boundary tetrahedra 的
    internal-face determinant 定义：
-   - low determinant cells = 448
-   - twoInternalFacesCells = 446
+   - low determinant cells = 646
+   - twoInternalFacesCells = 644
    - excess = 2
    - 其他 strict checks 全部通过
 8. 该结果只能记录为 accepted_boundary_tet_exception，不能写成 strict Mesh OK.
 9. 当前关键质量：
-   - max non-orthogonality = 70.2596 degrees
-   - severe non-orthogonal faces = 2
-   - max skewness = 1.10372
-   - min interpolation weight = 0.096809
-   - min face-volume ratio = 0.107186
+   - max non-orthogonality = 74.2375 degrees
+   - severe non-orthogonal faces = 1
+   - max skewness = 1.05840
+   - min interpolation weight = 0.090922
+   - min face-volume ratio = 0.100015
 10. 不得通过放宽阈值或删除 strict log 隐藏新问题。若 strict failure 不再仅是上述
     determinant 项，Allrun 必须失败。
 11. 必须完成 base/refined grid sensitivity，并保证两者物理和运行控制可比较。
@@ -277,8 +283,19 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
      \(2.79\times10^{-5}\) s；
    - alpha、相/总质量守恒、rim 水量和 gas-entry 仍干净。
    该结果证明问题是闭阀压差支撑和 sharp porous edge，不是 RDF 输运发散。
-8. 下一步必须先用 conformal two-sided no-slip closed baffle 和 `runTime`
-   输出控制复筛到至少 0.08 s；通过后才重新开始完整 1.0 s hold。
+8. conformal two-sided no-slip baffle 的生成网格、双侧 patch 和 0.001 s
+   startup 已验证；其 RDF 扩展筛选在 0.04 s 主动停止：
+   - Hstar peak-to-peak = 0.05658，已不可逆超过 0.02；
+   - `|U|max` 始终位于 tower 初始自由面，0.01 s 和 0.04 s 分别为
+     1.757 m/s 和 1.362 m/s，没有旧 penalty 的阀区热点；
+   - alpha 范围约
+     \([-1.75\times10^{-10},1+2.44\times10^{-10}]\)；
+   - gas/total balance 误差低于 \(6.5\times10^{-6}\%\)，无 rim 水量和
+     gas-entry。
+   这证明 baffle 拓扑正确，但剩余缺陷是自由面曲率/压力平衡。
+9. 下一步必须先运行 `CASEB_CURVATURE_MODEL=fitParaboloid` 的 0.006 s
+   短筛选；只有显著改善后才延长到超过 0.04 s，并且只有 Hstar
+   peak-to-peak 不超过 0.02 的候选才能开始完整 1.0 s hold。
 
 十、hold 验收
 

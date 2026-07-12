@@ -292,5 +292,88 @@
       "next_action": "Use a conformal valve-plane face zone and a two-sided no-slip baffle for CASEB_VALVE_MODE=closed, retain the dissipative resistance for opening runs, and replace adjustableRunTime output controls with runTime before re-screening."
     },
     "completion_claim": "This is a failed partial hold diagnostic. It is not a passed hold, smoke run, full experiment, or accepted baseline."
+  },
+  "conformal_baffle_rdf_screen": {
+    "status": "rejected_at_0p04_s",
+    "source_commits": [
+      "cf5ea10",
+      "c2491a8"
+    ],
+    "purpose": "Separate the connected penalty-valve defect from the sustained free-surface pressure drift by using a conformal two-sided no-slip closed baffle and runTime output control.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "RDF",
+      "valve_representation": "conformalNoSlipBaffle",
+      "valve_mode": "closed",
+      "time_control": "runTime",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "n_alpha_corr": 1,
+      "n_alpha_subcycles": 2,
+      "n_outer_correctors": 1,
+      "n_pressure_correctors": 2,
+      "n_non_orthogonal_correctors": 0
+    },
+    "mesh_and_baffle": {
+      "cells": 1903549,
+      "faces_per_baffle_side": 1829,
+      "disconnected_fluid_regions": 2,
+      "upstream_region_cells": 43365,
+      "downstream_region_cells": 1860184,
+      "standard_mesh_ok": true,
+      "strict_audit_status": "accepted_boundary_tet_exception"
+    },
+    "interrupted_result": {
+      "requested_end_time_s": 0.08,
+      "postprocessed_duration_s": 0.039996564,
+      "latest_solver_time_s": 0.0412446536,
+      "execution_time_s": 3493.82,
+      "clock_time_s": 4116,
+      "pressure_probe_peak_to_peak_Pa": 337.96,
+      "Hstar_peak_to_peak": 0.056578169643713094,
+      "Hstar_acceptance_limit": 0.02,
+      "pressure_probe_history_Pa": {
+        "0.0050109279": 105861.26,
+        "0.0099767511": 105965.19,
+        "0.014990982": 105926.71,
+        "0.020022167": 105864.9,
+        "0.024972947": 105791.75,
+        "0.029998856": 105691.73,
+        "0.035013489": 105627.23,
+        "0.039996564": 105652.23
+      },
+      "Yfs_star_max_drift": 0.0024590163934427034,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "minimum_alpha_water": -1.7542456e-10,
+      "maximum_alpha_water": 1.0000000002439065,
+      "liquid_mass_error_pct_max_abs": 0.0,
+      "gas_mass_error_pct_max_abs": 6.447510418069882e-06,
+      "total_mass_error_pct_max_abs": 1.5452752968342904e-07,
+      "final_delta_t_s": 4.7317409e-05,
+      "maximum_courant_number": 0.3650845,
+      "free_surface_velocity_history_m_per_s": {
+        "0.0099767511": 1.7568205,
+        "0.020022167": 1.0678002,
+        "0.029998856": 0.94021793,
+        "0.039996564": 1.3622903
+      },
+      "last_hotspot_location_m": [
+        3.5160891,
+        0.40370703,
+        -0.0031976625
+      ]
+    },
+    "rejection": {
+      "irreversible_acceptance_failure": "The raw pressure-probe peak-to-peak value exceeded the full-window Hstar limit by 0.04 s, so continuing to 0.08 s could not make the candidate pass.",
+      "baffle_finding": "The baffle removed the delayed valve-edge hotspot: the velocity maximum remained at the initial tower free surface and no valve leakage, rim water, gas entry, alpha defect or material-balance defect was observed.",
+      "mechanism": "The near-identical pressure drift with a topologically disconnected baffle identifies the sustained tower free-surface parasitic current and its acoustic pressure response as the remaining defect, rather than closed-valve pressure support.",
+      "next_action": "Screen the library-supported plicRDF plus fitParaboloid curvature sensitivity, which has lower reported curvature error on unstructured triangular/tetrahedral meshes, before any new full hold."
+    },
+    "completion_claim": "This is a rejected partial hold diagnostic. It validates the baffle topology but is not a passed hold, smoke run, full experiment, or accepted baseline."
   }
 }

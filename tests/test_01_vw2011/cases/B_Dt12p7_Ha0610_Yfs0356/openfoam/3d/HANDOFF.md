@@ -38,6 +38,16 @@ full-hold attempt was rejected at 0.06 s: pressure drift had already exceeded
 the immutable acceptance limit, and a growing velocity hotspot had moved to
 the first cell upstream of the sharp penalty-valve zone.
 
+The conformal two-sided baffle replacement passed its generated-mesh and
+0.001 s startup checks, and it removed that valve-edge hotspot.  Its extended
+RDF screen was nevertheless rejected at 0.04 s: the velocity maximum remained
+at the initial tower free surface, while the transducer range reached
+\(H^*=0.05658\), already above the 0.02 hold limit.  Alpha, phase/total
+balances, rim-water inventory and gas-entry checks stayed clean.  This
+separates the physically correct closed-valve topology from the remaining
+free-surface curvature/pressure-balance defect.  The next numerical screen is
+`plicRDF + fitParaboloid`, not another full RDF hold.
+
 ## Verified before handoff
 
 1. The paper and Case-B definition were audited in `PAPER_AUDIT.md`.
@@ -45,16 +55,16 @@ the first cell upstream of the sharp penalty-valve zone.
 3. OpenFOAM.com v2512 and Gmsh 4.12.1 generate a genuinely 3-D circular
    pipe/tower/exterior-atmosphere mesh.
 4. The committed base mesh evidence contains:
-   * 1,904,269 tetrahedra;
+   * 1,903,549 tetrahedra with a conformal 1,829-face valve plane;
    * 12.1 nominal edges across the 12.7 mm tower;
    * standard `checkMesh`: `Mesh OK.`;
-   * maximum non-orthogonality 70.26 degrees (two faces over 70 degrees);
-   * maximum skewness 1.104;
-   * minimum interpolation weight 0.0968;
-   * minimum face-volume ratio 0.107.
+   * maximum non-orthogonality 74.24 degrees (one face over 70 degrees);
+   * maximum skewness 1.058;
+   * minimum interpolation weight 0.0909;
+   * minimum face-volume ratio 0.100.
 5. The strict `checkMesh -allTopology -allGeometry` log has one documented
-   OpenFOAM boundary-tetrahedron determinant diagnostic: 448 low-determinant
-   cells versus 446 cells with only two internal faces.  All other strict
+   OpenFOAM boundary-tetrahedron determinant diagnostic: 646 low-determinant
+   cells versus 644 cells with only two internal faces.  All other strict
    checks pass.  The source records this as
    `accepted_boundary_tet_exception`, not as a strict `Mesh OK.` result.
 6. `setFields` and hydrostatic `setExprFields` initialization complete.
@@ -97,17 +107,29 @@ the first cell upstream of the sharp penalty-valve zone.
       remained tightly bounded, and no rim water or gas entry occurred.
     This separates a local closed-valve pressure-support defect from the RDF
     free-surface screening result.
+11. The conformal-baffle RDF screen was intentionally stopped and
+    postprocessed once it also became impossible to pass:
+    * requested duration 0.08 s and postprocessed duration 0.039996564 s;
+    * pressure peak-to-peak \(H^*=0.05658\), above the 0.02 limit;
+    * written velocity maxima remained at the initial tower free surface,
+      decreasing from 1.757 m/s at 0.01 s to 1.362 m/s at 0.04 s;
+    * no valve-edge hotspot or valve leakage was observed;
+    * gas and total balance errors remained below
+      \(6.5\times10^{-6}\%\), alpha remained tightly bounded, and no rim
+      water or gas entry occurred.
+    This validates the baffle topology but rejects `plicRDF + RDF` as the
+    hold configuration.
 
 ## Still required
 
 The scientific reproduction is **not complete**.  Continue in this order:
 
-1. Validate the new conformal, two-sided no-slip baffle for
-   `CASEB_VALVE_MODE=closed` and the `runTime` output controls on the generated
-   mesh, re-screen beyond the previous 0.04 s onset, then run the full 1.0 s
-   hold and assess leakage, interface drift, pressure drift, alpha bounds and
-   mass balance.  Opening runs retain the dissipative resistance and must be
-   tested separately.
+1. Screen the conformal-baffle hold with
+   `CASEB_CURVATURE_MODEL=fitParaboloid`, first through 0.006 s and then past
+   the 0.04 s pressure-drift onset if its short metrics improve.  Only a
+   candidate with \(H^*\) peak-to-peak at or below 0.02 may proceed to the
+   full 1.0 s hold.  Opening runs retain the dissipative resistance and must
+   be tested separately.
 2. Run the opened-valve 0.5 s smoke case.
 3. Run the 10.5 s base case through \(T^*\ge6\).
 4. Run the refined grid and required timestep/valve/compressibility

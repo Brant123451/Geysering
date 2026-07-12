@@ -101,6 +101,20 @@ interface and capillary limits were inactive.  Alpha, mass and rim-water
 checks remained clean, so this is a localized closed-valve pressure-support
 failure rather than an RDF transport failure.
 
+The conformal baffle then passed generated-mesh and 0.001 s startup checks,
+but its extended RDF screen was rejected at 0.04 s.  It removed the delayed
+valve-edge hotspot: the written velocity maximum remained at the initial
+tower free surface and was 1.362 m/s at 0.04 s.  Nevertheless, the raw
+transducer range was 337.96 Pa, or \(H^*=0.05658\), already above the immutable
+0.02 hold limit.  Alpha stayed within approximately
+\([-1.75\times10^{-10},1+2.44\times10^{-10}]\), phase/total balance errors
+remained below \(6.5\times10^{-6}\%\), and there was no rim water or gas entry.
+The baffle is therefore retained as the physically correct closed-valve
+topology, but `plicRDF + RDF` is not an accepted hold configuration.  The next
+screen uses the library-supported `fitParaboloid` curvature sensitivity,
+which has lower reported curvature error than RDF on unstructured
+triangular/tetrahedral meshes.
+
 Thermophysical choices are:
 
 * air: `perfectGas`, molecular weight 28.965 kg/kmol, \(C_p=1005\) J/kg/K,
@@ -181,8 +195,11 @@ support the finite closed-valve pressure jump at exactly zero velocity and
 creates a sharp pressure-correction coefficient jump at its cell-zone edge.
 The source now uses a conformal two-sided no-slip baffle at the valve plane
 for closed mode, while opening/instant modes retain the purely dissipative
-resistance.  The baffle must pass the same leakage, drift and conservation
-hold criteria; it is not accepted merely because it is exactly impermeable.
+resistance.  The baffle removed the penalty-zone hotspot and showed no
+leakage, but the first 0.04 s RDF screen still failed the pressure-drift
+criterion because the sustained velocity hotspot remained at the tower free
+surface.  The topology is therefore validated, while the numerical
+free-surface candidate remains unaccepted.
 
 ## Mesh
 
