@@ -49,10 +49,12 @@ A2 dimensions:
 - downstream pipe: `L=5.95 m`, `D=0.28 m`, horizontal;
 - physical riser: `D=0.06 m`, `L=1.22 m`.
 
-The numerical inlet headbox is retained from A2 to admit water while the
-upstream pipe has a free surface. The riser opens into a `0.60 x 0.60 m`
-external atmosphere extending to `z=5.25 m`. Its bottom annulus, sides and top
-are atmospheric boundaries. Thus the physical riser still ends at
+The numerical inlet plenum is a compact, fully water-filled volume whose top
+is a wall. It represents the paper's pressurised feed tank and forces the
+prescribed flow through the upstream pipe; an open headbox would create an
+unphysical overflow bypass. It lies outside the reported 5.80 m pipe length.
+The riser opens into a `0.60 x 0.60 m` external atmosphere extending to
+`z=5.25 m`. Its bottom annulus, sides and top are atmospheric boundaries. Thus the physical riser still ends at
 `z=1.67 m`; water is not deleted there and can rise to the approximately
 `4.21 m` Fig. 7(a) regression height above the chamber lid.
 

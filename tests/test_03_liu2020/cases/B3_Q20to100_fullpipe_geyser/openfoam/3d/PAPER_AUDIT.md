@@ -43,11 +43,14 @@ The B3 source case retains the same rig dimensions as A2:
 | Riser | diameter 0.06 m, length 1.22 m | same |
 | Riser connection | centre of chamber lid, open to atmosphere | same |
 
-The inlet headbox and the atmosphere volume above the riser are numerical
-boundary plenums. They do not alter any reported pipe, chamber, or riser
-dimension. In particular, the atmosphere volume is not an extension of the
-physical riser: its lower annulus and side/top faces are open-pressure
-boundaries, and the physical rim remains 1.22 m above the chamber lid.
+The compact, fully water-filled inlet plenum and the atmosphere volume above
+the riser are numerical boundary volumes. They do not alter any reported pipe,
+chamber, or riser dimension. The inlet plenum has wall faces except for its
+prescribed-flow inlet and its connection to the 5.80 m upstream pipe, matching
+the reported pressurised feed tank without an artificial overflow. The plume
+volume is not an extension of the physical riser: its lower annulus and
+side/top faces are open-pressure boundaries, and the physical rim remains
+1.22 m above the chamber lid.
 
 ## Flow programme and A2/B3 branch distinction
 
@@ -197,7 +200,10 @@ activation or thermal instability can be reported.
   initialisation, not a pressure-fit parameter.
 - Riser above that chamber level and the plume domain: atmospheric air.
 - Upstream pipe: approximately 0.08 m initial depth, as reported for A2; B3
-  retains A2's upstream condition. The numerical headbox is the inlet plenum.
+  retains A2's upstream condition. A compact water-filled inlet plenum
+  represents the reported pressurised feed tank. Its external faces are walls,
+  preventing imposed flow from bypassing the pipe through a numerical
+  headbox overflow.
 - The experimental pre-ramp state carries `Q0=0.020 m3/s`. The CFD liquid
   velocity is therefore seeded with `Q0/A` in the 0.08 m-deep upstream pipe,
   chamber, and full downstream pipe; it is not started from stagnant water.

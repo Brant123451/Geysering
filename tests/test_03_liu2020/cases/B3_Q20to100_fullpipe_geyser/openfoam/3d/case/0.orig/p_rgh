@@ -28,8 +28,8 @@ boundaryField
 
     atmosphere
     {
-        // Constant absolute atmospheric pressure on the headbox and on every
-        // external plume face; prghPressure applies the local hydrostatic term.
+        // Constant absolute atmospheric pressure on every external plume
+        // face; the water-filled inlet plenum has wall boundaries.
         type            prghPressure;
         p               uniform 101325;
         value           uniform 101325;

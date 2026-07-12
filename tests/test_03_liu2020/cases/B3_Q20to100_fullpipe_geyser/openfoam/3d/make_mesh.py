@@ -2,10 +2,11 @@
 """Generate the Liu2020 B3 three-dimensional fluid domain with Gmsh.
 
 The experimental apparatus is the audited A2 geometry.  B3 changes only the
-downstream initial/boundary condition.  A numerical headbox supplies the
-reported flow rate, and an external atmosphere box above the *physical* riser
-rim permits a jet to rise beyond the 1.22 m riser instead of being deleted by
-a pressure boundary at the rim.
+downstream initial/boundary condition.  A compact, water-filled numerical
+plenum represents the pressurised feed tank and supplies the reported flow
+without an open overflow bypass.  An external atmosphere box above the
+*physical* riser rim permits a jet to rise beyond the 1.22 m riser instead of
+being deleted by a pressure boundary at the rim.
 """
 from __future__ import annotations
 
@@ -29,11 +30,11 @@ X_DOWNSTREAM = LC + LD
 X_RISER, Y_RISER = LC / 2.0, 0.0
 Z_RISER_RIM = HC + HR
 
-# A2's numerical inlet plenum, retained so the upstream reach can remain a
-# free-surface flow while a total volumetric rate is imposed.
+# Numerical inlet plenum.  Its top is only just above the upstream pipe crown
+# and is a wall: the paper's feed tank is pressurised, not an open overflow.
 HEADBOX_X0, HEADBOX_X1 = X_UPSTREAM - 0.35, X_UPSTREAM
 HEADBOX_Y0, HEADBOX_Y1 = -0.15, 0.15
-HEADBOX_Z0, HEADBOX_Z1 = 0.188, 1.10
+HEADBOX_Z0, HEADBOX_Z1 = 0.188, 0.45
 
 # Open atmosphere outside the physical riser.  The expected B3 regression
 # height is ~4.21 m above the lid (z~4.66 m), leaving ~0.59 m top clearance.
@@ -213,11 +214,6 @@ def main() -> None:
 
             on_inlet = close(zmin, HEADBOX_Z0) and close(zmax, HEADBOX_Z0)
             on_outlet = close(xmin, X_DOWNSTREAM) and close(xmax, X_DOWNSTREAM)
-            headbox_top = (
-                close(zmin, HEADBOX_Z1)
-                and close(zmax, HEADBOX_Z1)
-                and xmax < X_UPSTREAM + 1e-3
-            )
             plume_surface = (
                 zmin >= PLUME_Z0 - 2e-5
                 and (
@@ -240,7 +236,7 @@ def main() -> None:
                 inlet_surfaces.append(tag)
             elif on_outlet:
                 outlet_surfaces.append(tag)
-            elif headbox_top or plume_surface:
+            elif plume_surface:
                 atmosphere_surfaces.append(tag)
             else:
                 wall_surfaces.append(tag)

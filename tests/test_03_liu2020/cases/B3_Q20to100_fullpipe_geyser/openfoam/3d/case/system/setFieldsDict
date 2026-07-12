@@ -16,10 +16,12 @@ defaultFieldValues
 
 regions
 (
-    // Numerical inlet headbox.
+    // Fully water-filled numerical inlet plenum representing the pressurised
+    // feed tank. Its top is a wall, so none of the imposed flow can bypass the
+    // upstream pipe through an artificial open headbox surface.
     boxToCell
     {
-        box (-6.20 -1 -1) (-5.80 1 0.42);
+        box (-6.20 -1 -1) (-5.80 1 0.46);
         fieldValues (volScalarFieldValue alpha.water 1);
     }
 
