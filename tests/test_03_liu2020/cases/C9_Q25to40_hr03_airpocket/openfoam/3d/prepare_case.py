@@ -1657,6 +1657,7 @@ divSchemes
 laplacianSchemes { default Gauss linear corrected; }
 interpolationSchemes { default linear; }
 snGradSchemes { default corrected; }
+wallDist { method meshWave; }
 """
     )
     write(
