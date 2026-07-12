@@ -81,7 +81,12 @@ described as a measured `90 deg` contact angle.
 3. The `0.2 s` and `0.5 s` sensitivities use a zero-thickness cyclic pressure
    jump. Its declared effective area is
    `A/A0=sin(pi*t/(2*tau))^2`; the loss is `K=(A0/A)^2-1`.
-   This is a monotone uncertainty envelope, not a measured ball-angle law.
+   This is a monotone uncertainty envelope, not a measured ball-angle law. The
+   jump starts at the audited hydrostatic value
+   `p_rgh,pocket-p_rgh,upstream=-6218.13717 Pa` and uses the OpenFOAM
+   `fixedJump` time-step relaxation factor `0.1`. Initialization preserves the
+   closed-valve pressure difference when the initial flux is zero; relaxation
+   damps the explicit quadratic-loss feedback. Neither term supplies pressure.
 
 The baffle is a passive loss, not a pressure or velocity source. No pressure,
 velocity, or thermal forcing is used. No result is tuned to the known

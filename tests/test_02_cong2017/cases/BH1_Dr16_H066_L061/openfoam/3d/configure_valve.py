@@ -3,13 +3,24 @@
 
 This is an uncertainty model, not a fitted ball-valve law.  The normalized
 effective area follows sin²(pi*t/(2*tau)); the corresponding inertial loss is
-K=A0²/A²-1.  The fully open baseline bypasses this script and has no baffle.
+K=A0²/A²-1.  The pressure jump starts from the audited hydrostatic pressure
+difference and uses fixedJump's time-step relaxation so the explicit quadratic
+loss does not momentarily erase the closed-valve pressure difference at zero
+initial flux.  The fully open baseline bypasses this script and has no baffle.
 """
 from __future__ import annotations
 
 import argparse
 import math
 from pathlib import Path
+
+
+UPSTREAM_INITIAL_P_RGH_PA = 107543.13717
+POCKET_INITIAL_P_RGH_PA = 101325.0
+# fixedJump applies owner = neighbour - jump.  The master/owner side is the
+# upstream water side, hence the required initial jump is pocket - upstream.
+INITIAL_JUMP_PA = POCKET_INITIAL_P_RGH_PA - UPSTREAM_INITIAL_P_RGH_PA
+JUMP_RELAXATION = 0.1
 
 
 def parse_args() -> argparse.Namespace:
@@ -37,7 +48,7 @@ def coefficient_table(duration: float, samples: int, minimum: float) -> str:
     return "\n".join(rows)
 
 
-def pressure_patch(table: str) -> str:
+def pressure_patch(table: str, initial_value: float) -> str:
     return f"""\
                     type            porousBafflePressure;
                     patchType       cyclic;
@@ -50,8 +61,10 @@ def pressure_patch(table: str) -> str:
                     );
                     length          0.001;
                     uniformJump     true;
-                    jump            uniform 0;
-                    value           uniform 101325;"""
+                    relax           {JUMP_RELAXATION:.9g};
+                    jump            uniform {INITIAL_JUMP_PA:.9g};
+                    jump0           uniform {INITIAL_JUMP_PA:.9g};
+                    value           uniform {initial_value:.9g};"""
 
 
 def main() -> None:
@@ -66,8 +79,8 @@ def main() -> None:
     table = coefficient_table(
         args.duration, args.samples, args.minimum_area_fraction
     )
-    p_master = pressure_patch(table)
-    p_slave = pressure_patch(table)
+    p_master = pressure_patch(table, UPSTREAM_INITIAL_P_RGH_PA)
+    p_slave = pressure_patch(table, POCKET_INITIAL_P_RGH_PA)
     text = f"""\
 FoamFile
 {{
@@ -79,6 +92,8 @@ FoamFile
 
 // Equivalent opening-duration sensitivity: tau={args.duration:.9g} s.
 // This is not asserted to be the unmeasured experimental angle-time law.
+// Initial p_rgh jump is the audited hydrostatic difference, not a pressure
+// source; fixedJump relaxation damps the explicit quadratic-loss feedback.
 internalFacesOnly true;
 
 baffles

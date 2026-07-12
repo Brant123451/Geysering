@@ -72,7 +72,15 @@
       0.5
     ],
     "sensitivity_area_law": "A/A0=sin(pi*t/(2*tau))^2 for 0<t<tau",
-    "sensitivity_note": "equivalent porous-baffle uncertainty model, not a measured ball-angle law"
+    "sensitivity_note": "equivalent porous-baffle uncertainty model, not a measured ball-angle law",
+    "pressure_jump_initialization": {
+      "upstream_p_rgh_Pa": 107543.13717,
+      "pocket_p_rgh_Pa": 101325.0,
+      "fixed_jump_Pa": -6218.13717,
+      "fixed_jump_sign_convention": "owner = neighbour - jump; the master owner is upstream",
+      "time_step_relaxation": 0.1,
+      "purpose": "retain the audited hydrostatic pressure difference at zero initial flux and damp the explicit quadratic-loss feedback; this is not a pressure source"
+    }
   },
   "meshes": {
     "base": {
