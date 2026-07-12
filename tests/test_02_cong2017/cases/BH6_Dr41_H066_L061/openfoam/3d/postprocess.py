@@ -702,12 +702,14 @@ def main() -> None:
         "downstream_air_volume_relative_change": 1.0e-6,
     }
     static_hold_pass = (
-        run_completed
-        and max_speed <= static_limits["max_speed_m_s"]
-        and abs(water_volume_change) / water_scale
-        <= static_limits["water_volume_relative_change"]
-        and abs(downstream_air_volume_change) / pocket_volume_scale
-        <= static_limits["downstream_air_volume_relative_change"]
+        bool(
+            run_completed
+            and max_speed <= static_limits["max_speed_m_s"]
+            and abs(water_volume_change) / water_scale
+            <= static_limits["water_volume_relative_change"]
+            and abs(downstream_air_volume_change) / pocket_volume_scale
+            <= static_limits["downstream_air_volume_relative_change"]
+        )
         if closed_hold
         else None
     )
