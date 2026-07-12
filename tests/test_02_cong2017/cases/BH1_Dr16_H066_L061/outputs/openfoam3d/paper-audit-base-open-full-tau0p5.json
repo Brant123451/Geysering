@@ -1,0 +1,229 @@
+{
+  "case": "Cong2017 B-H1",
+  "checks": [
+    {
+      "absolute_tolerance": 1e-09,
+      "actual": 0.05,
+      "expected": 0.05,
+      "name": "horizontal pipe diameter",
+      "pass": true,
+      "source": "Cong et al. (2017), DOI 10.1061/(ASCE)HY.1943-7900.0001332, Table 2 row B-H1"
+    },
+    {
+      "absolute_tolerance": 1e-09,
+      "actual": 0.016,
+      "expected": 0.016,
+      "name": "riser diameter",
+      "pass": true,
+      "source": "Cong et al. (2017), DOI 10.1061/(ASCE)HY.1943-7900.0001332, Table 2 row B-H1"
+    },
+    {
+      "absolute_tolerance": 1e-09,
+      "actual": 0.66,
+      "expected": 0.66,
+      "name": "upstream head above pipe invert",
+      "pass": true,
+      "source": "Cong et al. (2017), DOI 10.1061/(ASCE)HY.1943-7900.0001332, Table 2 row B-H1"
+    },
+    {
+      "absolute_tolerance": 1e-09,
+      "actual": 0.61,
+      "expected": 0.61,
+      "name": "initial pocket length",
+      "pass": true,
+      "source": "Cong et al. (2017), DOI 10.1061/(ASCE)HY.1943-7900.0001332, Table 2 row B-H1"
+    },
+    {
+      "absolute_tolerance": 1e-09,
+      "actual": 3.47,
+      "expected": 3.47,
+      "name": "tee axis",
+      "pass": true,
+      "source": "Cong et al. (2017), DOI 10.1061/(ASCE)HY.1943-7900.0001332, Fig. 1(b)"
+    },
+    {
+      "absolute_tolerance": 1e-09,
+      "actual": 6.6,
+      "expected": 6.6,
+      "name": "full computational pipe length",
+      "pass": true,
+      "source": "Fig. 1 chain gives 6.59 m; Chan et al. (2018) uses x=0..6.6 m"
+    },
+    {
+      "absolute_tolerance": 1e-09,
+      "actual": 1.8,
+      "expected": 1.8,
+      "name": "physical riser height above crown",
+      "pass": true,
+      "source": "Cong et al. (2017), DOI 10.1061/(ASCE)HY.1943-7900.0001332, Observation of Geysers"
+    },
+    {
+      "absolute_tolerance": 1e-09,
+      "actual": 296.15,
+      "expected": 296.15,
+      "name": "initial temperature",
+      "pass": true,
+      "source": "Cong et al. (2017), DOI 10.1061/(ASCE)HY.1943-7900.0001332, pressure-measurement paragraph (laboratory 23 degC)"
+    },
+    {
+      "absolute_tolerance": 1e-09,
+      "actual": 101325.0,
+      "expected": 101325.0,
+      "name": "initial pocket absolute pressure",
+      "pass": true,
+      "source": "Cong et al. (2017), DOI 10.1061/(ASCE)HY.1943-7900.0001332, Experimental Procedure and Measurements"
+    },
+    {
+      "absolute_tolerance": 0.05,
+      "actual": 998.2,
+      "expected": 998.2,
+      "name": "water reference density",
+      "pass": true,
+      "source": "Cong et al. (2017), DOI 10.1061/(ASCE)HY.1943-7900.0001332, pressure-measurement paragraph"
+    },
+    {
+      "absolute_tolerance": 1e-09,
+      "actual": 0.072,
+      "expected": 0.072,
+      "name": "surface tension",
+      "pass": true,
+      "source": "Cong et al. (2017), DOI 10.1061/(ASCE)HY.1943-7900.0001332, Eotvos-number discussion"
+    },
+    {
+      "absolute_tolerance": 5e-11,
+      "actual": 0.0011977322,
+      "expected": 0.0011977321991811086,
+      "name": "analytic initial pocket volume",
+      "pass": true,
+      "source": "Cong et al. (2017), DOI 10.1061/(ASCE)HY.1943-7900.0001332, notation Vair=pi*D^2*L0/4"
+    },
+    {
+      "absolute_tolerance": 1e-09,
+      "actual": 0.05,
+      "expected": 0.05,
+      "name": "CAD pipe diameter",
+      "pass": true,
+      "source": "generated CAD metadata"
+    },
+    {
+      "absolute_tolerance": 1e-09,
+      "actual": 0.016,
+      "expected": 0.016,
+      "name": "CAD riser diameter",
+      "pass": true,
+      "source": "generated CAD metadata"
+    },
+    {
+      "absolute_tolerance": 1e-09,
+      "actual": 3.47,
+      "expected": 3.47,
+      "name": "CAD tee axis",
+      "pass": true,
+      "source": "generated CAD metadata"
+    },
+    {
+      "absolute_tolerance": 1e-09,
+      "actual": 1.825,
+      "expected": 1.825,
+      "name": "CAD riser rim in model y datum",
+      "pass": true,
+      "source": "1.8 m above crown; model y=0 is pipe axis"
+    },
+    {
+      "file": "system/setFieldsDict",
+      "missing_fragments": [],
+      "name": "initial phase, pressure and temperature fields",
+      "pass": true,
+      "required_fragments": [
+        "volScalarFieldValue alpha.water 1",
+        "volScalarFieldValue T 296.15",
+        "box (5.989 -0.030 -0.030) (6.601 0.030 0.030)",
+        "volScalarFieldValue alpha.water 0",
+        "volScalarFieldValue p 101325",
+        "box (3.319 0.635 -0.151) (3.621 3.026 0.151)"
+      ],
+      "source": "Cong et al. (2017), DOI 10.1061/(ASCE)HY.1943-7900.0001332, Table 2 row B-H1; Cong et al. (2017), DOI 10.1061/(ASCE)HY.1943-7900.0001332, Experimental Procedure and Measurements"
+    },
+    {
+      "file": "0.orig/p_rgh",
+      "missing_fragments": [],
+      "name": "constant-head and atmospheric pressure boundaries",
+      "pass": true,
+      "required_fragments": [
+        "type            fixedValue;",
+        "value           uniform 107543.13717;",
+        "value           uniform 101332.42484;"
+      ],
+      "source": "Cong et al. (2017), DOI 10.1061/(ASCE)HY.1943-7900.0001332, Series B boundary description"
+    },
+    {
+      "file": "0.orig/alpha.water",
+      "missing_fragments": [],
+      "name": "water-only reservoir and air-only atmospheric inflow",
+      "pass": true,
+      "required_fragments": [
+        "type            fixedValue;",
+        "value           uniform 1;",
+        "type            inletOutlet;",
+        "inletValue      uniform 0;"
+      ],
+      "source": "Cong et al. (2017), DOI 10.1061/(ASCE)HY.1943-7900.0001332, Series B initial condition; Chan et al. (2018) boundary conditions"
+    },
+    {
+      "file": "constant/g",
+      "missing_fragments": [],
+      "name": "gravity",
+      "pass": true,
+      "required_fragments": [
+        "value           (0 -9.81 0);"
+      ],
+      "source": "Cong et al. (2017), DOI 10.1061/(ASCE)HY.1943-7900.0001332, notation"
+    },
+    {
+      "file": "constant/valveProperties",
+      "missing_fragments": [],
+      "name": "instantaneous baseline valve is not a hidden source",
+      "pass": true,
+      "required_fragments": [
+        "active                  false;"
+      ],
+      "source": "Chan et al. (2018) instantaneous CFD opening; experimental duration audited separately"
+    }
+  ],
+  "comparison_scope": {
+    "Fig10a": "Run B-1 PT1, same nominal D/Dr/H0/L0 but a different realization; morphology only",
+    "Fig9a": "Run B-H1 high-speed Yfs/Yint; direct quantitative comparison"
+  },
+  "declared_method_differences_from_chan2018": {
+    "riser_top": "physical 1.8 m rim plus open exterior atmosphere, rather than a confined 3.0 m riser",
+    "target_run": "B-H1 H0=0.66 m, whereas companion fine-mesh B1 has H0=0.88 m",
+    "temperature": "296.15 K measured in Cong2017, rather than companion CFD 300 K",
+    "turbulence": "laminar preregistered OpenFOAM baseline; companion uses standard k-epsilon but does not report inlet/initial turbulence data",
+    "valve": "instantaneous baseline plus separately labelled 0.2/0.5 s resistance sensitivities"
+  },
+  "derived_targets": {
+    "Vair_star": 9.025804924242426,
+    "initial_free_surface_height_above_crown_m": 0.61,
+    "initial_pocket_air_mass_kg": 0.0014276016764529435,
+    "initial_pocket_volume_m3": 0.0011977321991811086
+  },
+  "experimental_outputs_not_used_as_inputs": {
+    "Ta_s": 8.07,
+    "geyser": true,
+    "vfs_m_per_s": 0.924,
+    "vint_m_per_s": 1.231
+  },
+  "schema_version": 1,
+  "source_provenance": {
+    "companion_cfd": {
+      "citation": "Chan et al. (2018), DOI 10.1061/(ASCE)HY.1943-7900.0001416",
+      "role": "methodological comparison only; its fine-mesh B1 uses H0=0.88 m, not B-H1 H0=0.66 m"
+    },
+    "primary": {
+      "citation": "Cong et al. (2017), DOI 10.1061/(ASCE)HY.1943-7900.0001332",
+      "repository_file": "tests/test_02_cong2017/_shared/reference/paper_source/cong2017_JHE2017_offprint.pdf",
+      "sha256": "6a2fd77ae65f6361ec5479780a3226e5f5cf69fde643866f692279588c16aa3e"
+    }
+  },
+  "status": "PASS"
+}
