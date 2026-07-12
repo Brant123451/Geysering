@@ -228,6 +228,13 @@ def finite_max(values: np.ndarray) -> float | None:
     return float(np.max(finite)) if len(finite) else None
 
 
+def max_abs_drift(values: np.ndarray) -> float | None:
+    finite = values[np.isfinite(values)]
+    if len(finite) == 0:
+        return None
+    return float(np.max(np.abs(finite - finite[0])))
+
+
 def write_csv(path: Path, header: Iterable[str], rows: Iterable[Iterable[object]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as stream:
@@ -412,11 +419,9 @@ def reduce_run(run_id: str) -> dict:
             ),
         },
         "closed_hold": {
-            "max_abs_Yfs_drift_m": finite_max(np.abs(yfs - yfs[0])),
-            "max_abs_PT1_drift_Pa": finite_max(np.abs(p_pt1 - p_pt1[0])),
-            "max_abs_pocket_mass_drift_kg": finite_max(
-                np.abs(pocket_gas_mass - pocket_gas_mass[0])
-            ),
+            "max_abs_Yfs_drift_m": max_abs_drift(yfs),
+            "max_abs_PT1_drift_Pa": max_abs_drift(p_pt1),
+            "max_abs_pocket_mass_drift_kg": max_abs_drift(pocket_gas_mass),
         }
         if valve_name == "closed"
         else None,
@@ -502,7 +507,8 @@ def plot_outputs(metrics: dict[str, dict]) -> None:
     ax.axhline(1.8, color="k", lw=0.8, label="physical rim")
     ax.set(xlabel="t (s)", ylabel="height above main soffit (m)", xlim=(0, 13))
     ax.grid(alpha=0.25)
-    ax.legend(fontsize=7, ncol=2)
+    if ax.get_legend_handles_labels()[0]:
+        ax.legend(fontsize=7, ncol=2)
     fig.tight_layout()
     fig.savefig(RESULTS / "comparison_levels.png", dpi=160)
     plt.close(fig)
@@ -525,7 +531,8 @@ def plot_outputs(metrics: dict[str, dict]) -> None:
         )
     ax.set(xlabel="t (s)", ylabel="gauge pressure head / H0", xlim=(0, 13))
     ax.grid(alpha=0.25)
-    ax.legend(fontsize=7, ncol=2)
+    if ax.get_legend_handles_labels()[0]:
+        ax.legend(fontsize=7, ncol=2)
     fig.tight_layout()
     fig.savefig(RESULTS / "comparison_pressure.png", dpi=160)
     plt.close(fig)
