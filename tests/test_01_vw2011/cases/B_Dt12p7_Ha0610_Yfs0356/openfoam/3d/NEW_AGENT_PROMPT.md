@@ -513,6 +513,16 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     仍有一步延迟超限。下一项复用必做的 `CASEB_MAX_CO=0.15` 时间步敏感性，
     其余设置不变；只有实测 global/interface Co 不超过 0.30/0.20 且速度有界
     才可进入 0.04 s，否则保留已通过的 `maxDeltaT=1e-5` hard cap。
+28. tight-pressure `CASEB_MAX_CO=0.15` adaptive 成员已通过 0.006 s：
+    - 实测 global/interface Co 为 0.165/0.132；
+    - 写出速度在 0.00150 s 达峰值 1.358 m/s，末帧为 1.015 m/s；峰值比
+      默认目标 adaptive 低 25.2%，比 hard cap 低 10.1%；
+    - 所有速度与力热点仍在物理自由面，pressure-gravity/surface force
+      最大值为 83/118 kPa/m；
+    - alpha、质量界、rim water 与 gas-entry 干净。
+    因此下一窗口选择该低 Courant adaptive 成员，而不是默认目标或更昂贵的
+    hard cap。必须续算同一 decomposed state 至 0.04 s，并确认
+    \(H^*\) peak-to-peak 不超过 0.02，才可启动 1.0 s hold。
 
 十、hold 验收
 

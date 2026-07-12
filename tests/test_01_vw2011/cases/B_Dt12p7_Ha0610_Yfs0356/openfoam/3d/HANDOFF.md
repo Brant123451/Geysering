@@ -431,6 +431,18 @@ timestep controls.
     all other settings fixed.  It may enter the 0.04 s drift window only if
     observed global/interface Co stay at or below 0.30/0.20 and velocity
     remains bounded; otherwise retain `maxDeltaT=1e-5`.
+31. The tight-pressure `maxCo=0.15` adaptive member passed the 0.006 s screen:
+    * observed global/interface Courant maxima were 0.165/0.132;
+    * written velocity peaked at 1.358 m/s at 0.00150 s and ended at
+      1.015 m/s, 25.2% below the default-target adaptive peak and 10.1% below
+      the hard-cap peak;
+    * every velocity and force hotspot stayed at the physical free surface,
+      and maximum pressure-gravity/surface forces were 83/118 kPa/m;
+    * alpha and mass balances remained clean, with no rim water or gas entry.
+    This selects the lower adaptive Courant target over both the rejected
+    default target and the expensive hard cap for the next window.  Continue
+    the same decomposed state to 0.04 s and require \(H^*\) peak-to-peak at or
+    below 0.02 before starting a 1.0 s hold.
 
 ## Still required
 
@@ -456,9 +468,10 @@ The scientific reproduction is **not complete**.  Continue in this order:
    the dynamically regenerated exterior-gas pressure mode.  Tightening
    `p_rghFinal` to \(10^{-10}\) removes that mode and passes the hard-cap
    0.006 s screen.  The paired default-target adaptive run fails both observed
-   Courant gates but does not regenerate the gas hotspot.  Screen the required
-   `maxCo=0.15` adaptive timestep member next; do not enter the 0.04 s
-   pressure-drift window until it passes, or use the already-passing hard cap.
+   Courant gates but does not regenerate the gas hotspot.  The required
+   `maxCo=0.15` adaptive member now passes the 0.006 s gates and has the lowest
+   peak velocity of the three timestep members.  Extend that exact state to
+   the 0.04 s pressure-drift window next.
    Extend a candidate past the 0.04 s
    pressure-drift onset only if it stays within the declared Courant limits
    and reduces peak velocity, and only \(H^*\) peak-to-peak at or below 0.02

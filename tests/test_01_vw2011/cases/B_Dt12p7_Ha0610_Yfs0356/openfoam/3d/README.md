@@ -231,10 +231,14 @@ is not a hold.  Its paired adaptive `maxDeltaT=2.5e-4` run retained the physical
 free-surface hotspot and clean balances, but raised the written velocity peak
 to 1.814 m/s and reached global/interface Co=0.347/0.207.  It therefore fails
 both immutable observed-Courant gates and confirms that tighter timestep
-control is still required.  The next screen uses the required adaptive
-`maxCo=0.15` sensitivity with all other controls fixed; only if it stays below
-the 0.30/0.20 observed limits may it replace the costly hard cap for the
-0.04 s drift window.
+control is still required.  The required adaptive `maxCo=0.15` sensitivity then
+passed: observed global/interface Co fell to 0.165/0.132, written velocity
+peaked at 1.358 m/s and ended at 1.015 m/s, and all hotspots and balances
+remained physical and clean.  Its peak is 25.2% below the default-target
+adaptive member and 10.1% below the hard-cap member, so this is the selected
+timestep-screen candidate.  The same decomposed state must now reach the
+0.04 s drift window and satisfy \(H^*\) peak-to-peak at or below 0.02 before
+any 1.0 s hold.
 
 Thermophysical choices are:
 
