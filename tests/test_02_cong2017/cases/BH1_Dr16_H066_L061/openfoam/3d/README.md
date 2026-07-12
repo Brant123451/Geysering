@@ -162,6 +162,9 @@ against this Case's digitized Fig.9(a), the explicitly labelled
 heights are shifted by `-D=-0.05 m` only for display so that all level curves
 share the above-crown datum. That comparison remains qualitative because the
 frozen 1-D effective pipe and tee geometry differ from the audited 3-D model.
+The 3-D pipeline consumes the tracked legacy CSV without regenerating it; its
+threshold-sensitive solver requires `--overwrite-frozen` before replacing
+those environment-dependent reference artifacts.
 
 Water, gas, and total-mass conservation use
 

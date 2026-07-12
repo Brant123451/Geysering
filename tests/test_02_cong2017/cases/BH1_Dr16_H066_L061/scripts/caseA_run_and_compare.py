@@ -17,9 +17,14 @@ riser, partially enters, the supply slug arrests and COMPRESSES the pocket
 This driver runs the frozen per-case solver copy (model/), overlays the
 digitized Fig. 9(a) trajectories and Fig. 10(a) PT1 trace, writes metrics +
 the model series, and builds report.html.
+
+The tracked 1-D CSV is a frozen legacy comparison. Re-running this
+threshold-sensitive solver under a different NumPy/runtime can change its
+branch, so replacing those artifacts requires an explicit command-line flag.
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import math
@@ -105,6 +110,19 @@ def first_crossing(x, y, thresh, above=True, after=0.0):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--overwrite-frozen",
+        action="store_true",
+        help="explicitly replace the tracked legacy 1-D comparison artifacts",
+    )
+    args = parser.parse_args()
+    if not args.overwrite_frozen:
+        parser.error(
+            "tracked outputs are frozen; pass --overwrite-frozen only when "
+            "intentionally re-baselining the legacy 1-D comparison"
+        )
+
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt

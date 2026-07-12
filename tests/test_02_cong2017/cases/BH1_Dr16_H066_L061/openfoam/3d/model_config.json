@@ -139,7 +139,7 @@
   "postprocessing": {
     "riser_height_datum": "height above horizontal-pipe crown",
     "legacy_1d_height_shift_m": -0.05,
-    "legacy_1d_comparison": "qualitative only because its effective pipe and tee geometry differ",
+    "legacy_1d_comparison": "tracked frozen CSV, consumed without regeneration; qualitative only because its effective pipe and tee geometry differ",
     "ejected_water": "time integral of positive upward water flux through the physical riser mouth",
     "exterior_water": "instantaneous water inventory above the physical rim"
   },

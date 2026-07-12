@@ -521,7 +521,8 @@ def main() -> None:
             "The frozen 1-D model uses a 6.0 m effective pipe and x_tee=2.88 m, "
             "not the audited 3-D geometry. Its riser coordinates are shifted "
             "down by D=0.05 m in the plot to share the above-crown datum; the "
-            "comparison is qualitative."
+            "comparison is qualitative. The tracked legacy CSV is consumed "
+            "without runtime regeneration."
         ),
     }
 
