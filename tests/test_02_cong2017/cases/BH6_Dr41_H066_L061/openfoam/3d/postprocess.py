@@ -30,6 +30,7 @@ RIM_Y = 1.80  # physical riser height above horizontal-pipe soffit
 RIM_Z = 1.825
 R_AIR = 8314.46261815324 / 28.965
 TEMPERATURE = 296.15
+MASS_BALANCE_OUTPUT_INTERVAL_S = 0.01
 RISER_Z = np.arange(0.035, 1.815 + 1e-12, 0.020)
 PLUME_Z = np.arange(1.835, 3.015 + 1e-12, 0.020)
 AUDIT_COLUMNS = (
@@ -594,7 +595,31 @@ def main() -> None:
         "expelled_water_volume_m3",
         "estimated_riser_outflow_m3_s",
     )
-    write_csv(results / "mass_balance.csv", balance_header, balance_rows)
+    balance_targets = np.arange(
+        audit_time[0],
+        audit_time[-1] + 0.5 * MASS_BALANCE_OUTPUT_INTERVAL_S,
+        MASS_BALANCE_OUTPUT_INTERVAL_S,
+    )
+    balance_output_indices = np.searchsorted(
+        audit_time, balance_targets, side="left"
+    )
+    balance_output_indices = np.clip(
+        balance_output_indices, 0, len(audit_time) - 1
+    )
+    balance_output_indices = np.unique(
+        np.concatenate(
+            (
+                np.array([0], dtype=int),
+                balance_output_indices,
+                np.array([len(audit_time) - 1], dtype=int),
+            )
+        )
+    )
+    write_csv(
+        results / "mass_balance.csv",
+        balance_header,
+        balance_rows[balance_output_indices],
+    )
 
     common_time = riser_time
     series_rows = np.column_stack(
@@ -826,7 +851,18 @@ def main() -> None:
     water_scale = max(abs(water_volume[0]), 1e-30)
     gas_scale = max(abs(air_mass[0]), 1e-30)
     pocket_volume_scale = max(abs(downstream_air_volume[0]), 1e-30)
-    max_speed = float(np.nanmax(audit[:, AUDIT_INDEX["max_speed_m_s"]]))
+    max_speed_index = int(
+        np.nanargmax(audit[:, AUDIT_INDEX["max_speed_m_s"]])
+    )
+    min_pressure_index = int(
+        np.nanargmin(audit[:, AUDIT_INDEX["min_pressure_Pa"]])
+    )
+    max_pressure_index = int(
+        np.nanargmax(audit[:, AUDIT_INDEX["max_pressure_Pa"]])
+    )
+    max_speed = float(
+        audit[max_speed_index, AUDIT_INDEX["max_speed_m_s"]]
+    )
     water_volume_change = float(water_volume[-1] - water_volume[0])
     downstream_air_volume_change = float(
         downstream_air_volume[-1] - downstream_air_volume[0]
@@ -1004,6 +1040,31 @@ def main() -> None:
                 np.nanmax(np.abs(gas_residual)) / gas_scale
             ),
             "open_boundary_fluxes_included": True,
+            "flux_integration_samples": int(len(audit_time)),
+            "reported_balance_rows": int(len(balance_output_indices)),
+            "reported_balance_nominal_interval_s": (
+                MASS_BALANCE_OUTPUT_INTERVAL_S
+            ),
+        },
+        "numerical_extrema": {
+            "global_max_speed_m_s": max_speed,
+            "global_max_speed_time_s": float(audit_time[max_speed_index]),
+            "global_min_pressure_Pa": float(
+                audit[min_pressure_index, AUDIT_INDEX["min_pressure_Pa"]]
+            ),
+            "global_min_pressure_time_s": float(
+                audit_time[min_pressure_index]
+            ),
+            "global_max_pressure_Pa": float(
+                audit[max_pressure_index, AUDIT_INDEX["max_pressure_Pa"]]
+            ),
+            "global_max_pressure_time_s": float(
+                audit_time[max_pressure_index]
+            ),
+            "interpretation": (
+                "Whole-domain cell extrema expose short local numerical "
+                "transients; experimental comparisons use the specified probes."
+            ),
         },
         "static_diagnostics": {
             "applicable": closed_hold,
