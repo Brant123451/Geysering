@@ -488,6 +488,20 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     tolerance 时经常 0 iteration。下一项只收紧 pressure linear-solver
     tolerance 后复跑同一 hard-cap screen；不得更改物性或曲率模型，也不得
     进入 0.04 s。
+26. 完全相同的 hard-cap 配置只把
+    `CASEB_PRESSURE_FINAL_TOLERANCE` 收紧到 \(10^{-10}\) 后，首次通过
+    0.006 s 短筛选：
+    - global/interface Co 降至 0.041/0.021；
+    - 写出速度首帧达到全程峰值 1.510 m/s，末帧为 1.187 m/s，所有速度与
+      力热点均留在 y=0.403 m 物理自由面；
+    - pressure-gravity residual 最大值从 266 降至 93.4 kPa/m，surface
+      force 最大值仍约 119 kPa/m；
+    - `p_rghFinal` 不再接受约 \(10^{-8}\) 的零迭代残差，而是进行 1--2 次
+      迭代并收敛到约 \(10^{-11}\)；
+    - alpha、质量界、rim water 与 gas-entry 仍干净。
+    这是通过 Courant 与热点门槛的短候选，不是 0.04 s drift 或 1.0 s hold。
+    下一项保持 \(10^{-10}\) pressure tolerance，只恢复 adaptive
+    `maxDeltaT=2.5e-4` 完成配对；在该配对通过前不得进入 0.04 s。
 
 十、hold 验收
 

@@ -400,6 +400,22 @@ timestep controls.
     absolute tolerance.  Materialise a pressure-solver tolerance control and
     repeat this exact hard-cap screen with tighter `p_rghFinal` convergence
     before changing any physical or curvature setting.
+29. The otherwise identical hard-cap screen with
+    `CASEB_PRESSURE_FINAL_TOLERANCE=1e-10` passed the short numerical gates:
+    * global/interface Courant maxima were 0.041/0.021;
+    * written velocity peaked in the first frame at 1.510 m/s and ended at
+      1.187 m/s, with every velocity and force hotspot at the physical free
+      surface;
+    * maximum pressure-gravity residual fell from 266 to 93.4 kPa/m, while
+      maximum surface force remained 119 kPa/m;
+    * `p_rghFinal` now performs one or two iterations to approximately
+      \(10^{-11}\) residual instead of accepting an order-\(10^{-8}\) initial
+      residual with zero iterations;
+    * alpha and mass balances remained clean, with no rim water or gas entry.
+    This is the first physical RDF candidate to pass the 0.006 s Courant and
+    hotspot screen, not a passed drift window or hold.  Repeat the same
+    \(10^{-10}\) configuration with adaptive `maxDeltaT=2.5e-4` before any
+    extension to 0.04 s.
 
 ## Still required
 
@@ -422,9 +438,11 @@ The scientific reproduction is **not complete**.  Continue in this order:
    reduces its pre-solver force residual, but the adaptive RDF rerun still
    fails both Courant gates and has essentially unchanged free-surface startup
    velocity.  Its directly paired hard-cap run amplifies, rather than removes,
-   the dynamically regenerated exterior-gas pressure mode.  Isolate
-   `p_rghFinal` linear-solver tolerance next; do not enter the 0.04 s
-   pressure-drift window.  Extend a candidate past the 0.04 s
+   the dynamically regenerated exterior-gas pressure mode.  Tightening
+   `p_rghFinal` to \(10^{-10}\) removes that mode and passes the hard-cap
+   0.006 s screen.  Repeat that candidate with adaptive `maxDeltaT=2.5e-4`;
+   do not enter the 0.04 s pressure-drift window until the pair passes.
+   Extend a candidate past the 0.04 s
    pressure-drift onset only if it stays within the declared Courant limits
    and reduces peak velocity, and only \(H^*\) peak-to-peak at or below 0.02
    may proceed to the full 1.0 s hold.  Opening runs retain the dissipative

@@ -219,10 +219,17 @@ analytic hard-cap trace run.  It was worse: written velocity reached 2.173 m/s
 in pure exterior gas and the collocated pressure-gravity residual reached
 266 kPa/m, versus 1.481 m/s and 208 kPa/m for the analytic member, while maximum
 surface force remained 119 kPa/m.  The mode is dynamically regenerated rather
-than inherited from the initial hydrostatic field.  Since `p_rghFinal`
-frequently performs zero iterations below its current \(10^{-7}\) absolute
-tolerance, the next isolated screen tightens pressure-solver convergence.  No
-longer hold extension is cleared.
+than inherited from the initial hydrostatic field.  Tightening only the
+`p_rghFinal` absolute tolerance from \(10^{-7}\) to \(10^{-10}\) under the same
+hard cap removed that exterior-gas mode: global/interface Courant maxima fell
+to 0.041/0.021, all velocity and force hotspots stayed at the physical free
+surface, written velocity peaked in the first frame at 1.510 m/s and ended at
+1.187 m/s, and the maximum pressure-gravity residual fell from 266 to
+93.4 kPa/m.  Alpha and mass balances remained clean.  This is the first
+physical RDF candidate to pass the 0.006 s Courant and hotspot screen, but it
+is not a hold.  The next isolated screen retains the \(10^{-10}\) pressure
+tolerance and restores adaptive `maxDeltaT=2.5e-4`; no 0.04 s or longer hold
+extension is cleared until that pair is complete.
 
 Thermophysical choices are:
 
