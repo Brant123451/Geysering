@@ -1,0 +1,39 @@
+{
+  "case": "BH6_Dr41_H066_L061",
+  "work_root": "/tmp/bh6-base-screen-work",
+  "work_root_retained": true,
+  "campaign_status": "success",
+  "profiles_requested": [
+    "base"
+  ],
+  "profiles_completed": [
+    "base"
+  ],
+  "profiles_incomplete": [],
+  "results": [
+    {
+      "profile": "base",
+      "requested_end_s": 13.0,
+      "simulation_end_s": 13.0,
+      "run_completed": true,
+      "cells": 150502,
+      "strict_checkMesh_pass": false,
+      "solver_mesh_gate_pass": true,
+      "maxCo": 0.5,
+      "maxAlphaCo": 0.25,
+      "opening_duration_s": 0.2,
+      "Ta_3d_s": 9.6,
+      "catch_time_3d_s": 11.54,
+      "Yfs_max_3d_m": 1.0402171352090592,
+      "vfs_average_3d_m_s": 0.24051841435058938,
+      "vint_average_3d_m_s": 0.527436246699484,
+      "vnet_average_3d_m_s": 0.2869178323488946,
+      "PT1_post_arrival_peak_H_over_H0": 1.1912608799877913,
+      "water_above_rim": false,
+      "liquid_balance_relative_error": 8.292794290044267e-05,
+      "gas_balance_relative_error": -2.8240560319201902e-05,
+      "static_hold_pass": null,
+      "static_max_speed_m_s": 80.3050155013
+    }
+  ]
+}

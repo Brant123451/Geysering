@@ -139,6 +139,31 @@ Profiles are:
 | `valve-fast` | `13 s` | base | `0.10 s` |
 | `valve-slow` | `13 s` | base | `0.40 s` |
 
+## Completed base screening
+
+The committed `results/base` stream reaches `13.0 s` for every required probe
+and conservation audit.  It reproduces the experimental `NO GEYSER`
+classification without outcome forcing:
+
+| Quantity | Experiment | 3-D base |
+|---|---:|---:|
+| Air arrival `Ta` | `8.10 s` | `9.60 s` |
+| Bubble/free-surface catch | about `10.5–10.9 s` | `11.54 s` |
+| Peak `Yfs` above riser entrance | `1.21 m` | `1.040 m` |
+| Average `vfs` | `0.246 m/s` | `0.241 m/s` |
+| Average `vint` | `0.476 m/s` | `0.527 m/s` |
+| Geyser | no | no |
+
+The final liquid-volume and gas-mass residuals are `8.29e-5` and `-2.82e-5`
+relative; their maximum absolute residuals are `3.19e-4` and `5.36e-5`.
+The base result is a screening result, not the completed quantitative
+validation: arrival is `1.50 s` late, peak water level is `0.170 m` low, and
+the required refined-mesh and valve-duration profiles remain to be compared.
+The whole-domain extrema also expose a short local transient at `t=4.50 s`
+(`max|U|=80.3 m/s`, `p=72.5…142.1 kPa`) while the specified probe
+temperatures remain bounded.  It is retained, not hidden or clipped, and must
+be bracketed by the sensitivity runs before quantitative acceptance.
+
 The post-processor writes only compact CSV/JSON/PNG.  It reports `PT1`, `PT2`,
 `Yfs`, `Yint`, entrapped/apparatus air volume and mass, far-field flow,
 external-water inventory and cumulative expelled water; compares experiment,
@@ -156,7 +181,9 @@ single/expected regions, non-orthogonality below `70 deg`, skewness below `4`,
 and no low-weight faces; it never rewrites the strict `checkMesh` result.
 Every required probe and conservation stream must cover the requested end
 time; incomplete runs fail instead of being extrapolated into apparently
-complete CSV or metrics.
+complete CSV or metrics.  Conservation is integrated from the full `0.001 s`
+audit stream; only the reported CSV is sampled at `0.01 s` to keep the
+version-controlled artifact compact.
 
 ## Generated-file policy
 
