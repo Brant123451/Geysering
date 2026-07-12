@@ -24,8 +24,8 @@ divSchemes
     div(phi,thermo:rho.water) Gauss upwind;
     div(phi,thermo:rho.air)   Gauss upwind;
     div(rhoPhi,U)       Gauss limitedLinearV 1;
-    div(rhoPhi,T)       Gauss limitedLinear 1;
-    div(rhoPhi,K)       Gauss limitedLinear 1;
+    div(rhoPhi,T)       Gauss upwind;
+    div(rhoPhi,K)       Gauss upwind;
     div(phi,p)          Gauss upwind;
     div(phi,k)          Gauss upwind;
     div(phi,epsilon)    Gauss upwind;

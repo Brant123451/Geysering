@@ -56,6 +56,12 @@ No open-valve classification result existed when these limits were selected.
 The accepted limits are the tested stable lower bound, fixed for the closed
 hold and every event/sensitivity run.
 
+Temperature and kinetic-energy convection use bounded first-order upwind,
+matching the OpenFOAM v2512 3-D `compressibleInterIsoFoam` tutorial.  A
+pre-production run with `limitedLinear` temperature convection generated a
+non-physical `T=-102 K` interface cell at `t=8.13985 s`; the run was rejected.
+`T` is included in the 0.01 s field-extrema audit for every accepted run.
+
 ## Patch conditions
 
 | Patch | Physical meaning | `U` | `p_rgh` | `p` | `alpha.water` | `T` | `k/epsilon/alphat` |

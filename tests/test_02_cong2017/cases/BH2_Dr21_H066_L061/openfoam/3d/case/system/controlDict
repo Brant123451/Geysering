@@ -33,7 +33,7 @@ functions
     {
         type                fieldMinMax;
         libs                (fieldFunctionObjects);
-        fields              (U p alpha.water);
+        fields              (U p T alpha.water);
         mode                magnitude;
         location            true;
         writeControl        adjustableRunTime;
