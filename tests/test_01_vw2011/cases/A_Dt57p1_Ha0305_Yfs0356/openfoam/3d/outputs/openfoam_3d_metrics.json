@@ -1,11 +1,50 @@
 {
   "simulation_end_s": 9.0,
   "simulation_end_Tstar": 11.042444680426986,
-  "pressure_plateau_Hstar_mean_T1to7": 0.7064020958939992,
-  "pressure_RMSE_Hstar_no_shift": 0.1802640035441391,
+  "pressure_plateau_Hstar_mean_T1to7": 0.558861112287442,
+  "pressure_probe_plateau_Hstar_mean_T1to7": 0.7064020958939992,
+  "pressure_RMSE_Hstar_no_shift": 0.04378446829277075,
+  "pressure_datum": {
+    "comparison": "pipe crown / ventilation-tower base",
+    "probe_y_m": -0.043,
+    "comparison_y_m": 0.047,
+    "subtracted_Hstar": 0.14754098360655737,
+    "probe_pressure_retained_in_series": true
+  },
   "free_surface_max_Ystar": 0.6514216115923273,
   "free_surface_RMSE_Ystar_no_shift": 0.014453932526273567,
   "interface_RMSE_Ystar_no_shift": 0.17229694196004455,
+  "interface_RMSE_best_repetition_no_shift": 0.0905120984228068,
+  "interface_repetition_comparison": [
+    {
+      "repetition": 1,
+      "RMSE_Ystar_no_shift": 0.2622475026750008,
+      "samples_used": 15,
+      "digitized_samples": 15,
+      "climb_velocity_Vstar": 0.4255345195061351,
+      "liftoff_Tstar_fit": 7.128671089489547,
+      "catch_Tstar_fit_at_Ystar_0p63": 8.609162027642256
+    },
+    {
+      "repetition": 2,
+      "RMSE_Ystar_no_shift": 0.0905120984228068,
+      "samples_used": 19,
+      "digitized_samples": 19,
+      "climb_velocity_Vstar": 0.42697001123116407,
+      "liftoff_Tstar_fit": 7.600237169989714,
+      "catch_Tstar_fit_at_Ystar_0p63": 9.075750633296893
+    },
+    {
+      "repetition": 3,
+      "RMSE_Ystar_no_shift": 0.14071674339894824,
+      "samples_used": 18,
+      "digitized_samples": 21,
+      "climb_velocity_Vstar": 0.4307872631296409,
+      "liftoff_Tstar_fit": 7.747388021754534,
+      "catch_Tstar_fit_at_Ystar_0p63": 9.209826802843585
+    }
+  ],
+  "interface_climb_velocity_Vstar_fit": 0.5358216925075924,
   "rmse_sample_coverage": {
     "pressure": {
       "used": 593,
@@ -22,6 +61,7 @@
   },
   "interface_liftoff_Tstar": 7.944425478418303,
   "interface_catch_Tstar": 9.152959701776146,
+  "interface_catch_Tstar_fit_at_Ystar_0p63": 9.110398466495733,
   "geysering": false,
   "comparison_targets": {
     "pressure_plateau_Hstar": 0.54,
@@ -31,10 +71,16 @@
       7.8,
       7.9
     ],
-    "interface_catch_Tstar": 8.4,
+    "interface_catch_Tstar_earliest_repetition": 8.4,
+    "interface_catch_Tstar_repetition_fits": [
+      8.609162027642256,
+      9.075750633296893,
+      9.209826802843585
+    ],
+    "interface_climb_velocity_Vstar": 0.39,
     "observed_geysering": false
   },
-  "caveat": "Circular 3-D apparatus with an external atmosphere. No event-time shift or fitted wall/turbulence parameters were applied.",
+  "caveat": "Circular 3-D apparatus with an external atmosphere. Pressure is mapped from the near-invert probe to the paper's pipe-crown datum; the uncorrected probe value remains in the compact series. Fig. 7 interface errors are reported both for the full marker cloud and for each of the three repetitions. No event-time shift or fitted wall/turbulence parameters were applied.",
   "geometry_model": "3-D circular pipe and circular tower",
   "circular_tower_to_pipe_area_ratio": 0.36899162516976003,
   "plume_domain_height_above_rim_m": 1.2,
@@ -47,14 +93,18 @@
   "water_mass_max_abs_relative_drift": 1.621414606426819e-05,
   "water_mass_sampling": "Integral of alpha.water*thermo:rho.water over all cells; first sample at the first 0.005 s write",
   "experimental_errors": {
-    "pressure_plateau_Hstar_signed": 0.16640209589399912,
-    "pressure_plateau_percent_signed": 30.81520294333317,
-    "pressure_RMSE_Hstar_no_shift": 0.1802640035441391,
+    "pressure_plateau_Hstar_signed": 0.018861112287441917,
+    "pressure_plateau_percent_signed": 3.492798571748503,
+    "pressure_RMSE_Hstar_no_shift": 0.04378446829277075,
     "free_surface_max_Ystar_signed": 0.02142161159232725,
     "free_surface_RMSE_Ystar_no_shift": 0.014453932526273567,
     "interface_RMSE_Ystar_no_shift": 0.17229694196004455,
+    "interface_RMSE_best_repetition_no_shift": 0.0905120984228068,
     "interface_liftoff_distance_outside_repetition_range_Tstar": 0.04442547841830269,
-    "interface_catch_signed_Tstar": 0.7529597017761454
+    "interface_catch_signed_from_earliest_repetition_Tstar": 0.7529597017761454,
+    "interface_catch_distance_outside_repetition_range_Tstar": 0.0,
+    "interface_climb_velocity_Vstar_signed": 0.14582169250759236,
+    "interface_climb_velocity_percent_signed": 37.390177566049324
   },
   "mesh": {
     "cells": 104624,
