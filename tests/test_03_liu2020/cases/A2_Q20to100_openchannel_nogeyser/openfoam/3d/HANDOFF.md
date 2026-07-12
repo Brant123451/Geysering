@@ -10,6 +10,21 @@ Cloud-agent VMs, active solver processes, logs, meshes, and numerical time
 directories do not transfer between Cursor accounts. Only committed and pushed
 Git state is a reliable cross-account handoff.
 
+## Evidence-based replacement model
+
+The University of Alberta open-access MSc thesis for the same apparatus
+(Liu 2018, DOI 10.7939/R30R9MK98) was recovered after the fixed-stage runs.
+Unlike the condensed journal article, Sec. 3.1 reports a
+0.57 × 0.61 × 0.89 m downstream tank and a 0.30 m-diameter, 0.40 m-high
+movable circular overflow weir. The source case now includes that geometry,
+removes the unreported upstream headbox, applies `Q(t)` at the reported pipe
+end, and extends the Q0 initialization to eight seconds. The movable crest is
+set only from the reported `Q0=20 L/s, hd=0.070 m` operating point; no pressure
+or no-geyser result is used.
+
+The old metrics below are therefore a superseded diagnostic baseline. New
+base/refined strict meshes and full transients are required before completion.
+
 ## Completed and pushed
 
 * Original Liu et al. paper, Case files, digitized traces, scans, frozen 1-D
@@ -19,8 +34,8 @@ Git state is a reliable cross-account handoff.
 * Deterministic OpenCASCADE/Gmsh base and refined mesh profiles implemented.
 * Base profile: 118,321 tetrahedra; full
   `checkMesh -allGeometry -allTopology` reports `Mesh OK`.
-* Phase-aware fixed-stage downstream equivalent implemented from the only
-  reported datum, `hd/Dd=1/4`; unreported weir dimensions are not invented.
+* The original fixed-stage downstream equivalent was implemented from
+  `hd/Dd=1/4`, run, and shown quantitatively inadequate.
 * `p_rgh` boundary handling corrected and pressure comparisons changed to
   reconstructed atmospheric-gauge `p`.
 * The four-rank 0.2 s smoke run from the freshly initialized field completes:

@@ -10,9 +10,10 @@ FoamFile
 //   upstream depth ~0.08 m (p. 04019055-3);
 //   chamber free surface z=0.12 m, inferred from PT3=0.99 kPa at z=0.02 m;
 //   downstream depth hd=Dd/4=0.070 m (Table 1).
-// Six boxes approximate the upstream 1:100 free surface.  The -4..0 s Q0
-// interval relaxes this staircase, but completed runs show it is not a
-// converged steady initialization; see the 3-D README and committed metrics.
+// The Liu (2018) thesis adds the 0.57 x 0.61 x 0.89 m receiving tank and
+// 0.30 m diameter, 0.40 m high overflow weir used in the same experiment.
+// Six boxes approximate the upstream 1:100 free surface.  The -8..0 s Q0
+// interval establishes the experimental steady initial flow before the ramp.
 
 defaultFieldValues
 (
@@ -23,15 +24,6 @@ defaultFieldValues
 
 regions
 (
-    // Numerical headbox, matched to the upstream free surface at x=-5.80.
-    boxToCell { box (-6.20 -1 -1) (-5.80 1 0.318);
-        fieldValues
-        (
-            volScalarFieldValue alpha.water 1
-            volScalarFieldValue p_rgh 3118
-            volVectorFieldValue U (0 0 0.190476)
-        ); }
-
     // Upstream pipe: invert z=0.18-0.01*x, depth ~0.08 m.
     // The 0.08 m circular-segment area is 0.011735 m2, so Q0/A=1.704 m/s.
     boxToCell { box (-5.82 -1 -1) (-4.83 1 0.3132);
@@ -94,4 +86,28 @@ regions
             volScalarFieldValue p_rgh 687
             volVectorFieldValue U (1.66140 0 0)
         ); }
+
+    // Receiving tank initial stage.  The movable circular weir crest is
+    // z=0.019 m, giving the head needed to pass Q0 at hd=0.070 m.
+    boxToCell { box (6.249 -0.306 -0.382) (6.821 0.306 0.070);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+            volScalarFieldValue p_rgh 687
+        ); }
+
+    // Start the overflow-weir bore with air; Q0 establishes the falling nappe
+    // and drain flow during the pre-ramp interval.
+    cylinderToCell
+    {
+        point1 (6.535 0 -0.382);
+        point2 (6.535 0  0.070);
+        radius 0.140;
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 0
+            volScalarFieldValue p_rgh 0
+            volVectorFieldValue U (0 0 0)
+        );
+    }
 );

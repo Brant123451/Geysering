@@ -1,6 +1,6 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-| Liu2020 A2: full 3-D interFoam assessment                                  |
-| t=-4..0 s Q0 relaxation; t=0..0.4 s Q0->Q1; end t=14.4 s                  |
+| Liu2020 A2: full 3-D interFoam validation                                  |
+| t=-8..0 s Q0 initialization; t=0..0.4 s Q0->Q1; end t=14.4 s              |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
@@ -12,7 +12,7 @@ FoamFile
 
 application     interFoam;
 startFrom       startTime;
-startTime       -4;
+startTime       -8;
 stopAt          endTime;
 endTime         14.4;
 deltaT          0.0001;
@@ -81,6 +81,21 @@ functions
         );
     }
 
+    // Vertical stage samples in the receiving tank, away from the inflow jet
+    // and circular weir.  Generated with the riser samples.
+    tankLevel
+    {
+        type            probes;
+        libs            (sampling);
+        writeControl    timeStep;
+        writeInterval   10;
+        fields          (alpha.water);
+        probeLocations
+        (
+            #include "tankProbeLocations"
+        );
+    }
+
     // Interpolate alpha to faces, then integrate phase-weighted boundary
     // fluxes.  Together with waterVolume these give an independent liquid
     // continuity residual.
@@ -122,22 +137,16 @@ functions
         fields          (phi);
     }
 
-    waterFluxOutletAir
+    waterFluxTankAtmosphere
     {
         $waterFluxInlet;
-        name            outlet;
+        name            tankAtmosphere;
     }
 
-    waterFluxOutletWater
+    waterFluxWeirOutlet
     {
         $waterFluxInlet;
-        name            outletWater;
-    }
-
-    waterFluxHeadboxAtmosphere
-    {
-        $waterFluxInlet;
-        name            headboxAtmosphere;
+        name            weirOutlet;
     }
 
     waterFluxRiserOutlet

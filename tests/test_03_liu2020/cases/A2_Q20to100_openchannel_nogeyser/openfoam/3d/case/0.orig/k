@@ -18,25 +18,19 @@ boundaryField
         intensity       0.05;
         value           uniform 1e-4;
     }
-    outlet
-    {
-        type            inletOutlet;
-        inletValue      uniform 1e-4;
-        value           uniform 1e-4;
-    }
-    outletWater
-    {
-        type            inletOutlet;
-        inletValue      uniform 1e-4;
-        value           uniform 1e-4;
-    }
-    headboxAtmosphere
+    tankAtmosphere
     {
         type            inletOutlet;
         inletValue      uniform 1e-4;
         value           uniform 1e-4;
     }
     riserOutlet
+    {
+        type            inletOutlet;
+        inletValue      uniform 1e-4;
+        value           uniform 1e-4;
+    }
+    weirOutlet
     {
         type            inletOutlet;
         inletValue      uniform 1e-4;

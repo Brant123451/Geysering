@@ -10,6 +10,13 @@ article footers `04019055-N`, not PDF viewer indices. The Case README,
 manifest, JSON config, digitized Fig. 3 traces, paper scans, frozen 1-D model,
 and the complete pre-existing 3-D pilot were checked independently.
 
+The article's corresponding experimental source is Lujia Liu's open-access
+MSc thesis, *Experimental Study on Edmonton's Storm Geyser Formation Mechanism
+and Mitigation Measures* (University of Alberta, 2018), DOI
+10.7939/R30R9MK98. Its Sec. 3.1 and Figs. 3.1–3.2 report apparatus details
+omitted from the condensed journal article. These primary-source additions are
+identified explicitly below rather than treated as article measurements.
+
 ## Reported apparatus
 
 | Item | Value represented in 3-D | Paper basis |
@@ -20,6 +27,8 @@ and the complete pre-existing 3-D pilot were checked independently.
 | Downstream pipe | length 5.95 m; diameter 0.28 m; horizontal | p. 04019055-2 |
 | Riser | diameter 0.06 m; length 1.22 m; centered on chamber top | p. 04019055-2; Fig. 2 |
 | Riser opening | open to the laboratory atmosphere | Fig. 2 and the description of PT1/PT2 initially exposed to open air, pp. 04019055-2 and -4 |
+| Receiving tank | 0.57 × 0.61 × 0.89 m, open top | Liu (2018), Sec. 3.1, p. 10; Fig. 3.1 |
+| Circular overflow weir | diameter 0.30 m; height 0.40 m; movable at tank-bottom center | Liu (2018), Sec. 3.1, p. 10; Fig. 3.1 |
 
 All pipe cross-sections are circular and the chamber is a full-width cuboid;
 the final model is not a 2-D or thin-layer surrogate. Coordinates use the
@@ -28,14 +37,18 @@ and the chamber centerline as `y=0`.
 
 Two numerical details are not apparatus measurements:
 
-1. A 0.35 m long, 0.30 m wide upstream headbox admits the prescribed flow
-   through a low-speed bottom inlet. The paper says only that water came from
-   a pressurized tank; it does not report that tank's dimensions.
-2. The mathematically tangent chamber-floor/downstream-pipe contact produces
+1. The mathematically tangent chamber-floor/downstream-pipe contact produces
    zero-angle tetrahedra. The OCC mesh volume therefore has a local
-   20 × 80 × 8 mm recess under the outlet mouth (12.8 mL, about 0.0019% of the
+   20 × 80 × 8 mm recess under the outlet mouth (12.8 mL, about 0.0014% of the
    computational volume). The reported chamber dimensions remain unchanged
    elsewhere. This regularization is included in the geometric uncertainty.
+2. The thesis reports the overflow weir outside diameter but not its wall
+   thickness. The mesh uses a 10 mm wall solely to resolve separate outer and
+   inner wetted surfaces; the reported 0.30 m overflow perimeter is unchanged.
+
+The earlier unreported upstream headbox has been removed. `Q(t)` is now applied
+at the reported upstream-pipe end immediately downstream of the ball valve,
+only over the instantaneous wet fraction.
 
 The source STL builder remains an independent dimensional/watertightness
 check. The simulation mesh itself is generated as one Boolean-unioned OCC
@@ -52,14 +65,15 @@ fluid volume by `make_gmsh_mesh.py`.
 | Initial downstream state | open channel, `hd/Dd=1/4`, hence `hd=0.070 m` | pp. 04019055-2 and -3; Table 1; direct |
 | Downstream control | movable circular overflow weir in downstream tank | p. 04019055-2; direct |
 
-The paper does **not** report the downstream tank size, overflow-weir
-diameter/elevation, discharge coefficient, or rating curve. Inventing them
-would create a falsely precise reconstruction. The model instead splits the
-reported pipe-end patch at `z=0.070 m`: its lower part has
-`p_rgh=rho_w*g*hd`, and reverse flow is water; its upper part is atmospheric,
-and reverse flow is air. This is a fixed-stage equivalent constrained by the
-one reported datum, not an explicit weir. It cannot reproduce transient
-tailwater rise over the unknown weir and is a leading limitation.
+The journal article alone does **not** report the tank or weir dimensions. The
+thesis resolves that omission and also states that the crest was adjusted to
+hold `hd/Dd=1/4` for Series A. It still does not tabulate the crest elevation
+or a rating curve. The movable crest is therefore positioned from the reported
+operating point only: a standard circular sharp-crested estimate for the
+reported 0.30 m perimeter gives 0.051 m head at 20 L/s, hence
+`z_crest=0.070-0.051=0.019 m`. The 3-D solution then resolves overflow and lets
+the tank stage evolve; no transient pressure, riser response, or no-geyser
+outcome enters this one-point initial-stage closure.
 
 The initial chamber condition needs special care. The paper states that
 PT3 measured 0.99 kPa and that this “indicated a water depth of 0.10 m”
@@ -176,13 +190,20 @@ The original pilot was not accepted as evidence. Audit found and corrected:
 * combined or inconsistent legacy README metrics from several 1-D model
   revisions.
 
-The final report preserves, rather than hides, the fixed-stage outlet,
-headbox, local recess, probe-coordinate, turbulence/wall-resolution, and
-incompressible-VOF limitations.
+The fixed-stage outlet and numerical headbox were subsequently identified as
+the dominant nonphysical assumptions and replaced using the thesis geometry
+and the reported pipe-end inlet. The local recess, inferred movable-crest
+position, numerical weir-wall thickness, probe-coordinate,
+turbulence/wall-resolution, and incompressible-VOF limitations remain explicit.
 
-## Completed three-dimensional runtime audit
+## Superseded fixed-stage runtime audit
 
-The clean-source acceptance runs were completed with OpenFOAM.com v2512
+The following clean-source runs document the failed **former fixed-stage
+model** and motivated the evidence-based correction above. They must not be
+reported as results of the tank/weir model. Replacement base/refined runs are
+required before final validation.
+
+The former acceptance runs were completed with OpenFOAM.com v2512
 `interFoam` on four MPI ranks. The 118,321-cell base and 187,195-cell refined
 tetrahedral meshes both report `Mesh OK` under
 `checkMesh -allGeometry -allTopology`, and both solves cover the complete
@@ -235,9 +256,9 @@ its minimum time step near `t=2.58 s`; the base limiter-location history was
 removed by the documented clean-before-refined workflow and is not
 reconstructed.
 
-The strongest evidence-based explanation is the documented downstream
-uncertainty: a fixed 0.070 m terminal stage preserves the one reported initial
-datum but cannot reproduce the unknown tank/weir rating as flow rises fivefold.
-The unconverged pre-ramp state is an additional independent defect. No
-unreported weir geometry, fitted pressure, or other parameter was introduced
-to force the experimental no-geyser branch.
+The strongest evidence-based explanation was the fixed 0.070 m terminal stage,
+which prevented the receiving-tank level from responding as flow rose
+fivefold. The unreported-headbox inlet and unconverged pre-ramp state were
+additional independent defects. The replacement uses primary-source geometry
+and an eight-second Q0 initialization; no pressure or geyser classification is
+used to set its parameters.

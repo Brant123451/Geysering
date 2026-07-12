@@ -11,22 +11,23 @@ are intentionally not versioned.
 * Solver: OpenFOAM v2512 `interFoam`, VOF water–air, transient RANS
   `kOmegaSST`.
 * Domain: full circular upstream/downstream pipes, full 0.30 m-wide chamber,
-  and full circular riser; no symmetry, thin-layer, or 2-D approximation.
+  full circular riser, and the reported receiving tank/circular overflow weir;
+  no symmetry, thin-layer, or 2-D approximation.
 * Mesh: conformal first-order tetrahedra generated with Gmsh/OpenCASCADE.
   `base` and `refined` profiles change the chamber/riser and far-field sizes.
 * Gravity: `(0 0 -9.81) m/s²`.
-* Inlet: a positive liquid flow through the numerical headbox bottom,
-  0.020 m³/s until `t=0`, linear to 0.100 m³/s by `t=0.4 s`.
+* Inlet: wet-fraction-weighted flow at the reported upstream-pipe end,
+  0.020 m³/s until `t=0`, linear to 0.100 m³/s by `t=0.4 s`. The former
+  unreported numerical headbox is removed.
 * Initialization: approximate steady `Q0` velocities, 0.08 m upstream depth,
   chamber surface `z=0.12 m` inferred from PT3=0.99 kPa, and downstream
-  `hd=Dd/4=0.070 m`. The simulation allocates `t=-4…0 s` to Q0 relaxation.
-  The completed runs show that this interval does not reach a steady initial
-  state; the measured imbalance is reported below rather than hidden.
-* Downstream: fixed-stage equivalent at `hd=0.070 m`, split into hydrostatic
-  water and atmospheric-air portions at the reported pipe end. This does not
-  invent the unreported tank/weir dimensions or rating curve.
-* Vents: numerical-headbox atmosphere and physical riser outlet are distinct
-  patches. Water crossing the riser outlet is audited independently.
+  `hd=Dd/4=0.070 m`. The simulation allocates `t=-8…0 s` to establish Q0.
+* Downstream: the 0.57 × 0.61 × 0.89 m tank and 0.30 m-diameter, 0.40 m-high
+  movable circular weir reported in Liu's 2018 thesis for this apparatus.
+  Its crest is set from the reported `(Q0, hd)` operating point, not from any
+  transient pressure or geyser result; tank stage then evolves freely.
+* Vents: receiving-tank atmosphere, weir drain, and physical riser outlet are
+  distinct patches. Water crossing each opening is audited independently.
 * Pressure comparison: sampled reconstructed gauge `p`, not `p_rgh`.
 
 The required clock has `t=0` at ramp start. The paper defines zero at the
@@ -42,6 +43,8 @@ The deterministic Gmsh target sizes are:
 | Riser | 0.0120 m | 0.0102 m |
 | Upstream pipe | 0.0280 m | 0.0238 m |
 | Downstream pipe | 0.0400 m | 0.0340 m |
+| Receiving tank | 0.0400 m | 0.0340 m |
+| Weir crest region | 0.0180 m | 0.0153 m |
 
 ## Requirements
 
@@ -76,7 +79,7 @@ checkMesh -allGeometry -allTopology
 ```
 
 The smoke run is a fresh 0.2 s `Q0` run. `Allrun.solve full` deliberately
-starts fresh afterward, performs the complete `-4…14.4 s` run, and keeps only
+starts fresh afterward, performs the complete `-8…14.4 s` run, and keeps only
 three field checkpoints while retaining high-frequency compact function
 outputs.
 
@@ -118,7 +121,7 @@ base/refined grid-sensitivity block.
 
 * PT1, PT2, and PT3 `p`, `p_rgh`, and phase fraction;
 * 61 riser elevations with five radial samples at each elevation;
-* chamber phase probes;
+* chamber phase probes and a vertical receiving-tank stage line;
 * water volume and phase-weighted water flux through every open boundary.
 
 Riser results distinguish water-equivalent height, contiguous mixture-column
@@ -132,7 +135,12 @@ Bore arrival is a reproducible pressure diagnostic: after `t=0.4 s`, PT3 must
 remain at least 0.20 kPa above its `-0.5…0 s` baseline for at least 80% of a
 20 ms interval. The experimental target is 1.60 s on the ramp-start clock.
 
-## Completed run results
+## Superseded fixed-stage run results
+
+The values below belong to the former fixed-stage/headbox model. They are
+retained as a diagnosed baseline but are **not** evidence for the replacement
+tank/weir model. New base/refined results must replace this section after both
+full runs complete.
 
 Both four-rank OpenFOAM.com v2512 runs reached the complete
 `-4…14.4 s` window and both meshes passed
@@ -201,17 +209,15 @@ the riser top and the experimental first-column scalar.
 
 ## Limitations
 
-The strongest uncertainty is the downstream fixed-stage equivalent: Liu et
-al. report only `hd/Dd=1/4`, not enough information to reconstruct the tank
-and weir rating. The 20 mm ambiguity between the paper's stated chamber depth
-and its PT3 pressure is also retained in the audit. Probe in-plane positions
-are unreported. The mesh has no resolved viscous sublayer, so wall-function
-friction is checked only through base/refined sensitivity. Finally,
-incompressible single-velocity VOF does not resolve acoustic water hammer,
-compressible trapped gas, or subgrid bubble slip/breakup; these restrictions
-are material to pressure oscillations but not expected to control the vented
-Series A no-geyser branch. The completed calculations additionally show that
-the fixed-stage/initial-condition combination is still relaxing at `t=0` and
-substantially over-relieves the high-flow system. A longer initialization alone
-cannot recover the unknown transient tank/weir rating, so no unreported weir
-geometry or calibrated backpressure was introduced to force agreement.
+The journal article omits the downstream tank/weir geometry; the replacement
+uses dimensions reported in the corresponding open-access thesis. The crest
+position is inferred from the reported `(Q0, hd)` operating point, and the
+unreported weir wall thickness is a mesh-resolved numerical detail. Neither is
+fitted to transient pressures. The 20 mm ambiguity between the article's
+stated chamber depth and its PT3 pressure is retained in the audit, and probe
+in-plane positions remain unreported. The mesh has no resolved viscous
+sublayer, so wall-function friction is checked only through base/refined
+sensitivity. Finally, incompressible single-velocity VOF does not resolve
+acoustic water hammer, compressible trapped gas, or subgrid bubble
+slip/breakup. These restrictions are material to the measured aerated pressure
+oscillations even if the mean vented Series A branch is reproduced.

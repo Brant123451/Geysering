@@ -6,16 +6,16 @@ Coordinates match the 1D composite-domain model exactly:
   z = 0 at the chamber floor (= downstream pipe invert).
 
 Pieces (each a separate STL -> its own OpenFOAM patch):
-  walls.stl              headbox shell + pipes + chamber shell
+  walls.stl              pipes + chamber + receiving tank + overflow weir
   riserWall.stl          riser tube
-  inlet.stl              numerical headbox bottom (flow-rate inlet)
-  headboxAtmosphere.stl  numerical headbox open top
+  inlet.stl              upstream-pipe inlet at the reported pipe end
+  tankAtmosphere.stl     open top of the reported receiving tank
   riserOutlet.stl        physical riser open top
-  outlet.stl             reported downstream-pipe end
+  weirOutlet.stl         drain inside the circular overflow weir
 
-All pipe/wall rings share identical vertices.  There are no overlapping lips
-or penetrations: the combined geometry.stl is a genuinely closed surface that
-can be checked independently and meshed by cartesianMesh.
+The journal article omits the receiving tank, but Liu's open-access 2018 thesis
+describing the same apparatus reports its dimensions and the circular movable
+weir.  All rings share identical vertices, so geometry.stl is closed.
 """
 import argparse
 from collections import defaultdict, deque
@@ -34,18 +34,26 @@ args = parser.parse_args()
 OUT = args.case_dir.resolve() / "constant" / "triSurface"
 OUT.mkdir(parents=True, exist_ok=True)
 (OUT / "atmosphere.stl").unlink(missing_ok=True)  # retired combined patch
+for retired in ("headboxAtmosphere.stl", "outlet.stl"):
+    (OUT / retired).unlink(missing_ok=True)
 
 NSEG = 64              # pipe circumference segments
 NSEG_R = 48            # riser circumference segments
+NSEG_WEIR = 64         # reported 0.30 m circular overflow perimeter
 
 # ---- rig dimensions (LiuCase) ----
 Lu, Du, slope = 5.80, 0.20, 0.01
 Lc, Wc, Hc, drop = 0.30, 0.30, 0.45, 0.18
 dr, Hr = 0.06, 1.22
 Ld, Dd = 5.95, 0.28
+# Liu (2018 thesis), Sec. 3.1.
+Lt, Wt, Ht = 0.57, 0.61, 0.89
+Dw, Hw = 0.30, 0.40
+z_weir_crest = 0.019
+weir_wall_thickness = 0.010
 
 ru, rd, rr = Du / 2, Dd / 2, dr / 2
-x_up0 = -Lu                       # upstream pipe start (headbox face)
+x_up0 = -Lu                       # upstream pipe start, just after the valve
 zax_up = lambda x: (drop + ru) - slope * x   # upstream pipe axis elevation
 zax_dn = rd                       # downstream pipe axis elevation
 x_dn1 = Lc + Ld                   # downstream pipe end (outfall face)
@@ -53,12 +61,21 @@ xr, yr = Lc / 2, 0.0              # riser axis
 z_lid = Hc
 z_rtop = Hc + Hr
 
-# The paper does not report the upstream tank dimensions.  This is explicitly
-# a numerical boundary extension, not a reconstructed apparatus dimension.
-# The reported upstream length stops at this tank face exactly.
-# headbox
-HB = dict(x0=x_up0 - 0.35, x1=x_up0, y0=-0.15, y1=0.15, z0=drop + ru - 0.10 - slope * x_up0 - 0.05,
-          z1=1.10)
+# The movable crest is positioned so that the standard circular-overflow
+# estimate passes Q0=20 L/s at the reported hd=0.070 m.  This is an initial
+# stage datum, not a fit to the pressure curves.  The 10 mm wall is a
+# mesh-resolved numerical thickness; the reported outside diameter is exact.
+TANK = dict(
+    x0=x_dn1,
+    x1=x_dn1 + Lt,
+    y0=-Wt / 2,
+    y1=Wt / 2,
+    z0=z_weir_crest - Hw,
+    z1=z_weir_crest - Hw + Ht,
+)
+xw, yw = (TANK["x0"] + TANK["x1"]) / 2, 0.0
+rw_outer = Dw / 2
+rw_inner = rw_outer - weir_wall_thickness
 
 
 def tri_block(tris):
@@ -215,6 +232,32 @@ def disk(center, r, nseg, normal_up=True, zconst=None):
     return tri_block(tris)
 
 
+def annulus_z(center, z, r_inner, r_outer, nseg):
+    """Horizontal annulus with exactly matching inner and outer rings."""
+    cx, cy = center
+    th = np.linspace(0, 2 * np.pi, nseg + 1)
+    inner = np.stack(
+        [
+            cx + r_inner * np.cos(th),
+            cy + r_inner * np.sin(th),
+            np.full_like(th, z),
+        ],
+        axis=1,
+    )
+    outer = np.stack(
+        [
+            cx + r_outer * np.cos(th),
+            cy + r_outer * np.sin(th),
+            np.full_like(th, z),
+        ],
+        axis=1,
+    )
+    tris = []
+    for i in range(nseg):
+        tris += quad(outer[i], outer[i + 1], inner[i + 1], inner[i])
+    return tri_block(tris)
+
+
 def disk_x(center, r, nseg, normal_positive=True):
     """Triangle fan disk normal to x (downstream pipe outlet)."""
     c = np.asarray(center, float)
@@ -302,12 +345,6 @@ def box_faces(x0, x1, y0, y1, z0, z1, skip=()):
 # ================= build the pieces =================
 walls = []
 
-# ---- headbox: sides + holed downstream face (top=atmosphere, bottom=inlet)
-walls.append(box_faces(HB["x0"], HB["x1"], HB["y0"], HB["y1"], HB["z0"], HB["z1"],
-                       skip=("x1", "z0", "z1")))
-walls.append(rect_with_hole("x", HB["x1"], HB["y0"], HB["y1"], HB["z0"], HB["z1"],
-                            0.0, zax_up(x_up0), ru, NSEG))
-
 # ---- upstream pipe tube: exact paper length, ring-matched at both ends
 p0 = np.array([x_up0, 0.0, zax_up(x_up0)])
 p1 = np.array([0.0, 0.0, zax_up(0.0)])
@@ -330,37 +367,77 @@ walls.append(box_faces(0.0, Lc, -Wc / 2, Wc / 2, 0.0, Hc,
 # ---- downstream pipe tube ----
 walls.append(tube_x([Lc, 0.0, zax_dn], [x_dn1, 0.0, zax_dn], rd, NSEG))
 
+# ---- reported downstream tank with the pipe opening in its upstream face ----
+walls.append(
+    box_faces(
+        TANK["x0"],
+        TANK["x1"],
+        TANK["y0"],
+        TANK["y1"],
+        TANK["z0"],
+        TANK["z1"],
+        skip=("x0", "z0", "z1"),
+    )
+)
+walls.append(
+    rect_with_hole(
+        "x",
+        TANK["x0"],
+        TANK["y0"],
+        TANK["y1"],
+        TANK["z0"],
+        TANK["z1"],
+        0.0,
+        zax_dn,
+        rd,
+        NSEG,
+    )
+)
+# Tank floor outside the weir, finite-thickness circular weir walls, and crest.
+walls.append(
+    rect_with_hole(
+        "z",
+        TANK["z0"],
+        TANK["x0"],
+        TANK["x1"],
+        TANK["y0"],
+        TANK["y1"],
+        xw,
+        yw,
+        rw_outer,
+        NSEG_WEIR,
+    )
+)
+walls.append(tube([xw, yw, TANK["z0"]], [xw, yw, z_weir_crest], rw_outer, NSEG_WEIR))
+walls.append(tube([xw, yw, TANK["z0"]], [xw, yw, z_weir_crest], rw_inner, NSEG_WEIR))
+walls.append(annulus_z((xw, yw), z_weir_crest, rw_inner, rw_outer, NSEG_WEIR))
+
 walls_tris = np.concatenate(walls, axis=0)
 
 # ---- riser tube (separate STL: finer refinement level) ----
 riser_tris = tube([xr, yr, z_lid], [xr, yr, z_rtop], rr, NSEG_R)
 
-# ---- inlet: headbox bottom ----
-inlet_tris = rect([HB["x0"], HB["y0"], HB["z0"]], [HB["x1"], HB["y0"], HB["z0"]],
-                  [HB["x1"], HB["y1"], HB["z0"]], [HB["x0"], HB["y1"], HB["z0"]])
+# ---- inlet: reported upstream pipe end, immediately downstream of the valve ----
+inlet_tris = disk_x(p0, ru, NSEG, normal_positive=False)
 
 # ---- distinct atmospheric openings (separate overflow accounting) ----
-headbox_atmo_tris = rect(
-    [HB["x0"], HB["y0"], HB["z1"]],
-    [HB["x0"], HB["y1"], HB["z1"]],
-    [HB["x1"], HB["y1"], HB["z1"]],
-    [HB["x1"], HB["y0"], HB["z1"]],
+tank_atmo_tris = rect(
+    [TANK["x0"], TANK["y0"], TANK["z1"]],
+    [TANK["x1"], TANK["y0"], TANK["z1"]],
+    [TANK["x1"], TANK["y1"], TANK["z1"]],
+    [TANK["x0"], TANK["y1"], TANK["z1"]],
 )
 riser_outlet_tris = disk([xr, yr, z_rtop], rr, NSEG_R)
-
-# ---- outlet: exact end of the reported downstream pipe.  The physical
-# overflow-weir/tank geometry was not reported; its hd/Dd=1/4 control is
-# represented by the phase/pressure boundary condition, not invented solids.
-outlet_tris = disk_x([x_dn1, 0.0, zax_dn], rd, NSEG)
+weir_outlet_tris = disk([xw, yw, TANK["z0"]], rw_inner, NSEG_WEIR, normal_up=False)
 
 pieces, enclosed_volume = orient_closed_surface(
     {
         "walls": walls_tris,
         "riserWall": riser_tris,
         "inlet": inlet_tris,
-        "headboxAtmosphere": headbox_atmo_tris,
+        "tankAtmosphere": tank_atmo_tris,
         "riserOutlet": riser_outlet_tris,
-        "outlet": outlet_tris,
+        "weirOutlet": weir_outlet_tris,
     }
 )
 for name, tris in pieces.items():
@@ -371,13 +448,15 @@ for f in (
     "walls",
     "riserWall",
     "inlet",
-    "headboxAtmosphere",
+    "tankAtmosphere",
     "riserOutlet",
-    "outlet",
+    "weirOutlet",
     "geometry",
 ):
     p = OUT / f"{f}.stl"
     print(f"{f}.stl  {p.stat().st_size/1e6:.2f} MB")
-print("bounding box: x[%.2f, %.2f] y[-0.15,0.15] z[%.2f, %.2f]"
-      % (HB["x0"], x_dn1, HB["z0"], z_rtop))
+print(
+    "bounding box: x[%.2f, %.2f] y[%.3f,%.3f] z[%.3f, %.2f]"
+    % (x_up0, TANK["x1"], TANK["y0"], TANK["y1"], TANK["z0"], z_rtop)
+)
 print(f"closed fluid volume: {enclosed_volume:.8f} m3")

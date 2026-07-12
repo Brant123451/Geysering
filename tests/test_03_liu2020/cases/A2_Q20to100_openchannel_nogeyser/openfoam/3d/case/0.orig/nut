@@ -17,22 +17,17 @@ boundaryField
         type            calculated;
         value           uniform 0;
     }
-    outlet
-    {
-        type            calculated;
-        value           uniform 0;
-    }
-    outletWater
-    {
-        type            calculated;
-        value           uniform 0;
-    }
-    headboxAtmosphere
+    tankAtmosphere
     {
         type            calculated;
         value           uniform 0;
     }
     riserOutlet
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    weirOutlet
     {
         type            calculated;
         value           uniform 0;

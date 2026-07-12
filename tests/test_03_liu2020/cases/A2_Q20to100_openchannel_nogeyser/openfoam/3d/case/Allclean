@@ -8,7 +8,7 @@ if [[ -x "$OF_LAUNCH" ]]; then
     "$OF_LAUNCH" -- foamListTimes -rm >/dev/null 2>&1 || true
 fi
 rm -rf -- -8 -4 0 processor* postProcessing constant/polyMesh
-rm -f log.* mesh.profile system/riserProbeLocations
+rm -f log.* mesh.profile system/riserProbeLocations system/tankProbeLocations
 rm -f constant/triSurface/geometry.stl
 rm -rf ../__pycache__ ../../../model/__pycache__
 echo "CLEAN_DONE"

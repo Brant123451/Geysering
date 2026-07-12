@@ -14,35 +14,30 @@ boundaryField
 {
     inlet
     {
-        // Reported Q0/Q1.  Task time origin: ramp begins at t=0.
-        // The paper instead defines t=0 at fully-open valve (audit documents
-        // this 0.4 s shift).  Negative time is the Q0 stabilization run.
-        type            flowRateInletVelocity;
-        volumetricFlowRate table
+        // Apply Q only over the instantaneous wet fraction of the reported
+        // pipe-end section.  This removes the former unreported headbox.
+        type            variableHeightFlowRateInletVelocity;
+        flowRate table
         (
-            (-4.0  0.020)
+            (-8.0  0.020)
             ( 0.0  0.020)
             ( 0.4  0.100)
             (14.4  0.100)
         );
+        alpha           alpha.water;
         value           uniform (0 0 0);
     }
-    outlet
-    {
-        type            pressureInletOutletVelocity;
-        value           uniform (0 0 0);
-    }
-    outletWater
-    {
-        type            pressureInletOutletVelocity;
-        value           uniform (0 0 0);
-    }
-    headboxAtmosphere
+    tankAtmosphere
     {
         type            pressureInletOutletVelocity;
         value           uniform (0 0 0);
     }
     riserOutlet
+    {
+        type            pressureInletOutletVelocity;
+        value           uniform (0 0 0);
+    }
+    weirOutlet
     {
         type            pressureInletOutletVelocity;
         value           uniform (0 0 0);

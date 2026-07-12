@@ -30,6 +30,7 @@ RISER_HEIGHT = 1.22
 RISER_LEVELS = np.arange(0.46, 1.66001, 0.02)
 RISER_SAMPLES_PER_LEVEL = 5
 MIXTURE_ALPHA_THRESHOLD = 0.10
+TANK_LEVELS = np.arange(-0.36, 0.48001, 0.01)
 PAPER = {
     "PT3_initial_kPa": 0.99,
     "PT2_final_kPa": 2.15,
@@ -161,6 +162,19 @@ def riser_measures(alpha_samples: np.ndarray) -> dict[str, np.ndarray]:
         "front": np.clip(front, 0.0, RISER_HEIGHT),
         "top_alpha": level_alpha[:, -1],
     }
+
+
+def tank_stage(alpha_samples: np.ndarray) -> np.ndarray:
+    if alpha_samples.shape[1] != len(TANK_LEVELS):
+        raise RuntimeError(
+            f"expected {len(TANK_LEVELS)} tank probes, got {alpha_samples.shape[1]}"
+        )
+    stage = np.full(len(alpha_samples), TANK_LEVELS[0])
+    for row_index, row in enumerate(alpha_samples):
+        wet = np.flatnonzero(row >= 0.5)
+        if len(wet):
+            stage[row_index] = TANK_LEVELS[int(wet[-1])] + 0.005
+    return stage
 
 
 def parse_run_metadata(case: Path) -> dict[str, object]:
@@ -301,6 +315,7 @@ def main() -> None:
 
     pressure_time, pressure_pa = read_segments(case, "probesPT", "p")
     alpha_time, alpha_samples = read_segments(case, "riserAlpha", "alpha.water")
+    tank_time, tank_alpha = read_segments(case, "tankLevel", "alpha.water")
     if pressure_time.max() < 14.39 and not args.allow_incomplete:
         raise RuntimeError(f"3-D run incomplete: last pressure time {pressure_time.max():.6g} s")
     pt3d = {
@@ -309,6 +324,7 @@ def main() -> None:
         "PT3": pressure_pa[:, 2] / 1000.0,
     }
     riser = riser_measures(alpha_samples)
+    tank_water_level = tank_stage(tank_alpha)
 
     sys.path.insert(0, str(MODEL))
     from liu2020_network_twofluid import LiuCase, run_case
@@ -370,9 +386,8 @@ def main() -> None:
     volume_time, volume = read_function_scalar(case, "waterVolume")
     flux_names = (
         "waterFluxInlet",
-        "waterFluxOutletAir",
-        "waterFluxOutletWater",
-        "waterFluxHeadboxAtmosphere",
+        "waterFluxTankAtmosphere",
+        "waterFluxWeirOutlet",
         "waterFluxRiserOutlet",
     )
     flux = {}
@@ -385,9 +400,8 @@ def main() -> None:
     transient_mask = volume_time >= 0.0
     pre_mask = (volume_time >= -0.5) & (volume_time <= 0.0)
     pre_outflow = (
-        flux["waterFluxOutletAir"]
-        + flux["waterFluxOutletWater"]
-        + flux["waterFluxHeadboxAtmosphere"]
+        flux["waterFluxTankAtmosphere"]
+        + flux["waterFluxWeirOutlet"]
         + flux["waterFluxRiserOutlet"]
     )
     if np.count_nonzero(pre_mask) >= 2:
@@ -444,6 +458,12 @@ def main() -> None:
             ),
             "PT3_paper_window_kPa": window_mean(
                 pressure_time, pt3d["PT3"], steady_start, PAPER_END_S
+            ),
+            "tank_stage_initial_m": window_mean(
+                tank_time, tank_water_level, -0.5, 0.0
+            ),
+            "tank_stage_paper_window_m": window_mean(
+                tank_time, tank_water_level, steady_start, PAPER_END_S
             ),
             "bore_arrival_ramp_clock_s": bore_arrival(pressure_time, pt3d["PT3"]),
             "first_contiguous_mixture_column_m": first_column,
@@ -507,7 +527,9 @@ def main() -> None:
             "PT3_1d_RMSE_vs_digitized_kPa": rmse(p1_grid["PT3"], exp_interp["PT3"]),
         },
         "limitations": [
-            "Unreported downstream tank/weir geometry is replaced by a fixed-stage hd=0.070 m boundary.",
+            "The journal article omits the receiving tank/weir geometry; dimensions come from Liu's open-access 2018 thesis describing the same rig.",
+            "The movable-weir crest is positioned from the reported Q0 and hd using a standard circular-overflow estimate; it is not fitted to the transient pressures.",
+            "A 10 mm mesh-resolved weir wall thickness is numerical because the thesis reports only the 0.30 m outside diameter.",
             "Probe circumferential/in-plane coordinates are not reported by Liu et al.",
             "interFoam omits acoustic water hammer, air compressibility, bubble slip, breakup and coalescence.",
             "The experimental 0.13 m riser datum is a digitized first-column scalar, not a time series.",

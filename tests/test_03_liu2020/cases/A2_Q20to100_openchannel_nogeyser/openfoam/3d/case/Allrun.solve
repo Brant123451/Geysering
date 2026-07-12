@@ -15,6 +15,8 @@ if [[ ! -d constant/polyMesh ]]; then
     echo "mesh missing; first run: bash Allrun.mesh [base|refined]" >&2
     exit 2
 fi
+START_TIME="$("$OF_LAUNCH" -- foamDictionary system/controlDict -entry startTime -value)"
+SMOKE_END="$(python3 -c 'import sys; print(f"{float(sys.argv[1]) + 0.2:g}")' "$START_TIME")"
 
 RESTORE_DICT=""
 RESTORE_DECOMP="$(mktemp)"
@@ -35,7 +37,7 @@ trap restore_dictionaries EXIT
 if [[ "$MODE" == smoke ]]; then
     RESTORE_DICT="$(mktemp)"
     cp system/controlDict "$RESTORE_DICT"
-    "$OF_LAUNCH" -- foamDictionary system/controlDict -entry endTime -set -3.8
+    "$OF_LAUNCH" -- foamDictionary system/controlDict -entry endTime -set "$SMOKE_END"
     "$OF_LAUNCH" -- foamDictionary system/controlDict -entry writeInterval -set 0.2
     "$OF_LAUNCH" -- foamDictionary system/controlDict -entry purgeWrite -set 0
 fi
@@ -44,10 +46,10 @@ fi
 
 rm -rf processor* postProcessing
 "$OF_LAUNCH" -- foamListTimes -rm >/dev/null 2>&1 || true
-rm -rf -- -4
-cp -r 0.orig ./-4
+rm -rf -- "$START_TIME"
+cp -r 0.orig "./$START_TIME"
 python3 ../prepare_runtime.py --case-dir .
-"$OF_LAUNCH" -- setFields -time -4 > log.setFields 2>&1
+"$OF_LAUNCH" -- setFields -time "$START_TIME" > log.setFields 2>&1
 "$OF_LAUNCH" -- decomposePar -force > log.decomposePar 2>&1
 "$OF_LAUNCH" -- mpirun -np "$NP" interFoam -parallel > "log.interFoam.${MODE}" 2>&1
 

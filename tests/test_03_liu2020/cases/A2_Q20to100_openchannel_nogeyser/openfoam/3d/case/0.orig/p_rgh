@@ -17,26 +17,19 @@ boundaryField
         type            fixedFluxPressure;
         value           uniform 0;
     }
-    outlet
-    {
-        type            prghTotalPressure;
-        p0              uniform 0;
-        value           uniform 0;
-    }
-    outletWater
-    {
-        // Fixed-stage equivalent: p_rgh=rho_w*g*hd, hd=0.070 m.
-        // The downstream tank/weir dimensions and rating are not reported.
-        type            fixedValue;
-        value           uniform 686.7;
-    }
-    headboxAtmosphere
+    tankAtmosphere
     {
         type            prghTotalPressure;
         p0              uniform 0;
         value           uniform 0;
     }
     riserOutlet
+    {
+        type            prghTotalPressure;
+        p0              uniform 0;
+        value           uniform 0;
+    }
+    weirOutlet
     {
         type            prghTotalPressure;
         p0              uniform 0;
