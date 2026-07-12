@@ -26,6 +26,9 @@ MODEL = CASE_ROOT / "model"
 PATM = 101325.0
 RHO_WATER = 998.2
 G = 9.81
+WATER_SOUND_SPEED = 305.0
+WATER_R = WATER_SOUND_SPEED**2
+WATER_RHO0 = RHO_WATER - PATM / WATER_R
 RAMP_START = 2.0
 RAMP_END = 2.4
 CHAMBER_LID_Z = 0.45
@@ -37,10 +40,16 @@ RISER_Z = np.arange(0.47, 5.2200001, 0.05)
 
 PAPER = {
     "source_note": (
-        "Values frozen from the paper quotations/parsed metadata in this "
-        "commit; the PDF and page scans are absent (see openfoam/3d/PAPER_AUDIT.md)."
+        "Verified directly against Liu, Shao & Zhu (2020), J. Hydraulic "
+        "Engineering 146(2), 04019055, DOI 10.1061/(ASCE)HY.1943-7900.0001660; "
+        "the locally supplied PDF has SHA-256 "
+        "32abd351252725009ebbef98c8d5c7794b957a448ee23bf8729fcb347ce5c9c3."
     ),
     "geyser": True,
+    "upstream_initial_depth_m": 0.08,
+    "downstream_initial_depth_ratio": 1.0,
+    "valve_opening_duration_s_range": [0.2, 0.4],
+    "acrylic_pipe_wave_speed_m_s": 305.0,
     "bore_reach_chamber_s": 1.20,
     "PT2_peak_kPa": 55.03,
     "PT3_peak_kPa": 51.76,
@@ -59,6 +68,8 @@ PAPER = {
     "t_jet_out_s": 1.51,
     "t_column_top_s": 1.65,
     "t_break_s": [1.70, 1.89],
+    "spilled_water_volume_trials_L": [0.65, 0.78, 0.82],
+    "spilled_water_volume_mean_L": 0.72,
 }
 
 
@@ -346,16 +357,25 @@ def calculate_mass_balance(case: Path) -> dict:
     if len(time) < 2:
         raise RuntimeError("Insufficient volume/flux samples for mass balance")
     outward_flux = sum(values[valid] for values in fluxes.values())
-    integrated = np.zeros(len(time))
-    integrated[1:] = np.cumsum(
-        0.5 * (outward_flux[1:] + outward_flux[:-1]) * np.diff(time)
-    )
+    dt = np.diff(time)
+
+    def cumulative_integral(values: np.ndarray) -> np.ndarray:
+        result = np.zeros(len(time))
+        result[1:] = np.cumsum(0.5 * (values[1:] + values[:-1]) * dt)
+        return result
+
+    integrated = cumulative_integral(outward_flux)
+    integrated_by_boundary = {
+        name: cumulative_integral(values[valid]) for name, values in fluxes.items()
+    }
     residual = water_volume - water_volume[0] + integrated
     inlet_flux = fluxes["waterFluxInlet"][valid]
-    inlet_volume = np.zeros(len(time))
-    inlet_volume[1:] = np.cumsum(
-        -0.5 * (inlet_flux[1:] + inlet_flux[:-1]) * np.diff(time)
+    inlet_volume = -cumulative_integral(inlet_flux)
+    atmosphere_flux = fluxes["waterFluxAtmosphere"][valid]
+    gross_atmosphere_outflow = cumulative_integral(
+        np.maximum(atmosphere_flux, 0.0)
     )
+    net_atmosphere_outflow = integrated_by_boundary["waterFluxAtmosphere"]
     reference = max(water_volume[0] + max(inlet_volume[-1], 0.0), 1e-12)
     signed_percent = float(100 * residual[-1] / reference)
     return {
@@ -367,6 +387,24 @@ def calculate_mass_balance(case: Path) -> dict:
         "numerical_mass_error_percent": abs(signed_percent),
         "signed_numerical_mass_error_percent": signed_percent,
         "maximum_absolute_mass_error_L": float(1000 * np.max(np.abs(residual))),
+        "integrated_outward_water_flux_by_boundary_L": {
+            name: float(1000 * values[-1])
+            for name, values in integrated_by_boundary.items()
+        },
+        "net_atmosphere_water_outflow_L": float(
+            1000 * net_atmosphere_outflow[-1]
+        ),
+        "gross_atmosphere_water_outflow_L": float(
+            1000 * gross_atmosphere_outflow[-1]
+        ),
+        "spilled_water_volume_L": float(
+            1000 * max(net_atmosphere_outflow[-1], 0.0)
+        ),
+        "spilled_water_definition": (
+            "Net time-integrated outward alpha.water-weighted phi over every "
+            "open atmosphere face. The paper reports water collected outside "
+            "the riser, so gross outward crossings are also retained separately."
+        ),
         "method": (
             "Liquid-volume closure: V(alpha.water) change plus trapezoidal "
             "integral of alpha.water-weighted phi over inlet, submerged outlet "
@@ -703,6 +741,7 @@ def update_sensitivity(path: Path, row: dict[str, object]) -> None:
         "PT3_min_kPa",
         "maximum_geyser_height_m",
         "geyser",
+        "spilled_water_volume_L",
         "mass_error_percent",
         "max_velocity_limited_cells",
     ]
@@ -809,11 +848,19 @@ def main() -> None:
             "reason": (
                 "Two compressible immiscible phases are required for the 55 kPa "
                 "slam and negative rebound; incompressible interFoam cannot validate "
-                "their water-hammer amplitude. The geometric isoAdvector transport "
-                "keeps the sharp tetrahedral free surface explicitly bounded."
+                "their pressure amplitude. The geometric isoAdvector transport keeps "
+                "the sharp tetrahedral free surface explicitly bounded."
             ),
-            "water_equation_of_state": "perfectFluid, rho0=998.2 kg/m3, R=2.2e6 m2/s2",
-            "water_sound_speed_m_s": math.sqrt(2.2e6),
+            "water_equation_of_state": (
+                f"perfectFluid, rho0={WATER_RHO0:.7f} kg/m3, "
+                f"R={WATER_R:.0f} m2/s2; rho(101325 Pa)=998.2 kg/m3"
+            ),
+            "water_sound_speed_m_s": WATER_SOUND_SPEED,
+            "compliance_representation": (
+                "The paper's approximately 305 m/s pressure-wave speed in the "
+                "clear acrylic pipe is represented by an effective fluid EOS because "
+                "the fluid-only mesh does not resolve pipe-wall deformation."
+            ),
             "air_equation_of_state": "perfectGas",
         },
         "run": {
@@ -824,6 +871,11 @@ def main() -> None:
             "full_14s_post_ramp_window": end_report_time >= 14.4 - 0.01,
             "Q0_settle_duration_s": RAMP_START,
             "ramp_duration_s": RAMP_END - RAMP_START,
+            "upstream_initial_depth_m": PAPER["upstream_initial_depth_m"],
+            "chamber_initial_stage_m": 0.30,
+            "downstream_initial_depth_ratio": PAPER[
+                "downstream_initial_depth_ratio"
+            ],
         },
         "mesh": mesh,
         "paper": {**PAPER, "B3_regression_height_m": paper_height},
@@ -908,12 +960,16 @@ def main() -> None:
                 else math.nan,
                 PAPER["PT3_final_kPa"],
             ),
+            "spilled_water_volume": relative_error(
+                mass["spilled_water_volume_L"],
+                PAPER["spilled_water_volume_mean_L"],
+            ),
         },
         "unresolved_physics_and_input_uncertainty": [
-            "Paper PDF/page scans are absent from the required base commit.",
-            "Tail-gate opening and receiving-tank level were not reported; H_tail=Dd is the declared minimum full-pipe boundary realisation.",
-            "Initial B3 chamber level was not reported; 0.30 m is a declared initialisation, not a fitted datum.",
-            "Rigid walls omit PVC pipe-wall compliance because thickness and modulus were not reported.",
+            "The exact Series-B overflow-weir geometry/rating and receiving-tank transient were not reported; H_tail=Dd is its declared hydrostatic full-pipe equivalent.",
+            "The exact B3 chamber stage was not tabulated; 0.30 m covers the 0.28 m downstream crown and is consistent with the Fig. 5(a) t=0 image, but remains a declared image-based initialisation.",
+            "A uniform 305 m/s effective wave speed represents acrylic-pipe compliance; spatial differences among the acrylic pipes/riser and PVC chamber remain unresolved because wall thickness and modulus were not reported.",
+            "The measured valve trace and exact experimental time-zero convention are not reported beyond a 0.2 to 0.4 s manual opening interval; a 0.4 s linear ramp is used.",
             "VOF does not resolve sub-grid dispersed-air entrainment, bubble-size transport, cavitation or phase change.",
             "Exact PT2 in-plane and PT3 horizontal coordinates are not reported; A2 sampling coordinates are retained.",
         ],
@@ -930,6 +986,7 @@ def main() -> None:
         "PT3_min_kPa": pressure_metrics_["PT3"]["minimum_kPa"],
         "maximum_geyser_height_m": riser_metrics["maximum_geyser_height_above_lid_m"],
         "geyser": riser_metrics["geyser"],
+        "spilled_water_volume_L": mass["spilled_water_volume_L"],
         "mass_error_percent": mass["numerical_mass_error_percent"],
         "max_velocity_limited_cells": limiter[
             "maximum_cells_limited_in_one_correction"
