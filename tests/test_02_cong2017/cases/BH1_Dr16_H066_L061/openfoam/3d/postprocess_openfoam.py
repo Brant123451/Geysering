@@ -136,8 +136,12 @@ def interp(source_t: np.ndarray, source_y: np.ndarray, target_t: np.ndarray) -> 
     )
 
 
-def first_crossing(t: np.ndarray, y: np.ndarray, threshold: float) -> float | None:
+def first_crossing(
+    t: np.ndarray, y: np.ndarray, threshold: float, after: float | None = None
+) -> float | None:
     valid = np.isfinite(t) & np.isfinite(y)
+    if after is not None:
+        valid &= t >= after
     indices = np.flatnonzero(valid & (y >= threshold))
     if not indices.size:
         return None
@@ -185,11 +189,15 @@ def finite_relative(error: float, reference: float) -> float | None:
 
 
 def first_passage_speed(
-    t: np.ndarray, y: np.ndarray, low: float, high: float
+    t: np.ndarray,
+    y: np.ndarray,
+    low: float,
+    high: float,
+    after: float | None = None,
 ) -> float | None:
     """Average speed between first upward crossings of fixed height bounds."""
-    low_time = first_crossing(t, y, low)
-    high_time = first_crossing(t, y, high)
+    low_time = first_crossing(t, y, low, after)
+    high_time = first_crossing(t, y, high, after)
     if low_time is None or high_time is None or high_time <= low_time:
         return None
     return (high - low) / (high_time - low_time)
@@ -420,8 +428,8 @@ def main() -> None:
 
     ta = first_crossing(time, yint, 0.02)
     t_rim = first_crossing(time, yfs, 0.98 * RIM_HEIGHT)
-    vfs = first_passage_speed(time, yfs, 0.65, 1.70)
-    vint = first_passage_speed(time, yint, 0.05, 1.65)
+    vfs = first_passage_speed(time, yfs, 0.65, 1.70, ta)
+    vint = first_passage_speed(time, yint, 0.05, 1.65, ta)
     initial_tunnel_gas = float(series["tunnel_gas_volume"][0])
     pocket_volume_error = initial_tunnel_gas - POCKET_VOLUME_TARGET
     reached_end = float(time[-1])
@@ -455,7 +463,10 @@ def main() -> None:
         "vfs_fit_m_per_s": vfs,
         "vint_fit_m_per_s": vint,
         "velocity_metric": {
-            "method": "height interval divided by interpolated first-passage time",
+            "method": (
+                "height interval divided by interpolated first-passage time "
+                "after gas first enters the riser"
+            ),
             "Yfs_height_window_m": [0.65, 1.70],
             "Yint_height_window_m": [0.05, 1.65],
         },

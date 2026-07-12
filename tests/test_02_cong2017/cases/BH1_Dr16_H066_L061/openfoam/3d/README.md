@@ -168,10 +168,12 @@ those environment-dependent reference artifacts.
 
 Reported `vfs` and `vint` are first-passage averages over fixed, predeclared
 height windows (`0.65--1.70 m` and `0.05--1.65 m`, respectively), with linear
-interpolation at each threshold. This prevents later fallback through the same
-heights from cancelling the eruption speed. A 3-D geyser requires either the
-centreline free surface to reach `98%` of the physical rim height or at least
-`1e-9 m3` of positive upward water transfer through the rim.
+interpolation at each threshold after the gas first enters the riser. This
+excludes release-stage water sloshing before the eruption and prevents later
+fallback through the same heights from cancelling the eruption speed. A 3-D
+geyser requires either the centreline free surface to reach `98%` of the
+physical rim height or at least `1e-9 m3` of positive upward water transfer
+through the rim.
 
 Water, gas, and total-mass conservation use
 

@@ -141,7 +141,7 @@
     "legacy_1d_height_shift_m": -0.05,
     "legacy_1d_comparison": "tracked frozen CSV, consumed without regeneration; qualitative only because its effective pipe and tee geometry differ",
     "velocity_metric": {
-      "method": "height interval divided by interpolated first-passage time",
+      "method": "height interval divided by interpolated first-passage time after gas first enters the riser",
       "Yfs_height_window_m": [
         0.65,
         1.7
