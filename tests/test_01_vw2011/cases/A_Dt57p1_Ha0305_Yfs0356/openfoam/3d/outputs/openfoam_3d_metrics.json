@@ -1,0 +1,96 @@
+{
+  "simulation_end_s": 9.0,
+  "simulation_end_Tstar": 11.042444680426986,
+  "pressure_plateau_Hstar_mean_T1to7": 0.7064020958939992,
+  "pressure_RMSE_Hstar_no_shift": 0.1802640035441391,
+  "free_surface_max_Ystar": 0.6514216115923273,
+  "free_surface_RMSE_Ystar_no_shift": 0.014453932526273567,
+  "interface_RMSE_Ystar_no_shift": 0.17229694196004455,
+  "rmse_sample_coverage": {
+    "pressure": {
+      "used": 593,
+      "digitized_finite": 594
+    },
+    "free_surface": {
+      "used": 26,
+      "digitized_finite": 26
+    },
+    "interface": {
+      "used": 52,
+      "digitized_finite": 55
+    }
+  },
+  "interface_liftoff_Tstar": 7.944425478418303,
+  "interface_catch_Tstar": 9.152959701776146,
+  "geysering": false,
+  "comparison_targets": {
+    "pressure_plateau_Hstar": 0.54,
+    "free_surface_max_Ystar": 0.63,
+    "interface_liftoff_Tstar_repetitions": [
+      7.3,
+      7.8,
+      7.9
+    ],
+    "interface_catch_Tstar": 8.4,
+    "observed_geysering": false
+  },
+  "caveat": "Circular 3-D apparatus with an external atmosphere. No event-time shift or fitted wall/turbulence parameters were applied.",
+  "geometry_model": "3-D circular pipe and circular tower",
+  "circular_tower_to_pipe_area_ratio": 0.36899162516976003,
+  "plume_domain_height_above_rim_m": 1.2,
+  "water_detected_above_rim": false,
+  "max_sampled_water_height_above_rim_m": 0.0,
+  "geyser_detection": "alpha.water >= 0.05 on the external-atmosphere centreline; 20 mm vertical sampling",
+  "water_mass_initial_sample_kg": 24.669816,
+  "water_mass_final_kg": 24.669539,
+  "water_mass_final_relative_drift": -1.1228296149453518e-05,
+  "water_mass_max_abs_relative_drift": 1.621414606426819e-05,
+  "water_mass_sampling": "Integral of alpha.water*thermo:rho.water over all cells; first sample at the first 0.005 s write",
+  "experimental_errors": {
+    "pressure_plateau_Hstar_signed": 0.16640209589399912,
+    "pressure_plateau_percent_signed": 30.81520294333317,
+    "pressure_RMSE_Hstar_no_shift": 0.1802640035441391,
+    "free_surface_max_Ystar_signed": 0.02142161159232725,
+    "free_surface_RMSE_Ystar_no_shift": 0.014453932526273567,
+    "interface_RMSE_Ystar_no_shift": 0.17229694196004455,
+    "interface_liftoff_distance_outside_repetition_range_Tstar": 0.04442547841830269,
+    "interface_catch_signed_Tstar": 0.7529597017761454
+  },
+  "mesh": {
+    "cells": 104624,
+    "cell_type": "tetrahedra",
+    "core_size_m": 0.012,
+    "plume_size_m": 0.03,
+    "gmsh_version": "4.12.1",
+    "standard_checkMesh_ok": true,
+    "strict_checkMesh_ok": false,
+    "strict_failed_checks": 1,
+    "max_non_orthogonality": 65.293688,
+    "mean_non_orthogonality": 22.461525,
+    "max_skewness": 0.86943687,
+    "strict_underdetermined_cells": 294,
+    "cad_fluid_volume_m3": 0.137456195,
+    "openfoam_mesh_volume_m3": 0.13719732,
+    "relative_mesh_volume_error": -0.0018833272665520222
+  },
+  "solver": {
+    "openfoam_version": "2512",
+    "mpi_ranks": 4,
+    "solver_execution_time_s": 16342.28,
+    "solver_clock_time_s": 46838.0,
+    "solver_segments": 2,
+    "completed_parallel_run": true,
+    "temperature_limiter": {
+      "bounds_K": [
+        250.0,
+        350.0
+      ],
+      "lower_corrections_with_limiting": 26,
+      "lower_total_cell_corrections": 34,
+      "minimum_unlimited_temperature_K": 238.63486,
+      "upper_corrections_with_limiting": 0,
+      "upper_total_cell_corrections": 0,
+      "maximum_unlimited_temperature_K": 295.31872
+    }
+  }
+}
