@@ -59,7 +59,7 @@ PROFILES = {
     # Fast topology/BC smoke mesh.
     "smoke": MeshProfile(0.065, 0.032, 0.017, 0.045, 0.065, 0.160),
     # Production baseline selected after strict checkMesh and Q0 smoke tests.
-    "baseline": MeshProfile(0.050, 0.024, 0.013, 0.035, 0.050, 0.120),
+    "baseline": MeshProfile(0.050, 0.022, 0.013, 0.035, 0.050, 0.120),
     # Stable critical-region refinement of the production baseline.
     "refined": MeshProfile(0.045, 0.020, 0.0115, 0.030, 0.045, 0.110),
 }
