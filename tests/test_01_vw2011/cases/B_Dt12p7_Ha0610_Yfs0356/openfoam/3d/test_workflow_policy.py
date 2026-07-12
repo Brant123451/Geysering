@@ -41,6 +41,7 @@ def baseline_manifest(mesh: str = "base") -> dict:
         ),
         "advection_scheme": "isoAdvection",
         "reconstruction_scheme": "plicRDF",
+        "interpolate_normal": False,
         "curvature_model": "RDF",
         "max_co": 0.30,
         "max_alpha_co": 0.20,
@@ -77,6 +78,9 @@ class BaselinePolicyTests(unittest.TestCase):
         self.assertFalse(is_baseline_full_physics(manifest))
         manifest = baseline_manifest()
         manifest["curvature_model"] = "fitParaboloid"
+        self.assertFalse(is_baseline_full_physics(manifest))
+        manifest = baseline_manifest()
+        manifest["interpolate_normal"] = True
         self.assertFalse(is_baseline_full_physics(manifest))
         manifest = baseline_manifest()
         manifest["n_outer_correctors"] = 2
@@ -169,6 +173,8 @@ class InitialFieldPolicyTests(unittest.TestCase):
 class TwoPhaseFlowDeckTests(unittest.TestCase):
     def test_rdf_geometric_vof_is_the_default(self) -> None:
         settings = (HERE / "system" / "runSettings.default").read_text()
+        solution = (HERE / "system" / "fvSolution").read_text()
+        prepare = (HERE / "prepare_run.py").read_text()
         alpha_correctors = (
             HERE / "system" / "alphaCorrectors.default"
         ).read_text()
@@ -180,6 +186,9 @@ class TwoPhaseFlowDeckTests(unittest.TestCase):
         ).read_text()
         self.assertIn("advectionScheme         isoAdvection;", settings)
         self.assertIn("reconstructionScheme    plicRDF;", settings)
+        self.assertIn("interpolateNormal       false;", settings)
+        self.assertNotIn("interpolateNormal true;", solution)
+        self.assertIn("CASEB_INTERPOLATE_NORMAL", prepare)
         self.assertIn("clip                    false;", settings)
         self.assertIn("surfaceTensionForceModel    RDF;", surface_forces)
         self.assertIn("nAlphaCorr      1;", alpha_correctors)

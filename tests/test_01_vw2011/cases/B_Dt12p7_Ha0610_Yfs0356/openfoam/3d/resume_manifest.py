@@ -28,6 +28,7 @@ ENVIRONMENT_KEYS = {
     "c_alpha": "CASEB_C_ALPHA",
     "advection_scheme": "CASEB_ADVECTION_SCHEME",
     "reconstruction_scheme": "CASEB_RECONSTRUCTION_SCHEME",
+    "interpolate_normal": "CASEB_INTERPOLATE_NORMAL",
     "curvature_model": "CASEB_CURVATURE_MODEL",
     "n_alpha_bounds": "CASEB_N_ALPHA_BOUNDS",
     "n_alpha_corr": "CASEB_N_ALPHA_CORR",
@@ -102,6 +103,8 @@ def read_manifest(path: Path) -> dict:
         raise ValueError("Unknown reconstruction scheme in run manifest")
     if manifest["curvature_model"] not in {"RDF", "fitParaboloid", "gradAlpha"}:
         raise ValueError("Unknown curvature model in run manifest")
+    if not isinstance(manifest["interpolate_normal"], bool):
+        raise ValueError("interpolate_normal must be a boolean")
     if not isinstance(manifest["alpha_clip"], bool):
         raise ValueError("alpha_clip must be a boolean")
     for key in NUMERIC_KEYS:

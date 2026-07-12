@@ -62,6 +62,7 @@ required_solver_fragments = [
     "application     compressibleInterFlow",
     "advectionScheme         isoAdvection",
     "reconstructionScheme    plicRDF",
+    "interpolateNormal       false",
     "surfaceTensionForceModel    RDF",
     "nAlphaCorr      1",
     "nAlphaSubCycles 2",
@@ -88,7 +89,8 @@ result = {
     "case_definition_ok": True,
     "solver_source_check": (
         "compressibleInterFlow at pinned TwoPhaseFlow commit with "
-        "isoAdvection, plicRDF reconstruction, RDF curvature and "
+        "isoAdvection, plicRDF reconstruction without normal interpolation, "
+        "RDF curvature and "
         "TwoPhaseFlow-reference corrector counts; conformal no-slip closed "
         "baffle and runTime output control"
     ),

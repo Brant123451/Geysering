@@ -23,7 +23,6 @@ solvers
         surfCellTol     1e-8;
         tol             1e-6;
         iterations      5;
-        interpolateNormal true;
         writeVTK        false;
         writeIsoFaces   false;
     }

@@ -61,6 +61,7 @@ def configuration_id(manifest: dict) -> str:
             "two_phase_flow_commit",
             "advection_scheme",
             "reconstruction_scheme",
+            "interpolate_normal",
             "curvature_model",
             "n_alpha_bounds",
             "n_alpha_corr",
@@ -85,6 +86,7 @@ def is_baseline_numerics(manifest: dict) -> bool:
         and manifest.get("two_phase_flow_commit") == TWOPHASEFLOW_COMMIT
         and manifest.get("advection_scheme") == "isoAdvection"
         and manifest.get("reconstruction_scheme") == "plicRDF"
+        and manifest.get("interpolate_normal") is False
         and manifest.get("curvature_model") == "RDF"
         and math.isclose(float(manifest.get("max_capillary_num", -1)), 1.0)
         and math.isclose(float(manifest.get("c_alpha", -1)), 1.0)
@@ -181,6 +183,7 @@ def mesh_pair_compatible(first: dict, second: dict) -> bool:
         "two_phase_flow_commit",
         "advection_scheme",
         "reconstruction_scheme",
+        "interpolate_normal",
         "curvature_model",
         "n_alpha_bounds",
         "n_alpha_corr",
@@ -375,6 +378,7 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "cAlpha",
         "advectionScheme",
         "reconstructionScheme",
+        "interpolateNormal",
         "curvatureModel",
         "nAlphaBounds",
         "nAlphaCorr",
@@ -447,6 +451,7 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "cAlpha": manifest.get("c_alpha"),
         "advectionScheme": manifest.get("advection_scheme"),
         "reconstructionScheme": manifest.get("reconstruction_scheme"),
+        "interpolateNormal": manifest.get("interpolate_normal"),
         "curvatureModel": manifest.get("curvature_model"),
         "nAlphaBounds": manifest.get("n_alpha_bounds"),
         "nAlphaCorr": manifest.get("n_alpha_corr"),
@@ -513,6 +518,7 @@ def update_sensitivity_csv(metrics: dict) -> None:
         "cAlpha",
         "advectionScheme",
         "reconstructionScheme",
+        "interpolateNormal",
         "curvatureModel",
         "nAlphaBounds",
         "nAlphaCorr",
@@ -561,6 +567,7 @@ def update_sensitivity_csv(metrics: dict) -> None:
         "cAlpha": manifest.get("c_alpha"),
         "advectionScheme": manifest.get("advection_scheme"),
         "reconstructionScheme": manifest.get("reconstruction_scheme"),
+        "interpolateNormal": manifest.get("interpolate_normal"),
         "curvatureModel": manifest.get("curvature_model"),
         "nAlphaBounds": manifest.get("n_alpha_bounds"),
         "nAlphaCorr": manifest.get("n_alpha_corr"),
@@ -1233,6 +1240,7 @@ def postprocess(manifest: dict, mesh: dict) -> dict:
             "two_phase_flow_commit": manifest.get("two_phase_flow_commit"),
             "advection_scheme": manifest.get("advection_scheme"),
             "reconstruction_scheme": manifest.get("reconstruction_scheme"),
+            "interpolate_normal": manifest.get("interpolate_normal"),
             "curvature_model": manifest.get("curvature_model"),
             "gas_equation_of_state": manifest.get(
                 "gas_equation_of_state", "unknown"

@@ -97,7 +97,8 @@ Copy the full block below into the new Cursor account's Cloud Agent.
 1. Solver: OpenFOAM.com v2512 加固定提交
    `de9826f9ffb24f4b635ac97fd388ebd560cfc174` 的 DLR-RY TwoPhaseFlow
    `compressibleInterFlow`。当前数值候选使用
-   `isoAdvection + plicRDF + RDF`；它仍是单动量、可压缩、非等温 VOF。
+   `isoAdvection + plicRDF + RDF`，并按库内静态表面张力 benchmark 设置
+   `interpolateNormal=false`；它仍是单动量、可压缩、非等温 VOF。
    0.006 s 筛选已干净退出并显著降低伪流，但完整 hold 尚未完成，不能仅因
    短筛选通过就称为 baseline 已验证。
 2. 两相：
@@ -298,10 +299,11 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
      RDF 分别低 29.4% 和 38.1%；
    - alpha 和相/总质量守恒仍干净，无 rim 水量或 gas-entry；
    - 但 startup 单步 global Co 达 1.957、interface Co 达 0.676，超过声明限制。
-   该结果尚不能延长。下一步必须物化并记录 `plicRDF` 的
-   `interpolateNormal false`（TwoPhaseFlow 静态表面张力 benchmark 的设置），
-   重复 0.006 s 筛选；只有 CFL 和速度都改善后才延长到超过 0.04 s，并且只有
-   Hstar peak-to-peak 不超过 0.02 的候选才能开始完整 1.0 s hold。
+   该结果尚不能延长。source deck 已物化并记录 `plicRDF` 的
+   `interpolateNormal=false`（TwoPhaseFlow 静态表面张力 benchmark 的设置）；
+   下一步必须重复 0.006 s 筛选。只有 CFL 和速度都改善后才延长到超过
+   0.04 s，并且只有 Hstar peak-to-peak 不超过 0.02 的候选才能开始完整
+   1.0 s hold。
 
 十、hold 验收
 
@@ -326,6 +328,7 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
 - CASEB_VALVE_OPEN_TIME=0|0.10|0.25|0.50|1.0
 - CASEB_ADVECTION_SCHEME=isoAdvection|MULESScheme
 - CASEB_RECONSTRUCTION_SCHEME=plicRDF|isoAlpha|gradAlpha
+- CASEB_INTERPOLATE_NORMAL=false|true
 - CASEB_CURVATURE_MODEL=RDF|fitParaboloid|gradAlpha
 - CASEB_C_ALPHA=0.5|1.0|1.5（仅与 MULESScheme 配合）
 - CASEB_N_ALPHA_CORR=1

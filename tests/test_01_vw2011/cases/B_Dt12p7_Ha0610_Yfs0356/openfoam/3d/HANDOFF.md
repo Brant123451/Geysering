@@ -50,7 +50,8 @@ free-surface curvature/pressure-balance defect.  The next numerical screen is
 reduced the written peak and final velocities to 1.187 and 0.796 m/s, but a
 one-step startup Courant spike reached 1.957.  It must be repeated with
 `interpolateNormal false`, as used by TwoPhaseFlow's static surface-tension
-benchmarks, before any extension.
+benchmarks, before any extension.  The source now materialises and records
+that setting; its repeat screen is pending.
 
 ## Verified before handoff
 
@@ -141,12 +142,12 @@ benchmarks, before any extension.
 
 The scientific reproduction is **not complete**.  Continue in this order:
 
-1. Materialise and record `plicRDF`'s `interpolateNormal` control, repeat the
-   conformal-baffle `fitParaboloid` screen through 0.006 s with interpolation
-   disabled, and extend past the 0.04 s pressure-drift onset only if both the
-   velocity and Courant metrics improve.  Only a candidate with \(H^*\)
-   peak-to-peak at or below 0.02 may proceed to the full 1.0 s hold.  Opening
-   runs retain the dissipative resistance and must be tested separately.
+1. Repeat the conformal-baffle `fitParaboloid` screen through 0.006 s with
+   the newly materialised `interpolateNormal=false`, and extend past the
+   0.04 s pressure-drift onset only if both the velocity and Courant metrics
+   improve.  Only a candidate with \(H^*\) peak-to-peak at or below 0.02 may
+   proceed to the full 1.0 s hold.  Opening runs retain the dissipative
+   resistance and must be tested separately.
 2. Run the opened-valve 0.5 s smoke case.
 3. Run the 10.5 s base case through \(T^*\ge6\).
 4. Run the refined grid and required timestep/valve/compressibility

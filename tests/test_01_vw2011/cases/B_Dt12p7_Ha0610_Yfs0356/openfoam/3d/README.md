@@ -333,6 +333,7 @@ CASEB_MAX_CAPILLARY_NUM=0.5|1.0
 CASEB_VALVE_OPEN_TIME=0|0.10|0.25|0.50|1.0
 CASEB_ADVECTION_SCHEME=isoAdvection|MULESScheme
 CASEB_RECONSTRUCTION_SCHEME=plicRDF|isoAlpha|gradAlpha
+CASEB_INTERPOLATE_NORMAL=false|true
 CASEB_CURVATURE_MODEL=RDF|fitParaboloid|gradAlpha
 CASEB_C_ALPHA=0.5|1.0|1.5  # only with MULESScheme
 CASEB_HA0=0.579|0.610|0.641
@@ -351,6 +352,11 @@ CASEB_N_NON_ORTHOGONAL_CORRECTORS=0
 ```
 
 Changing any of these makes a non-baseline configuration.
+
+`interpolateNormal=false` is the baseline plicRDF setting because it matches
+TwoPhaseFlow's static surface-tension benchmarks.  The former `true` setting
+is retained as a recorded sensitivity; its first fitParaboloid screen had a
+one-step startup Courant spike of 1.957.
 
 The \(H_{a0}\) endpoints are the reported ±0.031 m manometer precision.
 `rhoConst` is a deliberately incompressible-gas limiting case at atmospheric

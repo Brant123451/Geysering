@@ -65,6 +65,7 @@ def main() -> None:
     reconstruction_scheme = os.environ.get(
         "CASEB_RECONSTRUCTION_SCHEME", "plicRDF"
     )
+    interpolate_normal = env_bool("CASEB_INTERPOLATE_NORMAL", False)
     curvature_model = os.environ.get("CASEB_CURVATURE_MODEL", "RDF")
     n_alpha_bounds = env_int("CASEB_N_ALPHA_BOUNDS", 5)
     n_alpha_corr = env_int("CASEB_N_ALPHA_CORR", 1)
@@ -200,6 +201,7 @@ def main() -> None:
         f"cAlpha                  {c_alpha:.10g};\n"
         f"advectionScheme         {advection_scheme};\n"
         f"reconstructionScheme    {reconstruction_scheme};\n"
+        f"interpolateNormal       {str(interpolate_normal).lower()};\n"
         f"nAlphaBounds            {n_alpha_bounds};\n"
         f"clip                    {str(alpha_clip).lower()};\n"
         "snapTol                 0;\n"
@@ -262,6 +264,7 @@ def main() -> None:
         "two_phase_flow_commit": TWOPHASEFLOW_COMMIT,
         "advection_scheme": advection_scheme,
         "reconstruction_scheme": reconstruction_scheme,
+        "interpolate_normal": interpolate_normal,
         "curvature_model": curvature_model,
         "max_co": max_co,
         "max_alpha_co": max_alpha_co,
