@@ -274,7 +274,7 @@ def main() -> None:
     with (OUT / "openfoam_3d_plume.csv").open(
         "w", newline="", encoding="utf-8"
     ) as stream:
-        writer = csv.writer(stream)
+        writer = csv.writer(stream, lineterminator="\n")
         writer.writerow(["time_s", "highest_water_y_m", "height_above_rim_m"])
         for sample_time, elevation in zip(time, highest_water_y):
             height = elevation - TOWER_RIM_Y if np.isfinite(elevation) else np.nan
@@ -286,7 +286,7 @@ def main() -> None:
     with (OUT / "openfoam_3d_water_mass.csv").open(
         "w", newline="", encoding="utf-8"
     ) as stream:
-        writer = csv.writer(stream)
+        writer = csv.writer(stream, lineterminator="\n")
         writer.writerow(["time_s", "water_mass_kg", "relative_drift"])
         writer.writerows(zip(mass_time, water_mass, relative_mass_drift))
 

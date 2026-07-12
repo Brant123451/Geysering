@@ -257,11 +257,11 @@ def main() -> None:
     }
 
     with (OUT / "openfoam_2d_series.csv").open("w", newline="", encoding="utf-8") as stream:
-        writer = csv.writer(stream)
+        writer = csv.writer(stream, lineterminator="\n")
         writer.writerow(["time_s", "Tstar", "Hstar_raw", "Hstar_smooth"])
         writer.writerows(zip(time, tstar, hstar_raw, hstar))
     with (OUT / "openfoam_2d_levels.csv").open("w", newline="", encoding="utf-8") as stream:
-        writer = csv.writer(stream)
+        writer = csv.writer(stream, lineterminator="\n")
         writer.writerow(["time_s", "Tstar", "Yint_star", "Yfs_star"])
         writer.writerows(zip(t_tower, tstar_tower, yint, yfs))
     (OUT / "openfoam_2d_metrics.json").write_text(
