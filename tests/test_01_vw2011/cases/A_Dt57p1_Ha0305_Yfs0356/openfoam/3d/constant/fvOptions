@@ -31,7 +31,7 @@ temperatureBounds
 
         codeCorrect
         #{
-            scalarField& values = field.primitiveFieldRef();
+            scalarField& values = fld.primitiveFieldRef();
             scalar Tmin = min(values);
             scalar Tmax = max(values);
             reduce(Tmin, minOp<scalar>());
@@ -54,7 +54,7 @@ temperatureBounds
             }
             reduce(lowerCells, sumOp<label>());
             reduce(upperCells, sumOp<label>());
-            field.correctBoundaryConditions();
+            fld.correctBoundaryConditions();
 
             Info<< "CASEA_TEMPERATURE_LIMITER lower_cells " << lowerCells
                 << " upper_cells " << upperCells
@@ -64,6 +64,13 @@ temperatureBounds
 
         codeAddSup
         #{
+            (void)eqn;
+            (void)fieldi;
+        #};
+
+        codeAddSupRho
+        #{
+            (void)rho;
             (void)eqn;
             (void)fieldi;
         #};
