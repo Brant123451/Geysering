@@ -14,9 +14,10 @@ boundaryField
 {
     inlet
     {
-        type            turbulentIntensityKineticEnergyInlet;
-        intensity       0.05;
-        value           uniform 1e-4;
+        // 5% intensity at the reported Q0 open-channel velocity (1.704 m/s).
+        // A fixed positive value also prevents k=0 on the dry inlet faces.
+        type            fixedValue;
+        value           uniform 0.01089;
     }
     tankAtmosphere
     {

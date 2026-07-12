@@ -14,9 +14,10 @@ boundaryField
 {
     inlet
     {
-        type            turbulentMixingLengthFrequencyInlet;
-        mixingLength    0.02;
-        value           uniform 5;
+        // sqrt(k)/(Cmu^0.25 L) with k=0.01089 and L=0.02 m.
+        // Keep dry inlet faces positive to avoid a k/omega singularity.
+        type            fixedValue;
+        value           uniform 9.53;
     }
     tankAtmosphere
     {
