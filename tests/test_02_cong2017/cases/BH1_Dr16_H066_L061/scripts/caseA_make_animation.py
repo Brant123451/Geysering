@@ -7,13 +7,14 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE / "model"))
+SCRIPT_DIR = Path(__file__).resolve().parent
+CASE_ROOT = SCRIPT_DIR.parent
+sys.path.insert(0, str(CASE_ROOT / "model"))
 
 from cong2017_network_twofluid import NetworkCase, run_network, make_case_gif
 
-OUT = HERE / "outputs"
-OUT.mkdir(exist_ok=True)
+OUT = CASE_ROOT / "outputs"
+OUT.mkdir(parents=True, exist_ok=True)
 
 CASE_KW = dict(
     D=0.05, Dr=0.016, riser_height=1.8,

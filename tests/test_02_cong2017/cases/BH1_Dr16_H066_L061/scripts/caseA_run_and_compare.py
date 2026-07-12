@@ -28,14 +28,16 @@ from pathlib import Path
 
 import numpy as np
 
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE / "model"))
+SCRIPT_DIR = Path(__file__).resolve().parent
+CASE_ROOT = SCRIPT_DIR.parent
+sys.path.insert(0, str(CASE_ROOT / "model"))
 
 from cong2017_network_twofluid import G, NetworkCase, run_network
 
-DIG = HERE / "digitized"
-OUT = HERE / "outputs"
-OUT.mkdir(exist_ok=True)
+DIG = CASE_ROOT / "data" / "digitized"
+OUT = CASE_ROOT / "outputs"
+REPORT = OUT / "report.html"
+OUT.mkdir(parents=True, exist_ok=True)
 
 C_MODEL = "#d62728"
 C_MODEL2 = "#f59e0b"
@@ -283,7 +285,7 @@ def main():
     print(json.dumps(m["model"], indent=2))
     print(f"-> {OUT / 'caseA_comparison_levels.png'}")
     print(f"-> {OUT / 'caseA_comparison_pressure.png'}")
-    print(f"-> {HERE / 'report.html'}")
+    print(f"-> {REPORT}")
 
 
 def build_report(m: dict):
@@ -356,16 +358,16 @@ Ta×Uf 运动学定出：8.07 s × 0.444√(gD) = 2.51 m 阀-三通距离）。�
 <div class="panel">
   <h2 style="margin-top:0">论文原图（扫描）</h2>
   <div class="grid2">
-    <div><h3 style="margin:4px 0">Fig.9 B-H1 竖管数据（(a) 已数字化）</h3><img src="paper_scans/fig9_bh1_riser.png"></div>
-    <div><h3 style="margin:4px 0">Fig.10 压力时程（上=B-1 喷发）</h3><img src="paper_scans/fig10_pressure.png"></div>
+    <div><h3 style="margin:4px 0">Fig.9 B-H1 竖管数据（(a) 已数字化）</h3><img src="../reference/paper_scans/fig9_bh1_riser.png"></div>
+    <div><h3 style="margin:4px 0">Fig.10 压力时程（上=B-1 喷发）</h3><img src="../reference/paper_scans/fig10_pressure.png"></div>
   </div>
   <h3 style="margin:12px 0 4px 0">Fig.8 B-H1 高速摄像瞬时帧</h3>
-  <img src="paper_scans/fig8_bh1_photos.png">
+  <img src="../reference/paper_scans/fig8_bh1_photos.png">
 </div>
 <div class="panel">
   <h2 style="margin-top:0">叠加对比</h2>
-  <h3>竖管水面与气核前端 Y(t)</h3><img src="outputs/caseA_comparison_levels.png">
-  <h3>气囊压头 H/H0</h3><img src="outputs/caseA_comparison_pressure.png">
+  <h3>竖管水面与气核前端 Y(t)</h3><img src="caseA_comparison_levels.png">
+  <h3>气囊压头 H/H0</h3><img src="caseA_comparison_pressure.png">
   <h3>指标对照</h3>
   <table>
     <tr><th>指标</th><th>论文实验</th><th>模型</th><th>备注</th></tr>
@@ -380,19 +382,23 @@ Ta×Uf 运动学定出：8.07 s × 0.444√(gD) = 2.51 m 阀-三通距离）。�
   全程平均速度因此低于实测的单段爬升；② 喷发后压力振荡幅度偏大（±2H0）——刚性水柱回落再压缩
   缺少三维破碎/掺气耗散；③ PT1 数字化平台 ~1.3H0 高于静水库头（传感器基准/标定存疑 ±0.3H0），
   压力对比以形态锚点（释放振荡、平台、喷发前回落、激增）为主。
-  模型序列见 <code>outputs/caseA_model_series.csv</code>；数字化中间产物见 <code>digitized/</code>。</p>
+  模型序列见 <code>caseA_model_series.csv</code>；数字化中间产物见 <code>../data/digitized/</code>。</p>
 </div>
 __EXTRA_SECTIONS__
 </div></body></html>"""
     html = html.replace("__EXTRA_SECTIONS__", build_extra_sections())
-    (HERE / "report.html").write_text(html, encoding="utf-8")
+    REPORT.write_text(html, encoding="utf-8")
 
 
 def build_extra_sections() -> str:
     parts = []
     frames_json = OUT / "frames_index.json"
     if frames_json.exists():
-        frames_data = frames_json.read_text(encoding="utf-8")
+        frames = json.loads(frames_json.read_text(encoding="utf-8"))
+        for frame in frames:
+            frame["file"] = frame["file"].removeprefix("outputs/")
+            frame["riserFile"] = frame["riserFile"].removeprefix("outputs/")
+        frames_data = json.dumps(frames)
         parts.append("""
 <div class="panel">
   <h2 style="margin-top:0">两流体模拟逐帧查看器 — 水平管 + 竖管全场演化</h2>
@@ -419,7 +425,7 @@ def build_extra_sections() -> str:
     <input id="vSlider" type="range" style="width:60%;vertical-align:middle">
     <button id="vNext" style="padding:8px 14px;margin:6px;border:1px solid #bbb;border-radius:8px;background:#fff;cursor:pointer">下一帧</button>
   </div>
-  <p class="muted">整段 GIF 备份：<a href="outputs/caseA_animation.gif">caseA_animation.gif</a></p>
+  <p class="muted">整段 GIF 备份：<a href="caseA_animation.gif">caseA_animation.gif</a></p>
 </div>
 <script>
 const vFrames=""" + frames_data + """;
@@ -453,7 +459,7 @@ vShow(0);
         parts.append("""
 <div class="panel">
   <h2 style="margin-top:0">两流体模拟动画</h2>
-  <img src="outputs/caseA_animation.gif" style="max-width:900px">
+  <img src="caseA_animation.gif" style="max-width:900px">
 </div>""")
     return "".join(parts)
 

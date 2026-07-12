@@ -17,12 +17,13 @@ from pathlib import Path
 
 import numpy as np
 
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE / "model"))
+SCRIPT_DIR = Path(__file__).resolve().parent
+CASE_ROOT = SCRIPT_DIR.parent
+sys.path.insert(0, str(CASE_ROOT / "model"))
 
 from cong2017_network_twofluid import NetworkCase, run_network
 
-OUT = HERE / "outputs"
+OUT = CASE_ROOT / "outputs"
 FRAMES = OUT / "frames"
 RISER_FRAMES = OUT / "riser_frames"
 N_FRAMES = 96
@@ -149,8 +150,8 @@ def main():
         plt.close(fig)
 
         index.append(dict(
-            file=f"outputs/frames/frame_{n:04d}.png",
-            riserFile=f"outputs/riser_frames/riser_{n:04d}.png",
+            file=f"frames/frame_{n:04d}.png",
+            riserFile=f"riser_frames/riser_{n:04d}.png",
             time=round(t_k, 3),
             wtop=round(wtop, 3),
             itop=round(itop, 3),
