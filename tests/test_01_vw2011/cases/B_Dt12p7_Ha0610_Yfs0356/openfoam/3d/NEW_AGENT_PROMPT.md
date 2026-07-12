@@ -96,11 +96,12 @@ Copy the full block below into the new Cursor account's Cloud Agent.
 
 1. Solver: OpenFOAM.com v2512 加固定提交
    `de9826f9ffb24f4b635ac97fd388ebd560cfc174` 的 DLR-RY TwoPhaseFlow
-   `compressibleInterFlow`。当前数值候选使用
+   `compressibleInterFlow`。source default 使用
    `isoAdvection + plicRDF + RDF`，并按库内静态表面张力 benchmark 设置
-   `interpolateNormal=false`；它仍是单动量、可压缩、非等温 VOF。
-   0.006 s 筛选已干净退出并显著降低伪流，但完整 hold 尚未完成，不能仅因
-   短筛选通过就称为 baseline 已验证。
+   `interpolateNormal=false`；它仍是单动量、可压缩、非等温 VOF。当前 hold
+   筛选正在评估 `fitParaboloid`，但 true/false 两个 0.006 s 候选都尚未满足
+   联合速度/Courant 门槛。完整 hold 尚未完成，不能仅因短筛选退出正常就称为
+   baseline 已验证。
 2. 两相：
    - air: perfectGas, molecular weight 28.965 kg/kmol, Cp 1005 J/kg/K,
      mu 1.81e-5 Pa s
@@ -299,11 +300,20 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
      RDF 分别低 29.4% 和 38.1%；
    - alpha 和相/总质量守恒仍干净，无 rim 水量或 gas-entry；
    - 但 startup 单步 global Co 达 1.957、interface Co 达 0.676，超过声明限制。
-   该结果尚不能延长。source deck 已物化并记录 `plicRDF` 的
-   `interpolateNormal=false`（TwoPhaseFlow 静态表面张力 benchmark 的设置）；
-   下一步必须重复 0.006 s 筛选。只有 CFL 和速度都改善后才延长到超过
-   0.04 s，并且只有 Hstar peak-to-peak 不超过 0.02 的候选才能开始完整
-   1.0 s hold。
+   该结果不能延长。
+10. source deck 物化并记录 `plicRDF` 的 `interpolateNormal=false` 后，
+    `fitParaboloid` 0.006 s 复筛也已 exit 0：
+    - global/interface Co 降至 0.350/0.289，严重单步尖峰已消除；
+    - 峰值速度却上升 9.7% 至 1.302 m/s，末帧仅微降至 0.788 m/s；
+    - alpha 约在
+      \([-1.23\times10^{-11},1+5.97\times10^{-12}]\)，gas/total balance
+      误差低于 \(3.4\times10^{-6}\%\)，仍无 rim 水量或 gas-entry；
+    - 只有一个 pressure sample，Hstar=0 没有稳定性意义。
+    因此它不满足“CFL 和峰值速度都改善”的门槛，也不能延长。下一步必须用
+    硬 `maxDeltaT` 的配对 startup 诊断分离 normal interpolation 与一步滞后的
+    Courant 控制；只有早期配对同时通过声明的 Courant 和速度门槛，才复筛至
+    0.006 s 并延长到超过 0.04 s。只有 Hstar peak-to-peak 不超过 0.02 的候选
+    才能开始完整 1.0 s hold。
 
 十、hold 验收
 

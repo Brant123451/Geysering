@@ -50,8 +50,12 @@ free-surface curvature/pressure-balance defect.  The next numerical screen is
 reduced the written peak and final velocities to 1.187 and 0.796 m/s, but a
 one-step startup Courant spike reached 1.957.  It must be repeated with
 `interpolateNormal false`, as used by TwoPhaseFlow's static surface-tension
-benchmarks, before any extension.  The source now materialises and records
-that setting; its repeat screen is pending.
+benchmarks, before any extension.  That repeat exited normally and reduced the
+global/interface Courant maxima to 0.350/0.289, but its peak velocity increased
+9.7% to 1.302 m/s; only the final velocity improved slightly to 0.788 m/s.
+It therefore fails the required joint Courant-and-velocity improvement and
+must not be extended.  The next screen must separate normal interpolation from
+the one-step timestep-feedback lag with a tightly capped paired startup test.
 
 ## Verified before handoff
 
@@ -137,17 +141,32 @@ that setting; its repeat screen is pending.
     The velocity reduction is promising, but the CFL regression prevents
     extension until the static-benchmark normal-interpolation setting is
     tested.
+13. The repeat `fitParaboloid` screen with `interpolateNormal=false` also
+    exited normally at 0.006 s:
+    * global and interface Courant maxima fell from 1.957/0.676 to
+      0.350/0.289;
+    * the written velocity peak increased from 1.187 to 1.302 m/s, while the
+      final value changed only from 0.796 to 0.788 m/s;
+    * alpha stayed within
+      \([-1.23\times10^{-11},1+5.97\times10^{-12}]\);
+    * gas and total balance errors remained below
+      \(3.4\times10^{-6}\%\), with no rim water or gas entry.
+    This does not meet the required joint velocity-and-Courant improvement.
+    The single pressure sample also gives no usable \(H^*\) stability evidence,
+    so the candidate is not cleared for extension.
 
 ## Still required
 
 The scientific reproduction is **not complete**.  Continue in this order:
 
-1. Repeat the conformal-baffle `fitParaboloid` screen through 0.006 s with
-   the newly materialised `interpolateNormal=false`, and extend past the
-   0.04 s pressure-drift onset only if both the velocity and Courant metrics
-   improve.  Only a candidate with \(H^*\) peak-to-peak at or below 0.02 may
-   proceed to the full 1.0 s hold.  Opening runs retain the dissipative
-   resistance and must be tested separately.
+1. Do not extend either existing `fitParaboloid` screen.  Run a tightly
+   timestep-capped paired startup diagnostic to separate the lower velocity
+   seen with `interpolateNormal=true` from its one-step Courant overshoot.
+   Re-screen to 0.006 s only if the early pair stays within the declared
+   Courant limits without increasing peak velocity.  A candidate may then
+   extend past the 0.04 s pressure-drift onset, and only \(H^*\) peak-to-peak
+   at or below 0.02 may proceed to the full 1.0 s hold.  Opening runs retain
+   the dissipative resistance and must be tested separately.
 2. Run the opened-valve 0.5 s smoke case.
 3. Run the 10.5 s base case through \(T^*\ge6\).
 4. Run the refined grid and required timestep/valve/compressibility

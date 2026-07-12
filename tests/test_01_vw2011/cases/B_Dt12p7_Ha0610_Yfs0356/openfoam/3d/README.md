@@ -119,7 +119,21 @@ screen, with clean alpha and mass bounds.  It nevertheless experienced a
 one-step startup Courant spike of 1.957 while `plicRDF` was interpolating
 interface normals.  This short run is not cleared for extension.  The next
 screen sets `interpolateNormal false`, matching TwoPhaseFlow's static
-surface-tension benchmarks, and records that control in the manifest.
+surface-tension reconstruction benchmarks, and records that control in the
+manifest.  That repeat exited normally at 0.006 s and reduced the global and
+interface Courant maxima to 0.350 and 0.289.  It did not satisfy the joint
+screening rule, however: peak velocity increased 9.7% to 1.302 m/s, while the
+final value improved only 0.9% to 0.788 m/s.  Alpha and mass bounds remained
+clean, with no rim water or gas entry.  The run had only one pressure sample,
+so its zero sampled pressure range is not hold evidence.  Neither
+`fitParaboloid` screen is cleared for extension.
+
+The library's static curvature benchmarks use `interpolateNormal=false`, but
+they reconstruct geometry without solving the transient momentum equation;
+its dynamic capillary-wave cases use the source default `true`.  Since
+OpenFOAM Courant control acts on the next timestep rather than as a strict
+current-step cap, the next diagnostic pairs normal interpolation with a hard
+startup timestep cap before choosing a pressure-drift candidate.
 
 Thermophysical choices are:
 
@@ -356,7 +370,9 @@ Changing any of these makes a non-baseline configuration.
 `interpolateNormal=false` is the baseline plicRDF setting because it matches
 TwoPhaseFlow's static surface-tension benchmarks.  The former `true` setting
 is retained as a recorded sensitivity; its first fitParaboloid screen had a
-one-step startup Courant spike of 1.957.
+one-step startup Courant spike of 1.957.  The corresponding `false` screen
+reduced that spike but increased peak velocity, so this source default remains
+an unaccepted numerical candidate until a full hold passes.
 
 The \(H_{a0}\) endpoints are the reported ±0.031 m manometer precision.
 `rhoConst` is a deliberately incompressible-gas limiting case at atmospheric

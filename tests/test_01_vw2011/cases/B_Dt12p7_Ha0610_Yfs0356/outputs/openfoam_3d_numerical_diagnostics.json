@@ -433,5 +433,68 @@
     },
     "next_action": "Align plicRDF interpolateNormal with the library static surface-tension benchmarks by setting it false, record that control in the manifest, and repeat the 0.006 s screen before extending the candidate.",
     "completion_claim": "This is a short curvature sensitivity with a CFL regression. It is not a passed hold, smoke run, full experiment, or accepted baseline."
+  },
+  "fit_paraboloid_no_interpolation_baffle_screen": {
+    "status": "cfl_improved_peak_velocity_regressed",
+    "source_commit": "3ab8d7e",
+    "purpose": "Repeat the conformal-baffle fitParaboloid screen with plicRDF normal interpolation disabled, matching the library static curvature benchmarks.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "fitParaboloid",
+      "interpolate_normal": false,
+      "valve_representation": "conformalNoSlipBaffle",
+      "time_control": "runTime",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.0059645104,
+      "postprocessed_probe_duration_s": 0.0049865935,
+      "execution_time_s": 491.21,
+      "clock_time_s": 502,
+      "final_delta_t_s": 7.3692891e-05,
+      "maximum_courant_number": 0.3496016,
+      "maximum_interface_courant_number": 0.2889185,
+      "maximum_capillary_number": 0.43647525,
+      "alpha_water_min": -1.224047e-11,
+      "alpha_water_max": 1.0000000000059626,
+      "peak_velocity_m_per_s": 1.3019122,
+      "final_written_velocity_m_per_s": 0.78839686,
+      "peak_velocity_location_m": [
+        3.5124782,
+        0.17225741,
+        0.0046252983
+      ],
+      "liquid_mass_error_pct_max_abs": 0.0,
+      "gas_mass_error_pct_max_abs": 3.3415297096455985e-06,
+      "total_mass_error_pct_max_abs": 1.683918818265077e-08,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "pressure_probe_samples": 1,
+      "hstar_evaluable": false
+    },
+    "comparison_to_interpolated_normal_screen": {
+      "global_courant_change_pct": -82.13639395328578,
+      "interface_courant_change_pct": -57.23096731877436,
+      "capillary_number_change_pct": 9.199150323130192,
+      "peak_velocity_change_pct": 9.704470034958912,
+      "final_velocity_change_pct": -0.9152946697877216,
+      "clock_time_change_pct": -12.390924956369983,
+      "interpretation": "Disabling normal interpolation removed the severe startup Courant event and slightly reduced the final written velocity, but the written peak velocity increased by 9.7 percent and both global and interface Courant maxima remained above their declared targets."
+    },
+    "extension_decision": {
+      "eligible": false,
+      "reason": "The source handoff requires both Courant and velocity metrics to improve before extension. Peak velocity regressed from 1.1867 to 1.3019 m/s, so this candidate must not be extended past the short screen.",
+      "pressure_caveat": "The 0.005 s probe interval produced only one pressure sample; the reported zero pressure range has no hold-stability meaning.",
+      "next_action": "Isolate the reconstruction setting from timestep feedback with a tightly capped, paired startup timestep screen before selecting any candidate for a pressure-drift window beyond 0.04 s."
+    },
+    "completion_claim": "This is a rejected short numerical screen. It is not a passed hold, smoke run, full experiment, or accepted baseline."
   }
 }
