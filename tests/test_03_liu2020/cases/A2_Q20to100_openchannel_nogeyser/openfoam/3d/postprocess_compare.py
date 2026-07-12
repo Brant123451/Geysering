@@ -167,6 +167,10 @@ def parse_run_metadata(case: Path) -> dict[str, object]:
     logs = sorted(case.glob("log.interFoam.full")) + sorted(case.glob("log.interFoam.resume.*"))
     log_texts = [path.read_text(errors="replace") for path in logs if path.exists()]
     text = "\n".join(log_texts)
+    decompose_text = (case / "system" / "decomposeParDict").read_text(errors="replace")
+    ranks_match = re.search(r"(?m)^nProcs\s*:\s*(\d+)\s*$", text)
+    if ranks_match is None:
+        ranks_match = re.search(r"\bnumberOfSubdomains\s+(\d+)\s*;", decompose_text)
     co = [
         float(value)
         for value in re.findall(r"(?m)^Courant Number mean: \S+ max: (\S+)", text)
@@ -192,6 +196,7 @@ def parse_run_metadata(case: Path) -> dict[str, object]:
     return {
         "solver": "interFoam",
         "openfoam_build": build.group(1).strip() if build else "OpenFOAM v2512",
+        "mpi_ranks": int(ranks_match.group(1)) if ranks_match else None,
         "cells": int(cells_match.group(1)) if cells_match else None,
         "mesh_ok": "Mesh OK." in check_text and not re.search(r"Failed [1-9]", check_text),
         "max_non_orthogonality": match_float(r"non-orthogonality Max:\s+(\S+)"),

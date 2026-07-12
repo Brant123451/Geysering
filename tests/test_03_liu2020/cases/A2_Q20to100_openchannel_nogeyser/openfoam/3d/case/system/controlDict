@@ -1,6 +1,6 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-| Liu2020 A2: full 3-D interFoam validation                                  |
-| t=-4..0 s Q0 stabilization; t=0..0.4 s Q0->Q1; end t=14.4 s               |
+| Liu2020 A2: full 3-D interFoam assessment                                  |
+| t=-4..0 s Q0 relaxation; t=0..0.4 s Q0->Q1; end t=14.4 s                  |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {

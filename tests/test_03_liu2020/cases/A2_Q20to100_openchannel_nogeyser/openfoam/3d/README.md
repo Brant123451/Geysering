@@ -1,6 +1,6 @@
-# Case A2 three-dimensional OpenFOAM validation
+# Case A2 three-dimensional OpenFOAM assessment
 
-This directory contains the reproducible 3-D validation of Liu, Shao & Zhu
+This directory contains the reproducible 3-D assessment of Liu, Shao & Zhu
 (2020), Case A2 (`Q=20→100 L/s`, downstream open channel). The geometry and
 paper evidence are audited in [PAPER_AUDIT.md](PAPER_AUDIT.md). Generated
 meshes, numerical time directories, logs, `processor*`, and `postProcessing`
@@ -19,8 +19,9 @@ are intentionally not versioned.
   0.020 m³/s until `t=0`, linear to 0.100 m³/s by `t=0.4 s`.
 * Initialization: approximate steady `Q0` velocities, 0.08 m upstream depth,
   chamber surface `z=0.12 m` inferred from PT3=0.99 kPa, and downstream
-  `hd=Dd/4=0.070 m`. The simulation first stabilizes from `t=-4` to `0 s`,
-  longer than one measured-depth Q0 pipe-flow transit.
+  `hd=Dd/4=0.070 m`. The simulation allocates `t=-4…0 s` to Q0 relaxation.
+  The completed runs show that this interval does not reach a steady initial
+  state; the measured imbalance is reported below rather than hidden.
 * Downstream: fixed-stage equivalent at `hd=0.070 m`, split into hydrostatic
   water and atmospheric-air portions at the reported pipe end. This does not
   invent the unreported tank/weir dimensions or rating curve.
@@ -31,6 +32,16 @@ are intentionally not versioned.
 The required clock has `t=0` at ramp start. The paper defines zero at the
 fully-open instant; experimental times are therefore shifted by +0.4 s in
 the output comparison.
+
+The deterministic Gmsh target sizes are:
+
+| Region | base | refined |
+|---|---:|---:|
+| Far field maximum | 0.0500 m | 0.0425 m |
+| Chamber | 0.0180 m | 0.0153 m |
+| Riser | 0.0120 m | 0.0102 m |
+| Upstream pipe | 0.0280 m | 0.0238 m |
+| Downstream pipe | 0.0400 m | 0.0340 m |
 
 ## Requirements
 
@@ -49,7 +60,8 @@ defaults to one Gmsh thread so the tetrahedral mesh is deterministic.
 From `openfoam/3d/case`:
 
 ```bash
-./Allrun base
+NP=4 ./Allrun base
+NP=4 ./Allrun refined
 ```
 
 This clean-clone entrypoint is equivalent to running `Allclean`,
@@ -75,12 +87,13 @@ resume its latest processor checkpoint with:
 NP=4 ./Allrun.resume
 ```
 
-For the grid-sensitivity run:
+The second command cleans generated base runtime state but retains its compact
+outputs. The equivalent manual grid-sensitivity sequence is:
 
 ```bash
 ./Allclean
 ./Allrun.mesh refined
-./Allrun.solve full
+NP=4 ./Allrun.solve full
 python3 ../postprocess_compare.py --profile refined --no-primary
 ```
 
@@ -93,6 +106,11 @@ compact profile-specific series plus the required primary deliverables:
 * `outputs/openfoam_3d_metrics.json`
 * `outputs/openfoam_3d_pressure_comparison.png`
 * `outputs/openfoam_3d_riser_comparison.png`
+
+The primary files and plots intentionally retain the base profile. Profile
+files are named `openfoam_3d_base_*` and `openfoam_3d_refined_*`; after base is
+run first and refined second, `openfoam_3d_metrics.json` also receives the
+base/refined grid-sensitivity block.
 
 ## Numerical observables
 
@@ -110,6 +128,77 @@ Liquid continuity is checked independently as
 
 `V(t)-V(t0)+integral(sum(outward water fluxes) dt)`.
 
+Bore arrival is a reproducible pressure diagnostic: after `t=0.4 s`, PT3 must
+remain at least 0.20 kPa above its `-0.5…0 s` baseline for at least 80% of a
+20 ms interval. The experimental target is 1.60 s on the ramp-start clock.
+
+## Completed run results
+
+Both four-rank OpenFOAM.com v2512 runs reached the complete
+`-4…14.4 s` window and both meshes passed
+`checkMesh -allGeometry -allTopology`:
+
+| Metric | base | refined |
+|---|---:|---:|
+| Tetrahedra | 118,321 | 187,195 |
+| Maximum non-orthogonality | 54.637 | 55.874 |
+| Maximum skewness | 0.712 | 0.693 |
+| Minimum cell determinant | 0.00412 | 0.00461 |
+| Minimum time step | 6.11e-5 s | 6.12e-5 s |
+| Maximum Courant number | 0.506 | 0.491 |
+| Maximum interface Courant number | 0.471 | 0.474 |
+| OpenFOAM ClockTime | 29,420 s | 33,579 s |
+| Final liquid-balance residual / inflow | +0.00151% | -0.00631% |
+
+The task's interface-Courant acceptance ceiling of 0.5 was met, but the
+adaptive-step dictionary targets (`maxCo=0.47`, `maxAlphaCo=0.35`) were
+briefly overshot: interface peaks were 0.471/0.474 and the base all-field peak
+was 0.506. Refined's all-field peak was 0.491. In the retained refined log,
+the 10 m/s safety limiter acted on at most 19 cells (0.01%); its minimum time
+step occurred near `t=2.58 s`. The base limiter-location history was removed
+by the documented clean step before this additional diagnostic was requested,
+so it is not reconstructed.
+
+The runs falsify the earlier assumption that four seconds provides a converged
+Q0 initialization:
+
+| Pre-ramp metric | base | refined |
+|---|---:|---:|
+| Inlet liquid flow | 20.00 L/s | 20.00 L/s |
+| Outlet liquid flow | 22.05 L/s | 23.75 L/s |
+| Water-volume slope | -1.93 L/s | -3.68 L/s |
+| PT3 initial gauge pressure | 0.622 kPa | 0.591 kPa |
+
+Quantitative experiment comparison uses reconstructed atmospheric-gauge `p`
+and shifts paper times by +0.4 s:
+
+| Observable | Experiment | base | refined |
+|---|---:|---:|---:|
+| Bore arrival, ramp-start clock | 1.60 s | 2.805 s | 2.849 s |
+| PT2 mean, paper 7–14 s window | 2.15 kPa | -0.034 kPa | -0.041 kPa |
+| PT3 mean, paper 7–14 s window | 4.99 kPa | 1.643 kPa | 1.788 kPa |
+| PT1 RMSE vs digitized trace | — | 0.149 kPa | 0.148 kPa |
+| PT2 RMSE vs digitized trace | — | 2.068 kPa | 2.065 kPa |
+| PT3 RMSE vs digitized trace | — | 2.865 kPa | 2.775 kPa |
+| First contiguous column, `t=0…3 s` | first column 0.13 m | 0 m | 0 m |
+| Maximum contiguous column, all `t>=0` | — | 0.020 m | 0.020 m |
+| Maximum mixture front, all `t>=0` | — | 0.020 m | 0.080 m |
+| Maximum water-equivalent riser height | — | 0.0051 m | 0.0070 m |
+
+Neither mesh reaches the 1.22 m riser top. Integrated riser water discharge is
+numerically zero (`1.19e-35 m3` base and `2.99e-54 m3` refined), so the
+implemented model classifies both runs as no-geyser. This is not accepted as a
+faithful validation merely because it matches the experimental branch: the
+model misses the initial state, bore timing, chamber pressurization, and riser
+response by large margins. Grid refinement changes PT3's final-window mean by
+0.144 kPa (8.1%) and bore timing by 0.043 s (1.5%), but does not remove those
+systematic discrepancies. PT2 changes by only 0.0073 kPa; its reported 17.6%
+relative grid change is not meaningful because both means are close to zero.
+The near-zero, slightly negative PT2 means indicate that the modeled chamber
+never develops the measured positive lid pressure. The mixture-front metric is
+also grid-sensitive (0.02 to 0.08 m), although both values remain far below
+the riser top and the experimental first-column scalar.
+
 ## Limitations
 
 The strongest uncertainty is the downstream fixed-stage equivalent: Liu et
@@ -121,4 +210,8 @@ friction is checked only through base/refined sensitivity. Finally,
 incompressible single-velocity VOF does not resolve acoustic water hammer,
 compressible trapped gas, or subgrid bubble slip/breakup; these restrictions
 are material to pressure oscillations but not expected to control the vented
-Series A no-geyser branch.
+Series A no-geyser branch. The completed calculations additionally show that
+the fixed-stage/initial-condition combination is still relaxing at `t=0` and
+substantially over-relieves the high-flow system. A longer initialization alone
+cannot recover the unknown transient tank/weir rating, so no unreported weir
+geometry or calibrated backpressure was introduced to force agreement.

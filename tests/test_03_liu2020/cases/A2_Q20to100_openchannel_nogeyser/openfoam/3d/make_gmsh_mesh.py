@@ -160,7 +160,7 @@ def main() -> None:
         else:
             # Uniform 15% reduction in the governing target sizes.  This is a
             # systematic resolution sensitivity while keeping the complete
-            # 22.4 s two-phase transient tractable on four MPI ranks.
+            # 18.4 s (-4 to 14.4 s) transient tractable on four MPI ranks.
             size_max, size_chamber, size_riser = 0.0425, 0.0153, 0.0102
             size_upstream, size_downstream = 0.0238, 0.034
 

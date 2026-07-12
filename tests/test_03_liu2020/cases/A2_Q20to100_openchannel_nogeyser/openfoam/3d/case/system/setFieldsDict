@@ -10,8 +10,9 @@ FoamFile
 //   upstream depth ~0.08 m (p. 04019055-3);
 //   chamber free surface z=0.12 m, inferred from PT3=0.99 kPa at z=0.02 m;
 //   downstream depth hd=Dd/4=0.070 m (Table 1).
-// Six boxes approximate the upstream 1:100 free surface; the -4..0 s Q0
-// stabilization removes this small staircase perturbation before the ramp.
+// Six boxes approximate the upstream 1:100 free surface.  The -4..0 s Q0
+// interval relaxes this staircase, but completed runs show it is not a
+// converged steady initialization; see the 3-D README and committed metrics.
 
 defaultFieldValues
 (
@@ -32,6 +33,7 @@ regions
         ); }
 
     // Upstream pipe: invert z=0.18-0.01*x, depth ~0.08 m.
+    // The 0.08 m circular-segment area is 0.011735 m2, so Q0/A=1.704 m/s.
     boxToCell { box (-5.82 -1 -1) (-4.83 1 0.3132);
         fieldValues
         (
@@ -83,7 +85,8 @@ regions
             volScalarFieldValue p_rgh 1177
         ); }
 
-    // downstream pipe (invert z=0), paper target hd/Dd=1/4.
+    // Downstream pipe (invert z=0), paper target hd/Dd=1/4.
+    // The 0.070 m circular-segment area is 0.012038 m2, so Q0/A=1.661 m/s.
     boxToCell { box (0.30 -1 -1) (6.25 1 0.070);
         fieldValues
         (

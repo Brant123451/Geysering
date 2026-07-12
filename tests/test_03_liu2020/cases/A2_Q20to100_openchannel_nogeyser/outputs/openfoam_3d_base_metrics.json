@@ -19,6 +19,7 @@
   "openfoam_3d": {
     "solver": "interFoam",
     "openfoam_build": "_bd2b6720-20260127 OPENFOAM=2512 version=2512",
+    "mpi_ranks": 4,
     "cells": 118321,
     "mesh_ok": true,
     "max_non_orthogonality": 54.63712,

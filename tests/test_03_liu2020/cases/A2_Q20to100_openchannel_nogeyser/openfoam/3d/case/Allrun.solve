@@ -10,7 +10,7 @@ case "$MODE" in
 esac
 
 OF_LAUNCH="${OPENFOAM_LAUNCH:-/usr/bin/openfoam2512}"
-NP="${NP:-$(nproc)}"
+NP="${NP:-4}"
 if [[ ! -d constant/polyMesh ]]; then
     echo "mesh missing; first run: bash Allrun.mesh [base|refined]" >&2
     exit 2

@@ -179,3 +179,65 @@ The original pilot was not accepted as evidence. Audit found and corrected:
 The final report preserves, rather than hides, the fixed-stage outlet,
 headbox, local recess, probe-coordinate, turbulence/wall-resolution, and
 incompressible-VOF limitations.
+
+## Completed three-dimensional runtime audit
+
+The clean-source acceptance runs were completed with OpenFOAM.com v2512
+`interFoam` on four MPI ranks. The 118,321-cell base and 187,195-cell refined
+tetrahedral meshes both report `Mesh OK` under
+`checkMesh -allGeometry -allTopology`, and both solves cover the complete
+`t=-4…14.4 s` window. Compact series and metrics are committed under
+`outputs/openfoam_3d_*`.
+
+The run evidence does not support the earlier claim that the `-4…0 s` interval
+is a converged Q0 initialization:
+
+| Observable immediately before ramp | Paper target | base | refined |
+|---|---:|---:|---:|
+| Liquid inlet | 20 L/s | 20.00 L/s | 20.00 L/s |
+| Liquid outlet | steady with inlet | 22.05 L/s | 23.75 L/s |
+| Water-volume slope | approximately zero | -1.93 L/s | -3.68 L/s |
+| PT3 gauge pressure | 0.99 kPa | 0.622 kPa | 0.591 kPa |
+
+This is a physical-state imbalance, not the numerical continuity residual:
+the final integrated liquid-balance residual is only +0.00151% of inflow for
+base and -0.00631% for refined. The discrepancy is therefore retained as a
+failed initialization/model check, not relabeled as mass loss.
+
+Pressure comparison samples reconstructed atmospheric-gauge `p`; no result
+below uses raw `p_rgh`. Experimental timestamps are shifted by +0.4 s:
+
+| Observable | Paper | base | refined |
+|---|---:|---:|---:|
+| Bore arrival on ramp-start clock | 1.60 s | 2.805 s | 2.849 s |
+| PT2 mean over paper 7–14 s window | 2.15 kPa | -0.034 kPa | -0.041 kPa |
+| PT3 mean over paper 7–14 s window | 4.99 kPa | 1.643 kPa | 1.788 kPa |
+| First contiguous column, first 3 s | about 0.13 m | 0 m | 0 m |
+| Maximum contiguous column | — | 0.020 m | 0.020 m |
+| Maximum mixture front | — | 0.020 m | 0.080 m |
+
+Neither calculation reaches the 1.22 m riser top. Integrated outward water
+volume at the physical riser opening is effectively zero (`1.19e-35 m3` base,
+`2.99e-54 m3` refined), so both computations classify A2 as no-geyser. This
+agreement in branch classification is not sufficient validation: chamber
+pressurization, bore timing, and the first riser response are all substantially
+underpredicted. Refinement changes the PT3 final-window mean by 0.144 kPa
+(8.1%) and bore timing by 0.043 s (1.5%), so ordinary grid sensitivity does not
+explain the systematic errors.
+
+The interface Courant maxima are 0.471 and 0.474; minimum time steps are
+`6.11e-5 s` and `6.12e-5 s`. Base briefly reaches an all-field Courant number
+of 0.506, while refined remains at 0.491. Thus the task's 0.5 interface-Co
+ceiling is met, but the adaptive-step dictionary targets
+(`maxCo=0.47`, `maxAlphaCo=0.35`) are briefly overshot. The retained refined
+log shows the 10 m/s safety limiter acting on at most 19 cells (0.01%), with
+its minimum time step near `t=2.58 s`; the base limiter-location history was
+removed by the documented clean-before-refined workflow and is not
+reconstructed.
+
+The strongest evidence-based explanation is the documented downstream
+uncertainty: a fixed 0.070 m terminal stage preserves the one reported initial
+datum but cannot reproduce the unknown tank/weir rating as flow rises fivefold.
+The unconverged pre-ramp state is an additional independent defect. No
+unreported weir geometry, fitted pressure, or other parameter was introduced
+to force the experimental no-geyser branch.
