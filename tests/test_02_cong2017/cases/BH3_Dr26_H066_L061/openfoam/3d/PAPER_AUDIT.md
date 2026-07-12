@@ -177,5 +177,10 @@ speed over `0.05 s` to `0.01760 m/s`. The speed is still increasing at the
 end of that short diagnostic, so it is **not** a 1 s static-hold pass.
 Post-processing now requires the full declared `1.0 s` duration as well as
 the drift and velocity thresholds before writing `closed_hold.pass=true`.
-The next controlled check retains this refined mesh and restores the
-primary-paper surface tension `0.072 N/m`.
+Restoring the primary-paper surface tension `0.072 N/m` on the same refined
+mesh is worse: by `0.05 s` its maximum water-weighted speed is
+`0.12539 m/s`, maximum domain speed is `0.93489 m/s`, and reconstructed
+initial force residual is `1681.4`. Refinement therefore reduces the
+gravity-only projection residual but does not control the nonconservative CSF
+residual. The physical-sigma static gate remains failed, so no 13 s event run
+is released.

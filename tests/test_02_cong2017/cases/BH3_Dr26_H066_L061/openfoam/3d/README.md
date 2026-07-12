@@ -173,7 +173,11 @@ water-weighted speed at `0.05 s`). It is retained as negative evidence and is
 not eligible to replace the baseline. Refining the diffuse/zero-sigma case to
 456,068 cells reduced that speed to `0.01760 m/s` and the reconstructed
 initial force residual from `475.5` to `319.3`, but the speed was still rising
-at `0.05 s`; this is improvement evidence, not a 1 s hold pass.
+at `0.05 s`; this is improvement evidence, not a 1 s hold pass. Restoring
+the measured `0.072 N/m` on that refined mesh increases the `0.05 s`
+water-weighted maximum to `0.12539 m/s` and the reconstructed residual to
+`1681.4`. Thus mesh refinement alone does not cure the CSF imbalance, and the
+physical-sigma event gate remains closed.
 
 ## Required outputs
 

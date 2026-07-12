@@ -52,6 +52,9 @@
   },
   "closed_hold": {
     "applicable": true,
+    "minimum_duration_s": 1.0,
+    "duration_complete": false,
+    "thresholds_pass": false,
     "free_surface_max_drift_m": 0.0,
     "initial_pocket_zone_max_relative_volume_drift": 0.0,
     "pass": false,
@@ -77,7 +80,7 @@
   },
   "classification_changed_by_numerics": null,
   "honesty_note": "Experimental classification is a comparison target only. No source term or fitted event trigger is used.",
-  "source_fingerprint": "0fc1037f4690db3bc5d049e666dc0733f0df044ab02a7663533e236938a08ffa",
+  "source_fingerprint": "36b0cca14158dcbe2c4741f306e7510c9eef37a0a2dfb670bf3a05b6a2cc33ef",
   "numerical_controls": {
     "mesh_profile": "base",
     "c_alpha": 1.0,

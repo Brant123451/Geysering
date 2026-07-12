@@ -34,6 +34,7 @@ def main() -> None:
         ejection = data["ejection"]
         numerical_controls = data.get("numerical_controls", {})
         closed_hold = data.get("closed_hold", {})
+        is_closed = data["run_mode"] == "closed"
         rows.append(
             {
                 "run_id": data["run_id"],
@@ -60,13 +61,15 @@ def main() -> None:
                 "total_mass_residual_fraction": conservation[
                     "max_abs_total_mass_residual_fraction"
                 ],
-                "closed_hold_duration_complete": closed_hold.get(
-                    "duration_complete"
+                "closed_hold_duration_complete": (
+                    closed_hold.get("duration_complete") if is_closed else None
                 ),
-                "closed_hold_thresholds_pass": closed_hold.get(
-                    "thresholds_pass"
+                "closed_hold_thresholds_pass": (
+                    closed_hold.get("thresholds_pass") if is_closed else None
                 ),
-                "closed_hold_pass": closed_hold.get("pass"),
+                "closed_hold_pass": (
+                    closed_hold.get("pass") if is_closed else None
+                ),
             }
         )
 
