@@ -60,21 +60,7 @@
     "straight_riser_elements": "vertically swept triangular prisms",
     "riser_sweep_bottom_z_m": 0.061,
     "initial_free_surface_is_exact_layer": true,
-    "physical_rim_is_exact_layer": true,
-    "riser_near_wall_base": {
-      "first_cell_m": 0.00015,
-      "total_thickness_m": 0.0015,
-      "growth_ratio": 1.2,
-      "tangential_size_m": 0.001,
-      "nominal_layers_within_0p6_mm": 3,
-      "nominal_layers_within_1p2_mm": 5
-    },
-    "riser_near_wall_refined": {
-      "first_cell_m": 0.0001,
-      "total_thickness_m": 0.0015,
-      "growth_ratio": 1.18,
-      "tangential_size_m": 0.00075
-    }
+    "physical_rim_is_exact_layer": true
   },
   "initial_conditions": {
     "temperature_K": 296.15,
