@@ -42,7 +42,11 @@ The initial state follows the paper:
 
 `setFields` first assigns the bulk regions, then OpenFOAM `setAlphaField`
 computes cut-cell volume fractions for the planar valve and tower interfaces.
-This avoids cell-centre stair stepping on the tetrahedral mesh.  Finally,
+This avoids cell-centre stair stepping on the tetrahedral mesh.  The tower
+water selector extends to the midpoint of the assumed 2 mm solid wall:
+1 mm beyond the fluid radius and 1 mm short of exterior fluid.  This prevents
+an artificial radial alpha layer in boundary-adjacent tower cells while
+leaving the external atmosphere unselected.  Finally,
 two independent `setExprFields` processes first write `p` and then reload that
 final field to make `p_rgh` hydrostatically consistent with the geometric
 phase field.  The process split is required because OpenFOAM writes each

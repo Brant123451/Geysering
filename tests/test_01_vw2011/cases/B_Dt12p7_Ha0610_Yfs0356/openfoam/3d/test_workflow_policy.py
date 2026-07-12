@@ -204,6 +204,14 @@ class InitialFieldPolicyTests(unittest.TestCase):
         self.assertIn("readFields (alpha.water p p_rgh T);", reduced)
         self.assertIn("keepPatches true;", reduced)
 
+    def test_tower_water_selector_stays_inside_solid_wall(self) -> None:
+        alpha_initialisation = (
+            HERE / "system" / "setAlphaFieldDict"
+        ).read_text()
+
+        self.assertIn("radius     0.00735;", alpha_initialisation)
+        self.assertIn("exterior fluid starts at", alpha_initialisation)
+
 
 class TwoPhaseFlowDeckTests(unittest.TestCase):
     def test_rdf_geometric_vof_is_the_default(self) -> None:

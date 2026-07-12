@@ -95,6 +95,7 @@ pressure_initialisation = (HERE / "system" / "setExprFieldsDict").read_text()
 reduced_pressure_initialisation = (
     HERE / "system" / "setExprFieldsReducedPressureDict"
 ).read_text()
+alpha_initialisation = (HERE / "system" / "setAlphaFieldDict").read_text()
 allrun_source = (HERE / "Allrun").read_text()
 pressure_call = "setExprFields -dict system/setExprFieldsDict.runtime"
 reduced_pressure_call = (
@@ -111,6 +112,11 @@ if (
     raise SystemExit(
         "Absolute and reduced pressure must be initialised by ordered, "
         "independent setExprFields processes"
+    )
+if "radius     0.00735;" not in alpha_initialisation:
+    raise SystemExit(
+        "Tower-water selector must end inside the solid wall gap so all "
+        "tower-fluid boundary cells start fully wet"
     )
 
 result = {
@@ -129,6 +135,10 @@ result = {
     "initial_pressure_source_check": (
         "absolute p is written before a separate process reloads it to construct "
         "mixture-density p_rgh"
+    ),
+    "initial_alpha_source_check": (
+        "tower-water geometric selector extends halfway into the assumed solid "
+        "wall and remains 1 mm inside the exterior fluid boundary"
     ),
     "pipe_length_m": 4.006,
     "pipe_diameter_m": pipe_diameter,
