@@ -158,6 +158,10 @@ results into `outputs/`.
 It treats a failed closed hold as a hard error and refuses to start core or
 sensitivity event windows unless a passing `closed_base` result with the
 current source fingerprint exists.
+The completed sharp/zero-surface-tension diagnostic failed more severely than
+the 15 mm diffuse diagnostic (`1.7366` versus `0.02387 m/s` maximum
+water-weighted speed at `0.05 s`). It is retained as negative evidence and is
+not eligible to replace the baseline.
 
 ## Required outputs
 

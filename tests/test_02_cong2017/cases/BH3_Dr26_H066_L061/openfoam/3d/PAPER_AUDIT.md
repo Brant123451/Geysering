@@ -158,5 +158,13 @@ core/sensitivity groups cannot start without a passing current-source hold.
 The water and air pressure expressions are hydrostatic in their pure-phase
 regions; their alpha-weighted blend through the declared 15 mm transition is
 not claimed to be an exact discrete equilibrium. The case-local pressure
-projection is the next controlled correction under this gate; it is not a
-substitute for the 1 s result.
+projection converges its EOS/pressure fixed point, but its nonconservative
+reconstructed force residual remains too large to substitute for the 1 s
+result. With `sigma=0`, the 15 mm profile reaches a maximum water-weighted
+speed of `0.02387 m/s` by `0.05 s`, above the declared `0.02 m/s` gate.
+The conformal sharp-step, `sigma=0` isolation test is substantially worse:
+its maximum water-weighted speed is `1.7366 m/s`, maximum domain speed is
+`3.2103 m/s`, and the initial reconstructed force residual is
+`2198.8` versus `475.5` for the diffuse profile. The sharp profile is
+therefore rejected as a static-balance correction, not promoted to a
+baseline. Mesh dependence of this residual is the next controlled check.
