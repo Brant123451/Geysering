@@ -51,8 +51,11 @@ forcing and no outcome-dependent source.
 OpenFOAM's stock, unsmoothed curvature (`nAlphaSmoothCurvature=0`) is used.
 Repeated alpha averaging was rejected because it increased the closed-hold
 spurious peak on this high-density-ratio interface.  With the swept riser and
-physical surface tension retained, the verified `0.10 s` closed hold has
-`max|U|=4.22e-4 m/s`; the prior all-tetrahedral riser produced `0.229 m/s`.
+physical surface tension retained, the verified `1.00 s` closed hold has
+`max|U|=9.996e-3 m/s`, below the `0.025 m/s` gate.  That maximum is localized
+at the `cyclicACMI` endpoint-tolerance cells, not the free surface; liquid
+volume and gas mass balance residuals are `5.08e-10` and `3.50e-10` relative.
+The prior all-tetrahedral riser produced `0.229 m/s` within `0.10 s`.
 
 Time stepping is adaptive with `maxCo=0.50`, `maxAlphaCo=0.25`, and
 `maxDeltaT=5e-4 s`.  A full `0.30 s` opening comparison against

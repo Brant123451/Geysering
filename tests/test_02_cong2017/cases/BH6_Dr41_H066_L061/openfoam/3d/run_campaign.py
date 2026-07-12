@@ -148,6 +148,12 @@ def aggregate(
                     "gas_balance_relative_error": metrics.get(
                         "conservation", {}
                     ).get("gas_mass_relative_residual"),
+                    "static_hold_pass": metrics.get(
+                        "static_diagnostics", {}
+                    ).get("pass"),
+                    "static_max_speed_m_s": metrics.get(
+                        "static_diagnostics", {}
+                    ).get("max_speed_m_s"),
                 }
             )
 

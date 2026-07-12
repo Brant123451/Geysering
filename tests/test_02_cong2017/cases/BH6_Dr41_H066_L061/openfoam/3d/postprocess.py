@@ -445,6 +445,9 @@ def main() -> None:
             f"requested {requested_end_s:g} s, common coverage ends at "
             f"{simulation_end_s:g} s; streams={coverage_end_s}"
         )
+    valve_event_started = (
+        args.opening_start <= simulation_end_s + completion_tolerance_s
+    )
 
     ta = first_time(riser_time, yint >= 0.02)
     catch = first_time(
@@ -592,24 +595,29 @@ def main() -> None:
     one_d_yint_entrance = np.maximum(one_d["Yint_m"] - PIPE_D, 0.0)
     fs_mask = levels_exp["kind"] == "fs"
     int_mask = levels_exp["kind"] == "int"
-    fs_rmse = interpolation_rmse(
-        riser_time,
-        yfs,
-        levels_exp["t_s"][fs_mask],
-        levels_exp["Y_m"][fs_mask],
-    )
-    int_rmse = interpolation_rmse(
-        riser_time,
-        yint,
-        levels_exp["t_s"][int_mask],
-        levels_exp["Y_m"][int_mask],
-    )
-    pressure_rmse = interpolation_rmse(
-        pt1_time,
-        pt1_smooth,
-        pressure_exp["t_s"],
-        pressure_exp["HoverH0_med"],
-    )
+    if valve_event_started:
+        fs_rmse = interpolation_rmse(
+            riser_time,
+            yfs,
+            levels_exp["t_s"][fs_mask],
+            levels_exp["Y_m"][fs_mask],
+        )
+        int_rmse = interpolation_rmse(
+            riser_time,
+            yint,
+            levels_exp["t_s"][int_mask],
+            levels_exp["Y_m"][int_mask],
+        )
+        pressure_rmse = interpolation_rmse(
+            pt1_time,
+            pt1_smooth,
+            pressure_exp["t_s"],
+            pressure_exp["HoverH0_med"],
+        )
+    else:
+        fs_rmse = float("nan")
+        int_rmse = float("nan")
+        pressure_rmse = float("nan")
 
     geometry = json.loads(
         (case / "geometry_audit.runtime.json").read_text(encoding="utf-8")
@@ -679,6 +687,30 @@ def main() -> None:
 
     water_scale = max(abs(water_volume[0]), 1e-30)
     gas_scale = max(abs(air_mass[0]), 1e-30)
+    pocket_volume_scale = max(abs(downstream_air_volume[0]), 1e-30)
+    max_speed = float(np.nanmax(audit[:, AUDIT_INDEX["max_speed_m_s"]]))
+    water_volume_change = float(water_volume[-1] - water_volume[0])
+    downstream_air_volume_change = float(
+        downstream_air_volume[-1] - downstream_air_volume[0]
+    )
+    closed_hold = (
+        args.opening_start > requested_end_s + completion_tolerance_s
+    )
+    static_limits = {
+        "max_speed_m_s": 0.025,
+        "water_volume_relative_change": 1.0e-6,
+        "downstream_air_volume_relative_change": 1.0e-6,
+    }
+    static_hold_pass = (
+        run_completed
+        and max_speed <= static_limits["max_speed_m_s"]
+        and abs(water_volume_change) / water_scale
+        <= static_limits["water_volume_relative_change"]
+        and abs(downstream_air_volume_change) / pocket_volume_scale
+        <= static_limits["downstream_air_volume_relative_change"]
+        if closed_hold
+        else None
+    )
     mesh_summary = {
         **valve_baffle_mesh,
         **geometry.get("mesh_sizes_m", {}),
@@ -793,14 +825,15 @@ def main() -> None:
             "open_boundary_fluxes_included": True,
         },
         "static_diagnostics": {
-            "max_speed_m_s": float(
-                np.nanmax(audit[:, AUDIT_INDEX["max_speed_m_s"]])
-            ),
-            "water_volume_change_m3": float(
-                water_volume[-1] - water_volume[0]
-            ),
-            "downstream_air_volume_change_m3": float(
-                downstream_air_volume[-1] - downstream_air_volume[0]
+            "applicable": closed_hold,
+            "pass": static_hold_pass,
+            "acceptance_limits": static_limits,
+            "max_speed_m_s": max_speed,
+            "water_volume_change_m3": water_volume_change,
+            "water_volume_relative_change": water_volume_change / water_scale,
+            "downstream_air_volume_change_m3": downstream_air_volume_change,
+            "downstream_air_volume_relative_change": (
+                downstream_air_volume_change / pocket_volume_scale
             ),
         },
         "limitations": [
