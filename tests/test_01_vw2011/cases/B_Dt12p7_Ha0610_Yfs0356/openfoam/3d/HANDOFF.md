@@ -94,7 +94,17 @@ reached +1608.6 1/m.  Global curvature extrema may lie outside the active
 alpha-CSF band, so the next diagnostic must collocate alpha, density and K in
 the actual maximum-velocity cell and separately report pressure-gravity,
 surface-tension and total face-force residuals.  Do not extend physical RDF
-until that mechanism evidence selects the next single-parameter screen.
+until that mechanism evidence selects the next single-parameter screen.  The
+new logger was compiled and executed during a 0.00049 s continuation.  It
+found the velocity hotspot in almost pure gas
+(\(\alpha_w=1.03\times10^{-5}\), \(K=337.5\ {\rm m^{-1}}\)) and found
+pressure-gravity/surface-force magnitudes 462/473 kPa/m at the same internal
+face deep in the tower, y=0.184 m.  A nearby alpha probe changed from 1.0 at
+time zero to 0.437 by 0.00649 s, far below the intended y=0.403 m free surface.
+This is not physically reachable advection and identifies a wall-adjacent
+alpha/reconstruction layer.  The next minimal fix is to extend the tower-water
+initialization cylinder into the known 2 mm solid wall gap, where there are no
+fluid cells, so every tower-fluid cell below the plane starts fully wet.
 
 ## Verified before handoff
 
@@ -277,6 +287,17 @@ until that mechanism evidence selects the next single-parameter screen.
     The RDF-versus-zero-curvature first-frame difference proves a strong
     variable-curvature contribution, while the zero-curvature delayed peak
     independently proves a pressure-gravity contribution.
+21. Collocated diagnostics are implemented, pass all 17 policy tests, compile,
+    and execute.  At 0.006493 s they recorded:
+    * Umax=1.178 m/s in a gas-dominant cell with
+      \(\alpha_w=1.03\times10^{-5}\), \(\rho=1.215\ {\rm kg/m^3}\), and
+      \(K=337.5\ {\rm m^{-1}}\);
+    * maximum pressure-gravity and surface-tension face-force magnitudes of
+      462 and 473 kPa/m at the same y=0.184 m tower-wall face;
+    * maximum total residual 77.6 kPa/m near the intended free surface;
+    * a probe beside the deep force hotspot changed from alpha=1 initially to
+      0.437, despite being 0.219 m below the physical interface.
+    The deep interfacial layer is numerical, not a geyser or gas breakthrough.
 
 ## Still required
 
@@ -290,11 +311,12 @@ The scientific reproduction is **not complete**.  Continue in this order:
    diagnostic, and the first `RDF + plicRDF + interpolateNormal=false`
    screen are also rejected.  The pressure split and corrected
    `constantCurvature=0` mechanism rerun and corrected physical RDF screen are
-   complete.  Before another model run, materialise collocated maximum-velocity
-   alpha/density/K and hydrostatic/surface/total face-force diagnostics.  Use
-   those results to choose one clean sensitivity (RDF `curvFromTr=false` if
-   curvature force dominates, or discrete hydrostatic initialization if the
-   pressure-gravity residual dominates).  Extend a candidate past the 0.04 s
+   complete, and the collocated logger has exposed an unintended deep
+   wall-adjacent interface.  Expand the tower-water initializer into the solid
+   wall gap, verify the initial tower column is fully wet below y=0.403 m, then
+   repeat paired zero-curvature and RDF screens.  Only after the deep force
+   hotspot is absent should `curvFromTr=false` or discrete hydrostatic
+   initialization be screened.  Extend a candidate past the 0.04 s
    pressure-drift onset only if it stays within the declared Courant limits
    and reduces peak velocity, and only \(H^*\) peak-to-peak at or below 0.02
    may proceed to the full 1.0 s hold.  Opening runs retain the dissipative

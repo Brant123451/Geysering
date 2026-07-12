@@ -908,11 +908,51 @@
       ],
       "caveat": "Global K extrema can occur in cells where the alphaCSF delta is zero. A collocated force diagnostic is required before interpreting all extrema as active surface-tension force."
     },
+    "collocated_force_diagnostic_at_0p0064928625_s": {
+      "source_commit": "771714e",
+      "continuation_note": "This diagnostic continued the rejected RDF screen by 0.00049 s only to execute the newly compiled collocated logger.",
+      "maximum_velocity_cell": {
+        "velocity_m_per_s": 1.1778191,
+        "location_m": [
+          3.5134313,
+          0.40380227,
+          0.0005271708
+        ],
+        "alpha_water": 1.0344235e-05,
+        "mixture_density_kg_per_m3": 1.2146573,
+        "curvature_per_m": 337.46564,
+        "pressure_pa": 101332.92,
+        "reduced_pressure_pa": 101337.73,
+        "processor": 1,
+        "local_cell": 457940
+      },
+      "maximum_internal_face_forces_pa_per_m": {
+        "hydrostatic_residual": 462427.18,
+        "surface_tension": 472860.0,
+        "common_location_m": [
+          3.5109107,
+          0.18428966,
+          0.0031242152
+        ],
+        "total_residual": 77568.911,
+        "total_residual_location_m": [
+          3.5153577,
+          0.40276563,
+          0.0046954981
+        ]
+      },
+      "radial_alpha_probe": {
+        "force_location_alpha_water_at_time_zero": 1.0,
+        "force_location_alpha_water_at_0p0064928625_s": 0.43746227,
+        "finding": "A cell adjacent to the deep tower-wall force hotspot became interfacial far below the intended y=0.403 free surface. This cannot be physical advection over 0.0065 s and identifies an unintended wall-adjacent alpha/reconstruction layer."
+      },
+      "decision": "The next minimal fix expands the tower-water geometric initializer into the known 2 mm solid wall gap. This keeps all fluid cells inside the tower fully wet below the planar free surface without selecting any exterior-atmosphere cells."
+    },
     "interpretation": {
       "finding": "The corrected physical RDF run failed both Courant limits and reached 1.775 m/s at the initial free surface. RDF creates a much larger first-frame velocity than corrected zero curvature (1.516 versus 0.170 m/s), while zero curvature still retains a delayed 1.424 m/s hotspot.",
       "mechanism": "Both variable-curvature force error and a separate pressure-gravity discrete imbalance are present. Timestep reductions after the two Courant excursions exactly follow the one-step-lag controller ratios and are consequences rather than the primary force source.",
       "decision": "Do not extend this candidate or start the 1.0 s hold.",
-      "next_action": "Record alpha, density and K in the actual maximum-velocity cell and collocated hydrostatic, surface-tension and total face-force residuals before selecting the next single-parameter physical screen."
+      "next_action": "Expand the tower-water initialization cylinder from the exact fluid radius into the solid wall gap, verify that no deep wall-adjacent alpha interface or force hotspot remains, and repeat the paired zero-curvature and RDF short screens."
     },
     "completion_claim": "This is a rejected corrected-initialization screen, not a passed hold, smoke run, full experiment, or accepted baseline."
   }

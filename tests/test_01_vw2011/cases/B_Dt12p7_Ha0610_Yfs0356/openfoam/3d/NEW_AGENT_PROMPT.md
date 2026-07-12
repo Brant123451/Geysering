@@ -393,6 +393,21 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     物化并记录实际 Umax cell 的 alpha/rho/K，以及 pressure-gravity、
     surface-tension 和 total face-force residual。根据同位机制证据只选择
     一个配对 sensitivity；不得直接延长到 0.04 s 或 1.0 s。
+18. commit `771714e` 的同位诊断已通过 17 项测试、动态编译并执行。在
+    0.006493 s 的最小 continuation 中：
+    - Umax cell 为近纯气体：
+      alpha.water=\(1.03\times10^{-5}\)、rho=1.215 kg/m3、
+      K=337.5 1/m；
+    - pressure-gravity residual 与 surface-tension force 的最大值为
+      462/473 kPa/m，并位于同一个 tower 深部 wall-adjacent face
+      (y=0.184 m)；
+    - 最大 total residual 为 77.6 kPa/m，位于预期自由面附近；
+    - 深部力热点旁的 alpha probe 从 time-zero 的 1.0 变成 0.006493 s
+      的 0.437，距物理自由面 0.219 m，不可能是该时窗内的物理 advection。
+    这确认 exact-radius tower cylinder 初始化/重构产生了非物理壁邻相界面。
+    下一步把 tower-water initializer 扩入已知 2 mm 固体壁间隙（不得触及
+    exterior fluid cells），先证明 y<0.403 的 tower fluid 全湿，再复筛
+    zero-curvature 与 RDF。
 
 十、hold 验收
 

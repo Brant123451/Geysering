@@ -183,7 +183,14 @@ metres although the analytical plane has zero curvature, including
 +1608.6 1/m in a free-surface cell at the velocity-peak time.  Since global K
 extrema can lie outside the active alpha-CSF band, the next run must first
 collocate alpha, density, curvature and force residuals with the actual
-velocity hotspot; no hold extension is cleared.
+velocity hotspot; no hold extension is cleared.  That logger now shows the
+velocity hotspot in nearly pure gas and 462/473 kPa/m pressure-gravity/surface
+forces at the same internal face at y=0.184 m, far below the intended
+y=0.403 m interface.  A nearby alpha probe changed from 1.0 to 0.437 by
+0.00649 s.  This nonphysical wall-adjacent interface points to the
+exact-radius tower cylinder used by geometric alpha initialization.  The next
+screen expands that selector into the known solid wall gap so all tower-fluid
+cells below the plane start fully wet without selecting exterior fluid.
 
 Thermophysical choices are:
 
