@@ -219,6 +219,9 @@ class InitialFieldPolicyTests(unittest.TestCase):
         initializer = (
             HERE / "caseBHydrostaticInit" / "caseBHydrostaticInit.C"
         ).read_text()
+        build_options = (
+            HERE / "caseBHydrostaticInit" / "Make" / "options"
+        ).read_text()
         allrun = (HERE / "Allrun").read_text()
         reduced_call = (
             "setExprFields -dict "
@@ -236,6 +239,13 @@ class InitialFieldPolicyTests(unittest.TestCase):
         )
         self.assertIn("hydrostaticEqn.setReferences", initializer)
         self.assertIn("CASEB_HYDROSTATIC_INIT_SUMMARY", initializer)
+        self.assertIn("-ltwoPhaseProperties", build_options)
+        self.assertLess(
+            initializer.index(
+                "constrainPressure(p_rgh, U, initialForceFlux, onef)"
+            ),
+            initializer.index("p_rgh.correctBoundaryConditions()"),
+        )
         self.assertIn("CASEB_HYDROSTATIC_INITIALIZATION", allrun)
         self.assertLess(
             allrun.index(reduced_call),

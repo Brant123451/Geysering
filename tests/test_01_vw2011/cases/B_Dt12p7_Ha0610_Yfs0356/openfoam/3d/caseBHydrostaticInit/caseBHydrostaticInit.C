@@ -94,6 +94,16 @@ void reportResidual
         << nl;
 }
 
+
+void resetPressureBoundaryUpdates(volScalarField& p_rgh)
+{
+    forAll(p_rgh.boundaryFieldRef(), patchI)
+    {
+        p_rgh.boundaryFieldRef()[patchI].setUpdated(false);
+    }
+}
+
+
 } // End anonymous namespace
 
 
@@ -194,7 +204,6 @@ int main(int argc, char *argv[])
         dimensionedScalar("one", dimless, 1)
     );
 
-    p_rgh.correctBoundaryConditions();
     rho.correctBoundaryConditions();
 
     const regionSplit cellRegion(mesh);
@@ -256,6 +265,35 @@ int main(int argc, char *argv[])
             << " location=" << mesh.C()[referenceCells[refI]] << nl;
     }
 
+    const surfaceScalarField initialGravityForce
+    (
+        IOobject
+        (
+            "caseBInitialGravityForce",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            false
+        ),
+       -ghf*fvc::snGrad(rho)
+    );
+    const surfaceScalarField initialForceFlux
+    (
+        IOobject
+        (
+            "caseBInitialGravityForceFlux",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            false
+        ),
+        initialGravityForce*mesh.magSf()
+    );
+    resetPressureBoundaryUpdates(p_rgh);
+    constrainPressure(p_rgh, U, initialForceFlux, onef);
+
     const residualStats before =
         measureResidual(mesh, ghf, gh, rho, p, p_rgh);
     reportResidual("before", 0, before);
@@ -265,7 +303,6 @@ int main(int argc, char *argv[])
     {
         rho = alpha1*rho1 + alpha2*rho2;
         rho.correctBoundaryConditions();
-        p_rgh.correctBoundaryConditions();
 
         const surfaceScalarField gravityForce
         (
@@ -294,6 +331,7 @@ int main(int argc, char *argv[])
             gravityForce*mesh.magSf()
         );
 
+        resetPressureBoundaryUpdates(p_rgh);
         constrainPressure(p_rgh, U, forceFlux, onef);
 
         fvScalarMatrix hydrostaticEqn
