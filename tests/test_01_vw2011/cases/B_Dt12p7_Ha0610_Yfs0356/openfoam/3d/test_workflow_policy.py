@@ -45,6 +45,8 @@ def baseline_manifest(mesh: str = "base") -> dict:
         "reconstruction_tolerance": 1e-6,
         "interpolate_normal": False,
         "curvature_model": "RDF",
+        "curvature_value_per_m": 0.0,
+        "curvature_from_trace": True,
         "max_co": 0.30,
         "max_alpha_co": 0.20,
         "max_capillary_num": 1.0,
@@ -80,6 +82,9 @@ class BaselinePolicyTests(unittest.TestCase):
         self.assertFalse(is_baseline_full_physics(manifest))
         manifest = baseline_manifest()
         manifest["curvature_model"] = "fitParaboloid"
+        self.assertFalse(is_baseline_full_physics(manifest))
+        manifest = baseline_manifest()
+        manifest["curvature_from_trace"] = False
         self.assertFalse(is_baseline_full_physics(manifest))
         manifest = baseline_manifest()
         manifest["interpolate_normal"] = True
@@ -203,6 +208,9 @@ class TwoPhaseFlowDeckTests(unittest.TestCase):
         self.assertIn("CASEB_INTERPOLATE_NORMAL", prepare)
         self.assertIn("CASEB_RECONSTRUCTION_ITERATIONS", prepare)
         self.assertIn("CASEB_RECONSTRUCTION_TOL", prepare)
+        self.assertIn("CASEB_CURVATURE_VALUE", prepare)
+        self.assertIn("CASEB_CURV_FROM_TR", prepare)
+        self.assertIn('"constantCurvature"', prepare)
         self.assertIn("clip                    false;", settings)
         self.assertIn("surfaceTensionForceModel    RDF;", surface_forces)
         self.assertIn("nAlphaCorr      1;", alpha_correctors)

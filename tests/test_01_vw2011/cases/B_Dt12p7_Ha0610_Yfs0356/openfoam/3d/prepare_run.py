@@ -69,6 +69,8 @@ def main() -> None:
     reconstruction_tolerance = env_float("CASEB_RECONSTRUCTION_TOL", 1e-6)
     interpolate_normal = env_bool("CASEB_INTERPOLATE_NORMAL", False)
     curvature_model = os.environ.get("CASEB_CURVATURE_MODEL", "RDF")
+    curvature_value = env_float("CASEB_CURVATURE_VALUE", 0.0)
+    curv_from_tr = env_bool("CASEB_CURV_FROM_TR", True)
     n_alpha_bounds = env_int("CASEB_N_ALPHA_BOUNDS", 5)
     n_alpha_corr = env_int("CASEB_N_ALPHA_CORR", 1)
     n_alpha_subcycles = env_int("CASEB_N_ALPHA_SUBCYCLES", 2)
@@ -105,9 +107,19 @@ def main() -> None:
         raise SystemExit(
             "CASEB_RECONSTRUCTION_SCHEME must be plicRDF, isoAlpha, or gradAlpha"
         )
-    if curvature_model not in {"RDF", "fitParaboloid", "gradAlpha"}:
+    if curvature_model not in {
+        "RDF",
+        "fitParaboloid",
+        "gradAlpha",
+        "constantCurvature",
+    }:
         raise SystemExit(
-            "CASEB_CURVATURE_MODEL must be RDF, fitParaboloid, or gradAlpha"
+            "CASEB_CURVATURE_MODEL must be RDF, fitParaboloid, gradAlpha, "
+            "or constantCurvature"
+        )
+    if curvature_model == "constantCurvature" and stage != "hold":
+        raise SystemExit(
+            "constantCurvature is a closed-hold mechanism diagnostic only"
         )
     if "CASEB_ALPHA_SMOOTH_CURVATURE" in os.environ:
         raise SystemExit(
@@ -132,6 +144,7 @@ def main() -> None:
         write_interval,
         c_alpha,
         reconstruction_tolerance,
+        curvature_value,
         initial_air_head,
         valve_seal_speed,
     )
@@ -224,12 +237,21 @@ def main() -> None:
         f"nCorrectors              {n_pressure_correctors};\n"
         f"nNonOrthogonalCorrectors {n_non_orthogonal_correctors};\n"
     )
+    curvature_controls = (
+        f"    curvFromTr                  {str(curv_from_tr).lower()};\n"
+        if curvature_model == "RDF"
+        else (
+            f"    curv                        {curvature_value:.10g};\n"
+            if curvature_model == "constantCurvature"
+            else ""
+        )
+    )
     (HERE / "constant" / "surfaceForces").write_text(
         "surfaceForces\n"
         "{\n"
         "    sigma                       0.072;\n"
         f"    surfaceTensionForceModel    {curvature_model};\n"
-        "    curvFromTr                  true;\n"
+        f"{curvature_controls}"
         "    accelerationForceModel      gravity;\n"
         "    deltaFunctionModel          alphaCSF;\n"
         "}\n"
@@ -277,6 +299,8 @@ def main() -> None:
         "reconstruction_tolerance": reconstruction_tolerance,
         "interpolate_normal": interpolate_normal,
         "curvature_model": curvature_model,
+        "curvature_value_per_m": curvature_value,
+        "curvature_from_trace": curv_from_tr,
         "max_co": max_co,
         "max_alpha_co": max_alpha_co,
         "max_capillary_num": max_capillary_num,

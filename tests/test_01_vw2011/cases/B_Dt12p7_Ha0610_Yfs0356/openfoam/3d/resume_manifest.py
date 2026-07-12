@@ -32,6 +32,8 @@ ENVIRONMENT_KEYS = {
     "reconstruction_tolerance": "CASEB_RECONSTRUCTION_TOL",
     "interpolate_normal": "CASEB_INTERPOLATE_NORMAL",
     "curvature_model": "CASEB_CURVATURE_MODEL",
+    "curvature_value_per_m": "CASEB_CURVATURE_VALUE",
+    "curvature_from_trace": "CASEB_CURV_FROM_TR",
     "n_alpha_bounds": "CASEB_N_ALPHA_BOUNDS",
     "n_alpha_corr": "CASEB_N_ALPHA_CORR",
     "n_alpha_subcycles": "CASEB_N_ALPHA_SUBCYCLES",
@@ -54,6 +56,7 @@ NUMERIC_KEYS = {
     "c_alpha",
     "reconstruction_iterations",
     "reconstruction_tolerance",
+    "curvature_value_per_m",
     "n_alpha_bounds",
     "n_alpha_corr",
     "n_alpha_subcycles",
@@ -105,10 +108,22 @@ def read_manifest(path: Path) -> dict:
         "gradAlpha",
     }:
         raise ValueError("Unknown reconstruction scheme in run manifest")
-    if manifest["curvature_model"] not in {"RDF", "fitParaboloid", "gradAlpha"}:
+    if manifest["curvature_model"] not in {
+        "RDF",
+        "fitParaboloid",
+        "gradAlpha",
+        "constantCurvature",
+    }:
         raise ValueError("Unknown curvature model in run manifest")
+    if (
+        manifest["curvature_model"] == "constantCurvature"
+        and manifest["stage"] != "hold"
+    ):
+        raise ValueError("constantCurvature is only valid for hold diagnostics")
     if not isinstance(manifest["interpolate_normal"], bool):
         raise ValueError("interpolate_normal must be a boolean")
+    if not isinstance(manifest["curvature_from_trace"], bool):
+        raise ValueError("curvature_from_trace must be a boolean")
     if not isinstance(manifest["alpha_clip"], bool):
         raise ValueError("alpha_clip must be a boolean")
     for key in NUMERIC_KEYS:

@@ -65,6 +65,8 @@ def configuration_id(manifest: dict) -> str:
             "reconstruction_tolerance",
             "interpolate_normal",
             "curvature_model",
+            "curvature_value_per_m",
+            "curvature_from_trace",
             "n_alpha_bounds",
             "n_alpha_corr",
             "n_alpha_subcycles",
@@ -94,6 +96,8 @@ def is_baseline_numerics(manifest: dict) -> bool:
         )
         and manifest.get("interpolate_normal") is False
         and manifest.get("curvature_model") == "RDF"
+        and math.isclose(float(manifest.get("curvature_value_per_m", -1)), 0.0)
+        and manifest.get("curvature_from_trace") is True
         and math.isclose(float(manifest.get("max_capillary_num", -1)), 1.0)
         and math.isclose(float(manifest.get("c_alpha", -1)), 1.0)
         and int(manifest.get("n_alpha_bounds", -1)) == 5
@@ -193,6 +197,8 @@ def mesh_pair_compatible(first: dict, second: dict) -> bool:
         "reconstruction_tolerance",
         "interpolate_normal",
         "curvature_model",
+        "curvature_value_per_m",
+        "curvature_from_trace",
         "n_alpha_bounds",
         "n_alpha_corr",
         "n_alpha_subcycles",
@@ -390,6 +396,8 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "reconstructionTolerance",
         "interpolateNormal",
         "curvatureModel",
+        "curvatureValue_per_m",
+        "curvatureFromTrace",
         "nAlphaBounds",
         "nAlphaCorr",
         "nAlphaSubCycles",
@@ -465,6 +473,8 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "reconstructionTolerance": manifest.get("reconstruction_tolerance"),
         "interpolateNormal": manifest.get("interpolate_normal"),
         "curvatureModel": manifest.get("curvature_model"),
+        "curvatureValue_per_m": manifest.get("curvature_value_per_m"),
+        "curvatureFromTrace": manifest.get("curvature_from_trace"),
         "nAlphaBounds": manifest.get("n_alpha_bounds"),
         "nAlphaCorr": manifest.get("n_alpha_corr"),
         "nAlphaSubCycles": manifest.get("n_alpha_subcycles"),
@@ -534,6 +544,8 @@ def update_sensitivity_csv(metrics: dict) -> None:
         "reconstructionTolerance",
         "interpolateNormal",
         "curvatureModel",
+        "curvatureValue_per_m",
+        "curvatureFromTrace",
         "nAlphaBounds",
         "nAlphaCorr",
         "nAlphaSubCycles",
@@ -585,6 +597,8 @@ def update_sensitivity_csv(metrics: dict) -> None:
         "reconstructionTolerance": manifest.get("reconstruction_tolerance"),
         "interpolateNormal": manifest.get("interpolate_normal"),
         "curvatureModel": manifest.get("curvature_model"),
+        "curvatureValue_per_m": manifest.get("curvature_value_per_m"),
+        "curvatureFromTrace": manifest.get("curvature_from_trace"),
         "nAlphaBounds": manifest.get("n_alpha_bounds"),
         "nAlphaCorr": manifest.get("n_alpha_corr"),
         "nAlphaSubCycles": manifest.get("n_alpha_subcycles"),
@@ -1264,6 +1278,8 @@ def postprocess(manifest: dict, mesh: dict) -> dict:
             ),
             "interpolate_normal": manifest.get("interpolate_normal"),
             "curvature_model": manifest.get("curvature_model"),
+            "curvature_value_per_m": manifest.get("curvature_value_per_m"),
+            "curvature_from_trace": manifest.get("curvature_from_trace"),
             "gas_equation_of_state": manifest.get(
                 "gas_equation_of_state", "unknown"
             ),
