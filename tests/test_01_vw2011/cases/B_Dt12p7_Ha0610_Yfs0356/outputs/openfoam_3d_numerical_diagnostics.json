@@ -836,5 +836,84 @@
       "next_action": "Repeat the physical RDF plus plicRDF plus interpolateNormal=false 0.006 s screen with the corrected initialization before testing timestep or pressure-coupling controls."
     },
     "completion_claim": "This validates the pressure-field repair, not the closed-valve hold or experimental reproduction."
+  },
+  "corrected_initialization_rdf_screen": {
+    "status": "rejected_curvature_and_hydrostatic_imbalance",
+    "source_commit": "9bd641c",
+    "purpose": "Re-establish the physical RDF plus plicRDF plus interpolateNormal=false baseline after eliminating the stale-pressure initialization defect.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "reconstruction_iterations": 5,
+      "reconstruction_tolerance": 1e-06,
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "write_interval_s": 0.0005,
+      "requested_end_time_s": 0.006
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.006003194242,
+      "postprocessed_probe_duration_s": 0.0049850321,
+      "execution_time_s": 607.83,
+      "clock_time_s": 619,
+      "final_delta_t_s": 5.4901916e-05,
+      "maximum_courant_number": 0.36626271,
+      "maximum_interface_courant_number": 0.30324312,
+      "maximum_capillary_number": 0.38514612,
+      "alpha_water_min": -6.8177947e-10,
+      "alpha_water_max": 1.0000000000000808,
+      "first_written_velocity_m_per_s": 1.5159313,
+      "first_written_velocity_time_s": 0.00046752439,
+      "written_peak_velocity_m_per_s": 1.7751321,
+      "written_peak_velocity_time_s": 0.0034856377,
+      "written_peak_velocity_location_m": [
+        3.51307,
+        0.40397566,
+        0.0037364212
+      ],
+      "final_written_velocity_m_per_s": 1.3443924,
+      "gas_mass_error_pct_max_abs": 4.907265599589989e-06,
+      "total_mass_error_pct_max_abs": 2.358176887033977e-08,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "pressure_probe_samples": 1,
+      "hstar_evaluable": false
+    },
+    "curvature_field_diagnostic": {
+      "theoretical_planar_curvature_per_m": 0.0,
+      "global_min_per_m": {
+        "0.00046752439": -8205.86,
+        "0.0034856377": -6801.4491,
+        "0.0060031942": -5872.0259
+      },
+      "global_max_per_m": {
+        "0.00046752439": 2516.316,
+        "0.0034856377": 1608.6365,
+        "0.0060031942": 2301.6158
+      },
+      "free_surface_max_location_m_at_peak_time": [
+        3.5215963,
+        0.40414422,
+        -0.00081251441
+      ],
+      "caveat": "Global K extrema can occur in cells where the alphaCSF delta is zero. A collocated force diagnostic is required before interpreting all extrema as active surface-tension force."
+    },
+    "interpretation": {
+      "finding": "The corrected physical RDF run failed both Courant limits and reached 1.775 m/s at the initial free surface. RDF creates a much larger first-frame velocity than corrected zero curvature (1.516 versus 0.170 m/s), while zero curvature still retains a delayed 1.424 m/s hotspot.",
+      "mechanism": "Both variable-curvature force error and a separate pressure-gravity discrete imbalance are present. Timestep reductions after the two Courant excursions exactly follow the one-step-lag controller ratios and are consequences rather than the primary force source.",
+      "decision": "Do not extend this candidate or start the 1.0 s hold.",
+      "next_action": "Record alpha, density and K in the actual maximum-velocity cell and collocated hydrostatic, surface-tension and total face-force residuals before selecting the next single-parameter physical screen."
+    },
+    "completion_claim": "This is a rejected corrected-initialization screen, not a passed hold, smoke run, full experiment, or accepted baseline."
   }
 }

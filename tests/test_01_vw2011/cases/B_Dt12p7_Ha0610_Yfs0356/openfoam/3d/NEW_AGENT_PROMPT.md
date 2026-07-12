@@ -379,6 +379,20 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     该非物理模型仍不能延长。下一步用修复后的初始化复筛
     `RDF + plicRDF + interpolateNormal=false`，再决定 timestep 或
     pressure-coupling sensitivity。
+17. 修复初始化后的物理 RDF 复筛已正常运行至 0.006 s，但明确失败：
+    - global/interface Co 为 0.366/0.303；
+    - 首帧速度 1.516 m/s，写出峰值在 0.00349 s 达 1.775 m/s，仍位于
+      初始自由面；
+    - 末帧速度仍为 1.344 m/s；
+    - 分析曲率为零的平面界面上，写出的 RDF `K_` 达数千 1/m，峰值时一个
+      自由面 cell 为 +1608.6 1/m；
+    - alpha 和质量界仍干净。
+    RDF 相对 zero-curvature 的首帧差异确认 variable-curvature force 很强，
+    而 zero-curvature 的延迟峰又独立确认 pressure-gravity 底噪。全局 K
+    极值可能落在 alpha-CSF 不活跃区域，所以下一步不是直接再换模型，而是
+    物化并记录实际 Umax cell 的 alpha/rho/K，以及 pressure-gravity、
+    surface-tension 和 total face-force residual。根据同位机制证据只选择
+    一个配对 sensitivity；不得直接延长到 0.04 s 或 1.0 s。
 
 十、hold 验收
 

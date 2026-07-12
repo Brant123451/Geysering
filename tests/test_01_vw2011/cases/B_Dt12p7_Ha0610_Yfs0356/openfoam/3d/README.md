@@ -176,8 +176,14 @@ separate processes.  A direct check over all 1,903,549 cells reduced the
 residual to exactly zero, and the corrected zero-curvature rerun lowered the
 first written velocity to 0.170 m/s.  It did not remove a delayed hotspot:
 velocity still peaked at 1.424 m/s near 0.00454 s and global Co reached 0.363.
-The initialization repair is retained, while physical RDF must be re-screened
-before any hold extension.
+The initialization repair is retained.  The corrected physical RDF rerun then
+reached global/interface Co=0.366/0.303 and a 1.775 m/s written peak at the
+initial free surface.  Its written `K_` field reached thousands of inverse
+metres although the analytical plane has zero curvature, including
++1608.6 1/m in a free-surface cell at the velocity-peak time.  Since global K
+extrema can lie outside the active alpha-CSF band, the next run must first
+collocate alpha, density, curvature and force residuals with the actual
+velocity hotspot; no hold extension is cleared.
 
 Thermophysical choices are:
 

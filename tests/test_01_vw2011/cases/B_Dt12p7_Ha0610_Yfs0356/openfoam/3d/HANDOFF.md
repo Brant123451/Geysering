@@ -85,8 +85,16 @@ evaluating `p_rgh`.  All prior startup screens share this defect.  Commit
 strongly reduced the first written velocity to 0.170 m/s, but a delayed
 free-surface hotspot still reached 1.424 m/s at 0.00454 s and global Co reached
 0.363.  The repair is valid, while the nonphysical mechanism candidate still
-cannot be extended.  Physical RDF must now be re-screened with the corrected
-initialization.
+cannot be extended.  The corrected physical RDF rerun has now also finished:
+global/interface Co reached 0.366/0.303, the first written velocity was
+1.516 m/s, and the written peak was 1.775 m/s at the initial free surface.
+The written RDF curvature field reached thousands of inverse metres although
+the analytical planar curvature is zero; at the peak time a free-surface cell
+reached +1608.6 1/m.  Global curvature extrema may lie outside the active
+alpha-CSF band, so the next diagnostic must collocate alpha, density and K in
+the actual maximum-velocity cell and separately report pressure-gravity,
+surface-tension and total face-force residuals.  Do not extend physical RDF
+until that mechanism evidence selects the next single-parameter screen.
 
 ## Verified before handoff
 
@@ -255,6 +263,20 @@ initialization.
       gas/total balance errors stayed below \(3.9\times10^{-6}\%\).
     Thus the stale-pressure impulse was real but was not the sole source of
     the delayed hotspot.  Zero curvature remains diagnostic-only.
+20. The corrected-initialization physical RDF screen exited normally at
+    0.006 s but failed:
+    * global/interface Co maxima were 0.366/0.303;
+    * the first written velocity was 1.516 m/s at 0.00047 s;
+    * the written peak was 1.775 m/s at 0.00349 s, at the initial free surface;
+    * the final written velocity remained 1.344 m/s;
+    * the RDF `K_` field ranged into thousands of inverse metres for an
+      analytically planar interface, including +1608.6 1/m in a free-surface
+      cell at the peak time;
+    * alpha stayed bounded and gas/total balance errors remained below
+      \(5.0\times10^{-6}\%\).
+    The RDF-versus-zero-curvature first-frame difference proves a strong
+    variable-curvature contribution, while the zero-curvature delayed peak
+    independently proves a pressure-gravity contribution.
 
 ## Still required
 
@@ -267,8 +289,12 @@ The scientific reproduction is **not complete**.  Continue in this order:
    `isoAlpha + fitParaboloid`, the nonphysical `constantCurvature=0`
    diagnostic, and the first `RDF + plicRDF + interpolateNormal=false`
    screen are also rejected.  The pressure split and corrected
-   `constantCurvature=0` mechanism rerun are complete; now re-screen physical
-   RDF with the corrected initialization.  Extend it past the 0.04 s
+   `constantCurvature=0` mechanism rerun and corrected physical RDF screen are
+   complete.  Before another model run, materialise collocated maximum-velocity
+   alpha/density/K and hydrostatic/surface/total face-force diagnostics.  Use
+   those results to choose one clean sensitivity (RDF `curvFromTr=false` if
+   curvature force dominates, or discrete hydrostatic initialization if the
+   pressure-gravity residual dominates).  Extend a candidate past the 0.04 s
    pressure-drift onset only if it stays within the declared Courant limits
    and reduces peak velocity, and only \(H^*\) peak-to-peak at or below 0.02
    may proceed to the full 1.0 s hold.  Opening runs retain the dissipative
