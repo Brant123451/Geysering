@@ -132,15 +132,17 @@ measurements exist:
    `depthCharge3D` reference case, including `maxCo=maxAlphaCo=0.5`. The same
    settings apply to every mesh and valve run and are not selected from the
    known B-H1 outcome.
-9. **Energy formulation:** use the phase-internal-energy temperature equation
-   with `p*div(U)` pressure work and without the explicit kinetic-energy
-   transport source. This is the `totalInternalEnergy=false` option introduced
-   by OpenFOAM Foundation commit `12dc41d0` specifically to avoid non-physical
-   temperatures during rapid pressure changes. OpenCFD v2512 does not expose
-   that switch, so the Case includes a minimal `compressibleInterFoam`
-   derivative implementing the same equation. It remains non-isothermal and
-   compressible; no temperature clipping is applied. The choice precedes all
-   mesh/valve comparisons and is not selected from the known B-H1 outcome.
+9. **Energy formulation:** use total sensible enthalpy with kinetic-energy
+   transport and pressure-time-derivative work. This is the standard OpenFOAM
+   compressible total-enthalpy transformation used by `rhoPimpleFoam`; it is
+   energetically equivalent to total internal energy while avoiding numerical
+   cancellation of the absolute atmospheric-pressure datum against
+   `p*div(U)` in low-Mach open air. OpenCFD v2512's
+   `compressibleInterFoam` hard-codes a mixture-temperature internal-energy
+   form, so the Case includes a minimal derivative implementing the enthalpy
+   equation with phase `Cp`. It remains non-isothermal and compressible; no
+   temperature clipping is applied. The choice precedes all mesh/valve
+   comparisons and is not selected from the known B-H1 outcome.
 
 With these declarations, all model-affecting paper conflicts are either
 resolved by primary evidence or isolated as named numerical sensitivities.

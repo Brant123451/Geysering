@@ -14,7 +14,7 @@ thermoType
     thermo          hConst;
     equationOfState perfectFluid;
     specie          specie;
-    energy          sensibleInternalEnergy;
+    energy          sensibleEnthalpy;
 }
 
 mixture

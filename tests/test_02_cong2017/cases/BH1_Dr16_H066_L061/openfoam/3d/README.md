@@ -43,13 +43,13 @@ rim; it is not a confined `3.0 m` riser.
   surface (`p_rgh=101332.42484 Pa`). All phases start at `296.15 K`.
 - Water starts at `296.15 K`, `rho0=998.2 kg/m3`, with physical bulk modulus
   `2.2 GPa`; air uses `perfectGas`.
-- The energy equation is active. The local solver uses the phase-internal-
-  energy form with `p*div(U)` pressure work, equivalent to
-  `totalInternalEnergy=false` added in OpenFOAM Foundation commit `12dc41d0`.
-  It excludes the explicit kinetic-energy source that can create non-physical
-  temperatures during rapid pressure changes; it does not constrain or clip
-  `T`. `fieldMinMax` records temperature extrema, and leaving the broad
-  `200--600 K` validity interval invalidates the run.
+- The energy equation is active. The local solver uses total sensible enthalpy
+  with kinetic-energy transport and pressure-time-derivative work, the standard
+  OpenFOAM compressible enthalpy transformation. This is energetically
+  equivalent to total internal energy but avoids cancellation of the absolute
+  atmospheric-pressure datum against `p*div(U)` in low-Mach open air. It does
+  not constrain or clip `T`. `fieldMinMax` records temperature extrema, and
+  leaving the broad `200--600 K` validity interval invalidates the run.
 - Hydrostatic water has `p_rgh=107543.13717 Pa` for the chosen coordinate
   origin. The pocket keeps `p_rgh=101325 Pa`; the disconnected headspace uses
   its hydrostatic value above.
@@ -112,8 +112,8 @@ The bounded transport/PIMPLE settings follow OpenFOAM v2512's
 `compressibleInterFoam/laminar/depthCharge3D` water-air reference: upwind
 momentum transport, uncorrected Laplacian/normal gradients, one outer
 corrector, two pressure correctors, and `maxCo=maxAlphaCo=0.5`. This declared
-baseline and the internal-energy equation are used unchanged for all meshes
-and valve cases.
+baseline and the total-enthalpy equation are used unchanged for all meshes and
+valve cases.
 
 Each run is created under ignored `runs/`; source templates remain clean.
 OpenFOAM v2512, Gmsh, NumPy, and Matplotlib are required.

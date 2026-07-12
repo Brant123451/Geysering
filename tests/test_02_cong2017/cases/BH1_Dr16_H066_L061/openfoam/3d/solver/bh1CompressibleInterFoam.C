@@ -28,14 +28,15 @@ Application
     bh1CompressibleInterFoam
 
 Description
-    OpenCFD v2512 compressibleInterFoam with the phase-internal-energy
-    temperature equation selected instead of the total-internal-energy form.
+    OpenCFD v2512 compressibleInterFoam with a total-sensible-enthalpy
+    temperature equation.
 
-    This follows the optional totalInternalEnergy=false formulation introduced
-    upstream in OpenFOAM Foundation commit 12dc41d0.  It removes the explicit
-    kinetic-energy source terms that can produce non-physical temperatures
-    during rapid pressure changes, while retaining pressure work, two
-    compressible thermodynamic phases, and the VOF transport equations.
+    The pressure work is represented by the pressure time derivative instead
+    of p*div(U).  This is the standard OpenFOAM total-enthalpy transformation:
+    it is energetically equivalent to total internal energy but avoids
+    subtracting large atmospheric-pressure work terms in low-Mach open air.
+    The two compressible thermodynamic phases and VOF transport equations are
+    unchanged.
 
 \*---------------------------------------------------------------------------*/
 
@@ -56,7 +57,7 @@ int main(int argc, char *argv[])
 {
     argList::addNote
     (
-        "Two-phase compressible VOF solver using the internal-energy "
+        "Two-phase compressible VOF solver using the total-enthalpy "
         "temperature equation"
     );
 
@@ -74,6 +75,19 @@ int main(int argc, char *argv[])
     volScalarField& T = mixture.T();
     const volScalarField& psi1 = mixture.thermo1().psi();
     const volScalarField& psi2 = mixture.thermo2().psi();
+    volScalarField dpdt
+    (
+        IOobject
+        (
+            "dpdt",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        mesh,
+        dimensionedScalar(p.dimensions()/dimTime, Zero)
+    );
 
     if (!LTS)
     {
@@ -117,6 +131,10 @@ int main(int argc, char *argv[])
             {
                 #include "pEqn.H"
             }
+
+            // Store the pressure derivative for the next enthalpy predictor,
+            // as in the standard OpenFOAM compressible PIMPLE solvers.
+            dpdt = fvc::ddt(p);
 
             if (pimple.turbCorr())
             {
