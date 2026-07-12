@@ -104,7 +104,14 @@ time zero to 0.437 by 0.00649 s, far below the intended y=0.403 m free surface.
 This is not physically reachable advection and identifies a wall-adjacent
 alpha/reconstruction layer.  The next minimal fix is to extend the tower-water
 initialization cylinder into the known 2 mm solid wall gap, where there are no
-fluid cells, so every tower-fluid cell below the plane starts fully wet.
+fluid cells, so every tower-fluid cell below the plane starts fully wet.  That
+repair is now implemented and its zero-curvature rerun removed the deep force
+hotspot.  The written velocity peak fell from 1.424 to 1.031 m/s and the
+maximum pressure-gravity residual fell from 462 to 10.5 kPa/m, now confined to
+the intended free surface.  Interface Co stayed below 0.121, but a one-step
+global Co event reached 0.419 after deltaT grew to 0.179 ms.  Physical RDF must
+now be repeated with this fully wet initializer before choosing curvature or
+timestep controls.
 
 ## Verified before handoff
 
@@ -298,6 +305,18 @@ fluid cells, so every tower-fluid cell below the plane starts fully wet.
     * a probe beside the deep force hotspot changed from alpha=1 initially to
       0.437, despite being 0.219 m below the physical interface.
     The deep interfacial layer is numerical, not a geyser or gas breakthrough.
+22. The tower-water selector now ends at radius 0.00735 m, halfway through the
+    assumed solid wall and 1 mm short of exterior fluid.  Eighteen policy tests
+    pass.  Its corrected zero-curvature rerun showed:
+    * no deep wall-adjacent force hotspot;
+    * peak/final written velocity 1.031/0.687 m/s, versus 1.424/0.760 m/s
+      before the alpha repair;
+    * maximum pressure-gravity residual 10.5 kPa/m at the intended free
+      surface, versus 462 kPa/m in the deep artificial layer;
+    * global/interface Co maxima 0.419/0.121;
+    * alpha bounded and gas/total balance errors below
+      \(1.6\times10^{-6}\%\).
+    The remaining Umax cell is gas-dominant at the physical free surface.
 
 ## Still required
 
@@ -312,11 +331,12 @@ The scientific reproduction is **not complete**.  Continue in this order:
    screen are also rejected.  The pressure split and corrected
    `constantCurvature=0` mechanism rerun and corrected physical RDF screen are
    complete, and the collocated logger has exposed an unintended deep
-   wall-adjacent interface.  Expand the tower-water initializer into the solid
-   wall gap, verify the initial tower column is fully wet below y=0.403 m, then
-   repeat paired zero-curvature and RDF screens.  Only after the deep force
-   hotspot is absent should `curvFromTr=false` or discrete hydrostatic
-   initialization be screened.  Extend a candidate past the 0.04 s
+   wall-adjacent interface.  The alpha repair and zero-curvature verification
+   are complete; now repeat physical RDF with the fully wet initializer and
+   collocated force diagnostics.  If the deep hotspot remains absent but
+   surface force dominates, screen `curvFromTr=false` with a hard timestep
+   cap.  If pressure-gravity dominates, use a discrete hydrostatic
+   initialization instead.  Extend a candidate past the 0.04 s
    pressure-drift onset only if it stays within the declared Courant limits
    and reduces peak velocity, and only \(H^*\) peak-to-peak at or below 0.02
    may proceed to the full 1.0 s hold.  Opening runs retain the dissipative

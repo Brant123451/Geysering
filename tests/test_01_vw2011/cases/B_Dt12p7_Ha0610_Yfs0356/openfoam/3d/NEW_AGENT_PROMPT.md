@@ -408,6 +408,18 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     下一步把 tower-water initializer 扩入已知 2 mm 固体壁间隙（不得触及
     exterior fluid cells），先证明 y<0.403 的 tower fluid 全湿，再复筛
     zero-curvature 与 RDF。
+19. commit `ebf034a` 已把 tower-water selector 半径改为 0.00735 m：
+    比 0.00635 m fluid radius 大 1 mm，同时比 0.00835 m exterior-fluid
+    内边界小 1 mm。18 项测试通过。修复后的 zero-curvature 复筛表明：
+    - deep wall-adjacent interface/force hotspot 已消失；
+    - 写出峰值/末值速度从 1.424/0.760 降到 1.031/0.687 m/s；
+    - pressure-gravity residual 从 deep layer 的 462 kPa/m 降至自由面
+      10.5 kPa/m；
+    - interface Co 仅 0.121，但 deltaT 增长至 0.179 ms 后，一步滞后的
+      global Co 达 0.419；
+    - alpha 与质量界干净，Umax cell 是物理自由面上的近纯气体。
+    下一步用 fully-wet initializer 复筛 physical RDF；若 surface force
+    主导，则用 hard maxDeltaT 配对 `curvFromTr=false`，不得直接延长。
 
 十、hold 验收
 
