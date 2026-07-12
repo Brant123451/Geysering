@@ -77,6 +77,14 @@ setExprFields -dict system/setExprFieldsDict.runtime \
 setExprFields -dict system/setExprFieldsReducedPressureDict.runtime \
     > log.setExprFields.p_rgh 2>&1
 
+HYDROSTATIC_INITIALIZATION="${CASEB_HYDROSTATIC_INITIALIZATION:-analytic}"
+if [[ "$STAGE" != "mesh" && "$HYDROSTATIC_INITIALIZATION" == "discrete" ]]; then
+    wmake caseBHydrostaticInit > log.wmake.caseBHydrostaticInit 2>&1
+    caseBHydrostaticInit \
+        -nCorrectors "${CASEB_HYDROSTATIC_CORRECTORS:-5}" \
+        > log.caseBHydrostaticInit 2>&1
+fi
+
 if [[ "$STAGE" == "mesh" ]]; then
     echo "CASE_B_3D_MESH_DONE"
     exit 0

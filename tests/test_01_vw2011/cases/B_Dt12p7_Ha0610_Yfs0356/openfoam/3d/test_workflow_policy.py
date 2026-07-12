@@ -14,6 +14,7 @@ from postprocess import (
     is_baseline_full,
     is_baseline_full_physics,
     is_canonical_hold,
+    parse_hydrostatic_initialization,
     parse_solver_diagnostics,
     should_update_hold_evidence,
     update_sensitivity_csv,
@@ -35,6 +36,8 @@ def baseline_manifest(mesh: str = "base") -> dict:
         "valve_seal_speed_m_per_s": 1.0,
         "initial_air_head_m": 0.610,
         "gas_equation_of_state": "perfectGas",
+        "hydrostatic_initialization": "analytic",
+        "n_hydrostatic_correctors": 5,
         "solver": "compressibleInterFlow",
         "two_phase_flow_commit": (
             "de9826f9ffb24f4b635ac97fd388ebd560cfc174"
@@ -212,6 +215,33 @@ class InitialFieldPolicyTests(unittest.TestCase):
         self.assertIn("radius     0.00735;", alpha_initialisation)
         self.assertIn("exterior fluid starts at", alpha_initialisation)
 
+    def test_discrete_hydrostatic_initializer_matches_solver_force(self) -> None:
+        initializer = (
+            HERE / "caseBHydrostaticInit" / "caseBHydrostaticInit.C"
+        ).read_text()
+        allrun = (HERE / "Allrun").read_text()
+        reduced_call = (
+            "setExprFields -dict "
+            "system/setExprFieldsReducedPressureDict.runtime"
+        )
+        initializer_call = "caseBHydrostaticInit \\\n"
+
+        self.assertIn(
+            "-ghf*fvc::snGrad(rho) - fvc::snGrad(p_rgh)",
+            initializer,
+        )
+        self.assertIn(
+            "fvm::laplacian(onef, p_rgh) == fvc::div(forceFlux)",
+            initializer,
+        )
+        self.assertIn("hydrostaticEqn.setReferences", initializer)
+        self.assertIn("CASEB_HYDROSTATIC_INIT_SUMMARY", initializer)
+        self.assertIn("CASEB_HYDROSTATIC_INITIALIZATION", allrun)
+        self.assertLess(
+            allrun.index(reduced_call),
+            allrun.index(initializer_call),
+        )
+
 
 class TwoPhaseFlowDeckTests(unittest.TestCase):
     def test_rdf_geometric_vof_is_the_default(self) -> None:
@@ -342,6 +372,36 @@ class TwoPhaseFlowDeckTests(unittest.TestCase):
         )
         self.assertEqual(diagnostics["max_surface_tension_force_pa_per_m"], 20)
         self.assertEqual(diagnostics["max_total_force_residual_pa_per_m"], 25)
+
+    def test_hydrostatic_initializer_diagnostics_are_parsed(self) -> None:
+        text = "\n".join(
+            (
+                "CASEB_HYDROSTATIC_INIT stage=before iteration=0 "
+                "maxForceResidual(Pa/m)=100 location=(3.5 0.4 0) "
+                "maxAlgebraicResidual(Pa)=0",
+                "CASEB_HYDROSTATIC_INIT stage=corrector iteration=5 "
+                "maxForceResidual(Pa/m)=2.5 location=(3.6 0.5 -0.1) "
+                "maxAlgebraicResidual(Pa)=1e-10",
+                "CASEB_HYDROSTATIC_INIT_SUMMARY correctors=5 "
+                "beforeMaxForceResidual(Pa/m)=100 "
+                "afterMaxForceResidual(Pa/m)=2.5 "
+                "afterMaxAlgebraicResidual(Pa)=1e-10",
+            )
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "log.caseBHydrostaticInit"
+            path.write_text(text)
+            diagnostics = parse_hydrostatic_initialization(path)
+
+        self.assertIsNotNone(diagnostics)
+        assert diagnostics is not None
+        self.assertTrue(diagnostics["completed"])
+        self.assertEqual(diagnostics["correctors"], 5)
+        self.assertEqual(diagnostics["force_residual_ratio"], 0.025)
+        self.assertEqual(
+            diagnostics["after_max_force_residual_location_m"],
+            [3.6, 0.5, -0.1],
+        )
 
 
 class SensitivityIndexTests(unittest.TestCase):

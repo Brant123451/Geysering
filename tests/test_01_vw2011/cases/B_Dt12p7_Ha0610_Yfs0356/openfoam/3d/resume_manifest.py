@@ -20,6 +20,8 @@ ENVIRONMENT_KEYS = {
     "valve_seal_speed_m_per_s": "CASEB_VALVE_SEAL_SPEED",
     "initial_air_head_m": "CASEB_HA0",
     "gas_equation_of_state": "CASEB_GAS_EOS",
+    "hydrostatic_initialization": "CASEB_HYDROSTATIC_INITIALIZATION",
+    "n_hydrostatic_correctors": "CASEB_HYDROSTATIC_CORRECTORS",
     "max_co": "CASEB_MAX_CO",
     "max_alpha_co": "CASEB_MAX_ALPHA_CO",
     "max_capillary_num": "CASEB_MAX_CAPILLARY_NUM",
@@ -48,6 +50,7 @@ NUMERIC_KEYS = {
     "valve_open_time_s",
     "valve_seal_speed_m_per_s",
     "initial_air_head_m",
+    "n_hydrostatic_correctors",
     "max_co",
     "max_alpha_co",
     "max_capillary_num",
@@ -70,6 +73,9 @@ def read_manifest(path: Path) -> dict:
     if not path.is_file():
         raise ValueError(f"Run manifest does not exist: {path}")
     manifest = json.loads(path.read_text())
+    # Manifests predating the discrete initializer used the analytic fields.
+    manifest.setdefault("hydrostatic_initialization", "analytic")
+    manifest.setdefault("n_hydrostatic_correctors", 5)
     required = set(ENVIRONMENT_KEYS) | {
         "solver",
         "two_phase_flow_commit",
@@ -96,6 +102,8 @@ def read_manifest(path: Path) -> dict:
         raise ValueError("Run manifest uses a timestep-disturbing output control")
     if manifest["gas_equation_of_state"] not in {"perfectGas", "rhoConst"}:
         raise ValueError("Unknown gas equation of state in run manifest")
+    if manifest["hydrostatic_initialization"] not in {"analytic", "discrete"}:
+        raise ValueError("Unknown hydrostatic initialization in run manifest")
     if manifest["solver"] != "compressibleInterFlow":
         raise ValueError("Run manifest was created by a different solver")
     if manifest["two_phase_flow_commit"] != TWOPHASEFLOW_COMMIT:
@@ -139,6 +147,7 @@ def read_manifest(path: Path) -> dict:
         "n_alpha_subcycles",
         "n_outer_correctors",
         "n_pressure_correctors",
+        "n_hydrostatic_correctors",
     }
     for key in positive_integer_keys:
         if not float(manifest[key]).is_integer() or int(manifest[key]) < 1:

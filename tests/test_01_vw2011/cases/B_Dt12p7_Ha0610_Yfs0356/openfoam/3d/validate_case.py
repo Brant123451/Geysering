@@ -55,6 +55,11 @@ solver_sources = "\n".join(
         (HERE / "constant" / "thermophysicalProperties").read_text(),
         (HERE / "constant" / "fvOptions").read_text(),
         (HERE / "constant" / "surfaceForces.default").read_text(),
+        (
+            HERE
+            / "caseBHydrostaticInit"
+            / "caseBHydrostaticInit.C"
+        ).read_text(),
         (HERE / "Allrun").read_text(),
     )
 )
@@ -76,6 +81,10 @@ required_solver_fragments = [
     "CASEB_FORCE_BALANCE",
     "hydrostaticForceResidual",
     "surfaceTensionForce",
+    "CASEB_HYDROSTATIC_INITIALIZATION",
+    "CASEB_HYDROSTATIC_INIT_SUMMARY",
+    "-ghf*fvc::snGrad(rho) - fvc::snGrad(p_rgh)",
+    "fvm::laplacian(onef, p_rgh) == fvc::div(forceFlux)",
     "zoneName    valvePlane",
     'if (mode != "closed")',
     "pureMovingPhaseModel",
@@ -134,7 +143,8 @@ result = {
     ),
     "initial_pressure_source_check": (
         "absolute p is written before a separate process reloads it to construct "
-        "mixture-density p_rgh"
+        "mixture-density p_rgh; optional discrete projection uses the same "
+        "face gravity-force operator as compressibleInterFlow"
     ),
     "initial_alpha_source_check": (
         "tower-water geometric selector extends halfway into the assumed solid "

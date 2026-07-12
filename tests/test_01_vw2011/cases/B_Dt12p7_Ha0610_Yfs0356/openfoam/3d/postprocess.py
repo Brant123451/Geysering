@@ -51,6 +51,8 @@ def configuration_id(manifest: dict) -> str:
             "valve_seal_speed_m_per_s",
             "initial_air_head_m",
             "gas_equation_of_state",
+            "hydrostatic_initialization",
+            "n_hydrostatic_correctors",
             "max_co",
             "max_alpha_co",
             "max_capillary_num",
@@ -356,6 +358,8 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "solver",
         "two_phase_flow_commit",
         "gas_eos",
+        "hydrostaticInitialization",
+        "nHydrostaticCorrectors",
         "initial_air_head_m",
         "valve_mode",
         "valve_representation",
@@ -423,6 +427,12 @@ def update_mesh_csv(mesh: dict, manifest: dict, run_metrics: dict | None = None)
         "solver": manifest.get("solver"),
         "two_phase_flow_commit": manifest.get("two_phase_flow_commit"),
         "gas_eos": manifest.get("gas_equation_of_state"),
+        "hydrostaticInitialization": manifest.get(
+            "hydrostatic_initialization"
+        ),
+        "nHydrostaticCorrectors": manifest.get(
+            "n_hydrostatic_correctors"
+        ),
         "initial_air_head_m": manifest.get("initial_air_head_m"),
         "valve_mode": manifest.get("valve_mode"),
         "valve_representation": manifest.get("valve_representation"),
@@ -527,6 +537,8 @@ def update_sensitivity_csv(metrics: dict) -> None:
         "solver",
         "two_phase_flow_commit",
         "gas_eos",
+        "hydrostaticInitialization",
+        "nHydrostaticCorrectors",
         "initial_air_head_m",
         "valve_mode",
         "valve_representation",
@@ -578,6 +590,12 @@ def update_sensitivity_csv(metrics: dict) -> None:
         "solver": manifest.get("solver"),
         "two_phase_flow_commit": manifest.get("two_phase_flow_commit"),
         "gas_eos": manifest.get("gas_equation_of_state"),
+        "hydrostaticInitialization": manifest.get(
+            "hydrostatic_initialization"
+        ),
+        "nHydrostaticCorrectors": manifest.get(
+            "n_hydrostatic_correctors"
+        ),
         "initial_air_head_m": manifest.get("initial_air_head_m"),
         "valve_mode": manifest.get("valve_mode"),
         "valve_representation": manifest.get("valve_representation"),
@@ -874,6 +892,50 @@ def parse_solver_diagnostics(text: str) -> dict:
     return result
 
 
+def parse_hydrostatic_initialization(path: Path) -> dict | None:
+    if not path.is_file():
+        return None
+    text = path.read_text(errors="replace")
+    summary = re.search(
+        rf"CASEB_HYDROSTATIC_INIT_SUMMARY\s+"
+        rf"correctors=(\d+)\s+"
+        rf"beforeMaxForceResidual\(Pa/m\)=({NUMBER_PATTERN})\s+"
+        rf"afterMaxForceResidual\(Pa/m\)=({NUMBER_PATTERN})\s+"
+        rf"afterMaxAlgebraicResidual\(Pa\)=({NUMBER_PATTERN})",
+        text,
+    )
+    samples = list(
+        re.finditer(
+            rf"CASEB_HYDROSTATIC_INIT\s+stage=(\w+)\s+iteration=(\d+)\s+"
+            rf"maxForceResidual\(Pa/m\)=({NUMBER_PATTERN})\s+"
+            rf"location=\(\s*({NUMBER_PATTERN})\s+({NUMBER_PATTERN})\s+"
+            rf"({NUMBER_PATTERN})\s*\)\s+"
+            rf"maxAlgebraicResidual\(Pa\)=({NUMBER_PATTERN})",
+            text,
+        )
+    )
+    if summary is None:
+        return {"completed": False, "sample_count": len(samples)}
+
+    before = float(summary.group(2))
+    after = float(summary.group(3))
+    result = {
+        "completed": True,
+        "correctors": int(summary.group(1)),
+        "before_max_force_residual_pa_per_m": before,
+        "after_max_force_residual_pa_per_m": after,
+        "after_max_algebraic_residual_pa": float(summary.group(4)),
+        "force_residual_ratio": after / before if before else 0.0,
+        "sample_count": len(samples),
+    }
+    if samples:
+        final = samples[-1]
+        result["after_max_force_residual_location_m"] = [
+            float(final.group(index)) for index in range(4, 7)
+        ]
+    return result
+
+
 def parse_accounting() -> dict[str, np.ndarray]:
     text = (HERE / "log.compressibleInterFlow").read_text(errors="replace")
     values: dict[float, list[float]] = {}
@@ -1069,6 +1131,13 @@ def postprocess(manifest: dict, mesh: dict) -> dict:
         errors="replace"
     )
     numerical_diagnostics = parse_solver_diagnostics(solver_text)
+    hydrostatic_diagnostics = parse_hydrostatic_initialization(
+        HERE / "log.caseBHydrostaticInit"
+    )
+    if hydrostatic_diagnostics is not None:
+        numerical_diagnostics["hydrostatic_initialization"] = (
+            hydrostatic_diagnostics
+        )
 
     exp_pressure, exp_levels = experiment_data()
     one_d = frozen_1d()
@@ -1380,6 +1449,12 @@ def postprocess(manifest: dict, mesh: dict) -> dict:
             "curvature_model": manifest.get("curvature_model"),
             "curvature_value_per_m": manifest.get("curvature_value_per_m"),
             "curvature_from_trace": manifest.get("curvature_from_trace"),
+            "hydrostatic_initialization": manifest.get(
+                "hydrostatic_initialization", "analytic"
+            ),
+            "n_hydrostatic_correctors": manifest.get(
+                "n_hydrostatic_correctors", 5
+            ),
             "gas_equation_of_state": manifest.get(
                 "gas_equation_of_state", "unknown"
             ),

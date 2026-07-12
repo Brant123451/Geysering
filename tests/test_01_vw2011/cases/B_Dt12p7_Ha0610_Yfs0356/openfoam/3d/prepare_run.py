@@ -86,6 +86,10 @@ def main() -> None:
     )
     valve_open_time = env_float("CASEB_VALVE_OPEN_TIME", 0.25)
     valve_seal_speed = env_float("CASEB_VALVE_SEAL_SPEED", 1.0)
+    hydrostatic_initialization = os.environ.get(
+        "CASEB_HYDROSTATIC_INITIALIZATION", "analytic"
+    )
+    n_hydrostatic_correctors = env_int("CASEB_HYDROSTATIC_CORRECTORS", 5)
     if valve_mode not in {"opening", "closed", "instant"}:
         raise SystemExit("CASEB_VALVE_MODE must be opening, closed, or instant")
     if stage == "hold" and valve_mode != "closed":
@@ -99,6 +103,10 @@ def main() -> None:
     gas_eos = os.environ.get("CASEB_GAS_EOS", "perfectGas")
     if gas_eos not in {"perfectGas", "rhoConst"}:
         raise SystemExit("CASEB_GAS_EOS must be perfectGas or rhoConst")
+    if hydrostatic_initialization not in {"analytic", "discrete"}:
+        raise SystemExit(
+            "CASEB_HYDROSTATIC_INITIALIZATION must be analytic or discrete"
+        )
     if advection_scheme not in {"isoAdvection", "MULESScheme"}:
         raise SystemExit(
             "CASEB_ADVECTION_SCHEME must be isoAdvection or MULESScheme"
@@ -190,6 +198,8 @@ def main() -> None:
         raise SystemExit(
             "CASEB_N_NON_ORTHOGONAL_CORRECTORS cannot be negative"
         )
+    if n_hydrostatic_correctors < 1:
+        raise SystemExit("CASEB_HYDROSTATIC_CORRECTORS must be positive")
     if stage != "mesh":
         write_interval = min(write_interval, end_time)
         probe_interval = min(0.005, end_time)
@@ -296,6 +306,8 @@ def main() -> None:
         "initial_air_head_m": initial_air_head,
         "initial_air_absolute_pressure_Pa": initial_air_pressure,
         "gas_equation_of_state": gas_eos,
+        "hydrostatic_initialization": hydrostatic_initialization,
+        "n_hydrostatic_correctors": n_hydrostatic_correctors,
         "solver": "compressibleInterFlow",
         "two_phase_flow_commit": TWOPHASEFLOW_COMMIT,
         "advection_scheme": advection_scheme,
