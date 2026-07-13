@@ -183,6 +183,11 @@ python3 run_study.py --variant closed_interface_sigma_zero_nhat_ls
 
 # Replace the transition neighbourhood with exact axial prism layers
 python3 run_study.py --variant closed_prism_sigma_072_nhat_ls
+python3 run_study.py --variant closed_prism_sigma_072_nhat_ls_repeat
+python3 run_study.py --variant closed_prism_sigma_072_nhat_ls_serial
+python3 run_study.py --variant closed_prism_sigma_072_nhat_ls_dt_fine
+python3 run_study.py --variant closed_prism_sigma_zero_nhat_ls
+python3 run_study.py --variant closed_prism_sigma_zero_nhat_ls_serial
 python3 run_study.py --variant closed_prism_sigma_072_nhat_point
 python3 run_study.py --variant closed_prism_sigma_072_nhat_point_serial
 python3 run_study.py --variant closed_prism_sigma_zero_nhat_point
@@ -204,6 +209,9 @@ controls. `NHAT_GRADIENT_SCHEME` accepts `gauss-linear`, `least-squares`, or
 `point-cells-least-squares`; the latter two are A/B diagnostics for the
 flat-interface curvature normal on tetrahedra, not unreported baseline
 changes.
+Parallel runs use deterministic axial `simple` decomposition with
+`n=(nProcs 1 1)`. This keeps the long pipe partitions reproducible and avoids
+confounding physical/operator comparisons with Scotch's changing partitions.
 `INITIAL_INTERFACE_THICKNESS` accepts only the declared `0.015 m` baseline or
 the conformal sharp-step value `0`; `INITIAL_INTERFACE_PROFILE` accepts
 `linear` or the declared `cosine` diagnostic for the 15 mm band. The baseline
@@ -264,8 +272,26 @@ short trajectory at `t=0.031 s` and aborted when the energy equation produced
 `T0=-2882.2 K`; no formal metric was accepted. The next declared prism tests
 pair `pointCellsLeastSquares` with four-process and serial execution and with
 `sigma=0`, separating capillary residual from parallel/energy sensitivity.
-Failed solvers now emit compact partial metrics with an explicit failure
-reason instead of leaving an unaudited log-only result.
+The physical-sigma four-process point-gradient run failed earlier, at
+`t=0.019 s` with `T0=-3028.1 K`, whereas the otherwise identical serial run
+completed `0.05 s` with `0.00784 m/s` maximum water-weighted speed and
+`5.45e-8` total-mass residual fraction. The four-process `sigma=0` pair also
+completed, with `2.36e-5 m/s` maximum water-weighted speed and `3.09e-9`
+total-mass residual fraction. Thus capillary forcing and partition-sensitive
+coupling, rather than an incorrect initial `296.15 K` field, are implicated.
+The former Scotch decomposition changed cell allocations between nominally
+identical runs (`125182/125405/126675/125546` versus
+`125566/125685/125677/125880`), so it has been replaced by the deterministic
+axial partition before accepting any repeat. Two fixed-partition
+physical-sigma repeats now complete with byte-identical time series and
+identical metrics: `2.11e-5 m/s` maximum water-weighted speed and `3.28e-9`
+total-mass residual fraction. The new extrema audit bounds temperature at
+`284.20--307.14 K`; both extrema occur at the top of the external atmosphere,
+which locates the remaining gas/energy oscillation. The deterministic 1 s
+hold is running, so neither repeat is yet a formal pass. Failed solvers emit
+compact partial metrics with an explicit failure reason; current runs
+additionally record per-step extrema and locations for temperature, pressure,
+velocity, turbulence fields, and volume fraction.
 
 ## Required outputs
 

@@ -279,3 +279,24 @@ completion. Because the nominally identical four-process short run had reached
 execution, plus a paired `sigma=0` run. These checks diagnose capillary
 forcing versus parallel trajectory sensitivity; they do not replace the
 physical-sigma 1 s requirement.
+
+Those paired point-gradient runs now separate the trigger. The four-process
+physical-sigma case aborts at `t=0.019 s` with
+`T0=-3028.147 K`, while the otherwise identical serial case reaches
+`0.05 s` without a thermodynamic failure; its maximum water-weighted speed is
+`0.00784 m/s` and total-mass residual fraction is `5.45e-8`. The four-process
+`sigma=0` case also reaches `0.05 s`, with `2.36e-5 m/s` maximum
+water-weighted speed and `3.09e-9` total-mass residual fraction. These are
+diagnostics, not grounds to omit the paper's measured surface tension.
+Inspection also found that Scotch gave different cell allocations to
+nominally identical four-process runs, so trajectory comparisons were
+partition-confounded. All current parallel runs therefore use deterministic
+axial `simple` decomposition with `n=(nProcs 1 1)` and record per-step extrema
+and locations for `T`, pressure, velocity, `k`, `epsilon`, and `alpha.water`.
+Two physical-sigma fixed-partition repeats now produce byte-identical time
+series and identical metrics: `2.11e-5 m/s` maximum water-weighted speed and
+`3.28e-9` total-mass residual fraction. Their temperature extrema are
+`284.20--307.14 K`, both at the top of the external atmosphere, identifying
+the remaining gas/energy oscillation spatially. The deterministic 1 s hold is
+the active gate; no event calculation is released by the completed 0.05 s
+runs.
