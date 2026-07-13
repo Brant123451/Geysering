@@ -16,14 +16,14 @@ License
 
 #include "boundedPhaseMassTransport.H"
 #include "addToRunTimeSelectionTable.H"
-#include "calculatedFvPatchFields.H"
 #include "fixedValueFvPatchField.H"
 #include "fvcDdt.H"
 #include "fvcDiv.H"
-#include "surfaceInterpolate.H"
 #include "fvmDdt.H"
 #include "fvmDiv.H"
 #include "fvmLaplacian.H"
+#include "inletOutletFvPatchFields.H"
+#include "surfaceInterpolate.H"
 #include "zeroGradientFvPatchField.H"
 
 namespace Foam
@@ -161,10 +161,26 @@ Foam::functionObjects::boundedPhaseMassTransport::conservedDensity
     const volScalarField& field
 )
 {
-    const tmp<volScalarField> taggedDensity(alpha*phaseRho*field);
-
     if (!sigmaPtr_.valid())
     {
+        // fvm::div cannot use calculated patch fields.  Mirror the fraction
+        // field's patch types, but replace inletOutlet with fixedValue so the
+        // boundary tagged density can be refreshed from alpha*rho*s after the
+        // fraction BCs are applied (same inflow/outflow selection).
+        wordList patchFieldTypes(field.boundaryField().types());
+        forAll(patchFieldTypes, patchi)
+        {
+            if
+            (
+                patchFieldTypes[patchi]
+             == inletOutletFvPatchField<scalar>::typeName
+            )
+            {
+                patchFieldTypes[patchi] =
+                    fixedValueFvPatchField<scalar>::typeName;
+            }
+        }
+
         sigmaPtr_.reset
         (
             new volScalarField
@@ -178,10 +194,12 @@ Foam::functionObjects::boundedPhaseMassTransport::conservedDensity
                     IOobject::NO_WRITE,
                     IOobject::REGISTER
                 ),
-                taggedDensity(),
-                calculatedFvPatchScalarField::typeName
+                mesh_,
+                dimensionedScalar(dimDensity, Zero),
+                patchFieldTypes
             )
         );
+        sigmaPtr_() == alpha*phaseRho*field;
         mesh_.setFluxRequired(sigmaResultName_);
     }
 
