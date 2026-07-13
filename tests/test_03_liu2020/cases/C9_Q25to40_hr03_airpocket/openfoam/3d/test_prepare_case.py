@@ -148,9 +148,8 @@ class PocketBodyTracerTests(unittest.TestCase):
             dictionary.count("weightField     alphaRhoAirForTracer;"),
             0,
         )
-        self.assertIn("build tagged mass fluxes from intensity s", dictionary)
-        self.assertIn("Do not reconstruct phiVol", dictionary)
-        self.assertIn("Recover s = sigma/(alpha*rho)", dictionary)
+        self.assertIn("build tagged mass fluxes from intensity s=sigma/(alpha*rho)", dictionary)
+        self.assertIn("No phiVol = phi_air/(alpha*rho)_f", dictionary)
         self.assertNotIn("ddt(alpha*rho, s)", dictionary)
         self.assertNotIn("Sp(fvc::ddt(alpha,rho)", dictionary)
         self.assertEqual(

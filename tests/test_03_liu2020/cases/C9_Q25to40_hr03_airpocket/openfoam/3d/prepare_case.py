@@ -503,10 +503,10 @@ functions
     pocketBodyTracerTransport
     {{
         // Project the air mass flux onto discrete phase continuity, then
-        // build tagged mass fluxes from intensity s (phi_air*s), limit them
-        // with MULES so sigma stays in [0, alpha*rho], and update sigma with
-        // rho=1.  Do not reconstruct phiVol = phi_air/(alpha*rho)_f.
-        // Recover s = sigma/(alpha*rho) for output.  No morphology clear/clamp.
+        // build tagged mass fluxes from intensity s=sigma/(alpha*rho)
+        // (allowing mild s>1 so shrinking alpha*rho does not trap inventory),
+        // limit with MULES against max(alpha*rho, sigma), and update sigma
+        // with rho=1.  No phiVol = phi_air/(alpha*rho)_f and no cell clip.
         type            boundedPhaseMassTransport;
         libs            ("libboundedPhaseMassTransport.so");
         field           pocketBodyTracer;

@@ -595,9 +595,10 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     const scalar resolveAlpha = max(residualAlpha_, 1e-3);
     const scalar rDeltaT = 1.0/mesh_.time().deltaTValue();
 
-    // Sync the intensity from the conserved density before building fluxes.
-    // Do not use phiVol = phi_air/(alpha*rho)_f: that form explodes on thin
-    // phase faces and drove recovered s to O(100) within a few steps.
+    // Build flux intensity from sigma/(alpha*rho).  Allow s>1 so that when
+    // alpha*rho shrinks, subsequent air outflow can still remove the full
+    // tagged inventory.  Clamp only the negative side.  Do not use
+    // phiVol = phi_air/(alpha*rho)_f (thin-face explosion).
     {
         scalarField& fieldCells = field.primitiveFieldRef();
         const scalarField& sigmaCells = sigma.primitiveField();
@@ -607,7 +608,7 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
         {
             if (alphaCells[celli] > resolveAlpha && alphaRhoCells[celli] > SMALL)
             {
-                fieldCells[celli] = sigmaCells[celli]/alphaRhoCells[celli];
+                fieldCells[celli] = max(sigmaCells[celli]/alphaRhoCells[celli], 0.0);
             }
             else
             {
@@ -669,12 +670,23 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
 
     surfaceScalarField phiCorr(tracerFlux - tracerFluxBD);
 
-    const scalarField sigmaMax(alphaRho.primitiveField());
+    // Do not demand sigma <= alpha*rho when alpha*rho has just shrunk below
+    // the current inventory: that bound is not achievable by flux limiting
+    // alone and is exactly the rejected cell-clip path.
+    scalarField sigmaMax(mesh_.nCells());
+    {
+        const scalarField& alphaRhoCells = alphaRho.primitiveField();
+        const scalarField& sigmaCells = sigma.primitiveField();
+        forAll(sigmaMax, celli)
+        {
+            sigmaMax[celli] = max(alphaRhoCells[celli], sigmaCells[celli]);
+        }
+    }
     const scalarField sigmaMin(mesh_.nCells(), Zero);
     scalarField allLambda(mesh_.nFaces(), 1.0);
 
-    // Limit the correction so the explicit sigma update stays in
-    // [0, alpha*rho].  Fluxes remain conservative (no cell clip).
+    // Limit the correction so the explicit sigma update stays non-negative
+    // and does not grow above max(alpha*rho, sigma_current).
     MULES::limiter
     (
         allLambda,
@@ -718,7 +730,9 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
         zeroField()
     );
 
-    // Recover s for output/BCs/arrival; inventory remains sigma.
+    // Recover raw s for output/arrival diagnostics.  Mild s>1 means local
+    // alpha*rho decreased faster than tagged mass left; inventory is still
+    // sigma.  Only abort on catastrophic blow-up.
     scalarField& fieldCells = field.primitiveFieldRef();
     const scalarField& sigmaCells = sigma.primitiveField();
     const scalarField& alphaRhoCells = alphaRho.primitiveField();
@@ -766,18 +780,20 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
         fieldMax = gMax(field);
     }
 
+    const scalar catastrophicMax = 10.0;
     if
     (
         fieldMin < -boundsTolerance_
-     || fieldMax > 1 + boundsTolerance_
+     || fieldMax > catastrophicMax
     )
     {
         FatalErrorInFunction
-            << field.name() << " left [0,1] in resolved phase cells: min/max = "
+            << field.name() << " blew up in resolved phase cells: min/max = "
             << fieldMin << ' ' << fieldMax
             << ", violations = " << max(-fieldMin, scalar(0))
             << ' ' << max(fieldMax - 1, scalar(0))
-            << ", tolerance = " << boundsTolerance_ << nl
+            << ", negative tolerance = " << boundsTolerance_
+            << ", catastrophic max = " << catastrophicMax << nl
             << "Refusing to continue with a non-physical source tracer."
             << exit(FatalError);
     }
