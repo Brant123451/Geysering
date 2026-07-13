@@ -11,7 +11,7 @@ solvers
     "alpha.water.*"
     {
         nAlphaCorr      1;
-        nAlphaSubCycles 2;
+        nAlphaSubCycles 4;
         cAlpha          1;
         MULESCorr       no;
         nLimiterIter    5;

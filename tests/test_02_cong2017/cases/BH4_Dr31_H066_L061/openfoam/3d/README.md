@@ -87,8 +87,12 @@ study uses 0.10, 0.20, and 0.30 s with every other input unchanged.  Closed
 hold, valve flux, and pressure on both sides are recorded independently before
 the experimental no-geyser label is examined.
 
-Production runs use `maxCo=0.40`, `maxAlphaCo=0.10`, and three PIMPLE outer
-correctors.  A two-outer-corrector candidate agreed within 0.7% over the 0.3 s
+Production runs use `maxCo=0.40`, `maxAlphaCo=0.20`, four alpha subcycles, and
+three PIMPLE outer correctors.  Thus the maximum Courant number of each VOF
+substep remains 0.05, exactly the same as the earlier
+`maxAlphaCo=0.10`/two-subcycle setup, while avoiding unnecessary
+momentum-pressure updates when only the interface Courant number limits the
+global step.  A two-outer-corrector candidate agreed within 0.7% over the 0.3 s
 smoke, but was rejected when its extended run developed a local `Co=2.38`
 overshoot and negative temperature at `t=0.507 s`.  Isolating the factors,
 three outer correctors remained stable in an independent `0...0.7 s` run at
