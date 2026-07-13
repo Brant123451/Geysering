@@ -218,10 +218,10 @@ still violated MULES's low-order positivity requirement (`|tracer|` exceeded
 `1e24` by solver time 0.0202 s). The current local
 `boundedPhaseMassTransport` instead projects the raw air mass flux onto the
 discrete `alpha.air*rho.air` continuity equation and advances the conserved
-tagged-mass density `sigma = alpha*rho*s` with
-`fvm::ddt(sigma) + fvm::div(phi/(alpha*rho)_f, sigma)`. The fraction `s` is
-recovered only for output, boundary conditions and arrival diagnostics.
-Intensity-form Sp corrections
+tagged-mass density `sigma = alpha*rho*s` with an explicit conservative
+update `sigma := sigmaOld - dt*div(flux(phi, s))` using the projected air
+mass flux. The fraction `s` is recovered only for output, boundary
+conditions and arrival diagnostics. Intensity-form Sp corrections
 (`fvm::ddt(alpha,rho,s) - Sp(fvc::ddt(alpha,rho)+fvc::div(phi),s) + ...`)
 were rejected: even with full material Sp they still lost about 5.9% of
 tagged mass by solver time 0.52 s, matching the earlier unprojected
@@ -231,10 +231,10 @@ tagged boundary fluxes must close within 1%, and the independently
 integrated numerical tracer-balance residual must also stay below 1%. The
 object aborts immediately if carrier projection exceeds the local relative
 tolerance `1e-4` or the recovered tracer leaves `[0,1]` in resolved-phase
-cells; failed projections receive up to two incremental correction passes
-before aborting. The range check allows only `1e-6` linear/discretisation
-tolerance and never clips the field. A fresh run is required to validate
-this implementation.
+cells beyond `boundsTolerance=1e-3`; failed projections receive up to two
+incremental correction passes before aborting. The range check never clips
+the conserved density. A fresh run is required to validate this
+implementation.
 
 Phase 1 is incomplete. Phase 2 and eight eruptions have not yet been
 reproduced.

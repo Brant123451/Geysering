@@ -586,32 +586,10 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
         ),
         alpha*phaseRho
     );
-    const surfaceScalarField alphaRhoFace(fvc::interpolate(alphaRho));
-    const dimensionedScalar alphaRhoFloor
-    (
-        "alphaRhoFloor",
-        dimDensity,
-        ROOTVSMALL
-    );
 
-    // Volumetric carrier flux consistent with the projected mass flux:
-    //   phi_sigma = phi / (alpha*rho)_f
-    // so that ddt(sigma) + div(phi_sigma, sigma) conserves ∫ sigma.
-    surfaceScalarField phiSigma
-    (
-        IOobject
-        (
-            fieldName_ + "PhiSigma",
-            mesh_.time().timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE,
-            IOobject::NO_REGISTER
-        ),
-        carrierFlux/max(alphaRhoFace, alphaRhoFloor)
-    );
-    phiSigma.oriented() = carrierFlux.oriented();
-
+    // Tagged-mass flux is the projected carrier mass flux times the upwind
+    // fraction.  Avoid phi/(alpha*rho)_f, which blows up on vanishing-phase
+    // faces even when the mass flux itself is small.
     const word divScheme("div(phi," + schemesField_ + ")");
     const dimensionedScalar dt(mesh_.time().deltaT());
 
@@ -622,13 +600,32 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     // Picard iterations on the explicit conservative update.
     for (label corr = 0; corr <= nCorr_; ++corr)
     {
-        const volScalarField& sigmaUpwind = (corr == 0) ? sigmaOld : sigma;
-        tracerFlux = fvc::flux(phiSigma, sigmaUpwind, divScheme);
+        const volScalarField& sUpwind = field;
+        tracerFlux = fvc::flux(carrierFlux, sUpwind, divScheme);
         tracerFlux.ref().oriented() = carrierFlux.oriented();
 
         const volScalarField divFlux(fvc::div(tracerFlux()));
         sigma.primitiveFieldRef() =
             sigmaOld.primitiveField() - dt.value()*divFlux.primitiveField();
+
+        // Refresh the upwind fraction from the updated conserved density
+        // before any additional Picard pass.
+        {
+            const scalarField alphaRhoFloorCells
+            (
+                residualAlpha_*phaseRho.primitiveField()
+            );
+            scalarField& fieldCells = field.primitiveFieldRef();
+            const scalarField& sigmaCells = sigma.primitiveField();
+            const scalarField& alphaRhoCells = alphaRho.primitiveField();
+            forAll(fieldCells, celli)
+            {
+                const scalar denom =
+                    max(alphaRhoCells[celli], alphaRhoFloorCells[celli]);
+                fieldCells[celli] = sigmaCells[celli]/denom;
+            }
+            field.correctBoundaryConditions();
+        }
 
         ++iteration;
         converged = true;

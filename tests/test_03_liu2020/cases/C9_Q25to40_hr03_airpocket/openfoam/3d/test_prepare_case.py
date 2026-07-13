@@ -148,7 +148,7 @@ class PocketBodyTracerTests(unittest.TestCase):
             dictionary.count("weightField     alphaRhoAirForTracer;"),
             0,
         )
-        self.assertIn("fvm::ddt(sigma)", dictionary)
+        self.assertIn("sigma := sigmaOld - dt*div(flux(phi, s))", dictionary)
         self.assertNotIn("Sp(fvc::ddt(alpha,rho)", dictionary)
         self.assertEqual(
             dictionary.count("fields          (pocketBodyTracerMassFlux);"),

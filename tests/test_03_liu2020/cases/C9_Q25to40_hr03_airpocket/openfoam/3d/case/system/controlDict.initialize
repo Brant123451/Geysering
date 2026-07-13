@@ -97,11 +97,10 @@ functions
     pocketBodyTracerTransport
     {
         // Project the air mass flux onto discrete phase continuity, then
-        // advance the conserved tagged-mass density
-        // sigma = alpha*rho*s with
-        // fvm::ddt(sigma) + fvm::div(phi/(alpha*rho)_f, sigma).
-        // Recover s = sigma/max(alpha*rho, residualAlpha*rho) only for
-        // output/BCs/arrival.  No Sp, no clamp/clear, no continuity source.
+        // advance the conserved tagged-mass density sigma = alpha*rho*s with
+        // sigma := sigmaOld - dt*div(flux(phi, s)) using the projected air
+        // mass flux.  Recover s = sigma/max(alpha*rho, residualAlpha*rho)
+        // for output/BCs/arrival.  No Sp, no clamp/clear, no continuity source.
         type            boundedPhaseMassTransport;
         libs            ("libboundedPhaseMassTransport.so");
         field           pocketBodyTracer;
