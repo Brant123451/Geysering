@@ -333,6 +333,31 @@ def main() -> None:
         )
         gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_size)
         gmsh.option.setNumber("Mesh.MeshSizeMax", args.atmosphere_size)
+        if args.interface_size is not None:
+            # The global minimum must permit the local 2.5 mm band, but it
+            # must not also release the curvature field to refine the entire
+            # 6.59 m pipe below the normal refined-profile 4 mm floor.
+            def spatial_size_floor(
+                dim: int,
+                tag: int,
+                x: float,
+                y: float,
+                z: float,
+                proposed_size: float,
+            ) -> float:
+                del dim, tag
+                in_interface_band = (
+                    math.hypot(x - TEE_X, y) <= riser_radius + 1.0e-5
+                    and 0.630 - 1.0e-8 <= z <= 0.690 + 1.0e-8
+                )
+                local_floor = (
+                    args.interface_size
+                    if in_interface_band
+                    else args.riser_size
+                )
+                return max(proposed_size, local_floor)
+
+            gmsh.model.mesh.setSizeCallback(spatial_size_floor)
         gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
         gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
         gmsh.option.setNumber(
@@ -372,6 +397,10 @@ def main() -> None:
             f"{INITIAL_INTERFACE_LOWER_Z},{INITIAL_INTERFACE_UPPER_Z}"
         )
         print(f"interface_size_m={args.interface_size}")
+        print(
+            "spatial_mesh_size_floor="
+            f"{args.interface_size is not None}"
+        )
         print(f"conformal_valve_plane_x_m={VALVE_X}")
         print(f"fluid_partitions={len(volumes)}")
         element_blocks = gmsh.model.mesh.getElements(3)[1]

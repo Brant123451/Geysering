@@ -220,5 +220,20 @@ at `(3.4593,-0.00019,0.66644) m`, `alpha.water=0.0706`, near the tee and the
 upper edge of the declared band. The next diagnostic therefore keeps the
 improved operator and all physical inputs fixed, adds conformal planes at
 `z=0.6525/0.6675 m`, and targets `2.5 mm` cells in the local interface band.
-It must pass strict `checkMesh`, the short rejection test, and ultimately the
-full 1 s hold; no event run is released by the improvement alone.
+Its first implementation passes strict `checkMesh` but is rejected: the mesh
+grows to 960,212 cells, maximum non-orthogonality rises to `67.79 deg`, the
+initial residual rises to `2741.5 Pa/m`, and water-weighted speed reaches
+`0.04948 m/s` by `0.028 s`. The run was deliberately ended with OpenFOAM
+`stopAt=writeNow` once the rejection was unambiguous rather than spending the
+remaining short window.
+
+That result also exposed a mesh-control defect: lowering the global Gmsh
+minimum from 4 to 2.5 mm allowed `MeshSizeFromCurvature=64` to refine much of
+the full pipe, not only the declared interface box. A spatial size-floor
+callback now restores the 4 mm floor outside `0.63<=z<=0.69 m`; the corrected
+local profile must be rerun and must not reuse the 960,212-cell result. In
+parallel, a declared `pointCellsLeastSquares` test checks whether a larger
+point-neighbour stencil reduces curvature noise on the unchanged refined mesh.
+If neither passes, the next mesh treatment is a 24-layer axial-prism slab with
+the three transition heights on exact layer faces. No event run is released
+by these diagnostic improvements alone.

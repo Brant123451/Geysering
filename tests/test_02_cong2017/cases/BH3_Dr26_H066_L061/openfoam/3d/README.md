@@ -162,6 +162,7 @@ python3 run_study.py --variant closed_refined_sigma_072
 # Test the curvature-normal gradient only; all physical inputs stay fixed
 python3 run_study.py --variant closed_refined_sigma_072_nhat_ls
 python3 run_study.py --variant closed_refined_sigma_zero_nhat_ls
+python3 run_study.py --variant closed_refined_sigma_072_nhat_point
 
 # Align and locally refine the full initial transition band
 python3 run_study.py --variant closed_interface_sigma_072_nhat_ls
@@ -180,9 +181,10 @@ RUN_MODE=event VALVE_OPENING=instant END_TIME=13 ./Allrun
 `VALVE_OPENING` accepts `instant`, `0.2`, or `0.5`. `C_ALPHA`, `MAX_CO`,
 `MAX_ALPHA_CO`, `MAX_DELTA_T`, `ALPHA_SMOOTH_CURVATURE`,
 `NHAT_GRADIENT_SCHEME`, and `SURFACE_TENSION` expose declared numerical
-controls. `NHAT_GRADIENT_SCHEME` accepts `gauss-linear` or `least-squares`;
-the latter is an A/B diagnostic for the flat-interface curvature normal on
-tetrahedra, not an unreported baseline change.
+controls. `NHAT_GRADIENT_SCHEME` accepts `gauss-linear`, `least-squares`, or
+`point-cells-least-squares`; the latter two are A/B diagnostics for the
+flat-interface curvature normal on tetrahedra, not unreported baseline
+changes.
 `INITIAL_INTERFACE_THICKNESS` accepts only the declared `0.015 m` baseline or
 the conformal sharp-step value `0`; `INITIAL_INTERFACE_PROFILE` accepts
 `linear` or the declared `cosine` diagnostic for the 15 mm band. The baseline
@@ -220,9 +222,16 @@ correcting `rAU` alone leaves the physical-sigma result essentially unchanged
 improvement to the curvature-normal gradient, but still fails the
 `0.02 m/s` gate. Its maximum residual is at
 `(3.4593,-0.00019,0.66644) m` with `alpha.water=0.0706`, spatially locating
-the remaining defect at the upper edge of the transition near the tee. The
-interface-aligned mesh is therefore the next declared diagnostic rather than
-a relaxation of the acceptance threshold.
+the remaining defect at the upper edge of the transition near the tee.
+The first interface-aligned tetrahedral attempt is negative evidence: it
+passes strict `checkMesh`, but has 960,212 cells, `67.79 deg` maximum
+non-orthogonality, `2741.5 Pa/m` initial residual, and reaches
+`0.04948 m/s` by its deliberately stopped `0.028 s` rejection window. Audit
+then found that lowering the global Gmsh size floor had also released
+curvature refinement along the full pipe; the source now applies a spatial
+size-floor callback before repeating this profile. A larger point-neighbour
+gradient and, if needed, a true axial-prism slab are the next diagnostics;
+none relaxes the acceptance threshold.
 
 ## Required outputs
 

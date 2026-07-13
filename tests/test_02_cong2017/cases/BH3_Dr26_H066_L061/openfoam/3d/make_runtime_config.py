@@ -20,7 +20,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--surface-tension", type=float, default=0.072)
     parser.add_argument(
         "--n-hat-gradient-scheme",
-        choices=("gauss-linear", "least-squares"),
+        choices=(
+            "gauss-linear",
+            "least-squares",
+            "point-cells-least-squares",
+        ),
         default="gauss-linear",
     )
     return parser.parse_args()
@@ -85,6 +89,7 @@ def main() -> None:
     n_hat_scheme = {
         "gauss-linear": "Gauss linear",
         "least-squares": "leastSquares",
+        "point-cells-least-squares": "pointCellsLeastSquares",
     }[args.n_hat_gradient_scheme]
     (system / "gradientSchemes.runtime").write_text(
         f"nHatGradientScheme {n_hat_scheme};\n",

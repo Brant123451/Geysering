@@ -123,6 +123,16 @@ VARIANTS = (
         n_hat_gradient_scheme="least-squares",
     ),
     Variant(
+        "closed_refined_sigma_072_nhat_point",
+        "diagnostic",
+        mesh="refined",
+        mode="closed",
+        valve="closed",
+        end_time=0.05,
+        sample_interval=1.0e-3,
+        n_hat_gradient_scheme="point-cells-least-squares",
+    ),
+    Variant(
         "closed_interface_sigma_072_nhat_ls",
         "diagnostic",
         mesh="interface",

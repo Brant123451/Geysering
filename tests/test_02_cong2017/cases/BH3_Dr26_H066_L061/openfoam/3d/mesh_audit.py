@@ -85,6 +85,11 @@ def main() -> None:
         "interface_target_size_m": first(
             r"^interface_size_m=([0-9.eE+-]+)", geometry
         ),
+        "spatial_mesh_size_floor": first(
+            r"^spatial_mesh_size_floor=(True|False)",
+            geometry,
+            lambda value: value == "True",
+        ),
     }
     if data["mesh_volume_m3"] is not None and data["fluid_geometry_volume_m3"]:
         data["mesh_to_cad_volume_relative_error"] = (
