@@ -168,6 +168,63 @@ VARIANTS = (
         n_hat_gradient_scheme="least-squares",
     ),
     Variant(
+        "closed_prism_sigma_072_nhat_ls_repeat",
+        "diagnostic",
+        mesh="prism",
+        mode="closed",
+        valve="closed",
+        end_time=0.05,
+        sample_interval=1.0e-3,
+        n_hat_gradient_scheme="least-squares",
+    ),
+    Variant(
+        "closed_prism_sigma_072_nhat_ls_serial",
+        "diagnostic",
+        mesh="prism",
+        mode="closed",
+        valve="closed",
+        end_time=0.05,
+        sample_interval=1.0e-3,
+        n_hat_gradient_scheme="least-squares",
+        processes=1,
+    ),
+    Variant(
+        "closed_prism_sigma_072_nhat_ls_dt_fine",
+        "diagnostic",
+        mesh="prism",
+        mode="closed",
+        valve="closed",
+        end_time=0.05,
+        max_co=0.05,
+        max_alpha_co=0.05,
+        max_delta_t=5.0e-5,
+        sample_interval=1.0e-3,
+        n_hat_gradient_scheme="least-squares",
+    ),
+    Variant(
+        "closed_prism_sigma_zero_nhat_ls",
+        "diagnostic",
+        mesh="prism",
+        mode="closed",
+        valve="closed",
+        end_time=0.05,
+        sample_interval=1.0e-3,
+        surface_tension=0.0,
+        n_hat_gradient_scheme="least-squares",
+    ),
+    Variant(
+        "closed_prism_sigma_zero_nhat_ls_serial",
+        "diagnostic",
+        mesh="prism",
+        mode="closed",
+        valve="closed",
+        end_time=0.05,
+        sample_interval=1.0e-3,
+        surface_tension=0.0,
+        n_hat_gradient_scheme="least-squares",
+        processes=1,
+    ),
+    Variant(
         "closed_prism_sigma_072_nhat_point",
         "diagnostic",
         mesh="prism",
@@ -296,6 +353,7 @@ def source_fingerprint() -> str:
         and "polyMesh" not in path.relative_to(HERE).parts
         and "triSurface" not in path.relative_to(HERE).parts
         and "postProcessing" not in path.relative_to(HERE).parts
+        and path.name not in {"README.md", "PAPER_AUDIT.md"}
         and not any(
             part == "0"
             or part.startswith("processor")
@@ -418,6 +476,10 @@ def annotate_metrics(
         "sample_interval_s": variant.sample_interval,
         "surface_tension_n_per_m": variant.surface_tension,
         "parallel_processes": process_count,
+        "parallel_decomposition": "simple-x" if process_count > 1 else "serial",
+        "parallel_partition_shape": (
+            [process_count, 1, 1] if process_count > 1 else None
+        ),
     }
     path.write_text(json.dumps(data, indent=2, allow_nan=False) + "\n", encoding="utf-8")
 

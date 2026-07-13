@@ -52,6 +52,7 @@ python3 make_runtime_config.py \
     --write-interval "${WRITE_INTERVAL:-0.05}" \
     --surface-tension "${SURFACE_TENSION:-0.072}" \
     --n-hat-gradient-scheme "${NHAT_GRADIENT_SCHEME:-gauss-linear}" \
+    --parallel-processes "$NP" \
     > log.runtimeConfig 2>&1
 
 cp -a 0.orig 0
@@ -133,9 +134,6 @@ fi
 if (( NP == 1 )); then
     compressibleInterFoam > log.compressibleInterFoam 2>&1
 else
-    cp system/decomposeParDict system/decomposeParDict.runtime
-    foamDictionary system/decomposeParDict.runtime \
-        -entry numberOfSubdomains -set "$NP" >/dev/null
     decomposePar -decomposeParDict system/decomposeParDict.runtime \
         > log.decomposePar 2>&1
     OMPI_ALLOW_RUN_AS_ROOT=1 \

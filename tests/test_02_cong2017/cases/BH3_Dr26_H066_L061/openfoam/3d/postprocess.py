@@ -234,6 +234,78 @@ def initial_pressure_balance(case: Path) -> dict[str, object] | None:
     }
 
 
+def field_extrema(case: Path) -> dict[str, object] | None:
+    paths = sorted(
+        (case / "postProcessing" / "stabilityExtrema").glob(
+            "*/fieldMinMax.dat"
+        ),
+        key=lambda path: float(path.parent.name),
+    )
+    if not paths:
+        return None
+
+    result: dict[str, dict[str, object]] = {}
+    for path in paths:
+        for line in path.read_text(
+            encoding="utf-8", errors="replace"
+        ).splitlines():
+            if not line.strip() or line.lstrip().startswith("#"):
+                continue
+            columns = [
+                value.strip() for value in line.split("\t") if value.strip()
+            ]
+            if len(columns) == 6:
+                time_text, field, min_text, min_position, max_text, max_position = (
+                    columns
+                )
+                min_processor = max_processor = None
+            elif len(columns) == 8:
+                (
+                    time_text,
+                    field,
+                    min_text,
+                    min_position,
+                    min_processor,
+                    max_text,
+                    max_position,
+                    max_processor,
+                ) = columns
+            else:
+                raise RuntimeError(
+                    f"Unexpected fieldMinMax row with {len(columns)} columns: {line}"
+                )
+
+            time_value = float(time_text)
+            minimum = {
+                "value": float(min_text),
+                "time_s": time_value,
+                "position_m": [
+                    float(value) for value in NUMBER.findall(min_position)
+                ],
+                "processor": (
+                    int(min_processor) if min_processor is not None else None
+                ),
+            }
+            maximum = {
+                "value": float(max_text),
+                "time_s": time_value,
+                "position_m": [
+                    float(value) for value in NUMBER.findall(max_position)
+                ],
+                "processor": (
+                    int(max_processor) if max_processor is not None else None
+                ),
+            }
+            current = result.setdefault(
+                field, {"minimum": minimum, "maximum": maximum}
+            )
+            if minimum["value"] < current["minimum"]["value"]:
+                current["minimum"] = minimum
+            if maximum["value"] > current["maximum"]["value"]:
+                current["maximum"] = maximum
+    return result
+
+
 def main() -> None:
     args = parse_args()
     case = args.case.resolve()
@@ -372,6 +444,7 @@ def main() -> None:
         else None
     )
     pressure_balance = initial_pressure_balance(case)
+    extrema = field_extrema(case)
 
     metrics = {
         "schema_version": 1,
@@ -401,6 +474,7 @@ def main() -> None:
         "maximum_gas_weighted_speed_m_per_s": float(
             np.nanmax(gas_weighted_speed)
         ),
+        "field_extrema": extrema,
         "initial_pressure_balance": pressure_balance,
         "initial_volume_audit": {
             "pocket_target_m3": POCKET_TARGET,

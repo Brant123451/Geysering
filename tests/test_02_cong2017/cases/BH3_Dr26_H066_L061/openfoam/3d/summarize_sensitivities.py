@@ -35,6 +35,9 @@ def main() -> None:
         numerical_controls = data.get("numerical_controls", {})
         closed_hold = data.get("closed_hold", {})
         pressure_balance = data.get("initial_pressure_balance") or {}
+        temperature_extrema = (
+            (data.get("field_extrema") or {}).get("T") or {}
+        )
         is_closed = data["run_mode"] == "closed"
         rows.append(
             {
@@ -56,8 +59,17 @@ def main() -> None:
                 "parallel_processes": numerical_controls.get(
                     "parallel_processes"
                 ),
+                "parallel_decomposition": numerical_controls.get(
+                    "parallel_decomposition"
+                ),
                 "solver_completed": data.get("solver_completed"),
                 "solver_failure_reason": data.get("solver_failure_reason"),
+                "temperature_min_k": (
+                    temperature_extrema.get("minimum") or {}
+                ).get("value"),
+                "temperature_max_k": (
+                    temperature_extrema.get("maximum") or {}
+                ).get("value"),
                 "initial_pressure_residual_pa_m": pressure_balance.get(
                     "maximum_reconstructed_residual_pa_per_m"
                 ),
@@ -97,8 +109,11 @@ def main() -> None:
         "initial_interface_profile",
         "n_hat_gradient_scheme",
         "parallel_processes",
+        "parallel_decomposition",
         "solver_completed",
         "solver_failure_reason",
+        "temperature_min_k",
+        "temperature_max_k",
         "initial_pressure_residual_pa_m",
         "end_time_s",
         "full_13s",

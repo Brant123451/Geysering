@@ -34,6 +34,18 @@ maxDeltaT       $maxDeltaTValue;
 
 functions
 {
+    stabilityExtrema
+    {
+        type            fieldMinMax;
+        libs            (fieldFunctionObjects);
+        fields          (T p p_rgh U k epsilon alpha.water);
+        mode            magnitude;
+        location        true;
+        log             false;
+        writeControl    timeStep;
+        writeInterval   1;
+    }
+
     pressureProbes
     {
         type            probes;

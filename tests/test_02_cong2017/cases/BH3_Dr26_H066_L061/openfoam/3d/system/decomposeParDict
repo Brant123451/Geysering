@@ -7,4 +7,11 @@ FoamFile
 }
 
 numberOfSubdomains 4;
-method scotch;
+method simple;
+
+simpleCoeffs
+{
+    // Deterministic axial cuts minimize processor faces in the long pipe.
+    n       (4 1 1);
+    delta   0.001;
+}

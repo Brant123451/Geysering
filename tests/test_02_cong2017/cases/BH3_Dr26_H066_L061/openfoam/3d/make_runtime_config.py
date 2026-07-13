@@ -18,6 +18,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--sample-interval", type=float, default=0.005)
     parser.add_argument("--write-interval", type=float, default=0.05)
     parser.add_argument("--surface-tension", type=float, default=0.072)
+    parser.add_argument("--parallel-processes", type=int, default=4)
     parser.add_argument(
         "--n-hat-gradient-scheme",
         choices=(
@@ -58,6 +59,8 @@ def main() -> None:
         raise ValueError("alpha curvature smoothing iterations cannot be negative")
     if args.surface_tension < 0:
         raise ValueError("surface tension cannot be negative")
+    if args.parallel_processes < 1:
+        raise ValueError("parallel process count must be positive")
     if args.initial_delta_t > args.max_delta_t:
         raise ValueError("initial deltaT cannot exceed maxDeltaT")
 
@@ -95,6 +98,30 @@ def main() -> None:
         f"nHatGradientScheme {n_hat_scheme};\n",
         encoding="utf-8",
     )
+    (system / "decomposeParDict.runtime").write_text(
+        "\n".join(
+            (
+                "FoamFile",
+                "{",
+                "    version     2.0;",
+                "    format      ascii;",
+                "    class       dictionary;",
+                "    object      decomposeParDict;",
+                "}",
+                "",
+                f"numberOfSubdomains {args.parallel_processes};",
+                "method simple;",
+                "",
+                "simpleCoeffs",
+                "{",
+                f"    n       ({args.parallel_processes} 1 1);",
+                "    delta   0.001;",
+                "}",
+                "",
+            )
+        ),
+        encoding="utf-8",
+    )
     write_locations(
         system / "riserProbeLocations.runtime",
         locations(0.060, 1.840, 0.010),
@@ -110,7 +137,8 @@ def main() -> None:
         f"cAlpha={args.c_alpha:g} "
         f"alphaSmoothCurvature={args.alpha_smooth_curvature} "
         f"sigma={args.surface_tension:g} "
-        f"nHatGradient={args.n_hat_gradient_scheme}"
+        f"nHatGradient={args.n_hat_gradient_scheme} "
+        f"decomposition=simple-x/{args.parallel_processes}"
     )
 
 

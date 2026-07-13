@@ -70,8 +70,10 @@
       "baseline_max_alpha_courant": 0.15,
       "baseline_max_delta_t_s": 0.0005,
       "closed_hold_baseline_mesh_profile": "prism",
+      "parallel_decomposition": "deterministic simple decomposition with n=(nProcs 1 1) along the horizontal-pipe axis",
       "closed_hold_parallel_process_sensitivity": [1, 4],
-      "surface_tension_sensitivity_n_per_m": [0.072, 0.0]
+      "surface_tension_sensitivity_n_per_m": [0.072, 0.0],
+      "stability_extrema_fields": ["T", "p", "p_rgh", "U", "k", "epsilon", "alpha.water"]
     },
     "valve_sensitivity": {
       "published_cfd_baseline_s": 0.0,
