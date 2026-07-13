@@ -223,8 +223,9 @@ residual-alpha deferred correction. It has no clamp and no carrier-continuity
 equation source. Physical inventory and tagged boundary fluxes must close
 within 1%, and the independently integrated numerical tracer-balance residual
 must also stay below 1%. The object aborts immediately if carrier projection
-misses its tolerance or the tracer leaves `[0,1]`. A fresh run is required to
-validate this implementation.
+exceeds the local relative tolerance `1e-4` or the tracer leaves `[0,1]`;
+failed projections receive up to two incremental correction passes before
+aborting. A fresh run is required to validate this implementation.
 
 Phase 1 is incomplete. Phase 2 and eight eruptions have not yet been
 reproduced.
