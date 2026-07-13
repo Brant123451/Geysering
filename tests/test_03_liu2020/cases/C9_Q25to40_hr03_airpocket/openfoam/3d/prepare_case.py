@@ -466,11 +466,11 @@ functions
         writeControl    none;
     }}
 
-    tracerWaterDensityFaces
+    tracerAirDensityFaces
     {{
         type            surfaceInterpolate;
         libs            (fieldFunctionObjects);
-        fields          ((thermo:rho.water waterDensityFaceForTracer));
+        fields          ((thermo:rho.air airDensityFaceForTracer));
         enabled         true;
         log             false;
         executeControl  timeStep;
@@ -478,15 +478,15 @@ functions
         writeControl    none;
     }}
 
-    tracerWaterMassFlux
+    tracerAirVolumeFlux
     {{
-        // exprField can evaluate solver-owned surface fields, but a newly
-        // created field must be assigned the kg/s dimensions of rhoPhi.
+        // alphaPhi0.water is the conservative water volumetric flux produced
+        // by MULES, so its complement is the air volumetric flux.
         type            exprField;
         libs            (fieldFunctionObjects);
-        field           waterMassFluxForTracer;
-        expression      "waterDensityFaceForTracer * alphaPhi0.water";
-        dimensions      [1 0 -1 0 0 0 0];
+        field           airVolumeFluxForTracer;
+        expression      "phi - alphaPhi0.water";
+        dimensions      [0 3 -1 0 0 0 0];
         store           true;
         autowrite       false;
         enabled         true;
@@ -498,12 +498,16 @@ functions
 
     tracerAirMassFlux
     {{
-        // compressibleInterFoam mixture mass flux minus its conservative
-        // water-phase contribution gives the air-phase mass flux.
-        type            subtract;
+        // Construct phase mass flux directly.  Subtracting water mass flux
+        // from rhoPhi is not equivalent in this compressible solver and can
+        // leave an O(water-flux) residual in nominally pure-water cells.
+        type            exprField;
         libs            (fieldFunctionObjects);
-        fields          (rhoPhi waterMassFluxForTracer);
-        result          airMassFluxForTracer;
+        field           airMassFluxForTracer;
+        expression      "airDensityFaceForTracer * airVolumeFluxForTracer";
+        dimensions      [1 0 -1 0 0 0 0];
+        store           true;
+        autowrite       false;
         enabled         true;
         log             false;
         executeControl  timeStep;
@@ -2127,7 +2131,7 @@ rm -f log.*
             "initial_support": "selected upstream main-body gas; thin layer excluded",
             "transport": (
                 "conservative air-phase mass fraction using "
-                "rhoPhi - interpolate(rho.water)*alphaPhi0.water"
+                "interpolate(rho.air)*(phi - alphaPhi0.water)"
             ),
             "purpose": (
                 "main-pocket source identity; alpha.air alone cannot distinguish "

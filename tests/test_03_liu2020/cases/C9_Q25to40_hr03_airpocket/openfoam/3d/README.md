@@ -200,7 +200,10 @@ the tag with mixture `rhoPhi/rho` diluted its maximum value from 1 to 0.00285
 and produced a false 0.71 s “arrival.” That trajectory remains useful for
 pressure and Courant diagnostics but is rejected for pocket chronology. The
 source now constructs the air mass flux as
-`rhoPhi - interpolate(rho.water)*alphaPhi0.water`; a fresh run is required.
+`interpolate(rho.air)*(phi - alphaPhi0.water)`. This uses the complementary
+MULES phase-volume flux directly instead of subtracting a separately
+interpolated water mass flux from compressible mixture `rhoPhi`; a fresh run
+is required.
 
 Phase 1 is incomplete. Phase 2 and eight eruptions have not yet been
 reproduced.

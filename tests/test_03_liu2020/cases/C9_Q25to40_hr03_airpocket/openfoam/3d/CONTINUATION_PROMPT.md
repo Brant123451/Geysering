@@ -98,7 +98,8 @@ et al. (2020) Test 3 / Series C / Case C9：
 - `compressibleInterFoam` 不接受 `-dict system/controlDict.*`；
 - 气相守恒不能读取运行时不存在的 `alphaRhoPhi.*`；
 - 守恒必须使用 `rhoPhi` 的质量通量列，而不是 `phi` 体积通量列；
-- 当前实现使用 `rhoPhi - rho_water*alphaPhi0.water` 得到边界气相质量通量；
+- 当前实现使用
+  `interpolate(rho.air)*(phi - alphaPhi0.water)` 直接构造气相质量通量；
 - tailgate 不使用会再次扣除速度头的 `prghTotalPressure`；
 - 当前 tailgate `p_rgh` 使用静水 tailwater closure；
 - STL 接口必须保持共形闭合，不要重新引入 penetration/lip 几何泄漏。

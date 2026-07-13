@@ -75,10 +75,11 @@ the then-current tracer used mixture `rhoPhi/rho`. The tracer diluted into the
 water phase (maximum 1 to 0.00285) and falsely labelled the paper's early crown
 passage as a 0.71 s body arrival. It is rejected for pocket chronology. The
 source now transports the tag with
-`rhoPhi - interpolate(rho.water)*alphaPhi0.water`, reports 1% transfer as
-leakage, and requires 20% transfer plus a sustained connection for operational
-bulk arrival. A fresh initialization and smoke are required to verify this
-change before phase 1.
+`interpolate(rho.air)*(phi - alphaPhi0.water)`, reports 1% transfer as leakage,
+and requires 20% transfer plus a sustained connection for operational bulk
+arrival. This direct phase-flux form avoids the non-equivalent subtraction of
+water mass flux from compressible mixture `rhoPhi`. A fresh initialization and
+smoke are required to verify this change before phase 1.
 
 Phase 1 is incomplete. Phase 2 and eight eruptions have not yet been
 reproduced.

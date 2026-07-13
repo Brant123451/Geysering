@@ -231,12 +231,15 @@ because C9 is at \(Re=O(10^5)\); the laminar result is a model sensitivity.
 A conservative `pocketBodyTracer` is initialized only in the thick gas body,
 not in the thin connected crown layer. It is transported as an air-phase mass
 fraction with the gas mass flux
-`rhoPhi - interpolate(rho.water)*alphaPhi0.water`; transporting it with the
-mixture `rhoPhi/rho` would let the tag dilute into water and is not a valid
-source-identity diagnostic. A 1% source-tag transfer is reported only as early
-leakage because the paper explicitly documents a temporary crown passage near
-1.30 s. The formal operational main-body arrival additionally requires 20%
-transfer into the chamber plus riser and a sustained deep-line connection.
+`interpolate(rho.air)*(phi - alphaPhi0.water)`. This directly converts the
+complementary MULES air-volume flux to air mass flux; subtracting a separately
+interpolated water mass flux from compressible mixture `rhoPhi` is not
+equivalent. Transporting the tag with mixture `rhoPhi/rho` would let it dilute
+into water and is not a valid source-identity diagnostic. A 1% source-tag
+transfer is reported only as early leakage because the paper explicitly
+documents a temporary crown passage near 1.30 s. The formal operational
+main-body arrival additionally requires 20% transfer into the chamber plus
+riser and a sustained deep-line connection.
 Because the paper does not report an arrival mass fraction, 1/5/10/20/30/50%
 transfer times are all retained as threshold sensitivity evidence.
 Line-sampled `alpha.air` alone remains a morphology fallback and cannot
