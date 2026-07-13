@@ -97,11 +97,10 @@ functions
     pocketBodyTracerTransport
     {
         // Project the air mass flux onto discrete phase continuity, then
-        // advect sigma with phiVol = phi_air / max((alpha*rho)_f,
-        // resolveAlpha*rho_f), limited by MULES against
-        // [0, max(alpha*rho, sigma)].  Face floor uses resolveAlpha (1e-3),
-        // not residualAlpha: thinner floors explode phiVol / go negative.
-        // Recover s = sigma/(alpha*rho) for output; mild s>1 allowed.
+        // transport sigma with upwind intensity fluxes (phi_air*s) scaled so
+        // no cell loses more tagged mass than it holds (conservative
+        // positivity).  Mild s>1 allowed when alpha*rho shrinks.  No phiVol
+        // reconstruction and no cell clip of sigma.
         type            boundedPhaseMassTransport;
         libs            ("libboundedPhaseMassTransport.so");
         field           pocketBodyTracer;
