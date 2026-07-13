@@ -265,7 +265,7 @@
   },
   "classification_changed_by_numerics": null,
   "honesty_note": "Experimental classification is a comparison target only. No source term or fitted event trigger is used.",
-  "source_fingerprint": "6b8ccbde97bfc91bd23047eaf59a92b905b553bf46ddbdd2796fb8c13955e612",
+  "source_fingerprint": "98e4f94f74d020a8c84c20d963c7f3c3f740b3536af5742a764e0a91f29bc34f",
   "solver_completed": true,
   "solver_failure_reason": null,
   "numerical_controls": {
