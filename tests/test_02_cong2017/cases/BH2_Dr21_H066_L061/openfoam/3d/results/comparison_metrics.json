@@ -1,0 +1,132 @@
+{
+  "case": {
+    "geometry_1d": "legacy 6.0 m main, tee x=2.88 m",
+    "geometry_3d": "paper-audited 6.59 m main, tee x=3.47 m",
+    "run": "B-H2",
+    "solver_3d": "OpenFOAM v2512 compressibleInterIsoFoam"
+  },
+  "comparison_limits": [
+    "B-H2 has no Case-owned digitized level or pressure history; scalar Table 2 errors only.",
+    "The legacy 1-D and audited 3-D geometries differ and are not time-shifted.",
+    "The reported experimental classification was not used to tune the 3-D model."
+  ],
+  "experiment": {
+    "Dr_mm": 21.0,
+    "H0_m": 0.66,
+    "L0_m": 0.61,
+    "Ta_s": 7.84,
+    "geyser": true,
+    "run": "B-H2",
+    "vfs_m_s": 0.768,
+    "vint_m_s": 1.022
+  },
+  "experiment_comparison": {
+    "base_3d": {
+      "Ta_delta_s": null,
+      "available": false,
+      "geyser_match": null,
+      "vfs_delta_m_s": null,
+      "vint_delta_m_s": null
+    },
+    "legacy_1d": {
+      "Ta_delta_s": null,
+      "available": true,
+      "geyser_match": false,
+      "vfs_delta_m_s": null,
+      "vint_delta_m_s": null
+    }
+  },
+  "model_1d": {
+    "Ta_s": null,
+    "Yfs_max_m": 0.87,
+    "Yint_max_m": 0.0,
+    "geometry": "legacy 6.0 m main, tee x=2.88 m",
+    "geyser": false,
+    "match": "MISMATCH",
+    "pocket_peak_over_H0": 1.5691,
+    "source": "outputs/series_b_model_summary.csv",
+    "vfs_m_s": null,
+    "vint_m_s": null
+  },
+  "openfoam_3d": {
+    "base_closed": {
+      "Ta_s": null,
+      "Yfs_max_m": 0.6116986786503271,
+      "Yint_max_m": null,
+      "closed_hold": {
+        "max_abs_PT1_drift_Pa": 1.7800000000133878,
+        "max_abs_Yfs_drift_m": 0.0019788434417225,
+        "max_abs_pocket_mass_drift_kg": 2.469999999996607e-08
+      },
+      "ejected_water_final_m3": 0.0,
+      "end_time_s": 2.0,
+      "geyser_model": false,
+      "initial_audit": {
+        "analytic_pocket": {
+          "air_density_kg_m3": 1.191912085091384,
+          "air_mass_kg": 0.001427591482907044,
+          "volume_m3": 0.0011977321991811086
+        },
+        "cell_count": 239660,
+        "classification_rule": "Exact tetrahedral cut fraction below z=0.635 m, followed by the conformal x>=5.98 m pocket override; no phase fraction adjusted to force analytic volume.",
+        "initial_mass_kg": {
+          "air_pocket": 0.0014073024157413726,
+          "air_total_including_external": 0.1305822032837643,
+          "water": 11.752050096654308
+        },
+        "initial_volume_m3": {
+          "air_pocket": 0.0011807099145961803,
+          "air_total_including_external": 0.10958718884785329,
+          "external_domain": 0.10800004136899959,
+          "water": 0.011775601299252814
+        },
+        "mesh": "/workspace/tests/test_02_cong2017/cases/BH2_Dr21_H066_L061/openfoam/3d/runs/base_closed/bh2.msh",
+        "mesh_fluid_volume_m3": 0.12136279014710609,
+        "pocket_volume_relative_error": -0.01421209565591247,
+        "schema_version": 1
+      },
+      "mass_conservation": {
+        "max_abs_gas_error_kg": 2.548405972655353e-07,
+        "max_abs_gas_relative_initial": 1.9515751866298063e-06,
+        "max_abs_total_error_kg": 5.257848305174262e-06,
+        "max_abs_total_relative_initial": 4.4248177745313924e-07,
+        "max_abs_water_error_kg": 5.341111211905609e-06
+      },
+      "mesh": "base",
+      "mesh_cells": 239660,
+      "notes": [
+        "No experimental classification was used as a model input.",
+        "PT1 millimetre offset is unreported; pocket gas-weighted pressure is also provided.",
+        "Yfs uses upward water-to-air and Yint upward air-to-water alpha.water=0.5 centreline crossings.",
+        "Ejected volume is external-domain water inventory plus signed cumulative far-field water outflow.",
+        "Water density is exactly constant in this configured model, so total minus water mass gives gas mass."
+      ],
+      "p_pocket_peak_over_H0": 3.853504432584909e-05,
+      "p_pt1_peak_over_H0": -3.0951842838790566e-06,
+      "run_id": "base_closed",
+      "schema_version": 1,
+      "series_csv": "openfoam_base_closed_series.csv",
+      "t_rim_s": null,
+      "valve": "closed",
+      "valve_opening_s": null,
+      "velocity_metric": {
+        "method": "maximum rolling climb rate",
+        "start_s": null,
+        "stop_s": null,
+        "window_s": 0.6
+      },
+      "vfs_m_s": null,
+      "vint_m_s": null
+    }
+  },
+  "schema_version": 1,
+  "sensitivity": {
+    "baseline_minus_instant_Ta_s": null,
+    "baseline_minus_instant_Yfs_max_m": null,
+    "classification_flip_mesh": null,
+    "classification_flip_valve": null,
+    "refined_minus_base_Ta_s": null,
+    "refined_minus_base_Yfs_max_m": null,
+    "refined_minus_base_pocket_peak_over_H0": null
+  }
+}
