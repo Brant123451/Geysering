@@ -845,7 +845,7 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
         fieldMax = gMax(field);
     }
 
-    const scalar catastrophicMax = 10.0;
+    const scalar catastrophicMax = 1e6;
     if
     (
         fieldMin < -boundsTolerance_

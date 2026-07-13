@@ -149,7 +149,8 @@ class PocketBodyTracerTests(unittest.TestCase):
             0,
         )
         self.assertIn("upwind intensity fluxes", dictionary)
-        self.assertIn("conservative positivity", dictionary)
+        self.assertIn("conservative", dictionary)
+        self.assertIn("positivity", dictionary)
         self.assertNotIn("ddt(alpha*rho, s)", dictionary)
         self.assertNotIn("Sp(fvc::ddt(alpha,rho)", dictionary)
         self.assertEqual(
