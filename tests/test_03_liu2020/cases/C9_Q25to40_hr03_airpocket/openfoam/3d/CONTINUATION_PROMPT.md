@@ -106,14 +106,18 @@ et al. (2020) Test 3 / Series C / Case C9：
 - 人工载体密度和显式重建时间层的两版可变密度 MULES 均已失界，
   后者在 solver time `0.0202 s` 达到约 `1e24`，禁止恢复；
 - 当前 `boundedPhaseMassTransport` 先将气相质量通量投影到离散气相
-  连续方程，再推进守恒密度 `sigma = alpha*rho*s`：
-  `fvm::ddt(sigma) + fvm::div(phi/(alpha*rho)_f, sigma)`，
-  仅恢复 `s` 供输出/边界/到达判据；无清除/截断、无连续性方程源，
-  载体投影不收敛或失界均立即终止；`Allrun.initialize` 会自动编译；
-- 强度量 Sp 形式（含完整材料导数 Sp）在 solver time ~0.52 s 仍损失
-  约 5.9% 示踪质量，已拒绝，禁止恢复；
-- 未加 Sp 项的 `fvm::ddt(alpha,rho,s)` smoke 轨迹在 solver time 0.35 s
-  已损失 1.93% 示踪质量且残差审计近零，已拒绝，禁止恢复；
+  连续方程，再尝试以守恒密度 `sigma` 为主变量推进；
+  `Allrun.initialize` 会自动编译；
+- 强度量 Sp 形式 `fvm::ddt(alpha,rho,s) - Sp(ddt(alpha,rho)+div(phi),s)`
+  在载体投影很紧时 Sp≈0，退化为已拒绝的 product-ddt 形式，
+  solver time ~0.52 s 损失约 5.9% 示踪质量，禁止恢复；
+- 未加 Sp 的 `fvm::ddt(alpha,rho,s)` 在 0.35 s 损失 1.93%，禁止恢复；
+- 将 `sigma` 裁剪到 `[0,αρ]` 可保持 s∈[0,1]，但在边界通量≈0 时
+  仍以约 0.5%/0.01 s 销毁库存，禁止作为可接受方案；
+- `phi/(αρ)_f` 面速度在薄相面上会爆炸；
+- 当前未裁剪的 `sigma := sigmaOld - dt*div(flux(phi,s))` 可构造守恒，
+  但恢复的 `s=sigma/αρ` 在 ~1e-4 s 已增长到 >2，轨迹未接受；
+  **下一步需要带局部上界 `αρ` 的守恒限制器（如 MULES）**；
 - 到达判据使用物理 `alpha.air*rho.air` 库存，并用三个开放边界
   示踪通量闭合质量预算；预算误差或累计数值示踪平衡残差超过初始
   示踪质量 1% 时判据无效；

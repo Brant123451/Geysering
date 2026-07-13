@@ -88,17 +88,26 @@ It is rejected. Two later variable-density MULES versions were rejected as
 well: a function-generated `alpha*rho` carrier had an invalid old-time level,
 while an explicit reconstruction of both levels still violated MULES's
 low-order positivity requirement and reached order `1e24` by solver time
-0.0202 s. The current `boundedPhaseMassTransport` projects the raw gas mass
-flux onto discrete gas continuity, then advances conserved
-`sigma = alpha*rho*s` with
-`fvm::ddt(sigma) + fvm::div(phi/(alpha*rho)_f, sigma)` and recovers `s` only
-for output/BCs/arrival. Intensity-form Sp corrections (ddt-only and full
-material Sp) still lost several percent of tagged mass by solver time
-~0.5 s during pocket compression and are rejected; an earlier unbounded
-`fvm::ddt(alpha,rho,s)` smoke trajectory reached 0.35 s with a near-zero
-reconstructed residual while destroying 1.93% of tagged mass. The object has
-no post-solve projection or continuity source and aborts on a failed carrier
-projection or any material `[0,1]` violation in resolved-phase cells.
+0.0202 s. The current `boundedPhaseMassTransport` still projects the raw gas
+mass flux onto discrete gas continuity. Several follow-on tracer forms were
+tested and rejected after that projection:
+
+- Intensity Sp on `fvm::ddt(alpha,rho,s)` vanishes when the projected
+  continuity residual is already small, so it collapses to the previously
+  rejected product-ddt inventory loss (~5.9% by ~0.52 s).
+- Clipping `sigma` onto `[0,alpha*rho]` keeps recovered `s` in `[0,1]` but
+  destroys inventory at ~0.5% per 0.01 s with essentially zero open-boundary
+  tagged flux.
+- Face velocity `phi/(alpha*rho)_f` explodes on thin-phase faces.
+- Unclipped conservative
+  `sigma := sigmaOld - dt*div(flux(phi,s))` preserves the finite-volume
+  inventory construction, but recovered `s = sigma/(alpha*rho)` grew above 2
+  by ~1e-4 s and is not an accepted trajectory.
+
+The remaining rank-1 need is a **conservative limiter with local upper bound
+`alpha*rho`** (e.g. MULES on `sigma`) so that both `∫sigma` and `s∈[0,1]` hold.
+It has no post-solve morphology clear and aborts on a failed carrier
+projection.
 Physical inventory and tagged boundary fluxes must close within 1%; the
 integrated numerical tracer-balance residual must independently remain below
 1% before accepting chronology. This newest implementation still requires a
