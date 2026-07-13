@@ -106,8 +106,8 @@ sample.
 | `closedEnd` | no slip | `fixedFluxPressure`; `p` calculated | zero gradient | zero gradient | Permanently capped downstream end |
 | `walls` | no slip | `fixedFluxPressure`; `p` calculated | static 90 deg | zero gradient | Circular pipe and external floor |
 | `riserWall` | no slip | `fixedFluxPressure`; `p` calculated | static 90 deg | zero gradient | Circular physical riser |
-| `atmosphere` | `pressureInletOutletVelocity` | expression-fixed isothermal ambient `p_rgh`, equivalent to `p=101325 Pa` at `z=0.66 m`; `p` calculated | `inletOutlet`, inflow 0 | `inletOutlet`, inflow 296.15 K | Open sides/top of external air domain |
-| Valve baffle | coupled cyclic; wall for closed-hold test | zero-jump for instantaneous baseline or time-varying porous pressure loss | coupled | coupled | Published instantaneous opening; 0.2/0.5 s sensitivities |
+| `atmosphere` | `pressureInletOutletVelocity` | hydrostatically initialized `p_rgh`, then `waveTransmissive` with `gamma=1.4`; `p` calculated | `inletOutlet`, inflow 0 | `inletOutlet`, inflow 296.15 K | Open sides/top of external air domain; expression-fixed pressure retained as rejected diagnostic |
+| Valve baffle | coupled cyclic; wall for closed-hold test | zero-jump for instantaneous sensitivity or time-varying porous pressure loss | coupled | coupled | Primary-paper opening about 0.2 s; paired CFD used instantaneous opening; 0.5 s retained as sensitivity |
 
 ## Mesh profiles
 
@@ -212,11 +212,11 @@ python3 run_study.py --variant closed_prism_sigma_zero_nhat_point
 # Isolate linear-band edge curvature with a volume-preserving cosine profile
 python3 run_study.py --variant closed_refined_sigma_072_cosine
 
-# Open-valve numerical smoke
-RUN_MODE=event VALVE_OPENING=instant END_TIME=0.02 ./Allrun
+# Open-valve smoke through the measured approximately 0.2 s opening
+python3 run_study.py --variant open_smoke_valve_0p2
 
 # Full first-event window
-RUN_MODE=event VALVE_OPENING=instant END_TIME=13 ./Allrun
+RUN_MODE=event VALVE_OPENING=0.2 END_TIME=13 ./Allrun
 ```
 
 `VALVE_OPENING` accepts `instant`, `0.2`, or `0.5`. `C_ALPHA`, `MAX_CO`,
@@ -224,7 +224,8 @@ RUN_MODE=event VALVE_OPENING=instant END_TIME=13 ./Allrun
 `NHAT_GRADIENT_SCHEME`, `SURFACE_TENSION`, and
 `ATMOSPHERE_PRESSURE_BOUNDARY` expose declared numerical controls.
 `ATMOSPHERE_PRESSURE_BOUNDARY` accepts `fixed-hydrostatic` or the
-`wave-transmissive` acoustic-outflow diagnostic; the latter uses
+`wave-transmissive` acoustic-outflow baseline; the former is retained as a
+rejected fixed-pressure diagnostic, while the latter uses
 `waveTransmissive` with `gamma=1.4` and no far-field relaxation. Both begin
 from the same isothermal hydrostatic face values. `NHAT_GRADIENT_SCHEME`
 accepts `gauss-linear`, `least-squares`, or `point-cells-least-squares`; the

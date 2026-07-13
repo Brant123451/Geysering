@@ -332,9 +332,19 @@ VARIANTS = (
     ),
     Variant(
         "open_smoke",
-        "smoke",
+        "diagnostic",
         mesh="prism_atmosphere",
         end_time=0.02,
+        sample_interval=1.0e-3,
+        n_hat_gradient_scheme="least-squares",
+        atmosphere_pressure_boundary="wave-transmissive",
+    ),
+    Variant(
+        "open_smoke_valve_0p2",
+        "smoke",
+        mesh="prism_atmosphere",
+        valve="0.2",
+        end_time=0.25,
         sample_interval=1.0e-3,
         n_hat_gradient_scheme="least-squares",
         atmosphere_pressure_boundary="wave-transmissive",
@@ -549,10 +559,19 @@ def annotate_metrics(
 ) -> None:
     path = runtime / "outputs" / f"{variant.run_id}_metrics.json"
     data = json.loads(path.read_text(encoding="utf-8"))
+    simulated_end_time = float(data.get("simulated_end_time_s", -1.0))
+    requested_window_completed = (
+        simulated_end_time >= variant.end_time - 1.0e-9
+    )
     data["source_fingerprint"] = expected_fingerprint
-    data["solver_completed"] = solver_completed
+    data["solver_completed"] = solver_completed and requested_window_completed
     data["solver_failure_reason"] = None
-    if not solver_completed:
+    if solver_completed and not requested_window_completed:
+        data["solver_failure_reason"] = (
+            f"Simulation ended at {simulated_end_time:g} s before the "
+            f"requested {variant.end_time:g} s window"
+        )
+    elif not solver_completed:
         solver_log = runtime / "log.compressibleInterFoam"
         if solver_log.is_file():
             text = solver_log.read_text(encoding="utf-8", errors="replace")
