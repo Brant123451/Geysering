@@ -412,7 +412,7 @@ def node_levels(node_tags: set[int]) -> list[float]:
         int(tag): float(coordinates[3 * index + 2])
         for index, tag in enumerate(all_node_tags)
     }
-    raw_levels = sorted(z_by_tag[tag] for tag in prism_node_tags)
+    raw_levels = sorted(z_by_tag[tag] for tag in node_tags)
     levels: list[float] = []
     for elevation in raw_levels:
         if not levels or abs(elevation - levels[-1]) > 1.0e-10:
