@@ -186,6 +186,9 @@ python3 run_study.py --variant closed_prism_sigma_072_nhat_ls
 python3 run_study.py --variant closed_prism_sigma_072_nhat_ls_repeat
 python3 run_study.py --variant closed_prism_sigma_072_nhat_ls_serial
 python3 run_study.py --variant closed_prism_sigma_072_nhat_ls_dt_fine
+python3 run_study.py --variant closed_prism_sigma_072_nhat_ls_wave
+python3 run_study.py --variant closed_prism_sigma_072_nhat_ls_dt_5e6
+python3 run_study.py --variant closed_prism_sigma_072_nhat_ls_wave_dt_5e6
 python3 run_study.py --variant closed_prism_sigma_zero_nhat_ls
 python3 run_study.py --variant closed_prism_sigma_zero_nhat_ls_serial
 python3 run_study.py --variant closed_prism_sigma_072_nhat_point
@@ -204,11 +207,15 @@ RUN_MODE=event VALVE_OPENING=instant END_TIME=13 ./Allrun
 
 `VALVE_OPENING` accepts `instant`, `0.2`, or `0.5`. `C_ALPHA`, `MAX_CO`,
 `MAX_ALPHA_CO`, `MAX_DELTA_T`, `ALPHA_SMOOTH_CURVATURE`,
-`NHAT_GRADIENT_SCHEME`, and `SURFACE_TENSION` expose declared numerical
-controls. `NHAT_GRADIENT_SCHEME` accepts `gauss-linear`, `least-squares`, or
-`point-cells-least-squares`; the latter two are A/B diagnostics for the
-flat-interface curvature normal on tetrahedra, not unreported baseline
-changes.
+`NHAT_GRADIENT_SCHEME`, `SURFACE_TENSION`, and
+`ATMOSPHERE_PRESSURE_BOUNDARY` expose declared numerical controls.
+`ATMOSPHERE_PRESSURE_BOUNDARY` accepts `fixed-hydrostatic` or the
+`wave-transmissive` acoustic-outflow diagnostic; the latter uses
+`waveTransmissive` with `gamma=1.4` and no far-field relaxation. Both begin
+from the same isothermal hydrostatic face values. `NHAT_GRADIENT_SCHEME`
+accepts `gauss-linear`, `least-squares`, or `point-cells-least-squares`; the
+latter two are A/B diagnostics for the flat-interface curvature normal on
+tetrahedra, not unreported baseline changes.
 Parallel runs use deterministic axial `simple` decomposition with
 `n=(nProcs 1 1)`. This keeps the long pipe partitions reproducible and avoids
 confounding physical/operator comparisons with Scotch's changing partitions.

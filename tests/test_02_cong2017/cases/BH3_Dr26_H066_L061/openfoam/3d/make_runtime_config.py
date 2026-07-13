@@ -20,6 +20,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--surface-tension", type=float, default=0.072)
     parser.add_argument("--parallel-processes", type=int, default=4)
     parser.add_argument(
+        "--atmosphere-pressure-boundary",
+        choices=("fixed-hydrostatic", "wave-transmissive"),
+        default="fixed-hydrostatic",
+    )
+    parser.add_argument(
         "--n-hat-gradient-scheme",
         choices=(
             "gauss-linear",
@@ -89,6 +94,32 @@ def main() -> None:
         f"surfaceTensionValue {args.surface_tension:.12g};\n",
         encoding="utf-8",
     )
+    atmosphere_pressure = {
+        "fixed-hydrostatic": "\n".join(
+            (
+                "type            exprFixedValue;",
+                'valueExpr       "101325*exp(-9.81*(pos().z()-0.66)/'
+                '(287.0421396863*296.15))*(1+9.81*pos().z()/'
+                '(287.0421396863*296.15))";',
+                "value           uniform 101325;",
+                "",
+            )
+        ),
+        "wave-transmissive": "\n".join(
+            (
+                "type            waveTransmissive;",
+                "phi             phi;",
+                "psi             thermo:psi;",
+                "gamma           1.4;",
+                "value           uniform 101325;",
+                "",
+            )
+        ),
+    }[args.atmosphere_pressure_boundary]
+    (system / "atmospherePressure.runtime").write_text(
+        atmosphere_pressure,
+        encoding="utf-8",
+    )
     n_hat_scheme = {
         "gauss-linear": "Gauss linear",
         "least-squares": "leastSquares",
@@ -138,6 +169,7 @@ def main() -> None:
         f"alphaSmoothCurvature={args.alpha_smooth_curvature} "
         f"sigma={args.surface_tension:g} "
         f"nHatGradient={args.n_hat_gradient_scheme} "
+        f"atmospherePressure={args.atmosphere_pressure_boundary} "
         f"decomposition=simple-x/{args.parallel_processes}"
     )
 

@@ -54,6 +54,7 @@ class Variant:
     initial_interface_profile: str = "linear"
     n_hat_gradient_scheme: str = "gauss-linear"
     processes: int | None = None
+    atmosphere_pressure_boundary: str = "fixed-hydrostatic"
 
 
 VARIANTS = (
@@ -200,6 +201,44 @@ VARIANTS = (
         max_delta_t=5.0e-5,
         sample_interval=1.0e-3,
         n_hat_gradient_scheme="least-squares",
+    ),
+    Variant(
+        "closed_prism_sigma_072_nhat_ls_wave",
+        "diagnostic",
+        mesh="prism",
+        mode="closed",
+        valve="closed",
+        end_time=0.12,
+        sample_interval=1.0e-3,
+        n_hat_gradient_scheme="least-squares",
+        atmosphere_pressure_boundary="wave-transmissive",
+    ),
+    Variant(
+        "closed_prism_sigma_072_nhat_ls_dt_5e6",
+        "diagnostic",
+        mesh="prism",
+        mode="closed",
+        valve="closed",
+        end_time=0.015,
+        max_co=0.05,
+        max_alpha_co=0.05,
+        max_delta_t=5.0e-6,
+        sample_interval=1.0e-3,
+        n_hat_gradient_scheme="least-squares",
+    ),
+    Variant(
+        "closed_prism_sigma_072_nhat_ls_wave_dt_5e6",
+        "diagnostic",
+        mesh="prism",
+        mode="closed",
+        valve="closed",
+        end_time=0.015,
+        max_co=0.05,
+        max_alpha_co=0.05,
+        max_delta_t=5.0e-6,
+        sample_interval=1.0e-3,
+        n_hat_gradient_scheme="least-squares",
+        atmosphere_pressure_boundary="wave-transmissive",
     ),
     Variant(
         "closed_prism_sigma_zero_nhat_ls",
@@ -484,6 +523,7 @@ def annotate_metrics(
         "max_delta_t_s": variant.max_delta_t,
         "sample_interval_s": variant.sample_interval,
         "surface_tension_n_per_m": variant.surface_tension,
+        "atmosphere_pressure_boundary": variant.atmosphere_pressure_boundary,
         "parallel_processes": process_count,
         "parallel_decomposition": "simple-x" if process_count > 1 else "serial",
         "parallel_partition_shape": (
@@ -568,6 +608,9 @@ def main() -> None:
                 ),
                 "INITIAL_INTERFACE_PROFILE": variant.initial_interface_profile,
                 "NHAT_GRADIENT_SCHEME": variant.n_hat_gradient_scheme,
+                "ATMOSPHERE_PRESSURE_BOUNDARY": (
+                    variant.atmosphere_pressure_boundary
+                ),
                 "MESH_PROFILE": variant.mesh,
                 "OPENFOAM_NP": str(process_count),
                 "REFERENCE_ROOT": str(HERE.parents[1]),
