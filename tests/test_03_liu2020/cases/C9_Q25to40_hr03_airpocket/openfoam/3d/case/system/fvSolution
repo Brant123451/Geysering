@@ -77,7 +77,7 @@ solvers
     }
     pocketBodyTracerSigma
     {
-        nLimiterIter 5;
+        nLimiterIter 8;
     }
     "U.*"
     {

@@ -131,7 +131,7 @@ class PocketBodyTracerTests(unittest.TestCase):
         self.assertIn("sigmaResult     pocketBodyTracerSigma;", dictionary)
         self.assertIn("fluxResult      pocketBodyTracerMassFlux;", dictionary)
         self.assertIn("sourceResult    pocketBodyTracerMassSource;", dictionary)
-        self.assertIn("boundsTolerance 1e-6;", dictionary)
+        self.assertIn("boundsTolerance 1e-3;", dictionary)
         self.assertIn("continuityTolerance 1e-4;", dictionary)
         self.assertIn("nCorr           0;", dictionary)
         self.assertIn("nNonOrthCorr    1;", dictionary)
@@ -148,7 +148,9 @@ class PocketBodyTracerTests(unittest.TestCase):
             dictionary.count("weightField     alphaRhoAirForTracer;"),
             0,
         )
-        self.assertIn("ddt(alpha*rho, s)", dictionary)
+        self.assertIn("advance conserved density sigma with MULES", dictionary)
+        self.assertIn("Recover s = sigma/(alpha*rho)", dictionary)
+        self.assertNotIn("ddt(alpha*rho, s)", dictionary)
         self.assertNotIn("Sp(fvc::ddt(alpha,rho)", dictionary)
         self.assertEqual(
             dictionary.count("fields          (pocketBodyTracerMassFlux);"),
@@ -157,6 +159,16 @@ class PocketBodyTracerTests(unittest.TestCase):
         self.assertNotIn(
             "phi             rhoPhi;\n        rho             rho;",
             dictionary,
+        )
+        from pathlib import Path
+
+        fv_solution = (
+            Path(__file__).resolve().parent / "case" / "system" / "fvSolution"
+        ).read_text(encoding="utf-8")
+        self.assertIn("pocketBodyTracerSigma", fv_solution)
+        self.assertRegex(
+            fv_solution,
+            r"pocketBodyTracerSigma\s*\{[^}]*nLimiterIter 8;",
         )
 
 

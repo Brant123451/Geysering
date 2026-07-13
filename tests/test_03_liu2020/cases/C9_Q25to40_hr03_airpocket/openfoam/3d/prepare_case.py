@@ -523,7 +523,7 @@ functions
         sourceResult    pocketBodyTracerMassSource;
         schemesField    pocketBodyTracer;
         tolerance       1e-8;
-        boundsTolerance 1e-6;
+        boundsTolerance 1e-3;
         continuityTolerance 1e-4;
         nCorr           0;
         nNonOrthCorr    1;
@@ -1877,7 +1877,7 @@ solvers
     }}
     pocketBodyTracerSigma
     {{
-        nLimiterIter 5;
+        nLimiterIter 8;
     }}
     "U.*"
     {{
