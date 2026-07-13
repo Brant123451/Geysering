@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 """Generate the runtime createBaffles dictionary for Valve #4.
 
-The paired CFD paper uses an instantaneous opening (zero pressure jump). Finite
-0.2 s and 0.5 s variants are sensitivity controls.
+The paired CFD paper uses an instantaneous opening. Finite 0.2 s and 0.5 s
+variants are sensitivity controls.
 
-A velocity-dependent porous baffle is a poor startup model for this sealed
-hydrostatic release: porousBafflePressure gives
-Δp = -(D μ U + 0.5 I ρ |U|²) L, so the jump is identically zero at U=0 and
-cannot hold the ~6.5 kPa closed-valve head. An inertial-only table and a
-large Darcy table both failed as compact negative evidence. Finite opening
-therefore uses uniformJump with a time-varying jump that starts at the
-closed-baffle hydrostatic p_rgh difference and decays to zero with the same
-smoothstep opening history used previously. Instantaneous opening keeps a
-zero jump. The `closed` mode creates an impermeable wall for the static-hold
-test.
+Event runs first project a closed-wall discrete hydrostatic state, merge those
+baffles, then recreate Valve #4 as the opening cyclic. Finite opening uses a
+porousBafflePressure table on the smoothstep open-area history:
+
+  A(t) = max(Amin, 3f^2-2f^3), Amin = 1/Nface
+  K = (1/A-1)^2
+  I = K/L
+  D = 2*I   (OpenFOAM damBreakPorousBaffle tutorial D/I ratio)
+
+A U-independent uniformJump hydrostatic decay and a large Darcy table were
+rejected as diagnostic failures: the jump cyclic still couples acoustically
+across the nearly sealed valve, while an oversized D stiffens the baffle at
+finite U. Instantaneous opening keeps D=I=0. The `closed` mode creates an
+impermeable wall for the static-hold test.
 """
 from __future__ import annotations
 
@@ -22,10 +26,9 @@ import re
 from pathlib import Path
 
 
-# Closed-baffle hydrostatic p_rgh values from the wall mode (Pa).
-UPSTREAM_P_RGH = 107786.651
-DOWNSTREAM_P_RGH = 101325.292
-HYDROSTATIC_JUMP = UPSTREAM_P_RGH - DOWNSTREAM_P_RGH
+VALVE_LENGTH = 0.050
+# Match the OpenFOAM damBreakPorousBaffle tutorial ratio D/I = 1000/500 = 2.
+D_OVER_I = 2.0
 
 
 def parse_args() -> argparse.Namespace:
@@ -59,21 +62,7 @@ def valve_face_count(path: Path) -> int:
     return count
 
 
-def jump_table(duration: float) -> str:
-    """Hydrostatic head support decays with smoothstep open fraction s(t).
-
-    jump(t) = Δp_hydro * (1 - s(t)) with s = 3f^2 - 2f^3, f=t/duration.
-    At t=0 the cyclic baffle still holds the closed hydrostatic difference at
-    U=0; at full opening the jump is exactly zero.
-    """
-    rows = []
-    for index in range(101):
-        fraction = index / 100.0
-        open_fraction = 3.0 * fraction**2 - 2.0 * fraction**3
-        jump = HYDROSTATIC_JUMP * (1.0 - open_fraction)
-        rows.append(
-            f"                ({duration * fraction:.9g} {jump:.9g})"
-        )
+def foam_table(rows: list[str]) -> str:
     return """{
             type table;
             outOfBounds clamp;
@@ -85,14 +74,42 @@ def jump_table(duration: float) -> str:
         }""" % "\n".join(rows)
 
 
-def coupled_fields(jump_function: str) -> str:
+def loss_tables(duration: float, face_count: int) -> tuple[str, str, float, float]:
+    d_rows: list[str] = []
+    i_rows: list[str] = []
+    minimum_resolved_area = 1.0 / face_count
+    d0 = 0.0
+    i0 = 0.0
+    for index in range(101):
+        fraction = index / 100.0
+        area = max(
+            minimum_resolved_area,
+            3.0 * fraction**2 - 2.0 * fraction**3,
+        )
+        loss_coefficient = (1.0 / area - 1.0) ** 2
+        inertial = loss_coefficient / VALVE_LENGTH
+        darcy = D_OVER_I * inertial
+        time = duration * fraction
+        d_rows.append(f"                ({time:.9g} {darcy:.9g})")
+        i_rows.append(f"                ({time:.9g} {inertial:.9g})")
+        if index == 0:
+            d0 = darcy
+            i0 = inertial
+    return foam_table(d_rows), foam_table(i_rows), d0, i0
+
+
+def coupled_fields(d_function: str, i_function: str) -> str:
     return f"""
                     p_rgh
                     {{
-                        type            uniformJump;
+                        type            porousBafflePressure;
                         patchType       cyclic;
-                        jumpTable       {jump_function};
-                        value           uniform {DOWNSTREAM_P_RGH};
+                        D               {d_function};
+                        I               {i_function};
+                        length          {VALVE_LENGTH};
+                        uniformJump     true;
+                        jump            uniform 0;
+                        value           uniform 101325;
                     }}
                     p           {{ type cyclic; }}
                     U           {{ type cyclic; }}
@@ -162,23 +179,28 @@ def main() -> None:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     face_count = valve_face_count(args.toposet_log)
 
+    d0 = 0.0
+    i0 = 0.0
     if args.mode == "closed":
         master_type = "wall"
         slave_type = "wall"
         master_extra = ""
         slave_extra = ""
-        master_fields = wall_fields(UPSTREAM_P_RGH, 107541.891, 1)
-        slave_fields = wall_fields(DOWNSTREAM_P_RGH, 101325.0, 0)
+        master_fields = wall_fields(107786.651, 107541.891, 1)
+        slave_fields = wall_fields(101325.292, 101325.0, 0)
     else:
         master_type = "cyclic"
         slave_type = "cyclic"
         master_extra = "neighbourPatch valve_downstream;"
         slave_extra = "neighbourPatch valve_upstream;"
         if args.mode == "instant":
-            jump_function = "constant 0"
+            d_function = "constant 0"
+            i_function = "constant 0"
         else:
-            jump_function = jump_table(float(args.mode))
-        master_fields = coupled_fields(jump_function)
+            d_function, i_function, d0, i0 = loss_tables(
+                float(args.mode), face_count
+            )
+        master_fields = coupled_fields(d_function, i_function)
         slave_fields = master_fields
 
     text = f"""FoamFile
@@ -224,7 +246,10 @@ baffles
     args.output.write_text(text, encoding="utf-8")
     print(f"mode={args.mode}")
     print(f"valve_face_count={face_count}")
-    print(f"hydrostatic_jump_pa={HYDROSTATIC_JUMP:.12g}")
+    print(f"minimum_resolved_open_area_fraction={1.0 / face_count:.12g}")
+    print(f"darcy_over_inertial={D_OVER_I:.12g}")
+    print(f"darcy_at_minimum_open_1_per_m2={d0:.12g}")
+    print(f"inertial_at_minimum_open_1_per_m={i0:.12g}")
     print(f"output={args.output}")
 
 
