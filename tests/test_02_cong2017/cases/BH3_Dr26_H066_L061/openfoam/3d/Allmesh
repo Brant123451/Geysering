@@ -5,6 +5,7 @@ source /usr/lib/openfoam/openfoam2512/etc/bashrc
 set -euo pipefail
 
 PROFILE="${MESH_PROFILE:-base}"
+INTERFACE_ARGS=()
 case "$PROFILE" in
     base)
         PIPE_SIZE=0.012
@@ -18,8 +19,15 @@ case "$PROFILE" in
         ATMOSPHERE_SIZE=0.025
         CURVATURE_ELEMENTS=64
         ;;
+    interface)
+        PIPE_SIZE=0.009
+        RISER_SIZE=0.004
+        ATMOSPHERE_SIZE=0.025
+        CURVATURE_ELEMENTS=64
+        INTERFACE_ARGS=(--align-interface-band --interface-size 0.0025)
+        ;;
     *)
-        echo "MESH_PROFILE must be base or refined" >&2
+        echo "MESH_PROFILE must be base, refined, or interface" >&2
         exit 2
         ;;
 esac
@@ -39,6 +47,7 @@ python3 make_geometry.py \
     --riser-size "$RISER_SIZE" \
     --atmosphere-size "$ATMOSPHERE_SIZE" \
     --curvature-elements "$CURVATURE_ELEMENTS" \
+    "${INTERFACE_ARGS[@]}" \
     > log.geometry 2>&1
 
 gmshToFoam bh3.msh > log.gmshToFoam 2>&1

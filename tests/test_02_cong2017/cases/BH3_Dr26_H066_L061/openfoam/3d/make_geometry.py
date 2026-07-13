@@ -8,9 +8,10 @@ The geometry is a Boolean union, not intersecting shell approximations:
 * expanded external atmosphere above the physical 1.8 m riser.
 
 The initial horizontal free surface and Valve #4 cross-section are embedded as
-conformal internal mesh surfaces.  The former prevents a cell-centre stair-step
-interface from seeding capillary currents; the latter lets createBaffles split
-one exact pipe cross-section instead of a jagged band of tetrahedron faces.
+conformal internal mesh surfaces.  An optional diagnostic also embeds both
+edges of the declared 15 mm VOF transition and locally refines that band.  The
+valve surface lets createBaffles split one exact pipe cross-section instead of
+a jagged band of tetrahedron faces.
 """
 from __future__ import annotations
 
@@ -31,6 +32,13 @@ PHYSICAL_RISER_HEIGHT = 1.800
 PHYSICAL_RIM_Z = PIPE_INVERT_Z + PIPE_DIAMETER + PHYSICAL_RISER_HEIGHT
 COMPUTATIONAL_TOP_Z = 3.000
 INITIAL_FREE_SURFACE_Z = 0.660
+INITIAL_INTERFACE_THICKNESS = 0.015
+INITIAL_INTERFACE_LOWER_Z = (
+    INITIAL_FREE_SURFACE_Z - INITIAL_INTERFACE_THICKNESS / 2.0
+)
+INITIAL_INTERFACE_UPPER_Z = (
+    INITIAL_FREE_SURFACE_Z + INITIAL_INTERFACE_THICKNESS / 2.0
+)
 VALVE_X = 5.980
 BOOLEAN_OVERLAP = 0.001
 
@@ -49,6 +57,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--riser-size", type=float, default=0.005)
     parser.add_argument("--atmosphere-size", type=float, default=0.030)
     parser.add_argument("--curvature-elements", type=int, default=40)
+    parser.add_argument("--align-interface-band", action="store_true")
+    parser.add_argument("--interface-size", type=float)
     return parser.parse_args()
 
 
@@ -78,6 +88,12 @@ def main() -> None:
         raise ValueError("riser-size must not exceed pipe-size")
     if args.curvature_elements < 20:
         raise ValueError("curvature-elements must be at least 20")
+    if args.interface_size is not None and not (
+        0 < args.interface_size <= args.riser_size
+    ):
+        raise ValueError("interface-size must be positive and no larger than riser-size")
+    if args.interface_size is not None and not args.align_interface_band:
+        raise ValueError("interface-size requires --align-interface-band")
 
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=True)
@@ -131,6 +147,20 @@ def main() -> None:
             args.atmosphere_width,
             args.atmosphere_width,
         )
+        fragment_surfaces = [(2, free_surface)]
+        if args.align_interface_band:
+            for elevation in (
+                INITIAL_INTERFACE_LOWER_Z,
+                INITIAL_INTERFACE_UPPER_Z,
+            ):
+                band_edge = occ.addRectangle(
+                    TEE_X - args.atmosphere_width / 2.0,
+                    -args.atmosphere_width / 2.0,
+                    elevation,
+                    args.atmosphere_width,
+                    args.atmosphere_width,
+                )
+                fragment_surfaces.append((2, band_edge))
         valve_disk = occ.addDisk(
             VALVE_X,
             0.0,
@@ -142,7 +172,7 @@ def main() -> None:
         )
         fluid, _ = occ.fragment(
             fused_fluid,
-            [(2, free_surface), (2, valve_disk)],
+            [*fragment_surfaces, (2, valve_disk)],
             removeObject=True,
             removeTool=True,
         )
@@ -262,15 +292,46 @@ def main() -> None:
         gmsh.model.mesh.field.setNumber(valve_field, "ZMin", -0.005)
         gmsh.model.mesh.field.setNumber(valve_field, "ZMax", 0.055)
 
+        mesh_fields = [pipe_field, riser_field, tee_field, valve_field]
+        if args.interface_size is not None:
+            interface_field = gmsh.model.mesh.field.add("Box")
+            gmsh.model.mesh.field.setNumber(
+                interface_field, "VIn", args.interface_size
+            )
+            gmsh.model.mesh.field.setNumber(
+                interface_field, "VOut", args.atmosphere_size
+            )
+            gmsh.model.mesh.field.setNumber(
+                interface_field, "XMin", TEE_X - riser_radius - 0.005
+            )
+            gmsh.model.mesh.field.setNumber(
+                interface_field, "XMax", TEE_X + riser_radius + 0.005
+            )
+            gmsh.model.mesh.field.setNumber(
+                interface_field, "YMin", -riser_radius - 0.005
+            )
+            gmsh.model.mesh.field.setNumber(
+                interface_field, "YMax", riser_radius + 0.005
+            )
+            gmsh.model.mesh.field.setNumber(interface_field, "ZMin", 0.630)
+            gmsh.model.mesh.field.setNumber(interface_field, "ZMax", 0.690)
+            mesh_fields.append(interface_field)
+
         minimum_field = gmsh.model.mesh.field.add("Min")
         gmsh.model.mesh.field.setNumbers(
             minimum_field,
             "FieldsList",
-            [pipe_field, riser_field, tee_field, valve_field],
+            mesh_fields,
         )
         gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
 
-        gmsh.option.setNumber("Mesh.MeshSizeMin", args.riser_size)
+        minimum_size = min(
+            args.riser_size,
+            args.interface_size
+            if args.interface_size is not None
+            else args.riser_size,
+        )
+        gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_size)
         gmsh.option.setNumber("Mesh.MeshSizeMax", args.atmosphere_size)
         gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
         gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
@@ -305,6 +366,12 @@ def main() -> None:
         print(f"physical_rim_z_m={PHYSICAL_RIM_Z}")
         print(f"computational_top_z_m={COMPUTATIONAL_TOP_Z}")
         print(f"conformal_initial_free_surface_z_m={INITIAL_FREE_SURFACE_Z}")
+        print(f"interface_band_aligned={args.align_interface_band}")
+        print(
+            "conformal_interface_band_edges_z_m="
+            f"{INITIAL_INTERFACE_LOWER_Z},{INITIAL_INTERFACE_UPPER_Z}"
+        )
+        print(f"interface_size_m={args.interface_size}")
         print(f"conformal_valve_plane_x_m={VALVE_X}")
         print(f"fluid_partitions={len(volumes)}")
         element_blocks = gmsh.model.mesh.getElements(3)[1]

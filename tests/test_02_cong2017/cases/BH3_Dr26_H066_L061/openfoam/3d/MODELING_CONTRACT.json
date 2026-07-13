@@ -84,6 +84,12 @@
         "riser_tetrahedron_target_m": 0.004,
         "atmosphere_tetrahedron_target_m": 0.025,
         "curvature_elements_per_2pi": 64
+      },
+      "interface_diagnostic": {
+        "inherits": "refined",
+        "conformal_transition_edges_z_m": [0.6525, 0.6675],
+        "interface_band_target_m": 0.0025,
+        "interface_refinement_z_m": [0.63, 0.69]
       }
     },
     "classification": {

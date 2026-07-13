@@ -206,3 +206,19 @@ interface profile, mesh, contact angle, and all experimental inputs remain
 fixed. These are declared operator diagnostics, not accepted results. Their
 short-window and then 1 s outcomes must be recorded before this gate can be
 released.
+
+The paired operator runs are now complete. On the unchanged 456,068-cell
+refined mesh, `rAU` weighting with the original `Gauss linear nHat` leaves
+the physical-sigma result essentially unchanged (`0.12546 m/s` and
+`1596.3 Pa/m`, versus the prior `0.12539 m/s` and `1681.4 Pa/m`).
+Keeping that weighting and changing only `nHat` to `leastSquares` lowers the
+`0.05 s` maximum water-weighted speed to `0.03173 m/s` and the reconstructed
+initial residual to `958.5 Pa/m`. This isolates a substantial curvature-
+gradient improvement but still fails the unchanged `0.02 m/s` gate. The
+residual maximum is in a mixed interface cell
+at `(3.4593,-0.00019,0.66644) m`, `alpha.water=0.0706`, near the tee and the
+upper edge of the declared band. The next diagnostic therefore keeps the
+improved operator and all physical inputs fixed, adds conformal planes at
+`z=0.6525/0.6675 m`, and targets `2.5 mm` cells in the local interface band.
+It must pass strict `checkMesh`, the short rejection test, and ultimately the
+full 1 s hold; no event run is released by the improvement alone.

@@ -1,7 +1,8 @@
-run_id,run_mode,valve_opening,surface_tension_n_m,initial_interface_thickness_m,initial_interface_profile,end_time_s,full_13s,geyser,Ta_s,Yfs_max_m,Yint_max_m,vfs_m_s,vint_m_s,rim_ejected_l,gas_mass_residual_fraction,total_mass_residual_fraction,closed_hold_duration_complete,closed_hold_thresholds_pass,closed_hold_pass
-closed_refined_sigma_072_cosine,closed,closed,0.072,0.015,cosine,0.05,0,0,,0.6599999999999997,,,,0.0,7.787846007971831e-09,5.126140935360501e-08,False,False,False
-closed_refined_sigma_072,closed,closed,0.072,0.015,,0.05,0,0,,0.6599999999999997,,,,0.0,1.5588085848865693e-08,7.103217228146078e-08,False,False,False
-closed_refined_sigma_zero,closed,closed,0.0,0.015,,0.05,0,0,,0.6599999999999997,,,,0.0,1.7662101872110246e-08,2.602093207900531e-08,False,True,False
-closed_sharp_sigma_zero,closed,closed,0.0,0.0,,0.05,0,0,,0.6599999999999997,,,,0.0,3.7658264715256645e-09,1.7767107666364208e-08,False,False,False
-closed_sigma_zero,closed,closed,0.0,0.015,,0.05,0,0,,0.6599999999999997,,,,0.0,7.649388865887313e-09,7.643318017646154e-08,False,False,False
-open_smoke,event,instant,0.072,0.015,,0.02,0,0,,0.6599999999999997,,,,0.0,2.8031490823318075e-08,1.0216049468785614e-07,,,
+run_id,run_mode,valve_opening,surface_tension_n_m,initial_interface_thickness_m,initial_interface_profile,n_hat_gradient_scheme,initial_pressure_residual_pa_m,end_time_s,full_13s,geyser,Ta_s,Yfs_max_m,Yint_max_m,vfs_m_s,vint_m_s,rim_ejected_l,gas_mass_residual_fraction,total_mass_residual_fraction,closed_hold_duration_complete,closed_hold_thresholds_pass,closed_hold_pass
+closed_refined_sigma_072_cosine,closed,closed,0.072,0.015,cosine,,,0.05,0,0,,0.6599999999999997,,,,0.0,7.787846007971831e-09,5.126140935360501e-08,False,False,False
+closed_refined_sigma_072,closed,closed,0.072,0.015,linear,gauss-linear,1596.296716,0.05,0,0,,0.6599999999999997,,,,0.0,1.4462191355243838e-08,7.06235965725995e-08,False,False,False
+closed_refined_sigma_072_nhat_ls,closed,closed,0.072,0.015,linear,least-squares,958.4596828,0.05,0,0,,0.6599999999999997,,,,0.0,1.5579942847312216e-08,8.642010728702605e-08,False,False,False
+closed_refined_sigma_zero,closed,closed,0.0,0.015,,,,0.05,0,0,,0.6599999999999997,,,,0.0,1.7662101872110246e-08,2.602093207900531e-08,False,True,False
+closed_sharp_sigma_zero,closed,closed,0.0,0.0,,,,0.05,0,0,,0.6599999999999997,,,,0.0,3.7658264715256645e-09,1.7767107666364208e-08,False,False,False
+closed_sigma_zero,closed,closed,0.0,0.015,,,,0.05,0,0,,0.6599999999999997,,,,0.0,7.649388865887313e-09,7.643318017646154e-08,False,False,False
+open_smoke,event,instant,0.072,0.015,,,,0.02,0,0,,0.6599999999999997,,,,0.0,2.8031490823318075e-08,1.0216049468785614e-07,,,

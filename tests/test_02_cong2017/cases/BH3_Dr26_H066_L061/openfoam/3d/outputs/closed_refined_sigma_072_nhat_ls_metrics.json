@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "case": "B-H3",
-  "run_id": "closed_refined_sigma_072",
+  "run_id": "closed_refined_sigma_072_nhat_ls",
   "run_mode": "closed",
   "valve_opening": "closed",
   "simulated_end_time_s": 0.05,
@@ -16,24 +16,24 @@
   "Yint_max_3d_m": null,
   "vfs_3d_m_per_s": null,
   "vint_3d_m_per_s": null,
-  "maximum_sampled_speed_m_per_s": 0.2880712778543768,
-  "maximum_all_domain_speed_m_per_s": 0.93470330339,
-  "maximum_water_weighted_speed_m_per_s": 0.12545780387,
-  "maximum_gas_weighted_speed_m_per_s": 0.93470330339,
+  "maximum_sampled_speed_m_per_s": 0.21547362218889393,
+  "maximum_all_domain_speed_m_per_s": 0.73319626877,
+  "maximum_water_weighted_speed_m_per_s": 0.031729321253,
+  "maximum_gas_weighted_speed_m_per_s": 0.73319626877,
   "initial_pressure_balance": {
     "fixed_point_converged": true,
     "force_balance_accepted": false,
-    "maximum_face_residual_pa_per_m": 1141.183596,
-    "maximum_reconstructed_residual_pa_per_m": 1596.296716,
-    "maximum_predicted_water_weighted_velocity_increment_m_per_s": 1.596259504e-06,
-    "maximum_residual_cell": 452847,
+    "maximum_face_residual_pa_per_m": 1100.687038,
+    "maximum_reconstructed_residual_pa_per_m": 958.4596828,
+    "maximum_predicted_water_weighted_velocity_increment_m_per_s": 9.455255055e-07,
+    "maximum_residual_cell": 439253,
     "maximum_residual_cell_centre_m": [
-      3.47765175,
-      0.007166886255,
-      0.6619389296
+      3.459276773,
+      -0.0001869102003,
+      0.6664402674
     ],
-    "alpha_water_at_maximum_residual": 0.370738024,
-    "predicted_water_weighted_velocity_increment_at_maximum_m_per_s": 1.596259504e-06
+    "alpha_water_at_maximum_residual": 0.07064883675,
+    "predicted_water_weighted_velocity_increment_at_maximum_m_per_s": 9.455255055e-07
   },
   "initial_volume_audit": {
     "pocket_target_m3": 0.0011977321991811086,
@@ -49,14 +49,14 @@
     "pocket_ideal_gas_mass_from_mesh_volume_kg": 0.0014230616773837762
   },
   "conservation": {
-    "max_abs_water_volume_residual_m3": 8.601662299682809e-10,
-    "max_abs_water_volume_residual_fraction": 7.15322041548254e-08,
-    "max_abs_global_gas_mass_residual_kg": 1.8166796153469448e-09,
-    "max_abs_global_gas_mass_residual_fraction": 1.4462191355243838e-08,
-    "max_abs_total_mass_residual_kg": 8.564156443604381e-07,
-    "max_abs_total_mass_residual_fraction": 7.06235965725995e-08,
-    "internal_air_mass_initial_kg": 0.0021677265830028483,
-    "internal_air_mass_final_kg": 0.0021677249006017887,
+    "max_abs_water_volume_residual_m3": 1.0527672311254462e-09,
+    "max_abs_water_volume_residual_fraction": 8.754907816731267e-08,
+    "max_abs_global_gas_mass_residual_kg": 1.9570868538884922e-09,
+    "max_abs_global_gas_mass_residual_fraction": 1.5579942847312216e-08,
+    "max_abs_total_mass_residual_kg": 1.0479717185152754e-06,
+    "max_abs_total_mass_residual_fraction": 8.642010728702605e-08,
+    "internal_air_mass_initial_kg": 0.002167726583490582,
+    "internal_air_mass_final_kg": 0.002167726390208856,
     "total_mass_boundary_flux": "direct sum(rhoPhi) on inlet and atmosphere",
     "residual_reference": "first common runtime sample; t=0 volumes are audited separately"
   },
@@ -101,7 +101,7 @@
     "c_alpha": 1.0,
     "initial_interface_thickness_m": 0.015,
     "initial_interface_profile": "linear",
-    "n_hat_gradient_scheme": "gauss-linear",
+    "n_hat_gradient_scheme": "least-squares",
     "alpha_smooth_curvature": 0,
     "max_co": 0.25,
     "max_alpha_co": 0.15,

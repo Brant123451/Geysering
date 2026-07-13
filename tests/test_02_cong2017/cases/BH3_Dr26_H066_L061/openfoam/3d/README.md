@@ -116,8 +116,13 @@ generates a boundary-fitted Delaunay tetrahedral mesh with named inlet, cap,
 wall, riser-wall, and atmosphere physical groups. The base and refined profiles
 use independent pipe/riser/atmosphere target sizes and 40/64 curvature elements
 per full circle; no cut-cell background or rectangular equivalent flow area
-enters the solution. Both the initial free surface and the Valve #4 circular
-cross-section are conformal internal mesh surfaces. Every run repeats the
+enters the solution. Both the initial free-surface centre plane and the
+Valve #4 circular cross-section are conformal internal mesh surfaces. A
+separately labeled `interface` diagnostic inherits the refined profile, adds
+conformal planes at both edges of the 15 mm transition
+(`z=0.6525/0.6675 m`), and targets `2.5 mm` cells only in
+`0.63<=z<=0.69 m` around the riser. It tests the spatially located CSF defect
+without altering physical inputs. Every run repeats the
 strict mesh check after creating its valve baffle and aborts before solving
 unless that final mesh reports `Mesh OK`.
 The paired FLUENT study used a much finer wall-resolved hybrid mesh; the present
@@ -128,6 +133,7 @@ falling film a priori.
 ```bash
 MESH_PROFILE=base ./Allmesh
 MESH_PROFILE=refined ./Allmesh
+MESH_PROFILE=interface ./Allmesh
 ```
 
 Neither generated STL surfaces nor `constant/polyMesh` are committed.
@@ -156,6 +162,10 @@ python3 run_study.py --variant closed_refined_sigma_072
 # Test the curvature-normal gradient only; all physical inputs stay fixed
 python3 run_study.py --variant closed_refined_sigma_072_nhat_ls
 python3 run_study.py --variant closed_refined_sigma_zero_nhat_ls
+
+# Align and locally refine the full initial transition band
+python3 run_study.py --variant closed_interface_sigma_072_nhat_ls
+python3 run_study.py --variant closed_interface_sigma_zero_nhat_ls
 
 # Isolate linear-band edge curvature with a volume-preserving cosine profile
 python3 run_study.py --variant closed_refined_sigma_072_cosine
@@ -202,7 +212,17 @@ physical-sigma event gate remains closed. The matched cosine-band diagnostic
 is not an improvement (`0.12721 m/s`, residual `2171.2`), so the linear
 band-edge derivative jumps alone are not a demonstrated cure. Because the
 cosine profile also has a larger peak gradient, this comparison is not treated
-as a pure one-variable proof about curvature.
+as a pure one-variable proof about curvature. On the unchanged refined mesh,
+correcting `rAU` alone leaves the physical-sigma result essentially unchanged
+(`0.12546 m/s`, `1596.3 Pa/m`), while changing only `nHat` to
+`leastSquares` reduces the reconstructed residual to `958.5 Pa/m` and the
+`0.05 s` water-weighted speed to `0.03173 m/s`. This isolates the main
+improvement to the curvature-normal gradient, but still fails the
+`0.02 m/s` gate. Its maximum residual is at
+`(3.4593,-0.00019,0.66644) m` with `alpha.water=0.0706`, spatially locating
+the remaining defect at the upper edge of the transition near the tee. The
+interface-aligned mesh is therefore the next declared diagnostic rather than
+a relaxation of the acceptance threshold.
 
 ## Required outputs
 
