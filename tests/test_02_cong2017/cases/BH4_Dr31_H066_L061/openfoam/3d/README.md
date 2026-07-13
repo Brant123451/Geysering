@@ -99,8 +99,10 @@ three outer correctors remained stable in an independent `0...0.7 s` run at
 `maxCo=0.40`; pressure, valve flow, pocket volume, and interface mixing agreed
 within 0.13% with the conservative `maxCo=0.20` checkpoint branch.
 `numerics_smoke_comparison.json` and `numerics_stability_gate.json` retain this
-selection evidence.  None of these short diagnostics is used for event
-classification.
+selection evidence.  The independent 8.5--8.55 s restart comparison in
+`subcycle_equivalence_gate.json` limits the maximum key-field change from the
+earlier two-subcycle controls to 0.057%, below its 0.5% gate.  None of these
+short diagnostics is used for event classification.
 
 ## Run
 
