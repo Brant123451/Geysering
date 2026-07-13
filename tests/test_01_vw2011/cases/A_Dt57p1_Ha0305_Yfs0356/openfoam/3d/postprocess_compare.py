@@ -380,6 +380,16 @@ def parse_mesh_provenance() -> dict[str, object]:
             if "core_size_m" in gmsh_values
             else None
         ),
+        "tower_size_m": (
+            float(gmsh_values["tower_size_m"])
+            if "tower_size_m" in gmsh_values
+            else None
+        ),
+        "wall_size_m": (
+            float(gmsh_values["wall_size_m"])
+            if "wall_size_m" in gmsh_values
+            else None
+        ),
         "plume_size_m": (
             float(gmsh_values["plume_size_m"])
             if "plume_size_m" in gmsh_values

@@ -45,7 +45,25 @@ def parse_args() -> argparse.Namespace:
         "--core-size",
         type=float,
         default=0.008,
-        help="Nominal pipe/tower tetrahedron edge length in metres",
+        help="Nominal pipe tetrahedron edge length in metres",
+    )
+    parser.add_argument(
+        "--tower-size",
+        type=float,
+        default=None,
+        help=(
+            "Nominal size inside the ventilation tower "
+            "(default: 0.5*core-size)"
+        ),
+    )
+    parser.add_argument(
+        "--wall-size",
+        type=float,
+        default=None,
+        help=(
+            "Near-wall size on the tower tube for descending film resolution "
+            "(default: 0.25*core-size)"
+        ),
     )
     parser.add_argument(
         "--plume-size",
@@ -60,12 +78,44 @@ def is_close(value: float, target: float, tolerance: float = 1e-6) -> bool:
     return abs(value - target) <= tolerance
 
 
+def classify_tower_wall_surfaces(wall_surfaces: list[int]) -> list[int]:
+    """Return OCC surface tags that form the vertical tower tube wall."""
+    tower_walls: list[int] = []
+    for tag in wall_surfaces:
+        xmin, ymin, zmin, xmax, ymax, zmax = gmsh.model.getBoundingBox(2, tag)
+        dx = xmax - xmin
+        dy = ymax - ymin
+        dz = zmax - zmin
+        cx = 0.5 * (xmin + xmax)
+        cz = 0.5 * (zmin + zmax)
+        near_tower_axis = (
+            abs(cx - TOWER_CENTRE_X) <= TOWER_RADIUS + 0.002
+            and abs(cz) <= TOWER_RADIUS + 0.002
+        )
+        spans_tower_height = dy >= 0.35 * TOWER_LENGTH_ABOVE_CROWN
+        compact_xz = dx <= 2.2 * TOWER_RADIUS and dz <= 2.2 * TOWER_RADIUS
+        reaches_above_pipe = ymax >= PIPE_RADIUS + 0.05
+        if near_tower_axis and spans_tower_height and compact_xz and reaches_above_pipe:
+            tower_walls.append(tag)
+    return tower_walls
+
+
 def main() -> None:
     args = parse_args()
-    if args.core_size <= 0 or args.plume_size <= 0:
+    tower_size = (
+        args.tower_size if args.tower_size is not None else 0.5 * args.core_size
+    )
+    wall_size = (
+        args.wall_size if args.wall_size is not None else 0.25 * args.core_size
+    )
+    if args.core_size <= 0 or args.plume_size <= 0 or tower_size <= 0 or wall_size <= 0:
         raise ValueError("Mesh sizes must be positive")
     if args.plume_size < args.core_size:
         raise ValueError("plume-size must be greater than or equal to core-size")
+    if wall_size > tower_size:
+        raise ValueError("wall-size must be less than or equal to tower-size")
+    if tower_size > args.plume_size:
+        raise ValueError("tower-size must be less than or equal to plume-size")
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
@@ -177,7 +227,7 @@ def main() -> None:
         gmsh.model.mesh.field.setNumber(pipe_field, "ZMax", PIPE_RADIUS + 0.01)
 
         tower_field = gmsh.model.mesh.field.add("Box")
-        gmsh.model.mesh.field.setNumber(tower_field, "VIn", args.core_size)
+        gmsh.model.mesh.field.setNumber(tower_field, "VIn", tower_size)
         gmsh.model.mesh.field.setNumber(tower_field, "VOut", args.plume_size)
         gmsh.model.mesh.field.setNumber(
             tower_field, "XMin", TOWER_CENTRE_X - TOWER_RADIUS - 0.01
@@ -212,15 +262,37 @@ def main() -> None:
         gmsh.model.mesh.field.setNumber(jet_field, "ZMin", -0.075)
         gmsh.model.mesh.field.setNumber(jet_field, "ZMax", 0.075)
 
+        # Resolve the ~0.7 mm experimental wall film with a thin near-wall band
+        # on the tower tube only (geometry and initial heads unchanged).
+        # StopAtDistMax keeps this field from forcing tower_size into the pipe.
+        tower_wall_surfaces = classify_tower_wall_surfaces(wall_surfaces)
+        if not tower_wall_surfaces:
+            raise RuntimeError(
+                "Failed to identify tower-wall surfaces for near-wall refinement"
+            )
+        distance_field = gmsh.model.mesh.field.add("Distance")
+        gmsh.model.mesh.field.setNumbers(
+            distance_field, "SurfacesList", tower_wall_surfaces
+        )
+        gmsh.model.mesh.field.setNumber(distance_field, "Sampling", 200)
+        wall_band = max(4.0 * wall_size, 0.008)
+        wall_field = gmsh.model.mesh.field.add("Threshold")
+        gmsh.model.mesh.field.setNumber(wall_field, "InField", distance_field)
+        gmsh.model.mesh.field.setNumber(wall_field, "SizeMin", wall_size)
+        gmsh.model.mesh.field.setNumber(wall_field, "SizeMax", tower_size)
+        gmsh.model.mesh.field.setNumber(wall_field, "DistMin", 0.0)
+        gmsh.model.mesh.field.setNumber(wall_field, "DistMax", wall_band)
+        gmsh.model.mesh.field.setNumber(wall_field, "StopAtDistMax", 1)
+
         minimum_field = gmsh.model.mesh.field.add("Min")
         gmsh.model.mesh.field.setNumbers(
             minimum_field,
             "FieldsList",
-            [pipe_field, tower_field, jet_field],
+            [pipe_field, tower_field, jet_field, wall_field],
         )
         gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
 
-        gmsh.option.setNumber("Mesh.MeshSizeMin", args.core_size)
+        gmsh.option.setNumber("Mesh.MeshSizeMin", wall_size)
         gmsh.option.setNumber("Mesh.MeshSizeMax", args.plume_size)
         gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
         gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
@@ -238,7 +310,11 @@ def main() -> None:
         print(f"mesh={args.output}")
         print(f"gmsh_version={gmsh.__version__}")
         print(f"core_size_m={args.core_size}")
+        print(f"tower_size_m={tower_size}")
+        print(f"wall_size_m={wall_size}")
         print(f"plume_size_m={args.plume_size}")
+        print(f"tower_wall_surfaces={len(tower_wall_surfaces)}")
+        print(f"wall_band_m={wall_band}")
         print(f"fluid_volume_m3={actual_volume:.9g}")
         print(f"cells_3d={len(gmsh.model.mesh.getElements(3)[1][0])}")
         print(f"pipe_diameter_m={PIPE_DIAMETER}")

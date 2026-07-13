@@ -18,12 +18,16 @@ elif (( NP < 1 )); then
 fi
 
 CORE_SIZE="${CASEA_CORE_SIZE:-0.008}"
+TOWER_SIZE="${CASEA_TOWER_SIZE:-0.005}"
+WALL_SIZE="${CASEA_WALL_SIZE:-0.0025}"
 PLUME_SIZE="${CASEA_PLUME_SIZE:-0.020}"
 DRY_RUN="${CASEA_DRY_RUN:-0}"
 
 python3 make_mesh.py \
     --output caseA3d.msh \
     --core-size "$CORE_SIZE" \
+    --tower-size "$TOWER_SIZE" \
+    --wall-size "$WALL_SIZE" \
     --plume-size "$PLUME_SIZE" \
     > log.gmsh 2>&1
 gmshToFoam caseA3d.msh > log.gmshToFoam 2>&1
