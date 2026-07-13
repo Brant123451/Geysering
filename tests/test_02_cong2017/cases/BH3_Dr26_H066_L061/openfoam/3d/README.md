@@ -111,20 +111,28 @@ sample.
 
 ## Mesh profiles
 
-`make_geometry.py` builds one exact OpenCASCADE Boolean fluid volume and
-generates a boundary-fitted Delaunay tetrahedral mesh with named inlet, cap,
-wall, riser-wall, and atmosphere physical groups. The base and refined profiles
-use independent pipe/riser/atmosphere target sizes and 40/64 curvature elements
-per full circle; no cut-cell background or rectangular equivalent flow area
-enters the solution. Both the initial free-surface centre plane and the
-Valve #4 circular cross-section are conformal internal mesh surfaces. A
-separately labeled `interface` diagnostic inherits the refined profile, adds
-conformal planes at both edges of the 15 mm transition
-(`z=0.6525/0.6675 m`), and targets `2.5 mm` cells only in
-`0.63<=z<=0.69 m` around the riser. It tests the spatially located CSF defect
-without altering physical inputs. Every run repeats the
-strict mesh check after creating its valve baffle and aborts before solving
-unless that final mesh reports `Mesh OK`.
+`make_geometry.py` builds an exact OpenCASCADE fluid domain and generates a
+boundary-fitted mesh with named inlet, cap, wall, riser-wall, and atmosphere
+physical groups. The base and refined profiles use independent
+pipe/riser/atmosphere target sizes and 40/64 curvature elements per full
+circle; no cut-cell background or rectangular equivalent flow area enters the
+solution. Both the initial free-surface centre plane and the Valve #4 circular
+cross-section are conformal internal mesh surfaces. A separately labeled
+`interface` diagnostic inherits the refined profile, adds conformal planes at
+both edges of the 15 mm transition (`z=0.6525/0.6675 m`), and targets `2.5 mm`
+tetrahedra only in `0.63<=z<=0.69 m` around the riser.
+
+The `prism` diagnostic also inherits the refined targets but replaces only that
+60 mm axial interval with 24 conformal `Prism6` layers, each exactly `2.5 mm`
+high. Its 25 layer planes include `z=0.6525`, `0.6600`, and `0.6675 m`
+exactly. The pipe/tee, riser outside the slab, and expanded external atmosphere
+remain tetrahedral. All Booleans finish at the valve plane before the slab is
+extruded; shared CAD faces connect its top and bottom to the tetrahedral
+regions. Mesh generation asserts the layer coordinates, prism count, shared
+faces, and CAD volume. These profiles test the spatially located CSF defect
+without altering physical inputs. Every run repeats the strict mesh check
+after creating its valve baffle and aborts before solving unless that final
+mesh reports `Mesh OK`.
 The paired FLUENT study used a much finer wall-resolved hybrid mesh; the present
 tetrahedral profiles are accepted only through their reported base/refined
 sensitivity and must not be described as resolving the reported sub-millimetre
@@ -134,6 +142,7 @@ falling film a priori.
 MESH_PROFILE=base ./Allmesh
 MESH_PROFILE=refined ./Allmesh
 MESH_PROFILE=interface ./Allmesh
+MESH_PROFILE=prism ./Allmesh
 ```
 
 Neither generated STL surfaces nor `constant/polyMesh` are committed.
@@ -167,6 +176,9 @@ python3 run_study.py --variant closed_refined_sigma_072_nhat_point
 # Align and locally refine the full initial transition band
 python3 run_study.py --variant closed_interface_sigma_072_nhat_ls
 python3 run_study.py --variant closed_interface_sigma_zero_nhat_ls
+
+# Replace the transition neighbourhood with exact axial prism layers
+python3 run_study.py --variant closed_prism_sigma_072_nhat_ls
 
 # Isolate linear-band edge curvature with a volume-preserving cosine profile
 python3 run_study.py --variant closed_refined_sigma_072_cosine
@@ -230,8 +242,10 @@ non-orthogonality, `2741.5 Pa/m` initial residual, and reaches
 then found that lowering the global Gmsh size floor had also released
 curvature refinement along the full pipe; the source now applies a spatial
 size-floor callback before repeating this profile. A larger point-neighbour
-gradient and, if needed, a true axial-prism slab are the next diagnostics;
-none relaxes the acceptance threshold.
+gradient remains a separate diagnostic. The axial-prism profile now isolates
+cell alignment from that gradient choice; it has no accepted solver result
+until its separately named short diagnostic is run, and it does not relax the
+acceptance threshold.
 
 ## Required outputs
 

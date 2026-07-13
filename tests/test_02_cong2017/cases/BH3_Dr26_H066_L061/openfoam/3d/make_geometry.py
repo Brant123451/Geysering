@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """Generate the boundary-fitted Cong2017 B-H3 volume mesh and review surfaces.
 
-The geometry is a Boolean union, not intersecting shell approximations:
+The geometry is a connected OpenCASCADE volume, not intersecting shell
+approximations:
 
 * circular 50 mm horizontal pipe;
 * circular 26 mm vertical riser and true three-dimensional tee opening;
 * expanded external atmosphere above the physical 1.8 m riser.
 
 The initial horizontal free surface and Valve #4 cross-section are embedded as
-conformal internal mesh surfaces.  An optional diagnostic also embeds both
-edges of the declared 15 mm VOF transition and locally refines that band.  The
-valve surface lets createBaffles split one exact pipe cross-section instead of
-a jagged band of tetrahedron faces.
+conformal internal mesh surfaces. Optional diagnostics either refine both
+edges of the declared 15 mm VOF transition or extrude a 24-layer triangular
+prism band around it. The valve surface lets createBaffles split one exact pipe
+cross-section instead of a jagged band of tetrahedron faces.
 """
 from __future__ import annotations
 
@@ -41,6 +42,19 @@ INITIAL_INTERFACE_UPPER_Z = (
 )
 VALVE_X = 5.980
 BOOLEAN_OVERLAP = 0.001
+PRISM_BOTTOM_Z = 0.630
+PRISM_TOP_Z = 0.690
+PRISM_LAYER_HEIGHT = 0.0025
+PRISM_STAGES = (
+    (INITIAL_INTERFACE_LOWER_Z, 9),
+    (INITIAL_FREE_SURFACE_Z, 3),
+    (INITIAL_INTERFACE_UPPER_Z, 3),
+    (PRISM_TOP_Z, 9),
+)
+# Independent geometric target for the exact physical domain: the circular
+# pipe/riser union, plus the 0.30 m square atmosphere beginning at z=1.85 m.
+PRISM_REFERENCE_VOLUME_M3 = 0.11739557248480555
+PRISM_CAD_RELATIVE_TOLERANCE = 5.0e-8
 
 
 def parse_args() -> argparse.Namespace:
@@ -59,6 +73,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--curvature-elements", type=int, default=40)
     parser.add_argument("--align-interface-band", action="store_true")
     parser.add_argument("--interface-size", type=float)
+    parser.add_argument("--prism-interface-band", action="store_true")
     return parser.parse_args()
 
 
@@ -74,6 +89,312 @@ def export_patch(output: Path, name: str, surfaces: list[int]) -> None:
     gmsh.model.setPhysicalName(2, group, name)
     gmsh.option.setNumber("Mesh.SaveAll", 0)
     gmsh.write(str(output / f"{name}.stl"))
+
+
+def single_entity(
+    entities: list[int],
+    description: str,
+) -> int:
+    if len(entities) != 1:
+        raise RuntimeError(
+            f"Expected one {description}, found {len(entities)}: {entities}"
+        )
+    return entities[0]
+
+
+def circular_surface_at_z(
+    occ,
+    surface_tags: list[int],
+    elevation: float,
+    radius: float,
+) -> int:
+    expected_area = math.pi * radius**2
+    matches = []
+    for tag in surface_tags:
+        xmin, ymin, zmin, xmax, ymax, zmax = gmsh.model.getBoundingBox(2, tag)
+        center_x, center_y, center_z = occ.getCenterOfMass(2, tag)
+        if (
+            close(zmin, elevation)
+            and close(zmax, elevation)
+            and close(center_x, TEE_X)
+            and close(center_y, 0.0)
+            and close(center_z, elevation)
+            and abs(occ.getMass(2, tag) / expected_area - 1.0) < 1.0e-8
+            and close(xmin, TEE_X - radius)
+            and close(xmax, TEE_X + radius)
+            and close(ymin, -radius)
+            and close(ymax, radius)
+        ):
+            matches.append(tag)
+    return single_entity(matches, f"riser disk at z={elevation}")
+
+
+def extrusion_entities_at_z(
+    occ,
+    extrusion: list[tuple[int, int]],
+    elevation: float,
+    radius: float,
+) -> tuple[int, int]:
+    volume = single_entity(
+        [tag for dim, tag in extrusion if dim == 3],
+        f"extruded volume ending at z={elevation}",
+    )
+    top = circular_surface_at_z(
+        occ,
+        [tag for dim, tag in extrusion if dim == 2],
+        elevation,
+        radius,
+    )
+    return volume, top
+
+
+def build_prism_geometry(
+    occ,
+    args: argparse.Namespace,
+    riser_radius: float,
+) -> tuple[list[int], dict[str, object]]:
+    """Build the prism profile without any Boolean after the first extrusion."""
+    pipe = occ.addCylinder(
+        0.0,
+        0.0,
+        PIPE_AXIS_Z,
+        PIPE_LENGTH,
+        0.0,
+        0.0,
+        PIPE_RADIUS,
+    )
+    lower_riser = occ.addCylinder(
+        TEE_X,
+        0.0,
+        PIPE_AXIS_Z,
+        0.0,
+        0.0,
+        PRISM_BOTTOM_Z - PIPE_AXIS_Z,
+        riser_radius,
+    )
+    lower_fluid, _ = occ.fuse([(3, pipe)], [(3, lower_riser)])
+
+    # This valve fragment is deliberately the final Boolean operation. All
+    # following volumes are made from shared faces by geometric extrusion.
+    valve_disk = occ.addDisk(
+        VALVE_X,
+        0.0,
+        PIPE_AXIS_Z,
+        PIPE_RADIUS,
+        PIPE_RADIUS,
+        zAxis=[1.0, 0.0, 0.0],
+        xAxis=[0.0, 1.0, 0.0],
+    )
+    lower_parts, _ = occ.fragment(
+        lower_fluid,
+        [(2, valve_disk)],
+        removeObject=True,
+        removeTool=True,
+    )
+    occ.synchronize()
+
+    lower_volumes = [tag for dim, tag in lower_parts if dim == 3]
+    if len(lower_volumes) != 2:
+        raise RuntimeError(
+            "Valve fragmentation must split the lower fluid into two volumes"
+        )
+    lower_boundary = gmsh.model.getBoundary(
+        [(3, tag) for tag in lower_volumes],
+        combined=True,
+        oriented=False,
+        recursive=False,
+    )
+    lower_top = circular_surface_at_z(
+        occ,
+        [tag for dim, tag in lower_boundary if dim == 2],
+        PRISM_BOTTOM_Z,
+        riser_radius,
+    )
+
+    prism_volumes: list[int] = []
+    prism_interfaces = [lower_top]
+    current_top = lower_top
+    current_z = PRISM_BOTTOM_Z
+    for target_z, layers in PRISM_STAGES:
+        extrusion = occ.extrude(
+            [(2, current_top)],
+            0.0,
+            0.0,
+            target_z - current_z,
+            numElements=[layers],
+            recombine=True,
+        )
+        occ.synchronize()
+        prism_volume, current_top = extrusion_entities_at_z(
+            occ,
+            extrusion,
+            target_z,
+            riser_radius,
+        )
+        prism_volumes.append(prism_volume)
+        prism_interfaces.append(current_top)
+        current_z = target_z
+
+    # No layer specification: the upper physical riser is tetrahedral.
+    upper_extrusion = occ.extrude(
+        [(2, current_top)],
+        0.0,
+        0.0,
+        PHYSICAL_RIM_Z - PRISM_TOP_Z,
+    )
+    occ.synchronize()
+    upper_volume, rim_disk = extrusion_entities_at_z(
+        occ,
+        upper_extrusion,
+        PHYSICAL_RIM_Z,
+        riser_radius,
+    )
+
+    # Make the external floor directly as a square face with a circular hole.
+    # Reusing the rim disk edge makes the floor and central opening conformal;
+    # this is a wire/face construction, not a post-extrusion Boolean.
+    half_width = args.atmosphere_width / 2.0
+    outer_points = [
+        occ.addPoint(TEE_X - half_width, -half_width, PHYSICAL_RIM_Z),
+        occ.addPoint(TEE_X + half_width, -half_width, PHYSICAL_RIM_Z),
+        occ.addPoint(TEE_X + half_width, half_width, PHYSICAL_RIM_Z),
+        occ.addPoint(TEE_X - half_width, half_width, PHYSICAL_RIM_Z),
+    ]
+    outer_lines = [
+        occ.addLine(outer_points[index], outer_points[(index + 1) % 4])
+        for index in range(4)
+    ]
+    outer_wire = occ.addWire(outer_lines, checkClosed=True)
+    occ.synchronize()
+    rim_edges = [
+        tag
+        for dim, tag in gmsh.model.getBoundary(
+            [(2, rim_disk)],
+            combined=False,
+            oriented=True,
+            recursive=False,
+        )
+        if dim == 1
+    ]
+    # A top face produced by OCC extrusion has the opposite loop orientation
+    # from a new coplanar outer wire. Reverse it so it is a hole, not an island.
+    inner_wire = occ.addWire([-tag for tag in rim_edges], checkClosed=True)
+    external_floor = occ.addPlaneSurface([outer_wire, inner_wire])
+    occ.synchronize()
+    expected_floor_area = args.atmosphere_width**2 - math.pi * riser_radius**2
+    floor_area = occ.getMass(2, external_floor)
+    if abs(floor_area / expected_floor_area - 1.0) > 1.0e-10:
+        raise RuntimeError(
+            "External floor is not the square-minus-riser annulus: "
+            f"area={floor_area:.17g}, expected={expected_floor_area:.17g}"
+        )
+
+    # Extrude the central disk and annulus together. Their shared circular edge
+    # produces one internal cylindrical face and a conformal tetrahedral box.
+    atmosphere_extrusion = occ.extrude(
+        [(2, rim_disk), (2, external_floor)],
+        0.0,
+        0.0,
+        COMPUTATIONAL_TOP_Z - PHYSICAL_RIM_Z,
+    )
+    occ.synchronize()
+    atmosphere_volumes = [
+        tag for dim, tag in atmosphere_extrusion if dim == 3
+    ]
+    if len(atmosphere_volumes) != 2:
+        raise RuntimeError(
+            "Central disk and external annulus must produce two atmosphere volumes"
+        )
+
+    volumes = [
+        *lower_volumes,
+        *prism_volumes,
+        upper_volume,
+        *atmosphere_volumes,
+    ]
+    model_volumes = [tag for dim, tag in gmsh.model.getEntities(3)]
+    if set(volumes) != set(model_volumes) or len(volumes) != len(set(volumes)):
+        raise RuntimeError(
+            f"Tracked fluid volumes {volumes} do not match CAD volumes {model_volumes}"
+        )
+
+    shared_face_levels = []
+    for surface, elevation in zip(
+        prism_interfaces,
+        (PRISM_BOTTOM_Z, *(target for target, _ in PRISM_STAGES)),
+        strict=True,
+    ):
+        adjacent = {
+            int(tag) for tag in gmsh.model.getAdjacencies(2, surface)[0]
+        }
+        if len(adjacent) != 2:
+            raise RuntimeError(
+                f"Prism interface z={elevation} has {len(adjacent)} adjacent volumes"
+            )
+        shared_face_levels.append(elevation)
+    rim_adjacent = {
+        int(tag) for tag in gmsh.model.getAdjacencies(2, rim_disk)[0]
+    }
+    if len(rim_adjacent) != 2:
+        raise RuntimeError(
+            f"Physical rim opening has {len(rim_adjacent)} adjacent volumes"
+        )
+
+    fluid_volume = sum(occ.getMass(3, tag) for tag in volumes)
+    cad_relative_error = fluid_volume / PRISM_REFERENCE_VOLUME_M3 - 1.0
+    if abs(cad_relative_error) > PRISM_CAD_RELATIVE_TOLERANCE:
+        raise RuntimeError(
+            "Prism CAD volume differs from the physical-domain reference: "
+            f"volume={fluid_volume:.17g}, reference={PRISM_REFERENCE_VOLUME_M3:.17g}, "
+            f"relative_error={cad_relative_error:.17g}"
+        )
+
+    return volumes, {
+        "prism_volumes": prism_volumes,
+        "prism_interfaces": prism_interfaces,
+        "shared_face_levels": shared_face_levels,
+        "rim_shared": True,
+        "reference_volume_m3": PRISM_REFERENCE_VOLUME_M3,
+        "cad_relative_error": cad_relative_error,
+    }
+
+
+def mesh_element_counts() -> tuple[dict[str, int], dict[str, set[int]]]:
+    counts: dict[str, int] = {}
+    nodes_by_name: dict[str, set[int]] = {}
+    element_types, element_tags, node_tags = gmsh.model.mesh.getElements(3)
+    for element_type, tags, nodes in zip(
+        element_types,
+        element_tags,
+        node_tags,
+        strict=True,
+    ):
+        name = gmsh.model.mesh.getElementProperties(int(element_type))[0]
+        counts[name] = counts.get(name, 0) + len(tags)
+        nodes_by_name.setdefault(name, set()).update(int(tag) for tag in nodes)
+    return counts, nodes_by_name
+
+
+def prism_mesh_levels(
+    nodes_by_name: dict[str, set[int]],
+) -> tuple[int, list[float]]:
+    prism_node_tags = {
+        tag
+        for name, tags in nodes_by_name.items()
+        if name.startswith("Prism")
+        for tag in tags
+    }
+    all_node_tags, coordinates, _ = gmsh.model.mesh.getNodes()
+    z_by_tag = {
+        int(tag): float(coordinates[3 * index + 2])
+        for index, tag in enumerate(all_node_tags)
+    }
+    raw_levels = sorted(z_by_tag[tag] for tag in prism_node_tags)
+    levels: list[float] = []
+    for elevation in raw_levels:
+        if not levels or abs(elevation - levels[-1]) > 1.0e-10:
+            levels.append(elevation)
+    return len(prism_node_tags), levels
 
 
 def main() -> None:
@@ -94,6 +415,12 @@ def main() -> None:
         raise ValueError("interface-size must be positive and no larger than riser-size")
     if args.interface_size is not None and not args.align_interface_band:
         raise ValueError("interface-size requires --align-interface-band")
+    if args.prism_interface_band and (
+        args.align_interface_band or args.interface_size is not None
+    ):
+        raise ValueError(
+            "prism-interface-band is a separate profile from align-interface-band"
+        )
 
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=True)
@@ -111,78 +438,86 @@ def main() -> None:
         gmsh.model.add("Cong2017_BH3_3D_fluid")
         occ = gmsh.model.occ
 
-        pipe = occ.addCylinder(
-            0.0,
-            0.0,
-            PIPE_AXIS_Z,
-            PIPE_LENGTH,
-            0.0,
-            0.0,
-            PIPE_RADIUS,
-        )
-        riser = occ.addCylinder(
-            TEE_X,
-            0.0,
-            PIPE_AXIS_Z,
-            0.0,
-            0.0,
-            PHYSICAL_RIM_Z - PIPE_AXIS_Z + BOOLEAN_OVERLAP,
-            riser_radius,
-        )
-        atmosphere = occ.addBox(
-            atmosphere_min_x,
-            atmosphere_min_y,
-            PHYSICAL_RIM_Z - BOOLEAN_OVERLAP,
-            args.atmosphere_width,
-            args.atmosphere_width,
-            COMPUTATIONAL_TOP_Z - PHYSICAL_RIM_Z + BOOLEAN_OVERLAP,
-        )
-
-        apparatus, _ = occ.fuse([(3, pipe)], [(3, riser)])
-        fused_fluid, _ = occ.fuse(apparatus, [(3, atmosphere)])
-        free_surface = occ.addRectangle(
-            TEE_X - args.atmosphere_width / 2.0,
-            -args.atmosphere_width / 2.0,
-            INITIAL_FREE_SURFACE_Z,
-            args.atmosphere_width,
-            args.atmosphere_width,
-        )
-        fragment_surfaces = [(2, free_surface)]
-        if args.align_interface_band:
-            for elevation in (
-                INITIAL_INTERFACE_LOWER_Z,
-                INITIAL_INTERFACE_UPPER_Z,
-            ):
-                band_edge = occ.addRectangle(
-                    TEE_X - args.atmosphere_width / 2.0,
-                    -args.atmosphere_width / 2.0,
-                    elevation,
-                    args.atmosphere_width,
-                    args.atmosphere_width,
-                )
-                fragment_surfaces.append((2, band_edge))
-        valve_disk = occ.addDisk(
-            VALVE_X,
-            0.0,
-            PIPE_AXIS_Z,
-            PIPE_RADIUS,
-            PIPE_RADIUS,
-            zAxis=[1.0, 0.0, 0.0],
-            xAxis=[0.0, 1.0, 0.0],
-        )
-        fluid, _ = occ.fragment(
-            fused_fluid,
-            [*fragment_surfaces, (2, valve_disk)],
-            removeObject=True,
-            removeTool=True,
-        )
-        occ.synchronize()
-
-        volumes = [tag for dim, tag in fluid if dim == 3]
-        if len(volumes) < 3:
-            raise RuntimeError(
-                "Free-surface and valve fragmentation did not partition the fluid"
+        prism_metadata: dict[str, object] | None = None
+        if args.prism_interface_band:
+            volumes, prism_metadata = build_prism_geometry(
+                occ,
+                args,
+                riser_radius,
             )
+        else:
+            pipe = occ.addCylinder(
+                0.0,
+                0.0,
+                PIPE_AXIS_Z,
+                PIPE_LENGTH,
+                0.0,
+                0.0,
+                PIPE_RADIUS,
+            )
+            riser = occ.addCylinder(
+                TEE_X,
+                0.0,
+                PIPE_AXIS_Z,
+                0.0,
+                0.0,
+                PHYSICAL_RIM_Z - PIPE_AXIS_Z + BOOLEAN_OVERLAP,
+                riser_radius,
+            )
+            atmosphere = occ.addBox(
+                atmosphere_min_x,
+                atmosphere_min_y,
+                PHYSICAL_RIM_Z - BOOLEAN_OVERLAP,
+                args.atmosphere_width,
+                args.atmosphere_width,
+                COMPUTATIONAL_TOP_Z - PHYSICAL_RIM_Z + BOOLEAN_OVERLAP,
+            )
+
+            apparatus, _ = occ.fuse([(3, pipe)], [(3, riser)])
+            fused_fluid, _ = occ.fuse(apparatus, [(3, atmosphere)])
+            free_surface = occ.addRectangle(
+                TEE_X - args.atmosphere_width / 2.0,
+                -args.atmosphere_width / 2.0,
+                INITIAL_FREE_SURFACE_Z,
+                args.atmosphere_width,
+                args.atmosphere_width,
+            )
+            fragment_surfaces = [(2, free_surface)]
+            if args.align_interface_band:
+                for elevation in (
+                    INITIAL_INTERFACE_LOWER_Z,
+                    INITIAL_INTERFACE_UPPER_Z,
+                ):
+                    band_edge = occ.addRectangle(
+                        TEE_X - args.atmosphere_width / 2.0,
+                        -args.atmosphere_width / 2.0,
+                        elevation,
+                        args.atmosphere_width,
+                        args.atmosphere_width,
+                    )
+                    fragment_surfaces.append((2, band_edge))
+            valve_disk = occ.addDisk(
+                VALVE_X,
+                0.0,
+                PIPE_AXIS_Z,
+                PIPE_RADIUS,
+                PIPE_RADIUS,
+                zAxis=[1.0, 0.0, 0.0],
+                xAxis=[0.0, 1.0, 0.0],
+            )
+            fluid, _ = occ.fragment(
+                fused_fluid,
+                [*fragment_surfaces, (2, valve_disk)],
+                removeObject=True,
+                removeTool=True,
+            )
+            occ.synchronize()
+
+            volumes = [tag for dim, tag in fluid if dim == 3]
+            if len(volumes) < 3:
+                raise RuntimeError(
+                    "Free-surface and valve fragmentation did not partition the fluid"
+                )
 
         patches: dict[str, list[int]] = {
             "inlet": [],
@@ -372,6 +707,70 @@ def main() -> None:
         gmsh.option.setNumber("Mesh.MshFileVersion", 2.2)
         gmsh.option.setNumber("Mesh.Binary", 0)
         gmsh.model.mesh.generate(3)
+
+        element_counts, nodes_by_name = mesh_element_counts()
+        prism_count = sum(
+            count
+            for name, count in element_counts.items()
+            if name.startswith("Prism")
+        )
+        tetrahedron_count = sum(
+            count
+            for name, count in element_counts.items()
+            if name.startswith("Tetrahedron")
+        )
+        prism_node_count, prism_levels = prism_mesh_levels(nodes_by_name)
+        if args.prism_interface_band:
+            if prism_metadata is None:
+                raise RuntimeError("Prism metadata was not initialized")
+            slab_count = 0
+            for volume in prism_metadata["prism_volumes"]:
+                types, tags, _ = gmsh.model.mesh.getElements(3, int(volume))
+                names = [
+                    gmsh.model.mesh.getElementProperties(int(item))[0]
+                    for item in types
+                ]
+                if not names or any(not name.startswith("Prism") for name in names):
+                    raise RuntimeError(
+                        f"Prism slab volume {volume} contains element types {names}"
+                    )
+                slab_count += sum(len(block) for block in tags)
+            if prism_count <= 0 or prism_count != slab_count:
+                raise RuntimeError(
+                    f"Prism count mismatch: global={prism_count}, slab={slab_count}"
+                )
+            expected_levels = [
+                PRISM_BOTTOM_Z + index * PRISM_LAYER_HEIGHT
+                for index in range(25)
+            ]
+            if len(prism_levels) != 25 or any(
+                abs(actual - expected) > 1.0e-10
+                for actual, expected in zip(
+                    prism_levels,
+                    expected_levels,
+                    strict=True,
+                )
+            ):
+                raise RuntimeError(
+                    f"Expected 25 exact 2.5 mm prism levels, found {prism_levels}"
+                )
+            for key_level in (
+                INITIAL_INTERFACE_LOWER_Z,
+                INITIAL_FREE_SURFACE_Z,
+                INITIAL_INTERFACE_UPPER_Z,
+            ):
+                if not any(
+                    abs(level - key_level) <= 1.0e-10
+                    for level in prism_levels
+                ):
+                    raise RuntimeError(
+                        f"Required prism interface z={key_level} is absent"
+                    )
+        elif prism_count:
+            raise RuntimeError(
+                f"Non-prism profile unexpectedly generated {prism_count} prisms"
+            )
+
         args.mesh_output.parent.mkdir(parents=True, exist_ok=True)
         gmsh.write(str(args.mesh_output))
 
@@ -391,7 +790,10 @@ def main() -> None:
         print(f"physical_rim_z_m={PHYSICAL_RIM_Z}")
         print(f"computational_top_z_m={COMPUTATIONAL_TOP_Z}")
         print(f"conformal_initial_free_surface_z_m={INITIAL_FREE_SURFACE_Z}")
-        print(f"interface_band_aligned={args.align_interface_band}")
+        print(
+            "interface_band_aligned="
+            f"{args.align_interface_band or args.prism_interface_band}"
+        )
         print(
             "conformal_interface_band_edges_z_m="
             f"{INITIAL_INTERFACE_LOWER_Z},{INITIAL_INTERFACE_UPPER_Z}"
@@ -403,8 +805,35 @@ def main() -> None:
         )
         print(f"conformal_valve_plane_x_m={VALVE_X}")
         print(f"fluid_partitions={len(volumes)}")
-        element_blocks = gmsh.model.mesh.getElements(3)[1]
-        print(f"cells_3d={sum(len(block) for block in element_blocks)}")
+        print(f"cells_3d={sum(element_counts.values())}")
+        print(f"tetrahedron_count={tetrahedron_count}")
+        print(f"prism_count={prism_count}")
+        print(f"gmsh_version={gmsh.option.getString('General.Version')}")
+        print(f"prism_profile={args.prism_interface_band}")
+        if args.prism_interface_band:
+            if prism_metadata is None:
+                raise RuntimeError("Prism metadata was lost before audit")
+            print(f"prism_node_count={prism_node_count}")
+            print(f"prism_layer_count={len(prism_levels)}")
+            print(
+                "prism_layer_z_m="
+                + ",".join(f"{level:.10g}" for level in prism_levels)
+            )
+            print("prism_key_layers_asserted=True")
+            print(
+                "prism_shared_face_count="
+                f"{len(prism_metadata['shared_face_levels'])}"
+            )
+            print("prism_shared_faces_asserted=True")
+            print(f"prism_rim_shared_asserted={prism_metadata['rim_shared']}")
+            print(
+                "fluid_reference_volume_m3="
+                f"{prism_metadata['reference_volume_m3']:.12g}"
+            )
+            print(
+                "cad_to_reference_volume_relative_error="
+                f"{prism_metadata['cad_relative_error']:.12g}"
+            )
         print(f"pipe_size_m={args.pipe_size}")
         print(f"riser_size_m={args.riser_size}")
         print(f"atmosphere_size_m={args.atmosphere_size}")
