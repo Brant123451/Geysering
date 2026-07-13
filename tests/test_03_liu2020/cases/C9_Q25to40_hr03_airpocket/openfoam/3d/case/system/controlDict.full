@@ -30,37 +30,6 @@ maxDeltaT       0.0005;
 
 functions
 {
-    tracerAirFraction
-    {
-        // Residual air fraction keeps the compressible scalar matrix
-        // non-singular in pure-water cells without transporting tracer there.
-        type            exprField;
-        libs            (fieldFunctionObjects);
-        field           alphaAirForTracer;
-        expression      "alpha.air + 1e-8";
-        store           true;
-        autowrite       false;
-        enabled         true;
-        log             false;
-        executeControl  timeStep;
-        executeInterval 1;
-        writeControl    none;
-    }
-
-    tracerAirMassDensity
-    {
-        // Residual-stabilised density used only in the scalar matrix.
-        type            multiply;
-        libs            (fieldFunctionObjects);
-        fields          (alphaAirForTracer thermo:rho.air);
-        result          alphaRhoAirForTracer;
-        enabled         true;
-        log             false;
-        executeControl  timeStep;
-        executeInterval 1;
-        writeControl    none;
-    }
-
     tracerPhysicalAirMassDensity
     {
         // Physical alpha*rho, without the matrix residual, is the inventory
@@ -128,14 +97,19 @@ functions
     pocketBodyTracerTransport
     {
         // The stock scalarTransport mass-flux branch has no bounded MULES
-        // correction.  This local function object conserves rho*tracer while
-        // enforcing 0 <= tracer <= 1 through variable-density MULES.
+        // correction.  This local object builds current and old alpha*rho from
+        // solver-owned fields and accounts for their discrete continuity
+        // residual as an explicit, audited tracer-mass source.
         type            boundedPhaseMassTransport;
         libs            ("libboundedPhaseMassTransport.so");
         field           pocketBodyTracer;
         phi             airMassFluxForTracer;
-        rho             alphaRhoAirForTracer;
+        alpha           alpha.air;
+        phaseRho        thermo:rho.air;
+        residualAlpha   1e-8;
+        rhoResult       alphaRhoAirForTracer;
         fluxResult      pocketBodyTracerMassFlux;
+        sourceResult    pocketBodyTracerMassSource;
         schemesField    pocketBodyTracer;
         tolerance       1e-8;
         nCorr           0;
@@ -569,6 +543,19 @@ functions
         operation       weightedVolIntegrate;
         weightField     alphaRhoAirForTracer;
         fields          (pocketBodyTracer);
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+        writeFields     false;
+    }
+
+    totalPocketBodyTracerMassSource
+    {
+        // Integrated carrier-continuity source used by the bounded transport.
+        // It must be included in, and remain small relative to, the tag budget.
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        operation       volIntegrate;
+        fields          (pocketBodyTracerMassSource);
         writeControl    adjustableRunTime;
         writeInterval   0.01;
         writeFields     false;

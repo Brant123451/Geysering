@@ -242,10 +242,15 @@ workaround was tested and rejected: by solver time 0.6401 s (paper time
 inventory. The current source therefore compiles a local
 `boundedPhaseMassTransport` function object and applies variable-density
 MULES directly to the air-phase mass equation; no non-conservative post-solve
-projection remains. Arrival diagnostics use physical `alpha.air*rho.air`.
-Conservation is audited separately with the residual-stabilised matrix
-inventory and tagged mass flux through inlet, gate, and atmosphere; chronology
-is invalid when that budget error exceeds 1%. A 1% source-tag transfer is
+projection remains. It constructs both carrier time levels from solver-owned
+`alpha.air` and `rho.air`; a function-generated product field was tested and
+rejected because its invalid old-time state made even the low-order solution
+unbounded. Arrival diagnostics use physical `alpha.air*rho.air`. Conservation
+is audited with the residual-stabilised matrix inventory, the explicit
+discrete carrier-continuity source, and tagged mass flux through inlet, gate,
+and atmosphere. Chronology is invalid when either the source-inclusive budget
+error or cumulative continuity source exceeds 1% of initial tag mass. A 1%
+source-tag transfer is
 reported only as early leakage because the paper explicitly documents a
 temporary crown passage near 1.30 s. The formal operational main-body arrival
 additionally requires 20% transfer into the chamber plus riser and a sustained

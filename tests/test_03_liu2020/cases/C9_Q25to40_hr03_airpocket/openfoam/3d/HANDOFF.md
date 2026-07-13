@@ -86,9 +86,14 @@ clear/clamp workaround was therefore bounded but non-conservative: the
 0.3901 s) after losing 7.65% of its paper-time-zero physical tracer inventory.
 It is rejected. The source now compiles `boundedPhaseMassTransport`, which
 applies variable-density MULES to the compressible phase-mass flux and needs
-no post-solve projection. It records physical and residual-stabilised matrix
-inventories plus tagged boundary fluxes; post-processing requires the matrix
-mass budget to close within 1% before accepting tracer chronology.
+no post-solve projection. Its first integration attempt also rejected a
+function-generated `alpha*rho` carrier because its old-time state was invalid
+and the low-order tracer became unbounded. The current implementation builds
+both time levels from solver-owned `alpha.air` and `rho.air`, and includes the
+discrete carrier-continuity residual as an audited mass source. It records
+physical/matrix inventories, that source, and tagged boundary fluxes;
+post-processing requires both source-inclusive budget error and cumulative
+continuity source to remain within 1% before accepting tracer chronology.
 The historical, now-rejected clear/clamp `maxCo=0.35` reference remained in
 `[0,1]` through solver time 0.37 s and lost about 0.5% of its paper-time-zero
 inventory by 0.31 s, but cut-cell Courant control reduced its step to roughly

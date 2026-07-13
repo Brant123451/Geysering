@@ -103,11 +103,14 @@ et al. (2020) Test 3 / Series C / Case C9：
 - v2512 的 `scalarTransport` 可压缩质量通量分支不执行 `bounded01`；
   禁止恢复逐步清除/截断投影，该方案在论文时间 0.3901 s 已损失
   7.65% 示踪库存；
-- 当前 `boundedPhaseMassTransport` 用可变密度 MULES 守恒地限制
-  `[0,1]`，运行前由 `Allrun.initialize` 自动编译；
+- 当前 `boundedPhaseMassTransport` 从求解器持有的 `alpha.air` 和
+  `rho.air` 重建当前/旧时间层载体密度，再用可变密度 MULES 限制
+  `[0,1]`；禁止恢复没有有效旧时间层的函数对象乘积载体；
+  `Allrun.initialize` 会自动编译；
 - 到达判据使用物理 `alpha.air*rho.air` 库存，同时必须用含 `1e-8`
-  残余相分数的矩阵库存和三个开放边界示踪通量闭合质量预算，误差
-  超过 1% 时示踪判据无效；
+  残余相分数的矩阵库存、离散载体连续性源和三个开放边界示踪通量
+  闭合质量预算；预算误差或累计连续性源超过初始示踪质量 1% 时，
+  示踪判据无效；
 - tailgate 不使用会再次扣除速度头的 `prghTotalPressure`；
 - 当前 tailgate `p_rgh` 使用静水 tailwater closure；
 - STL 接口必须保持共形闭合，不要重新引入 penetration/lip 几何泄漏。

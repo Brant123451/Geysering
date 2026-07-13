@@ -213,12 +213,16 @@ explicit clear/clamp implementation was stopped at solver time 0.6401 s
 (paper time 0.3901 s): despite remaining in `[0,1]`, it had destroyed 7.65% of
 the paper-time-zero physical tracer inventory and is rejected. The source now
 builds a local `boundedPhaseMassTransport` function object. It follows the
-implicit air-mass solve with variable-density MULES, enforcing `[0,1]`
-conservatively without any clear/clamp projection. Diagnostics report both the
-physical `alpha.air*rho.air` inventory and the residual-stabilised matrix
-inventory, plus tagged boundary mass fluxes; post-processing accepts the
-arrival tracer only when its full mass budget closes within 1%. A fresh run is
-required.
+implicit air-mass solve with variable-density MULES, enforcing `[0,1]` without
+any clear/clamp projection. A first integration attempt proved that a
+function-generated `alpha*rho` field did not retain a valid old-time carrier
+state and became unbounded; the current object instead builds current and old
+carrier densities directly from solver-owned `alpha.air` and `rho.air`. Its
+discrete carrier-continuity residual is an explicit, reported tracer source.
+Diagnostics report physical and matrix inventories, that source, and tagged
+boundary mass fluxes. Post-processing accepts chronology only when both the
+full source-inclusive budget error and cumulative continuity source remain
+within 1%. A fresh run is required.
 
 Phase 1 is incomplete. Phase 2 and eight eruptions have not yet been
 reproduced.

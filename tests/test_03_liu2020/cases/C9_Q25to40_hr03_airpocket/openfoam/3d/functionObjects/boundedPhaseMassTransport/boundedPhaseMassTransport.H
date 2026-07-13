@@ -30,10 +30,10 @@ namespace functionObjects
                 Class boundedPhaseMassTransport Declaration
 \*---------------------------------------------------------------------------*/
 
-//- Transport a bounded mass fraction using a supplied phase mass density and
-//  phase mass flux.  Unlike scalarTransport's compressible branch, the
-//  implicit conservative solve is followed by variable-density MULES, so the
-//  field remains in [0,1] without a non-conservative projection.
+//- Transport a bounded mass fraction using phase fraction, phase density, and
+//  phase mass flux.  The carrier density and its old-time value are built from
+//  the solver-owned phase fields.  A phase-continuity source keeps constants
+//  bounded, and its integral is exposed for a complete tracer budget.
 class boundedPhaseMassTransport
 :
     public fvMeshFunctionObject
@@ -42,18 +42,30 @@ class boundedPhaseMassTransport
 
         word fieldName_;
         word phiName_;
-        word rhoName_;
+        word alphaName_;
+        word phaseRhoName_;
+        word rhoResultName_;
         word fluxResultName_;
+        word sourceResultName_;
         word schemesField_;
+        scalar residualAlpha_;
         scalar tolerance_;
         label nCorr_;
         bool resetOnStartUp_;
+        autoPtr<volScalarField> carrierRhoPtr_;
+        autoPtr<volScalarField> tracerSourcePtr_;
         autoPtr<surfaceScalarField> tracerFluxPtr_;
 
 
     // Private Member Functions
 
         volScalarField& transportedField();
+
+        volScalarField& updateCarrierDensity
+        (
+            const volScalarField& alpha,
+            const volScalarField& phaseRho
+        );
 
 
 public:

@@ -94,14 +94,13 @@ class PocketBodyTracerTests(unittest.TestCase):
         )
 
         expected_order = [
-            "tracerAirFraction",
-            "tracerAirMassDensity",
             "tracerPhysicalAirMassDensity",
             "tracerAirDensityFaces",
             "tracerAirVolumeFlux",
             "tracerAirMassFlux",
             "pocketBodyTracerTransport",
             "matrixPocketBodyTracerMass",
+            "totalPocketBodyTracerMassSource",
             "inletPocketBodyTracerMassFlux",
             "gatePocketBodyTracerMassFlux",
             "atmospherePocketBodyTracerMassFlux",
@@ -121,8 +120,12 @@ class PocketBodyTracerTests(unittest.TestCase):
         self.assertIn("type            boundedPhaseMassTransport;", dictionary)
         self.assertIn('libs            ("libboundedPhaseMassTransport.so");', dictionary)
         self.assertIn("phi             airMassFluxForTracer;", dictionary)
-        self.assertIn("rho             alphaRhoAirForTracer;", dictionary)
+        self.assertIn("alpha           alpha.air;", dictionary)
+        self.assertIn("phaseRho        thermo:rho.air;", dictionary)
+        self.assertIn("rhoResult       alphaRhoAirForTracer;", dictionary)
         self.assertIn("fluxResult      pocketBodyTracerMassFlux;", dictionary)
+        self.assertIn("sourceResult    pocketBodyTracerMassSource;", dictionary)
+        self.assertIn("fields          (pocketBodyTracerMassSource);", dictionary)
         self.assertNotIn("clearPocketBodyTracerOutsideAir", dictionary)
         self.assertNotIn("boundPocketBodyTracer", dictionary)
         self.assertEqual(

@@ -75,20 +75,37 @@ class TracerTransferTests(unittest.TestCase):
 
 class TracerConservationTests(unittest.TestCase):
     def test_outward_flux_accounts_for_inventory_loss(self) -> None:
-        cumulative, residual, error = post.tracer_conservation_budget(
-            np.array([0.0, 1.0, 2.0]),
-            np.array([1.0, 0.9, 0.8]),
-            np.array([0.1, 0.1, 0.1]),
+        cumulative_outflow, cumulative_source, residual, error = (
+            post.tracer_conservation_budget(
+                np.array([0.0, 1.0, 2.0]),
+                np.array([1.0, 0.9, 0.8]),
+                np.array([0.1, 0.1, 0.1]),
+                np.zeros(3),
+            )
         )
 
-        np.testing.assert_allclose(cumulative, [0.0, 0.1, 0.2])
+        np.testing.assert_allclose(cumulative_outflow, [0.0, 0.1, 0.2])
+        np.testing.assert_allclose(cumulative_source, 0.0)
+        np.testing.assert_allclose(residual, 0.0, atol=1e-15)
+        self.assertAlmostEqual(error, 0.0)
+
+    def test_continuity_source_accounts_for_inventory_gain(self) -> None:
+        _, cumulative_source, residual, error = post.tracer_conservation_budget(
+            np.array([0.0, 1.0, 2.0]),
+            np.array([1.0, 1.1, 1.2]),
+            np.zeros(3),
+            np.full(3, 0.1),
+        )
+
+        np.testing.assert_allclose(cumulative_source, [0.0, 0.1, 0.2])
         np.testing.assert_allclose(residual, 0.0, atol=1e-15)
         self.assertAlmostEqual(error, 0.0)
 
     def test_unaccounted_inventory_loss_fails_budget(self) -> None:
-        _, residual, error = post.tracer_conservation_budget(
+        _, _, residual, error = post.tracer_conservation_budget(
             np.array([0.0, 1.0]),
             np.array([1.0, 0.8]),
+            np.zeros(2),
             np.zeros(2),
         )
 
