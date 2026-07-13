@@ -158,7 +158,7 @@ Neither generated STL surfaces nor `constant/polyMesh` are committed.
 bash ./Allwmake
 
 # Closed-valve static hold
-RUN_MODE=closed END_TIME=1.0 ./Allrun
+python3 run_study.py --variant closed_base
 
 # Paired-CFD surface-tension omission diagnostic (not the experiment baseline)
 python3 run_study.py --variant closed_sigma_zero
@@ -250,9 +250,13 @@ mesh, `pointCellsLeastSquares` further reduces the physical-sigma result to
 `0.01598 m/s` and `721.8 Pa/m`; the `0.05 s` thresholds pass, but speed is
 again rising at the endpoint and the required 1 s duration is incomplete.
 This is a promising short diagnostic, not a formal hold pass. The axial-prism
-profile now isolates cell alignment from that gradient choice; it has no
-accepted solver result until its separately named short diagnostic is run,
-and it does not relax the acceptance threshold.
+profile with `leastSquares nHat` is substantially better: over `0.05 s`, its
+maximum water-weighted speed is `2.36e-5 m/s`, sampled riser speed is
+`6.72e-4 m/s`, and the initial reconstructed residual is `693.4 Pa/m`.
+The water-side signal decays to the few-micrometre-per-second range rather than
+growing. This short result selects the prism profile for the formal
+`closed_base` candidate, but it is not itself a 1 s pass and does not relax
+the acceptance threshold.
 
 ## Required outputs
 

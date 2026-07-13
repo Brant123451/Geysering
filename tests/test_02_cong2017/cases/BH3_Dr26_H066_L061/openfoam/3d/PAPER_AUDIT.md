@@ -254,3 +254,16 @@ exactly at the paper-derived physical rim while retaining a 1 mm central-riser
 overlap for robust Boolean union. Consequently all future base/refined/prism
 comparisons use the same `0.11739557 m3` CAD fluid domain; prior diagnostic
 fingerprints remain historical evidence and cannot release the current gate.
+
+The physical-sigma prism short diagnostic now completes. Its `0.05 s`
+maximum water-weighted speed is `2.36e-5 m/s`, maximum sampled riser speed is
+`6.72e-4 m/s`, and water-volume and total-mass residual fractions are
+`2.40e-9` and `3.00e-9`, respectively. The water-side speed falls to a
+few micrometres per second after the initial projection instead of exhibiting
+the growing tetrahedral CSF current. The reconstructed initial residual
+(`693.4 Pa/m`) remains above its conservative diagnostic warning level, so
+the initializer correctly reports `force_balance_accepted=false`; dynamic
+static-hold acceptance remains governed by the independent 1 s drift,
+velocity, and conservation gates. This result selects the prism profile with
+`leastSquares nHat` as the formal `closed_base` candidate, not as an already
+accepted event baseline.

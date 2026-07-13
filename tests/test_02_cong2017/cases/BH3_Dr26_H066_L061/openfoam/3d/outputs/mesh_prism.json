@@ -65,5 +65,6 @@
   "fluid_reference_volume_m3": 0.117395572485,
   "cad_to_reference_volume_relative_error": 1.10589086777e-08,
   "mesh_to_cad_volume_relative_error": -0.0004458880459732306,
-  "prism_contract_passed": true
+  "prism_contract_passed": true,
+  "source_fingerprint": "cc1033d6009c62dfe89ad367d2f8077828cd2db323b09355dee356d8d0668b4c"
 }

@@ -58,10 +58,12 @@ VARIANTS = (
     Variant(
         "closed_base",
         "smoke",
+        mesh="prism",
         mode="closed",
         valve="closed",
         end_time=1.0,
         sample_interval=1.0e-3,
+        n_hat_gradient_scheme="least-squares",
     ),
     Variant(
         "closed_sigma_zero",

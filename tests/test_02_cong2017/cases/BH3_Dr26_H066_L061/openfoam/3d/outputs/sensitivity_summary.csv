@@ -1,5 +1,6 @@
 run_id,run_mode,valve_opening,surface_tension_n_m,initial_interface_thickness_m,initial_interface_profile,n_hat_gradient_scheme,initial_pressure_residual_pa_m,end_time_s,full_13s,geyser,Ta_s,Yfs_max_m,Yint_max_m,vfs_m_s,vint_m_s,rim_ejected_l,gas_mass_residual_fraction,total_mass_residual_fraction,closed_hold_duration_complete,closed_hold_thresholds_pass,closed_hold_pass
 closed_interface_sigma_072_nhat_ls,closed,closed,0.072,0.015,linear,least-squares,2741.466701,0.028,0,0,,0.6599999999999997,,,,0.0,2.44494607504523e-09,3.8045551632469026e-09,False,False,False
+closed_prism_sigma_072_nhat_ls,closed,closed,0.072,0.015,linear,least-squares,693.4352638,0.05,0,0,,0.6599999999999997,,,,0.0,8.659075232796157e-08,3.0035273646549094e-09,False,True,False
 closed_refined_sigma_072_cosine,closed,closed,0.072,0.015,cosine,,,0.05,0,0,,0.6599999999999997,,,,0.0,7.787846007971831e-09,5.126140935360501e-08,False,False,False
 closed_refined_sigma_072,closed,closed,0.072,0.015,linear,gauss-linear,1596.296716,0.05,0,0,,0.6599999999999997,,,,0.0,1.4462191355243838e-08,7.06235965725995e-08,False,False,False
 closed_refined_sigma_072_nhat_ls,closed,closed,0.072,0.015,linear,least-squares,958.4596828,0.05,0,0,,0.6599999999999997,,,,0.0,1.5579942847312216e-08,8.642010728702605e-08,False,False,False

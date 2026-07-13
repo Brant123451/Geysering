@@ -57,7 +57,7 @@
       "application": "compressibleInterFoam",
       "turbulence_model": "standard_kEpsilon",
       "interface_scheme": "MULES_vanLeer",
-      "n_hat_gradient_scheme": "Gauss linear",
+      "n_hat_gradient_scheme": "leastSquares",
       "n_hat_gradient_scheme_sensitivity": [
         "Gauss linear",
         "leastSquares",
@@ -69,6 +69,7 @@
       "baseline_max_courant": 0.25,
       "baseline_max_alpha_courant": 0.15,
       "baseline_max_delta_t_s": 0.0005,
+      "closed_hold_baseline_mesh_profile": "prism",
       "surface_tension_sensitivity_n_per_m": [0.072, 0.0]
     },
     "valve_sensitivity": {
