@@ -9,7 +9,10 @@ ensure_tracer_function_object()
 {
     if [[ ! -f "$TRACER_FUNCTION_OBJECT_LIB" ]] \
         || [[ "$TRACER_FUNCTION_OBJECT_DIR/boundedPhaseMassTransport.C" -nt "$TRACER_FUNCTION_OBJECT_LIB" ]] \
-        || [[ "$TRACER_FUNCTION_OBJECT_DIR/boundedPhaseMassTransport.H" -nt "$TRACER_FUNCTION_OBJECT_LIB" ]]; then
+        || [[ "$TRACER_FUNCTION_OBJECT_DIR/boundedPhaseMassTransport.H" -nt "$TRACER_FUNCTION_OBJECT_LIB" ]] \
+        || [[ "$TRACER_FUNCTION_OBJECT_DIR/Make/files" -nt "$TRACER_FUNCTION_OBJECT_LIB" ]] \
+        || [[ "$TRACER_FUNCTION_OBJECT_DIR/Make/options" -nt "$TRACER_FUNCTION_OBJECT_LIB" ]] \
+        || [[ "../functionObjects/Allwmake" -nt "$TRACER_FUNCTION_OBJECT_LIB" ]]; then
         ../functionObjects/Allwmake > log.wmake.boundedPhaseMassTransport 2>&1
     fi
 }

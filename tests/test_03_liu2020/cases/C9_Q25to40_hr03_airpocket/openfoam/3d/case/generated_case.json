@@ -46,13 +46,14 @@
   "pocket_body_tracer": {
     "field": "pocketBodyTracer",
     "initial_support": "selected upstream main-body gas; thin layer excluded",
-    "transport": "conservative air-phase mass fraction using interpolate(rho.air)*(phi - alphaPhi0.water)",
+    "transport": "conservative air-phase mass fraction using a continuity-projected interpolate(rho.air)*(phi - alphaPhi0.water)",
     "matrix_residual_air_fraction": 1e-08,
-    "bounded_transport": "local boundedPhaseMassTransport applies variable-density MULES to the compressible air-phase mass equation using solver-owned current and old phase fields",
+    "bounded_transport": "continuity-projected phase mass flux with implicit upwind fvm::ddt(alpha,rho,tracer) and residual-alpha deferred correction",
+    "conservative_transport_with_bounds_guard": true,
     "inventory_weight": "alpha.air*thermo:rho.air",
-    "conservation_inventory_weight": "(alpha.air + 1e-8)*thermo:rho.air",
+    "conservation_inventory_weight": "alpha.air*thermo:rho.air",
     "boundary_flux": "pocketBodyTracerMassFlux",
-    "carrier_continuity_source": "pocketBodyTracerMassSource",
+    "carrier_continuity_source": "none; pocketBodyTracerMassSource reports numerical balance residual",
     "purpose": "main-pocket source identity; alpha.air alone cannot distinguish the initial thin layer from the body"
   },
   "initial_field_correction": {

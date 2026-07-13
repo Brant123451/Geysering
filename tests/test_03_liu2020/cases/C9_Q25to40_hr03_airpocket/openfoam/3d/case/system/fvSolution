@@ -59,6 +59,21 @@ solvers
         relTol 0;
         maxIter 50;
     }
+    pocketBodyTracerCarrierPotential
+    {
+        solver GAMG;
+        tolerance 1e-10;
+        relTol 0;
+        smoother DIC;
+    }
+    pocketBodyTracer
+    {
+        solver smoothSolver;
+        smoother symGaussSeidel;
+        tolerance 1e-10;
+        relTol 0;
+        maxIter 200;
+    }
     "U.*"
     {
         solver smoothSolver;

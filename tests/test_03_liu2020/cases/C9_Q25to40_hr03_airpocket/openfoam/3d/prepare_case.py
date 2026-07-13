@@ -502,23 +502,28 @@ functions
 
     pocketBodyTracerTransport
     {{
-        // The stock scalarTransport mass-flux branch has no bounded MULES
-        // correction.  This local object builds current and old alpha*rho from
-        // solver-owned fields and accounts for their discrete continuity
-        // residual as an explicit, audited tracer-mass source.
+        // Project the air mass flux onto discrete phase continuity, then solve
+        // the phase scalar with fvm::ddt(alpha,rho,tracer), implicit upwind,
+        // and the Foundation residual-alpha deferred correction.
         type            boundedPhaseMassTransport;
         libs            ("libboundedPhaseMassTransport.so");
         field           pocketBodyTracer;
         phi             airMassFluxForTracer;
         alpha           alpha.air;
         phaseRho        thermo:rho.air;
+        p               p_rgh;
+        potential       pocketBodyTracerCarrierPotential;
+        carrierFluxResult correctedAirMassFluxForTracer;
         residualAlpha   1e-8;
         rhoResult       alphaRhoAirForTracer;
         fluxResult      pocketBodyTracerMassFlux;
         sourceResult    pocketBodyTracerMassSource;
         schemesField    pocketBodyTracer;
         tolerance       1e-8;
-        nCorr           0;
+        boundsTolerance 1e-8;
+        continuityTolerance 1e-6;
+        nCorr           1;
+        nNonOrthCorr    1;
         resetOnStartUp  false;
         enabled         true;
         log             false;
@@ -713,9 +718,8 @@ functions
 
     matrixPocketBodyTracerMass
     {{
-        // This residual-stabilised inventory is the quantity conserved by the
-        // MULES transport equation.  Its difference from the physical
-        // alpha.air*rho.air inventory quantifies the 1e-8 matrix residual.
+        // Independent duplicate of the physical alpha.air*rho.air inventory
+        // produced by the transport object for budget cross-checking.
         type            volFieldValue;
         libs            (fieldFunctionObjects);
         operation       weightedVolIntegrate;
@@ -728,8 +732,8 @@ functions
 
     totalPocketBodyTracerMassSource
     {{
-        // Integrated carrier-continuity source used by the bounded transport.
-        // It must be included in, and remain small relative to, the tag budget.
+        // This is the integrated numerical tracer-balance residual, not an
+        // equation source.  It must remain below 1% of initial tagged mass.
         type            volFieldValue;
         libs            (fieldFunctionObjects);
         operation       volIntegrate;
@@ -1452,12 +1456,14 @@ actions
     gateOutlet
     {
         type inletOutlet;
+        phi correctedAirMassFluxForTracer;
         inletValue uniform 0;
         value uniform 0;
     }
     atmosphere
     {
         type inletOutlet;
+        phi correctedAirMassFluxForTracer;
         inletValue uniform 0;
         value uniform 0;
     }
@@ -1792,7 +1798,11 @@ divSchemes
     div(phi,pocketBodyTracer) Gauss upwind;
     div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
 }
-laplacianSchemes { default Gauss linear corrected; }
+laplacianSchemes
+{
+    default Gauss linear corrected;
+    laplacian(pocketBodyTracerCarrierPotential) Gauss linear corrected;
+}
 interpolationSchemes { default linear; }
 snGradSchemes { default corrected; }
 wallDist { method meshWave; }
@@ -1845,6 +1855,21 @@ solvers
         tolerance 1e-7;
         relTol 0;
         maxIter 50;
+    }}
+    pocketBodyTracerCarrierPotential
+    {{
+        solver GAMG;
+        tolerance 1e-10;
+        relTol 0;
+        smoother DIC;
+    }}
+    pocketBodyTracer
+    {{
+        solver smoothSolver;
+        smoother symGaussSeidel;
+        tolerance 1e-10;
+        relTol 0;
+        maxIter 200;
     }}
     "U.*"
     {{
@@ -1943,7 +1968,10 @@ ensure_tracer_function_object()
 {{
     if [[ ! -f "$TRACER_FUNCTION_OBJECT_LIB" ]] \\
         || [[ "$TRACER_FUNCTION_OBJECT_DIR/boundedPhaseMassTransport.C" -nt "$TRACER_FUNCTION_OBJECT_LIB" ]] \\
-        || [[ "$TRACER_FUNCTION_OBJECT_DIR/boundedPhaseMassTransport.H" -nt "$TRACER_FUNCTION_OBJECT_LIB" ]]; then
+        || [[ "$TRACER_FUNCTION_OBJECT_DIR/boundedPhaseMassTransport.H" -nt "$TRACER_FUNCTION_OBJECT_LIB" ]] \\
+        || [[ "$TRACER_FUNCTION_OBJECT_DIR/Make/files" -nt "$TRACER_FUNCTION_OBJECT_LIB" ]] \\
+        || [[ "$TRACER_FUNCTION_OBJECT_DIR/Make/options" -nt "$TRACER_FUNCTION_OBJECT_LIB" ]] \\
+        || [[ "../functionObjects/Allwmake" -nt "$TRACER_FUNCTION_OBJECT_LIB" ]]; then
         ../functionObjects/Allwmake > log.wmake.boundedPhaseMassTransport 2>&1
     fi
 }}
@@ -2207,20 +2235,21 @@ rm -f log.*
             "initial_support": "selected upstream main-body gas; thin layer excluded",
             "transport": (
                 "conservative air-phase mass fraction using "
-                "interpolate(rho.air)*(phi - alphaPhi0.water)"
+                "a continuity-projected interpolate(rho.air)"
+                "*(phi - alphaPhi0.water)"
             ),
             "matrix_residual_air_fraction": 1e-8,
             "bounded_transport": (
-                "local boundedPhaseMassTransport applies variable-density "
-                "MULES to the compressible air-phase mass equation using "
-                "solver-owned current and old phase fields"
+                "continuity-projected phase mass flux with implicit upwind "
+                "fvm::ddt(alpha,rho,tracer) and residual-alpha deferred correction"
             ),
+            "conservative_transport_with_bounds_guard": True,
             "inventory_weight": "alpha.air*thermo:rho.air",
-            "conservation_inventory_weight": (
-                "(alpha.air + 1e-8)*thermo:rho.air"
-            ),
+            "conservation_inventory_weight": "alpha.air*thermo:rho.air",
             "boundary_flux": "pocketBodyTracerMassFlux",
-            "carrier_continuity_source": "pocketBodyTracerMassSource",
+            "carrier_continuity_source": (
+                "none; pocketBodyTracerMassSource reports numerical balance residual"
+            ),
             "purpose": (
                 "main-pocket source identity; alpha.air alone cannot distinguish "
                 "the initial thin layer from the body"

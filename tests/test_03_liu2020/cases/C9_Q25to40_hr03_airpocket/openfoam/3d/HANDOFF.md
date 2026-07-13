@@ -84,16 +84,19 @@ compressible scalar branch does not apply its `bounded01` switch. The initial
 clear/clamp workaround was therefore bounded but non-conservative: the
 `maxCo=0.70` diagnostic was stopped at solver time 0.6401 s (paper time
 0.3901 s) after losing 7.65% of its paper-time-zero physical tracer inventory.
-It is rejected. The source now compiles `boundedPhaseMassTransport`, which
-applies variable-density MULES to the compressible phase-mass flux and needs
-no post-solve projection. Its first integration attempt also rejected a
-function-generated `alpha*rho` carrier because its old-time state was invalid
-and the low-order tracer became unbounded. The current implementation builds
-both time levels from solver-owned `alpha.air` and `rho.air`, and includes the
-discrete carrier-continuity residual as an audited mass source. It records
-physical/matrix inventories, that source, and tagged boundary fluxes;
-post-processing requires both source-inclusive budget error and cumulative
-continuity source to remain within 1% before accepting tracer chronology.
+It is rejected. Two later variable-density MULES versions were rejected as
+well: a function-generated `alpha*rho` carrier had an invalid old-time level,
+while an explicit reconstruction of both levels still violated MULES's
+low-order positivity requirement and reached order `1e24` by solver time
+0.0202 s. The current `boundedPhaseMassTransport` projects the raw gas mass
+flux onto discrete gas continuity, then uses the solver-owned
+`fvm::ddt(alpha,rho,tracer)` time term, implicit upwind, and a residual-alpha
+deferred correction. It has no post-solve projection or continuity source and
+aborts on a failed carrier projection or any material `[0,1]` violation.
+Physical inventory and tagged boundary fluxes must close within 1%; the
+integrated numerical tracer-balance residual must independently remain below
+1% before accepting chronology. This newest implementation still requires a
+fresh validation run.
 The historical, now-rejected clear/clamp `maxCo=0.35` reference remained in
 `[0,1]` through solver time 0.37 s and lost about 0.5% of its paper-time-zero
 inventory by 0.31 s, but cut-cell Courant control reduced its step to roughly

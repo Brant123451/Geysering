@@ -15,13 +15,14 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "boundedPhaseMassTransport.H"
-#include "MULES.H"
 #include "addToRunTimeSelectionTable.H"
+#include "fixedValueFvPatchField.H"
 #include "fvcDdt.H"
 #include "fvcDiv.H"
 #include "fvmDdt.H"
 #include "fvmDiv.H"
-#include "fvmSup.H"
+#include "fvmLaplacian.H"
+#include "zeroGradientFvPatchField.H"
 
 namespace Foam
 {
@@ -66,27 +67,65 @@ Foam::functionObjects::boundedPhaseMassTransport::transportedField()
 
 
 Foam::volScalarField&
-Foam::functionObjects::boundedPhaseMassTransport::updateCarrierDensity
+Foam::functionObjects::boundedPhaseMassTransport::potential
+(
+    const surfaceScalarField& phi,
+    const volScalarField& p
+)
+{
+    if (!potentialPtr_.valid())
+    {
+        wordList patchFieldTypes(mesh_.boundary().size());
+        forAll(p.boundaryField(), patchi)
+        {
+            patchFieldTypes[patchi] =
+                p.boundaryField()[patchi].fixesValue()
+              ? fixedValueFvPatchField<scalar>::typeName
+              : zeroGradientFvPatchField<scalar>::typeName;
+        }
+
+        potentialPtr_.reset
+        (
+            new volScalarField
+            (
+                IOobject
+                (
+                    potentialName_,
+                    mesh_.time().timeName(),
+                    mesh_,
+                    IOobject::READ_IF_PRESENT,
+                    IOobject::NO_WRITE,
+                    IOobject::REGISTER
+                ),
+                mesh_,
+                dimensionedScalar
+                (
+                    potentialName_,
+                    phi.dimensions()/dimLength,
+                    Zero
+                ),
+                patchFieldTypes
+            )
+        );
+        mesh_.setFluxRequired(potentialName_);
+    }
+
+    return potentialPtr_();
+}
+
+
+Foam::volScalarField&
+Foam::functionObjects::boundedPhaseMassTransport::updateInventoryDensity
 (
     const volScalarField& alpha,
     const volScalarField& phaseRho
 )
 {
-    const dimensionedScalar residual
-    (
-        "residualAlpha",
-        dimless,
-        residualAlpha_
-    );
-    const tmp<volScalarField> currentDensity((alpha + residual)*phaseRho);
-    const tmp<volScalarField> oldDensity
-    (
-        (alpha.oldTime() + residual)*phaseRho.oldTime()
-    );
+    const tmp<volScalarField> physicalDensity(alpha*phaseRho);
 
-    if (!carrierRhoPtr_.valid())
+    if (!inventoryRhoPtr_.valid())
     {
-        carrierRhoPtr_.reset
+        inventoryRhoPtr_.reset
         (
             new volScalarField
             (
@@ -99,21 +138,16 @@ Foam::functionObjects::boundedPhaseMassTransport::updateCarrierDensity
                     IOobject::NO_WRITE,
                     IOobject::REGISTER
                 ),
-                currentDensity()
+                physicalDensity()
             )
         );
-        carrierRhoPtr_->oldTime();
+    }
+    else
+    {
+        inventoryRhoPtr_() == physicalDensity();
     }
 
-    volScalarField& carrierRho = carrierRhoPtr_();
-    carrierRho.primitiveFieldRef() = currentDensity().primitiveField();
-    carrierRho.boundaryFieldRef() = currentDensity().boundaryField();
-
-    volScalarField& oldCarrierRho = carrierRho.oldTime();
-    oldCarrierRho.primitiveFieldRef() = oldDensity().primitiveField();
-    oldCarrierRho.boundaryFieldRef() = oldDensity().boundaryField();
-
-    return carrierRho;
+    return inventoryRhoPtr_();
 }
 
 
@@ -130,6 +164,23 @@ boundedPhaseMassTransport
     phiName_(dict.getOrDefault<word>("phi", "phi")),
     alphaName_(dict.getOrDefault<word>("alpha", "alpha")),
     phaseRhoName_(dict.getOrDefault<word>("phaseRho", "rho")),
+    pName_(dict.getOrDefault<word>("p", "p")),
+    potentialName_
+    (
+        dict.getOrDefault<word>
+        (
+            "potential",
+            fieldName_ + "CarrierPotential"
+        )
+    ),
+    carrierFluxResultName_
+    (
+        dict.getOrDefault<word>
+        (
+            "carrierFluxResult",
+            fieldName_ + "CarrierMassFlux"
+        )
+    ),
     rhoResultName_
     (
         dict.getOrDefault<word>("rhoResult", fieldName_ + "CarrierRho")
@@ -145,10 +196,15 @@ boundedPhaseMassTransport
     schemesField_("unknown-schemesField"),
     residualAlpha_(1e-8),
     tolerance_(1),
+    boundsTolerance_(1e-8),
+    continuityTolerance_(1e-6),
     nCorr_(0),
+    nNonOrthCorr_(0),
     resetOnStartUp_(false),
-    carrierRhoPtr_(nullptr),
+    potentialPtr_(nullptr),
+    inventoryRhoPtr_(nullptr),
     tracerSourcePtr_(nullptr),
+    carrierFluxPtr_(nullptr),
     tracerFluxPtr_(nullptr)
 {
     read(dict);
@@ -176,14 +232,40 @@ bool Foam::functionObjects::boundedPhaseMassTransport::read
     dict.readIfPresent("phi", phiName_);
     dict.readIfPresent("alpha", alphaName_);
     dict.readIfPresent("phaseRho", phaseRhoName_);
+    dict.readIfPresent("p", pName_);
+    dict.readIfPresent("potential", potentialName_);
+    dict.readIfPresent("carrierFluxResult", carrierFluxResultName_);
     dict.readIfPresent("rhoResult", rhoResultName_);
     dict.readIfPresent("fluxResult", fluxResultName_);
     dict.readIfPresent("sourceResult", sourceResultName_);
     schemesField_ = dict.getOrDefault("schemesField", fieldName_);
     dict.readIfPresent("residualAlpha", residualAlpha_);
     dict.readIfPresent("tolerance", tolerance_);
+    dict.readIfPresent("boundsTolerance", boundsTolerance_);
+    dict.readIfPresent("continuityTolerance", continuityTolerance_);
     dict.readIfPresent("nCorr", nCorr_);
+    dict.readIfPresent("nNonOrthCorr", nNonOrthCorr_);
     dict.readIfPresent("resetOnStartUp", resetOnStartUp_);
+
+    if
+    (
+        residualAlpha_ < 0
+     || tolerance_ < 0
+     || boundsTolerance_ < 0
+     || continuityTolerance_ <= 0
+     || nCorr_ < 0
+     || nNonOrthCorr_ < 0
+    )
+    {
+        FatalErrorInFunction
+            << "Invalid transport controls: residualAlpha=" << residualAlpha_
+            << ", tolerance=" << tolerance_
+            << ", boundsTolerance=" << boundsTolerance_
+            << ", continuityTolerance=" << continuityTolerance_
+            << ", nCorr=" << nCorr_
+            << ", nNonOrthCorr=" << nNonOrthCorr_
+            << exit(FatalError);
+    }
 
     return true;
 }
@@ -196,15 +278,17 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
         lookupObject<volScalarField>(alphaName_);
     const volScalarField& phaseRho =
         lookupObject<volScalarField>(phaseRhoName_);
-    volScalarField& rho = updateCarrierDensity(alpha, phaseRho);
     const surfaceScalarField& phi =
         lookupObject<surfaceScalarField>(phiName_);
+    const volScalarField& p =
+        lookupObject<volScalarField>(pName_);
 
-    if (rho.dimensions() != dimDensity)
+    if (phaseRho.dimensions() != dimDensity)
     {
         FatalErrorInFunction
-            << "Expected phase mass density dimensions " << dimDensity
-            << " for " << rho.name() << ", found " << rho.dimensions()
+            << "Expected phase density dimensions " << dimDensity
+            << " for " << phaseRho.name() << ", found "
+            << phaseRho.dimensions()
             << exit(FatalError);
     }
 
@@ -216,19 +300,133 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
             << exit(FatalError);
     }
 
-    volScalarField continuityError
+    if (!carrierFluxPtr_.valid())
+    {
+        carrierFluxPtr_.reset
+        (
+            new surfaceScalarField
+            (
+                IOobject
+                (
+                    carrierFluxResultName_,
+                    mesh_.time().timeName(),
+                    mesh_,
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE,
+                    IOobject::REGISTER
+                ),
+                phi
+            )
+        );
+    }
+    else
+    {
+        carrierFluxPtr_() = phi;
+    }
+
+    surfaceScalarField& carrierFlux = carrierFluxPtr_();
+    carrierFlux.oriented() = phi.oriented();
+
+    volScalarField carrierDdt
     (
         IOobject
         (
-            fieldName_ + "CarrierContinuityError",
+            fieldName_ + "CarrierDdt",
             mesh_.time().timeName(),
             mesh_,
             IOobject::NO_READ,
             IOobject::NO_WRITE,
             IOobject::NO_REGISTER
         ),
-        fvc::ddt(rho) + fvc::div(phi)
+        fvc::ddt(phaseRho, alpha)
     );
+
+    volScalarField continuityErrorBefore
+    (
+        IOobject
+        (
+            fieldName_ + "CarrierContinuityErrorBefore",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            IOobject::NO_REGISTER
+        ),
+        carrierDdt + fvc::div(carrierFlux)
+    );
+
+    volScalarField& Phi = potential(phi, p);
+    const word laplacianScheme("laplacian(" + potentialName_ + ")");
+
+    for (label nonOrth = 0; nonOrth <= nNonOrthCorr_; ++nonOrth)
+    {
+        fvScalarMatrix PhiEqn
+        (
+            fvm::laplacian(Phi, laplacianScheme)
+          + fvc::ddt(phaseRho, alpha)
+          + fvc::div(carrierFlux)
+        );
+
+        PhiEqn.solve(potentialName_);
+
+        if (nonOrth == nNonOrthCorr_)
+        {
+            tmp<surfaceScalarField> correctionFlux(PhiEqn.flux());
+            correctionFlux.ref().oriented() = carrierFlux.oriented();
+            carrierFlux += correctionFlux();
+        }
+    }
+
+    volScalarField carrierDivAfter
+    (
+        IOobject
+        (
+            fieldName_ + "CarrierDivAfter",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            IOobject::NO_REGISTER
+        ),
+        fvc::div(carrierFlux)
+    );
+
+    volScalarField continuityErrorAfter
+    (
+        IOobject
+        (
+            fieldName_ + "CarrierContinuityErrorAfter",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            IOobject::NO_REGISTER
+        ),
+        carrierDdt + carrierDivAfter
+    );
+
+    const auto maxMag = [](const volScalarField& value)
+    {
+        return max(mag(gMin(value)), mag(gMax(value)));
+    };
+    const scalar continuityScale =
+        max(maxMag(carrierDdt), max(maxMag(carrierDivAfter), VSMALL));
+    const scalar relativeContinuityError =
+        maxMag(continuityErrorAfter)/continuityScale;
+
+    if (relativeContinuityError > continuityTolerance_)
+    {
+        FatalErrorInFunction
+            << "Carrier-flux projection did not satisfy phase continuity: "
+            << "relative max error = " << relativeContinuityError
+            << ", tolerance = " << continuityTolerance_ << nl
+            << "Refusing to transport the source tracer with an inconsistent "
+            << "carrier flux." << exit(FatalError);
+    }
+
+    // inletOutlet patches must use the corrected phase mass flux when
+    // selecting inflow values.
+    field.correctBoundaryConditions();
 
     const word divScheme("div(phi," + schemesField_ + ")");
     scalar relaxCoeff = 0;
@@ -242,47 +440,56 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     {
         fvScalarMatrix fieldEqn
         (
-            fvm::ddt(rho, field)
-          + fvm::div(phi, field, divScheme)
+            fvm::ddt(alpha, phaseRho, field)
+          + fvm::div(carrierFlux, field, divScheme)
          ==
-            fvm::Sp(continuityError, field)
+          - fvm::ddt(residualAlpha_*phaseRho, field)
+          + fvc::ddt(residualAlpha_*phaseRho, field)
         );
 
         fieldEqn.relax(relaxCoeff);
 
         ++iteration;
-        converged =
-        (
-            fieldEqn.solve(schemesField_).initialResidual() < tolerance_
-        );
+        const auto solverPerformance = fieldEqn.solve(schemesField_);
+        converged = solverPerformance.finalResidual() < tolerance_;
         tracerFlux = fieldEqn.flux();
+        tracerFlux.ref().oriented() = carrierFlux.oriented();
 
-        if (converged)
-        {
-            break;
-        }
     }
 
-    // The stock scalarTransport function object only applies this
-    // variable-density MULES correction in its volume-phase branch.  Applying
-    // it here bounds the compressible phase mass fraction conservatively.
-    // fvMatrix::flux() is not marked oriented in this OpenFOAM release, while
-    // the supplied phase flux is.  MULES subtracts their upwind fluxes, so the
-    // orientation metadata must match before entering the limiter.
-    tracerFlux.ref().oriented() = phi.oriented();
-    MULES::explicitSolve
-    (
-        rho,
-        field,
-        phi,
-        tracerFlux.ref(),
-        continuityError,
-        zeroField(),
-        oneField(),
-        zeroField()
-    );
+    if (!converged)
+    {
+        FatalErrorInFunction
+            << field.name() << " did not reach linear-solver tolerance "
+            << tolerance_ << " after " << iteration << " solve(s)."
+            << exit(FatalError);
+    }
 
-    const tmp<volScalarField> tracerSource(continuityError*field);
+    const scalar fieldMin = gMin(field);
+    const scalar fieldMax = gMax(field);
+    if
+    (
+        fieldMin < -boundsTolerance_
+     || fieldMax > 1 + boundsTolerance_
+    )
+    {
+        FatalErrorInFunction
+            << field.name() << " left [0,1]: min/max = "
+            << fieldMin << ' ' << fieldMax
+            << ", tolerance = " << boundsTolerance_ << nl
+            << "Refusing to continue with a non-physical source tracer."
+            << exit(FatalError);
+    }
+
+    updateInventoryDensity(alpha, phaseRho);
+
+    // This is not an equation source.  It is the local physical tracer-balance
+    // residual after the deferred correction and linear solves, exposed so
+    // post-processing can reject a trajectory with excessive numerical mass.
+    const tmp<volScalarField> tracerSource
+    (
+        fvc::ddt(alpha, phaseRho, field) + fvc::div(tracerFlux())
+    );
     if (!tracerSourcePtr_.valid())
     {
         tracerSourcePtr_.reset
@@ -332,9 +539,12 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     }
 
     Log << type() << " execute: " << field.name()
-        << ", min/max = " << gMin(field) << ' ' << gMax(field)
-        << ", carrier continuity error min/max = "
-        << gMin(continuityError) << ' ' << gMax(continuityError)
+        << ", min/max = " << fieldMin << ' ' << fieldMax
+        << ", carrier continuity error before min/max = "
+        << gMin(continuityErrorBefore) << ' ' << gMax(continuityErrorBefore)
+        << ", after min/max = "
+        << gMin(continuityErrorAfter) << ' ' << gMax(continuityErrorAfter)
+        << ", relative max = " << relativeContinuityError
         << ", iterations = " << iteration
         << ", converged = " << converged << nl << endl;
 

@@ -24,7 +24,11 @@ divSchemes
     div(phi,pocketBodyTracer) Gauss upwind;
     div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
 }
-laplacianSchemes { default Gauss linear corrected; }
+laplacianSchemes
+{
+    default Gauss linear corrected;
+    laplacian(pocketBodyTracerCarrierPotential) Gauss linear corrected;
+}
 interpolationSchemes { default linear; }
 snGradSchemes { default corrected; }
 wallDist { method meshWave; }

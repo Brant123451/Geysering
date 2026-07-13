@@ -239,17 +239,21 @@ into water and is not a valid source-identity diagnostic. The OpenFOAM v2512
 compressible scalar branch does not execute `bounded01`. A clear/clamp
 workaround was tested and rejected: by solver time 0.6401 s (paper time
 0.3901 s) it had removed 7.65% of the paper-time-zero physical tracer
-inventory. The current source therefore compiles a local
-`boundedPhaseMassTransport` function object and applies variable-density
-MULES directly to the air-phase mass equation; no non-conservative post-solve
-projection remains. It constructs both carrier time levels from solver-owned
-`alpha.air` and `rho.air`; a function-generated product field was tested and
-rejected because its invalid old-time state made even the low-order solution
-unbounded. Arrival diagnostics use physical `alpha.air*rho.air`. Conservation
-is audited with the residual-stabilised matrix inventory, the explicit
-discrete carrier-continuity source, and tagged mass flux through inlet, gate,
-and atmosphere. Chronology is invalid when either the source-inclusive budget
-error or cumulative continuity source exceeds 1% of initial tag mass. A 1%
+inventory. Two variable-density MULES integrations were then rejected: a
+function-generated `alpha*rho` field had an invalid old-time level, and an
+explicit reconstruction of both levels still violated MULES's low-order
+positivity requirement, exceeding order `1e24` by solver time 0.0202 s. The
+current local `boundedPhaseMassTransport` projects the raw air mass flux onto
+the discrete `alpha.air*rho.air` continuity equation, then solves
+`fvm::ddt(alpha,rho,tracer)` with implicit upwind and the Foundation
+residual-alpha deferred correction. No non-conservative projection or
+carrier-continuity equation source remains; failed carrier projection or a
+material `[0,1]` violation is fatal. Arrival diagnostics use physical
+`alpha.air*rho.air`. Conservation is audited with an independent
+physical-inventory copy, tagged mass flux through inlet, gate, and atmosphere,
+and the integrated numerical tracer-balance residual. Chronology is invalid
+when either the boundary-flux budget error or cumulative numerical residual
+exceeds 1% of initial tag mass. A 1%
 source-tag transfer is
 reported only as early leakage because the paper explicitly documents a
 temporary crown passage near 1.30 s. The formal operational main-body arrival

@@ -30,10 +30,11 @@ namespace functionObjects
                 Class boundedPhaseMassTransport Declaration
 \*---------------------------------------------------------------------------*/
 
-//- Transport a bounded mass fraction using phase fraction, phase density, and
-//  phase mass flux.  The carrier density and its old-time value are built from
-//  the solver-owned phase fields.  A phase-continuity source keeps constants
-//  bounded, and its integral is exposed for a complete tracer budget.
+//- Transport a phase mass fraction using the solver-owned phase fraction and
+//  density time levels.  The supplied phase mass flux is projected onto the
+//  discrete phase-continuity equation before an implicit upwind scalar solve.
+//  A residual-phase deferred correction regularises cells in which the phase
+//  vanishes without adding a physical tracer source.
 class boundedPhaseMassTransport
 :
     public fvMeshFunctionObject
@@ -44,16 +45,24 @@ class boundedPhaseMassTransport
         word phiName_;
         word alphaName_;
         word phaseRhoName_;
+        word pName_;
+        word potentialName_;
+        word carrierFluxResultName_;
         word rhoResultName_;
         word fluxResultName_;
         word sourceResultName_;
         word schemesField_;
         scalar residualAlpha_;
         scalar tolerance_;
+        scalar boundsTolerance_;
+        scalar continuityTolerance_;
         label nCorr_;
+        label nNonOrthCorr_;
         bool resetOnStartUp_;
-        autoPtr<volScalarField> carrierRhoPtr_;
+        autoPtr<volScalarField> potentialPtr_;
+        autoPtr<volScalarField> inventoryRhoPtr_;
         autoPtr<volScalarField> tracerSourcePtr_;
+        autoPtr<surfaceScalarField> carrierFluxPtr_;
         autoPtr<surfaceScalarField> tracerFluxPtr_;
 
 
@@ -61,7 +70,13 @@ class boundedPhaseMassTransport
 
         volScalarField& transportedField();
 
-        volScalarField& updateCarrierDensity
+        volScalarField& potential
+        (
+            const surfaceScalarField& phi,
+            const volScalarField& p
+        );
+
+        volScalarField& updateInventoryDensity
         (
             const volScalarField& alpha,
             const volScalarField& phaseRho

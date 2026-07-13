@@ -122,9 +122,18 @@ class PocketBodyTracerTests(unittest.TestCase):
         self.assertIn("phi             airMassFluxForTracer;", dictionary)
         self.assertIn("alpha           alpha.air;", dictionary)
         self.assertIn("phaseRho        thermo:rho.air;", dictionary)
+        self.assertIn("p               p_rgh;", dictionary)
+        self.assertIn(
+            "carrierFluxResult correctedAirMassFluxForTracer;",
+            dictionary,
+        )
         self.assertIn("rhoResult       alphaRhoAirForTracer;", dictionary)
         self.assertIn("fluxResult      pocketBodyTracerMassFlux;", dictionary)
         self.assertIn("sourceResult    pocketBodyTracerMassSource;", dictionary)
+        self.assertIn("boundsTolerance 1e-8;", dictionary)
+        self.assertIn("continuityTolerance 1e-6;", dictionary)
+        self.assertIn("nCorr           1;", dictionary)
+        self.assertIn("nNonOrthCorr    1;", dictionary)
         self.assertIn("fields          (pocketBodyTracerMassSource);", dictionary)
         self.assertNotIn("clearPocketBodyTracerOutsideAir", dictionary)
         self.assertNotIn("boundPocketBodyTracer", dictionary)

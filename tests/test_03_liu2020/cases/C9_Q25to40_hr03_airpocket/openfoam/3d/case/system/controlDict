@@ -96,23 +96,28 @@ functions
 
     pocketBodyTracerTransport
     {
-        // The stock scalarTransport mass-flux branch has no bounded MULES
-        // correction.  This local object builds current and old alpha*rho from
-        // solver-owned fields and accounts for their discrete continuity
-        // residual as an explicit, audited tracer-mass source.
+        // Project the air mass flux onto discrete phase continuity, then solve
+        // the phase scalar with fvm::ddt(alpha,rho,tracer), implicit upwind,
+        // and the Foundation residual-alpha deferred correction.
         type            boundedPhaseMassTransport;
         libs            ("libboundedPhaseMassTransport.so");
         field           pocketBodyTracer;
         phi             airMassFluxForTracer;
         alpha           alpha.air;
         phaseRho        thermo:rho.air;
+        p               p_rgh;
+        potential       pocketBodyTracerCarrierPotential;
+        carrierFluxResult correctedAirMassFluxForTracer;
         residualAlpha   1e-8;
         rhoResult       alphaRhoAirForTracer;
         fluxResult      pocketBodyTracerMassFlux;
         sourceResult    pocketBodyTracerMassSource;
         schemesField    pocketBodyTracer;
         tolerance       1e-8;
-        nCorr           0;
+        boundsTolerance 1e-8;
+        continuityTolerance 1e-6;
+        nCorr           1;
+        nNonOrthCorr    1;
         resetOnStartUp  false;
         enabled         true;
         log             false;
@@ -535,9 +540,8 @@ functions
 
     matrixPocketBodyTracerMass
     {
-        // This residual-stabilised inventory is the quantity conserved by the
-        // MULES transport equation.  Its difference from the physical
-        // alpha.air*rho.air inventory quantifies the 1e-8 matrix residual.
+        // Independent duplicate of the physical alpha.air*rho.air inventory
+        // produced by the transport object for budget cross-checking.
         type            volFieldValue;
         libs            (fieldFunctionObjects);
         operation       weightedVolIntegrate;
@@ -550,8 +554,8 @@ functions
 
     totalPocketBodyTracerMassSource
     {
-        // Integrated carrier-continuity source used by the bounded transport.
-        // It must be included in, and remain small relative to, the tag budget.
+        // This is the integrated numerical tracer-balance residual, not an
+        // equation source.  It must remain below 1% of initial tagged mass.
         type            volFieldValue;
         libs            (fieldFunctionObjects);
         operation       volIntegrate;

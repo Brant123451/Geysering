@@ -686,7 +686,10 @@ def main() -> None:
     phase_mass_tracer = bool(
         air_phase_mass_transport_declared
         and isinstance(tracer_bounded_transport, str)
-        and "MULES" in tracer_bounded_transport
+        and (
+            tracer_metadata.get("conservative_transport_with_bounds_guard") is True
+            or "MULES" in tracer_bounded_transport
+        )
     )
 
     p_time_solver, p_values = parse_probe_scalar(post, "probesPT", "p")

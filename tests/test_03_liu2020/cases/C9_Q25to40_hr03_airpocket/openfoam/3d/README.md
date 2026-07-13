@@ -211,18 +211,20 @@ MULES phase-volume flux directly instead of subtracting a separately
 interpolated water mass flux from compressible mixture `rhoPhi`. The first
 explicit clear/clamp implementation was stopped at solver time 0.6401 s
 (paper time 0.3901 s): despite remaining in `[0,1]`, it had destroyed 7.65% of
-the paper-time-zero physical tracer inventory and is rejected. The source now
-builds a local `boundedPhaseMassTransport` function object. It follows the
-implicit air-mass solve with variable-density MULES, enforcing `[0,1]` without
-any clear/clamp projection. A first integration attempt proved that a
-function-generated `alpha*rho` field did not retain a valid old-time carrier
-state and became unbounded; the current object instead builds current and old
-carrier densities directly from solver-owned `alpha.air` and `rho.air`. Its
-discrete carrier-continuity residual is an explicit, reported tracer source.
-Diagnostics report physical and matrix inventories, that source, and tagged
-boundary mass fluxes. Post-processing accepts chronology only when both the
-full source-inclusive budget error and cumulative continuity source remain
-within 1%. A fresh run is required.
+the paper-time-zero physical tracer inventory and is rejected. Two subsequent
+variable-density MULES integrations were also rejected: an artificial
+`alpha*rho` field had an invalid old-time level, and rebuilding both levels
+still violated MULES's low-order positivity requirement (`|tracer|` exceeded
+`1e24` by solver time 0.0202 s). The current local
+`boundedPhaseMassTransport` instead projects the raw air mass flux onto the
+discrete `alpha.air*rho.air` continuity equation and solves
+`fvm::ddt(alpha,rho,tracer)` with implicit upwind plus the Foundation
+residual-alpha deferred correction. It has no clamp and no carrier-continuity
+equation source. Physical inventory and tagged boundary fluxes must close
+within 1%, and the independently integrated numerical tracer-balance residual
+must also stay below 1%. The object aborts immediately if carrier projection
+misses its tolerance or the tracer leaves `[0,1]`. A fresh run is required to
+validate this implementation.
 
 Phase 1 is incomplete. Phase 2 and eight eruptions have not yet been
 reproduced.

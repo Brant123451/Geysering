@@ -19,12 +19,14 @@ boundaryField
     gateOutlet
     {
         type inletOutlet;
+        phi correctedAirMassFluxForTracer;
         inletValue uniform 0;
         value uniform 0;
     }
     atmosphere
     {
         type inletOutlet;
+        phi correctedAirMassFluxForTracer;
         inletValue uniform 0;
         value uniform 0;
     }
