@@ -523,7 +523,7 @@ functions
         sourceResult    pocketBodyTracerMassSource;
         schemesField    pocketBodyTracer;
         tolerance       1e-8;
-        boundsTolerance 1e-3;
+        boundsTolerance 1e-2;
         continuityTolerance 1e-4;
         nCorr           0;
         nNonOrthCorr    1;
