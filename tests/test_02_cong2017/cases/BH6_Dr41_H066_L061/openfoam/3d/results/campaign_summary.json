@@ -5,11 +5,13 @@
   "campaign_status": "success",
   "profiles_requested": [
     "base",
-    "valve-fast"
+    "valve-fast",
+    "valve-slow"
   ],
   "profiles_completed": [
     "base",
-    "valve-fast"
+    "valve-fast",
+    "valve-slow"
   ],
   "profiles_incomplete": [],
   "results": [
@@ -60,6 +62,30 @@
       "gas_balance_relative_error": -2.873359884095236e-05,
       "static_hold_pass": null,
       "static_max_speed_m_s": 16.3397728679
+    },
+    {
+      "profile": "valve-slow",
+      "requested_end_s": 13.0,
+      "simulation_end_s": 13.0,
+      "run_completed": true,
+      "cells": 150502,
+      "strict_checkMesh_pass": false,
+      "solver_mesh_gate_pass": true,
+      "maxCo": 0.5,
+      "maxAlphaCo": 0.25,
+      "opening_duration_s": 0.4,
+      "Ta_3d_s": 9.68,
+      "catch_time_3d_s": 11.56,
+      "Yfs_max_3d_m": 1.0191991730065992,
+      "vfs_average_3d_m_s": 0.22606926543630596,
+      "vint_average_3d_m_s": 0.5195831183725954,
+      "vnet_average_3d_m_s": 0.2935138529362893,
+      "PT1_post_arrival_peak_H_over_H0": 1.1849139232346013,
+      "water_above_rim": false,
+      "liquid_balance_relative_error": 0.0004200437179408008,
+      "gas_balance_relative_error": 3.7584808265288287e-06,
+      "static_hold_pass": null,
+      "static_max_speed_m_s": 182.672464253
     }
   ]
 }
