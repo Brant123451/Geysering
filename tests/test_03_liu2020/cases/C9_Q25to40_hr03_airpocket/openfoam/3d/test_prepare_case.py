@@ -133,7 +133,7 @@ class PocketBodyTracerTests(unittest.TestCase):
         self.assertIn("sourceResult    pocketBodyTracerMassSource;", dictionary)
         self.assertIn("boundsTolerance 1e-2;", dictionary)
         self.assertIn("continuityTolerance 1e-4;", dictionary)
-        self.assertIn("nCorr           1;", dictionary)
+        self.assertIn("nCorr           0;", dictionary)
         self.assertIn("nNonOrthCorr    1;", dictionary)
         self.assertIn("nProjectionCorr 2;", dictionary)
         self.assertIn("fields          (pocketBodyTracerMassSource);", dictionary)

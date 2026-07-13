@@ -528,7 +528,7 @@ functions
         // This guards the derived fraction only; sigma is never clipped.
         boundsTolerance 1e-2;
         continuityTolerance 1e-4;
-        nCorr           1;
+        nCorr           0;
         nNonOrthCorr    1;
         nProjectionCorr 2;
         resetOnStartUp  false;

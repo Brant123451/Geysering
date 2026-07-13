@@ -597,43 +597,18 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     label iteration = 0;
     tmp<surfaceScalarField> tracerFlux;
 
-    // Picard iterations on the explicit conservative update.
-    for (label corr = 0; corr <= nCorr_; ++corr)
+    // Single explicit conservative update from the pre-step fraction.
+    // Do not refresh s inside Picard iterations: a temporary recovery
+    // overshoot would be re-injected into the upwind flux and grow.
     {
-        const volScalarField& sUpwind = field;
-        tracerFlux = fvc::flux(carrierFlux, sUpwind, divScheme);
+        tracerFlux = fvc::flux(carrierFlux, field, divScheme);
         tracerFlux.ref().oriented() = carrierFlux.oriented();
 
         const volScalarField divFlux(fvc::div(tracerFlux()));
         sigma.primitiveFieldRef() =
             sigmaOld.primitiveField() - dt.value()*divFlux.primitiveField();
 
-        // Refresh the upwind fraction from the updated conserved density
-        // before any additional Picard pass.  Only reconstruct s in
-        // resolved-phase cells; vanishing-phase cells keep s=0 for upwind
-        // while sigma inventory is left untouched.
-        {
-            const scalar resolveAlpha = max(residualAlpha_, 1e-3);
-            scalarField& fieldCells = field.primitiveFieldRef();
-            const scalarField& sigmaCells = sigma.primitiveField();
-            const scalarField& alphaCells = alpha.primitiveField();
-            const scalarField& alphaRhoCells = alphaRho.primitiveField();
-            forAll(fieldCells, celli)
-            {
-                if (alphaCells[celli] > resolveAlpha)
-                {
-                    fieldCells[celli] =
-                        sigmaCells[celli]/alphaRhoCells[celli];
-                }
-                else
-                {
-                    fieldCells[celli] = 0;
-                }
-            }
-            field.correctBoundaryConditions();
-        }
-
-        ++iteration;
+        iteration = 1;
         converged = true;
     }
 
