@@ -608,6 +608,20 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
         sigma.primitiveFieldRef() =
             sigmaOld.primitiveField() - dt.value()*divFlux.primitiveField();
 
+        // Local bound projection onto the phase mass density: 0 ≤ sigma ≤
+        // alpha*rho.  This keeps the recovered fraction in [0,1] without a
+        // morphology clear.  Any clipped mass is a numerical residual and
+        // must remain below the 1% inventory budget.
+        {
+            scalarField& sigmaCells = sigma.primitiveFieldRef();
+            const scalarField& alphaRhoCells = alphaRho.primitiveField();
+            forAll(sigmaCells, celli)
+            {
+                sigmaCells[celli] =
+                    min(max(sigmaCells[celli], scalar(0)), alphaRhoCells[celli]);
+            }
+        }
+
         iteration = 1;
         converged = true;
     }
