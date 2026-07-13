@@ -107,6 +107,28 @@ def extract_cross_section_levels(
     )
 
 
+def clip_levels_after_catch(
+    common,
+    time: np.ndarray,
+    yint: np.ndarray,
+    yfs: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Discard disconnected liquid remnants after the coherent pocket surfaces."""
+    yint = np.array(yint, dtype=float, copy=True)
+    yfs = np.array(yfs, dtype=float, copy=True)
+    trajectory = common.analyse_interface_trajectory(
+        time * common.TIME_SCALE,
+        yint,
+        yfs,
+    )
+    catch = trajectory["catch_Tstar"]
+    if np.isfinite(catch):
+        after_catch = time * common.TIME_SCALE > catch
+        yint[after_catch] = np.nan
+        yfs[after_catch] = np.nan
+    return yint, yfs
+
+
 def write_cross_section_audit(
     common,
     time: np.ndarray,
@@ -163,6 +185,7 @@ def interface_threshold_sensitivity(
     rows = []
     for threshold in INTERFACE_THRESHOLD_SENSITIVITY:
         yint, yfs = extract_cross_section_levels(common, area_alpha, threshold)
+        yint, yfs = clip_levels_after_catch(common, time, yint, yfs)
         trajectory = common.analyse_interface_trajectory(tstar, yint, yfs)
         repetition_rmses = []
         repetition_samples = []
@@ -412,6 +435,12 @@ def main() -> None:
         common,
         section_alpha,
     )
+    section_yint, section_yfs = clip_levels_after_catch(
+        common,
+        section_time,
+        section_yint,
+        section_yfs,
+    )
     common.main(
         level_series=(section_time, section_yint, section_yfs),
         level_sampling={
@@ -435,6 +464,10 @@ def main() -> None:
             ),
             "free_surface_definition": (
                 "highest section crossing of 50% area-averaged water"
+            ),
+            "post_catch_handling": (
+                "levels are omitted after the coherent air-pocket nose reaches "
+                "the free surface; disconnected drops are not a free surface"
             ),
         },
     )

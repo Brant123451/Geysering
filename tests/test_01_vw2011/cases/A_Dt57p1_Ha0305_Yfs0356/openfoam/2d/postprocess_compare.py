@@ -529,6 +529,14 @@ def main(
             "interface_catch_Tstar_earliest_repetition": 8.4,
             "interface_catch_Tstar_repetition_fits": catch_repetition_fits,
             "interface_climb_velocity_Vstar": INTERFACE_VELOCITY_TARGET,
+            "interface_climb_velocity_Vstar_source": (
+                "Table 2 average for all tested conditions at Dt/D=0.607"
+            ),
+            "interface_climb_velocity_Vstar_Fig7_repetition_fits": [
+                item["climb_velocity_Vstar"]
+                for item in interface_repetition_metrics
+                if np.isfinite(item["climb_velocity_Vstar"])
+            ],
             "observed_geysering": False,
         },
         "caveat": (

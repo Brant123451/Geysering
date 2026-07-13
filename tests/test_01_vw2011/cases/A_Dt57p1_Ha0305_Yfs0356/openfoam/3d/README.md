@@ -85,7 +85,9 @@ The reported air-pocket nose is the bottom of the uppermost contiguous water
 column at a section-averaged water fraction of `0.90`; the free surface uses
 the conventional `0.50` crossing. The complete section averages, original
 centreline estimate, and a `0.80–0.95` nose-threshold sensitivity sweep are
-retained as compact CSV files.
+retained as compact CSV files. Reported level trajectories stop when the
+coherent nose reaches the free surface; isolated liquid remnants after air
+breakthrough are not relabeled as a new free surface.
 
 Fig. 7 contains three separate interface trajectories from repeated manual
 valve openings. The metrics retain the conservative RMSE against the complete
@@ -93,6 +95,32 @@ marker cloud and also separate the approximately parallel trajectories,
 reporting a no-shift RMSE, climb velocity, and fitted catch time for each
 repetition. This avoids treating simultaneous markers from different runs as
 one impossible interface shape.
+
+## Completed 8 mm validation
+
+The committed compact outputs come from a complete `9.0 s` run with `342,135`
+tetrahedra and four MPI ranks. OpenFOAM reports `97,786.53 s` execution time
+and `105,842 s` wall time. The standard mesh check passes; the strict audit
+retains one failure for `438` small-determinant cells.
+
+| Observable | Experiment | 3-D result |
+| --- | ---: | ---: |
+| Crown-datum pressure plateau `H*` | `0.54` | `0.55217` (`+2.25%`) |
+| Pressure no-shift RMSE | — | `0.05125` |
+| Maximum free surface `Yfs*` | `0.63` | `0.62307` |
+| Free-surface no-shift RMSE | — | `0.01500` |
+| Interface liftoff `T*` | `7.3–7.9` | `7.607` |
+| Interface catch `T*` | fitted repetitions `8.609–9.210` | `8.711` |
+| Interface climb `V*` | Fig. 7 fits `0.4255–0.4308` | `0.4648` (`+7.89%` nearest) |
+| Best repetition no-shift RMSE | — | `0.10295` |
+| Above-rim water / geyser | no | no |
+
+The `0.80–0.95` section-threshold sweep gives `V*=0.4630–0.4648` with
+`R²>0.999`, so the corrected slope is not a selected single-threshold
+artifact. Table 2's `V*=0.39` is the diameter-wide average across the tested
+conditions rather than a fit to this one Fig. 7 trajectory; the present result
+is `+19.17%` relative to that broader average. Maximum water-mass drift is
+`1.81e-5`.
 
 `constant/fvOptions` applies a coded correction equivalent to OpenFOAM's
 temperature limiter directly to the solver's shared mixture-temperature field
