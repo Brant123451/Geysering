@@ -103,6 +103,10 @@ class PocketBodyTracerTests(unittest.TestCase):
         ]
         indices = [dictionary.index(name) for name in expected_order]
         self.assertEqual(indices, sorted(indices))
+        self.assertIn(
+            "fields          (waterDensityFaceForTracer alphaPhi0.water);",
+            dictionary,
+        )
         self.assertIn("fields          (rhoPhi waterMassFluxForTracer);", dictionary)
         self.assertIn("phi             airMassFluxForTracer;", dictionary)
         self.assertIn("rho             alphaRhoAirForTracer;", dictionary)
