@@ -3,6 +3,16 @@ source /usr/lib/openfoam/openfoam2512/etc/bashrc
 set -eo pipefail
 cd "$(dirname "$0")"
 NP="${OPENFOAM_NP:-4}"
+TRACER_FUNCTION_OBJECT_DIR="../functionObjects/boundedPhaseMassTransport"
+TRACER_FUNCTION_OBJECT_LIB="${FOAM_USER_LIBBIN}/libboundedPhaseMassTransport.so"
+ensure_tracer_function_object()
+{
+    if [[ ! -f "$TRACER_FUNCTION_OBJECT_LIB" ]] \
+        || [[ "$TRACER_FUNCTION_OBJECT_DIR/boundedPhaseMassTransport.C" -nt "$TRACER_FUNCTION_OBJECT_LIB" ]] \
+        || [[ "$TRACER_FUNCTION_OBJECT_DIR/boundedPhaseMassTransport.H" -nt "$TRACER_FUNCTION_OBJECT_LIB" ]]; then
+        ../functionObjects/Allwmake > log.wmake.boundedPhaseMassTransport 2>&1
+    fi
+}
 SOURCE_SCHEMA_FILES=(
     generated_case.json
     0.orig/alpha.water 0.orig/pocketBodyTracer 0.orig/U 0.orig/p 0.orig/p_rgh
@@ -15,6 +25,11 @@ SOURCE_SCHEMA_FILES=(
     system/setFieldsDict system/setExprFieldsDict
     system/controlDict.initialize system/controlDict.smoke
     system/controlDict.phase1 system/controlDict.full
+    ../functionObjects/boundedPhaseMassTransport/boundedPhaseMassTransport.C
+    ../functionObjects/boundedPhaseMassTransport/boundedPhaseMassTransport.H
+    ../functionObjects/boundedPhaseMassTransport/Make/files
+    ../functionObjects/boundedPhaseMassTransport/Make/options
+    ../functionObjects/Allwmake
 )
 test "$NP" -eq 4 || {
     echo "OPENFOAM_NP must match system/decomposeParDict (4)" >&2

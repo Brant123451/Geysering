@@ -261,6 +261,32 @@ def cumulative_trapezoid(times, values):
     return result
 
 
+def tracer_conservation_budget(times, inventory, boundary_flux):
+    """Return cumulative outward flux, mass residual, and relative max error."""
+    times = np.asarray(times, dtype=float)
+    inventory = np.asarray(inventory, dtype=float)
+    boundary_flux = np.asarray(boundary_flux, dtype=float)
+    invalid = np.full(len(times), np.nan)
+    if (
+        not len(times)
+        or len(inventory) != len(times)
+        or len(boundary_flux) != len(times)
+        or not np.all(np.isfinite(times))
+        or not np.all(np.isfinite(inventory))
+        or not np.all(np.isfinite(boundary_flux))
+        or (len(times) > 1 and not np.all(np.diff(times) > 0))
+        or abs(float(inventory[0])) <= 1e-12
+    ):
+        return invalid, invalid.copy(), None
+
+    cumulative_outflow = cumulative_trapezoid(times, boundary_flux)
+    residual = inventory + cumulative_outflow - inventory[0]
+    relative_error = float(
+        np.max(np.abs(residual)) / abs(float(inventory[0]))
+    )
+    return cumulative_outflow, residual, relative_error
+
+
 def local_peaks(times, values, start=0.0, end=6.5, separation=0.4):
     mask = np.isfinite(values) & (times >= start) & (times <= end)
     t = times[mask]
@@ -643,11 +669,19 @@ def main() -> None:
     offset = float(metadata.get("paper_time_offset_s", RAMP_OFFSET))
     tracer_metadata = metadata.get("pocket_body_tracer", {})
     tracer_transport = tracer_metadata.get("transport")
-    tracer_projection = tracer_metadata.get("projection")
+    tracer_bounded_transport = tracer_metadata.get("bounded_transport")
     tracer_inventory_weight = tracer_metadata.get("inventory_weight")
-    phase_mass_tracer = bool(
+    tracer_conservation_inventory_weight = tracer_metadata.get(
+        "conservation_inventory_weight"
+    )
+    air_phase_mass_transport_declared = bool(
         isinstance(tracer_transport, str)
         and tracer_transport.startswith("conservative air-phase mass fraction")
+    )
+    phase_mass_tracer = bool(
+        air_phase_mass_transport_declared
+        and isinstance(tracer_bounded_transport, str)
+        and "MULES" in tracer_bounded_transport
     )
 
     p_time_solver, p_values = parse_probe_scalar(post, "probesPT", "p")
@@ -781,6 +815,18 @@ def main() -> None:
         post, "chamberPocketBodyTracerMass"
     )
     tracer_riser_t, tracer_riser_raw = first_column(post, "riserPocketBodyTracerMass")
+    tracer_matrix_t, tracer_matrix_raw = first_column(
+        post, "matrixPocketBodyTracerMass"
+    )
+    tracer_inlet_flux_t, tracer_inlet_flux_raw = first_column(
+        post, "inletPocketBodyTracerMassFlux"
+    )
+    tracer_gate_flux_t, tracer_gate_flux_raw = first_column(
+        post, "gatePocketBodyTracerMassFlux"
+    )
+    tracer_atmosphere_flux_t, tracer_atmosphere_flux_raw = first_column(
+        post, "atmospherePocketBodyTracerMassFlux"
+    )
     tracer_data_present = bool(
         len(tracer_total_t)
         and len(tracer_upstream_t)
@@ -809,6 +855,49 @@ def main() -> None:
         tracer_chamber = np.empty(0)
         tracer_riser = np.empty(0)
 
+    tracer_matrix = np.empty(0)
+    tracer_boundary_flux = np.empty(0)
+    tracer_cumulative_boundary_outflow = np.empty(0)
+    tracer_matrix_budget_residual = np.empty(0)
+    body_tracer_conservation_relative_error = None
+    body_tracer_matrix_initial_mass = None
+    body_tracer_matrix_end_mass = None
+    matrix_data_present = bool(
+        len(tracer_matrix_t)
+        and len(tracer_inlet_flux_t)
+        and len(tracer_gate_flux_t)
+        and len(tracer_atmosphere_flux_t)
+    )
+    if matrix_data_present:
+        tracer_matrix = tracer_matrix_raw
+        boundary_flux_components = [
+            align_at_times(times, values, tracer_matrix_t)
+            for times, values in (
+                (tracer_inlet_flux_t, tracer_inlet_flux_raw),
+                (tracer_gate_flux_t, tracer_gate_flux_raw),
+                (tracer_atmosphere_flux_t, tracer_atmosphere_flux_raw),
+            )
+        ]
+        if all(np.all(np.isfinite(component)) for component in boundary_flux_components):
+            tracer_boundary_flux = np.sum(boundary_flux_components, axis=0)
+            (
+                tracer_cumulative_boundary_outflow,
+                tracer_matrix_budget_residual,
+                body_tracer_conservation_relative_error,
+            ) = tracer_conservation_budget(
+                tracer_matrix_t,
+                tracer_matrix,
+                tracer_boundary_flux,
+            )
+            body_tracer_matrix_initial_mass = float(tracer_matrix[0])
+            body_tracer_matrix_end_mass = float(tracer_matrix[-1])
+        else:
+            tracer_boundary_flux = np.full(len(tracer_matrix_t), np.nan)
+            tracer_cumulative_boundary_outflow = np.full(
+                len(tracer_matrix_t), np.nan
+            )
+            tracer_matrix_budget_residual = np.full(len(tracer_matrix_t), np.nan)
+
     body_tracer_total = align_at_times(
         tracer_solver_t, tracer_total, uv_t_solver
     )
@@ -821,11 +910,26 @@ def main() -> None:
     body_tracer_riser = align_at_times(
         tracer_solver_t, tracer_riser, uv_t_solver
     )
+    body_tracer_matrix = align_at_times(
+        tracer_matrix_t, tracer_matrix, uv_t_solver
+    )
+    body_tracer_cumulative_boundary_outflow = align_at_times(
+        tracer_matrix_t, tracer_cumulative_boundary_outflow, uv_t_solver
+    )
+    body_tracer_matrix_budget_residual = align_at_times(
+        tracer_matrix_t, tracer_matrix_budget_residual, uv_t_solver
+    )
     if not tracer_data_present:
         body_tracer_total = np.full(len(uv_t_solver), np.nan)
         body_tracer_upstream = np.full(len(uv_t_solver), np.nan)
         body_tracer_chamber = np.full(len(uv_t_solver), np.nan)
         body_tracer_riser = np.full(len(uv_t_solver), np.nan)
+    if not matrix_data_present:
+        body_tracer_matrix = np.full(len(uv_t_solver), np.nan)
+        body_tracer_cumulative_boundary_outflow = np.full(
+            len(uv_t_solver), np.nan
+        )
+        body_tracer_matrix_budget_residual = np.full(len(uv_t_solver), np.nan)
 
     tracer_valid = False
     tracer_status = "missing"
@@ -841,12 +945,20 @@ def main() -> None:
     body_tracer_initial_upstream_mass = None
     arrival_time = None
     if tracer_data_present:
+        tracer_conservation_acceptable = bool(
+            body_tracer_conservation_relative_error is not None
+            and body_tracer_conservation_relative_error <= 0.01
+        )
         tracer_status = (
-            "invalid_paper_time_zero_baseline"
+            "invalid_conservation_budget"
+            if phase_mass_tracer and not tracer_conservation_acceptable
+            else "invalid_paper_time_zero_baseline"
             if phase_mass_tracer
+            else "invalid_nonconservative_projection_transport"
+            if air_phase_mass_transport_declared
             else "invalid_mixture_phase_transport"
         )
-        if phase_mass_tracer:
+        if phase_mass_tracer and tracer_conservation_acceptable:
             baseline_candidates = np.where(
                 (np.abs(tracer_t) <= 0.011)
                 & np.isfinite(tracer_total)
@@ -994,6 +1106,9 @@ def main() -> None:
             "upstream_body_tracer_mass_kg",
             "chamber_body_tracer_mass_kg",
             "riser_body_tracer_mass_kg",
+            "matrix_body_tracer_mass_kg",
+            "cumulative_boundary_body_tracer_outflow_kg",
+            "matrix_body_tracer_budget_residual_kg",
         ],
         zip(
             uv_t,
@@ -1007,6 +1122,9 @@ def main() -> None:
             body_tracer_upstream,
             body_tracer_chamber,
             body_tracer_riser,
+            body_tracer_matrix,
+            body_tracer_cumulative_boundary_outflow,
+            body_tracer_matrix_budget_residual,
         ),
     )
 
@@ -1224,8 +1342,11 @@ def main() -> None:
         ),
         "body_tracer_status": tracer_status,
         "body_tracer_transport": tracer_transport,
-        "body_tracer_projection": tracer_projection,
+        "body_tracer_bounded_transport": tracer_bounded_transport,
         "body_tracer_inventory_weight": tracer_inventory_weight,
+        "body_tracer_conservation_inventory_weight": (
+            tracer_conservation_inventory_weight
+        ),
         "body_tracer_bulk_transfer_fraction": BODY_TRACER_BULK_FRACTION,
         "simulated_line_morphology_arrival_s": morphology_arrival_time,
         "line_morphology_arrival_definition": morphology_arrival_definition,
@@ -1265,6 +1386,11 @@ def main() -> None:
         "body_tracer_domain_inventory_change_relative": (
             body_tracer_domain_inventory_change
         ),
+        "body_tracer_conservation_relative_error": (
+            body_tracer_conservation_relative_error
+        ),
+        "body_tracer_matrix_initial_mass_kg": body_tracer_matrix_initial_mass,
+        "body_tracer_matrix_end_mass_kg": body_tracer_matrix_end_mass,
         "experimental_air_pocket_arrival_s": PAPER["air_pocket_arrival_s"],
         "air_pocket_arrival_error_percent": relative_error(arrival_time, PAPER["air_pocket_arrival_s"]),
         "major_pressure_peak_error_percent": relative_error(p1m, PAPER["P1m_kPa"]),

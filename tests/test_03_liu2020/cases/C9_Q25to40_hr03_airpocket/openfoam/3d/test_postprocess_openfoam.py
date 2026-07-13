@@ -73,6 +73,29 @@ class TracerTransferTests(unittest.TestCase):
         self.assertFalse(np.any(condition))
 
 
+class TracerConservationTests(unittest.TestCase):
+    def test_outward_flux_accounts_for_inventory_loss(self) -> None:
+        cumulative, residual, error = post.tracer_conservation_budget(
+            np.array([0.0, 1.0, 2.0]),
+            np.array([1.0, 0.9, 0.8]),
+            np.array([0.1, 0.1, 0.1]),
+        )
+
+        np.testing.assert_allclose(cumulative, [0.0, 0.1, 0.2])
+        np.testing.assert_allclose(residual, 0.0, atol=1e-15)
+        self.assertAlmostEqual(error, 0.0)
+
+    def test_unaccounted_inventory_loss_fails_budget(self) -> None:
+        _, residual, error = post.tracer_conservation_budget(
+            np.array([0.0, 1.0]),
+            np.array([1.0, 0.8]),
+            np.zeros(2),
+        )
+
+        np.testing.assert_allclose(residual, [0.0, -0.2])
+        self.assertAlmostEqual(error, 0.2)
+
+
 class ProbeParsingTests(unittest.TestCase):
     def test_scalar_probe_coordinates_come_from_header(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

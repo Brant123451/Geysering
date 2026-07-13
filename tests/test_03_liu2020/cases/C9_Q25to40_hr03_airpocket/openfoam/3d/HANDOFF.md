@@ -80,14 +80,19 @@ and requires 20% transfer plus a sustained connection for operational bulk
 arrival. This direct phase-flux form avoids the non-equivalent subtraction of
 water mass flux from compressible mixture `rhoPhi`. A fresh initialization and
 smoke are required to verify this change before phase 1. The v2512
-compressible scalar branch does not apply its `bounded01` switch, so the source
-explicitly clears values where `alpha.air < 1e-6`, clamps the remaining mass
-fraction to `[0,1]`, and reports inventory with physical
-`alpha.air*thermo:rho.air` rather than the residual-stabilised matrix density.
-The first bounded-tracer `maxCo=0.35` reference remained in `[0,1]` through
-solver time 0.37 s and lost only about 0.5% of its paper-time-zero inventory by
-0.31 s, but cut-cell Courant control reduced its step to roughly \(3\times
-10^{-5}\) s. The selected baseline is now `maxCo=0.70` with
+compressible scalar branch does not apply its `bounded01` switch. The initial
+clear/clamp workaround was therefore bounded but non-conservative: the
+`maxCo=0.70` diagnostic was stopped at solver time 0.6401 s (paper time
+0.3901 s) after losing 7.65% of its paper-time-zero physical tracer inventory.
+It is rejected. The source now compiles `boundedPhaseMassTransport`, which
+applies variable-density MULES to the compressible phase-mass flux and needs
+no post-solve projection. It records physical and residual-stabilised matrix
+inventories plus tagged boundary fluxes; post-processing requires the matrix
+mass budget to close within 1% before accepting tracer chronology.
+The historical, now-rejected clear/clamp `maxCo=0.35` reference remained in
+`[0,1]` through solver time 0.37 s and lost about 0.5% of its paper-time-zero
+inventory by 0.31 s, but cut-cell Courant control reduced its step to roughly
+\(3\times 10^{-5}\) s. The selected baseline is now `maxCo=0.70` with
 `maxAlphaCo=0.20`, backed by the earlier same-physics 0.35/0.70 benchmark;
 0.35 remains an explicit sensitivity.
 
@@ -96,7 +101,9 @@ reproduced.
 
 ## Reproduce and continue
 
-OpenFOAM v2512 is expected at `/usr/lib/openfoam/openfoam2512`.
+OpenFOAM v2512 plus `openfoam2512-source` and `openfoam2512-tools` are expected
+at `/usr/lib/openfoam/openfoam2512`; initialization automatically builds the
+local conservative tracer function object.
 
 ```bash
 cd tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket/openfoam/3d

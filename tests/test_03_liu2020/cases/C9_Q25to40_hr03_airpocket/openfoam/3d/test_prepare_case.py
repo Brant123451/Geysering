@@ -101,8 +101,10 @@ class PocketBodyTracerTests(unittest.TestCase):
             "tracerAirVolumeFlux",
             "tracerAirMassFlux",
             "pocketBodyTracerTransport",
-            "clearPocketBodyTracerOutsideAir",
-            "boundPocketBodyTracer",
+            "matrixPocketBodyTracerMass",
+            "inletPocketBodyTracerMassFlux",
+            "gatePocketBodyTracerMassFlux",
+            "atmospherePocketBodyTracerMassFlux",
         ]
         indices = [dictionary.index(name) for name in expected_order]
         self.assertEqual(indices, sorted(indices))
@@ -116,13 +118,24 @@ class PocketBodyTracerTests(unittest.TestCase):
         )
         self.assertIn("dimensions      [1 0 -1 0 0 0 0];", dictionary)
         self.assertNotIn("fields          (rhoPhi waterMassFluxForTracer);", dictionary)
+        self.assertIn("type            boundedPhaseMassTransport;", dictionary)
+        self.assertIn('libs            ("libboundedPhaseMassTransport.so");', dictionary)
         self.assertIn("phi             airMassFluxForTracer;", dictionary)
         self.assertIn("rho             alphaRhoAirForTracer;", dictionary)
-        self.assertIn('fieldMask       "alpha.air < 1e-6";', dictionary)
-        self.assertIn("limit           both;", dictionary)
+        self.assertIn("fluxResult      pocketBodyTracerMassFlux;", dictionary)
+        self.assertNotIn("clearPocketBodyTracerOutsideAir", dictionary)
+        self.assertNotIn("boundPocketBodyTracer", dictionary)
         self.assertEqual(
             dictionary.count("weightField     alphaRhoAirPhysicalForTracer;"),
             4,
+        )
+        self.assertEqual(
+            dictionary.count("weightField     alphaRhoAirForTracer;"),
+            1,
+        )
+        self.assertEqual(
+            dictionary.count("fields          (pocketBodyTracerMassFlux);"),
+            3,
         )
         self.assertNotIn(
             "phi             rhoPhi;\n        rho             rho;",

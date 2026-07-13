@@ -32,7 +32,11 @@ geyser timing or peak.
 
 ## Build and staged execution
 
-OpenFOAM v2512 must be installed at `/usr/lib/openfoam/openfoam2512`.
+OpenFOAM v2512, its source headers, and `wmake` must be installed at
+`/usr/lib/openfoam/openfoam2512` (Debian packages `openfoam2512`,
+`openfoam2512-source`, and `openfoam2512-tools`). `Allrun.initialize`
+automatically rebuilds the local conservative tracer function object when its
+source changes.
 
 ```bash
 cd tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket/openfoam/3d
@@ -204,12 +208,17 @@ pressure and Courant diagnostics but is rejected for pocket chronology. The
 source now constructs the air mass flux as
 `interpolate(rho.air)*(phi - alphaPhi0.water)`. This uses the complementary
 MULES phase-volume flux directly instead of subtracting a separately
-interpolated water mass flux from compressible mixture `rhoPhi`; a fresh run
-is required. Because OpenFOAM v2512 does not apply `bounded01` in the
-compressible mass-flux branch of `scalarTransport`, each solve clears the
-undefined tracer in cells with `alpha.air < 1e-6` and clamps the remaining
-phase mass fraction to `[0,1]`. Reported inventory uses physical
-`alpha.air*rho.air`, never the matrix residual.
+interpolated water mass flux from compressible mixture `rhoPhi`. The first
+explicit clear/clamp implementation was stopped at solver time 0.6401 s
+(paper time 0.3901 s): despite remaining in `[0,1]`, it had destroyed 7.65% of
+the paper-time-zero physical tracer inventory and is rejected. The source now
+builds a local `boundedPhaseMassTransport` function object. It follows the
+implicit air-mass solve with variable-density MULES, enforcing `[0,1]`
+conservatively without any clear/clamp projection. Diagnostics report both the
+physical `alpha.air*rho.air` inventory and the residual-stabilised matrix
+inventory, plus tagged boundary mass fluxes; post-processing accepts the
+arrival tracer only when its full mass budget closes within 1%. A fresh run is
+required.
 
 Phase 1 is incomplete. Phase 2 and eight eruptions have not yet been
 reproduced.

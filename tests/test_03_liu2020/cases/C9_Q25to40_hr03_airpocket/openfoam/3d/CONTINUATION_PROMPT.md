@@ -100,9 +100,14 @@ et al. (2020) Test 3 / Series C / Case C9：
 - 守恒必须使用 `rhoPhi` 的质量通量列，而不是 `phi` 体积通量列；
 - 当前实现使用
   `interpolate(rho.air)*(phi - alphaPhi0.water)` 直接构造气相质量通量；
-- v2512 的可压缩质量通量分支不执行 `bounded01`，因此每步清除
-  `alpha.air < 1e-6` 中未定义的示踪值并把其余质量分数限于 `[0,1]`；
-- 示踪库存必须用物理 `alpha.air*rho.air`，不能包含矩阵残余相分数；
+- v2512 的 `scalarTransport` 可压缩质量通量分支不执行 `bounded01`；
+  禁止恢复逐步清除/截断投影，该方案在论文时间 0.3901 s 已损失
+  7.65% 示踪库存；
+- 当前 `boundedPhaseMassTransport` 用可变密度 MULES 守恒地限制
+  `[0,1]`，运行前由 `Allrun.initialize` 自动编译；
+- 到达判据使用物理 `alpha.air*rho.air` 库存，同时必须用含 `1e-8`
+  残余相分数的矩阵库存和三个开放边界示踪通量闭合质量预算，误差
+  超过 1% 时示踪判据无效；
 - tailgate 不使用会再次扣除速度头的 `prghTotalPressure`；
 - 当前 tailgate `p_rgh` 使用静水 tailwater closure；
 - STL 接口必须保持共形闭合，不要重新引入 penetration/lip 几何泄漏。

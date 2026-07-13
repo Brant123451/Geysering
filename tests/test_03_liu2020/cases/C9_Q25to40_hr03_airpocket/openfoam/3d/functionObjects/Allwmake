@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+cd "$(dirname "$0")"
+
+command -v wmake >/dev/null || {
+    echo "OpenFOAM development tools are required (openfoam2512-source and openfoam2512-tools)." >&2
+    exit 2
+}
+
+wmake libso boundedPhaseMassTransport

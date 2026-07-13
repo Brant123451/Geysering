@@ -533,17 +533,16 @@ functions
 
     pocketBodyTracerTransport
     {{
-        type            scalarTransport;
-        libs            (solverFunctionObjects);
+        // The stock scalarTransport mass-flux branch has no bounded MULES
+        // correction.  This local function object conserves rho*tracer while
+        // enforcing 0 <= tracer <= 1 through variable-density MULES.
+        type            boundedPhaseMassTransport;
+        libs            ("libboundedPhaseMassTransport.so");
         field           pocketBodyTracer;
         phi             airMassFluxForTracer;
         rho             alphaRhoAirForTracer;
+        fluxResult      pocketBodyTracerMassFlux;
         schemesField    pocketBodyTracer;
-        // OpenFOAM applies bounded01 only in scalarTransport's volume-phase
-        // branch, not its compressible mass-flux branch.  The following
-        // projection objects therefore enforce the phase-mass-fraction range.
-        bounded01       false;
-        D               0;
         tolerance       1e-8;
         nCorr           0;
         resetOnStartUp  false;
@@ -553,39 +552,6 @@ functions
         executeInterval 1;
         writeControl    writeTime;
         writeInterval   1;
-    }}
-
-    clearPocketBodyTracerOutsideAir
-    {{
-        // The phase mass fraction is undefined in pure water.  Clearing only
-        // alpha.air < 1e-6 removes residual-matrix values while discarding at
-        // most one part per million of local physical gas inventory.
-        type            exprField;
-        libs            (fieldFunctionObjects);
-        field           pocketBodyTracer;
-        action          modify;
-        fieldMask       "alpha.air < 1e-6";
-        expression      "0";
-        enabled         true;
-        log             false;
-        executeControl  timeStep;
-        executeInterval 1;
-        writeControl    none;
-    }}
-
-    boundPocketBodyTracer
-    {{
-        type            limitFields;
-        libs            (fieldFunctionObjects);
-        fields          (pocketBodyTracer);
-        limit           both;
-        min             0;
-        max             1;
-        enabled         true;
-        log             false;
-        executeControl  timeStep;
-        executeInterval 1;
-        writeControl    none;
     }}
 
     probesPT
@@ -771,6 +737,21 @@ functions
         writeFields     false;
     }}
 
+    matrixPocketBodyTracerMass
+    {{
+        // This residual-stabilised inventory is the quantity conserved by the
+        // MULES transport equation.  Its difference from the physical
+        // alpha.air*rho.air inventory quantifies the 1e-8 matrix residual.
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        operation       weightedVolIntegrate;
+        weightField     alphaRhoAirForTracer;
+        fields          (pocketBodyTracer);
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+        writeFields     false;
+    }}
+
     upstreamPocketBodyTracerMass
     {{
         type            volFieldValue;
@@ -889,6 +870,45 @@ functions
         operation       weightedSum;
         weightField     thermo:rho.water;
         fields          (alphaPhi0.water);
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+        writeFields     false;
+    }}
+
+    inletPocketBodyTracerMassFlux
+    {{
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            inlet;
+        operation       sum;
+        fields          (pocketBodyTracerMassFlux);
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+        writeFields     false;
+    }}
+
+    gatePocketBodyTracerMassFlux
+    {{
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            gateOutlet;
+        operation       sum;
+        fields          (pocketBodyTracerMassFlux);
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+        writeFields     false;
+    }}
+
+    atmospherePocketBodyTracerMassFlux
+    {{
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            atmosphere;
+        operation       sum;
+        fields          (pocketBodyTracerMassFlux);
         writeControl    adjustableRunTime;
         writeInterval   0.01;
         writeFields     false;
@@ -1930,6 +1950,16 @@ source /usr/lib/openfoam/openfoam2512/etc/bashrc
 set -eo pipefail
 cd "$(dirname "$0")"
 NP="${{OPENFOAM_NP:-{args.np}}}"
+TRACER_FUNCTION_OBJECT_DIR="../functionObjects/boundedPhaseMassTransport"
+TRACER_FUNCTION_OBJECT_LIB="${{FOAM_USER_LIBBIN}}/libboundedPhaseMassTransport.so"
+ensure_tracer_function_object()
+{{
+    if [[ ! -f "$TRACER_FUNCTION_OBJECT_LIB" ]] \\
+        || [[ "$TRACER_FUNCTION_OBJECT_DIR/boundedPhaseMassTransport.C" -nt "$TRACER_FUNCTION_OBJECT_LIB" ]] \\
+        || [[ "$TRACER_FUNCTION_OBJECT_DIR/boundedPhaseMassTransport.H" -nt "$TRACER_FUNCTION_OBJECT_LIB" ]]; then
+        ../functionObjects/Allwmake > log.wmake.boundedPhaseMassTransport 2>&1
+    fi
+}}
 SOURCE_SCHEMA_FILES=(
     generated_case.json
     0.orig/alpha.water 0.orig/pocketBodyTracer 0.orig/U 0.orig/p 0.orig/p_rgh
@@ -1942,6 +1972,11 @@ SOURCE_SCHEMA_FILES=(
     system/setFieldsDict system/setExprFieldsDict
     system/controlDict.initialize system/controlDict.smoke
     system/controlDict.phase1 system/controlDict.full
+    ../functionObjects/boundedPhaseMassTransport/boundedPhaseMassTransport.C
+    ../functionObjects/boundedPhaseMassTransport/boundedPhaseMassTransport.H
+    ../functionObjects/boundedPhaseMassTransport/Make/files
+    ../functionObjects/boundedPhaseMassTransport/Make/options
+    ../functionObjects/Allwmake
 )
 """
     surface_name = (
@@ -2000,7 +2035,8 @@ echo MESH_DONE
     write(
         "Allrun.initialize",
         bash_prefix
-        + f"""rm -rf processor* postProcessing
+        + f"""ensure_tracer_function_object
+rm -rf processor* postProcessing
 rm -f log.smoke log.phase1 log.full log.source.sha256
 foamListTimes -rm >/dev/null 2>&1 || true
 rm -rf 0
@@ -2019,7 +2055,8 @@ echo INITIALIZATION_DONE
     write(
         "Allrun.resume",
         bash_prefix
-        + f"""STAGE="${{1:-full}}"
+        + f"""ensure_tracer_function_object
+STAGE="${{1:-full}}"
 case "$STAGE" in
     smoke|phase1|full) ;;
     *) echo "usage: $0 [smoke|phase1|full]" >&2; exit 2 ;;
@@ -2186,12 +2223,15 @@ rm -f log.*
                 "interpolate(rho.air)*(phi - alphaPhi0.water)"
             ),
             "matrix_residual_air_fraction": 1e-8,
-            "projection": (
-                "clear where alpha.air < 1e-6, then clamp to [0,1]; "
-                "required because scalarTransport bounded01 is inactive "
-                "for its compressible mass-flux branch"
+            "bounded_transport": (
+                "local boundedPhaseMassTransport applies variable-density "
+                "MULES to the compressible air-phase mass equation"
             ),
             "inventory_weight": "alpha.air*thermo:rho.air",
+            "conservation_inventory_weight": (
+                "(alpha.air + 1e-8)*thermo:rho.air"
+            ),
+            "boundary_flux": "pocketBodyTracerMassFlux",
             "purpose": (
                 "main-pocket source identity; alpha.air alone cannot distinguish "
                 "the initial thin layer from the body"
