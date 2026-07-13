@@ -16,4 +16,4 @@ closed_refined_sigma_072_nhat_point,closed,closed,0.072,0.015,linear,point-cells
 closed_refined_sigma_zero,closed,closed,0.0,0.015,,,,,fixed-hydrostatic,,,,,,,0.05,0,0,,0.6599999999999997,,,,0.0,1.7662101872110246e-08,2.602093207900531e-08,,False,True,False
 closed_sharp_sigma_zero,closed,closed,0.0,0.0,,,,,fixed-hydrostatic,,,,,,,0.05,0,0,,0.6599999999999997,,,,0.0,3.7658264715256645e-09,1.7767107666364208e-08,,False,False,False
 closed_sigma_zero,closed,closed,0.0,0.015,,,,,fixed-hydrostatic,,,,,,,0.05,0,0,,0.6599999999999997,,,,0.0,7.649388865887313e-09,7.643318017646154e-08,,False,False,False
-open_smoke,event,instant,0.072,0.015,,,,,fixed-hydrostatic,,,,,,,0.02,0,0,,0.6599999999999997,,,,0.0,2.8031490823318075e-08,1.0216049468785614e-07,,,,
+open_smoke,event,instant,0.072,0.015,linear,least-squares,4,simple-x,wave-transmissive,False,"Stopped at 0.003 s after instantaneous opening produced non-physical divergence: max |U|=452.7 m/s, max p=785.7 MPa, and max k=10233.9 m2/s2.",223.73539339,305.21530189,,,0.003,0,0,,0.6599999999999997,,,,0.0,2.2492765248297853e-07,0.00018116693389276699,1.6137625046e-06,,,

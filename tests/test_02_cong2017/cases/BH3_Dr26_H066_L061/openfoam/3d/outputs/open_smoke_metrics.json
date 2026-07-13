@@ -4,7 +4,7 @@
   "run_id": "open_smoke",
   "run_mode": "event",
   "valve_opening": "instant",
-  "simulated_end_time_s": 0.02,
+  "simulated_end_time_s": 0.003,
   "full_13s_window_completed": false,
   "geometry_model": "3-D circular pipe, circular riser, Boolean tee, external air",
   "solver": "compressibleInterFoam",
@@ -16,32 +16,192 @@
   "Yint_max_3d_m": null,
   "vfs_3d_m_per_s": null,
   "vint_3d_m_per_s": null,
-  "maximum_sampled_speed_m_per_s": 0.1629351087769964,
-  "maximum_all_domain_speed_m_per_s": 3.1427795179,
-  "maximum_water_weighted_speed_m_per_s": 0.44454505541,
-  "maximum_gas_weighted_speed_m_per_s": 3.1427795179,
+  "maximum_sampled_speed_m_per_s": 0.012679404324773786,
+  "maximum_all_domain_speed_m_per_s": 301.0628899,
+  "maximum_water_weighted_speed_m_per_s": 301.0628899,
+  "maximum_gas_weighted_speed_m_per_s": 11.883484715,
+  "field_extrema": {
+    "T": {
+      "minimum": {
+        "value": 223.73539339,
+        "time_s": 0.002588464224,
+        "position_m": [
+          5.98043099,
+          -0.0024122040897,
+          0.048802941105
+        ],
+        "processor": 3
+      },
+      "maximum": {
+        "value": 305.21530189,
+        "time_s": 0.003,
+        "position_m": [
+          5.9138258404,
+          -0.021627712425,
+          0.030244185716
+        ],
+        "processor": 3
+      }
+    },
+    "mag(U)": {
+      "minimum": {
+        "value": 0.0,
+        "time_s": 1.1999904e-06,
+        "position_m": [
+          1.2868729253,
+          -0.013065888732,
+          0.046251227191
+        ],
+        "processor": 0
+      },
+      "maximum": {
+        "value": 452.74414689,
+        "time_s": 0.002591021757,
+        "position_m": [
+          5.9804511358,
+          0.012007194721,
+          0.045295718969
+        ],
+        "processor": 3
+      }
+    },
+    "alpha.water": {
+      "minimum": {
+        "value": -2.0786618641e-07,
+        "time_s": 0.002588464224,
+        "position_m": [
+          5.9817694488,
+          0.00082946251117,
+          0.047308275871
+        ],
+        "processor": 3
+      },
+      "maximum": {
+        "value": 1.0,
+        "time_s": 1.1999904e-06,
+        "position_m": [
+          1.2877098229,
+          -0.013208802554,
+          0.044921579217
+        ],
+        "processor": 0
+      }
+    },
+    "epsilon": {
+      "minimum": {
+        "value": 1.0623800864e-20,
+        "time_s": 0.002622608006,
+        "position_m": [
+          5.9622319535,
+          -0.0057333038532,
+          0.00072117594113
+        ],
+        "processor": 3
+      },
+      "maximum": {
+        "value": 440374321.1,
+        "time_s": 0.002983244997,
+        "position_m": [
+          5.9167595032,
+          -0.019727194757,
+          0.038666239569
+        ],
+        "processor": 3
+      }
+    },
+    "k": {
+      "minimum": {
+        "value": 1e-15,
+        "time_s": 0.001079545455,
+        "position_m": [
+          5.9790457981,
+          -0.0022490849346,
+          0.049843594946
+        ],
+        "processor": 3
+      },
+      "maximum": {
+        "value": 10233.899014,
+        "time_s": 0.002993705802,
+        "position_m": [
+          5.9086032311,
+          -0.023037735052,
+          0.026019981969
+        ],
+        "processor": 3
+      }
+    },
+    "p": {
+      "minimum": {
+        "value": 50000.0,
+        "time_s": 0.002472877303,
+        "position_m": [
+          5.9770193363,
+          0.0037423712071,
+          0.039798758202
+        ],
+        "processor": 3
+      },
+      "maximum": {
+        "value": 785735582.1,
+        "time_s": 0.002825886282,
+        "position_m": [
+          5.8479852561,
+          -0.00840098497,
+          0.047451551962
+        ],
+        "processor": 3
+      }
+    },
+    "p_rgh": {
+      "minimum": {
+        "value": 50006.282596,
+        "time_s": 0.002613113293,
+        "position_m": [
+          5.9788093964,
+          -0.0020580757229,
+          0.00013681958938
+        ],
+        "processor": 3
+      },
+      "maximum": {
+        "value": 785736212.51,
+        "time_s": 0.002825886282,
+        "position_m": [
+          5.8479852561,
+          -0.00840098497,
+          0.047451551962
+        ],
+        "processor": 3
+      }
+    }
+  },
+  "initial_pressure_balance": null,
   "initial_volume_audit": {
     "pocket_target_m3": 0.0011977321991811086,
-    "pocket_mesh_m3": 0.0011916476668,
-    "pocket_relative_error": -0.005080044091048563,
+    "pocket_mesh_m3": 0.0011939587248,
+    "pocket_relative_error": -0.0031505159364411117,
     "paper_riser_water_target_m3": 0.0003504132445814056,
     "paper_vair_over_vw_target": 3.418056302671687,
-    "mesh_pocket_over_paper_vw": 3.4006924259484284,
+    "mesh_pocket_over_paper_vw": 3.407287661818467,
     "riser_nonoverlap_water_target_m3": 0.0003238667866585718,
-    "riser_nonoverlap_water_mesh_m3": 0.00031697112825,
-    "riser_nonoverlap_relative_error": -0.02129165043355108,
+    "riser_nonoverlap_water_mesh_m3": 0.00031899987714,
+    "riser_nonoverlap_relative_error": -0.015027504267372205,
     "pocket_ideal_gas_mass_target_kg": 0.0014276407696572862,
-    "pocket_ideal_gas_mass_from_mesh_volume_kg": 0.0014203882916012489
+    "pocket_ideal_gas_mass_from_mesh_volume_kg": 0.001423142964660968
   },
   "conservation": {
-    "max_abs_water_volume_residual_m3": 1.1909113755119538e-08,
-    "max_abs_water_volume_residual_fraction": 9.922797233967278e-07,
-    "max_abs_global_gas_mass_residual_kg": 3.5209918281856595e-09,
-    "max_abs_global_gas_mass_residual_fraction": 2.8031490823318075e-08,
-    "max_abs_total_mass_residual_kg": 1.236489396889875e-06,
-    "max_abs_total_mass_residual_fraction": 1.0216049468785614e-07,
-    "internal_air_mass_initial_kg": 0.0021604320664475847,
-    "internal_air_mass_final_kg": 0.0021608602883809017,
+    "max_abs_water_volume_residual_m3": 9.78444920796509e-07,
+    "max_abs_water_volume_residual_fraction": 8.13687138318828e-05,
+    "max_abs_global_gas_mass_residual_kg": 2.823054372604182e-08,
+    "max_abs_global_gas_mass_residual_fraction": 2.2492765248297853e-07,
+    "max_abs_total_mass_residual_kg": 0.002196887193108033,
+    "max_abs_total_mass_residual_fraction": 0.00018116693389276699,
+    "internal_air_mass_initial_kg": 0.0021674054279274967,
+    "internal_air_mass_final_kg": 0.002167433795399983,
+    "maximum_atmosphere_absolute_mass_flux_kg_per_s": 1.6137625046e-06,
+    "maximum_atmosphere_outflow_mass_flux_kg_per_s": 7.029672125700001e-07,
+    "maximum_atmosphere_inflow_mass_flux_kg_per_s": 9.1079529203e-07,
     "total_mass_boundary_flux": "direct sum(rhoPhi) on inlet and atmosphere",
     "residual_reference": "first common runtime sample; t=0 volumes are audited separately"
   },
@@ -56,7 +216,7 @@
     "duration_complete": null,
     "thresholds_pass": null,
     "free_surface_max_drift_m": 0.0,
-    "initial_pocket_zone_max_relative_volume_drift": 0.001554786342258807,
+    "initial_pocket_zone_max_relative_volume_drift": 0.0008213216751049579,
     "pass": null,
     "criteria": {
       "free_surface_drift_m": 0.01,
@@ -80,16 +240,28 @@
   },
   "classification_changed_by_numerics": null,
   "honesty_note": "Experimental classification is a comparison target only. No source term or fitted event trigger is used.",
-  "source_fingerprint": "347f70d9688d8324037c34fbc958d892df29103a06f87e216c2104f22b950847",
+  "source_fingerprint": "98e4f94f74d020a8c84c20d963c7f3c3f740b3536af5742a764e0a91f29bc34f",
+  "solver_completed": false,
+  "solver_failure_reason": "Stopped at 0.003 s after instantaneous opening produced non-physical divergence: max |U|=452.7 m/s, max p=785.7 MPa, and max k=10233.9 m2/s2.",
   "numerical_controls": {
-    "mesh_profile": "base",
+    "mesh_profile": "prism_atmosphere",
     "c_alpha": 1.0,
     "initial_interface_thickness_m": 0.015,
+    "initial_interface_profile": "linear",
+    "n_hat_gradient_scheme": "least-squares",
     "alpha_smooth_curvature": 0,
     "max_co": 0.25,
     "max_alpha_co": 0.15,
     "max_delta_t_s": 0.0005,
     "sample_interval_s": 0.001,
-    "surface_tension_n_per_m": 0.072
+    "surface_tension_n_per_m": 0.072,
+    "atmosphere_pressure_boundary": "wave-transmissive",
+    "parallel_processes": 4,
+    "parallel_decomposition": "simple-x",
+    "parallel_partition_shape": [
+      4,
+      1,
+      1
+    ]
   }
 }

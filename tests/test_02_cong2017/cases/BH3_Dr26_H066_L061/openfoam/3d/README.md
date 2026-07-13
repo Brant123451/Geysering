@@ -334,6 +334,11 @@ isolated-pocket volume drifts are zero at the retained resolution, and
 water-volume/global-gas-mass/total-mass residual fractions are
 `2.81e-8/9.21e-7/3.11e-8`. The all-domain gas-side maximum is
 `0.00884 m/s`, while temperature stays within `295.33--297.05 K`.
+The subsequent instantaneous-opening smoke is rejected as a dynamic
+trajectory: it was stopped at `0.003 s` after local maxima reached
+`452.7 m/s`, `785.7 MPa`, and `k=1.02e4 m2/s2` around the valve. This compact
+failure is retained as the instantaneous-opening sensitivity; the next smoke
+uses the primary paper's approximately `0.2 s` measured opening time.
 The pressure initializer reports the exact atmosphere-patch acoustic Courant
 number at `maxDeltaT`, and runtime output records both net and absolute
 atmosphere mass flux to expose locally cancelling inflow/outflow. Failed

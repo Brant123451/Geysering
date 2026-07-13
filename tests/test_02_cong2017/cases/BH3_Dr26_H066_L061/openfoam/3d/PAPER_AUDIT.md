@@ -346,3 +346,12 @@ global-gas-mass, and total-mass residual fractions are `2.81e-8`, `9.21e-7`,
 and `3.11e-8`, respectively. The dynamic pass does not relabel the initializer's
 independent `force_balance_accepted=false` audit. It releases the open-valve
 smoke and event calculations without changing any experimental target.
+
+The first released instantaneous-opening smoke is negative evidence, not an
+event result. By `t=0.003 s` the sharp removal of the valve loss drives local
+maxima of `452.7 m/s`, `785.7 MPa`, and `k=1.02e4 m2/s2` around
+`x=5.98 m`; the diagnostic was stopped rather than spending further compute on
+that non-physical trajectory. This does not authorize deleting the
+instantaneous sensitivity. The next smoke uses the primary paper's measured
+approximately `0.2 s` opening time with the already declared time-varying
+porous baffle, while retaining the same mesh, fluids, interface, and outlet.
