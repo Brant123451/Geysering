@@ -330,7 +330,15 @@ VARIANTS = (
         sample_interval=1.0e-3,
         initial_interface_profile="cosine",
     ),
-    Variant("open_smoke", "smoke", end_time=0.02, sample_interval=1.0e-3),
+    Variant(
+        "open_smoke",
+        "smoke",
+        mesh="prism_atmosphere",
+        end_time=0.02,
+        sample_interval=1.0e-3,
+        n_hat_gradient_scheme="least-squares",
+        atmosphere_pressure_boundary="wave-transmissive",
+    ),
     Variant("base_nominal", "core"),
     Variant("refined_nominal", "core", mesh="refined"),
     Variant(
