@@ -18,6 +18,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--sample-interval", type=float, default=0.005)
     parser.add_argument("--write-interval", type=float, default=0.05)
     parser.add_argument("--surface-tension", type=float, default=0.072)
+    parser.add_argument(
+        "--n-hat-gradient-scheme",
+        choices=("gauss-linear", "least-squares"),
+        default="gauss-linear",
+    )
     return parser.parse_args()
 
 
@@ -77,6 +82,14 @@ def main() -> None:
         f"surfaceTensionValue {args.surface_tension:.12g};\n",
         encoding="utf-8",
     )
+    n_hat_scheme = {
+        "gauss-linear": "Gauss linear",
+        "least-squares": "leastSquares",
+    }[args.n_hat_gradient_scheme]
+    (system / "gradientSchemes.runtime").write_text(
+        f"nHatGradientScheme {n_hat_scheme};\n",
+        encoding="utf-8",
+    )
     write_locations(
         system / "riserProbeLocations.runtime",
         locations(0.060, 1.840, 0.010),
@@ -91,7 +104,8 @@ def main() -> None:
         f"maxAlphaCo={args.max_alpha_co:g} maxDeltaT={args.max_delta_t:g} "
         f"cAlpha={args.c_alpha:g} "
         f"alphaSmoothCurvature={args.alpha_smooth_curvature} "
-        f"sigma={args.surface_tension:g}"
+        f"sigma={args.surface_tension:g} "
+        f"nHatGradient={args.n_hat_gradient_scheme}"
     )
 
 

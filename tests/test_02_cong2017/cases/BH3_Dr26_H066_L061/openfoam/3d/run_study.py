@@ -51,6 +51,7 @@ class Variant:
     surface_tension: float = 0.072
     initial_interface_thickness: float = 0.015
     initial_interface_profile: str = "linear"
+    n_hat_gradient_scheme: str = "gauss-linear"
 
 
 VARIANTS = (
@@ -99,6 +100,27 @@ VARIANTS = (
         valve="closed",
         end_time=0.05,
         sample_interval=1.0e-3,
+    ),
+    Variant(
+        "closed_refined_sigma_072_nhat_ls",
+        "diagnostic",
+        mesh="refined",
+        mode="closed",
+        valve="closed",
+        end_time=0.05,
+        sample_interval=1.0e-3,
+        n_hat_gradient_scheme="least-squares",
+    ),
+    Variant(
+        "closed_refined_sigma_zero_nhat_ls",
+        "diagnostic",
+        mesh="refined",
+        mode="closed",
+        valve="closed",
+        end_time=0.05,
+        sample_interval=1.0e-3,
+        surface_tension=0.0,
+        n_hat_gradient_scheme="least-squares",
     ),
     Variant(
         "closed_refined_sigma_072_cosine",
@@ -295,6 +317,7 @@ def annotate_metrics(
         "c_alpha": variant.c_alpha,
         "initial_interface_thickness_m": variant.initial_interface_thickness,
         "initial_interface_profile": variant.initial_interface_profile,
+        "n_hat_gradient_scheme": variant.n_hat_gradient_scheme,
         "alpha_smooth_curvature": variant.alpha_smooth_curvature,
         "max_co": variant.max_co,
         "max_alpha_co": variant.max_alpha_co,
@@ -376,6 +399,7 @@ def main() -> None:
                     variant.initial_interface_thickness
                 ),
                 "INITIAL_INTERFACE_PROFILE": variant.initial_interface_profile,
+                "NHAT_GRADIENT_SCHEME": variant.n_hat_gradient_scheme,
                 "MESH_PROFILE": variant.mesh,
                 "OPENFOAM_NP": str(args.np),
                 "REFERENCE_ROOT": str(HERE.parents[1]),

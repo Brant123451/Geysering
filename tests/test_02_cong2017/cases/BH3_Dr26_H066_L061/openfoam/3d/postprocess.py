@@ -177,6 +177,63 @@ def safe_float(value: object) -> float | None:
     return float(value)
 
 
+def initial_pressure_balance(case: Path) -> dict[str, object] | None:
+    path = case / "log.balanceInitialPressure"
+    if not path.is_file():
+        return None
+    text = path.read_text(encoding="utf-8", errors="replace")
+
+    def final_scalar(label: str) -> float:
+        matches = re.findall(
+            rf"{re.escape(label)}\s*({NUMBER.pattern})",
+            text,
+        )
+        if not matches:
+            raise RuntimeError(f"Missing '{label}' in {path}")
+        return float(matches[-1])
+
+    accepted = re.search(
+        r"Force-balance acceptance:\s*(true|false)",
+        text,
+    )
+    location = re.search(
+        (
+            rf"Maximum reconstructed residual cell:\s*(\d+),\s*"
+            rf"C=\(\s*({NUMBER.pattern})\s+({NUMBER.pattern})\s+"
+            rf"({NUMBER.pattern})\s*\),\s*alpha\.water="
+            rf"({NUMBER.pattern}),\s*predicted water-weighted deltaU="
+            rf"({NUMBER.pattern})"
+        ),
+        text,
+    )
+    if accepted is None or location is None:
+        raise RuntimeError(f"Incomplete pressure-balance audit in {path}")
+
+    return {
+        "fixed_point_converged": "EOS/pressure fixed point converged." in text,
+        "force_balance_accepted": accepted.group(1) == "true",
+        "maximum_face_residual_pa_per_m": final_scalar(
+            "Final face residual:"
+        ),
+        "maximum_reconstructed_residual_pa_per_m": final_scalar(
+            "Final reconstructed residual:"
+        ),
+        "maximum_predicted_water_weighted_velocity_increment_m_per_s": (
+            final_scalar(
+                "Final predicted water-weighted velocity increment:"
+            )
+        ),
+        "maximum_residual_cell": int(location.group(1)),
+        "maximum_residual_cell_centre_m": [
+            float(location.group(index)) for index in (2, 3, 4)
+        ],
+        "alpha_water_at_maximum_residual": float(location.group(5)),
+        "predicted_water_weighted_velocity_increment_at_maximum_m_per_s": (
+            float(location.group(6))
+        ),
+    }
+
+
 def main() -> None:
     args = parse_args()
     case = args.case.resolve()
@@ -314,6 +371,7 @@ def main() -> None:
         if args.run_mode == "closed"
         else None
     )
+    pressure_balance = initial_pressure_balance(case)
 
     metrics = {
         "schema_version": 1,
@@ -343,6 +401,7 @@ def main() -> None:
         "maximum_gas_weighted_speed_m_per_s": float(
             np.nanmax(gas_weighted_speed)
         ),
+        "initial_pressure_balance": pressure_balance,
         "initial_volume_audit": {
             "pocket_target_m3": POCKET_TARGET,
             "pocket_mesh_m3": initial_pocket_mesh,

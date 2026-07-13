@@ -78,6 +78,14 @@ int main(int argc, char* argv[])
         controls.getOrDefault<scalar>("relaxation", 1);
     const scalar zeroUTolerance =
         controls.getOrDefault<scalar>("zeroVelocityTolerance", 1e-12);
+    const scalar reconstructedResidualTolerance =
+        controls.getOrDefault<scalar>
+        (
+            "reconstructedResidualTolerance",
+            GREAT
+        );
+    const Switch failOnResidual =
+        controls.getOrDefault<Switch>("failOnResidual", false);
 
     if
     (
@@ -89,6 +97,7 @@ int main(int argc, char* argv[])
      || relaxation <= 0
      || relaxation > 1
      || zeroUTolerance < 0
+     || reconstructedResidualTolerance <= 0
     )
     {
         FatalErrorInFunction
@@ -307,9 +316,11 @@ int main(int argc, char* argv[])
             return rhoChange;
         };
 
-    bool converged = false;
+    bool fixedPointConverged = false;
     scalar lastFaceResidual = GREAT;
     scalar lastReconstructedResidual = GREAT;
+    scalar lastPredictedWaterVelocityIncrement = GREAT;
+    label lastResidualCell = -1;
 
     for (label outer = 0; outer < nOuter; ++outer)
     {
@@ -326,15 +337,34 @@ int main(int argc, char* argv[])
           - ghf*fvc::snGrad(rho)
         );
 
+        // Match the leading-order pressure operator used by
+        // compressibleInterFoam. At startup UEqn.A() is dominated by
+        // rho/deltaT, so rAU ~= deltaT/rho. The previous unweighted
+        // projection was formally inconsistent across the water/air jump.
+        volScalarField rAUStatic
+        (
+            "rAUStatic",
+            runTime.deltaT()/rho
+        );
+        surfaceScalarField rAUf
+        (
+            "rAUf",
+            fvc::interpolate(rAUStatic)
+        );
+        surfaceScalarField phig
+        (
+            "balancePhig",
+            force*rAUf*mesh.magSf()
+        );
+
         for (label nonOrth = 0; nonOrth <= nNonOrth; ++nonOrth)
         {
             preparePressureBoundaries(force);
 
             fvScalarMatrix pEqn
             (
-                fvm::laplacian(p_rgh)
-             ==
-                fvc::div(force*mesh.magSf())
+                fvc::div(phig)
+              - fvm::laplacian(rAUf, p_rgh)
             );
 
             if (referenceCells.size())
@@ -384,6 +414,15 @@ int main(int argc, char* argv[])
         );
         tmp<volVectorField> reconstructed =
             fvc::reconstruct(forceResidual*mesh.magSf());
+        volScalarField finalRAU
+        (
+            "finalRAUStatic",
+            runTime.deltaT()/rho
+        );
+        tmp<volVectorField> predictedVelocityIncrement =
+            finalRAU*reconstructed();
+        tmp<volScalarField> waterWeightedPredictedVelocityIncrement =
+            alpha1*mag(predictedVelocityIncrement());
 
         const scalar dp = gMax
         (
@@ -400,6 +439,27 @@ int main(int argc, char* argv[])
             gMax(mag(forceResidual.primitiveField()));
         lastReconstructedResidual =
             gMax(mag(reconstructed().primitiveField()));
+        lastPredictedWaterVelocityIncrement = gMax
+        (
+            waterWeightedPredictedVelocityIncrement().primitiveField()
+        );
+
+        const scalarField reconstructedMagnitude
+        (
+            mag(reconstructed().primitiveField())
+        );
+        lastResidualCell = 0;
+        forAll(reconstructedMagnitude, celli)
+        {
+            if
+            (
+                reconstructedMagnitude[celli]
+              > reconstructedMagnitude[lastResidualCell]
+            )
+            {
+                lastResidualCell = celli;
+            }
+        }
 
         Info<< "outer=" << outer + 1
             << " maxDeltaP_rgh=" << dp
@@ -409,7 +469,9 @@ int main(int argc, char* argv[])
             << " relativeFaceResidual="
             << lastFaceResidual/max(maxForce, VSMALL)
             << " maxReconstructedResidual="
-            << lastReconstructedResidual << nl;
+            << lastReconstructedResidual
+            << " maxPredictedWaterVelocityIncrement="
+            << lastPredictedWaterVelocityIncrement << nl;
 
         if
         (
@@ -418,17 +480,57 @@ int main(int argc, char* argv[])
          && eosChange <= rhoTolerance
         )
         {
-            converged = true;
+            fixedPointConverged = true;
             break;
         }
     }
 
-    if (!converged)
+    if (!fixedPointConverged)
     {
         FatalErrorInFunction
             << "EOS/pressure fixed-point iteration did not converge; "
             << "fields were not written"
             << exit(FatalError);
+    }
+
+    const bool forceBalanceAccepted =
+        lastReconstructedResidual <= reconstructedResidualTolerance;
+
+    Info<< "EOS/pressure fixed point converged." << nl
+        << "Force-balance acceptance: "
+        << (forceBalanceAccepted ? "true" : "false")
+        << " (reconstructed residual " << lastReconstructedResidual
+        << " <= " << reconstructedResidualTolerance << " Pa/m)" << nl;
+
+    if (lastResidualCell >= 0)
+    {
+        Info<< "Maximum reconstructed residual cell: " << lastResidualCell
+            << ", C=" << mesh.C()[lastResidualCell]
+            << ", alpha.water=" << alpha1[lastResidualCell]
+            << ", predicted water-weighted deltaU="
+            << (
+                   alpha1[lastResidualCell]
+                  *mag(predictedVelocityIncrement()[lastResidualCell])
+               )
+            << " m/s" << nl;
+    }
+
+    if (!forceBalanceAccepted)
+    {
+        WarningInFunction
+            << "The pressure/EOS fixed point converged, but the projected "
+            << "force residual did not meet the declared acceptance limit. "
+            << "This is not a discretely balanced static state." << nl;
+
+        if (failOnResidual)
+        {
+            FatalErrorInFunction
+                << "Reconstructed force residual "
+                << lastReconstructedResidual << " exceeds "
+                << reconstructedResidualTolerance << " Pa/m; "
+                << "fields were not written"
+                << exit(FatalError);
+        }
     }
 
     if (!(p.write() && p_rgh.write() && rho.write()))
@@ -441,6 +543,8 @@ int main(int argc, char* argv[])
     Info<< "Final face residual: " << lastFaceResidual << nl
         << "Final reconstructed residual: "
         << lastReconstructedResidual << nl
+        << "Final predicted water-weighted velocity increment: "
+        << lastPredictedWaterVelocityIncrement << nl
         << "alpha.water and U were not modified." << nl
         << "End" << endl;
 

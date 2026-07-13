@@ -34,6 +34,7 @@ def main() -> None:
         ejection = data["ejection"]
         numerical_controls = data.get("numerical_controls", {})
         closed_hold = data.get("closed_hold", {})
+        pressure_balance = data.get("initial_pressure_balance") or {}
         is_closed = data["run_mode"] == "closed"
         rows.append(
             {
@@ -48,6 +49,12 @@ def main() -> None:
                 ),
                 "initial_interface_profile": numerical_controls.get(
                     "initial_interface_profile"
+                ),
+                "n_hat_gradient_scheme": numerical_controls.get(
+                    "n_hat_gradient_scheme"
+                ),
+                "initial_pressure_residual_pa_m": pressure_balance.get(
+                    "maximum_reconstructed_residual_pa_per_m"
                 ),
                 "end_time_s": data["simulated_end_time_s"],
                 "full_13s": int(data["full_13s_window_completed"]),
@@ -83,6 +90,8 @@ def main() -> None:
         "surface_tension_n_m",
         "initial_interface_thickness_m",
         "initial_interface_profile",
+        "n_hat_gradient_scheme",
+        "initial_pressure_residual_pa_m",
         "end_time_s",
         "full_13s",
         "geyser",

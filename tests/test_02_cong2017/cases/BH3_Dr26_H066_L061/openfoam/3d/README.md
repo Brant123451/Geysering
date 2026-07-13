@@ -80,7 +80,13 @@ are the source of the discrete CSF impulse.
 
 For the closed-hold gate, `balanceInitialPressure` then keeps `alpha.water`
 and `U=0` fixed while iterating both phase equations of state and projecting
-`p_rgh` against the face operators used for gravity and CSF. It runs only
+`p_rgh` against the face operators used for gravity and CSF. The projection is
+weighted by the startup inverse momentum diagonal
+`rAU ~= deltaT/rho`, matching the leading-order pressure operator used by
+`compressibleInterFoam` across the water/air density jump. It separately
+reports EOS/pressure fixed-point convergence, residual-force acceptance, the
+residual maximum location, and the predicted first-step water velocity; a
+converged fixed point is not mislabeled as a balanced force state. It runs only
 after the valve has become a closed baffle, so the isolated atmospheric pocket
 retains its own pressure reference rather than being numerically equalized
 with the upstream water. This is a discrete initialization, not a physical
@@ -147,6 +153,10 @@ python3 run_study.py --variant closed_refined_sigma_zero
 # Restore the measured surface tension on the same refined mesh
 python3 run_study.py --variant closed_refined_sigma_072
 
+# Test the curvature-normal gradient only; all physical inputs stay fixed
+python3 run_study.py --variant closed_refined_sigma_072_nhat_ls
+python3 run_study.py --variant closed_refined_sigma_zero_nhat_ls
+
 # Isolate linear-band edge curvature with a volume-preserving cosine profile
 python3 run_study.py --variant closed_refined_sigma_072_cosine
 
@@ -158,8 +168,11 @@ RUN_MODE=event VALVE_OPENING=instant END_TIME=13 ./Allrun
 ```
 
 `VALVE_OPENING` accepts `instant`, `0.2`, or `0.5`. `C_ALPHA`, `MAX_CO`,
-`MAX_ALPHA_CO`, `MAX_DELTA_T`, `ALPHA_SMOOTH_CURVATURE`, and
-`SURFACE_TENSION` expose declared numerical controls.
+`MAX_ALPHA_CO`, `MAX_DELTA_T`, `ALPHA_SMOOTH_CURVATURE`,
+`NHAT_GRADIENT_SCHEME`, and `SURFACE_TENSION` expose declared numerical
+controls. `NHAT_GRADIENT_SCHEME` accepts `gauss-linear` or `least-squares`;
+the latter is an A/B diagnostic for the flat-interface curvature normal on
+tetrahedra, not an unreported baseline change.
 `INITIAL_INTERFACE_THICKNESS` accepts only the declared `0.015 m` baseline or
 the conformal sharp-step value `0`; `INITIAL_INTERFACE_PROFILE` accepts
 `linear` or the declared `cosine` diagnostic for the 15 mm band. The baseline
@@ -187,7 +200,9 @@ water-weighted maximum to `0.12539 m/s` and the reconstructed residual to
 `1681.4`. Thus mesh refinement alone does not cure the CSF imbalance, and the
 physical-sigma event gate remains closed. The matched cosine-band diagnostic
 is not an improvement (`0.12721 m/s`, residual `2171.2`), so the linear
-band-edge derivative jumps are not the controlling defect.
+band-edge derivative jumps alone are not a demonstrated cure. Because the
+cosine profile also has a larger peak gradient, this comparison is not treated
+as a pure one-variable proof about curvature.
 
 ## Required outputs
 

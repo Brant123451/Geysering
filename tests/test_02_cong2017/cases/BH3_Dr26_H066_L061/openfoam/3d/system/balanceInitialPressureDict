@@ -14,3 +14,9 @@ pTolerance                 1e-5;
 rhoTolerance               1e-10;
 relaxation                 1;
 zeroVelocityTolerance      1e-12;
+
+// Diagnostic acceptance threshold for the pressure-projectable force
+// residual. Diagnostics continue so that the ensuing velocity can be
+// measured; production release remains controlled by the 1 s hold gate.
+reconstructedResidualTolerance 300;
+failOnResidual             false;

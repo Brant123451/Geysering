@@ -161,10 +161,11 @@ This is enforced by `run_study.py`: a failed hold is not cache-complete, and
 core/sensitivity groups cannot start without a passing current-source hold.
 The water and air pressure expressions are hydrostatic in their pure-phase
 regions; their alpha-weighted blend through the declared 15 mm transition is
-not claimed to be an exact discrete equilibrium. The case-local pressure
-projection converges its EOS/pressure fixed point, but its nonconservative
-reconstructed force residual remains too large to substitute for the 1 s
-result. With `sigma=0`, the 15 mm profile reaches a maximum water-weighted
+not claimed to be an exact discrete equilibrium. The previously tested
+unweighted case-local pressure projection converged its EOS/pressure fixed
+point, but its nonconservative reconstructed force residual remained too large
+to substitute for the 1 s result. With `sigma=0`, the 15 mm profile reaches a
+maximum water-weighted
 speed of `0.02387 m/s` by `0.05 s`, above the declared `0.02 m/s` gate.
 The conformal sharp-step, `sigma=0` isolation test is substantially worse:
 its maximum water-weighted speed is `1.7366 m/s`, maximum domain speed is
@@ -192,3 +193,16 @@ and `1681.4` for the refined linear profile. Removing the band-edge derivative
 jumps therefore does not cure the physical-sigma imbalance. Further event
 work remains blocked pending a mesh/operator treatment that passes the static
 gate without changing the measured physics.
+
+Source inspection of OpenFOAM v2512 identified one formal mismatch in that
+initializer: the solver pressure equation projects
+`rAUf*(F_sigma + F_g)`, whereas the initializer projected the unweighted face
+force. The revised diagnostic uses the startup leading-order approximation
+`rAU=deltaT/rho`, reports fixed-point convergence separately from residual
+acceptance, and records the maximum residual location and predicted first-step
+water velocity. A paired refined-mesh A/B also changes only the curvature
+normal gradient from `Gauss linear` to `leastSquares`; surface tension,
+interface profile, mesh, contact angle, and all experimental inputs remain
+fixed. These are declared operator diagnostics, not accepted results. Their
+short-window and then 1 s outcomes must be recorded before this gate can be
+released.

@@ -6,6 +6,8 @@ FoamFile
     object      fvSchemes;
 }
 
+#include "gradientSchemes.runtime"
+
 ddtSchemes
 {
     default         Euler;
@@ -14,6 +16,7 @@ ddtSchemes
 gradSchemes
 {
     default         Gauss linear;
+    nHat            $nHatGradientScheme;
     grad(U)         cellLimited Gauss linear 1;
 }
 

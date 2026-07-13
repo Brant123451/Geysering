@@ -51,6 +51,7 @@ python3 make_runtime_config.py \
     --sample-interval "${SAMPLE_INTERVAL:-0.005}" \
     --write-interval "${WRITE_INTERVAL:-0.05}" \
     --surface-tension "${SURFACE_TENSION:-0.072}" \
+    --n-hat-gradient-scheme "${NHAT_GRADIENT_SCHEME:-gauss-linear}" \
     > log.runtimeConfig 2>&1
 
 cp -a 0.orig 0
