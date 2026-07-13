@@ -16,13 +16,14 @@ License
 
 #include "boundedPhaseMassTransport.H"
 #include "addToRunTimeSelectionTable.H"
+#include "calculatedFvPatchFields.H"
 #include "fixedValueFvPatchField.H"
 #include "fvcDdt.H"
 #include "fvcDiv.H"
+#include "surfaceInterpolate.H"
 #include "fvmDdt.H"
 #include "fvmDiv.H"
 #include "fvmLaplacian.H"
-#include "fvmSup.H"
 #include "zeroGradientFvPatchField.H"
 
 namespace Foam
@@ -152,6 +153,42 @@ Foam::functionObjects::boundedPhaseMassTransport::updateInventoryDensity
 }
 
 
+Foam::volScalarField&
+Foam::functionObjects::boundedPhaseMassTransport::conservedDensity
+(
+    const volScalarField& alpha,
+    const volScalarField& phaseRho,
+    const volScalarField& field
+)
+{
+    const tmp<volScalarField> taggedDensity(alpha*phaseRho*field);
+
+    if (!sigmaPtr_.valid())
+    {
+        sigmaPtr_.reset
+        (
+            new volScalarField
+            (
+                IOobject
+                (
+                    sigmaResultName_,
+                    mesh_.time().timeName(),
+                    mesh_,
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE,
+                    IOobject::REGISTER
+                ),
+                taggedDensity(),
+                calculatedFvPatchScalarField::typeName
+            )
+        );
+        mesh_.setFluxRequired(sigmaResultName_);
+    }
+
+    return sigmaPtr_();
+}
+
+
 Foam::functionObjects::boundedPhaseMassTransport::
 boundedPhaseMassTransport
 (
@@ -186,6 +223,10 @@ boundedPhaseMassTransport
     (
         dict.getOrDefault<word>("rhoResult", fieldName_ + "CarrierRho")
     ),
+    sigmaResultName_
+    (
+        dict.getOrDefault<word>("sigmaResult", fieldName_ + "Sigma")
+    ),
     fluxResultName_
     (
         dict.getOrDefault<word>("fluxResult", fieldName_ + "MassFlux")
@@ -205,6 +246,7 @@ boundedPhaseMassTransport
     resetOnStartUp_(false),
     potentialPtr_(nullptr),
     inventoryRhoPtr_(nullptr),
+    sigmaPtr_(nullptr),
     tracerSourcePtr_(nullptr),
     carrierFluxPtr_(nullptr),
     tracerFluxPtr_(nullptr)
@@ -238,6 +280,7 @@ bool Foam::functionObjects::boundedPhaseMassTransport::read
     dict.readIfPresent("potential", potentialName_);
     dict.readIfPresent("carrierFluxResult", carrierFluxResultName_);
     dict.readIfPresent("rhoResult", rhoResultName_);
+    dict.readIfPresent("sigmaResult", sigmaResultName_);
     dict.readIfPresent("fluxResult", fluxResultName_);
     dict.readIfPresent("sourceResult", sourceResultName_);
     schemesField_ = dict.getOrDefault("schemesField", fieldName_);
@@ -478,24 +521,64 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
 
     // inletOutlet patches must use the corrected phase mass flux when
     // selecting inflow values.
-    // Ensure old-time storage exists before the first ddt evaluation.
-    field.oldTime();
     field.correctBoundaryConditions();
+
+    volScalarField& sigma = conservedDensity(alpha, phaseRho, field);
+    const bool firstSigmaStep = !sigma.nOldTimes();
+    if (firstSigmaStep)
+    {
+        // Seed the conserved density from the user-facing fraction only once.
+        // Later steps advance sigma directly; never rebuild it from s.
+        sigma == alpha*phaseRho*field;
+    }
+    {
+        const volScalarField taggedDensity(alpha*phaseRho*field);
+        sigma.boundaryFieldRef() == taggedDensity.boundaryField();
+    }
+    sigma.oldTime();
+
+    const volScalarField alphaRho
+    (
+        IOobject
+        (
+            fieldName_ + "AlphaRho",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            IOobject::NO_REGISTER
+        ),
+        alpha*phaseRho
+    );
+    const surfaceScalarField alphaRhoFace(fvc::interpolate(alphaRho));
+    const dimensionedScalar alphaRhoFloor
+    (
+        "alphaRhoFloor",
+        dimDensity,
+        ROOTVSMALL
+    );
+
+    // Volumetric carrier flux consistent with the projected mass flux:
+    //   phi_sigma = phi / (alpha*rho)_f
+    // so that ddt(sigma) + div(phi_sigma, sigma) conserves ∫ sigma.
+    surfaceScalarField phiSigma
+    (
+        IOobject
+        (
+            fieldName_ + "PhiSigma",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            IOobject::NO_REGISTER
+        ),
+        carrierFlux/max(alphaRhoFace, alphaRhoFloor)
+    );
+    phiSigma.oriented() = carrierFlux.oriented();
 
     const word divScheme("div(phi," + schemesField_ + ")");
     scalar relaxCoeff = 0;
     mesh_.relaxEquation(schemesField_, relaxCoeff);
-
-    // Compressible phase-fraction transport must remove the carrier material
-    // derivative from the tag equation:
-    //   ddt(αρs)+div(φs) - s*(ddt(αρ)+div(φ)) = αρ*dds/dt + φ·∇s
-    // Matching OpenFOAM energyTransport / boundedDdtScheme, Sp uses both the
-    // carrier ddt and the projected carrier divergence so residual continuity
-    // error is not reinterpreted as tag creation/destruction.
-    const volScalarField alphaRhoMaterialDerivative
-    (
-        fvc::ddt(alpha, phaseRho) + fvc::div(carrierFlux)
-    );
 
     bool converged = false;
     label iteration = 0;
@@ -503,36 +586,69 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
 
     for (label corr = 0; corr <= nCorr_; ++corr)
     {
-        fvScalarMatrix fieldEqn
+        fvScalarMatrix sigmaEqn
         (
-            fvm::ddt(alpha, phaseRho, field)
-          - fvm::Sp(alphaRhoMaterialDerivative, field)
-          + fvm::div(carrierFlux, field, divScheme)
-         ==
-          - fvm::ddt(residualAlpha_*phaseRho, field)
-          + fvc::ddt(residualAlpha_*phaseRho, field)
+            fvm::ddt(sigma)
+          + fvm::div(phiSigma, sigma, divScheme)
         );
 
-        fieldEqn.relax(relaxCoeff);
+        sigmaEqn.relax(relaxCoeff);
 
         ++iteration;
-        const auto solverPerformance = fieldEqn.solve(schemesField_);
+        const auto solverPerformance = sigmaEqn.solve(schemesField_);
         converged = solverPerformance.finalResidual() < tolerance_;
-        tracerFlux = fieldEqn.flux();
+        tracerFlux = sigmaEqn.flux();
         tracerFlux.ref().oriented() = carrierFlux.oriented();
-
     }
 
     if (!converged)
     {
         FatalErrorInFunction
-            << field.name() << " did not reach linear-solver tolerance "
+            << sigma.name() << " did not reach linear-solver tolerance "
             << tolerance_ << " after " << iteration << " solve(s)."
             << exit(FatalError);
     }
 
-    const scalar fieldMin = gMin(field);
-    const scalar fieldMax = gMax(field);
+    // Recover the phase mass fraction for output, BCs and arrival metrics.
+    // residualAlpha only floors the divisor in vanishing-phase cells; it is
+    // not a deferred equation correction and does not clear inventory.
+    const scalarField alphaRhoFloorCells
+    (
+        residualAlpha_*phaseRho.primitiveField()
+    );
+    scalarField& fieldCells = field.primitiveFieldRef();
+    const scalarField& sigmaCells = sigma.primitiveField();
+    const scalarField& alphaRhoCells = alphaRho.primitiveField();
+    forAll(fieldCells, celli)
+    {
+        const scalar denom =
+            max(alphaRhoCells[celli], alphaRhoFloorCells[celli]);
+        fieldCells[celli] = sigmaCells[celli]/denom;
+    }
+    field.correctBoundaryConditions();
+    {
+        const volScalarField taggedDensity(alphaRho*field);
+        sigma.boundaryFieldRef() == taggedDensity.boundaryField();
+    }
+
+    scalar fieldMin = VGREAT;
+    scalar fieldMax = -VGREAT;
+    forAll(fieldCells, celli)
+    {
+        if (alpha.primitiveField()[celli] > residualAlpha_)
+        {
+            fieldMin = min(fieldMin, fieldCells[celli]);
+            fieldMax = max(fieldMax, fieldCells[celli]);
+        }
+    }
+    reduce(fieldMin, minOp<scalar>());
+    reduce(fieldMax, maxOp<scalar>());
+    if (fieldMin > 0.5*VGREAT)
+    {
+        fieldMin = gMin(field);
+        fieldMax = gMax(field);
+    }
+
     if
     (
         fieldMin < -boundsTolerance_
@@ -540,7 +656,7 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     )
     {
         FatalErrorInFunction
-            << field.name() << " left [0,1]: min/max = "
+            << field.name() << " left [0,1] in resolved phase cells: min/max = "
             << fieldMin << ' ' << fieldMax
             << ", violations = " << max(-fieldMin, scalar(0))
             << ' ' << max(fieldMax - 1, scalar(0))
@@ -551,12 +667,10 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
 
     updateInventoryDensity(alpha, phaseRho);
 
-    // Discrete tagged-mass residual of ∫ alpha*rho*s after the bounded solve.
-    // With the Sp(ddt(alpha,rho)) form this should stay near the projected
-    // carrier-continuity residual rather than track artificial s erosion.
+    // Discrete tagged-mass residual of the conserved density sigma.
     const tmp<volScalarField> tracerSource
     (
-        fvc::ddt(alpha, phaseRho, field) + fvc::div(tracerFlux())
+        fvc::ddt(sigma) + fvc::div(tracerFlux())
     );
     if (!tracerSourcePtr_.valid())
     {
@@ -607,7 +721,8 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     }
 
     Log << type() << " execute: " << field.name()
-        << ", min/max = " << fieldMin << ' ' << fieldMax
+        << ", sigma min/max = " << gMin(sigma) << ' ' << gMax(sigma)
+        << ", fraction min/max = " << fieldMin << ' ' << fieldMax
         << ", carrier continuity error before min/max = "
         << gMin(continuityErrorBefore) << ' ' << gMax(continuityErrorBefore)
         << ", after min/max = "
@@ -624,6 +739,10 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
 bool Foam::functionObjects::boundedPhaseMassTransport::write()
 {
     transportedField().write();
+    if (sigmaPtr_.valid())
+    {
+        sigmaPtr_().write();
+    }
     return true;
 }
 

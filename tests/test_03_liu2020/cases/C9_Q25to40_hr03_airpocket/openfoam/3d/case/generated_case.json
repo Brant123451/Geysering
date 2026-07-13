@@ -48,10 +48,10 @@
     "initial_support": "selected upstream main-body gas; thin layer excluded",
     "transport": "conservative air-phase mass fraction using a continuity-projected interpolate(rho.air)*(phi - alphaPhi0.water)",
     "matrix_residual_air_fraction": 1e-08,
-    "bounded_transport": "continuity-projected phase mass flux with implicit upwind fvm::ddt(alpha,rho,tracer) and residual-alpha deferred correction",
+    "bounded_transport": "continuity-projected phase mass flux; conserved sigma=alpha*rho*s via fvm::ddt(sigma)+fvm::div(phi/(alpha*rho)_f,sigma); s recovered for output/BCs/arrival only",
     "conservative_transport_with_bounds_guard": true,
     "inventory_weight": "alpha.air*thermo:rho.air",
-    "conservation_inventory_weight": "alpha.air*thermo:rho.air",
+    "conservation_inventory_weight": "pocketBodyTracerSigma",
     "boundary_flux": "pocketBodyTracerMassFlux",
     "carrier_continuity_source": "none; pocketBodyTracerMassSource reports numerical balance residual",
     "purpose": "main-pocket source identity; alpha.air alone cannot distinguish the initial thin layer from the body"

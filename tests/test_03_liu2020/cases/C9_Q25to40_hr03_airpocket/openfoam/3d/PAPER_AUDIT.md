@@ -244,13 +244,14 @@ function-generated `alpha*rho` field had an invalid old-time level, and an
 explicit reconstruction of both levels still violated MULES's low-order
 positivity requirement, exceeding order `1e24` by solver time 0.0202 s. The
 current local `boundedPhaseMassTransport` projects the raw air mass flux onto
-the discrete `alpha.air*rho.air` continuity equation, then solves
-`fvm::ddt(alpha,rho,tracer)` with implicit upwind and the Foundation
-residual-alpha deferred correction. No non-conservative projection or
+the discrete `alpha.air*rho.air` continuity equation, then advances conserved
+`sigma = alpha*rho*s` with
+`fvm::ddt(sigma) + fvm::div(phi/(alpha*rho)_f, sigma)` and recovers `s` only
+for output/BCs/arrival. No non-conservative projection or
 carrier-continuity equation source remains; failed carrier projection or a
 material `[0,1]` violation is fatal. Arrival diagnostics use physical
 `alpha.air*rho.air`. Conservation is audited with an independent
-physical-inventory copy, tagged mass flux through inlet, gate, and atmosphere,
+`pocketBodyTracerSigma` integral, tagged mass flux through inlet, gate, and atmosphere,
 and the integrated numerical tracer-balance residual. Chronology is invalid
 when either the boundary-flux budget error or cumulative numerical residual
 exceeds 1% of initial tag mass. A 1%

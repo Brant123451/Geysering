@@ -30,11 +30,12 @@ namespace functionObjects
                 Class boundedPhaseMassTransport Declaration
 \*---------------------------------------------------------------------------*/
 
-//- Transport a phase mass fraction using the solver-owned phase fraction and
-//  density time levels.  The supplied phase mass flux is projected onto the
-//  discrete phase-continuity equation before an implicit upwind scalar solve.
-//  A residual-phase deferred correction regularises cells in which the phase
-//  vanishes without adding a physical tracer source.
+//- Transport a phase mass fraction by advancing the conserved tagged-mass
+//  density sigma = alpha*rho*s.  The supplied phase mass flux is projected
+//  onto the discrete phase-continuity equation, then
+//  fvm::ddt(sigma) + fvm::div(phi/(alpha*rho)_f, sigma) is solved.  The
+//  fraction field s is recovered only for output, boundary conditions and
+//  arrival diagnostics.  No clamp/clear and no carrier-continuity source.
 class boundedPhaseMassTransport
 :
     public fvMeshFunctionObject
@@ -49,6 +50,7 @@ class boundedPhaseMassTransport
         word potentialName_;
         word carrierFluxResultName_;
         word rhoResultName_;
+        word sigmaResultName_;
         word fluxResultName_;
         word sourceResultName_;
         word schemesField_;
@@ -62,6 +64,7 @@ class boundedPhaseMassTransport
         bool resetOnStartUp_;
         autoPtr<volScalarField> potentialPtr_;
         autoPtr<volScalarField> inventoryRhoPtr_;
+        autoPtr<volScalarField> sigmaPtr_;
         autoPtr<volScalarField> tracerSourcePtr_;
         autoPtr<surfaceScalarField> carrierFluxPtr_;
         autoPtr<surfaceScalarField> tracerFluxPtr_;
@@ -81,6 +84,13 @@ class boundedPhaseMassTransport
         (
             const volScalarField& alpha,
             const volScalarField& phaseRho
+        );
+
+        volScalarField& conservedDensity
+        (
+            const volScalarField& alpha,
+            const volScalarField& phaseRho,
+            const volScalarField& field
         );
 
 

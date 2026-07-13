@@ -502,12 +502,12 @@ functions
 
     pocketBodyTracerTransport
     {{
-        // Project the air mass flux onto discrete phase continuity, then solve
-        // the bounded phase-fraction equation
-        // fvm::ddt(alpha,rho,s) - Sp(fvc::ddt(alpha,rho)+fvc::div(phi),s)
-        // + fvm::div(phi,s) with implicit upwind and the Foundation
-        // residual-alpha deferred correction.  The Sp term prevents
-        // MULES/thermo compression from eroding the source tag.
+        // Project the air mass flux onto discrete phase continuity, then
+        // advance the conserved tagged-mass density
+        // sigma = alpha*rho*s with
+        // fvm::ddt(sigma) + fvm::div(phi/(alpha*rho)_f, sigma).
+        // Recover s = sigma/max(alpha*rho, residualAlpha*rho) only for
+        // output/BCs/arrival.  No Sp, no clamp/clear, no continuity source.
         type            boundedPhaseMassTransport;
         libs            ("libboundedPhaseMassTransport.so");
         field           pocketBodyTracer;
@@ -519,6 +519,7 @@ functions
         carrierFluxResult correctedAirMassFluxForTracer;
         residualAlpha   1e-8;
         rhoResult       alphaRhoAirForTracer;
+        sigmaResult     pocketBodyTracerSigma;
         fluxResult      pocketBodyTracerMassFlux;
         sourceResult    pocketBodyTracerMassSource;
         schemesField    pocketBodyTracer;
@@ -722,13 +723,12 @@ functions
 
     matrixPocketBodyTracerMass
     {{
-        // Independent duplicate of the physical alpha.air*rho.air inventory
-        // produced by the transport object for budget cross-checking.
+        // Direct integral of the conserved tagged-mass density sigma.
+        // Cross-check against weighted alpha.air*rho.air*s inventory.
         type            volFieldValue;
         libs            (fieldFunctionObjects);
-        operation       weightedVolIntegrate;
-        weightField     alphaRhoAirForTracer;
-        fields          (pocketBodyTracer);
+        operation       volIntegrate;
+        fields          (pocketBodyTracerSigma);
         writeControl    adjustableRunTime;
         writeInterval   0.01;
         writeFields     false;
@@ -2244,12 +2244,13 @@ rm -f log.*
             ),
             "matrix_residual_air_fraction": 1e-8,
             "bounded_transport": (
-                "continuity-projected phase mass flux with implicit upwind "
-                "fvm::ddt(alpha,rho,tracer) and residual-alpha deferred correction"
+                "continuity-projected phase mass flux; conserved sigma="
+                "alpha*rho*s via fvm::ddt(sigma)+fvm::div(phi/(alpha*rho)_f,sigma); "
+                "s recovered for output/BCs/arrival only"
             ),
             "conservative_transport_with_bounds_guard": True,
             "inventory_weight": "alpha.air*thermo:rho.air",
-            "conservation_inventory_weight": "alpha.air*thermo:rho.air",
+            "conservation_inventory_weight": "pocketBodyTracerSigma",
             "boundary_flux": "pocketBodyTracerMassFlux",
             "carrier_continuity_source": (
                 "none; pocketBodyTracerMassSource reports numerical balance residual"

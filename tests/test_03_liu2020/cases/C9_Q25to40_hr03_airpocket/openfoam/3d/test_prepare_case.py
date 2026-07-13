@@ -128,6 +128,7 @@ class PocketBodyTracerTests(unittest.TestCase):
             dictionary,
         )
         self.assertIn("rhoResult       alphaRhoAirForTracer;", dictionary)
+        self.assertIn("sigmaResult     pocketBodyTracerSigma;", dictionary)
         self.assertIn("fluxResult      pocketBodyTracerMassFlux;", dictionary)
         self.assertIn("sourceResult    pocketBodyTracerMassSource;", dictionary)
         self.assertIn("boundsTolerance 1e-6;", dictionary)
@@ -136,6 +137,7 @@ class PocketBodyTracerTests(unittest.TestCase):
         self.assertIn("nNonOrthCorr    1;", dictionary)
         self.assertIn("nProjectionCorr 2;", dictionary)
         self.assertIn("fields          (pocketBodyTracerMassSource);", dictionary)
+        self.assertIn("fields          (pocketBodyTracerSigma);", dictionary)
         self.assertNotIn("clearPocketBodyTracerOutsideAir", dictionary)
         self.assertNotIn("boundPocketBodyTracer", dictionary)
         self.assertEqual(
@@ -144,8 +146,10 @@ class PocketBodyTracerTests(unittest.TestCase):
         )
         self.assertEqual(
             dictionary.count("weightField     alphaRhoAirForTracer;"),
-            1,
+            0,
         )
+        self.assertIn("fvm::ddt(sigma)", dictionary)
+        self.assertNotIn("Sp(fvc::ddt(alpha,rho)", dictionary)
         self.assertEqual(
             dictionary.count("fields          (pocketBodyTracerMassFlux);"),
             3,
