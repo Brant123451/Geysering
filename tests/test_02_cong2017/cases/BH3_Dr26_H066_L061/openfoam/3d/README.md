@@ -388,6 +388,7 @@ hold pass, and the measured-opening smoke reaches the declared `0.25 s` window
 with `solver_completed=true`. Maximum water-weighted speed is `1.436 m/s`,
 gas-weighted speed is `3.806 m/s`, temperature stays within `291.8--303.1 K`,
 and water/gas/total mass residual fractions are `1.17e-6`, `9.24e-7`, and
-`1.91e-7`. This releases the 13 s event/sensitivity runs on the same
-`prism_atmosphere` + `0.2 s` opening path without changing the experimental
-classification target.
+`1.91e-7`. Core/sensitivity events use the same opening path and the smoke
+Courant limits (`maxCo=0.1`); a looser `base_nominal` attempt diverged near
+`0.003 s`. This releases the 13 s event/sensitivity runs without changing the
+experimental classification target.
