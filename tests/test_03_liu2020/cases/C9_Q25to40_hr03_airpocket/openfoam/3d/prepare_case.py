@@ -455,10 +455,26 @@ functions
 
     tracerAirMassDensity
     {{
+        // Residual-stabilised density used only in the scalar matrix.
         type            multiply;
         libs            (fieldFunctionObjects);
         fields          (alphaAirForTracer thermo:rho.air);
         result          alphaRhoAirForTracer;
+        enabled         true;
+        log             false;
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    none;
+    }}
+
+    tracerPhysicalAirMassDensity
+    {{
+        // Physical alpha*rho, without the matrix residual, is the inventory
+        // weight used for all reported source-gas masses.
+        type            multiply;
+        libs            (fieldFunctionObjects);
+        fields          (alpha.air thermo:rho.air);
+        result          alphaRhoAirPhysicalForTracer;
         enabled         true;
         log             false;
         executeControl  timeStep;
@@ -523,7 +539,10 @@ functions
         phi             airMassFluxForTracer;
         rho             alphaRhoAirForTracer;
         schemesField    pocketBodyTracer;
-        bounded01       true;
+        // OpenFOAM applies bounded01 only in scalarTransport's volume-phase
+        // branch, not its compressible mass-flux branch.  The following
+        // projection objects therefore enforce the phase-mass-fraction range.
+        bounded01       false;
         D               0;
         tolerance       1e-8;
         nCorr           0;
@@ -534,6 +553,39 @@ functions
         executeInterval 1;
         writeControl    writeTime;
         writeInterval   1;
+    }}
+
+    clearPocketBodyTracerOutsideAir
+    {{
+        // The phase mass fraction is undefined in pure water.  Clearing only
+        // alpha.air < 1e-6 removes residual-matrix values while discarding at
+        // most one part per million of local physical gas inventory.
+        type            exprField;
+        libs            (fieldFunctionObjects);
+        field           pocketBodyTracer;
+        action          modify;
+        fieldMask       "alpha.air < 1e-6";
+        expression      "0";
+        enabled         true;
+        log             false;
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    none;
+    }}
+
+    boundPocketBodyTracer
+    {{
+        type            limitFields;
+        libs            (fieldFunctionObjects);
+        fields          (pocketBodyTracer);
+        limit           both;
+        min             0;
+        max             1;
+        enabled         true;
+        log             false;
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    none;
     }}
 
     probesPT
@@ -712,7 +764,7 @@ functions
         type            volFieldValue;
         libs            (fieldFunctionObjects);
         operation       weightedVolIntegrate;
-        weightField     alphaRhoAirForTracer;
+        weightField     alphaRhoAirPhysicalForTracer;
         fields          (pocketBodyTracer);
         writeControl    adjustableRunTime;
         writeInterval   0.01;
@@ -726,7 +778,7 @@ functions
         regionType      cellZone;
         name            upstreamPipe;
         operation       weightedVolIntegrate;
-        weightField     alphaRhoAirForTracer;
+        weightField     alphaRhoAirPhysicalForTracer;
         fields          (pocketBodyTracer);
         writeControl    adjustableRunTime;
         writeInterval   0.01;
@@ -740,7 +792,7 @@ functions
         regionType      cellZone;
         name            chamber;
         operation       weightedVolIntegrate;
-        weightField     alphaRhoAirForTracer;
+        weightField     alphaRhoAirPhysicalForTracer;
         fields          (pocketBodyTracer);
         writeControl    adjustableRunTime;
         writeInterval   0.01;
@@ -754,7 +806,7 @@ functions
         regionType      cellZone;
         name            riser;
         operation       weightedVolIntegrate;
-        weightField     alphaRhoAirForTracer;
+        weightField     alphaRhoAirPhysicalForTracer;
         fields          (pocketBodyTracer);
         writeControl    adjustableRunTime;
         writeInterval   0.01;
@@ -2133,6 +2185,13 @@ rm -f log.*
                 "conservative air-phase mass fraction using "
                 "interpolate(rho.air)*(phi - alphaPhi0.water)"
             ),
+            "matrix_residual_air_fraction": 1e-8,
+            "projection": (
+                "clear where alpha.air < 1e-6, then clamp to [0,1]; "
+                "required because scalarTransport bounded01 is inactive "
+                "for its compressible mass-flux branch"
+            ),
+            "inventory_weight": "alpha.air*thermo:rho.air",
             "purpose": (
                 "main-pocket source identity; alpha.air alone cannot distinguish "
                 "the initial thin layer from the body"

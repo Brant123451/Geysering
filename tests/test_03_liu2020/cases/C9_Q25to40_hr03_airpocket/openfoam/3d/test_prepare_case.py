@@ -96,10 +96,13 @@ class PocketBodyTracerTests(unittest.TestCase):
         expected_order = [
             "tracerAirFraction",
             "tracerAirMassDensity",
+            "tracerPhysicalAirMassDensity",
             "tracerAirDensityFaces",
             "tracerAirVolumeFlux",
             "tracerAirMassFlux",
             "pocketBodyTracerTransport",
+            "clearPocketBodyTracerOutsideAir",
+            "boundPocketBodyTracer",
         ]
         indices = [dictionary.index(name) for name in expected_order]
         self.assertEqual(indices, sorted(indices))
@@ -115,8 +118,10 @@ class PocketBodyTracerTests(unittest.TestCase):
         self.assertNotIn("fields          (rhoPhi waterMassFluxForTracer);", dictionary)
         self.assertIn("phi             airMassFluxForTracer;", dictionary)
         self.assertIn("rho             alphaRhoAirForTracer;", dictionary)
+        self.assertIn('fieldMask       "alpha.air < 1e-6";', dictionary)
+        self.assertIn("limit           both;", dictionary)
         self.assertEqual(
-            dictionary.count("weightField     alphaRhoAirForTracer;"),
+            dictionary.count("weightField     alphaRhoAirPhysicalForTracer;"),
             4,
         )
         self.assertNotIn(

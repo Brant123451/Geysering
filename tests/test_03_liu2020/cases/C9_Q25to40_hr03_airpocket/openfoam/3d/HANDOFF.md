@@ -79,7 +79,11 @@ source now transports the tag with
 and requires 20% transfer plus a sustained connection for operational bulk
 arrival. This direct phase-flux form avoids the non-equivalent subtraction of
 water mass flux from compressible mixture `rhoPhi`. A fresh initialization and
-smoke are required to verify this change before phase 1.
+smoke are required to verify this change before phase 1. The v2512
+compressible scalar branch does not apply its `bounded01` switch, so the source
+explicitly clears values where `alpha.air < 1e-6`, clamps the remaining mass
+fraction to `[0,1]`, and reports inventory with physical
+`alpha.air*thermo:rho.air` rather than the residual-stabilised matrix density.
 
 Phase 1 is incomplete. Phase 2 and eight eruptions have not yet been
 reproduced.

@@ -47,6 +47,9 @@
     "field": "pocketBodyTracer",
     "initial_support": "selected upstream main-body gas; thin layer excluded",
     "transport": "conservative air-phase mass fraction using interpolate(rho.air)*(phi - alphaPhi0.water)",
+    "matrix_residual_air_fraction": 1e-08,
+    "projection": "clear where alpha.air < 1e-6, then clamp to [0,1]; required because scalarTransport bounded01 is inactive for its compressible mass-flux branch",
+    "inventory_weight": "alpha.air*thermo:rho.air",
     "purpose": "main-pocket source identity; alpha.air alone cannot distinguish the initial thin layer from the body"
   },
   "initial_field_correction": {

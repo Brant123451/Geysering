@@ -203,7 +203,11 @@ source now constructs the air mass flux as
 `interpolate(rho.air)*(phi - alphaPhi0.water)`. This uses the complementary
 MULES phase-volume flux directly instead of subtracting a separately
 interpolated water mass flux from compressible mixture `rhoPhi`; a fresh run
-is required.
+is required. Because OpenFOAM v2512 does not apply `bounded01` in the
+compressible mass-flux branch of `scalarTransport`, each solve clears the
+undefined tracer in cells with `alpha.air < 1e-6` and clamps the remaining
+phase mass fraction to `[0,1]`. Reported inventory uses physical
+`alpha.air*rho.air`, never the matrix residual.
 
 Phase 1 is incomplete. Phase 2 and eight eruptions have not yet been
 reproduced.

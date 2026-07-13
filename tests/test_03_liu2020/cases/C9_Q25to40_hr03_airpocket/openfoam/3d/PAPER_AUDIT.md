@@ -235,11 +235,15 @@ fraction with the gas mass flux
 complementary MULES air-volume flux to air mass flux; subtracting a separately
 interpolated water mass flux from compressible mixture `rhoPhi` is not
 equivalent. Transporting the tag with mixture `rhoPhi/rho` would let it dilute
-into water and is not a valid source-identity diagnostic. A 1% source-tag
-transfer is reported only as early leakage because the paper explicitly
-documents a temporary crown passage near 1.30 s. The formal operational
-main-body arrival additionally requires 20% transfer into the chamber plus
-riser and a sustained deep-line connection.
+into water and is not a valid source-identity diagnostic. The OpenFOAM v2512
+compressible scalar branch does not execute `bounded01`; after each solve the
+undefined value where `alpha.air < 1e-6` is cleared and the remaining phase
+mass fraction is clamped to `[0,1]`. Mass diagnostics use physical
+`alpha.air*rho.air`, excluding the matrix residual. A 1% source-tag transfer is
+reported only as early leakage because the paper explicitly documents a
+temporary crown passage near 1.30 s. The formal operational main-body arrival
+additionally requires 20% transfer into the chamber plus riser and a sustained
+deep-line connection.
 Because the paper does not report an arrival mass fraction, 1/5/10/20/30/50%
 transfer times are all retained as threshold sensitivity evidence.
 Line-sampled `alpha.air` alone remains a morphology fallback and cannot

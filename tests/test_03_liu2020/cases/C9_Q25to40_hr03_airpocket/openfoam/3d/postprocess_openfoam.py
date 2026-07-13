@@ -641,7 +641,10 @@ def main() -> None:
     metadata_path = case / "generated_case.json"
     metadata = json.loads(metadata_path.read_text()) if metadata_path.exists() else {}
     offset = float(metadata.get("paper_time_offset_s", RAMP_OFFSET))
-    tracer_transport = metadata.get("pocket_body_tracer", {}).get("transport")
+    tracer_metadata = metadata.get("pocket_body_tracer", {})
+    tracer_transport = tracer_metadata.get("transport")
+    tracer_projection = tracer_metadata.get("projection")
+    tracer_inventory_weight = tracer_metadata.get("inventory_weight")
     phase_mass_tracer = bool(
         isinstance(tracer_transport, str)
         and tracer_transport.startswith("conservative air-phase mass fraction")
@@ -1221,6 +1224,8 @@ def main() -> None:
         ),
         "body_tracer_status": tracer_status,
         "body_tracer_transport": tracer_transport,
+        "body_tracer_projection": tracer_projection,
+        "body_tracer_inventory_weight": tracer_inventory_weight,
         "body_tracer_bulk_transfer_fraction": BODY_TRACER_BULK_FRACTION,
         "simulated_line_morphology_arrival_s": morphology_arrival_time,
         "line_morphology_arrival_definition": morphology_arrival_definition,
