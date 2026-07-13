@@ -1,0 +1,31 @@
+{
+  "case": "B-H4",
+  "purpose": "Throughput trial for maxAlphaCo=0.40 with eight alpha subcycles; not an event-classification result",
+  "checkpoint_time_s": 8.5,
+  "candidate_controls": {
+    "maxCo": 0.4,
+    "maxAlphaCo": 0.4,
+    "nAlphaSubCycles": 8,
+    "maximum_alpha_courant_per_subcycle": 0.05
+  },
+  "retained_controls": {
+    "maxCo": 0.4,
+    "maxAlphaCo": 0.2,
+    "nAlphaSubCycles": 4,
+    "maximum_alpha_courant_per_subcycle": 0.05
+  },
+  "observed": {
+    "wall_minutes": 15.3,
+    "reached_time_s": 8.5307,
+    "deltaT_s": 2.85e-05,
+    "global_courant_max": 0.4018,
+    "interface_courant_max": 0.2149,
+    "approximate_throughput_s_sim_per_min": 0.0020
+  },
+  "result": "REJECTED",
+  "reason": "Global Courant already limited the step near 0.40, so raising maxAlphaCo gave almost no deltaT gain while doubling MULES work per step and reducing throughput.",
+  "notes": [
+    "Per-subcycle interface Courant would have remained 0.05, but the trial was stopped for throughput, not accuracy.",
+    "Production retains the previously gated maxAlphaCo=0.20 / four-subcycle controls."
+  ]
+}
