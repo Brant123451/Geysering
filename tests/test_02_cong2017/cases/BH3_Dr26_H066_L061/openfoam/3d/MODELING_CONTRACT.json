@@ -85,7 +85,7 @@
       "paired_cfd_reported_experiment_s": 0.5,
       "finite_opening_model": "balanced closed-valve projection, then porousBafflePressure with smoothstep open-area fraction",
       "event_initialisation": "create closed wall baffle, balanceInitialPressure, mergeOrSplitBaffles, createPatch remove empty walls, recreate valve face zone as opening cyclic",
-      "minimum_resolved_open_area": "one valve-face area, computed as 1/Nface from the generated face zone",
+      "minimum_resolved_open_area": "max(1/Nface, 0.05); 0.05 floor keeps early I within the tutorial-scale regime after one-face Amin repeatedly blew up near 0.003 s",
       "opening_table_samples": 101,
       "loss_coefficient": "K=(1/A-1)^2",
       "inertial_coefficient": "I=K/L with L=0.050 m",

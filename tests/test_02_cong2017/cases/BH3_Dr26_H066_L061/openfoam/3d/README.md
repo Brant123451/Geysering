@@ -111,14 +111,17 @@ sample.
 
 The finite-opening model uses `porousBafflePressure` on the smoothstep
 open-area history with `K=(1/A-1)^2`, `I=K/L`, and `D=2*I` (OpenFOAM
-`damBreakPorousBaffle` tutorial ratio). The zero-area endpoint is regularized
-at exactly one generated valve-face area (`Amin=1/Nface`). Event runs first
-create a closed wall baffle, run `balanceInitialPressure`, merge those baffles,
-strip the empty wall patches, then rebuild Valve #4 as the opening cyclic.
-A U-independent `uniformJump` hydrostatic decay and a large Darcy table are
-retained only as diagnostic negative evidence. Instantaneous opening keeps
-`D=I=0` after the same balanced start. The 101-point tables resolve the
-measured opening window without an outcome-fitted coefficient.
+`damBreakPorousBaffle` tutorial ratio). The open-area floor is
+`max(1/Nface, 0.05)`: one-face `Amin` still left `I~2e6` and a repeated
+`~0.003 s` compressible blow-up after an otherwise bounded start from the
+closed projection. Event runs first create a closed wall baffle, run
+`balanceInitialPressure`, merge those baffles, strip the empty wall patches,
+then rebuild Valve #4 as the opening cyclic. A U-independent `uniformJump`
+hydrostatic decay and a large Darcy table are retained only as diagnostic
+negative evidence. Instantaneous opening keeps `D=I=0` after the same
+balanced start. The 101-point tables resolve the measured opening window
+without an outcome-fitted coefficient. The `open_smoke_valve_0p2` smoke uses
+tighter Courant limits (`maxCo=0.1`, `maxAlphaCo=0.05`, `maxDeltaT=1e-4 s`).
 
 ## Mesh profiles
 

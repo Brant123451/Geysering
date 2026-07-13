@@ -369,11 +369,14 @@ resisted. The smoke conserved mass through about `0.003 s`
 blow-up). A follow-up Darcy table scaled to the closed-hold water-speed gate
 failed earlier (`~4e-6 s`, SIGFPE): the jump remains U-dependent, so a large
 `D` stiffens the baffle without restoring a finite head at `U=0`. Finite
-opening therefore keeps `porousBafflePressure` with mesh-derived `Amin=1/Nface`
-and a mild tutorial-ratio Darcy term `D=2*I`, but only after first applying the
-same closed-valve `balanceInitialPressure` projection, merging the wall baffles,
-and stripping the empty patches before recreating the opening cyclic. A
-`uniformJump` hydrostatic-head decay on that balanced start still produced a
-violent early compressible transient and is retained only as diagnostic
-negative evidence. Instantaneous opening remains a zero-loss cyclic on the
-same balanced start.
+opening therefore keeps `porousBafflePressure` with open-area floor
+`max(1/Nface, 0.05)` and a mild tutorial-ratio Darcy term `D=2*I`, after
+first applying the closed-valve `balanceInitialPressure` projection, merging
+the wall baffles, and stripping the empty patches before recreating the
+opening cyclic. One-face `Amin` on that balanced start still diverged near
+`0.003 s` with healthy pressures beforehand and is retained as
+`open_smoke_valve_0p2_balanced_porous_*`. A `uniformJump` hydrostatic-head
+decay on the balanced start produced a violent early compressible transient
+and is retained only as diagnostic negative evidence. Instantaneous opening
+remains a zero-loss cyclic on the same balanced start. The measured-opening
+smoke also tightens Courant limits to `maxCo=0.1` / `maxAlphaCo=0.05`.

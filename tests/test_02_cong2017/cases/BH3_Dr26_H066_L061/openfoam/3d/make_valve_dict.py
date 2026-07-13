@@ -29,6 +29,10 @@ from pathlib import Path
 VALVE_LENGTH = 0.050
 # Match the OpenFOAM damBreakPorousBaffle tutorial ratio D/I = 1000/500 = 2.
 D_OVER_I = 2.0
+# One-face Amin still left I~2e6 and a repeated ~0.003 s compressible blow-up
+# after an otherwise bounded start from the closed projection. Floor the open
+# area at 5% so the early baffle loss stays within the tutorial-scale regime.
+MINIMUM_OPEN_AREA_FRACTION = 0.05
 
 
 def parse_args() -> argparse.Namespace:
@@ -77,7 +81,7 @@ def foam_table(rows: list[str]) -> str:
 def loss_tables(duration: float, face_count: int) -> tuple[str, str, float, float]:
     d_rows: list[str] = []
     i_rows: list[str] = []
-    minimum_resolved_area = 1.0 / face_count
+    minimum_resolved_area = max(1.0 / face_count, MINIMUM_OPEN_AREA_FRACTION)
     d0 = 0.0
     i0 = 0.0
     for index in range(101):
@@ -246,7 +250,11 @@ baffles
     args.output.write_text(text, encoding="utf-8")
     print(f"mode={args.mode}")
     print(f"valve_face_count={face_count}")
-    print(f"minimum_resolved_open_area_fraction={1.0 / face_count:.12g}")
+    print(f"one_face_open_area_fraction={1.0 / face_count:.12g}")
+    print(
+        "minimum_resolved_open_area_fraction="
+        f"{max(1.0 / face_count, MINIMUM_OPEN_AREA_FRACTION):.12g}"
+    )
     print(f"darcy_over_inertial={D_OVER_I:.12g}")
     print(f"darcy_at_minimum_open_1_per_m2={d0:.12g}")
     print(f"inertial_at_minimum_open_1_per_m={i0:.12g}")
