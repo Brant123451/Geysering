@@ -503,9 +503,10 @@ functions
     pocketBodyTracerTransport
     {{
         // Project the air mass flux onto discrete phase continuity, then
-        // advance s with compressible MULES:
-        //   ddt(alpha*rho, s) + div(phi, s),  s limited to [0,1].
-        // Inventory is sigma = alpha*rho*s.  No morphology clear/clamp.
+        // advance conserved density sigma with MULES (rho=1, bounds
+        // [0, alpha*rho]) using phiVol = phi_air / max((alpha*rho)_f,
+        // residualAlpha*rho_f).  Recover s = sigma/(alpha*rho) for output.
+        // No morphology clear/clamp.
         type            boundedPhaseMassTransport;
         libs            ("libboundedPhaseMassTransport.so");
         field           pocketBodyTracer;
@@ -1872,6 +1873,10 @@ solvers
         tolerance 1e-10;
         relTol 0;
         maxIter 200;
+        nLimiterIter 5;
+    }}
+    pocketBodyTracerSigma
+    {{
         nLimiterIter 5;
     }}
     "U.*"

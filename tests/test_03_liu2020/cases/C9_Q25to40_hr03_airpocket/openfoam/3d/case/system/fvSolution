@@ -75,6 +75,10 @@ solvers
         maxIter 200;
         nLimiterIter 5;
     }
+    pocketBodyTracerSigma
+    {
+        nLimiterIter 5;
+    }
     "U.*"
     {
         solver smoothSolver;

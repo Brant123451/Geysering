@@ -30,10 +30,10 @@ namespace functionObjects
                 Class boundedPhaseMassTransport Declaration
 \*---------------------------------------------------------------------------*/
 
-//- Transport a phase mass fraction s with compressible MULES:
-//  ddt(alpha*rho, s) + div(phi, s) limited to s in [0,1], where phi is the
-//  continuity-projected phase mass flux.  The conserved inventory is
-//  sigma = alpha*rho*s.  No morphology clear/clamp and no continuity source.
+//- Transport tagged phase mass as conserved density sigma=alpha*rho*s with
+//  MULES on sigma (rho=1, local bounds [0, alpha*rho]) using a volume flux
+//  reconstructed from the continuity-projected phase mass flux.  Recover s
+//  only for output/arrival.  No morphology clear/clamp.
 class boundedPhaseMassTransport
 :
     public fvMeshFunctionObject
