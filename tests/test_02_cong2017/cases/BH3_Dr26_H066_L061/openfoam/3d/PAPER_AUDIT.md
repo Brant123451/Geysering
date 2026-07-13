@@ -237,3 +237,20 @@ point-neighbour stencil reduces curvature noise on the unchanged refined mesh.
 If neither passes, the next mesh treatment is a 24-layer axial-prism slab with
 the three transition heights on exact layer faces. No event run is released
 by these diagnostic improvements alone.
+
+The unchanged-refined-mesh `pointCellsLeastSquares` short diagnostic reaches
+`0.01598 m/s` maximum water-weighted speed and `721.8 Pa/m` reconstructed
+residual with physical surface tension. Its short-window thresholds pass, but
+the speed rises again over the final samples and the run covers only `0.05 s`;
+therefore `closed_hold.pass=false` remains correct. The prism mesh has now
+passed strict mesh checks with 500,672 tetrahedra plus 2,136 prisms and all
+25 required layer planes asserted, but it has no solver acceptance result yet.
+
+The prism construction also exposed a small geometry inconsistency in the
+older tetrahedral profiles: their atmosphere box began 1 mm below the physical
+rim solely to overlap the riser Boolean, creating an annular external-air
+sliver below `z=1.85 m`. The source now begins every external atmosphere
+exactly at the paper-derived physical rim while retaining a 1 mm central-riser
+overlap for robust Boolean union. Consequently all future base/refined/prism
+comparisons use the same `0.11739557 m3` CAD fluid domain; prior diagnostic
+fingerprints remain historical evidence and cannot release the current gate.

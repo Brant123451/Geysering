@@ -19,7 +19,8 @@
       "physical_riser_height_above_soffit_m": 1.8,
       "physical_rim_elevation_from_invert_m": 1.85,
       "computational_top_elevation_from_invert_m": 3.0,
-      "external_atmosphere_width_m": 0.3
+      "external_atmosphere_width_m": 0.3,
+      "external_atmosphere_base_elevation_m": 1.85
     },
     "initial_and_boundary_conditions": {
       "upstream_head_from_invert_m": 0.66,

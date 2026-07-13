@@ -467,10 +467,10 @@ def main() -> None:
             atmosphere = occ.addBox(
                 atmosphere_min_x,
                 atmosphere_min_y,
-                PHYSICAL_RIM_Z - BOOLEAN_OVERLAP,
+                PHYSICAL_RIM_Z,
                 args.atmosphere_width,
                 args.atmosphere_width,
-                COMPUTATIONAL_TOP_Z - PHYSICAL_RIM_Z + BOOLEAN_OVERLAP,
+                COMPUTATIONAL_TOP_Z - PHYSICAL_RIM_Z,
             )
 
             apparatus, _ = occ.fuse([(3, pipe)], [(3, riser)])

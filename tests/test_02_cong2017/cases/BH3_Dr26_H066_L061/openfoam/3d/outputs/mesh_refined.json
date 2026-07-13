@@ -23,6 +23,9 @@
   "fluid_geometry_volume_m3": 0.11748504288,
   "analytic_initial_pocket_m3": 0.00119773219918,
   "curvature_elements_per_2pi": 64,
+  "interface_band_aligned": false,
+  "interface_target_size_m": null,
+  "spatial_mesh_size_floor": false,
   "mesh_to_cad_volume_relative_error": -0.0004470209884813725,
-  "source_fingerprint": "23b3d970825098d6639380db44ee8ec9ca868470cf8ec1f51e486eb8147af92b"
+  "source_fingerprint": "8933e5b01b9683061ec3cfe72fd171601567d2bbad564b09f786df6437b4b7d2"
 }

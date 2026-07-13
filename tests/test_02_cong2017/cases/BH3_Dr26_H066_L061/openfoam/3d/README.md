@@ -129,7 +129,11 @@ exactly. The pipe/tee, riser outside the slab, and expanded external atmosphere
 remain tetrahedral. All Booleans finish at the valve plane before the slab is
 extruded; shared CAD faces connect its top and bottom to the tetrahedral
 regions. Mesh generation asserts the layer coordinates, prism count, shared
-faces, and CAD volume. These profiles test the spatially located CSF defect
+faces, and CAD volume. Every profile now starts the square external atmosphere
+at the physical rim `z=1.85 m`; the prior tetrahedral construction's 1 mm
+annular Boolean overlap below the rim was removed so mesh sensitivities share
+the prism profile's exact physical domain. These profiles test the spatially
+located CSF defect
 without altering physical inputs. Every run repeats the strict mesh check
 after creating its valve baffle and aborts before solving unless that final
 mesh reports `Mesh OK`.
@@ -241,11 +245,14 @@ non-orthogonality, `2741.5 Pa/m` initial residual, and reaches
 `0.04948 m/s` by its deliberately stopped `0.028 s` rejection window. Audit
 then found that lowering the global Gmsh size floor had also released
 curvature refinement along the full pipe; the source now applies a spatial
-size-floor callback before repeating this profile. A larger point-neighbour
-gradient remains a separate diagnostic. The axial-prism profile now isolates
-cell alignment from that gradient choice; it has no accepted solver result
-until its separately named short diagnostic is run, and it does not relax the
-acceptance threshold.
+size-floor callback before repeating this profile. On the unchanged refined
+mesh, `pointCellsLeastSquares` further reduces the physical-sigma result to
+`0.01598 m/s` and `721.8 Pa/m`; the `0.05 s` thresholds pass, but speed is
+again rising at the endpoint and the required 1 s duration is incomplete.
+This is a promising short diagnostic, not a formal hold pass. The axial-prism
+profile now isolates cell alignment from that gradient choice; it has no
+accepted solver result until its separately named short diagnostic is run,
+and it does not relax the acceptance threshold.
 
 ## Required outputs
 
