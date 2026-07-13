@@ -142,10 +142,20 @@ def level_series(run: Path) -> np.ndarray:
                 else math.nan
             )
         )
-        # The pocket nose is an upward air-to-water transition.  Direction,
-        # rather than simply the lowest crossing, avoids treating the initial
-        # free surface as an air-pocket front.
-        yint = min(air_to_water) - 0.025 if air_to_water else math.nan
+        # The Taylor-bubble nose is the highest upward air-to-water
+        # crossing that remains below the free-surface elevation.  Using
+        # min() would latch onto secondary fragments near the tee once the
+        # pocket breaks up, while the free surface itself is water-to-air.
+        if air_to_water and np.isfinite(yfs):
+            free_surface_z = yfs + 0.025
+            nose_candidates = [z_c for z_c in air_to_water if z_c < free_surface_z]
+            yint = (
+                max(nose_candidates) - 0.025 if nose_candidates else math.nan
+            )
+        elif air_to_water:
+            yint = max(air_to_water) - 0.025
+        else:
+            yint = math.nan
         rows.append((time, yfs, yint))
     if not rows:
         return np.empty((0, 3))
@@ -430,7 +440,7 @@ def reduce_run(run_id: str) -> dict:
         "notes": [
             "No experimental classification was used as a model input.",
             "PT1 millimetre offset is unreported; pocket gas-weighted pressure is also provided.",
-            "Yfs uses upward water-to-air and Yint upward air-to-water alpha.water=0.5 centreline crossings.",
+            "Yfs uses the highest upward water-to-air alpha.water=0.5 centreline crossing; Yint uses the highest upward air-to-water crossing below that free surface (Taylor-bubble nose).",
             "Ejected volume is external-domain water inventory plus signed cumulative far-field water outflow.",
             "Water density is exactly constant in this configured model, so total minus water mass gives gas mass.",
         ],
