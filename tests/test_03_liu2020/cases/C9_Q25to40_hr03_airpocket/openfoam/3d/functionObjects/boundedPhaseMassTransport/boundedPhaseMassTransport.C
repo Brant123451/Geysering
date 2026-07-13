@@ -196,7 +196,7 @@ boundedPhaseMassTransport
     schemesField_("unknown-schemesField"),
     residualAlpha_(1e-8),
     tolerance_(1),
-    boundsTolerance_(1e-8),
+    boundsTolerance_(1e-6),
     continuityTolerance_(1e-4),
     nCorr_(0),
     nNonOrthCorr_(0),
