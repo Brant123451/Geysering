@@ -197,7 +197,7 @@ boundedPhaseMassTransport
     residualAlpha_(1e-8),
     tolerance_(1),
     boundsTolerance_(1e-8),
-    continuityTolerance_(1e-6),
+    continuityTolerance_(1e-5),
     nCorr_(0),
     nNonOrthCorr_(0),
     resetOnStartUp_(false),
