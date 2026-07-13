@@ -104,6 +104,8 @@ tested and rejected after that projection:
   inventory construction, but recovered `s = sigma/(alpha*rho)` grew above 2
   by ~1e-4 s and is not an accepted trajectory.
 
+Latest tracer iteration (branch tip): advect conserved `sigma` with `phiVol = phi_air / max((alpha*rho)_f, 1e-3*rho_f)`, MULES-limited against `[0, max(alpha*rho, sigma)]`, recover `s` for output, abort only on catastrophic `s` (`<-1e-2` or `>10`). Rejected again: `residualAlpha`-floored phiVol (explosion), and intensity fluxes `phi*s` (negative s by ~1e-4 s). Fresh `Allrun.initialize` required.
+
 The remaining rank-1 need is a **conservative limiter with local upper bound
 `alpha*rho`** (e.g. MULES on `sigma`) so that both `∫sigma` and `s∈[0,1]` hold.
 It has no post-solve morphology clear and aborts on a failed carrier
