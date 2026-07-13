@@ -110,10 +110,15 @@ sample.
 | Valve baffle | coupled cyclic; wall for closed-hold test | zero-jump for instantaneous sensitivity or time-varying porous pressure loss | coupled | coupled | Primary-paper opening about 0.2 s; paired CFD used instantaneous opening; 0.5 s retained as sensitivity |
 
 The finite-opening loss uses the smoothstep open-area history and
-`K=(1/A-1)^2`. Its zero-area endpoint is regularized at exactly one generated
-valve-face area (`Amin=1/Nface`, audited from `topoSet`), because an aperture
-smaller than one face is not represented by this mesh. The 101-point loss
-table resolves that early opening without introducing an outcome-fitted
+`K=(1/A-1)^2`. Inertial and Darcy tables share that history:
+`I=K/L` and `D=(0.5 U_c / ν_w) I`, with `U_c=0.02 m/s` equal to the
+closed-hold water-speed gate and `ν_w` from the contract water properties.
+The Darcy term is required because `porousBafflePressure` is identically zero
+at `U=0` when `D=0`, so an inertial-only baffle cannot resist the initial
+hydrostatic jump. Its zero-area endpoint is regularized at exactly one
+generated valve-face area (`Amin=1/Nface`, audited from `topoSet`), because an
+aperture smaller than one face is not represented by this mesh. The 101-point
+tables resolve that early opening without introducing an outcome-fitted
 coefficient.
 
 ## Mesh profiles
@@ -346,7 +351,11 @@ The subsequent instantaneous-opening smoke is rejected as a dynamic
 trajectory: it was stopped at `0.003 s` after local maxima reached
 `452.7 m/s`, `785.7 MPa`, and `k=1.02e4 m2/s2` around the valve. This compact
 failure is retained as the instantaneous-opening sensitivity; the next smoke
-uses the primary paper's approximately `0.2 s` measured opening time.
+uses the primary paper's approximately `0.2 s` measured opening time. An
+inertial-only `0.2 s` table still failed near `0.003 s` after an initially
+bounded start, because `D=0` leaves zero baffle resistance at `U=0`. That
+compact failure is retained under the `open_smoke_valve_0p2_inertial_only_*`
+products; the revised smoke adds the mesh-derived Darcy table described above.
 The pressure initializer reports the exact atmosphere-patch acoustic Courant
 number at `maxDeltaT`, and runtime output records both net and absolute
 atmosphere mass flux to expose locally cancelling inflow/outflow. Failed

@@ -360,3 +360,13 @@ The first finite-opening attempt exposed a singular sub-face endpoint:
 momentum and energy solves to fail on their first update. The corrected
 regularization is mesh-derived rather than tuned: `Amin=1/Nface`, exactly one
 generated valve-face area, with the smoothstep loss sampled at 101 times.
+
+That inertial-only table still failed as diagnostic negative evidence: with
+`D=0`, `porousBafflePressure` provides no jump at `U=0`, so the ~6.5 kPa
+hydrostatic difference across Valve #4 could accelerate before `I|U|²`
+resisted. The smoke conserved mass through about `0.003 s`
+(`Ugas~4.4 m/s`, `Uwater~0.15 m/s`) and then diverged (`T`/`p`/`k`/`ε`
+blow-up). The fix adds a Darcy table on the same `K=(1/A-1)^2` history,
+scaled so viscous and inertial baffle terms match at the closed-hold
+water-speed gate `0.02 m/s` with contract water properties. Instantaneous
+opening remains an inertial/Darcy-free zero-jump diagnostic.

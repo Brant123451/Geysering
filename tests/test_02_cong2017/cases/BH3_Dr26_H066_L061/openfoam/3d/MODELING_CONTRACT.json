@@ -83,9 +83,13 @@
       "published_cfd_baseline_s": 0.0,
       "experiment_nominal_s": 0.2,
       "paired_cfd_reported_experiment_s": 0.5,
-      "finite_opening_model": "time-varying inertial porous baffle with smoothstep area fraction",
+      "finite_opening_model": "time-varying Darcy-plus-inertial porous baffle with smoothstep area fraction",
       "minimum_resolved_open_area": "one valve-face area, computed as 1/Nface from the generated face zone",
-      "opening_table_samples": 101
+      "opening_table_samples": 101,
+      "loss_coefficient": "K=(1/A-1)^2",
+      "inertial_coefficient": "I=K/L with L=0.050 m",
+      "darcy_coefficient": "D=(0.5*U_crossover/nu_water)*I so viscous and inertial baffle terms match at U_crossover=0.02 m/s (closed-hold water-speed gate) with contract water properties",
+      "full_open_jump": "D=I=0 exactly when A=1"
     },
     "mesh_profiles": {
       "base": {
