@@ -15,17 +15,17 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "boundedPhaseMassTransport.H"
+#include "MULES.H"
 #include "addToRunTimeSelectionTable.H"
 #include "fixedValueFvPatchField.H"
 #include "fvcDdt.H"
 #include "fvcDiv.H"
 #include "fvcFlux.H"
-#include "fvmDdt.H"
-#include "fvmDiv.H"
 #include "fvmLaplacian.H"
-#include "fvmSup.H"
 #include "inletOutletFvPatchFields.H"
+#include "oneField.H"
 #include "surfaceInterpolate.H"
+#include "zeroField.H"
 #include "zeroGradientFvPatchField.H"
 
 namespace Foam
@@ -267,7 +267,7 @@ boundedPhaseMassTransport
     potentialPtr_(nullptr),
     inventoryRhoPtr_(nullptr),
     sigmaPtr_(nullptr),
-    alphaRhoPrevPtr_(nullptr),
+    alphaRhoPtr_(nullptr),
     tracerSourcePtr_(nullptr),
     carrierFluxPtr_(nullptr),
     tracerFluxPtr_(nullptr)
@@ -544,19 +544,35 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     // selecting inflow values.
     field.correctBoundaryConditions();
 
-    const volScalarField alphaRho
-    (
-        IOobject
+    // Maintain alpha*rho with a valid old-time level for compressible MULES:
+    //   ddt(alpha*rho, s) + div(phi, s)  with s limited to [0,1].
+    if (!alphaRhoPtr_.valid())
+    {
+        alphaRhoPtr_.reset
         (
-            fieldName_ + "AlphaRho",
-            mesh_.time().timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE,
-            IOobject::NO_REGISTER
-        ),
-        alpha*phaseRho
-    );
+            new volScalarField
+            (
+                IOobject
+                (
+                    fieldName_ + "AlphaRhoMULES",
+                    mesh_.time().timeName(),
+                    mesh_,
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE,
+                    IOobject::REGISTER
+                ),
+                alpha*phaseRho
+            )
+        );
+        alphaRhoPtr_().oldTime();
+    }
+    else
+    {
+        // Store the previous alpha*rho into oldTime before overwriting.
+        alphaRhoPtr_().oldTime();
+        alphaRhoPtr_() == alpha*phaseRho;
+    }
+    volScalarField& alphaRho = alphaRhoPtr_();
 
     volScalarField& sigma = conservedDensity(alpha, phaseRho, field);
     if (!sigma.nOldTimes())
@@ -583,17 +599,43 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     const dimensionedScalar dt(mesh_.time().deltaT());
     const scalar resolveAlpha = max(residualAlpha_, 1e-3);
 
-    // Conservative tagged-mass update.  Inventory is ∫sigma; s is recovered
-    // for output/BCs/next-step upwind only and is not clipped back into sigma.
-    tmp<surfaceScalarField> tracerFlux =
-        fvc::flux(carrierFlux, field, divScheme);
-    tracerFlux.ref().oriented() = carrierFlux.oriented();
+    // High-order tagged-mass flux; MULES will limit it toward a bounded
+    // upwind flux so the updated fraction stays in [0,1].
+    surfaceScalarField tracerFlux
+    (
+        IOobject
+        (
+            fluxResultName_,
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            IOobject::NO_REGISTER
+        ),
+        fvc::flux(carrierFlux, field, divScheme)
+    );
+    tracerFlux.oriented() = carrierFlux.oriented();
 
-    {
-        const volScalarField divFlux(fvc::div(tracerFlux()));
-        sigma.primitiveFieldRef() =
-            sigmaOld.primitiveField() - dt.value()*divFlux.primitiveField();
-    }
+    // Ensure the fraction has an old-time slot.  Time.storeOldTimes should
+    // already have made old == current at the start of this function-object
+    // pass for the registered pocketBodyTracer field.
+    field.oldTime();
+
+    MULES::explicitSolve
+    (
+        alphaRho,
+        field,
+        carrierFlux,
+        tracerFlux,
+        zeroField(),
+        zeroField(),
+        oneField(),
+        zeroField()
+    );
+
+    // Inventory follows the bounded fraction by construction of the
+    // compressible MULES update for (alpha*rho*s).
+    sigma == alphaRho*field;
 
     const label iteration = 1;
     const bool converged = true;
@@ -607,29 +649,8 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
             << sigmaMassOld << " -> " << sigmaMass << exit(FatalError);
     }
 
-    // Recover s for output and the next upwind state.  Do not write the
-    // recovered fraction back into sigma (that would destroy conservation).
-    scalarField& fieldCells = field.primitiveFieldRef();
-    const scalarField& sigmaCells = sigma.primitiveField();
-    const scalarField& alphaRhoCells = alphaRho.primitiveField();
+    const scalarField& fieldCells = field.primitiveField();
     const scalarField& alphaCells = alpha.primitiveField();
-    forAll(fieldCells, celli)
-    {
-        if (alphaCells[celli] > resolveAlpha)
-        {
-            fieldCells[celli] = sigmaCells[celli]/alphaRhoCells[celli];
-        }
-        else
-        {
-            fieldCells[celli] = 0;
-        }
-    }
-    field.correctBoundaryConditions();
-    {
-        const volScalarField taggedDensity(alphaRho*field);
-        sigma.boundaryFieldRef(false) == taggedDensity.boundaryField();
-    }
-
     scalar fieldMin = VGREAT;
     scalar fieldMax = -VGREAT;
     forAll(fieldCells, celli)
@@ -664,12 +685,13 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
             << exit(FatalError);
     }
 
+    // Keep the legacy inventoryRho name pointing at the same alpha*rho.
     updateInventoryDensity(alpha, phaseRho);
 
     // Discrete tagged-mass residual of the conserved density sigma.
     const tmp<volScalarField> tracerSource
     (
-        (sigma - sigmaOld)/dt + fvc::div(tracerFlux())
+        (sigma - sigmaOld)/dt + fvc::div(tracerFlux)
     );
     if (!tracerSourcePtr_.valid())
     {
@@ -710,13 +732,13 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
                     IOobject::NO_WRITE,
                     IOobject::REGISTER
                 ),
-                tracerFlux()
+                tracerFlux
             )
         );
     }
     else
     {
-        tracerFluxPtr_() = tracerFlux();
+        tracerFluxPtr_() = tracerFlux;
     }
 
     Log << type() << " execute: " << field.name()

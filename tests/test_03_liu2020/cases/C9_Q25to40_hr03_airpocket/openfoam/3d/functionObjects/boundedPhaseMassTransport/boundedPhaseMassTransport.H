@@ -30,12 +30,10 @@ namespace functionObjects
                 Class boundedPhaseMassTransport Declaration
 \*---------------------------------------------------------------------------*/
 
-//- Transport a phase mass fraction by advancing the conserved tagged-mass
-//  density sigma = alpha*rho*s.  The supplied phase mass flux is projected
-//  onto the discrete phase-continuity equation, then
-//  fvm::ddt(sigma) + fvm::div(phi/(alpha*rho)_f, sigma) is solved.  The
-//  fraction field s is recovered only for output, boundary conditions and
-//  arrival diagnostics.  No clamp/clear and no carrier-continuity source.
+//- Transport a phase mass fraction s with compressible MULES:
+//  ddt(alpha*rho, s) + div(phi, s) limited to s in [0,1], where phi is the
+//  continuity-projected phase mass flux.  The conserved inventory is
+//  sigma = alpha*rho*s.  No morphology clear/clamp and no continuity source.
 class boundedPhaseMassTransport
 :
     public fvMeshFunctionObject
@@ -65,7 +63,7 @@ class boundedPhaseMassTransport
         autoPtr<volScalarField> potentialPtr_;
         autoPtr<volScalarField> inventoryRhoPtr_;
         autoPtr<volScalarField> sigmaPtr_;
-        autoPtr<volScalarField> alphaRhoPrevPtr_;
+        autoPtr<volScalarField> alphaRhoPtr_;
         autoPtr<volScalarField> tracerSourcePtr_;
         autoPtr<surfaceScalarField> carrierFluxPtr_;
         autoPtr<surfaceScalarField> tracerFluxPtr_;
