@@ -134,7 +134,10 @@ slab and additionally extrudes the external air from `z=1.85` to `3.0 m` as
 92 exact 12.5 mm vertical prism layers. The initial 46-layer, 25 mm attempt
 failed strict `checkMesh` at the physical-rim tetrahedron/prism transition;
 halving the layer height reduces that size jump and the prism end-cell aspect
-ratio. This profile removes the top circular-seam
+ratio. The resulting 471,331-cell mesh passes the full geometry/topology check
+with minimum determinant `0.002026`, minimum interpolation weight `0.06023`,
+maximum aspect ratio `17.66`, and maximum non-orthogonality `56.12 deg`; the
+closed-valve baffle mesh also passes. This profile removes the top circular-seam
 tetrahedron whose 0.352 mm face-to-cell distance produced an audited acoustic
 Courant number of `490.5` at `maxDeltaT=5e-4 s`; it does not change the CAD
 domain or boundary locations. Every profile starts the square external
@@ -315,19 +318,23 @@ implicating water-side balance or global mass loss. The matched
 `waveTransmissive` diagnostic completes `0.12 s`, crossing the former failure
 time. It keeps temperature within `293.62--297.66 K`, water-weighted speed
 within `3.24e-5 m/s`, and total-mass residual fraction within `1.23e-9`.
-This strongly isolates the fixed pressure boundary as the early energy
-failure trigger. It is not yet a formal pass: the run is shorter than `1 s`,
-and top-boundary gas speed is still rising, reaching `1.04 m/s` at `0.12 s`.
-The declared matched `5e-6 s` fixed/wave pair changes only `maxDeltaT`; the
-baseline `maxCo=0.25` and `maxAlphaCo=0.15` remain fixed. It must next
-distinguish boundary treatment from acoustic timestep sensitivity before
-extending the acoustic boundary to the formal hold. The pressure initializer
-now reports the exact atmosphere-patch acoustic Courant number at
-`maxDeltaT`, and runtime output records both net and absolute atmosphere mass
-flux to expose locally cancelling inflow/outflow. Failed solvers emit compact
-partial metrics with an explicit failure reason; current runs also record
-per-step extrema and locations for temperature, pressure, velocity,
-turbulence fields, and volume fraction.
+That tetrahedral result still had a rising `1.04 m/s` top-boundary gas speed,
+so the outlet mesh remained a confounding factor. A subsequent matched pair on
+the strict 92-layer atmosphere mesh now isolates the boundary condition.
+Fixed hydrostatic pressure completes `0.12 s` but reaches `0.1487 m/s`
+gas-weighted speed and `273.46--318.71 K`; `waveTransmissive` limits these to
+`0.00457 m/s` and `295.52--296.80 K`. The latter keeps maximum
+water-weighted speed at `3.84e-5 m/s`, with water-volume and total-mass
+residual fractions of `7.89e-9` and `7.99e-9`. Its audited atmosphere
+acoustic Courant number is `31.64` at the unchanged `maxDeltaT=5e-4 s`,
+down from `490.5`. This selects the layered `waveTransmissive` configuration
+for the next formal 1 s hold; the `0.12 s` result is not itself a pass. The
+pressure initializer reports the exact atmosphere-patch acoustic Courant
+number at `maxDeltaT`, and runtime output records both net and absolute
+atmosphere mass flux to expose locally cancelling inflow/outflow. Failed
+solvers emit compact partial metrics with an explicit failure reason; current
+runs also record per-step extrema and locations for temperature, pressure,
+velocity, turbulence fields, and volume fraction.
 
 ## Required outputs
 

@@ -303,17 +303,11 @@ subsequently failed at `t=0.086397 s`: the water-weighted speed remained only
 `2.39e-9` and `3.28e-9`, but the external-gas velocity rose abruptly and the
 temperature inversion reached its 100-iteration limit with non-finite-scale
 negative internal-energy temperatures. This localised gas/energy failure is
-not a static-hold pass. A matched fixed-pressure versus `waveTransmissive`
-atmosphere-boundary diagnostic completes `0.12 s` and crosses the former
-failure time without a thermodynamic abort. Its temperature range is
-`293.62--297.66 K`, maximum water-weighted speed is `3.24e-5 m/s`, and
-total-mass residual fraction is `1.23e-9`. This is strong A/B evidence that
-the fixed atmospheric pressure triggers the early gas-energy instability,
-but it is not a formal hold: the required duration is `1 s`, and the
-top-boundary gas speed is still increasing (`1.04 m/s` at `0.12 s`). A
-matched `5e-6 s` fixed/wave timestep pair, changing only `maxDeltaT`, is
-required before extending the acoustic boundary to the formal hold. The
-initializer now audits the exact atmosphere-patch acoustic Courant number
+not a static-hold pass. A tetrahedral-atmosphere `waveTransmissive`
+diagnostic crosses the former failure time, but its top-boundary gas speed
+still rises to `1.04 m/s` at `0.12 s`; boundary treatment alone therefore
+does not repair the poorly resolved acoustic outlet. The initializer audits
+the exact atmosphere-patch acoustic Courant number
 `(Un+sqrt(gamma/psi))*maxDeltaT*deltaCoeffs`, because the solver's ordinary
 Courant control contains velocity but not sound speed. Net and absolute
 atmosphere mass flux are both retained to detect cancelling local
@@ -328,6 +322,18 @@ construction failed strict `checkMesh` with 8 low-determinant cells and 32
 low-interpolation-weight faces at the physical-rim transition. Their exported
 coordinates locate the defect at `z=1.85 m`, so the declared candidate now uses
 92 exact 12.5 mm layers to reduce both the end-cell aspect ratio and the
-tetrahedron/prism size jump. Its strict mesh and acoustic audits must pass
-before another dynamic comparison. No event calculation is released by these
-short diagnostics.
+tetrahedron/prism size jump. The revised 471,331-cell mesh and its closed-valve
+baffle both pass `checkMesh -allGeometry -allTopology`: minimum determinant is
+`0.002026`, minimum interpolation weight is `0.06023`, maximum aspect ratio is
+`17.66`, and maximum non-orthogonality is `56.12 deg`.
+
+A matched `0.12 s` A/B pair on this same layered mesh now separates the outlet
+condition. Fixed hydrostatic pressure completes but develops `0.1487 m/s`
+gas-weighted speed and a `273.46--318.71 K` temperature range.
+`waveTransmissive` limits those values to `0.00457 m/s` and
+`295.52--296.80 K`; its maximum water-weighted speed is `3.84e-5 m/s`, with
+water-volume and total-mass residual fractions of `7.89e-9` and `7.99e-9`.
+The acoustic audit falls from `490.5` to `31.64` at the unchanged
+`maxDeltaT=5e-4 s`. This matched evidence selects the layered
+`waveTransmissive` configuration for the formal 1 s hold, but the short run is
+not itself a pass. No event calculation is released before that duration gate.
