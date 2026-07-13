@@ -486,11 +486,16 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     scalar relaxCoeff = 0;
     mesh_.relaxEquation(schemesField_, relaxCoeff);
 
-    // Compressible phase-fraction transport must use the bounded ddt form
-    // αρ*dds/dt, not ddt(αρs).  Otherwise independent α/ρ evolution from
-    // MULES/thermo is misinterpreted as a change in the tag and erodes the
-    // pocket inventory even when carrier continuity is projected.
-    const volScalarField alphaRhoDdt(fvc::ddt(alpha, phaseRho));
+    // Compressible phase-fraction transport must remove the carrier material
+    // derivative from the tag equation:
+    //   ddt(αρs)+div(φs) - s*(ddt(αρ)+div(φ)) = αρ*dds/dt + φ·∇s
+    // Matching OpenFOAM energyTransport / boundedDdtScheme, Sp uses both the
+    // carrier ddt and the projected carrier divergence so residual continuity
+    // error is not reinterpreted as tag creation/destruction.
+    const volScalarField alphaRhoMaterialDerivative
+    (
+        fvc::ddt(alpha, phaseRho) + fvc::div(carrierFlux)
+    );
 
     bool converged = false;
     label iteration = 0;
@@ -501,7 +506,7 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
         fvScalarMatrix fieldEqn
         (
             fvm::ddt(alpha, phaseRho, field)
-          - fvm::Sp(alphaRhoDdt, field)
+          - fvm::Sp(alphaRhoMaterialDerivative, field)
           + fvm::div(carrierFlux, field, divScheme)
          ==
           - fvm::ddt(residualAlpha_*phaseRho, field)

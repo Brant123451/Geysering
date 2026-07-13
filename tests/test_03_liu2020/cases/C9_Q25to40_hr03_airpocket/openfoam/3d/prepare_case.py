@@ -504,10 +504,10 @@ functions
     {{
         // Project the air mass flux onto discrete phase continuity, then solve
         // the bounded phase-fraction equation
-        // fvm::ddt(alpha,rho,s) - Sp(fvc::ddt(alpha,rho),s) + fvm::div(phi,s)
-        // with implicit upwind and the Foundation residual-alpha deferred
-        // correction.  The Sp term prevents MULES/thermo compression from
-        // eroding the source tag.
+        // fvm::ddt(alpha,rho,s) - Sp(fvc::ddt(alpha,rho)+fvc::div(phi),s)
+        // + fvm::div(phi,s) with implicit upwind and the Foundation
+        // residual-alpha deferred correction.  The Sp term prevents
+        // MULES/thermo compression from eroding the source tag.
         type            boundedPhaseMassTransport;
         libs            ("libboundedPhaseMassTransport.so");
         field           pocketBodyTracer;
