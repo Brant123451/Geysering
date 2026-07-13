@@ -132,6 +132,10 @@ balanceInitialPressure -time 0 \
 
 if [[ "$RUN_MODE" == "event" ]]; then
     mergeOrSplitBaffles -overwrite > log.mergeOrSplitBaffles 2>&1
+    # mergeOrSplitBaffles leaves zero-faced wall patches; strip them so the
+    # opening createBaffles can recreate cyclics with the same names.
+    createPatch -overwrite -dict system/createPatchDict.removeEmptyValve \
+        > log.createPatch.removeEmptyValve 2>&1
     topoSet -dict system/topoSetDict.valve > log.topoSet.valve.open 2>&1
     python3 make_valve_dict.py \
         --mode "$VALVE_OPENING" \
