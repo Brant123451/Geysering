@@ -365,6 +365,19 @@ functions
         writeInterval   $sampleInterval;
     }
 
+    atmosphereMassFluxMagnitude
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            atmosphere;
+        fields          (rhoPhi);
+        operation       sumMag;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   $sampleInterval;
+    }
+
     rimWaterFlux
     {
         type            surfaceFieldValue;

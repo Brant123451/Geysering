@@ -311,6 +311,10 @@ total-mass residual fraction is `1.23e-9`. This is strong A/B evidence that
 the fixed atmospheric pressure triggers the early gas-energy instability,
 but it is not a formal hold: the required duration is `1 s`, and the
 top-boundary gas speed is still increasing (`1.04 m/s` at `0.12 s`). A
-matched `5e-6 s` fixed/wave timestep pair is required before extending the
-acoustic boundary to the formal hold. No event calculation is released by
-these short diagnostics.
+matched `5e-6 s` fixed/wave timestep pair, changing only `maxDeltaT`, is
+required before extending the acoustic boundary to the formal hold. The
+initializer now audits the exact atmosphere-patch acoustic Courant number
+`(Un+sqrt(gamma/psi))*maxDeltaT*deltaCoeffs`, because the solver's ordinary
+Courant control contains velocity but not sound speed. Net and absolute
+atmosphere mass flux are both retained to detect cancelling local
+inflow/outflow. No event calculation is released by these short diagnostics.

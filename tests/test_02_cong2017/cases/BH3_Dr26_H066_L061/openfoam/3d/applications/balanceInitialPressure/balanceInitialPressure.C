@@ -36,11 +36,14 @@ int main(int argc, char* argv[])
         mesh.boundaryMesh().findPatchID("valve_upstream");
     const label valveDown =
         mesh.boundaryMesh().findPatchID("valve_downstream");
+    const label atmosphere =
+        mesh.boundaryMesh().findPatchID("atmosphere");
 
     if
     (
         valveUp < 0
      || valveDown < 0
+     || atmosphere < 0
      || mesh.boundaryMesh()[valveUp].coupled()
      || mesh.boundaryMesh()[valveDown].coupled()
     )
@@ -86,6 +89,8 @@ int main(int argc, char* argv[])
         );
     const Switch failOnResidual =
         controls.getOrDefault<Switch>("failOnResidual", false);
+    const scalar atmosphereGamma =
+        controls.getOrDefault<scalar>("atmosphereGamma", 1.4);
 
     if
     (
@@ -98,6 +103,7 @@ int main(int argc, char* argv[])
      || relaxation > 1
      || zeroUTolerance < 0
      || reconstructedResidualTolerance <= 0
+     || atmosphereGamma <= 1
     )
     {
         FatalErrorInFunction
@@ -533,6 +539,58 @@ int main(int argc, char* argv[])
                 << exit(FatalError);
         }
     }
+
+    const scalar maxDeltaT =
+        runTime.controlDict().get<scalar>("maxDeltaT");
+    const fvPatch& atmospherePatch = mesh.boundary()[atmosphere];
+    const scalarField& deltaCoeffs = atmospherePatch.deltaCoeffs();
+    const vectorField faceNormals(atmospherePatch.nf());
+    const scalarField normalVelocity
+    (
+        U.boundaryField()[atmosphere] & faceNormals
+    );
+    const scalarField soundSpeed
+    (
+        sqrt
+        (
+            atmosphereGamma
+           /mixture.psi().boundaryField()[atmosphere]
+        )
+    );
+    const scalarField waveSpeed
+    (
+        max(normalVelocity + soundSpeed, scalar(0))
+    );
+    const scalarField acousticCourant
+    (
+        maxDeltaT*waveSpeed*deltaCoeffs
+    );
+
+    label maxAcousticCourantFace = 0;
+    forAll(acousticCourant, facei)
+    {
+        if
+        (
+            acousticCourant[facei]
+          > acousticCourant[maxAcousticCourantFace]
+        )
+        {
+            maxAcousticCourantFace = facei;
+        }
+    }
+
+    Info<< "Atmosphere acoustic Courant at maxDeltaT: "
+        << gMax(acousticCourant) << nl
+        << "Atmosphere maximum delta coefficient: "
+        << gMax(deltaCoeffs) << " 1/m" << nl
+        << "Atmosphere minimum normal cell distance: "
+        << 1/gMax(deltaCoeffs) << " m" << nl
+        << "Atmosphere acoustic Courant maximum face: "
+        << maxAcousticCourantFace
+        << ", Cf=" << atmospherePatch.Cf()[maxAcousticCourantFace]
+        << ", waveSpeed=" << waveSpeed[maxAcousticCourantFace]
+        << " m/s, deltaCoeff="
+        << deltaCoeffs[maxAcousticCourantFace] << " 1/m" << nl;
 
     if (!(p.write() && p_rgh.write() && rho.write()))
     {

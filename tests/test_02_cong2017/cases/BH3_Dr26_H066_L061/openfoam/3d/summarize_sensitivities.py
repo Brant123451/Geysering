@@ -76,6 +76,11 @@ def main() -> None:
                 "initial_pressure_residual_pa_m": pressure_balance.get(
                     "maximum_reconstructed_residual_pa_per_m"
                 ),
+                "atmosphere_acoustic_courant_at_max_delta_t": (
+                    pressure_balance.get(
+                        "atmosphere_acoustic_courant_at_max_delta_t"
+                    )
+                ),
                 "end_time_s": data["simulated_end_time_s"],
                 "full_13s": int(data["full_13s_window_completed"]),
                 "geyser": int(data["geysering"]),
@@ -91,6 +96,11 @@ def main() -> None:
                 "total_mass_residual_fraction": conservation[
                     "max_abs_total_mass_residual_fraction"
                 ],
+                "maximum_atmosphere_absolute_mass_flux_kg_s": (
+                    conservation.get(
+                        "maximum_atmosphere_absolute_mass_flux_kg_per_s"
+                    )
+                ),
                 "closed_hold_duration_complete": (
                     closed_hold.get("duration_complete") if is_closed else None
                 ),
@@ -119,6 +129,7 @@ def main() -> None:
         "temperature_min_k",
         "temperature_max_k",
         "initial_pressure_residual_pa_m",
+        "atmosphere_acoustic_courant_at_max_delta_t",
         "end_time_s",
         "full_13s",
         "geyser",
@@ -130,6 +141,7 @@ def main() -> None:
         "rim_ejected_l",
         "gas_mass_residual_fraction",
         "total_mass_residual_fraction",
+        "maximum_atmosphere_absolute_mass_flux_kg_s",
         "closed_hold_duration_complete",
         "closed_hold_thresholds_pass",
         "closed_hold_pass",

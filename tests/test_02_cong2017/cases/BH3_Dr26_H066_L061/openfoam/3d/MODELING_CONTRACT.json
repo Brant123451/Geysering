@@ -76,6 +76,7 @@
       "parallel_decomposition": "deterministic simple decomposition with n=(nProcs 1 1) along the horizontal-pipe axis",
       "closed_hold_parallel_process_sensitivity": [1, 4],
       "surface_tension_sensitivity_n_per_m": [0.072, 0.0],
+      "atmosphere_acoustic_courant_audit": "(Un + sqrt(gamma/thermo:psi))*maxDeltaT*patchDeltaCoeffs",
       "stability_extrema_fields": ["T", "p", "p_rgh", "U", "k", "epsilon", "alpha.water"]
     },
     "valve_sensitivity": {

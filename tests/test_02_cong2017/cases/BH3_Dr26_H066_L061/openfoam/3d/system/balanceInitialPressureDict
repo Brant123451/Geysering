@@ -14,6 +14,7 @@ pTolerance                 1e-5;
 rhoTolerance               1e-10;
 relaxation                 1;
 zeroVelocityTolerance      1e-12;
+atmosphereGamma            1.4;
 
 // Diagnostic acceptance threshold for the pressure-projectable force
 // residual. Diagnostics continue so that the ensuing velocity can be

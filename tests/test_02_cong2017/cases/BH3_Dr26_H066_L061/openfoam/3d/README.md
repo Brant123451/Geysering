@@ -307,12 +307,16 @@ within `3.24e-5 m/s`, and total-mass residual fraction within `1.23e-9`.
 This strongly isolates the fixed pressure boundary as the early energy
 failure trigger. It is not yet a formal pass: the run is shorter than `1 s`,
 and top-boundary gas speed is still rising, reaching `1.04 m/s` at `0.12 s`.
-The declared matched `5e-6 s` fixed/wave timestep pair must next distinguish
-boundary treatment from timestep sensitivity before extending the acoustic
-boundary to the formal hold. Failed solvers emit compact partial metrics with
-an explicit failure reason; current runs also record per-step extrema and
-locations for temperature, pressure, velocity, turbulence fields, and volume
-fraction.
+The declared matched `5e-6 s` fixed/wave pair changes only `maxDeltaT`; the
+baseline `maxCo=0.25` and `maxAlphaCo=0.15` remain fixed. It must next
+distinguish boundary treatment from acoustic timestep sensitivity before
+extending the acoustic boundary to the formal hold. The pressure initializer
+now reports the exact atmosphere-patch acoustic Courant number at
+`maxDeltaT`, and runtime output records both net and absolute atmosphere mass
+flux to expose locally cancelling inflow/outflow. Failed solvers emit compact
+partial metrics with an explicit failure reason; current runs also record
+per-step extrema and locations for temperature, pressure, velocity,
+turbulence fields, and volume fraction.
 
 ## Required outputs
 

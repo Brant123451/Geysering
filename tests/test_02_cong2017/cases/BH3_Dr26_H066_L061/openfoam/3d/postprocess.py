@@ -192,6 +192,13 @@ def initial_pressure_balance(case: Path) -> dict[str, object] | None:
             raise RuntimeError(f"Missing '{label}' in {path}")
         return float(matches[-1])
 
+    def optional_final_scalar(label: str) -> float | None:
+        matches = re.findall(
+            rf"{re.escape(label)}\s*({NUMBER.pattern})",
+            text,
+        )
+        return float(matches[-1]) if matches else None
+
     accepted = re.search(
         r"Force-balance acceptance:\s*(true|false)",
         text,
@@ -208,6 +215,17 @@ def initial_pressure_balance(case: Path) -> dict[str, object] | None:
     )
     if accepted is None or location is None:
         raise RuntimeError(f"Incomplete pressure-balance audit in {path}")
+
+    acoustic_location = re.search(
+        (
+            rf"Atmosphere acoustic Courant maximum face:\s*(\d+),\s*"
+            rf"Cf=\(\s*({NUMBER.pattern})\s+({NUMBER.pattern})\s+"
+            rf"({NUMBER.pattern})\s*\),\s*waveSpeed="
+            rf"({NUMBER.pattern})\s*m/s,\s*deltaCoeff="
+            rf"({NUMBER.pattern})\s*1/m"
+        ),
+        text,
+    )
 
     return {
         "fixed_point_converged": "EOS/pressure fixed point converged." in text,
@@ -230,6 +248,32 @@ def initial_pressure_balance(case: Path) -> dict[str, object] | None:
         "alpha_water_at_maximum_residual": float(location.group(5)),
         "predicted_water_weighted_velocity_increment_at_maximum_m_per_s": (
             float(location.group(6))
+        ),
+        "atmosphere_acoustic_courant_at_max_delta_t": optional_final_scalar(
+            "Atmosphere acoustic Courant at maxDeltaT:"
+        ),
+        "atmosphere_maximum_delta_coefficient_per_m": optional_final_scalar(
+            "Atmosphere maximum delta coefficient:"
+        ),
+        "atmosphere_minimum_normal_cell_distance_m": optional_final_scalar(
+            "Atmosphere minimum normal cell distance:"
+        ),
+        "atmosphere_acoustic_courant_maximum_face": (
+            int(acoustic_location.group(1)) if acoustic_location else None
+        ),
+        "atmosphere_acoustic_courant_maximum_face_centre_m": (
+            [
+                float(acoustic_location.group(index))
+                for index in (2, 3, 4)
+            ]
+            if acoustic_location
+            else None
+        ),
+        "atmosphere_wave_speed_at_maximum_face_m_per_s": (
+            float(acoustic_location.group(5)) if acoustic_location else None
+        ),
+        "atmosphere_delta_coefficient_at_maximum_face_per_m": (
+            float(acoustic_location.group(6)) if acoustic_location else None
         ),
     }
 
@@ -362,6 +406,9 @@ def main() -> None:
     atmosphere_mass_flux_table = read_function(
         case, "atmosphereMassFlux", "surfaceFieldValue.dat"
     )
+    atmosphere_mass_flux_magnitude_table = read_function(
+        case, "atmosphereMassFluxMagnitude", "surfaceFieldValue.dat"
+    )
     rim_water_flux_table = read_function(
         case, "rimWaterFlux", "surfaceFieldValue.dat"
     )
@@ -378,6 +425,9 @@ def main() -> None:
     q_atmos_air_mass = interpolate(atmosphere_air_pt_flux_table, time) / R_AIR
     q_inlet_mass = interpolate(inlet_mass_flux_table, time)
     q_atmos_mass = interpolate(atmosphere_mass_flux_table, time)
+    q_atmos_mass_magnitude = interpolate(
+        atmosphere_mass_flux_magnitude_table, time
+    )
     q_rim_water = interpolate(rim_water_flux_table, time)
 
     finite = np.isfinite(
@@ -386,6 +436,7 @@ def main() -> None:
         + q_atmos_air_mass
         + q_inlet_mass
         + q_atmos_mass
+        + q_atmos_mass_magnitude
     )
     if not np.all(finite):
         raise RuntimeError("Flux function objects did not span the probe interval")
@@ -520,6 +571,15 @@ def main() -> None:
             ),
             "internal_air_mass_initial_kg": float(internal_air_mass[0]),
             "internal_air_mass_final_kg": float(internal_air_mass[-1]),
+            "maximum_atmosphere_absolute_mass_flux_kg_per_s": float(
+                np.nanmax(q_atmos_mass_magnitude)
+            ),
+            "maximum_atmosphere_outflow_mass_flux_kg_per_s": float(
+                np.nanmax(0.5 * (q_atmos_mass_magnitude + q_atmos_mass))
+            ),
+            "maximum_atmosphere_inflow_mass_flux_kg_per_s": float(
+                np.nanmax(0.5 * (q_atmos_mass_magnitude - q_atmos_mass))
+            ),
             "total_mass_boundary_flux": (
                 "direct sum(rhoPhi) on inlet and atmosphere"
             ),
@@ -608,6 +668,7 @@ def main() -> None:
                 "gas_weighted_speed_max_m_per_s",
                 "inlet_total_mass_flow_kg_s",
                 "atmosphere_total_mass_flow_kg_s",
+                "atmosphere_absolute_mass_flow_kg_s",
                 "rim_water_flow_m3_s",
                 "atmosphere_water_flow_m3_s",
                 "cumulative_rim_ejected_m3",
@@ -633,6 +694,7 @@ def main() -> None:
             gas_weighted_speed,
             q_inlet_mass,
             q_atmos_mass,
+            q_atmos_mass_magnitude,
             q_rim_water,
             q_atmos_water,
             ejected_volume,
