@@ -1,0 +1,278 @@
+{
+  "schema_version": 1,
+  "case": "B-H3",
+  "run_id": "closed_prism_sigma_072_nhat_ls_wave",
+  "run_mode": "closed",
+  "valve_opening": "closed",
+  "simulated_end_time_s": 0.12,
+  "full_13s_window_completed": false,
+  "geometry_model": "3-D circular pipe, circular riser, Boolean tee, external air",
+  "solver": "compressibleInterFoam",
+  "geysering": false,
+  "geyser_detection": "alpha.water >= 0.05 at centreline probes above z=1.85 m",
+  "Ta_3d_s": null,
+  "t_rim_3d_s": null,
+  "Yfs_max_3d_m": 0.6599999999999997,
+  "Yint_max_3d_m": null,
+  "vfs_3d_m_per_s": null,
+  "vint_3d_m_per_s": null,
+  "maximum_sampled_speed_m_per_s": 0.0002134715591350602,
+  "maximum_all_domain_speed_m_per_s": 1.0446356907,
+  "maximum_water_weighted_speed_m_per_s": 3.243864075e-05,
+  "maximum_gas_weighted_speed_m_per_s": 1.0446356907,
+  "field_extrema": {
+    "T": {
+      "minimum": {
+        "value": 293.61844573,
+        "time_s": 0.119,
+        "position_m": [
+          3.4723225874,
+          -0.013685969736,
+          2.996478514
+        ],
+        "processor": 2
+      },
+      "maximum": {
+        "value": 297.66449423,
+        "time_s": 0.119,
+        "position_m": [
+          3.4739146185,
+          -0.013132511694,
+          2.9966915954
+        ],
+        "processor": 2
+      }
+    },
+    "mag(U)": {
+      "minimum": {
+        "value": 0.0,
+        "time_s": 1.1999904e-06,
+        "position_m": [
+          2.0088374943,
+          -0.024306336158,
+          0.03061553798
+        ],
+        "processor": 0
+      },
+      "maximum": {
+        "value": 1.0446356907,
+        "time_s": 0.12,
+        "position_m": [
+          3.4573558061,
+          -0.0041956913063,
+          2.9986632637
+        ],
+        "processor": 1
+      }
+    },
+    "alpha.water": {
+      "minimum": {
+        "value": -2.114367696e-23,
+        "time_s": 0.001711191269,
+        "position_m": [
+          3.4628784705,
+          -0.0090302820757,
+          0.66875
+        ],
+        "processor": 1
+      },
+      "maximum": {
+        "value": 1.0,
+        "time_s": 1.1999904e-06,
+        "position_m": [
+          2.3599344294,
+          0.0043570061815,
+          0.020034850079
+        ],
+        "processor": 0
+      }
+    },
+    "epsilon": {
+      "minimum": {
+        "value": 4.2359344636e-08,
+        "time_s": 0.12,
+        "position_m": [
+          3.5093079435,
+          0.10006994186,
+          1.8593489329
+        ],
+        "processor": 2
+      },
+      "maximum": {
+        "value": 0.011362659673,
+        "time_s": 0.12,
+        "position_m": [
+          3.4543545323,
+          -0.0018866282445,
+          2.9954462829
+        ],
+        "processor": 1
+      }
+    },
+    "k": {
+      "minimum": {
+        "value": 8.796703662e-07,
+        "time_s": 0.12,
+        "position_m": [
+          3.4723736393,
+          0.0042602141065,
+          1.7603138934
+        ],
+        "processor": 2
+      },
+      "maximum": {
+        "value": 0.00027796466111,
+        "time_s": 0.12,
+        "position_m": [
+          3.4543545323,
+          -0.0018866282445,
+          2.9954462829
+        ],
+        "processor": 1
+      }
+    },
+    "p": {
+      "minimum": {
+        "value": 101297.32811,
+        "time_s": 0.119642487,
+        "position_m": [
+          3.4544276388,
+          -0.00083644935762,
+          3.0
+        ],
+        "processor": 1
+      },
+      "maximum": {
+        "value": 107787.53933,
+        "time_s": 0.001192156863,
+        "position_m": [
+          5.9407608485,
+          0.00010420498871,
+          5.3636422411e-05
+        ],
+        "processor": 3
+      }
+    },
+    "p_rgh": {
+      "minimum": {
+        "value": 101325.28973,
+        "time_s": 0.002,
+        "position_m": [
+          5.9844222069,
+          0.0021748621224,
+          0.049857035561
+        ],
+        "processor": 3
+      },
+      "maximum": {
+        "value": 107790.50112,
+        "time_s": 0.0008399850047,
+        "position_m": [
+          3.4697167078,
+          0.0021018231163,
+          0.62694515231
+        ],
+        "processor": 1
+      }
+    }
+  },
+  "initial_pressure_balance": {
+    "fixed_point_converged": true,
+    "force_balance_accepted": false,
+    "maximum_face_residual_pa_per_m": 797.7707588,
+    "maximum_reconstructed_residual_pa_per_m": 693.4352639,
+    "maximum_predicted_water_weighted_velocity_increment_m_per_s": 6.936649361e-07,
+    "maximum_residual_cell": 501986,
+    "maximum_residual_cell_centre_m": [
+      3.477503359,
+      0.005001298448,
+      0.66125
+    ],
+    "alpha_water_at_maximum_residual": 0.4166666667,
+    "predicted_water_weighted_velocity_increment_at_maximum_m_per_s": 6.936649361e-07
+  },
+  "initial_volume_audit": {
+    "pocket_target_m3": 0.0011977321991811086,
+    "pocket_mesh_m3": 0.0011939587248,
+    "pocket_relative_error": -0.0031505159364411117,
+    "paper_riser_water_target_m3": 0.0003504132445814056,
+    "paper_vair_over_vw_target": 3.418056302671687,
+    "mesh_pocket_over_paper_vw": 3.407287661818467,
+    "riser_nonoverlap_water_target_m3": 0.0003238667866585718,
+    "riser_nonoverlap_water_mesh_m3": 0.00031901845331,
+    "riser_nonoverlap_relative_error": -0.0149701468267045,
+    "pocket_ideal_gas_mass_target_kg": 0.0014276407696572862,
+    "pocket_ideal_gas_mass_from_mesh_volume_kg": 0.001423142964660968
+  },
+  "conservation": {
+    "max_abs_water_volume_residual_m3": 1.6079880086776144e-11,
+    "max_abs_water_volume_residual_fraction": 1.3372240383157429e-09,
+    "max_abs_global_gas_mass_residual_kg": 1.0098213382937827e-08,
+    "max_abs_global_gas_mass_residual_fraction": 8.045779941796531e-08,
+    "max_abs_total_mass_residual_kg": 1.495451722208196e-08,
+    "max_abs_total_mass_residual_fraction": 1.2332285559233198e-09,
+    "internal_air_mass_initial_kg": 0.0021678749692991828,
+    "internal_air_mass_final_kg": 0.0021678751046103257,
+    "total_mass_boundary_flux": "direct sum(rhoPhi) on inlet and atmosphere",
+    "residual_reference": "first common runtime sample; t=0 volumes are audited separately"
+  },
+  "ejection": {
+    "cumulative_positive_rim_water_volume_m3": 0.0,
+    "cumulative_positive_rim_water_volume_l": 0.0,
+    "cumulative_atmosphere_escape_water_volume_m3": 0.0
+  },
+  "closed_hold": {
+    "applicable": true,
+    "minimum_duration_s": 1.0,
+    "duration_complete": false,
+    "thresholds_pass": true,
+    "free_surface_max_drift_m": 0.0,
+    "initial_pocket_zone_max_relative_volume_drift": 0.0,
+    "pass": false,
+    "criteria": {
+      "free_surface_drift_m": 0.01,
+      "pocket_relative_volume_drift": 0.01,
+      "water_weighted_speed_m_per_s": 0.02
+    },
+    "all_domain_and_gas_speed_are_reported_but_not_gates": "Low-density gas-side CSF velocity is monitored separately; the hold gate uses phase-weighted water speed plus interface and pocket-volume drift."
+  },
+  "experiment": {
+    "geyser": true,
+    "Ta_s": 8.18,
+    "vfs_m_per_s": 0.657,
+    "vint_m_per_s": 0.916
+  },
+  "existing_1d": {
+    "geyser": false,
+    "Ta_s": 9.56,
+    "vfs_m_per_s": 0.4268,
+    "vint_m_per_s": 1.2369,
+    "Yfs_max_m": 0.82
+  },
+  "classification_changed_by_numerics": null,
+  "honesty_note": "Experimental classification is a comparison target only. No source term or fitted event trigger is used.",
+  "source_fingerprint": "cfa52157f4cb318470c2be6bc77f7b5f136fc0324a1ffaf2c7a58add5a1db23b",
+  "solver_completed": true,
+  "solver_failure_reason": null,
+  "numerical_controls": {
+    "mesh_profile": "prism",
+    "c_alpha": 1.0,
+    "initial_interface_thickness_m": 0.015,
+    "initial_interface_profile": "linear",
+    "n_hat_gradient_scheme": "least-squares",
+    "alpha_smooth_curvature": 0,
+    "max_co": 0.25,
+    "max_alpha_co": 0.15,
+    "max_delta_t_s": 0.0005,
+    "sample_interval_s": 0.001,
+    "surface_tension_n_per_m": 0.072,
+    "atmosphere_pressure_boundary": "wave-transmissive",
+    "parallel_processes": 4,
+    "parallel_decomposition": "simple-x",
+    "parallel_partition_shape": [
+      4,
+      1,
+      1
+    ]
+  }
+}

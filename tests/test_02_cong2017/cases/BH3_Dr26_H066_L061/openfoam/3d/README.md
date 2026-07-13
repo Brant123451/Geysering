@@ -300,13 +300,19 @@ still only `2.11e-5 m/s`, with water-volume and total-mass residual fractions
 of `2.39e-9` and `3.28e-9`; the external-gas velocity instead grew abruptly
 and the temperature inversion exceeded its 100-iteration limit. This rejects
 the current fixed atmospheric-pressure boundary for the formal hold without
-implicating water-side balance or global mass loss. The next declared A/B test
-keeps the mesh, initial fields, physical surface tension, gradient operator,
-and deterministic partition fixed while changing only atmospheric `p_rgh`
-from the hydrostatic fixed value to `waveTransmissive`. Failed solvers emit
-compact partial metrics with an explicit failure reason; current runs also
-record per-step extrema and locations for temperature, pressure, velocity,
-turbulence fields, and volume fraction.
+implicating water-side balance or global mass loss. The matched
+`waveTransmissive` diagnostic completes `0.12 s`, crossing the former failure
+time. It keeps temperature within `293.62--297.66 K`, water-weighted speed
+within `3.24e-5 m/s`, and total-mass residual fraction within `1.23e-9`.
+This strongly isolates the fixed pressure boundary as the early energy
+failure trigger. It is not yet a formal pass: the run is shorter than `1 s`,
+and top-boundary gas speed is still rising, reaching `1.04 m/s` at `0.12 s`.
+The declared matched `5e-6 s` fixed/wave timestep pair must next distinguish
+boundary treatment from timestep sensitivity before extending the acoustic
+boundary to the formal hold. Failed solvers emit compact partial metrics with
+an explicit failure reason; current runs also record per-step extrema and
+locations for temperature, pressure, velocity, turbulence fields, and volume
+fraction.
 
 ## Required outputs
 

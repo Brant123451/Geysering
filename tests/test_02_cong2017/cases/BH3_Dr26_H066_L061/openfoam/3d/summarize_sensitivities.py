@@ -62,6 +62,9 @@ def main() -> None:
                 "parallel_decomposition": numerical_controls.get(
                     "parallel_decomposition"
                 ),
+                "atmosphere_pressure_boundary": numerical_controls.get(
+                    "atmosphere_pressure_boundary", "fixed-hydrostatic"
+                ),
                 "solver_completed": data.get("solver_completed"),
                 "solver_failure_reason": data.get("solver_failure_reason"),
                 "temperature_min_k": (
@@ -110,6 +113,7 @@ def main() -> None:
         "n_hat_gradient_scheme",
         "parallel_processes",
         "parallel_decomposition",
+        "atmosphere_pressure_boundary",
         "solver_completed",
         "solver_failure_reason",
         "temperature_min_k",

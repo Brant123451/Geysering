@@ -66,5 +66,5 @@
   "cad_to_reference_volume_relative_error": 1.10589086777e-08,
   "mesh_to_cad_volume_relative_error": -0.0004458880459732306,
   "prism_contract_passed": true,
-  "source_fingerprint": "a4e0c5686772a93126a203b51a6b9250ae2952b2e023f7f9441045d7d46a82f8"
+  "source_fingerprint": "c0327d6f7e796957a4012f9474195f3ba2269643fd4b3f8b559edd511de07e1a"
 }

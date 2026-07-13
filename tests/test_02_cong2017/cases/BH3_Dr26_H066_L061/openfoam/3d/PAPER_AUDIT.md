@@ -304,5 +304,13 @@ subsequently failed at `t=0.086397 s`: the water-weighted speed remained only
 temperature inversion reached its 100-iteration limit with non-finite-scale
 negative internal-energy temperatures. This localised gas/energy failure is
 not a static-hold pass. A matched fixed-pressure versus `waveTransmissive`
-atmosphere-boundary diagnostic is therefore required before another formal
-hold; no event calculation is released by the completed short runs.
+atmosphere-boundary diagnostic completes `0.12 s` and crosses the former
+failure time without a thermodynamic abort. Its temperature range is
+`293.62--297.66 K`, maximum water-weighted speed is `3.24e-5 m/s`, and
+total-mass residual fraction is `1.23e-9`. This is strong A/B evidence that
+the fixed atmospheric pressure triggers the early gas-energy instability,
+but it is not a formal hold: the required duration is `1 s`, and the
+top-boundary gas speed is still increasing (`1.04 m/s` at `0.12 s`). A
+matched `5e-6 s` fixed/wave timestep pair is required before extending the
+acoustic boundary to the formal hold. No event calculation is released by
+these short diagnostics.
