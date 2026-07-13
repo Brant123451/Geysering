@@ -355,3 +355,8 @@ that non-physical trajectory. This does not authorize deleting the
 instantaneous sensitivity. The next smoke uses the primary paper's measured
 approximately `0.2 s` opening time with the already declared time-varying
 porous baffle, while retaining the same mesh, fluids, interface, and outlet.
+The first finite-opening attempt exposed a singular sub-face endpoint:
+`Amin=1e-4` implied an unresolved aperture and `I=2.0e9 1/m`, causing the
+momentum and energy solves to fail on their first update. The corrected
+regularization is mesh-derived rather than tuned: `Amin=1/Nface`, exactly one
+generated valve-face area, with the smoothstep loss sampled at 101 times.

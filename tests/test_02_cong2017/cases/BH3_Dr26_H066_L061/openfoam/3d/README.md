@@ -109,6 +109,13 @@ sample.
 | `atmosphere` | `pressureInletOutletVelocity` | hydrostatically initialized `p_rgh`, then `waveTransmissive` with `gamma=1.4`; `p` calculated | `inletOutlet`, inflow 0 | `inletOutlet`, inflow 296.15 K | Open sides/top of external air domain; expression-fixed pressure retained as rejected diagnostic |
 | Valve baffle | coupled cyclic; wall for closed-hold test | zero-jump for instantaneous sensitivity or time-varying porous pressure loss | coupled | coupled | Primary-paper opening about 0.2 s; paired CFD used instantaneous opening; 0.5 s retained as sensitivity |
 
+The finite-opening loss uses the smoothstep open-area history and
+`K=(1/A-1)^2`. Its zero-area endpoint is regularized at exactly one generated
+valve-face area (`Amin=1/Nface`, audited from `topoSet`), because an aperture
+smaller than one face is not represented by this mesh. The 101-point loss
+table resolves that early opening without introducing an outcome-fitted
+coefficient.
+
 ## Mesh profiles
 
 `make_geometry.py` builds an exact OpenCASCADE fluid domain and generates a
