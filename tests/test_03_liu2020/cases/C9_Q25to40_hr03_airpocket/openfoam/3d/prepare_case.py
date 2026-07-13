@@ -524,7 +524,10 @@ functions
         sourceResult    pocketBodyTracerMassSource;
         schemesField    pocketBodyTracer;
         tolerance       1e-8;
-        boundsTolerance 1e-6;
+        // Recovered s = sigma/max(alpha*rho, ...) can overshoot by O(1e-4)
+        // from discrete carrier compression even when ∫sigma is conserved.
+        // This guards the derived fraction only; sigma is never clipped.
+        boundsTolerance 1e-3;
         continuityTolerance 1e-4;
         nCorr           1;
         nNonOrthCorr    1;
