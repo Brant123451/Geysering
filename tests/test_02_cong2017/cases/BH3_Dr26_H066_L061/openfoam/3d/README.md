@@ -183,6 +183,9 @@ python3 run_study.py --variant closed_interface_sigma_zero_nhat_ls
 
 # Replace the transition neighbourhood with exact axial prism layers
 python3 run_study.py --variant closed_prism_sigma_072_nhat_ls
+python3 run_study.py --variant closed_prism_sigma_072_nhat_point
+python3 run_study.py --variant closed_prism_sigma_072_nhat_point_serial
+python3 run_study.py --variant closed_prism_sigma_zero_nhat_point
 
 # Isolate linear-band edge curvature with a volume-preserving cosine profile
 python3 run_study.py --variant closed_refined_sigma_072_cosine
@@ -256,7 +259,13 @@ maximum water-weighted speed is `2.36e-5 m/s`, sampled riser speed is
 The water-side signal decays to the few-micrometre-per-second range rather than
 growing. This short result selects the prism profile for the formal
 `closed_base` candidate, but it is not itself a 1 s pass and does not relax
-the acceptance threshold.
+the acceptance threshold. The first formal rerun diverged from the successful
+short trajectory at `t=0.031 s` and aborted when the energy equation produced
+`T0=-2882.2 K`; no formal metric was accepted. The next declared prism tests
+pair `pointCellsLeastSquares` with four-process and serial execution and with
+`sigma=0`, separating capillary residual from parallel/energy sensitivity.
+Failed solvers now emit compact partial metrics with an explicit failure
+reason instead of leaving an unaudited log-only result.
 
 ## Required outputs
 

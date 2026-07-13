@@ -53,6 +53,11 @@ def main() -> None:
                 "n_hat_gradient_scheme": numerical_controls.get(
                     "n_hat_gradient_scheme"
                 ),
+                "parallel_processes": numerical_controls.get(
+                    "parallel_processes"
+                ),
+                "solver_completed": data.get("solver_completed"),
+                "solver_failure_reason": data.get("solver_failure_reason"),
                 "initial_pressure_residual_pa_m": pressure_balance.get(
                     "maximum_reconstructed_residual_pa_per_m"
                 ),
@@ -91,6 +96,9 @@ def main() -> None:
         "initial_interface_thickness_m",
         "initial_interface_profile",
         "n_hat_gradient_scheme",
+        "parallel_processes",
+        "solver_completed",
+        "solver_failure_reason",
         "initial_pressure_residual_pa_m",
         "end_time_s",
         "full_13s",

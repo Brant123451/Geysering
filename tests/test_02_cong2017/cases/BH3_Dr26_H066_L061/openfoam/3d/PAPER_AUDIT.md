@@ -267,3 +267,15 @@ static-hold acceptance remains governed by the independent 1 s drift,
 velocity, and conservation gates. This result selects the prism profile with
 `leastSquares nHat` as the formal `closed_base` candidate, not as an already
 accepted event baseline.
+
+The first 1 s candidate did not reproduce the short trajectory: at
+`t=0.031 s`, while the water-side audit was still in the micrometre-per-second
+range, the gas/energy coupling became unstable and
+`compressibleInterFoam` aborted with `Negative initial temperature
+T0: -2882.196026`. This is a failed formal hold, not an infrastructure
+completion. Because the nominally identical four-process short run had reached
+`0.05 s`, the next A/B set records process count and tests
+`pointCellsLeastSquares` on the prism mesh in both four-process and serial
+execution, plus a paired `sigma=0` run. These checks diagnose capillary
+forcing versus parallel trajectory sensitivity; they do not replace the
+physical-sigma 1 s requirement.

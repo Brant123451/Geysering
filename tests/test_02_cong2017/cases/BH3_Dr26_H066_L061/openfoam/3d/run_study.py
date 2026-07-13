@@ -10,6 +10,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -52,6 +53,7 @@ class Variant:
     initial_interface_thickness: float = 0.015
     initial_interface_profile: str = "linear"
     n_hat_gradient_scheme: str = "gauss-linear"
+    processes: int | None = None
 
 
 VARIANTS = (
@@ -164,6 +166,38 @@ VARIANTS = (
         end_time=0.05,
         sample_interval=1.0e-3,
         n_hat_gradient_scheme="least-squares",
+    ),
+    Variant(
+        "closed_prism_sigma_072_nhat_point",
+        "diagnostic",
+        mesh="prism",
+        mode="closed",
+        valve="closed",
+        end_time=0.05,
+        sample_interval=1.0e-3,
+        n_hat_gradient_scheme="point-cells-least-squares",
+    ),
+    Variant(
+        "closed_prism_sigma_072_nhat_point_serial",
+        "diagnostic",
+        mesh="prism",
+        mode="closed",
+        valve="closed",
+        end_time=0.05,
+        sample_interval=1.0e-3,
+        n_hat_gradient_scheme="point-cells-least-squares",
+        processes=1,
+    ),
+    Variant(
+        "closed_prism_sigma_zero_nhat_point",
+        "diagnostic",
+        mesh="prism",
+        mode="closed",
+        valve="closed",
+        end_time=0.05,
+        sample_interval=1.0e-3,
+        surface_tension=0.0,
+        n_hat_gradient_scheme="point-cells-least-squares",
     ),
     Variant(
         "closed_refined_sigma_072_cosine",
@@ -350,11 +384,27 @@ def outputs_complete(
 
 
 def annotate_metrics(
-    runtime: Path, variant: Variant, expected_fingerprint: str
+    runtime: Path,
+    variant: Variant,
+    expected_fingerprint: str,
+    process_count: int,
+    solver_completed: bool,
 ) -> None:
     path = runtime / "outputs" / f"{variant.run_id}_metrics.json"
     data = json.loads(path.read_text(encoding="utf-8"))
     data["source_fingerprint"] = expected_fingerprint
+    data["solver_completed"] = solver_completed
+    data["solver_failure_reason"] = None
+    if not solver_completed:
+        solver_log = runtime / "log.compressibleInterFoam"
+        if solver_log.is_file():
+            text = solver_log.read_text(encoding="utf-8", errors="replace")
+            match = re.search(r"Negative initial temperature T0:\s*([^\n]+)", text)
+            data["solver_failure_reason"] = (
+                f"Negative initial temperature T0: {match.group(1).strip()}"
+                if match
+                else "compressibleInterFoam exited non-zero"
+            )
     data["numerical_controls"] = {
         "mesh_profile": variant.mesh,
         "c_alpha": variant.c_alpha,
@@ -367,6 +417,7 @@ def annotate_metrics(
         "max_delta_t_s": variant.max_delta_t,
         "sample_interval_s": variant.sample_interval,
         "surface_tension_n_per_m": variant.surface_tension,
+        "parallel_processes": process_count,
     }
     path.write_text(json.dumps(data, indent=2, allow_nan=False) + "\n", encoding="utf-8")
 
@@ -403,6 +454,9 @@ def main() -> None:
         )
 
     for variant in selected:
+        process_count = variant.processes or args.np
+        if process_count < 1:
+            raise ValueError(f"{variant.run_id}: processes must be positive")
         if (
             outputs_complete(source_output, variant, expected_fingerprint)
             and not args.force
@@ -444,7 +498,7 @@ def main() -> None:
                 "INITIAL_INTERFACE_PROFILE": variant.initial_interface_profile,
                 "NHAT_GRADIENT_SCHEME": variant.n_hat_gradient_scheme,
                 "MESH_PROFILE": variant.mesh,
-                "OPENFOAM_NP": str(args.np),
+                "OPENFOAM_NP": str(process_count),
                 "REFERENCE_ROOT": str(HERE.parents[1]),
             }
         )
@@ -452,11 +506,47 @@ def main() -> None:
             run(["bash", "./Allrun"], runtime, env)
         except subprocess.CalledProcessError:
             metrics_path = runtime / "outputs" / f"{variant.run_id}_metrics.json"
+            if not metrics_path.is_file() and (
+                runtime / "postProcessing" / "pressureProbes"
+            ).is_dir():
+                subprocess.run(
+                    [
+                        "python3",
+                        "postprocess.py",
+                        "--case",
+                        ".",
+                        "--reference-root",
+                        str(HERE.parents[1]),
+                        "--run-id",
+                        variant.run_id,
+                        "--run-mode",
+                        variant.mode,
+                        "--valve-opening",
+                        variant.valve,
+                        "--output",
+                        "outputs",
+                    ],
+                    cwd=runtime,
+                    env=env,
+                    check=False,
+                )
             if metrics_path.is_file():
-                annotate_metrics(runtime, variant, expected_fingerprint)
+                annotate_metrics(
+                    runtime,
+                    variant,
+                    expected_fingerprint,
+                    process_count,
+                    solver_completed=False,
+                )
                 copy_products(runtime, source_output, variant.run_id)
             raise
-        annotate_metrics(runtime, variant, expected_fingerprint)
+        annotate_metrics(
+            runtime,
+            variant,
+            expected_fingerprint,
+            process_count,
+            solver_completed=True,
+        )
         copy_products(runtime, source_output, variant.run_id)
         if variant.mode == "closed" and not outputs_complete(
             source_output, variant, expected_fingerprint

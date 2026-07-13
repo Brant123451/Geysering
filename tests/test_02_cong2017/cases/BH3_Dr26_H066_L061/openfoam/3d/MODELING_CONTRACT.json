@@ -70,6 +70,7 @@
       "baseline_max_alpha_courant": 0.15,
       "baseline_max_delta_t_s": 0.0005,
       "closed_hold_baseline_mesh_profile": "prism",
+      "closed_hold_parallel_process_sensitivity": [1, 4],
       "surface_tension_sensitivity_n_per_m": [0.072, 0.0]
     },
     "valve_sensitivity": {
