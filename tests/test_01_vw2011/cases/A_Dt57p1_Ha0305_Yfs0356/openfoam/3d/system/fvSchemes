@@ -29,11 +29,13 @@ divSchemes
     div(phi,alpha)  Gauss vanLeer;
     div(phirb,alpha) Gauss interfaceCompression;
 
-    div(rhoPhi,U)   Gauss limitedLinearV 1;
+    // Keep momentum upwind on the under-determined tetrahedra; limitedLinearV
+    // previously triggered an FPE in GaussSeidel during the U solve.
+    div(rhoPhi,U)   Gauss upwind;
     div(rhoPhi,T)   Gauss limitedLinear 1;
-    div(rhoPhi,K)   Gauss limitedLinear 1;
-    div(phi,p)      Gauss limitedLinear 1;
-    div(phi,k)      Gauss limitedLinear 1;
+    div(rhoPhi,K)   Gauss upwind;
+    div(phi,p)      Gauss upwind;
+    div(phi,k)      Gauss upwind;
 
     div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
 }
