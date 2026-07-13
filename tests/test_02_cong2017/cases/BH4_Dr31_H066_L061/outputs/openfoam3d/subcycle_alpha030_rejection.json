@@ -1,0 +1,31 @@
+{
+  "case": "B-H4",
+  "purpose": "Throughput trial for maxAlphaCo=0.30 with six alpha subcycles after the 9 s checkpoint; not an event-classification result",
+  "checkpoint_time_s": 9.0,
+  "candidate_controls": {
+    "maxCo": 0.4,
+    "maxAlphaCo": 0.3,
+    "nAlphaSubCycles": 6,
+    "maximum_alpha_courant_per_subcycle": 0.05
+  },
+  "retained_controls": {
+    "maxCo": 0.4,
+    "maxAlphaCo": 0.2,
+    "nAlphaSubCycles": 4,
+    "maximum_alpha_courant_per_subcycle": 0.05
+  },
+  "observed": {
+    "reached_time_s": 9.00295,
+    "deltaT_s": 1.94e-05,
+    "global_courant_max": 0.4001,
+    "interface_courant_max": 0.1837,
+    "deltaT_gain_versus_maxAlphaCo_0p20": 1.29,
+    "mules_work_gain_versus_four_subcycles": 1.5
+  },
+  "result": "REJECTED",
+  "reason": "Raising maxAlphaCo allowed the step to grow only until the global Courant limit of 0.40. The resulting ~1.29x deltaT gain was smaller than the 1.5x MULES work from six subcycles, so net throughput fell.",
+  "notes": [
+    "The earlier maxAlphaCo=0.20 / four-subcycle controls remain the production setting.",
+    "Per-subcycle interface Courant would have remained 0.05; the trial was stopped for throughput, not accuracy."
+  ]
+}

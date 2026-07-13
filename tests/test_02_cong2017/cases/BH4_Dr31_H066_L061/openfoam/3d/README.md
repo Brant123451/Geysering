@@ -104,7 +104,10 @@ selection evidence.  The independent 8.5--8.55 s restart comparison in
 earlier two-subcycle controls to 0.057%, below its 0.5% gate.  A later
 `maxAlphaCo=0.40`/eight-subcycle trial was rejected because the global Courant
 limit already capped `deltaT`, so the extra MULES work reduced throughput;
-see `subcycle_alpha040_rejection.json`.  None of these short diagnostics is
+see `subcycle_alpha040_rejection.json`.  A later `maxAlphaCo=0.30`/six-subcycle
+trial after the 9 s checkpoint was likewise rejected: the global Courant limit
+capped the step before the extra MULES work paid for itself; see
+`subcycle_alpha030_rejection.json`.  None of these short diagnostics is
 used for event classification.
 
 ## Run
