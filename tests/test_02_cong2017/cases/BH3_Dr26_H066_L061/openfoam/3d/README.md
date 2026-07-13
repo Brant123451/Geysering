@@ -328,8 +328,13 @@ water-weighted speed at `3.84e-5 m/s`, with water-volume and total-mass
 residual fractions of `7.89e-9` and `7.99e-9`. Its audited atmosphere
 acoustic Courant number is `31.64` at the unchanged `maxDeltaT=5e-4 s`,
 down from `490.5`. This selects the layered `waveTransmissive` configuration
-for the next formal 1 s hold; the `0.12 s` result is not itself a pass. The
-pressure initializer reports the exact atmosphere-patch acoustic Courant
+for the formal hold. The unchanged configuration now completes `1.0 s` and
+passes: maximum water-weighted speed is `9.72e-5 m/s`, free-surface and
+isolated-pocket volume drifts are zero at the retained resolution, and
+water-volume/global-gas-mass/total-mass residual fractions are
+`2.81e-8/9.21e-7/3.11e-8`. The all-domain gas-side maximum is
+`0.00884 m/s`, while temperature stays within `295.33--297.05 K`.
+The pressure initializer reports the exact atmosphere-patch acoustic Courant
 number at `maxDeltaT`, and runtime output records both net and absolute
 atmosphere mass flux to expose locally cancelling inflow/outflow. Failed
 solvers emit compact partial metrics with an explicit failure reason; current
@@ -351,7 +356,6 @@ speed maxima are retained as explicit diagnostics. For event runs,
 `closed_hold.pass` is `null`; an open-valve smoke can never be mistaken for a
 closed-hold pass.
 
-At the current revision, the base mesh passes strict `checkMesh` and the
-`0.02 s` event smoke completes, but the 1 s closed hold has not passed. No
-13 s result is accepted until that gate is resolved without changing the
-experimental classification target.
+At the current revision, the strict layered mesh checks and formal 1 s closed
+hold pass. This releases a new open-valve smoke and the 13 s event/sensitivity
+runs without changing the experimental classification target.

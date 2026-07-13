@@ -335,5 +335,14 @@ gas-weighted speed and a `273.46--318.71 K` temperature range.
 water-volume and total-mass residual fractions of `7.89e-9` and `7.99e-9`.
 The acoustic audit falls from `490.5` to `31.64` at the unchanged
 `maxDeltaT=5e-4 s`. This matched evidence selects the layered
-`waveTransmissive` configuration for the formal 1 s hold, but the short run is
-not itself a pass. No event calculation is released before that duration gate.
+`waveTransmissive` configuration for the formal 1 s hold.
+
+That unchanged configuration now completes the full `1.0 s` hold and passes
+the declared gate. Maximum water-weighted speed is `9.72e-5 m/s` against the
+`0.02 m/s` limit; free-surface and isolated-pocket volume drifts are both zero
+at the retained resolution. The all-domain/gas maximum is `0.00884 m/s`,
+temperature remains within `295.33--297.05 K`, and maximum water-volume,
+global-gas-mass, and total-mass residual fractions are `2.81e-8`, `9.21e-7`,
+and `3.11e-8`, respectively. The dynamic pass does not relabel the initializer's
+independent `force_balance_accepted=false` audit. It releases the open-valve
+smoke and event calculations without changing any experimental target.

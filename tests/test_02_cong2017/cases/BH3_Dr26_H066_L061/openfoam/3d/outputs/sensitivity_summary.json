@@ -27,7 +27,7 @@
   "all_required_full_variants_complete": false,
   "classification_values_across_completed_full_variants": [],
   "classification_changed_by_numerics": false,
-  "closed_hold_passed": false,
+  "closed_hold_passed": true,
   "experimental_classification": "GEYSER",
   "note": "No result is tuned to the experimental label."
 }
