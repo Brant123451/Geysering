@@ -176,6 +176,10 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     // The stock scalarTransport function object only applies this
     // variable-density MULES correction in its volume-phase branch.  Applying
     // it here bounds the compressible phase mass fraction conservatively.
+    // fvMatrix::flux() is not marked oriented in this OpenFOAM release, while
+    // the supplied phase flux is.  MULES subtracts their upwind fluxes, so the
+    // orientation metadata must match before entering the limiter.
+    tracerFlux.ref().oriented() = phi.oriented();
     MULES::explicitSolve
     (
         rho,
