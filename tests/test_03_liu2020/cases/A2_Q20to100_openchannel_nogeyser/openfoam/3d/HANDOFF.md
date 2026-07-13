@@ -57,24 +57,15 @@ base/refined strict meshes and full transients are required before completion.
 * Detailed evidence and modeling limitations are in `PAPER_AUDIT.md`; commands
   are in `README.md`.
 
-## Completed after handoff
+## Completed after handoff (superseded fixed-stage baseline)
 
-The new-account agent rebuilt both cases from committed source and completed:
+An earlier new-account agent completed base/refined full transients on the
+**fixed-stage / headbox** geometry (`-4…14.4 s`, 118,321 / 187,195 cells).
+Those compact `outputs/` files remain on this branch only as a diagnosed
+baseline. They are **not** evidence for the replacement tank/weir model and
+must be replaced after the new full runs finish.
 
-1. base: 118,321 tetrahedra, strict `Mesh OK`, four-rank smoke and full
-   `-4…14.4 s` transient;
-2. refined: 187,195 tetrahedra, strict `Mesh OK`, four-rank smoke and full
-   `-4…14.4 s` transient;
-3. base/refined pressure, riser, Courant, liquid-continuity and grid-sensitivity
-   postprocessing;
-4. compact CSV/JSON/PNG output commits on this same PR branch.
-
-The run result is an evidence-based **failed quantitative validation**, not a
-completed match. Both grids predict no riser-top reach or water discharge, but
-the four-second pre-ramp state is not converged and the pressure response is
-far below the experiment:
-
-| Metric | base | refined |
+| Metric (fixed-stage, superseded) | base | refined |
 |---|---:|---:|
 | Pre-ramp outlet (20 L/s inlet) | 22.05 L/s | 23.75 L/s |
 | Pre-ramp water-volume slope | -1.93 L/s | -3.68 L/s |
@@ -85,11 +76,27 @@ far below the experiment:
 | Maximum contiguous riser column | 0.020 m | 0.020 m |
 | Maximum mixture front | 0.020 m | 0.080 m |
 
-The unknown downstream tank/weir rating remains the leading physical
-uncertainty. A longer initialization alone cannot reconstruct it. No
-unreported geometry or fitted backpressure was introduced to force no-geyser.
-The original acceptance requirement for a stable pre-ramp state therefore
-remains failed even though both requested full calculations were completed.
+## Live progress: replacement tank/weir model
+
+Committed source now uses the thesis tank + movable circular weir
+(`z_crest=0.031 m` from Q0/`hd` only), `Dr=0.057 m`, no headbox, and a
+canonical `-12…14.4 s` window. Status at the latest agent check:
+
+1. **base mesh**: 158,507 tetrahedra, strict `Mesh OK` (non-orth. max 59.76,
+   skewness 0.845).
+2. **base smoke**: four-rank smoke completed (`SOLVE_DONE mode=smoke`).
+3. **base full**: `NP=4 ./Allrun base` running in tmux `a2-base-full`
+   (`log.interFoam.full`). Sampled near `t ≈ -6.47 s` (window `-12…14.4 s`):
+   inlet ≈ 19.99 L/s, weir ≈ 19.6–22.6 L/s (still settling), riser outlet 0,
+   volume slope ≈ −0.9 L/s over a short window, downstream equivalent depths
+   ≈ 0.063 / 0.070 / 0.087 m at `x=0.60/3.25/6.00 m`. No fatal/FPE.
+   Recent rate ≈ 3.9e-4 sim-s/wall-s → order of ~15 h wall remaining to
+   `14.4 s` on this 4-core host. Written fields include `-12`, `-9`, `-8`,
+   `-7`.
+4. **refined**: not started for the replacement model (prior refined tmux
+   belongs to the superseded fixed-stage campaign).
+5. Do **not** treat incomplete `postProcessing` or partial CSV/JSON as final
+   validation. No crest or BC retuning from transient/no-geyser evidence.
 
 ## Reproduction
 
@@ -128,4 +135,6 @@ directories, logs, frames, or caches.
 `README.md` record which requirements passed and which runtime checks failed.
 Generated meshes, decomposed fields, logs, and time directories remain
 non-versioned; all compact evidence needed to audit the conclusions is under
-the Case `outputs/` directory.
+the Case `outputs/` directory. Until the replacement-model base and refined
+fulls finish and replace those files, treat committed `outputs/openfoam_3d_*`
+as the superseded fixed-stage baseline only.
