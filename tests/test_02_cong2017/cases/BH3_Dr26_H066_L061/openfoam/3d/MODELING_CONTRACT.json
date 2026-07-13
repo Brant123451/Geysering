@@ -95,6 +95,15 @@
         "interface_band_target_m": 0.0025,
         "interface_refinement_z_m": [0.63, 0.69],
         "minimum_size_outside_interface_m": 0.004
+      },
+      "prism_diagnostic": {
+        "inherits": "refined",
+        "prism_band_z_m": [0.63, 0.69],
+        "axial_layer_height_m": 0.0025,
+        "axial_layer_count": 24,
+        "exact_layer_planes_z_m": [0.6525, 0.66, 0.6675],
+        "element_type": "Prism6",
+        "tetrahedral_outside_prism_band": true
       }
     },
     "classification": {

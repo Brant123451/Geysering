@@ -154,6 +154,16 @@ VARIANTS = (
         n_hat_gradient_scheme="least-squares",
     ),
     Variant(
+        "closed_prism_sigma_072_nhat_ls",
+        "diagnostic",
+        mesh="prism",
+        mode="closed",
+        valve="closed",
+        end_time=0.05,
+        sample_interval=1.0e-3,
+        n_hat_gradient_scheme="least-squares",
+    ),
+    Variant(
         "closed_refined_sigma_072_cosine",
         "diagnostic",
         mesh="refined",
