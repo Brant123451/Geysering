@@ -186,15 +186,15 @@ def main() -> None:
         if data["prism_rim_shared_asserted"] is not True:
             prism_failures.append("physical-rim shared-face assertion did not pass")
         if args.profile == "prism_atmosphere":
-            if data["atmosphere_prism_layer_count"] != 46:
+            if data["atmosphere_prism_layer_count"] != 92:
                 prism_failures.append(
-                    "atmosphere prism profile does not contain 46 layers"
+                    "atmosphere prism profile does not contain 92 layers"
                 )
             atmosphere_levels = data["atmosphere_prism_layer_z_m"]
             expected_atmosphere_levels = [
-                1.85 + 0.025 * index for index in range(47)
+                1.85 + 0.0125 * index for index in range(93)
             ]
-            if atmosphere_levels is None or len(atmosphere_levels) != 47:
+            if atmosphere_levels is None or len(atmosphere_levels) != 93:
                 prism_failures.append(
                     "atmosphere prism z-level audit is incomplete"
                 )
@@ -207,7 +207,7 @@ def main() -> None:
                 )
             ):
                 prism_failures.append(
-                    "atmosphere prism levels are not exact 25 mm layers"
+                    "atmosphere prism levels are not exact 12.5 mm layers"
                 )
             if not data["atmosphere_prism_cell_count"]:
                 prism_failures.append(

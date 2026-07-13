@@ -116,8 +116,8 @@
       },
       "prism_atmosphere_diagnostic": {
         "inherits": "prism_diagnostic",
-        "external_atmosphere_vertical_layer_height_m": 0.025,
-        "external_atmosphere_vertical_layer_count": 46,
+        "external_atmosphere_vertical_layer_height_m": 0.0125,
+        "external_atmosphere_vertical_layer_count": 92,
         "purpose": "remove thin top-boundary tetrahedra from acoustic-outflow sensitivity"
       }
     },

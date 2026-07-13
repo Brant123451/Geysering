@@ -323,6 +323,11 @@ inflow/outflow. On the current tetrahedral external-air mesh that audit is
 would leave this local acoustic number at `4.91`, so blindly extending that
 expensive timestep diagnostic is not justified. A declared
 `prism_atmosphere` mesh instead preserves the exact CAD domain while imposing
-46 exact 25 mm vertical layers in the external air; its strict mesh and
-acoustic audits must pass before another dynamic comparison. No event
-calculation is released by these short diagnostics.
+vertical prism layers in the external air. The first 46-layer, 25 mm
+construction failed strict `checkMesh` with 8 low-determinant cells and 32
+low-interpolation-weight faces at the physical-rim transition. Their exported
+coordinates locate the defect at `z=1.85 m`, so the declared candidate now uses
+92 exact 12.5 mm layers to reduce both the end-cell aspect ratio and the
+tetrahedron/prism size jump. Its strict mesh and acoustic audits must pass
+before another dynamic comparison. No event calculation is released by these
+short diagnostics.

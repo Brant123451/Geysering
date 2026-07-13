@@ -131,7 +131,10 @@ extruded; shared CAD faces connect its top and bottom to the tetrahedral
 regions. Mesh generation asserts the layer coordinates, prism count, shared
 faces, and CAD volume. The `prism_atmosphere` diagnostic keeps that interface
 slab and additionally extrudes the external air from `z=1.85` to `3.0 m` as
-46 exact 25 mm vertical prism layers. This removes the top circular-seam
+92 exact 12.5 mm vertical prism layers. The initial 46-layer, 25 mm attempt
+failed strict `checkMesh` at the physical-rim tetrahedron/prism transition;
+halving the layer height reduces that size jump and the prism end-cell aspect
+ratio. This profile removes the top circular-seam
 tetrahedron whose 0.352 mm face-to-cell distance produced an audited acoustic
 Courant number of `490.5` at `maxDeltaT=5e-4 s`; it does not change the CAD
 domain or boundary locations. Every profile starts the square external

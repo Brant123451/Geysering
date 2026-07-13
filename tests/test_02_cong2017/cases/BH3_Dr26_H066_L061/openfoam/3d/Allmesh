@@ -40,7 +40,7 @@ case "$PROFILE" in
         CURVATURE_ELEMENTS=64
         GEOMETRY_ARGS=(
             --prism-interface-band
-            --prism-atmosphere-layers 46
+            --prism-atmosphere-layers 92
         )
         ;;
     *)

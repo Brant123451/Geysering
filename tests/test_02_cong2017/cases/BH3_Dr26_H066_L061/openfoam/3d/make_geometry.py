@@ -47,8 +47,8 @@ BOOLEAN_OVERLAP = 0.001
 PRISM_BOTTOM_Z = 0.630
 PRISM_TOP_Z = 0.690
 PRISM_LAYER_HEIGHT = 0.0025
-ATMOSPHERE_PRISM_LAYER_HEIGHT = 0.025
-ATMOSPHERE_PRISM_LAYERS = 46
+ATMOSPHERE_PRISM_LAYER_HEIGHT = 0.0125
+ATMOSPHERE_PRISM_LAYERS = 92
 PRISM_STAGES = (
     (INITIAL_INTERFACE_LOWER_Z, 9),
     (INITIAL_FREE_SURFACE_Z, 3),
@@ -480,7 +480,8 @@ def main() -> None:
         abs_tol=1.0e-12,
     ):
         raise ValueError(
-            "prism-atmosphere-layers must produce exact 25 mm layers"
+            "prism-atmosphere-layers must produce exact "
+            f"{ATMOSPHERE_PRISM_LAYER_HEIGHT:g} m layers"
         )
 
     output = args.output_dir.resolve()
@@ -858,7 +859,8 @@ def main() -> None:
                     )
                 ):
                     raise RuntimeError(
-                        "Atmosphere prism levels do not form exact 25 mm "
+                        "Atmosphere prism levels do not form exact "
+                        f"{ATMOSPHERE_PRISM_LAYER_HEIGHT:g} m "
                         f"layers: {atmosphere_prism_levels}"
                     )
         elif prism_count:
