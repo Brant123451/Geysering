@@ -106,9 +106,12 @@ et al. (2020) Test 3 / Series C / Case C9：
 - 人工载体密度和显式重建时间层的两版可变密度 MULES 均已失界，
   后者在 solver time `0.0202 s` 达到约 `1e24`，禁止恢复；
 - 当前 `boundedPhaseMassTransport` 先将气相质量通量投影到离散气相
-  连续方程，再使用 `fvm::ddt(alpha,rho,tracer)`、隐式迎风和
-  residual-alpha 延迟校正；无清除/截断、无连续性方程源，载体投影
-  不收敛或失界均立即终止；`Allrun.initialize` 会自动编译；
+  连续方程，再使用有界相分数形式
+  `fvm::ddt(alpha,rho,s) - Sp(fvc::ddt(alpha,rho),s) + fvm::div(phi,s)`、
+  隐式迎风和 residual-alpha 延迟校正；无清除/截断、无连续性方程源，
+  载体投影不收敛或失界均立即终止；`Allrun.initialize` 会自动编译；
+- 未加 Sp 项的 `fvm::ddt(alpha,rho,s)` smoke 轨迹在 solver time 0.35 s
+  已损失 1.93% 示踪质量且残差审计近零，已拒绝，禁止恢复；
 - 到达判据使用物理 `alpha.air*rho.air` 库存，并用三个开放边界
   示踪通量闭合质量预算；预算误差或累计数值示踪平衡残差超过初始
   示踪质量 1% 时判据无效；

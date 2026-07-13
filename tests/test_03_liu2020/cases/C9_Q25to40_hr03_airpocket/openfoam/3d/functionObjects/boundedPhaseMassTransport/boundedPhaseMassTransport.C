@@ -22,6 +22,7 @@ License
 #include "fvmDdt.H"
 #include "fvmDiv.H"
 #include "fvmLaplacian.H"
+#include "fvmSup.H"
 #include "zeroGradientFvPatchField.H"
 
 namespace Foam
@@ -477,11 +478,19 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
 
     // inletOutlet patches must use the corrected phase mass flux when
     // selecting inflow values.
+    // Ensure old-time storage exists before the first ddt evaluation.
+    field.oldTime();
     field.correctBoundaryConditions();
 
     const word divScheme("div(phi," + schemesField_ + ")");
     scalar relaxCoeff = 0;
     mesh_.relaxEquation(schemesField_, relaxCoeff);
+
+    // Compressible phase-fraction transport must use the bounded ddt form
+    // αρ*dds/dt, not ddt(αρs).  Otherwise independent α/ρ evolution from
+    // MULES/thermo is misinterpreted as a change in the tag and erodes the
+    // pocket inventory even when carrier continuity is projected.
+    const volScalarField alphaRhoDdt(fvc::ddt(alpha, phaseRho));
 
     bool converged = false;
     label iteration = 0;
@@ -492,6 +501,7 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
         fvScalarMatrix fieldEqn
         (
             fvm::ddt(alpha, phaseRho, field)
+          - fvm::Sp(alphaRhoDdt, field)
           + fvm::div(carrierFlux, field, divScheme)
          ==
           - fvm::ddt(residualAlpha_*phaseRho, field)
@@ -536,9 +546,9 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
 
     updateInventoryDensity(alpha, phaseRho);
 
-    // This is not an equation source.  It is the local physical tracer-balance
-    // residual after the deferred correction and linear solves, exposed so
-    // post-processing can reject a trajectory with excessive numerical mass.
+    // Discrete tagged-mass residual of ∫ alpha*rho*s after the bounded solve.
+    // With the Sp(ddt(alpha,rho)) form this should stay near the projected
+    // carrier-continuity residual rather than track artificial s erosion.
     const tmp<volScalarField> tracerSource
     (
         fvc::ddt(alpha, phaseRho, field) + fvc::div(tracerFlux())

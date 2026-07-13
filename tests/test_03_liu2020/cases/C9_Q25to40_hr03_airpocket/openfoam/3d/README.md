@@ -217,17 +217,21 @@ variable-density MULES integrations were also rejected: an artificial
 still violated MULES's low-order positivity requirement (`|tracer|` exceeded
 `1e24` by solver time 0.0202 s). The current local
 `boundedPhaseMassTransport` instead projects the raw air mass flux onto the
-discrete `alpha.air*rho.air` continuity equation and solves
-`fvm::ddt(alpha,rho,tracer)` with implicit upwind plus the Foundation
-residual-alpha deferred correction. It has no clamp and no carrier-continuity
-equation source. Physical inventory and tagged boundary fluxes must close
-within 1%, and the independently integrated numerical tracer-balance residual
-must also stay below 1%. The object aborts immediately if carrier projection
-exceeds the local relative tolerance `1e-4` or the tracer leaves `[0,1]`;
-failed projections receive up to two incremental correction passes before
-aborting. The range check allows only `1e-6` linear/discretisation tolerance
-and never clips the field. A fresh run is required to validate this
-implementation.
+discrete `alpha.air*rho.air` continuity equation and solves the bounded
+phase-fraction form
+`fvm::ddt(alpha,rho,s) - Sp(fvc::ddt(alpha,rho),s) + fvm::div(phi,s)` with
+implicit upwind plus the Foundation residual-alpha deferred correction. The
+Sp term is required: an earlier unprojected `fvm::ddt(alpha,rho,s)` form kept
+a near-zero reconstructed residual while still eroding 1.93% of tagged mass
+by solver time 0.35 s during pocket compression, so that trajectory is
+rejected. It has no clamp and no carrier-continuity equation source. Physical
+inventory and tagged boundary fluxes must close within 1%, and the
+independently integrated numerical tracer-balance residual must also stay
+below 1%. The object aborts immediately if carrier projection exceeds the
+local relative tolerance `1e-4` or the tracer leaves `[0,1]`; failed
+projections receive up to two incremental correction passes before aborting.
+The range check allows only `1e-6` linear/discretisation tolerance and never
+clips the field. A fresh run is required to validate this implementation.
 
 Phase 1 is incomplete. Phase 2 and eight eruptions have not yet been
 reproduced.

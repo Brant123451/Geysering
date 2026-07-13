@@ -89,10 +89,15 @@ well: a function-generated `alpha*rho` carrier had an invalid old-time level,
 while an explicit reconstruction of both levels still violated MULES's
 low-order positivity requirement and reached order `1e24` by solver time
 0.0202 s. The current `boundedPhaseMassTransport` projects the raw gas mass
-flux onto discrete gas continuity, then uses the solver-owned
-`fvm::ddt(alpha,rho,tracer)` time term, implicit upwind, and a residual-alpha
-deferred correction. It has no post-solve projection or continuity source and
-aborts on a failed carrier projection or any material `[0,1]` violation.
+flux onto discrete gas continuity, then uses the bounded phase-fraction form
+`fvm::ddt(alpha,rho,s) - Sp(fvc::ddt(alpha,rho),s) + fvm::div(phi,s)`,
+implicit upwind, and a residual-alpha deferred correction. An earlier
+unbounded `fvm::ddt(alpha,rho,s)` smoke trajectory reached solver time
+0.35 s with a near-zero reconstructed residual while still destroying 1.93%
+of tagged mass during pocket compression; that run is rejected. The Sp term
+prevents MULES/thermo compression from being misread as tag erosion. It has
+no post-solve projection or continuity source and aborts on a failed carrier
+projection or any material `[0,1]` violation.
 Physical inventory and tagged boundary fluxes must close within 1%; the
 integrated numerical tracer-balance residual must independently remain below
 1% before accepting chronology. This newest implementation still requires a
