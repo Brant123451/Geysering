@@ -48,7 +48,7 @@
     "initial_support": "selected upstream main-body gas; thin layer excluded",
     "transport": "conservative air-phase mass fraction using a continuity-projected interpolate(rho.air)*(phi - alphaPhi0.water)",
     "matrix_residual_air_fraction": 1e-08,
-    "bounded_transport": "continuity-projected phase mass flux; intensity advection fvm::ddt(s)+fvm::div(phiSigma,s)-Sp(div(phiSigma),s) with phiSigma=phi/(alpha*rho)_f; sigma=alpha*rho*s",
+    "bounded_transport": "continuity-projected phase mass flux; conserved sigma via sigma:=sigmaOld-dt*div(flux(phi,s)); s recovered for output/BCs/upwind only and never clipped back into sigma",
     "conservative_transport_with_bounds_guard": true,
     "inventory_weight": "alpha.air*thermo:rho.air",
     "conservation_inventory_weight": "pocketBodyTracerSigma",

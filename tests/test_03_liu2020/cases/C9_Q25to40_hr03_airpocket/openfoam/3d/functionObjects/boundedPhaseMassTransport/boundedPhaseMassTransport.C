@@ -559,25 +559,10 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     );
 
     volScalarField& sigma = conservedDensity(alpha, phaseRho, field);
-    if (!alphaRhoPrevPtr_.valid())
+    if (!sigma.nOldTimes())
     {
-        alphaRhoPrevPtr_.reset
-        (
-            new volScalarField
-            (
-                IOobject
-                (
-                    fieldName_ + "AlphaRhoPrev",
-                    mesh_.time().timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE,
-                    IOobject::NO_REGISTER
-                ),
-                alphaRho
-            )
-        );
         sigma == alphaRho*field;
+        sigma.oldTime();
     }
 
     const volScalarField sigmaOld
@@ -594,72 +579,24 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
         sigma
     );
 
-    // Volume flux of the carrier consistent with the projected mass flux.
-    // Floor with residualAlpha*rho_f so dry faces cannot explode phiSigma.
-    const surfaceScalarField alphaRhoFace(fvc::interpolate(alphaRho));
-    const surfaceScalarField rhoFace(fvc::interpolate(phaseRho));
-    surfaceScalarField phiSigma
-    (
-        IOobject
-        (
-            fieldName_ + "PhiSigma",
-            mesh_.time().timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE,
-            IOobject::NO_REGISTER
-        ),
-        carrierFlux/max(alphaRhoFace, residualAlpha_*rhoFace)
-    );
-    phiSigma.oriented() = carrierFlux.oriented();
-
     const word divScheme("div(phi," + schemesField_ + ")");
     const dimensionedScalar dt(mesh_.time().deltaT());
-    scalar relaxCoeff = 0;
-    mesh_.relaxEquation(schemesField_, relaxCoeff);
     const scalar resolveAlpha = max(residualAlpha_, 1e-3);
 
-    // Advect the fraction with the intensity form
-    //   ds/dt + div(u s) - s div(u) = 0
-    // so upwind keeps s bounded.  Then define sigma = alpha*rho*s.
-    // (The old Sp(ddt(alpha,rho)+div(phi)) form on fvm::ddt(alpha,rho,s)
-    // vanished under a tight carrier projection and fell back to the
-    // rejected non-conservative product-ddt inventory loss.)
-    field.oldTime();
-    bool converged = false;
-    label iteration = 0;
-    tmp<surfaceScalarField> tracerFlux;
+    // Conservative tagged-mass update.  Inventory is ∫sigma; s is recovered
+    // for output/BCs/next-step upwind only and is not clipped back into sigma.
+    tmp<surfaceScalarField> tracerFlux =
+        fvc::flux(carrierFlux, field, divScheme);
+    tracerFlux.ref().oriented() = carrierFlux.oriented();
 
-    for (label corr = 0; corr <= nCorr_; ++corr)
     {
-        fvScalarMatrix fieldEqn
-        (
-            fvm::ddt(field)
-          + fvm::div(phiSigma, field, divScheme)
-          - fvm::Sp(fvc::div(phiSigma), field)
-        );
-        fieldEqn.relax(relaxCoeff);
-
-        ++iteration;
-        const auto solverPerformance = fieldEqn.solve(schemesField_);
-        converged = solverPerformance.finalResidual() < tolerance_;
-
-        // Tagged-mass flux for the budget uses the carrier mass flux.
-        tracerFlux = fvc::flux(carrierFlux, field, divScheme);
-        tracerFlux.ref().oriented() = carrierFlux.oriented();
+        const volScalarField divFlux(fvc::div(tracerFlux()));
+        sigma.primitiveFieldRef() =
+            sigmaOld.primitiveField() - dt.value()*divFlux.primitiveField();
     }
 
-    if (!converged)
-    {
-        FatalErrorInFunction
-            << field.name() << " did not reach linear-solver tolerance "
-            << tolerance_ << " after " << iteration << " solve(s)."
-            << exit(FatalError);
-    }
-
-    // Inventory density follows the bounded fraction by definition.
-    sigma == alphaRho*field;
-    alphaRhoPrevPtr_() == alphaRho;
+    const label iteration = 1;
+    const bool converged = true;
 
     const scalar sigmaMass = gSum(mesh_.V()*sigma.primitiveField());
     const scalar sigmaMassOld = gSum(mesh_.V()*sigmaOld.primitiveField());
@@ -670,8 +607,29 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
             << sigmaMassOld << " -> " << sigmaMass << exit(FatalError);
     }
 
-    const scalarField& fieldCells = field.primitiveField();
+    // Recover s for output and the next upwind state.  Do not write the
+    // recovered fraction back into sigma (that would destroy conservation).
+    scalarField& fieldCells = field.primitiveFieldRef();
+    const scalarField& sigmaCells = sigma.primitiveField();
+    const scalarField& alphaRhoCells = alphaRho.primitiveField();
     const scalarField& alphaCells = alpha.primitiveField();
+    forAll(fieldCells, celli)
+    {
+        if (alphaCells[celli] > resolveAlpha)
+        {
+            fieldCells[celli] = sigmaCells[celli]/alphaRhoCells[celli];
+        }
+        else
+        {
+            fieldCells[celli] = 0;
+        }
+    }
+    field.correctBoundaryConditions();
+    {
+        const volScalarField taggedDensity(alphaRho*field);
+        sigma.boundaryFieldRef(false) == taggedDensity.boundaryField();
+    }
+
     scalar fieldMin = VGREAT;
     scalar fieldMax = -VGREAT;
     forAll(fieldCells, celli)

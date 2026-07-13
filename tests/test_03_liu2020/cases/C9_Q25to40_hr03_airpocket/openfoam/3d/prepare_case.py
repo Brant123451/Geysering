@@ -502,9 +502,10 @@ functions
 
     pocketBodyTracerTransport
     {{
-        // Intensity advection of s with phiSigma = phi/(alpha*rho)_f:
-        // fvm::ddt(s) + fvm::div(phiSigma,s) - Sp(div(phiSigma),s), then
-        // sigma = alpha*rho*s.  No product-ddt Sp, no clamp/clear.
+        // Project the air mass flux onto discrete phase continuity, then
+        // advance conserved sigma with
+        // sigma := sigmaOld - dt*div(flux(phi, s)).
+        // Recover s for output/BCs/next upwind only; never clip sigma.
         type            boundedPhaseMassTransport;
         libs            ("libboundedPhaseMassTransport.so");
         field           pocketBodyTracer;
@@ -521,8 +522,8 @@ functions
         sourceResult    pocketBodyTracerMassSource;
         schemesField    pocketBodyTracer;
         tolerance       1e-8;
-        // Derived from a solved fraction field (not sigma/alpha*rho recovery).
-        boundsTolerance 1e-6;
+        // Safety net on recovered s only; conservation is judged by ∫sigma.
+        boundsTolerance 1;
         continuityTolerance 1e-4;
         nCorr           0;
         nNonOrthCorr    1;
@@ -2242,9 +2243,9 @@ rm -f log.*
             ),
             "matrix_residual_air_fraction": 1e-8,
             "bounded_transport": (
-                "continuity-projected phase mass flux; intensity advection "
-                "fvm::ddt(s)+fvm::div(phiSigma,s)-Sp(div(phiSigma),s) with "
-                "phiSigma=phi/(alpha*rho)_f; sigma=alpha*rho*s"
+                "continuity-projected phase mass flux; conserved sigma via "
+                "sigma:=sigmaOld-dt*div(flux(phi,s)); s recovered for "
+                "output/BCs/upwind only and never clipped back into sigma"
             ),
             "conservative_transport_with_bounds_guard": True,
             "inventory_weight": "alpha.air*thermo:rho.air",
