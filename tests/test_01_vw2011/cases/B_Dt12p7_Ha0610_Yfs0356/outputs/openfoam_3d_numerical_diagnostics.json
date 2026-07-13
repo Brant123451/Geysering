@@ -1858,5 +1858,128 @@
       "next_action": "Keep all admitted settings fixed and raise only CASEB_N_CORRECTORS from 2 to 3 through a 0.12 s screen that covers the rim-onset window."
     },
     "completion_claim": "This is a rejected partial full-hold diagnostic, not a passed hold, smoke run, or completed reproduction."
+  },
+  "tight_pressure_maxco_0p15_ncorrectors_3_screen_0p12_s": {
+    "status": "rejected_delayed_rim_exterior_gas_hotspot",
+    "source_commit": "26ee6e4",
+    "purpose": "Test whether raising only CASEB_N_CORRECTORS from 2 to 3 suppresses the delayed rim exterior-gas mode through the 0.12 s onset window.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "hydrostatic_initialization": "discrete",
+      "hydrostatic_correctors": 10,
+      "pressure_final_tolerance": 1e-10,
+      "n_outer_correctors": 1,
+      "n_pressure_correctors": 3,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.15,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "field_write_interval_s": 0.01,
+      "requested_end_time_s": 0.12
+    },
+    "clean_run_result_0p12_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.1199969307,
+      "postprocessed_probe_duration_s": 0.11999693,
+      "execution_time_s": 23816.87,
+      "clock_time_s": 31813,
+      "final_delta_t_s": 8.4991294e-06,
+      "maximum_courant_number": 0.16231862,
+      "maximum_interface_courant_number": 0.14607616,
+      "maximum_capillary_number": 0.23623177,
+      "alpha_water_min": -8.2718061e-25,
+      "alpha_water_max": 1.0,
+      "Hstar_peak_to_peak": 0.0008789069435124475,
+      "Yfs_star_max_drift": 0.0024590163934427034,
+      "gas_mass_error_pct_max_abs": 3.841498411729597e-06,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "final_logged_velocity_m_per_s": 1.841094,
+      "final_logged_velocity_location_m": [
+        3.5246578,
+        0.65725576,
+        -0.00011479415
+      ],
+      "final_logged_alpha_water": 0.0,
+      "final_logged_curvature_per_m": 0.0
+    },
+    "logged_velocity_history_m_per_s": {
+      "0.010009": {
+        "U": 1.964859,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.020009": {
+        "U": 0.927157,
+        "y_m": 0.404025,
+        "mode": "free_surface"
+      },
+      "0.029999": {
+        "U": 1.705266,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.039994": {
+        "U": 1.464017,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.050002": {
+        "U": 1.487263,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.059996": {
+        "U": 1.550182,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.069997": {
+        "U": 1.656744,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.079996": {
+        "U": 1.699941,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.090004": {
+        "U": 1.658045,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.099998": {
+        "U": 1.781167,
+        "y_m": 0.404025,
+        "mode": "free_surface"
+      },
+      "0.110004": {
+        "U": 1.829084,
+        "y_m": 0.404025,
+        "mode": "free_surface"
+      },
+      "0.119997": {
+        "U": 1.841094,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      }
+    },
+    "interpretation": {
+      "finding": "nCorrectors=3 delayed the rim exterior-gas onset from about 0.066 s to the final 0.12 s sample, but did not suppress it. Through 0.110 s every logged hotspot remained at the free surface; at 0.120 s the maximum jumped to the same pure-gas rim cell (3.5247, 0.6573, -0.00011) with U=1.841 m/s and zero curvature.",
+      "pressure_caveat": "Transducer Hstar peak-to-peak was only 0.000879, so pressure drift alone would again falsely clear the candidate.",
+      "comparison_to_ncorrectors_2": "Relative to the rejected nCorrectors=2 hold, the rim mode onset moved later by roughly 0.05 s, confirming that extra pressure corrections help but are insufficient.",
+      "decision": "Reject nCorrectors=3. Do not promote it to the baseline or start a 1.0 s hold with this setting alone.",
+      "next_action": "Revert to the admitted nCorrectors=2 baseline and raise only CASEB_N_OUTER_CORRECTORS from 1 to 2 through another fresh 0.12 s rim-onset screen."
+    },
+    "completion_claim": "This is a rejected 0.12 s pressure-coupling screen, not a passed hold, smoke run, or completed reproduction."
   }
 }

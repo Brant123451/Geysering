@@ -541,6 +541,15 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     下一步保持全部已准入设置不变，只把 `CASEB_N_CORRECTORS` 从 2 提到 3，
     全新跑覆盖 rim 起始窗口的 0.12 s 筛查；仅当 rim 模式被压制且 Courant/
     \(H^*\) 仍可接受时，才可考虑再次进入 1.0 s hold。
+31. `nCorrectors=3` 的全新 0.12 s 筛查已完成并被拒绝：
+    - solver 达到 0.119997 s；global/interface Co 为 0.162/0.146；
+    - 直至 0.110 s 热点仍在自由面；0.120 s 末样本跳到同一 rim 纯气单元
+      \(y=0.657\) m，\(U=1.841\) m/s，曲率为 0；
+    - \(H^*\) peak-to-peak 仅 0.000879，压力 alone 会再次误判；
+    - 相对 `nCorrectors=2`，rim 起始大约推迟 0.05 s，但未被消除。
+    不得把 `nCorrectors=3` 写入 baseline。下一步回到已准入的
+    `nCorrectors=2`，只把 `CASEB_N_OUTER_CORRECTORS` 从 1 提到 2，再跑
+    0.12 s rim-onset 筛查。
 
 十、hold 验收
 
@@ -573,7 +582,8 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
 - CASEB_N_ALPHA_CORR=1
 - CASEB_N_ALPHA_SUBCYCLES=2
 - CASEB_N_OUTER_CORRECTORS=1
-- CASEB_N_CORRECTORS=2（当前 rim-onset 诊断可试 3；未通过前勿写入 baseline）
+- CASEB_N_CORRECTORS=2（`=3` 的 0.12 s rim 筛查已拒绝；勿写入 baseline）
+- CASEB_N_OUTER_CORRECTORS=1（下一 rim-onset 诊断可试 2；未通过前勿写入 baseline）
 - CASEB_PRESSURE_FINAL_TOLERANCE=1e-7（诊断可收紧；当前候选为 1e-10）
 - CASEB_N_NON_ORTHOGONAL_CORRECTORS=0
 - CASEB_HA0=0.579|0.610|0.641

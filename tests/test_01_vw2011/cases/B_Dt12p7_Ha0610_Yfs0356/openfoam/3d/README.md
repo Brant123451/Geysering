@@ -248,9 +248,12 @@ full-hold continuation was intentionally stopped at about 0.117 s after a pure
 exterior-gas rim hotspot at \(y\approx0.657\) m grew monotonically from
 1.038 m/s at 0.066 s to 1.781 m/s at 0.116 s with zero collocated curvature,
 while transducer \(H^*\) peak-to-peak remained only 0.00100.  That rejected
-state must not be resumed.  The next isolated control keeps every admitted
-setting fixed and raises only `CASEB_N_CORRECTORS` from 2 to 3 through a fresh
-0.12 s screen covering the rim-onset window.
+state must not be resumed.  The isolated `nCorrectors=3` 0.12 s screen then delayed the rim mode to the
+final sample (\(U=1.841\) m/s at \(y=0.657\) m, zero curvature) but did not
+remove it, while \(H^*\) peak-to-peak remained only 0.000879.  That setting is
+rejected.  The next isolated control reverts to admitted `nCorrectors=2` and
+raises only `CASEB_N_OUTER_CORRECTORS` from 1 to 2 through another fresh 0.12 s
+rim-onset screen.
 
 Thermophysical choices are:
 

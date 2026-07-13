@@ -470,6 +470,18 @@ timestep controls.
     `CASEB_N_CORRECTORS` from 2 to 3 through a fresh 0.12 s screen that covers
     the rim-onset window.  Promote that change only if the rim mode is
     suppressed while Courant and \(H^*\) remain admissible.
+34. The fresh `nCorrectors=3` 0.12 s screen completed and was rejected:
+    * solver time reached 0.119997 s; observed global/interface Courant maxima
+      were 0.162/0.146;
+    * logged hotspots stayed at the free surface through 0.110 s, but the final
+      0.120 s sample locked onto the same pure-gas rim cell at
+      \(y=0.657\) m with \(U=1.841\) m/s and zero curvature;
+    * \(H^*\) peak-to-peak was only 0.000879, again a false pressure-only clear;
+    * relative to `nCorrectors=2`, the rim onset was delayed by about 0.05 s but
+      not removed.
+    Do not promote `nCorrectors=3`.  Revert to the admitted `nCorrectors=2`
+    baseline and raise only `CASEB_N_OUTER_CORRECTORS` from 1 to 2 through
+    another fresh 0.12 s rim-onset screen.
 
 ## Still required
 
@@ -500,10 +512,11 @@ The scientific reproduction is **not complete**.  Continue in this order:
    short-window peak velocity of the three timestep members.  Its 0.04 s
    continuation also passes the pressure-drift admission gate.  The subsequent
    full-hold continuation was rejected at about 0.117 s for a growing rim
-   exterior-gas hotspot despite a falsely calm transducer \(H^*\).  Do not
-   resume that rejected state.  Keep all admitted settings fixed and raise only
-   `CASEB_N_CORRECTORS` from 2 to 3 through a fresh 0.12 s rim-onset screen
-   before any new 1.0 s hold.
+   exterior-gas hotspot despite a falsely calm transducer \(H^*\).  The isolated
+   `nCorrectors=3` 0.12 s screen only delayed that rim mode to the final sample
+   and is rejected.  Revert to admitted `nCorrectors=2` and raise only
+   `CASEB_N_OUTER_CORRECTORS` from 1 to 2 through a fresh 0.12 s rim-onset
+   screen before any new 1.0 s hold.
    Extend a candidate past the 0.04 s
    pressure-drift onset only if it stays within the declared Courant limits
    and reduces peak velocity, and only \(H^*\) peak-to-peak at or below 0.02
