@@ -43,6 +43,36 @@ class DominantGasComponentTests(unittest.TestCase):
         self.assertTrue(np.isnan(furthest))
 
 
+class TracerTransferTests(unittest.TestCase):
+    def test_bulk_transfer_requires_matching_destination_inventory(self) -> None:
+        total = np.ones(4)
+        upstream = np.array([1.0, 0.98, 0.79, 0.70])
+        chamber = np.array([0.0, 0.005, 0.10, 0.09])
+        riser = np.array([0.0, 0.005, 0.10, 0.09])
+
+        leakage = post.tracer_transfer_condition(
+            total, upstream, chamber, riser, 0, 0.01
+        )
+        bulk = post.tracer_transfer_condition(
+            total, upstream, chamber, riser, 0, 0.20
+        )
+
+        np.testing.assert_array_equal(leakage, [False, True, True, True])
+        np.testing.assert_array_equal(bulk, [False, False, True, False])
+
+    def test_upstream_loss_alone_is_not_transfer(self) -> None:
+        condition = post.tracer_transfer_condition(
+            np.ones(3),
+            np.array([1.0, 0.7, 0.5]),
+            np.zeros(3),
+            np.zeros(3),
+            0,
+            0.20,
+        )
+
+        self.assertFalse(np.any(condition))
+
+
 class ProbeParsingTests(unittest.TestCase):
     def test_scalar_probe_coordinates_come_from_header(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

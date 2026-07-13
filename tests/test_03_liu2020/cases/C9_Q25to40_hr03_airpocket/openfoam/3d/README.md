@@ -137,8 +137,12 @@ continuation, so the 12 m/s trajectory is not a production baseline.
 The solver records PT1–PT4, 111 riser-centreline probes, 60 upstream-crown
 probes, zone water/air inventories, boundary volume/mass fluxes, and extrema.
 A conservative `pocketBodyTracer` is initialized only in the thick initial
-body, excluding the connected thin layer. Its sustained transfer into the
-chamber is the preferred source-identity arrival metric.
+body, excluding the connected thin layer. It is transported with the
+air-phase mass flux, not the mixture flux. One-percent transfer is reported as
+early source-gas leakage; formal operational arrival requires sustained
+deep-line connectivity and 20% transfer into the chamber plus riser. Since
+20% is not a paper-reported threshold, 1/5/10/20/30/50% transfer times are
+reported together.
 After a run:
 
 ```bash
@@ -159,10 +163,11 @@ The event table is generated only from actual `alpha.water` crossing the
 physical riser rim. Missing stages remain `not_run`, `initialization_only`,
 `partial_smoke`, `smoke_complete`, or `complete_phase1_only`; the
 postprocessor does not invent phase-2 eruptions. Main-pocket arrival uses the
-body tracer when available. The longest connected gas-dominant component on
-the deep crown-probe line remains an explicitly qualified morphology fallback.
-Detached bubbles or local thickening of the initially connected thin layer
-cannot establish source-identified main-body arrival.
+air-phase body tracer when available. The longest connected gas-dominant
+component on the deep crown-probe line remains an explicitly qualified
+morphology fallback. A small tracer leak or a connected finger cannot by
+itself establish main-body arrival: the paper reports a temporary crown
+passage near 1.30 s before the large-cross-section connection at 6.46 s.
 
 ## Current validation status
 
@@ -188,6 +193,14 @@ speed was about 25.4 km/s, so it is archived only as evidence that the old
 0.62 s signal conflated thin-layer gas with main-pocket transport. A corrected
 305 m/s, \(k\)-\(\omega\) SST, body-tracer smoke trajectory must replace it
 before phase 1 can be accepted.
+
+A later corrected-EOS/RANS smoke reached paper time 1.00 s and reproduced the
+first rim crossing at 0.655 s, but exposed a second tracer defect: transporting
+the tag with mixture `rhoPhi/rho` diluted its maximum value from 1 to 0.00285
+and produced a false 0.71 s “arrival.” That trajectory remains useful for
+pressure and Courant diagnostics but is rejected for pocket chronology. The
+source now constructs the air mass flux as
+`rhoPhi - interpolate(rho.water)*alphaPhi0.water`; a fresh run is required.
 
 Phase 1 is incomplete. Phase 2 and eight eruptions have not yet been
 reproduced.

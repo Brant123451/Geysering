@@ -47,16 +47,17 @@ class PerfectFluidEosTests(unittest.TestCase):
 
 
 class PocketBodyTracerTests(unittest.TestCase):
-    def test_tracer_excludes_the_thin_crown_layer(self) -> None:
+    def setUp(self) -> None:
         with prepare_case.PARAM_FILE.open(encoding="utf-8") as stream:
-            parameters = json.load(stream)
-        model = parameters["model"]
-        pocket = model["pocket_profiles"]["base"]
+            self.parameters = json.load(stream)
+        self.model = self.parameters["model"]
+        self.pocket = self.model["pocket_profiles"]["base"]
 
+    def test_tracer_excludes_the_thin_crown_layer(self) -> None:
         dictionary = prepare_case.generate_set_fields(
-            parameters["paper"],
-            model,
-            pocket,
+            self.parameters["paper"],
+            self.model,
+            self.pocket,
         )
 
         self.assertEqual(
@@ -71,12 +72,47 @@ class PocketBodyTracerTests(unittest.TestCase):
             dictionary.rfind("boxToCell", 0, tracer_index) : tracer_index
         ]
         self.assertIn(
-            f"box ({pocket['tail_x_m']:.8g}",
+            f"box ({self.pocket['tail_x_m']:.8g}",
             containing_region,
         )
         self.assertIn(
-            f"({pocket['body_nose_x_m']:.8g} 0.12",
+            f"({self.pocket['body_nose_x_m']:.8g} 0.12",
             containing_region,
+        )
+
+    def test_tracer_uses_air_phase_mass_flux_and_inventory(self) -> None:
+        dictionary = prepare_case.make_control_dict(
+            "compressibleInterFoam",
+            1.25,
+            0.1,
+            0.35,
+            0.2,
+            5e-4,
+            self.parameters["paper"],
+            self.model,
+            self.pocket,
+        )
+
+        expected_order = [
+            "tracerAirFraction",
+            "tracerAirMassDensity",
+            "tracerWaterDensityFaces",
+            "tracerWaterMassFlux",
+            "tracerAirMassFlux",
+            "pocketBodyTracerTransport",
+        ]
+        indices = [dictionary.index(name) for name in expected_order]
+        self.assertEqual(indices, sorted(indices))
+        self.assertIn("fields          (rhoPhi waterMassFluxForTracer);", dictionary)
+        self.assertIn("phi             airMassFluxForTracer;", dictionary)
+        self.assertIn("rho             alphaRhoAirForTracer;", dictionary)
+        self.assertEqual(
+            dictionary.count("weightField     alphaRhoAirForTracer;"),
+            4,
+        )
+        self.assertNotIn(
+            "phi             rhoPhi;\n        rho             rho;",
+            dictionary,
         )
 
 

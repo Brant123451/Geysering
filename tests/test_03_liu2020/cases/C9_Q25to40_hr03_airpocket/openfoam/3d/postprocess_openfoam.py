@@ -30,6 +30,9 @@ RAMP_OFFSET = 0.25
 RIM_HEIGHT = 1.22
 CHAMBER_VOLUME = 0.30 * 0.30 * 0.45
 UPSTREAM_VOLUME = math.pi * 0.20**2 / 4.0 * 5.80
+BODY_TRACER_LEAKAGE_FRACTION = 0.01
+BODY_TRACER_BULK_FRACTION = 0.20
+BODY_TRACER_TRANSFER_FRACTIONS = (0.01, 0.05, 0.10, 0.20, 0.30, 0.50)
 
 PAPER = {
     "initial_PT2_kPa": 2.97,
@@ -314,6 +317,57 @@ def first_sustained_time(times, active, minimum_duration, maximum_gap=None):
     return float(times[events[0][0]]) if events else None
 
 
+def tracer_transfer_condition(
+    total: np.ndarray,
+    upstream: np.ndarray,
+    chamber: np.ndarray,
+    riser: np.ndarray,
+    baseline_index: int,
+    fraction: float,
+) -> np.ndarray:
+    """Identify transfer of a fraction of source-tagged gas out of upstream.
+
+    Both an upstream loss and a matching chamber-plus-riser inventory gain are
+    required.  This prevents numerical loss, compression, or a small gas finger
+    from being labelled as main-pocket transfer.
+    """
+    total = np.asarray(total, dtype=float)
+    upstream = np.asarray(upstream, dtype=float)
+    chamber = np.asarray(chamber, dtype=float)
+    riser = np.asarray(riser, dtype=float)
+    active = np.zeros(len(total), dtype=bool)
+    if (
+        not 0 <= baseline_index < len(total)
+        or not 0.0 < fraction <= 1.0
+        or len(upstream) != len(total)
+        or len(chamber) != len(total)
+    ):
+        return active
+
+    tracer_scale = abs(float(total[baseline_index]))
+    if not np.isfinite(tracer_scale) or tracer_scale <= 1e-12:
+        return active
+    if len(riser) != len(total) or not np.any(np.isfinite(riser)):
+        riser = np.zeros(len(total))
+
+    destination = chamber + riser
+    baseline_upstream = float(upstream[baseline_index])
+    baseline_destination = float(destination[baseline_index])
+    valid = (
+        np.isfinite(upstream)
+        & np.isfinite(chamber)
+        & np.isfinite(riser)
+        & np.isfinite(destination)
+    )
+    indices = np.arange(len(total))
+    return (
+        (indices >= baseline_index)
+        & valid
+        & (upstream <= baseline_upstream - fraction * tracer_scale)
+        & (destination >= baseline_destination + fraction * tracer_scale)
+    )
+
+
 def dominant_gas_component(
     x: np.ndarray, alpha_water: np.ndarray, threshold: float = 0.50
 ) -> tuple[float, float, float]:
@@ -587,6 +641,11 @@ def main() -> None:
     metadata_path = case / "generated_case.json"
     metadata = json.loads(metadata_path.read_text()) if metadata_path.exists() else {}
     offset = float(metadata.get("paper_time_offset_s", RAMP_OFFSET))
+    tracer_transport = metadata.get("pocket_body_tracer", {}).get("transport")
+    phase_mass_tracer = bool(
+        isinstance(tracer_transport, str)
+        and tracer_transport.startswith("conservative air-phase mass fraction")
+    )
 
     p_time_solver, p_values = parse_probe_scalar(post, "probesPT", "p")
     p_time = p_time_solver - offset
@@ -769,66 +828,73 @@ def main() -> None:
     tracer_status = "missing"
     body_tracer_transfer_onset = None
     body_tracer_transfer_20pct = None
+    body_tracer_transfer_thresholds = {
+        f"{round(fraction * 100):g}pct": None
+        for fraction in BODY_TRACER_TRANSFER_FRACTIONS
+    }
     body_tracer_baseline_time = None
     body_tracer_domain_inventory_change = None
     body_tracer_initial_mass = None
     body_tracer_initial_upstream_mass = None
     arrival_time = None
     if tracer_data_present:
-        tracer_status = "invalid_paper_time_zero_baseline"
-        baseline_candidates = np.where(
-            (np.abs(tracer_t) <= 0.011)
-            & np.isfinite(tracer_total)
-            & np.isfinite(tracer_upstream)
-            & np.isfinite(tracer_chamber)
-            & (tracer_total > 1e-9)
-            & (tracer_upstream >= 0.99 * tracer_total)
-        )[0]
+        tracer_status = (
+            "invalid_paper_time_zero_baseline"
+            if phase_mass_tracer
+            else "invalid_mixture_phase_transport"
+        )
+        if phase_mass_tracer:
+            baseline_candidates = np.where(
+                (np.abs(tracer_t) <= 0.011)
+                & np.isfinite(tracer_total)
+                & np.isfinite(tracer_upstream)
+                & np.isfinite(tracer_chamber)
+                & (tracer_total > 1e-9)
+                & (tracer_upstream >= 0.99 * tracer_total)
+            )[0]
+        else:
+            baseline_candidates = np.empty(0, dtype=int)
         if len(baseline_candidates):
-            tracer_baseline_index = int(baseline_candidates[0])
+            tracer_baseline_index = int(
+                min(
+                    baseline_candidates,
+                    key=lambda index: (
+                        abs(float(tracer_t[index])),
+                        float(tracer_t[index]) < 0.0,
+                    ),
+                )
+            )
             tracer_valid = True
-            tracer_status = "valid"
+            tracer_status = "valid_air_phase_mass_transport"
             body_tracer_baseline_time = float(tracer_t[tracer_baseline_index])
             body_tracer_initial_mass = float(tracer_total[tracer_baseline_index])
             body_tracer_initial_upstream_mass = float(
                 tracer_upstream[tracer_baseline_index]
             )
-            baseline_chamber_tracer = float(tracer_chamber[tracer_baseline_index])
-            tracer_scale = abs(body_tracer_initial_mass)
-            transfer_started = (
-                (np.arange(len(tracer_t)) >= tracer_baseline_index)
-                & (
-                    tracer_chamber - baseline_chamber_tracer
-                    >= 0.01 * tracer_scale
+            transfer_conditions = {
+                fraction: tracer_transfer_condition(
+                    tracer_total,
+                    tracer_upstream,
+                    tracer_chamber,
+                    tracer_riser,
+                    tracer_baseline_index,
+                    fraction,
                 )
-                & (
-                    tracer_upstream
-                    <= body_tracer_initial_upstream_mass - 0.01 * tracer_scale
+                for fraction in BODY_TRACER_TRANSFER_FRACTIONS
+            }
+            for fraction, condition in transfer_conditions.items():
+                body_tracer_transfer_thresholds[
+                    f"{round(fraction * 100):g}pct"
+                ] = first_sustained_time(
+                    tracer_t,
+                    condition,
+                    minimum_duration=0.05,
+                    maximum_gap=0.025,
                 )
-            )
-            transferred_20pct = (
-                (np.arange(len(tracer_t)) >= tracer_baseline_index)
-                & (
-                    tracer_chamber - baseline_chamber_tracer
-                    >= 0.20 * tracer_scale
-                )
-                & (
-                    tracer_upstream
-                    <= body_tracer_initial_upstream_mass - 0.20 * tracer_scale
-                )
-            )
-            body_tracer_transfer_onset = first_sustained_time(
-                tracer_t,
-                transfer_started,
-                minimum_duration=0.05,
-                maximum_gap=0.025,
-            )
-            body_tracer_transfer_20pct = first_sustained_time(
-                tracer_t,
-                transferred_20pct,
-                minimum_duration=0.05,
-                maximum_gap=0.025,
-            )
+            transfer_started = transfer_conditions[BODY_TRACER_LEAKAGE_FRACTION]
+            transferred_20pct = transfer_conditions[BODY_TRACER_BULK_FRACTION]
+            body_tracer_transfer_onset = body_tracer_transfer_thresholds["1pct"]
+            body_tracer_transfer_20pct = body_tracer_transfer_thresholds["20pct"]
             morphology_at_tracer = (
                 align_at_times(
                     deep_t_solver,
@@ -840,7 +906,7 @@ def main() -> None:
                 else np.zeros(len(tracer_t), dtype=bool)
             )
             source_identified_connected_arrival = (
-                transfer_started & morphology_at_tracer
+                transferred_20pct & morphology_at_tracer
             )
             arrival_time = first_sustained_time(
                 tracer_t,
@@ -850,6 +916,7 @@ def main() -> None:
             )
             finite_total = tracer_total[np.isfinite(tracer_total)]
             if len(finite_total):
+                tracer_scale = abs(body_tracer_initial_mass)
                 body_tracer_domain_inventory_change = float(
                     np.max(np.abs(finite_total - body_tracer_initial_mass))
                     / tracer_scale
@@ -857,11 +924,16 @@ def main() -> None:
 
     arrival_definition = (
         "first nonnegative paper time for which both conditions persist for "
-        "at least 0.05 s: (1) at least 1% of the paper-time-zero thick-body "
-        "tracer mass has left the upstream zone and entered the chamber, and "
+        "at least 0.05 s: (1) at least 20% of the paper-time-zero, air-phase "
+        "mass tracer has left the upstream zone and is present in the chamber "
+        "plus riser, and "
         "(2) a gas-dominant connected component on the deep crown line reaches "
         "the chamber-side probe while retaining the required body span. The "
         "initially connected thin crown layer is excluded from the tracer. "
+        "The 1% transfer time is reported separately as early source-gas "
+        "leakage because the paper documents a temporary crown passage near "
+        "1.30 s. The 20% bulk threshold is operational, not a reported paper "
+        "measurement, and 1/5/10/20/30/50% sensitivity times are reported. "
         "Formal arrival remains null when either source is unavailable"
     )
 
@@ -1143,11 +1215,13 @@ def main() -> None:
         "simulated_air_pocket_arrival_s": arrival_time,
         "air_pocket_arrival_definition": arrival_definition,
         "air_pocket_arrival_method": (
-            "source_tracer_plus_line_morphology"
+            "air_phase_mass_tracer_bulk_transfer_plus_line_morphology"
             if tracer_valid and len(connected_body_at_chamber)
             else "unavailable"
         ),
         "body_tracer_status": tracer_status,
+        "body_tracer_transport": tracer_transport,
+        "body_tracer_bulk_transfer_fraction": BODY_TRACER_BULK_FRACTION,
         "simulated_line_morphology_arrival_s": morphology_arrival_time,
         "line_morphology_arrival_definition": morphology_arrival_definition,
         "air_pocket_arrival_proxy_plane_x_m": (
@@ -1163,6 +1237,9 @@ def main() -> None:
         "gas_transfer_baseline_paper_time_s": transfer_baseline_time,
         "simulated_body_tracer_transfer_20pct_s": body_tracer_transfer_20pct,
         "simulated_body_tracer_transfer_onset_s": body_tracer_transfer_onset,
+        "simulated_body_tracer_transfer_thresholds_s": (
+            body_tracer_transfer_thresholds
+        ),
         "body_tracer_baseline_paper_time_s": body_tracer_baseline_time,
         "body_tracer_initial_mass_kg": body_tracer_initial_mass,
         "body_tracer_initial_upstream_mass_kg": body_tracer_initial_upstream_mass,

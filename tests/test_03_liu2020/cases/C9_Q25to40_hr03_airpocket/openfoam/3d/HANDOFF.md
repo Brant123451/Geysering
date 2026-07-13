@@ -42,7 +42,8 @@ and rerun the stages from committed source.
    wave speed as a rigid-wall effective modulus (92.86 MPa), preserves
    998.2 kg/m³ at 101325 Pa and 293.15 K, defaults to RANS
    \(k\)-\(\omega\) SST, and carries a conservative thick-body-only source
-   tracer. Intrinsic-water 2.2 GPa and laminar flow remain sensitivities.
+   tracer using the air-phase mass flux. Intrinsic-water 2.2 GPa and laminar
+   flow remain sensitivities.
 7. Resume scripts hash the initialized source schema and reject old
    checkpoints. A new corrected run must start from `Allrun.initialize`;
    historical fields cannot be resumed because they lack RANS and tracer
@@ -67,6 +68,17 @@ The latest local diagnostic was stopped safely at solver 0.5568 s (paper
 This supports the diagnosis that the old 0.620 s metric was not a coherent
 main-body arrival. It does not validate pressure chronology because the run
 used the erroneous 25.4 km/s EOS and laminar closure.
+
+A corrected-EOS/RANS smoke subsequently reached paper time 1.00 s. Its first
+rim crossing was 0.655 s and its no-limiter pressure history was stable, but
+the then-current tracer used mixture `rhoPhi/rho`. The tracer diluted into the
+water phase (maximum 1 to 0.00285) and falsely labelled the paper's early crown
+passage as a 0.71 s body arrival. It is rejected for pocket chronology. The
+source now transports the tag with
+`rhoPhi - interpolate(rho.water)*alphaPhi0.water`, reports 1% transfer as
+leakage, and requires 20% transfer plus a sustained connection for operational
+bulk arrival. A fresh initialization and smoke are required to verify this
+change before phase 1.
 
 Phase 1 is incomplete. Phase 2 and eight eruptions have not yet been
 reproduced.

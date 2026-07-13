@@ -229,13 +229,23 @@ compressible liquid water. This retains an energy equation and supports
 closed-pocket pressure/mass changes. RANS \(k\)-\(\omega\) SST is the default
 because C9 is at \(Re=O(10^5)\); the laminar result is a model sensitivity.
 A conservative `pocketBodyTracer` is initialized only in the thick gas body,
-not in the thin connected crown layer. Its transfer into the chamber is the
-source-identity definition of main-pocket arrival; line-sampled `alpha.air`
-remains a morphology fallback only. `compressibleInterIsoFoam` is supplied
-only as an isoAdvector interface-transport sensitivity; despite its name, it
-is not an isothermal-gas solver. Thermal closure is instead bracketed by
-declared heat-capacity limits, and liquid/pipe compliance by wave-speed and
-intrinsic-bulk-modulus limits. These are interface-capturing continuum models:
+not in the thin connected crown layer. It is transported as an air-phase mass
+fraction with the gas mass flux
+`rhoPhi - interpolate(rho.water)*alphaPhi0.water`; transporting it with the
+mixture `rhoPhi/rho` would let the tag dilute into water and is not a valid
+source-identity diagnostic. A 1% source-tag transfer is reported only as early
+leakage because the paper explicitly documents a temporary crown passage near
+1.30 s. The formal operational main-body arrival additionally requires 20%
+transfer into the chamber plus riser and a sustained deep-line connection.
+Because the paper does not report an arrival mass fraction, 1/5/10/20/30/50%
+transfer times are all retained as threshold sensitivity evidence.
+Line-sampled `alpha.air` alone remains a morphology fallback and cannot
+distinguish that early passage from the large-cross-section connection at
+6.46 s. `compressibleInterIsoFoam` is supplied only as an isoAdvector
+interface-transport sensitivity; despite its name, it is not an isothermal-gas
+solver. Thermal closure is instead bracketed by declared heat-capacity limits,
+and liquid/pipe compliance by wave-speed and intrinsic-bulk-modulus limits.
+These are interface-capturing continuum models:
 they can advect and
 break a resolved gas region, but subcell bubbles, coalescence, and entrainment
 are mesh/model dependent. Reproducing phase 1 does not by itself establish

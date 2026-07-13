@@ -80,7 +80,8 @@ et al. (2020) Test 3 / Series C / Case C9：
   92.86 MPa 全域等效模量，2.2 GPa 本征水体模量作为敏感性；
 - C9 \(Re=O(10^5)\) 的默认 RANS \(k\)-\(\omega\) SST 闭合，laminar
   仅作敏感性；
-- 仅初始化于厚气囊主体、排除薄冠层的守恒 `pocketBodyTracer`；
+- 仅初始化于厚气囊主体、排除薄冠层，并使用气相质量通量而非混合物
+  `rhoPhi` 输运的守恒 `pocketBodyTracer`；
 - VOF、重力、表面张力、接触角；
 - MULES 默认界面输运和 isoAdvector 敏感性入口；
 - `cartesianMesh`/cfMesh 默认网格和保留的
