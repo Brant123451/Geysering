@@ -595,30 +595,32 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     const scalar resolveAlpha = max(residualAlpha_, 1e-3);
     const scalar rDeltaT = 1.0/mesh_.time().deltaTValue();
 
-    // Build flux intensity from sigma/(alpha*rho).  Allow s>1 so that when
-    // alpha*rho shrinks, subsequent air outflow can still remove the full
-    // tagged inventory.  Clamp only the negative side.  Do not use
-    // phiVol = phi_air/(alpha*rho)_f (thin-face explosion).
-    {
-        scalarField& fieldCells = field.primitiveFieldRef();
-        const scalarField& sigmaCells = sigma.primitiveField();
-        const scalarField& alphaRhoCells = alphaRho.primitiveField();
-        const scalarField& alphaCells = alpha.primitiveField();
-        forAll(fieldCells, celli)
-        {
-            if (alphaCells[celli] > resolveAlpha && alphaRhoCells[celli] > SMALL)
-            {
-                fieldCells[celli] = max(sigmaCells[celli]/alphaRhoCells[celli], 0.0);
-            }
-            else
-            {
-                fieldCells[celli] = 0;
-            }
-        }
-        field.correctBoundaryConditions();
-    }
+    // Advect conserved density sigma with a volume flux reconstructed from
+    // the projected air mass flux.  Floor face density at resolveAlpha*rho
+    // (not residualAlpha): the 1e-8 floor made phiVol explode; intensity
+    // fluxes phi*s also went negative from an equivalent thin-face CFL.
+    const surfaceScalarField alphaRhoFace(fvc::interpolate(alphaRho));
+    const surfaceScalarField rhoFace(fvc::interpolate(phaseRho));
+    const surfaceScalarField alphaRhoFaceFloor
+    (
+        max(alphaRhoFace, resolveAlpha*rhoFace)
+    );
+    surfaceScalarField phiVol
+    (
+        IOobject
+        (
+            fieldName_ + "PhiVol",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            IOobject::NO_REGISTER
+        ),
+        carrierFlux/alphaRhoFaceFloor
+    );
+    phiVol.oriented() = carrierFlux.oriented();
 
-    // Refresh non-coupled sigma BCs after the intensity BC update.
+    // Refresh non-coupled sigma BCs from clamped intensity for inlets.
     {
         volScalarField::Boundary& sigmaBf = sigma.boundaryFieldRef();
         const volScalarField::Boundary& alphaRhoBf = alphaRho.boundaryField();
@@ -627,12 +629,14 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
         {
             if (!sigmaBf[patchi].coupled())
             {
-                sigmaBf[patchi] == alphaRhoBf[patchi]*fieldBf[patchi];
+                // Inlet value: use BC intensity in [0,1].
+                scalarField sPatch(fieldBf[patchi]);
+                sPatch = min(max(sPatch, 0.0), 1.0);
+                sigmaBf[patchi] == alphaRhoBf[patchi]*sPatch;
             }
         }
     }
 
-    // Tagged mass flux from intensity: phi_air * s.  High-order / upwind.
     surfaceScalarField tracerFlux
     (
         IOobject
@@ -644,18 +648,16 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
             IOobject::NO_WRITE,
             IOobject::NO_REGISTER
         ),
-        fvc::flux(carrierFlux, field, divScheme)
+        fvc::flux(phiVol, sigma, divScheme)
     );
     tracerFlux.oriented() = carrierFlux.oriented();
 
     surfaceScalarField tracerFluxBD
     (
-        upwind<scalar>(mesh_, carrierFlux).flux(field)
+        upwind<scalar>(mesh_, phiVol).flux(sigma)
     );
     tracerFluxBD.oriented() = carrierFlux.oriented();
 
-    // Match MULES::limit: on non-coupled patches the bounded flux equals the
-    // prescribed high-order boundary flux.
     {
         surfaceScalarField::Boundary& bdBf = tracerFluxBD.boundaryFieldRef();
         const surfaceScalarField::Boundary& hoBf = tracerFlux.boundaryField();
@@ -670,23 +672,19 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
 
     surfaceScalarField phiCorr(tracerFlux - tracerFluxBD);
 
-    // Do not demand sigma <= alpha*rho when alpha*rho has just shrunk below
-    // the current inventory: that bound is not achievable by flux limiting
-    // alone and is exactly the rejected cell-clip path.
+    // Upper bound: do not demand an instantaneous sink when alpha*rho shrinks.
     scalarField sigmaMax(mesh_.nCells());
     {
         const scalarField& alphaRhoCells = alphaRho.primitiveField();
         const scalarField& sigmaCells = sigma.primitiveField();
         forAll(sigmaMax, celli)
         {
-            sigmaMax[celli] = max(alphaRhoCells[celli], sigmaCells[celli]);
+            sigmaMax[celli] = max(alphaRhoCells[celli], max(sigmaCells[celli], 0.0));
         }
     }
     const scalarField sigmaMin(mesh_.nCells(), Zero);
     scalarField allLambda(mesh_.nFaces(), 1.0);
 
-    // Limit the correction so the explicit sigma update stays non-negative
-    // and does not grow above max(alpha*rho, sigma_current).
     MULES::limiter
     (
         allLambda,
