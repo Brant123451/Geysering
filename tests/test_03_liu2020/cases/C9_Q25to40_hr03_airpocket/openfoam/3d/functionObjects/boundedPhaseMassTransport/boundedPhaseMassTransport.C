@@ -19,6 +19,7 @@ License
 #include "fixedValueFvPatchField.H"
 #include "fvcDdt.H"
 #include "fvcDiv.H"
+#include "fvcFlux.H"
 #include "fvmDdt.H"
 #include "fvmDiv.H"
 #include "fvmLaplacian.H"
@@ -542,18 +543,35 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     field.correctBoundaryConditions();
 
     volScalarField& sigma = conservedDensity(alpha, phaseRho, field);
-    const bool firstSigmaStep = !sigma.nOldTimes();
-    if (firstSigmaStep)
+    if (!sigma.nOldTimes())
     {
-        // Seed the conserved density from the user-facing fraction only once.
-        // Later steps advance sigma directly; never rebuild it from s.
+        // Seed once from the user-facing fraction.  Later steps advance the
+        // conserved density directly and never rebuild it from s.
         sigma == alpha*phaseRho*field;
+        // Create an old-time slot without relying on it for the update below.
+        sigma.oldTime();
     }
     {
         const volScalarField taggedDensity(alpha*phaseRho*field);
-        sigma.boundaryFieldRef() == taggedDensity.boundaryField();
+        // Avoid boundaryFieldRef()'s default storeOldTimes side effect.
+        sigma.boundaryFieldRef(false) == taggedDensity.boundaryField();
     }
-    sigma.oldTime();
+
+    // Snapshot before the update.  Manual Euler avoids GeometricField
+    // oldTime/storeOldTimes interactions inside function-object execute().
+    const volScalarField sigmaOld
+    (
+        IOobject
+        (
+            sigmaResultName_ + "Old",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            IOobject::NO_REGISTER
+        ),
+        sigma
+    );
 
     const volScalarField alphaRho
     (
@@ -595,28 +613,34 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     phiSigma.oriented() = carrierFlux.oriented();
 
     const word divScheme("div(phi," + schemesField_ + ")");
-    scalar relaxCoeff = 0;
-    mesh_.relaxEquation(schemesField_, relaxCoeff);
+    const dimensionedScalar dt(mesh_.time().deltaT());
 
     bool converged = false;
     label iteration = 0;
     tmp<surfaceScalarField> tracerFlux;
 
+    // Picard iterations on the explicit conservative update.
     for (label corr = 0; corr <= nCorr_; ++corr)
     {
-        fvScalarMatrix sigmaEqn
-        (
-            fvm::ddt(sigma)
-          + fvm::div(phiSigma, sigma, divScheme)
-        );
+        const volScalarField& sigmaUpwind = (corr == 0) ? sigmaOld : sigma;
+        tracerFlux = fvc::flux(phiSigma, sigmaUpwind, divScheme);
+        tracerFlux.ref().oriented() = carrierFlux.oriented();
 
-        sigmaEqn.relax(relaxCoeff);
+        const volScalarField divFlux(fvc::div(tracerFlux()));
+        sigma.primitiveFieldRef() =
+            sigmaOld.primitiveField() - dt.value()*divFlux.primitiveField();
 
         ++iteration;
-        const auto solverPerformance = sigmaEqn.solve(schemesField_);
-        converged = solverPerformance.finalResidual() < tolerance_;
-        tracerFlux = sigmaEqn.flux();
-        tracerFlux.ref().oriented() = carrierFlux.oriented();
+        converged = true;
+    }
+
+    const scalar sigmaMass = gSum(mesh_.V()*sigma.primitiveField());
+    const scalar sigmaMassOld = gSum(mesh_.V()*sigmaOld.primitiveField());
+    if (mag(sigmaMassOld) > SMALL && mag(sigmaMass) < 0.5*mag(sigmaMassOld))
+    {
+        FatalErrorInFunction
+            << "Conserved tracer density inventory collapsed: "
+            << sigmaMassOld << " -> " << sigmaMass << exit(FatalError);
     }
 
     if (!converged)
@@ -646,7 +670,7 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     field.correctBoundaryConditions();
     {
         const volScalarField taggedDensity(alphaRho*field);
-        sigma.boundaryFieldRef() == taggedDensity.boundaryField();
+        sigma.boundaryFieldRef(false) == taggedDensity.boundaryField();
     }
 
     scalar fieldMin = VGREAT;
@@ -688,7 +712,7 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     // Discrete tagged-mass residual of the conserved density sigma.
     const tmp<volScalarField> tracerSource
     (
-        fvc::ddt(sigma) + fvc::div(tracerFlux())
+        (sigma - sigmaOld)/dt + fvc::div(tracerFlux())
     );
     if (!tracerSourcePtr_.valid())
     {
