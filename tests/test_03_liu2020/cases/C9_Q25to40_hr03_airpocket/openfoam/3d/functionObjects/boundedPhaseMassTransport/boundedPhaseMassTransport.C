@@ -24,7 +24,9 @@ License
 #include "fvmLaplacian.H"
 #include "geometricOneField.H"
 #include "inletOutletFvPatchFields.H"
+#include "slicedSurfaceFields.H"
 #include "surfaceInterpolate.H"
+#include "upwind.H"
 #include "zeroField.H"
 #include "zeroGradientFvPatchField.H"
 
@@ -574,21 +576,6 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
         sigma.oldTime();
     }
 
-    // Refresh non-coupled sigma BCs from the corrected fraction so inlet
-    // faces carry alpha*rho*s_inlet (usually 0) rather than a stale value.
-    {
-        volScalarField::Boundary& sigmaBf = sigma.boundaryFieldRef();
-        const volScalarField::Boundary& alphaRhoBf = alphaRho.boundaryField();
-        const volScalarField::Boundary& fieldBf = field.boundaryField();
-        forAll(sigmaBf, patchi)
-        {
-            if (!sigmaBf[patchi].coupled())
-            {
-                sigmaBf[patchi] == alphaRhoBf[patchi]*fieldBf[patchi];
-            }
-        }
-    }
-
     const volScalarField sigmaOld
     (
         IOobject
@@ -606,35 +593,45 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     const word divScheme("div(phi," + schemesField_ + ")");
     const dimensionedScalar dt(mesh_.time().deltaT());
     const scalar resolveAlpha = max(residualAlpha_, 1e-3);
+    const scalar rDeltaT = 1.0/mesh_.time().deltaTValue();
 
-    // Volume flux consistent with the projected air mass flux.  Floor the
-    // face density so dry faces cannot explode phiVol; MULES then keeps
-    // sigma inside [0, alpha*rho] via limited fluxes (no cell clip).
-    const surfaceScalarField alphaRhoFace(fvc::interpolate(alphaRho));
-    const surfaceScalarField rhoFace(fvc::interpolate(phaseRho));
-    const surfaceScalarField alphaRhoFaceFloor
-    (
-        max
-        (
-            alphaRhoFace,
-            residualAlpha_*rhoFace
-        )
-    );
-    surfaceScalarField phiVol
-    (
-        IOobject
-        (
-            fieldName_ + "PhiVol",
-            mesh_.time().timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE,
-            IOobject::NO_REGISTER
-        ),
-        carrierFlux/alphaRhoFaceFloor
-    );
-    phiVol.oriented() = carrierFlux.oriented();
+    // Sync the intensity from the conserved density before building fluxes.
+    // Do not use phiVol = phi_air/(alpha*rho)_f: that form explodes on thin
+    // phase faces and drove recovered s to O(100) within a few steps.
+    {
+        scalarField& fieldCells = field.primitiveFieldRef();
+        const scalarField& sigmaCells = sigma.primitiveField();
+        const scalarField& alphaRhoCells = alphaRho.primitiveField();
+        const scalarField& alphaCells = alpha.primitiveField();
+        forAll(fieldCells, celli)
+        {
+            if (alphaCells[celli] > resolveAlpha && alphaRhoCells[celli] > SMALL)
+            {
+                fieldCells[celli] = sigmaCells[celli]/alphaRhoCells[celli];
+            }
+            else
+            {
+                fieldCells[celli] = 0;
+            }
+        }
+        field.correctBoundaryConditions();
+    }
 
+    // Refresh non-coupled sigma BCs after the intensity BC update.
+    {
+        volScalarField::Boundary& sigmaBf = sigma.boundaryFieldRef();
+        const volScalarField::Boundary& alphaRhoBf = alphaRho.boundaryField();
+        const volScalarField::Boundary& fieldBf = field.boundaryField();
+        forAll(sigmaBf, patchi)
+        {
+            if (!sigmaBf[patchi].coupled())
+            {
+                sigmaBf[patchi] == alphaRhoBf[patchi]*fieldBf[patchi];
+            }
+        }
+    }
+
+    // Tagged mass flux from intensity: phi_air * s.  High-order / upwind.
     surfaceScalarField tracerFlux
     (
         IOobject
@@ -646,26 +643,79 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
             IOobject::NO_WRITE,
             IOobject::NO_REGISTER
         ),
-        fvc::flux(phiVol, sigma, divScheme)
+        fvc::flux(carrierFlux, field, divScheme)
     );
     tracerFlux.oriented() = carrierFlux.oriented();
 
-    // MULES on conserved density sigma with rho=1 avoids the dry-cell
-    // divide-by-zero that broke variable-density MULES on s.  Pass local
-    // bounds as scalarFields: dimensionedScalar/volScalarField mixes fail
-    // to instantiate the MULES limiter arithmetic.
+    surfaceScalarField tracerFluxBD
+    (
+        upwind<scalar>(mesh_, carrierFlux).flux(field)
+    );
+    tracerFluxBD.oriented() = carrierFlux.oriented();
+
+    // Match MULES::limit: on non-coupled patches the bounded flux equals the
+    // prescribed high-order boundary flux.
+    {
+        surfaceScalarField::Boundary& bdBf = tracerFluxBD.boundaryFieldRef();
+        const surfaceScalarField::Boundary& hoBf = tracerFlux.boundaryField();
+        forAll(bdBf, patchi)
+        {
+            if (!bdBf[patchi].coupled())
+            {
+                bdBf[patchi] = hoBf[patchi];
+            }
+        }
+    }
+
+    surfaceScalarField phiCorr(tracerFlux - tracerFluxBD);
+
     const scalarField sigmaMax(alphaRho.primitiveField());
     const scalarField sigmaMin(mesh_.nCells(), Zero);
-    MULES::explicitSolve
+    scalarField allLambda(mesh_.nFaces(), 1.0);
+
+    // Limit the correction so the explicit sigma update stays in
+    // [0, alpha*rho].  Fluxes remain conservative (no cell clip).
+    MULES::limiter
     (
+        allLambda,
+        rDeltaT,
         geometricOneField(),
         sigma,
-        phiVol,
-        tracerFlux,
+        tracerFluxBD,
+        phiCorr,
         zeroField(),
         zeroField(),
         sigmaMax,
         sigmaMin
+    );
+
+    {
+        slicedSurfaceScalarField lambda
+        (
+            IOobject
+            (
+                fieldName_ + "MULESLambda",
+                mesh_.time().timeName(),
+                mesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE,
+                IOobject::NO_REGISTER
+            ),
+            mesh_,
+            dimless,
+            allLambda,
+            false
+        );
+        tracerFlux = tracerFluxBD + lambda*phiCorr;
+    }
+
+    MULES::explicitSolve
+    (
+        geometricOneField(),
+        sigma,
+        tracerFlux,
+        zeroField(),
+        zeroField()
     );
 
     // Recover s for output/BCs/arrival; inventory remains sigma.
@@ -675,7 +725,7 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     const scalarField& alphaCells = alpha.primitiveField();
     forAll(fieldCells, celli)
     {
-        if (alphaCells[celli] > resolveAlpha)
+        if (alphaCells[celli] > resolveAlpha && alphaRhoCells[celli] > SMALL)
         {
             fieldCells[celli] = sigmaCells[celli]/alphaRhoCells[celli];
         }
