@@ -248,11 +248,32 @@ def read_numerical_health(log_path: Path) -> dict[str, float | bool]:
     }
     extrema: dict[str, float] = {}
     fatal_error = False
+    in_numerical_health_block = False
+    field_extrema = {
+        "temperature_min_K",
+        "temperature_max_K",
+        "velocity_max_m_per_s",
+        "alpha_water_min",
+        "alpha_water_max",
+        "pressure_min_Pa",
+        "pressure_max_Pa",
+    }
     with log_path.open(errors="replace") as handle:
         for line in handle:
             if "FOAM FATAL ERROR" in line or "Negative initial temperature" in line:
                 fatal_error = True
+            stripped = line.strip()
+            if stripped == "fieldMinMax numericalHealth write:":
+                in_numerical_health_block = True
+                continue
+            if in_numerical_health_block and not stripped:
+                in_numerical_health_block = False
             for name, (pattern, operation) in patterns.items():
+                # MULES prints intermediate alpha corrections using the same
+                # min/max spelling.  Numerical health concerns accepted
+                # end-of-step fields, recorded by this function object.
+                if name in field_extrema and not in_numerical_health_block:
+                    continue
                 match = pattern.search(line)
                 if not match:
                     continue
