@@ -408,8 +408,11 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
         // corrected carrier flux.  This removes the residual left by finite
         // non-orthogonal correction loops without loosening the acceptance
         // criterion.
-        Phi == Zero;
-        Phi.correctBoundaryConditions();
+        if (projection > 0)
+        {
+            Phi == Zero;
+            Phi.correctBoundaryConditions();
+        }
 
         for (label nonOrth = 0; nonOrth <= nNonOrthCorr_; ++nonOrth)
         {

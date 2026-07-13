@@ -1860,7 +1860,7 @@ solvers
     pocketBodyTracerCarrierPotential
     {{
         solver GAMG;
-        tolerance 1e-10;
+        tolerance 1e-8;
         relTol 0;
         smoother DIC;
     }}
@@ -1868,7 +1868,7 @@ solvers
     {{
         solver smoothSolver;
         smoother symGaussSeidel;
-        tolerance 1e-10;
+        tolerance 1e-8;
         relTol 0;
         maxIter 200;
     }}
