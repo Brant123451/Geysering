@@ -243,8 +243,14 @@ any 1.0 s hold.  That continuation is now complete: solver time reached
 remained 0.165/0.132, and alpha, mass, rim-water and gas-entry checks stayed
 clean.  The free-surface parasitic velocity oscillated rather than growing
 monotonically, peaking at 1.945 m/s at 0.0160 s and falling to 1.288 m/s at the
-final written sample.  This passes only the drift admission screen and
-authorises continuation of the exact state to the full 1.0 s hold.
+final written sample.  This passes only the drift admission screen.  The later
+full-hold continuation was intentionally stopped at about 0.117 s after a pure
+exterior-gas rim hotspot at \(y\approx0.657\) m grew monotonically from
+1.038 m/s at 0.066 s to 1.781 m/s at 0.116 s with zero collocated curvature,
+while transducer \(H^*\) peak-to-peak remained only 0.00100.  That rejected
+state must not be resumed.  The next isolated control keeps every admitted
+setting fixed and raises only `CASEB_N_CORRECTORS` from 2 to 3 through a fresh
+0.12 s screen covering the rim-onset window.
 
 Thermophysical choices are:
 

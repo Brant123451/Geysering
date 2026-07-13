@@ -1784,9 +1784,79 @@
     "interpretation": {
       "finding": "The transducer pressure remained essentially flat through the drift window: Hstar peak-to-peak was 0.000926, only 4.6 percent of the 0.02 admission limit.",
       "stability": "Velocity remained an oscillatory free-surface parasitic mode rather than a monotonic instability. It peaked at 1.945 m/s at 0.0160 s and fell to 1.288 m/s at the final written sample; no exterior-gas or valve hotspot appeared.",
-      "decision": "Pass the 0.04 s drift screen and authorize continuation of this exact state to the full 1.0 s closed-valve hold. Do not treat this partial window as a hold pass.",
-      "next_action": "Resume to 1.0 s with a 0.1 s field-write interval and require at least 0.9 s postprocessed duration, Hstar and Yfs-star drift at or below 0.02, both phase mass errors below 1 percent, no rim water, and no gas entry."
+      "decision": "Pass the 0.04 s drift screen. A later full-hold attempt then exposed a delayed rim exterior-gas mode, so this admission alone is not sufficient for a hold claim.",
+      "next_action": "Treat the subsequent partial full-hold evidence as the controlling rejection and isolate a pressure-coupling control before any new 1.0 s attempt."
     },
     "completion_claim": "This passes the 0.04 s drift admission screen only; it is not a passed 1.0 s hold, smoke run, or completed reproduction."
+  },
+  "tight_pressure_maxco_0p15_partial_hold_0p117_s": {
+    "status": "rejected_growing_rim_exterior_gas_hotspot",
+    "source_commit": "d3e7ab8",
+    "purpose": "Continue the admitted maxCo=0.15 tight-pressure state toward the full 1.0 s closed-valve hold.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "hydrostatic_initialization": "discrete",
+      "hydrostatic_correctors": 10,
+      "pressure_final_tolerance": 1e-10,
+      "n_pressure_correctors": 2,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.15,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "field_write_interval_s": 0.1,
+      "requested_end_time_s": 1.0
+    },
+    "intentionally_stopped_result": {
+      "cells": 1903549,
+      "stop_reason": "Monotonic pure-gas rim hotspot growth after the 0.04 s admission window; continuing would not produce admissible hold evidence.",
+      "achieved_solver_time_s": 0.1170440045,
+      "postprocessed_probe_duration_s": 0.11600609,
+      "continuation_execution_time_s": 15878.04,
+      "continuation_clock_time_s": 79411,
+      "final_delta_t_s": 8.6121992e-06,
+      "maximum_courant_number": 0.16484573,
+      "maximum_interface_courant_number": 0.13217248,
+      "maximum_capillary_number": 0.23623177,
+      "alpha_water_min": -9.3840651e-15,
+      "alpha_water_max": 1.0000000000000775,
+      "written_peak_velocity_over_full_history_m_per_s": 1.9449346,
+      "written_peak_velocity_time_s": 0.016019972,
+      "final_logged_velocity_m_per_s": 1.7807122,
+      "final_logged_velocity_location_m": [
+        3.5246578,
+        0.65725576,
+        -0.00011479415
+      ],
+      "final_logged_alpha_water": 0.0,
+      "final_logged_curvature_per_m": 0.0,
+      "Hstar_peak_to_peak": 0.0010044650782999875,
+      "Yfs_star_max_drift": 0.0024590163934427034,
+      "gas_mass_error_pct_max_abs": 9.004983638084669e-06,
+      "total_mass_error_pct_max_abs": 3.349999747881541e-07,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "rim_exterior_gas_velocity_history_m_per_s": {
+      "0.066008359": 1.0376508,
+      "0.086013636": 1.3290742,
+      "0.096012020": 1.4990719,
+      "0.106004980": 1.6304043,
+      "0.116006090": 1.7807122
+    },
+    "interpretation": {
+      "finding": "After the previously admitted 0.04 s window, a pure exterior-gas hotspot locked onto the tower rim at y=0.657 m and grew monotonically from 1.329 m/s at 0.086 s to 1.781 m/s at 0.116 s, with zero collocated curvature.",
+      "pressure_caveat": "Transducer Hstar peak-to-peak remained only 0.00100, far below the 0.02 hold limit, so pressure drift alone would have falsely cleared the candidate.",
+      "mechanism": "This is the same class of dynamically regenerated exterior-gas pressure mode seen in earlier hard-cap screens, now delayed to the rim exterior after the free-surface startup window. Free-surface force residuals were no longer growing when the rim mode dominated.",
+      "decision": "Reject this hold continuation and do not resume it to 1.0 s.",
+      "next_action": "Keep all admitted settings fixed and raise only CASEB_N_CORRECTORS from 2 to 3 through a 0.12 s screen that covers the rim-onset window."
+    },
+    "completion_claim": "This is a rejected partial full-hold diagnostic, not a passed hold, smoke run, or completed reproduction."
   }
 }

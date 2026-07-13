@@ -452,8 +452,24 @@ timestep controls.
       falling to 1.288 m/s at the final written sample, with no exterior-gas
       or valve hotspot;
     * alpha, phase/total balances, rim water and gas entry remained clean.
-    This passes the drift admission screen, not the hold.  Resume the exact
-    decomposed state to 1.0 s and apply the full hold criteria.
+    This passes the drift admission screen, not the hold.  A later full-hold
+    attempt then exposed a delayed rim exterior-gas mode, so this admission
+    alone is not sufficient for a hold claim.
+33. The continued `maxCo=0.15` full-hold attempt was intentionally stopped at
+    about 0.117 s and rejected:
+    * transducer \(H^*\) peak-to-peak remained only 0.00100, far below the
+      0.02 hold limit, so pressure drift alone would have falsely cleared the
+      candidate;
+    * after the admitted 0.04 s window, a pure exterior-gas hotspot locked onto
+      the tower rim near \(y=0.657\) m and grew monotonically from 1.038 m/s at
+      0.066 s through 1.329/1.499/1.630 m/s to 1.781 m/s at 0.116 s, with zero
+      collocated curvature;
+    * alpha, phase/total balances, rim water and gas entry remained clean;
+    * do not resume that rejected decomposed state to 1.0 s.
+    Keep every admitted physical and timestep setting fixed and raise only
+    `CASEB_N_CORRECTORS` from 2 to 3 through a fresh 0.12 s screen that covers
+    the rim-onset window.  Promote that change only if the rim mode is
+    suppressed while Courant and \(H^*\) remain admissible.
 
 ## Still required
 
@@ -482,8 +498,12 @@ The scientific reproduction is **not complete**.  Continue in this order:
    Courant gates but does not regenerate the gas hotspot.  The required
    `maxCo=0.15` adaptive member now passes the 0.006 s gates and has the lowest
    short-window peak velocity of the three timestep members.  Its 0.04 s
-   continuation also passes the pressure-drift admission gate.  Resume that
-   exact decomposed state to the full 1.0 s hold next.
+   continuation also passes the pressure-drift admission gate.  The subsequent
+   full-hold continuation was rejected at about 0.117 s for a growing rim
+   exterior-gas hotspot despite a falsely calm transducer \(H^*\).  Do not
+   resume that rejected state.  Keep all admitted settings fixed and raise only
+   `CASEB_N_CORRECTORS` from 2 to 3 through a fresh 0.12 s rim-onset screen
+   before any new 1.0 s hold.
    Extend a candidate past the 0.04 s
    pressure-drift onset only if it stays within the declared Courant limits
    and reduces peak velocity, and only \(H^*\) peak-to-peak at or below 0.02

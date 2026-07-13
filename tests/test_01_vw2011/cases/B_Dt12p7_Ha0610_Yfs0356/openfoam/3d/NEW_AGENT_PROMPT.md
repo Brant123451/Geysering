@@ -530,8 +530,17 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     - 自由面伪流呈振荡而非单调增长，在 0.0160 s 达 1.945 m/s，末个写出
       样本降至 1.288 m/s，未出现 exterior-gas 或 valve 热点；
     - alpha、相/总质量、rim water 与 gas-entry 检查干净。
-    这只通过了 drift admission，不是 hold。下一步必须续算同一 decomposed
-    state 至 1.0 s，并执行完整 hold 验收。
+    这只通过了 drift admission，不是 hold。
+30. 同一 `maxCo=0.15` state 向 1.0 s hold 的续算在约 0.117 s 被主动停止并拒绝：
+    - 换能器 \(H^*\) peak-to-peak 仅约 0.00100，远低于 0.02，单独用压力漂移会
+      误判通过；
+    - 越过 0.04 s 后，纯外部气体热点锁定在塔 rim 附近 \(y\approx0.657\) m，
+      速度从 0.066 s 的 1.038 m/s 单调增至 0.116 s 的 1.781 m/s，同位曲率为 0；
+    - alpha、相/总质量、rim water 与 gas-entry 检查仍干净；
+    - 不得续算该已拒绝 decomposed state。
+    下一步保持全部已准入设置不变，只把 `CASEB_N_CORRECTORS` 从 2 提到 3，
+    全新跑覆盖 rim 起始窗口的 0.12 s 筛查；仅当 rim 模式被压制且 Courant/
+    \(H^*\) 仍可接受时，才可考虑再次进入 1.0 s hold。
 
 十、hold 验收
 
@@ -564,8 +573,8 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
 - CASEB_N_ALPHA_CORR=1
 - CASEB_N_ALPHA_SUBCYCLES=2
 - CASEB_N_OUTER_CORRECTORS=1
-- CASEB_N_CORRECTORS=2
-- CASEB_PRESSURE_FINAL_TOLERANCE=1e-7（诊断可收紧）
+- CASEB_N_CORRECTORS=2（当前 rim-onset 诊断可试 3；未通过前勿写入 baseline）
+- CASEB_PRESSURE_FINAL_TOLERANCE=1e-7（诊断可收紧；当前候选为 1e-10）
 - CASEB_N_NON_ORTHOGONAL_CORRECTORS=0
 - CASEB_HA0=0.579|0.610|0.641
 - CASEB_GAS_EOS=perfectGas|rhoConst
