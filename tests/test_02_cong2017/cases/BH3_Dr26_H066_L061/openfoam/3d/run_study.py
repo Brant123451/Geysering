@@ -25,6 +25,13 @@ PRODUCT_SUFFIXES = (
     "_comparison.csv",
     "_summary.png",
 )
+NON_RUNTIME_FINGERPRINT_FILES = {
+    "MODELING_CONTRACT.json",
+    "PAPER_AUDIT.md",
+    "README.md",
+    "run_study.py",
+    "summarize_sensitivities.py",
+}
 MESH_INPUTS = (
     Path("Allmesh"),
     Path("make_geometry.py"),
@@ -410,7 +417,7 @@ def source_fingerprint() -> str:
         and "polyMesh" not in path.relative_to(HERE).parts
         and "triSurface" not in path.relative_to(HERE).parts
         and "postProcessing" not in path.relative_to(HERE).parts
-        and path.name not in {"README.md", "PAPER_AUDIT.md"}
+        and path.name not in NON_RUNTIME_FINGERPRINT_FILES
         and not any(
             part == "0"
             or part.startswith("processor")
@@ -474,6 +481,7 @@ def outputs_complete(
     source_output: Path,
     variant: Variant,
     expected_fingerprint: str,
+    process_count: int,
 ) -> bool:
     products = [source_output / f"{variant.run_id}{suffix}" for suffix in PRODUCT_SUFFIXES]
     if not all(path.is_file() and path.stat().st_size > 0 for path in products):
@@ -487,6 +495,10 @@ def outputs_complete(
         and data.get("run_mode") == variant.mode
         and float(data.get("simulated_end_time_s", -1.0)) >= variant.end_time - 1.0e-9
         and data.get("source_fingerprint") == expected_fingerprint
+        and data.get("solver_completed") is True
+        and data.get("numerical_controls") == variant_controls(
+            variant, process_count
+        )
     )
     if not complete:
         return False
@@ -496,6 +508,28 @@ def outputs_complete(
     ):
         return data.get("closed_hold", {}).get("pass") is True
     return True
+
+
+def variant_controls(variant: Variant, process_count: int) -> dict[str, object]:
+    return {
+        "mesh_profile": variant.mesh,
+        "c_alpha": variant.c_alpha,
+        "initial_interface_thickness_m": variant.initial_interface_thickness,
+        "initial_interface_profile": variant.initial_interface_profile,
+        "n_hat_gradient_scheme": variant.n_hat_gradient_scheme,
+        "alpha_smooth_curvature": variant.alpha_smooth_curvature,
+        "max_co": variant.max_co,
+        "max_alpha_co": variant.max_alpha_co,
+        "max_delta_t_s": variant.max_delta_t,
+        "sample_interval_s": variant.sample_interval,
+        "surface_tension_n_per_m": variant.surface_tension,
+        "atmosphere_pressure_boundary": variant.atmosphere_pressure_boundary,
+        "parallel_processes": process_count,
+        "parallel_decomposition": "simple-x" if process_count > 1 else "serial",
+        "parallel_partition_shape": (
+            [process_count, 1, 1] if process_count > 1 else None
+        ),
+    }
 
 
 def annotate_metrics(
@@ -529,25 +563,7 @@ def annotate_metrics(
                 data["solver_failure_reason"] = temperature_iterations.group(0).strip()
             else:
                 data["solver_failure_reason"] = "compressibleInterFoam exited non-zero"
-    data["numerical_controls"] = {
-        "mesh_profile": variant.mesh,
-        "c_alpha": variant.c_alpha,
-        "initial_interface_thickness_m": variant.initial_interface_thickness,
-        "initial_interface_profile": variant.initial_interface_profile,
-        "n_hat_gradient_scheme": variant.n_hat_gradient_scheme,
-        "alpha_smooth_curvature": variant.alpha_smooth_curvature,
-        "max_co": variant.max_co,
-        "max_alpha_co": variant.max_alpha_co,
-        "max_delta_t_s": variant.max_delta_t,
-        "sample_interval_s": variant.sample_interval,
-        "surface_tension_n_per_m": variant.surface_tension,
-        "atmosphere_pressure_boundary": variant.atmosphere_pressure_boundary,
-        "parallel_processes": process_count,
-        "parallel_decomposition": "simple-x" if process_count > 1 else "serial",
-        "parallel_partition_shape": (
-            [process_count, 1, 1] if process_count > 1 else None
-        ),
-    }
+    data["numerical_controls"] = variant_controls(variant, process_count)
     path.write_text(json.dumps(data, indent=2, allow_nan=False) + "\n", encoding="utf-8")
 
 
@@ -567,6 +583,7 @@ def main() -> None:
     source_output = HERE / "outputs"
     expected_fingerprint = source_fingerprint()
     closed_variant = next(item for item in VARIANTS if item.run_id == "closed_base")
+    closed_process_count = closed_variant.processes or args.np
     needs_closed_gate = any(
         item.group in {"core", "sensitivity"} for item in selected
     )
@@ -574,7 +591,10 @@ def main() -> None:
         needs_closed_gate
         and closed_variant not in selected
         and not outputs_complete(
-            source_output, closed_variant, expected_fingerprint
+            source_output,
+            closed_variant,
+            expected_fingerprint,
+            closed_process_count,
         )
     ):
         raise RuntimeError(
@@ -587,7 +607,12 @@ def main() -> None:
         if process_count < 1:
             raise ValueError(f"{variant.run_id}: processes must be positive")
         if (
-            outputs_complete(source_output, variant, expected_fingerprint)
+            outputs_complete(
+                source_output,
+                variant,
+                expected_fingerprint,
+                process_count,
+            )
             and not args.force
         ):
             print(f"[{variant.run_id}] complete current compact output exists; skipping")
@@ -681,7 +706,10 @@ def main() -> None:
         )
         copy_products(runtime, source_output, variant.run_id)
         if variant.mode == "closed" and not outputs_complete(
-            source_output, variant, expected_fingerprint
+            source_output,
+            variant,
+            expected_fingerprint,
+            process_count,
         ):
             raise RuntimeError(
                 f"{variant.run_id} completed but failed the closed-hold gate"
