@@ -609,20 +609,26 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
             sigmaOld.primitiveField() - dt.value()*divFlux.primitiveField();
 
         // Refresh the upwind fraction from the updated conserved density
-        // before any additional Picard pass.
+        // before any additional Picard pass.  Only reconstruct s in
+        // resolved-phase cells; vanishing-phase cells keep s=0 for upwind
+        // while sigma inventory is left untouched.
         {
-            const scalarField alphaRhoFloorCells
-            (
-                residualAlpha_*phaseRho.primitiveField()
-            );
+            const scalar resolveAlpha = max(residualAlpha_, 1e-3);
             scalarField& fieldCells = field.primitiveFieldRef();
             const scalarField& sigmaCells = sigma.primitiveField();
+            const scalarField& alphaCells = alpha.primitiveField();
             const scalarField& alphaRhoCells = alphaRho.primitiveField();
             forAll(fieldCells, celli)
             {
-                const scalar denom =
-                    max(alphaRhoCells[celli], alphaRhoFloorCells[celli]);
-                fieldCells[celli] = sigmaCells[celli]/denom;
+                if (alphaCells[celli] > resolveAlpha)
+                {
+                    fieldCells[celli] =
+                        sigmaCells[celli]/alphaRhoCells[celli];
+                }
+                else
+                {
+                    fieldCells[celli] = 0;
+                }
             }
             field.correctBoundaryConditions();
         }
@@ -649,20 +655,23 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     }
 
     // Recover the phase mass fraction for output, BCs and arrival metrics.
-    // residualAlpha only floors the divisor in vanishing-phase cells; it is
-    // not a deferred equation correction and does not clear inventory.
-    const scalarField alphaRhoFloorCells
-    (
-        residualAlpha_*phaseRho.primitiveField()
-    );
+    // Do not divide by a residual-alpha floor: that amplifies any numerical
+    // sigma deposited in nearly dry cells into huge non-physical s values.
+    const scalar resolveAlpha = max(residualAlpha_, 1e-3);
     scalarField& fieldCells = field.primitiveFieldRef();
     const scalarField& sigmaCells = sigma.primitiveField();
     const scalarField& alphaRhoCells = alphaRho.primitiveField();
+    const scalarField& alphaCells = alpha.primitiveField();
     forAll(fieldCells, celli)
     {
-        const scalar denom =
-            max(alphaRhoCells[celli], alphaRhoFloorCells[celli]);
-        fieldCells[celli] = sigmaCells[celli]/denom;
+        if (alphaCells[celli] > resolveAlpha)
+        {
+            fieldCells[celli] = sigmaCells[celli]/alphaRhoCells[celli];
+        }
+        else
+        {
+            fieldCells[celli] = 0;
+        }
     }
     field.correctBoundaryConditions();
     {
@@ -674,7 +683,7 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     scalar fieldMax = -VGREAT;
     forAll(fieldCells, celli)
     {
-        if (alpha.primitiveField()[celli] > residualAlpha_)
+        if (alphaCells[celli] > resolveAlpha)
         {
             fieldMin = min(fieldMin, fieldCells[celli]);
             fieldMax = max(fieldMax, fieldCells[celli]);
