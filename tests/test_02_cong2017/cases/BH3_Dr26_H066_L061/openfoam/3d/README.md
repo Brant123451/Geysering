@@ -111,12 +111,15 @@ sample.
 
 The finite-opening model uses a cyclic `uniformJump` whose jump starts at the
 closed-baffle hydrostatic `p_rgh` difference (`6461.359 Pa`) and decays to
-zero with a smoothstep open fraction. That U-independent head support is
-required because `porousBafflePressure` is identically zero at `U=0` and
-cannot hold the sealed hydrostatic state at the first instant of opening.
-Inertial-only and large-Darcy porous tables are retained only as diagnostic
-negative evidence. Instantaneous opening keeps a zero jump. The 101-point
-jump table resolves the measured opening window without an outcome-fitted
+zero with a smoothstep open fraction. Event runs first create a closed wall
+baffle, run the same discrete `balanceInitialPressure` projection used by the
+hold, merge those baffles back to internal faces, then rebuild Valve #4 as the
+time-varying jump cyclic. That U-independent head support is required because
+`porousBafflePressure` is identically zero at `U=0` and cannot hold the sealed
+hydrostatic state at the first instant of opening. Inertial-only and large-Darcy
+porous tables are retained only as diagnostic negative evidence. Instantaneous
+opening keeps a zero jump after the same balanced start. The 101-point jump
+table resolves the measured opening window without an outcome-fitted
 coefficient.
 
 ## Mesh profiles

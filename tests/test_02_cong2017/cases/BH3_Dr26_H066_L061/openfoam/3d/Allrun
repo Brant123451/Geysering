@@ -114,24 +114,44 @@ postProcess \
     -fields "(alpha.water)" \
     > log.initialVolumeAudit 2>&1
 topoSet -dict system/topoSetDict.valve > log.topoSet.valve 2>&1
+
+# Every event starts from the discrete closed-valve hydrostatic projection.
+# Opening directly onto a cyclic baffle without that projection leaves an
+# unbalanced impulsive start across Valve #4. Finite opening then rebuilds the
+# same face zone as a time-varying uniformJump; instantaneous opening rebuilds
+# it as a zero-jump cyclic.
+bash ./Allwmake > log.wmake.balanceInitialPressure 2>&1
 python3 make_valve_dict.py \
-    --mode "$VALVE_OPENING" \
-    --output system/createBafflesDict.runtime \
-    > log.valveDict 2>&1
-createBaffles -overwrite -dict system/createBafflesDict.runtime \
-    > log.createBaffles 2>&1
+    --mode closed \
+    --output system/createBafflesDict.closed \
+    > log.valveDict.closed 2>&1
+createBaffles -overwrite -dict system/createBafflesDict.closed \
+    > log.createBaffles.closed 2>&1
+balanceInitialPressure -time 0 \
+    > log.balanceInitialPressure 2>&1
+
+if [[ "$RUN_MODE" == "event" ]]; then
+    mergeOrSplitBaffles -overwrite > log.mergeOrSplitBaffles 2>&1
+    topoSet -dict system/topoSetDict.valve > log.topoSet.valve.open 2>&1
+    python3 make_valve_dict.py \
+        --mode "$VALVE_OPENING" \
+        --toposet-log log.topoSet.valve.open \
+        --output system/createBafflesDict.runtime \
+        > log.valveDict 2>&1
+    createBaffles -overwrite -dict system/createBafflesDict.runtime \
+        > log.createBaffles 2>&1
+else
+    cp -f system/createBafflesDict.closed system/createBafflesDict.runtime
+    cp -f log.createBaffles.closed log.createBaffles
+    cp -f log.valveDict.closed log.valveDict
+fi
+
 checkMesh -allGeometry -allTopology > log.checkMesh.baffled 2>&1
 python3 mesh_audit.py \
     --profile "${MESH_PROFILE:-base}-${VALVE_OPENING}" \
     --check-mesh-log log.checkMesh.baffled \
     --output "outputs/${RUN_ID}_mesh.json" \
     > log.meshAudit.baffled 2>&1
-
-if [[ "$RUN_MODE" == "closed" ]]; then
-    bash ./Allwmake > log.wmake.balanceInitialPressure 2>&1
-    balanceInitialPressure -time 0 \
-        > log.balanceInitialPressure 2>&1
-fi
 
 if (( NP == 1 )); then
     compressibleInterFoam > log.compressibleInterFoam 2>&1
