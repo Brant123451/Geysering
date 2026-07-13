@@ -86,13 +86,14 @@ canonical `-12…14.4 s` window. Status at the latest agent check:
    skewness 0.845).
 2. **base smoke**: four-rank smoke completed (`SOLVE_DONE mode=smoke`).
 3. **base full**: `NP=4 ./Allrun base` running in tmux `a2-base-full`
-   (`log.interFoam.full`). Latest sample near `t ≈ -0.75 s` (≈43% of
-   `-12…14.4 s`): last-1 s means are inlet 19.993 L/s, weir 20.120 L/s,
-   water-volume slope −0.120 L/s; PT3 ≈ 0.795 kPa; downstream equivalent
-   depths ≈ 0.060 / 0.069 / 0.078 m at `x=0.60/3.25/6.00 m`; max Co ≈ 0.47;
-   no fatal/FPE. Recent rate ≈ 4.0e-4 sim-s/wall-s → order of ~10–11 h wall
-   remaining to `14.4 s` on this 4-core host. Written fields include
-   `-12`, `-3`, `-2`, `-1`.
+   (`log.interFoam.full`). Latest sample near `t ≈ 3.53 s` (≈59% of
+   `-12…14.4 s`). Near `t=0` last-1 s means were inlet 19.993 L/s, weir
+   20.120 L/s, volume slope −0.120 L/s, PT3 ≈ 0.795 kPa. After the ramp,
+   sampled inlet ≈ 91 L/s (wet-section weighted BC under Q1), weir rising
+   (~30 L/s at this sample), riser outlet still 0, PT3 ≈ 1.50 kPa, bore
+   probes wet by ~2.07 s; max Co ≈ 0.47; no fatal/FPE. Recent advance
+   ≈ 0.6–0.9 sim-s per wall-hour on this 4-core host. Written fields include
+   `-12`, `1`, `2`, `3`.
 4. **refined**: not started for the replacement model (prior refined tmux
    belongs to the superseded fixed-stage campaign).
 5. Do **not** treat incomplete `postProcessing` or partial CSV/JSON as final
