@@ -33,8 +33,18 @@ case "$PROFILE" in
         CURVATURE_ELEMENTS=64
         GEOMETRY_ARGS=(--prism-interface-band)
         ;;
+    prism_atmosphere)
+        PIPE_SIZE=0.009
+        RISER_SIZE=0.004
+        ATMOSPHERE_SIZE=0.025
+        CURVATURE_ELEMENTS=64
+        GEOMETRY_ARGS=(
+            --prism-interface-band
+            --prism-atmosphere-layers 46
+        )
+        ;;
     *)
-        echo "MESH_PROFILE must be base, refined, interface, or prism" >&2
+        echo "MESH_PROFILE must be base, refined, interface, prism, or prism_atmosphere" >&2
         exit 2
         ;;
 esac

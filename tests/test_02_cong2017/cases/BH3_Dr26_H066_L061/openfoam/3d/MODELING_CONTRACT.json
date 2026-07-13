@@ -113,6 +113,12 @@
         "exact_layer_planes_z_m": [0.6525, 0.66, 0.6675],
         "element_type": "Prism6",
         "tetrahedral_outside_prism_band": true
+      },
+      "prism_atmosphere_diagnostic": {
+        "inherits": "prism_diagnostic",
+        "external_atmosphere_vertical_layer_height_m": 0.025,
+        "external_atmosphere_vertical_layer_count": 46,
+        "purpose": "remove thin top-boundary tetrahedra from acoustic-outflow sensitivity"
       }
     },
     "classification": {

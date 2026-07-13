@@ -11,8 +11,10 @@ approximations:
 The initial horizontal free surface and Valve #4 cross-section are embedded as
 conformal internal mesh surfaces. Optional diagnostics either refine both
 edges of the declared 15 mm VOF transition or extrude a 24-layer triangular
-prism band around it. The valve surface lets createBaffles split one exact pipe
-cross-section instead of a jagged band of tetrahedron faces.
+prism band around it; a further option vertically layers the external air to
+remove thin acoustic-boundary tetrahedra. The valve surface lets createBaffles
+split one exact pipe cross-section instead of a jagged band of tetrahedron
+faces.
 """
 from __future__ import annotations
 
@@ -45,6 +47,8 @@ BOOLEAN_OVERLAP = 0.001
 PRISM_BOTTOM_Z = 0.630
 PRISM_TOP_Z = 0.690
 PRISM_LAYER_HEIGHT = 0.0025
+ATMOSPHERE_PRISM_LAYER_HEIGHT = 0.025
+ATMOSPHERE_PRISM_LAYERS = 46
 PRISM_STAGES = (
     (INITIAL_INTERFACE_LOWER_Z, 9),
     (INITIAL_FREE_SURFACE_Z, 3),
@@ -74,6 +78,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--align-interface-band", action="store_true")
     parser.add_argument("--interface-size", type=float)
     parser.add_argument("--prism-interface-band", action="store_true")
+    parser.add_argument(
+        "--prism-atmosphere-layers",
+        type=int,
+        default=0,
+    )
     return parser.parse_args()
 
 
@@ -290,12 +299,20 @@ def build_prism_geometry(
         )
 
     # Extrude the central disk and annulus together. Their shared circular edge
-    # produces one internal cylindrical face and a conformal tetrahedral box.
+    # produces one internal cylindrical face. The optional vertical layers
+    # remove thin top-boundary tetrahedra from the acoustic-outflow diagnostic.
+    atmosphere_layer_options: dict[str, object] = {}
+    if args.prism_atmosphere_layers:
+        atmosphere_layer_options = {
+            "numElements": [args.prism_atmosphere_layers],
+            "recombine": True,
+        }
     atmosphere_extrusion = occ.extrude(
         [(2, rim_disk), (2, external_floor)],
         0.0,
         0.0,
         COMPUTATIONAL_TOP_Z - PHYSICAL_RIM_Z,
+        **atmosphere_layer_options,
     )
     occ.synchronize()
     atmosphere_volumes = [
@@ -352,6 +369,8 @@ def build_prism_geometry(
     return volumes, {
         "prism_volumes": prism_volumes,
         "prism_interfaces": prism_interfaces,
+        "atmosphere_volumes": atmosphere_volumes,
+        "atmosphere_prism_layers": args.prism_atmosphere_layers,
         "shared_face_levels": shared_face_levels,
         "rim_shared": True,
         "reference_volume_m3": PRISM_REFERENCE_VOLUME_M3,
@@ -384,6 +403,10 @@ def prism_mesh_levels(
         if name.startswith("Prism")
         for tag in tags
     }
+    return len(prism_node_tags), node_levels(prism_node_tags)
+
+
+def node_levels(node_tags: set[int]) -> list[float]:
     all_node_tags, coordinates, _ = gmsh.model.mesh.getNodes()
     z_by_tag = {
         int(tag): float(coordinates[3 * index + 2])
@@ -394,7 +417,29 @@ def prism_mesh_levels(
     for elevation in raw_levels:
         if not levels or abs(elevation - levels[-1]) > 1.0e-10:
             levels.append(elevation)
-    return len(prism_node_tags), levels
+    return levels
+
+
+def prism_elements_in_volumes(
+    volumes: list[int],
+    label: str,
+) -> tuple[int, set[int]]:
+    count = 0
+    node_tags: set[int] = set()
+    for volume in volumes:
+        types, tags, node_blocks = gmsh.model.mesh.getElements(3, int(volume))
+        names = [
+            gmsh.model.mesh.getElementProperties(int(item))[0]
+            for item in types
+        ]
+        if not names or any(not name.startswith("Prism") for name in names):
+            raise RuntimeError(
+                f"{label} volume {volume} contains element types {names}"
+            )
+        count += sum(len(block) for block in tags)
+        for nodes in node_blocks:
+            node_tags.update(int(tag) for tag in nodes)
+    return count, node_tags
 
 
 def main() -> None:
@@ -420,6 +465,22 @@ def main() -> None:
     ):
         raise ValueError(
             "prism-interface-band is a separate profile from align-interface-band"
+        )
+    if args.prism_atmosphere_layers and not args.prism_interface_band:
+        raise ValueError(
+            "prism-atmosphere-layers requires prism-interface-band"
+        )
+    if args.prism_atmosphere_layers < 0:
+        raise ValueError("prism-atmosphere-layers cannot be negative")
+    if args.prism_atmosphere_layers and not math.isclose(
+        (COMPUTATIONAL_TOP_Z - PHYSICAL_RIM_Z)
+        / args.prism_atmosphere_layers,
+        ATMOSPHERE_PRISM_LAYER_HEIGHT,
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+    ):
+        raise ValueError(
+            "prism-atmosphere-layers must produce exact 25 mm layers"
         )
 
     output = args.output_dir.resolve()
@@ -720,39 +781,53 @@ def main() -> None:
             if name.startswith("Tetrahedron")
         )
         prism_node_count, prism_levels = prism_mesh_levels(nodes_by_name)
+        interface_prism_node_count = prism_node_count
+        interface_prism_levels = prism_levels
+        atmosphere_prism_count = 0
+        atmosphere_prism_node_count = 0
+        atmosphere_prism_levels: list[float] = []
         if args.prism_interface_band:
             if prism_metadata is None:
                 raise RuntimeError("Prism metadata was not initialized")
-            slab_count = 0
-            for volume in prism_metadata["prism_volumes"]:
-                types, tags, _ = gmsh.model.mesh.getElements(3, int(volume))
-                names = [
-                    gmsh.model.mesh.getElementProperties(int(item))[0]
-                    for item in types
-                ]
-                if not names or any(not name.startswith("Prism") for name in names):
-                    raise RuntimeError(
-                        f"Prism slab volume {volume} contains element types {names}"
+            slab_count, slab_nodes = prism_elements_in_volumes(
+                prism_metadata["prism_volumes"],
+                "Interface prism slab",
+            )
+            interface_prism_node_count = len(slab_nodes)
+            interface_prism_levels = node_levels(slab_nodes)
+            if args.prism_atmosphere_layers:
+                atmosphere_prism_count, atmosphere_nodes = (
+                    prism_elements_in_volumes(
+                        prism_metadata["atmosphere_volumes"],
+                        "Atmosphere prism",
                     )
-                slab_count += sum(len(block) for block in tags)
-            if prism_count <= 0 or prism_count != slab_count:
+                )
+                atmosphere_prism_node_count = len(atmosphere_nodes)
+                atmosphere_prism_levels = node_levels(atmosphere_nodes)
+            if (
+                prism_count <= 0
+                or prism_count != slab_count + atmosphere_prism_count
+            ):
                 raise RuntimeError(
-                    f"Prism count mismatch: global={prism_count}, slab={slab_count}"
+                    "Prism count mismatch: "
+                    f"global={prism_count}, slab={slab_count}, "
+                    f"atmosphere={atmosphere_prism_count}"
                 )
             expected_levels = [
                 PRISM_BOTTOM_Z + index * PRISM_LAYER_HEIGHT
                 for index in range(25)
             ]
-            if len(prism_levels) != 25 or any(
+            if len(interface_prism_levels) != 25 or any(
                 abs(actual - expected) > 1.0e-10
                 for actual, expected in zip(
-                    prism_levels,
+                    interface_prism_levels,
                     expected_levels,
                     strict=True,
                 )
             ):
                 raise RuntimeError(
-                    f"Expected 25 exact 2.5 mm prism levels, found {prism_levels}"
+                    "Expected 25 exact 2.5 mm interface prism levels, found "
+                    f"{interface_prism_levels}"
                 )
             for key_level in (
                 INITIAL_INTERFACE_LOWER_Z,
@@ -761,10 +836,30 @@ def main() -> None:
             ):
                 if not any(
                     abs(level - key_level) <= 1.0e-10
-                    for level in prism_levels
+                    for level in interface_prism_levels
                 ):
                     raise RuntimeError(
                         f"Required prism interface z={key_level} is absent"
+                    )
+            if args.prism_atmosphere_layers:
+                expected_atmosphere_levels = [
+                    PHYSICAL_RIM_Z
+                    + index * ATMOSPHERE_PRISM_LAYER_HEIGHT
+                    for index in range(args.prism_atmosphere_layers + 1)
+                ]
+                if len(atmosphere_prism_levels) != len(
+                    expected_atmosphere_levels
+                ) or any(
+                    abs(actual - expected) > 1.0e-10
+                    for actual, expected in zip(
+                        atmosphere_prism_levels,
+                        expected_atmosphere_levels,
+                        strict=True,
+                    )
+                ):
+                    raise RuntimeError(
+                        "Atmosphere prism levels do not form exact 25 mm "
+                        f"layers: {atmosphere_prism_levels}"
                     )
         elif prism_count:
             raise RuntimeError(
@@ -813,13 +908,34 @@ def main() -> None:
         if args.prism_interface_band:
             if prism_metadata is None:
                 raise RuntimeError("Prism metadata was lost before audit")
-            print(f"prism_node_count={prism_node_count}")
-            print(f"prism_layer_count={len(prism_levels)}")
+            print(f"total_prism_node_count={prism_node_count}")
+            print(f"prism_node_count={interface_prism_node_count}")
+            print(f"prism_layer_count={len(interface_prism_levels)}")
             print(
                 "prism_layer_z_m="
-                + ",".join(f"{level:.10g}" for level in prism_levels)
+                + ",".join(
+                    f"{level:.10g}" for level in interface_prism_levels
+                )
             )
             print("prism_key_layers_asserted=True")
+            print(
+                "atmosphere_prism_layer_count="
+                f"{args.prism_atmosphere_layers}"
+            )
+            print(
+                "atmosphere_prism_cell_count="
+                f"{atmosphere_prism_count}"
+            )
+            print(
+                "atmosphere_prism_node_count="
+                f"{atmosphere_prism_node_count}"
+            )
+            print(
+                "atmosphere_prism_layer_z_m="
+                + ",".join(
+                    f"{level:.10g}" for level in atmosphere_prism_levels
+                )
+            )
             print(
                 "prism_shared_face_count="
                 f"{len(prism_metadata['shared_face_levels'])}"

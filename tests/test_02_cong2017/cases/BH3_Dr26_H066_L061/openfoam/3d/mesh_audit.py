@@ -96,6 +96,9 @@ def main() -> None:
             r"^tetrahedron_count=(\d+)", geometry, int
         ),
         "gmsh_prism_count": first(r"^prism_count=(\d+)", geometry, int),
+        "total_prism_node_count": first(
+            r"^total_prism_node_count=(\d+)", geometry, int
+        ),
         "prism_layer_count": first(
             r"^prism_layer_count=(\d+)", geometry, int
         ),
@@ -122,6 +125,24 @@ def main() -> None:
             geometry,
             lambda value: value == "True",
         ),
+        "atmosphere_prism_layer_count": first(
+            r"^atmosphere_prism_layer_count=(\d+)", geometry, int
+        ),
+        "atmosphere_prism_cell_count": first(
+            r"^atmosphere_prism_cell_count=(\d+)", geometry, int
+        ),
+        "atmosphere_prism_node_count": first(
+            r"^atmosphere_prism_node_count=(\d+)", geometry, int
+        ),
+        "atmosphere_prism_layer_z_m": first(
+            r"^atmosphere_prism_layer_z_m=(.*)$",
+            geometry,
+            lambda value: (
+                [float(item) for item in value.split(",")]
+                if value
+                else []
+            ),
+        ),
         "fluid_reference_volume_m3": first(
             r"^fluid_reference_volume_m3=([0-9.eE+-]+)", geometry
         ),
@@ -137,7 +158,8 @@ def main() -> None:
     else:
         data["mesh_to_cad_volume_relative_error"] = None
     prism_failures = []
-    if args.profile == "prism":
+    prism_profile = args.profile in {"prism", "prism_atmosphere"}
+    if prism_profile:
         if not data["prisms"]:
             prism_failures.append("checkMesh reported no prism cells")
         if data["gmsh_prism_count"] != data["prisms"]:
@@ -163,11 +185,39 @@ def main() -> None:
             prism_failures.append("five slab shared-face assertions did not pass")
         if data["prism_rim_shared_asserted"] is not True:
             prism_failures.append("physical-rim shared-face assertion did not pass")
+        if args.profile == "prism_atmosphere":
+            if data["atmosphere_prism_layer_count"] != 46:
+                prism_failures.append(
+                    "atmosphere prism profile does not contain 46 layers"
+                )
+            atmosphere_levels = data["atmosphere_prism_layer_z_m"]
+            expected_atmosphere_levels = [
+                1.85 + 0.025 * index for index in range(47)
+            ]
+            if atmosphere_levels is None or len(atmosphere_levels) != 47:
+                prism_failures.append(
+                    "atmosphere prism z-level audit is incomplete"
+                )
+            elif any(
+                abs(actual - expected) > 1.0e-10
+                for actual, expected in zip(
+                    atmosphere_levels,
+                    expected_atmosphere_levels,
+                    strict=True,
+                )
+            ):
+                prism_failures.append(
+                    "atmosphere prism levels are not exact 25 mm layers"
+                )
+            if not data["atmosphere_prism_cell_count"]:
+                prism_failures.append(
+                    "atmosphere prism profile contains no atmosphere prisms"
+                )
         cad_error = data["cad_to_reference_volume_relative_error"]
         if cad_error is None or abs(cad_error) > 5.0e-8:
             prism_failures.append("CAD reference-volume assertion did not pass")
     data["prism_contract_passed"] = (
-        not prism_failures if args.profile == "prism" else None
+        not prism_failures if prism_profile else None
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")

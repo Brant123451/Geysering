@@ -317,4 +317,12 @@ initializer now audits the exact atmosphere-patch acoustic Courant number
 `(Un+sqrt(gamma/psi))*maxDeltaT*deltaCoeffs`, because the solver's ordinary
 Courant control contains velocity but not sound speed. Net and absolute
 atmosphere mass flux are both retained to detect cancelling local
-inflow/outflow. No event calculation is released by these short diagnostics.
+inflow/outflow. On the current tetrahedral external-air mesh that audit is
+`490.5` at `maxDeltaT=5e-4 s`, caused by a top circular-seam cell with
+`deltaCoeffs=2843.7 1/m` (0.352 mm face-to-cell distance). Even `5e-6 s`
+would leave this local acoustic number at `4.91`, so blindly extending that
+expensive timestep diagnostic is not justified. A declared
+`prism_atmosphere` mesh instead preserves the exact CAD domain while imposing
+46 exact 25 mm vertical layers in the external air; its strict mesh and
+acoustic audits must pass before another dynamic comparison. No event
+calculation is released by these short diagnostics.

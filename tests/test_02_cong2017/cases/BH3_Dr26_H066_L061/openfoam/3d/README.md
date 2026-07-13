@@ -129,8 +129,13 @@ exactly. The pipe/tee, riser outside the slab, and expanded external atmosphere
 remain tetrahedral. All Booleans finish at the valve plane before the slab is
 extruded; shared CAD faces connect its top and bottom to the tetrahedral
 regions. Mesh generation asserts the layer coordinates, prism count, shared
-faces, and CAD volume. Every profile now starts the square external atmosphere
-at the physical rim `z=1.85 m`; the prior tetrahedral construction's 1 mm
+faces, and CAD volume. The `prism_atmosphere` diagnostic keeps that interface
+slab and additionally extrudes the external air from `z=1.85` to `3.0 m` as
+46 exact 25 mm vertical prism layers. This removes the top circular-seam
+tetrahedron whose 0.352 mm face-to-cell distance produced an audited acoustic
+Courant number of `490.5` at `maxDeltaT=5e-4 s`; it does not change the CAD
+domain or boundary locations. Every profile starts the square external
+atmosphere at the physical rim `z=1.85 m`; the prior tetrahedral construction's 1 mm
 annular Boolean overlap below the rim was removed so mesh sensitivities share
 the prism profile's exact physical domain. These profiles test the spatially
 located CSF defect
@@ -147,6 +152,7 @@ MESH_PROFILE=base ./Allmesh
 MESH_PROFILE=refined ./Allmesh
 MESH_PROFILE=interface ./Allmesh
 MESH_PROFILE=prism ./Allmesh
+MESH_PROFILE=prism_atmosphere ./Allmesh
 ```
 
 Neither generated STL surfaces nor `constant/polyMesh` are committed.
@@ -187,6 +193,8 @@ python3 run_study.py --variant closed_prism_sigma_072_nhat_ls_repeat
 python3 run_study.py --variant closed_prism_sigma_072_nhat_ls_serial
 python3 run_study.py --variant closed_prism_sigma_072_nhat_ls_dt_fine
 python3 run_study.py --variant closed_prism_sigma_072_nhat_ls_wave
+python3 run_study.py --variant closed_prism_atmosphere_sigma_072_nhat_ls_fixed
+python3 run_study.py --variant closed_prism_atmosphere_sigma_072_nhat_ls_wave
 python3 run_study.py --variant closed_prism_sigma_072_nhat_ls_dt_5e6
 python3 run_study.py --variant closed_prism_sigma_072_nhat_ls_wave_dt_5e6
 python3 run_study.py --variant closed_prism_sigma_zero_nhat_ls
