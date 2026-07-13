@@ -83,13 +83,11 @@
       "published_cfd_baseline_s": 0.0,
       "experiment_nominal_s": 0.2,
       "paired_cfd_reported_experiment_s": 0.5,
-      "finite_opening_model": "time-varying Darcy-plus-inertial porous baffle with smoothstep area fraction",
-      "minimum_resolved_open_area": "one valve-face area, computed as 1/Nface from the generated face zone",
+      "finite_opening_model": "time-varying uniformJump from closed hydrostatic p_rgh difference to zero with smoothstep opening fraction",
+      "hydrostatic_jump_pa": 6461.359,
       "opening_table_samples": 101,
-      "loss_coefficient": "K=(1/A-1)^2",
-      "inertial_coefficient": "I=K/L with L=0.050 m",
-      "darcy_coefficient": "D=(0.5*U_crossover/nu_water)*I so viscous and inertial baffle terms match at U_crossover=0.02 m/s (closed-hold water-speed gate) with contract water properties",
-      "full_open_jump": "D=I=0 exactly when A=1"
+      "full_open_jump": "jump=0 exactly when the smoothstep open fraction reaches 1",
+      "rejected_porous_baffle": "porousBafflePressure inertial-only and large-Darcy tables retained as diagnostic negative evidence; jump is identically zero at U=0 so they cannot hold the closed hydrostatic head"
     },
     "mesh_profiles": {
       "base": {

@@ -366,7 +366,9 @@ That inertial-only table still failed as diagnostic negative evidence: with
 hydrostatic difference across Valve #4 could accelerate before `I|U|²`
 resisted. The smoke conserved mass through about `0.003 s`
 (`Ugas~4.4 m/s`, `Uwater~0.15 m/s`) and then diverged (`T`/`p`/`k`/`ε`
-blow-up). The fix adds a Darcy table on the same `K=(1/A-1)^2` history,
-scaled so viscous and inertial baffle terms match at the closed-hold
-water-speed gate `0.02 m/s` with contract water properties. Instantaneous
-opening remains an inertial/Darcy-free zero-jump diagnostic.
+blow-up). A follow-up Darcy table scaled to the closed-hold water-speed gate
+failed earlier (`~4e-6 s`, SIGFPE): the jump remains U-dependent, so a large
+`D` stiffens the baffle without restoring a finite head at `U=0`. Finite
+opening therefore switches to `uniformJump` with a smoothstep decay of the
+closed hydrostatic `p_rgh` difference to zero. Instantaneous opening remains
+a zero-jump diagnostic.

@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """Generate the runtime createBaffles dictionary for Valve #4.
 
-The paired CFD paper uses an instantaneous opening. Finite 0.2 s and 0.5 s
-variants are sensitivity controls: a cyclic porous baffle has time-varying
-Darcy and inertial losses based on a smoothstep opening-area fraction. At full
-opening both coefficients are exactly zero. The `closed` mode creates an
-impermeable wall for the required static-hold test.
+The paired CFD paper uses an instantaneous opening (zero pressure jump). Finite
+0.2 s and 0.5 s variants are sensitivity controls.
 
-An inertial-only table is insufficient at startup: porousBafflePressure gives
-Δp = -(D μ U + 0.5 I ρ |U|²) L, so D=0 leaves zero resistance at U=0 and the
-~6.5 kPa hydrostatic jump can accelerate a non-physical flux before I|U|²
-grows. The Darcy table uses the same K=(1/A-1)^2 history, scaled so viscous
-and inertial baffle terms match at the closed-hold water-speed gate
-U=0.02 m/s with contract water properties. That crossover is a numerical
-control shared with the hold gate, not an experimental fit.
+A velocity-dependent porous baffle is a poor startup model for this sealed
+hydrostatic release: porousBafflePressure gives
+Δp = -(D μ U + 0.5 I ρ |U|²) L, so the jump is identically zero at U=0 and
+cannot hold the ~6.5 kPa closed-valve head. An inertial-only table and a
+large Darcy table both failed as compact negative evidence. Finite opening
+therefore uses uniformJump with a time-varying jump that starts at the
+closed-baffle hydrostatic p_rgh difference and decays to zero with the same
+smoothstep opening history used previously. Instantaneous opening keeps a
+zero jump. The `closed` mode creates an impermeable wall for the static-hold
+test.
 """
 from __future__ import annotations
 
@@ -22,14 +22,10 @@ import re
 from pathlib import Path
 
 
-VALVE_LENGTH = 0.050
-# Contract materials / closed-hold water-speed gate.
-RHO_WATER = 998.0
-MU_WATER = 0.000933
-U_CROSSOVER = 0.02
-NU_WATER = MU_WATER / RHO_WATER
-# Ergun balance D*nu*U = 0.5*I*U^2  =>  D/I = 0.5*U/nu
-D_OVER_I = 0.5 * U_CROSSOVER / NU_WATER
+# Closed-baffle hydrostatic p_rgh values from the wall mode (Pa).
+UPSTREAM_P_RGH = 107786.651
+DOWNSTREAM_P_RGH = 101325.292
+HYDROSTATIC_JUMP = UPSTREAM_P_RGH - DOWNSTREAM_P_RGH
 
 
 def parse_args() -> argparse.Namespace:
@@ -63,7 +59,21 @@ def valve_face_count(path: Path) -> int:
     return count
 
 
-def foam_table(rows: list[str]) -> str:
+def jump_table(duration: float) -> str:
+    """Hydrostatic head support decays with smoothstep open fraction s(t).
+
+    jump(t) = Δp_hydro * (1 - s(t)) with s = 3f^2 - 2f^3, f=t/duration.
+    At t=0 the cyclic baffle still holds the closed hydrostatic difference at
+    U=0; at full opening the jump is exactly zero.
+    """
+    rows = []
+    for index in range(101):
+        fraction = index / 100.0
+        open_fraction = 3.0 * fraction**2 - 2.0 * fraction**3
+        jump = HYDROSTATIC_JUMP * (1.0 - open_fraction)
+        rows.append(
+            f"                ({duration * fraction:.9g} {jump:.9g})"
+        )
     return """{
             type table;
             outOfBounds clamp;
@@ -75,43 +85,14 @@ def foam_table(rows: list[str]) -> str:
         }""" % "\n".join(rows)
 
 
-def loss_tables(duration: float, face_count: int) -> tuple[str, str, float, float]:
-    """Return (D_function, I_function, D0, I0) for the mesh-resolved Amin."""
-    d_rows: list[str] = []
-    i_rows: list[str] = []
-    minimum_resolved_area = 1.0 / face_count
-    d0 = 0.0
-    i0 = 0.0
-    for index in range(101):
-        fraction = index / 100.0
-        area = max(
-            minimum_resolved_area,
-            3.0 * fraction**2 - 2.0 * fraction**3,
-        )
-        loss_coefficient = (1.0 / area - 1.0) ** 2
-        inertial = loss_coefficient / VALVE_LENGTH
-        darcy = D_OVER_I * inertial
-        time = duration * fraction
-        d_rows.append(f"                ({time:.9g} {darcy:.9g})")
-        i_rows.append(f"                ({time:.9g} {inertial:.9g})")
-        if index == 0:
-            d0 = darcy
-            i0 = inertial
-    return foam_table(d_rows), foam_table(i_rows), d0, i0
-
-
-def coupled_fields(d_function: str, i_function: str) -> str:
+def coupled_fields(jump_function: str) -> str:
     return f"""
                     p_rgh
                     {{
-                        type            porousBafflePressure;
+                        type            uniformJump;
                         patchType       cyclic;
-                        D               {d_function};
-                        I               {i_function};
-                        length          {VALVE_LENGTH};
-                        uniformJump     true;
-                        jump            uniform 0;
-                        value           uniform 101325;
+                        jumpTable       {jump_function};
+                        value           uniform {DOWNSTREAM_P_RGH};
                     }}
                     p           {{ type cyclic; }}
                     U           {{ type cyclic; }}
@@ -181,28 +162,23 @@ def main() -> None:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     face_count = valve_face_count(args.toposet_log)
 
-    d0 = 0.0
-    i0 = 0.0
     if args.mode == "closed":
         master_type = "wall"
         slave_type = "wall"
         master_extra = ""
         slave_extra = ""
-        master_fields = wall_fields(107786.651, 107541.891, 1)
-        slave_fields = wall_fields(101325.292, 101325.0, 0)
+        master_fields = wall_fields(UPSTREAM_P_RGH, 107541.891, 1)
+        slave_fields = wall_fields(DOWNSTREAM_P_RGH, 101325.0, 0)
     else:
         master_type = "cyclic"
         slave_type = "cyclic"
         master_extra = "neighbourPatch valve_downstream;"
         slave_extra = "neighbourPatch valve_upstream;"
         if args.mode == "instant":
-            d_function = "constant 0"
-            i_function = "constant 0"
+            jump_function = "constant 0"
         else:
-            d_function, i_function, d0, i0 = loss_tables(
-                float(args.mode), face_count
-            )
-        master_fields = coupled_fields(d_function, i_function)
+            jump_function = jump_table(float(args.mode))
+        master_fields = coupled_fields(jump_function)
         slave_fields = master_fields
 
     text = f"""FoamFile
@@ -248,10 +224,7 @@ baffles
     args.output.write_text(text, encoding="utf-8")
     print(f"mode={args.mode}")
     print(f"valve_face_count={face_count}")
-    print(f"minimum_resolved_open_area_fraction={1.0 / face_count:.12g}")
-    print(f"darcy_over_inertial_per_m={D_OVER_I:.12g}")
-    print(f"darcy_at_minimum_open_1_per_m2={d0:.12g}")
-    print(f"inertial_at_minimum_open_1_per_m={i0:.12g}")
+    print(f"hydrostatic_jump_pa={HYDROSTATIC_JUMP:.12g}")
     print(f"output={args.output}")
 
 
