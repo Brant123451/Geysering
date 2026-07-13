@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "case": "B-H3",
-  "run_id": "closed_prism_sigma_072_nhat_ls",
+  "run_id": "closed_prism_sigma_072_nhat_ls_repeat",
   "run_mode": "closed",
   "valve_opening": "closed",
   "simulated_end_time_s": 0.05,
