@@ -200,6 +200,7 @@ boundedPhaseMassTransport
     continuityTolerance_(1e-5),
     nCorr_(0),
     nNonOrthCorr_(0),
+    nProjectionCorr_(0),
     resetOnStartUp_(false),
     potentialPtr_(nullptr),
     inventoryRhoPtr_(nullptr),
@@ -245,6 +246,7 @@ bool Foam::functionObjects::boundedPhaseMassTransport::read
     dict.readIfPresent("continuityTolerance", continuityTolerance_);
     dict.readIfPresent("nCorr", nCorr_);
     dict.readIfPresent("nNonOrthCorr", nNonOrthCorr_);
+    dict.readIfPresent("nProjectionCorr", nProjectionCorr_);
     dict.readIfPresent("resetOnStartUp", resetOnStartUp_);
 
     if
@@ -255,6 +257,7 @@ bool Foam::functionObjects::boundedPhaseMassTransport::read
      || continuityTolerance_ <= 0
      || nCorr_ < 0
      || nNonOrthCorr_ < 0
+     || nProjectionCorr_ < 0
     )
     {
         FatalErrorInFunction
@@ -264,6 +267,7 @@ bool Foam::functionObjects::boundedPhaseMassTransport::read
             << ", continuityTolerance=" << continuityTolerance_
             << ", nCorr=" << nCorr_
             << ", nNonOrthCorr=" << nNonOrthCorr_
+            << ", nProjectionCorr=" << nProjectionCorr_
             << exit(FatalError);
     }
 
@@ -358,25 +362,6 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     volScalarField& Phi = potential(phi, p);
     const word laplacianScheme("laplacian(" + potentialName_ + ")");
 
-    for (label nonOrth = 0; nonOrth <= nNonOrthCorr_; ++nonOrth)
-    {
-        fvScalarMatrix PhiEqn
-        (
-            fvm::laplacian(Phi, laplacianScheme)
-          + fvc::ddt(phaseRho, alpha)
-          + fvc::div(carrierFlux)
-        );
-
-        PhiEqn.solve(potentialName_);
-
-        if (nonOrth == nNonOrthCorr_)
-        {
-            tmp<surfaceScalarField> correctionFlux(PhiEqn.flux());
-            correctionFlux.ref().oriented() = carrierFlux.oriented();
-            carrierFlux += correctionFlux();
-        }
-    }
-
     volScalarField carrierDivAfter
     (
         IOobject
@@ -409,10 +394,56 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     {
         return max(mag(gMin(value)), mag(gMax(value)));
     };
-    const scalar continuityScale =
-        max(maxMag(carrierDdt), max(maxMag(carrierDivAfter), VSMALL));
-    const scalar relativeContinuityError =
-        maxMag(continuityErrorAfter)/continuityScale;
+    scalar relativeContinuityError = GREAT;
+    label projectionIterations = 0;
+
+    for
+    (
+        label projection = 0;
+        projection <= nProjectionCorr_;
+        ++projection
+    )
+    {
+        // Each outer pass solves for an incremental correction to the already
+        // corrected carrier flux.  This removes the residual left by finite
+        // non-orthogonal correction loops without loosening the acceptance
+        // criterion.
+        Phi == Zero;
+        Phi.correctBoundaryConditions();
+
+        for (label nonOrth = 0; nonOrth <= nNonOrthCorr_; ++nonOrth)
+        {
+            fvScalarMatrix PhiEqn
+            (
+                fvm::laplacian(Phi, laplacianScheme)
+              + carrierDdt
+              + fvc::div(carrierFlux)
+            );
+
+            PhiEqn.solve(potentialName_);
+
+            if (nonOrth == nNonOrthCorr_)
+            {
+                tmp<surfaceScalarField> correctionFlux(PhiEqn.flux());
+                correctionFlux.ref().oriented() = carrierFlux.oriented();
+                carrierFlux += correctionFlux();
+            }
+        }
+
+        carrierDivAfter == fvc::div(carrierFlux);
+        continuityErrorAfter == carrierDdt + carrierDivAfter;
+
+        const scalar continuityScale =
+            max(maxMag(carrierDdt), max(maxMag(carrierDivAfter), VSMALL));
+        relativeContinuityError =
+            maxMag(continuityErrorAfter)/continuityScale;
+        projectionIterations = projection + 1;
+
+        if (relativeContinuityError <= continuityTolerance_)
+        {
+            break;
+        }
+    }
 
     if (relativeContinuityError > continuityTolerance_)
     {
@@ -545,6 +576,7 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
         << ", after min/max = "
         << gMin(continuityErrorAfter) << ' ' << gMax(continuityErrorAfter)
         << ", relative max = " << relativeContinuityError
+        << ", projection passes = " << projectionIterations
         << ", iterations = " << iteration
         << ", converged = " << converged << nl << endl;
 

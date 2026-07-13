@@ -58,6 +58,7 @@ class boundedPhaseMassTransport
         scalar continuityTolerance_;
         label nCorr_;
         label nNonOrthCorr_;
+        label nProjectionCorr_;
         bool resetOnStartUp_;
         autoPtr<volScalarField> potentialPtr_;
         autoPtr<volScalarField> inventoryRhoPtr_;

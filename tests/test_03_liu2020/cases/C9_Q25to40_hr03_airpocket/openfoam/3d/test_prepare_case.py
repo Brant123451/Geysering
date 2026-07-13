@@ -134,6 +134,7 @@ class PocketBodyTracerTests(unittest.TestCase):
         self.assertIn("continuityTolerance 1e-5;", dictionary)
         self.assertIn("nCorr           1;", dictionary)
         self.assertIn("nNonOrthCorr    1;", dictionary)
+        self.assertIn("nProjectionCorr 2;", dictionary)
         self.assertIn("fields          (pocketBodyTracerMassSource);", dictionary)
         self.assertNotIn("clearPocketBodyTracerOutsideAir", dictionary)
         self.assertNotIn("boundPocketBodyTracer", dictionary)

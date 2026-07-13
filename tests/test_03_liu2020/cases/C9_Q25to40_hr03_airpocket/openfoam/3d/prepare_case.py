@@ -524,6 +524,7 @@ functions
         continuityTolerance 1e-5;
         nCorr           1;
         nNonOrthCorr    1;
+        nProjectionCorr 2;
         resetOnStartUp  false;
         enabled         true;
         log             false;
