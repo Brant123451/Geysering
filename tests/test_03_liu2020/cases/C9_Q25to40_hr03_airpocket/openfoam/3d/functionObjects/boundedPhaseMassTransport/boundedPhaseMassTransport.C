@@ -26,6 +26,7 @@ License
 #include "inletOutletFvPatchFields.H"
 #include "slicedSurfaceFields.H"
 #include "surfaceInterpolate.H"
+#include "syncTools.H"
 #include "upwind.H"
 #include "zeroField.H"
 #include "zeroGradientFvPatchField.H"
@@ -593,34 +594,29 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     const word divScheme("div(phi," + schemesField_ + ")");
     const dimensionedScalar dt(mesh_.time().deltaT());
     const scalar resolveAlpha = max(residualAlpha_, 1e-3);
-    const scalar rDeltaT = 1.0/mesh_.time().deltaTValue();
+    const scalar dtValue = mesh_.time().deltaTValue();
 
-    // Advect conserved density sigma with a volume flux reconstructed from
-    // the projected air mass flux.  Floor face density at resolveAlpha*rho
-    // (not residualAlpha): the 1e-8 floor made phiVol explode; intensity
-    // fluxes phi*s also went negative from an equivalent thin-face CFL.
-    const surfaceScalarField alphaRhoFace(fvc::interpolate(alphaRho));
-    const surfaceScalarField rhoFace(fvc::interpolate(phaseRho));
-    const surfaceScalarField alphaRhoFaceFloor
-    (
-        max(alphaRhoFace, resolveAlpha*rhoFace)
-    );
-    surfaceScalarField phiVol
-    (
-        IOobject
-        (
-            fieldName_ + "PhiVol",
-            mesh_.time().timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE,
-            IOobject::NO_REGISTER
-        ),
-        carrierFlux/alphaRhoFaceFloor
-    );
-    phiVol.oriented() = carrierFlux.oriented();
+    // Sync non-negative flux intensity from conserved sigma.  Allow s>1 so
+    // shrinking alpha*rho can still drain the full tagged inventory.
+    {
+        scalarField& fieldCells = field.primitiveFieldRef();
+        const scalarField& sigmaCells = sigma.primitiveField();
+        const scalarField& alphaRhoCells = alphaRho.primitiveField();
+        const scalarField& alphaCells = alpha.primitiveField();
+        forAll(fieldCells, celli)
+        {
+            if (alphaCells[celli] > resolveAlpha && alphaRhoCells[celli] > SMALL)
+            {
+                fieldCells[celli] = max(sigmaCells[celli]/alphaRhoCells[celli], 0.0);
+            }
+            else
+            {
+                fieldCells[celli] = 0;
+            }
+        }
+        field.correctBoundaryConditions();
+    }
 
-    // Refresh non-coupled sigma BCs from clamped intensity for inlets.
     {
         volScalarField::Boundary& sigmaBf = sigma.boundaryFieldRef();
         const volScalarField::Boundary& alphaRhoBf = alphaRho.boundaryField();
@@ -629,14 +625,14 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
         {
             if (!sigmaBf[patchi].coupled())
             {
-                // Inlet value: use BC intensity in [0,1].
-                scalarField sPatch(fieldBf[patchi]);
-                sPatch = min(max(sPatch, 0.0), 1.0);
-                sigmaBf[patchi] == alphaRhoBf[patchi]*sPatch;
+                sigmaBf[patchi] == alphaRhoBf[patchi]*max(fieldBf[patchi], 0.0);
             }
         }
     }
 
+    // Physically consistent tagged mass flux: phi_air * s.
+    // High-order candidate, then fall back toward upwind if needed via a
+    // positivity scaling (not phiVol — that form repeatedly blew up).
     surfaceScalarField tracerFlux
     (
         IOobject
@@ -648,16 +644,15 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
             IOobject::NO_WRITE,
             IOobject::NO_REGISTER
         ),
-        fvc::flux(phiVol, sigma, divScheme)
+        fvc::flux(carrierFlux, field, divScheme)
     );
     tracerFlux.oriented() = carrierFlux.oriented();
 
     surfaceScalarField tracerFluxBD
     (
-        upwind<scalar>(mesh_, phiVol).flux(sigma)
+        upwind<scalar>(mesh_, carrierFlux).flux(field)
     );
     tracerFluxBD.oriented() = carrierFlux.oriented();
-
     {
         surfaceScalarField::Boundary& bdBf = tracerFluxBD.boundaryFieldRef();
         const surfaceScalarField::Boundary& hoBf = tracerFlux.boundaryField();
@@ -670,55 +665,115 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
         }
     }
 
-    surfaceScalarField phiCorr(tracerFlux - tracerFluxBD);
+    // Start from upwind intensity flux, then scale donor outflows so no cell
+    // loses more tagged mass than it currently holds (conservative, parallel-
+    // safe via min face-scale sync).
+    tracerFlux = tracerFluxBD;
 
-    // Upper bound: do not demand an instantaneous sink when alpha*rho shrinks.
-    scalarField sigmaMax(mesh_.nCells());
     {
-        const scalarField& alphaRhoCells = alphaRho.primitiveField();
+        const scalarField& V = mesh_.V();
         const scalarField& sigmaCells = sigma.primitiveField();
-        forAll(sigmaMax, celli)
+        const labelUList& owner = mesh_.owner();
+        const labelUList& neighb = mesh_.neighbour();
+
+        scalarField sumOut(mesh_.nCells(), Zero);
+        const scalarField& fluxIf = tracerFlux.primitiveField();
+
+        forAll(fluxIf, facei)
         {
-            sigmaMax[celli] = max(alphaRhoCells[celli], max(sigmaCells[celli], 0.0));
+            const scalar flux = fluxIf[facei];
+            if (flux > 0)
+            {
+                sumOut[owner[facei]] += flux*dtValue;
+            }
+            else if (flux < 0)
+            {
+                sumOut[neighb[facei]] -= flux*dtValue;
+            }
+        }
+
+        const surfaceScalarField::Boundary& fluxBf = tracerFlux.boundaryField();
+        forAll(fluxBf, patchi)
+        {
+            const fvsPatchScalarField& pFlux = fluxBf[patchi];
+            const labelUList& pFaceCells = mesh_.boundary()[patchi].faceCells();
+            forAll(pFlux, pFacei)
+            {
+                const scalar flux = pFlux[pFacei];
+                if (flux > 0)
+                {
+                    sumOut[pFaceCells[pFacei]] += flux*dtValue;
+                }
+            }
+        }
+
+        scalarField cellScale(mesh_.nCells(), 1.0);
+        forAll(cellScale, celli)
+        {
+            const scalar available = max(sigmaCells[celli], 0.0)*V[celli];
+            if (sumOut[celli] > available && sumOut[celli] > ROOTVSMALL)
+            {
+                cellScale[celli] = available/sumOut[celli];
+            }
+        }
+
+        scalarField faceScale(mesh_.nFaces(), 1.0);
+        forAll(fluxIf, facei)
+        {
+            if (fluxIf[facei] > 0)
+            {
+                faceScale[facei] = cellScale[owner[facei]];
+            }
+            else if (fluxIf[facei] < 0)
+            {
+                faceScale[facei] = cellScale[neighb[facei]];
+            }
+        }
+
+        label facei = mesh_.nInternalFaces();
+        forAll(fluxBf, patchi)
+        {
+            const fvsPatchScalarField& pFlux = fluxBf[patchi];
+            const labelUList& pFaceCells = mesh_.boundary()[patchi].faceCells();
+            forAll(pFlux, pFacei)
+            {
+                if (pFlux[pFacei] > 0)
+                {
+                    faceScale[facei] = cellScale[pFaceCells[pFacei]];
+                }
+                else if (pFlux[pFacei] < 0)
+                {
+                    // Inflow face: donor is the neighbour; keep 1 here and
+                    // let syncTools take the neighbour's outflow scale.
+                    faceScale[facei] = 1.0;
+                }
+                ++facei;
+            }
+        }
+
+        syncTools::syncFaceList(mesh_, faceScale, minEqOp<scalar>());
+
+        scalarField& fluxIfRef = tracerFlux.primitiveFieldRef();
+        forAll(fluxIfRef, facei)
+        {
+            fluxIfRef[facei] *= faceScale[facei];
+        }
+
+        surfaceScalarField::Boundary& fluxBfRef =
+            tracerFlux.boundaryFieldRef();
+        facei = mesh_.nInternalFaces();
+        forAll(fluxBfRef, patchi)
+        {
+            fvsPatchScalarField& pFlux = fluxBfRef[patchi];
+            forAll(pFlux, pFacei)
+            {
+                pFlux[pFacei] *= faceScale[facei];
+                ++facei;
+            }
         }
     }
-    const scalarField sigmaMin(mesh_.nCells(), Zero);
-    scalarField allLambda(mesh_.nFaces(), 1.0);
 
-    MULES::limiter
-    (
-        allLambda,
-        rDeltaT,
-        geometricOneField(),
-        sigma,
-        tracerFluxBD,
-        phiCorr,
-        zeroField(),
-        zeroField(),
-        sigmaMax,
-        sigmaMin
-    );
-
-    {
-        slicedSurfaceScalarField lambda
-        (
-            IOobject
-            (
-                fieldName_ + "MULESLambda",
-                mesh_.time().timeName(),
-                mesh_,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE,
-                IOobject::NO_REGISTER
-            ),
-            mesh_,
-            dimless,
-            allLambda,
-            false
-        );
-        tracerFlux = tracerFluxBD + lambda*phiCorr;
-    }
-
+    // Conservative explicit update of sigma (rho = 1).
     MULES::explicitSolve
     (
         geometricOneField(),
@@ -727,6 +782,18 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
         zeroField(),
         zeroField()
     );
+
+    // Optional tiny round-off floor: do not use as a physics clip.
+    {
+        scalarField& sigmaCells = sigma.primitiveFieldRef();
+        forAll(sigmaCells, celli)
+        {
+            if (sigmaCells[celli] > -ROOTVSMALL && sigmaCells[celli] < 0)
+            {
+                sigmaCells[celli] = 0;
+            }
+        }
+    }
 
     // Recover raw s for output/arrival diagnostics.  Mild s>1 means local
     // alpha*rho decreased faster than tagged mass left; inventory is still

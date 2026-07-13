@@ -148,8 +148,8 @@ class PocketBodyTracerTests(unittest.TestCase):
             dictionary.count("weightField     alphaRhoAirForTracer;"),
             0,
         )
-        self.assertIn("advect sigma with phiVol", dictionary)
-        self.assertIn("resolveAlpha*rho_f", dictionary)
+        self.assertIn("upwind intensity fluxes", dictionary)
+        self.assertIn("conservative positivity", dictionary)
         self.assertNotIn("ddt(alpha*rho, s)", dictionary)
         self.assertNotIn("Sp(fvc::ddt(alpha,rho)", dictionary)
         self.assertEqual(
