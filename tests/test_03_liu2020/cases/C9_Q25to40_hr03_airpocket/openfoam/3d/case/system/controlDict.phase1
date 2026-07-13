@@ -74,13 +74,15 @@ functions
 
     tracerWaterMassFlux
     {
-        // Field multiplication preserves the kg/s dimensions required for
-        // subtraction from rhoPhi.  exprField otherwise defaults a newly
-        // created surface field to dimensionless.
-        type            multiply;
+        // exprField can evaluate solver-owned surface fields, but a newly
+        // created field must be assigned the kg/s dimensions of rhoPhi.
+        type            exprField;
         libs            (fieldFunctionObjects);
-        fields          (waterDensityFaceForTracer alphaPhi0.water);
-        result          waterMassFluxForTracer;
+        field           waterMassFluxForTracer;
+        expression      "waterDensityFaceForTracer * alphaPhi0.water";
+        dimensions      [1 0 -1 0 0 0 0];
+        store           true;
+        autowrite       false;
         enabled         true;
         log             false;
         executeControl  timeStep;
