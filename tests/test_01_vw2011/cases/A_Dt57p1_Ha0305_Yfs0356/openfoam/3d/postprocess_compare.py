@@ -16,6 +16,10 @@ CASE_A = HERE.parents[1]
 OUT = HERE / "outputs"
 TOWER_RIM_Y = 0.657
 PLUME_Y = np.arange(0.672, 1.853, 0.020)
+TOWER_SECTION_Y = np.arange(0.052, 0.653, 0.010)
+INTERFACE_SECTION_WATER_FRACTION = 0.90
+FREE_SURFACE_SECTION_WATER_FRACTION = 0.50
+INTERFACE_THRESHOLD_SENSITIVITY = (0.80, 0.85, 0.90, 0.95)
 WATER_MASS_PATTERN = re.compile(
     r"^CASEA_WATER_MASS_KG\s+"
     r"(?P<time>[-+0-9.eE]+)\s+(?P<mass>[-+0-9.eE]+)\s*$"
@@ -47,6 +51,170 @@ def parse_water_mass(log_path: Path) -> tuple[np.ndarray, np.ndarray]:
     time = np.asarray(sorted(samples), dtype=float)
     mass = np.asarray([samples[value] for value in time], dtype=float)
     return time, mass
+
+
+def read_surface_field_value(name: str) -> np.ndarray:
+    root = HERE / "postProcessing" / name
+    if not root.exists():
+        raise FileNotFoundError(
+            f"{root} is missing; run the tower cross-section postProcess step"
+        )
+    chunks = []
+    for path in sorted(
+        root.glob("*/surfaceFieldValue.dat"),
+        key=lambda value: float(value.parent.name),
+    ):
+        data = np.loadtxt(path, comments="#", ndmin=2)
+        if data.size:
+            chunks.append(data[:, :2])
+    if not chunks:
+        raise RuntimeError(f"No area-average samples found below {root}")
+    data = np.vstack(chunks)
+    order = np.argsort(data[:, 0], kind="stable")
+    data = data[order]
+    _, reverse_index = np.unique(data[::-1, 0], return_index=True)
+    return data[np.sort(len(data) - 1 - reverse_index)]
+
+
+def read_tower_cross_sections() -> tuple[np.ndarray, np.ndarray]:
+    columns = []
+    time = None
+    for section in range(len(TOWER_SECTION_Y)):
+        data = read_surface_field_value(f"towerSection{section:02d}")
+        if time is None:
+            time = data[:, 0]
+        elif len(time) != len(data) or not np.allclose(time, data[:, 0]):
+            raise RuntimeError(
+                f"towerSection{section:02d} times do not match section 00"
+            )
+        columns.append(data[:, 1])
+    if time is None:
+        raise RuntimeError("No tower cross-section samples were loaded")
+    return time, np.column_stack(columns)
+
+
+def extract_cross_section_levels(
+    common,
+    area_alpha: np.ndarray,
+    interface_threshold: float = INTERFACE_SECTION_WATER_FRACTION,
+) -> tuple[np.ndarray, np.ndarray]:
+    return common.extract_levels(
+        area_alpha,
+        y_locations=TOWER_SECTION_Y,
+        interface_threshold=interface_threshold,
+        free_surface_threshold=FREE_SURFACE_SECTION_WATER_FRACTION,
+        connected_to_free_surface=True,
+    )
+
+
+def write_cross_section_audit(
+    common,
+    time: np.ndarray,
+    area_alpha: np.ndarray,
+) -> None:
+    with (OUT / "openfoam_3d_tower_sections.csv").open(
+        "w", newline="", encoding="utf-8"
+    ) as stream:
+        writer = csv.writer(stream, lineterminator="\n")
+        writer.writerow(
+            ["time_s", "Tstar"]
+            + [f"alpha.water_areaAverage_y_{value:.3f}_m" for value in TOWER_SECTION_Y]
+        )
+        for sample_time, profile in zip(time, area_alpha):
+            writer.writerow(
+                [sample_time, sample_time * common.TIME_SCALE, *profile]
+            )
+
+    tower = common.read_probe("towerCentreline", "alpha.water")
+    centreline_yint, centreline_yfs = common.extract_levels(tower[:, 1:])
+    with (OUT / "openfoam_3d_levels_centerline_audit.csv").open(
+        "w", newline="", encoding="utf-8"
+    ) as stream:
+        writer = csv.writer(stream, lineterminator="\n")
+        writer.writerow(["time_s", "Tstar", "Yint_star", "Yfs_star"])
+        writer.writerows(
+            zip(
+                tower[:, 0],
+                tower[:, 0] * common.TIME_SCALE,
+                centreline_yint,
+                centreline_yfs,
+            )
+        )
+
+
+def interface_threshold_sensitivity(
+    common,
+    time: np.ndarray,
+    area_alpha: np.ndarray,
+) -> list[dict[str, object]]:
+    levels_exp = np.genfromtxt(
+        CASE_A / "data" / "digitized" / "fig7_caseA_levels.csv",
+        delimiter=",",
+        names=True,
+        dtype=None,
+        encoding="utf-8",
+    )
+    interface_mask = levels_exp["kind"] == "int"
+    interface_runs = common.cluster_interface_repetitions(
+        levels_exp["Tstar"][interface_mask],
+        levels_exp["Ystar"][interface_mask],
+    )
+    tstar = time * common.TIME_SCALE
+    rows = []
+    for threshold in INTERFACE_THRESHOLD_SENSITIVITY:
+        yint, yfs = extract_cross_section_levels(common, area_alpha, threshold)
+        trajectory = common.analyse_interface_trajectory(tstar, yint, yfs)
+        repetition_rmses = []
+        repetition_samples = []
+        for run in interface_runs:
+            rmse, samples = common.interp_rmse(
+                tstar,
+                yint,
+                run[:, 0],
+                run[:, 1],
+            )
+            repetition_rmses.append(rmse)
+            repetition_samples.append(samples)
+        finite_rmses = [value for value in repetition_rmses if np.isfinite(value)]
+        rows.append(
+            {
+                "interface_alpha_water_area_threshold": threshold,
+                "interface_liftoff_Tstar": trajectory["liftoff_Tstar"],
+                "interface_catch_Tstar": trajectory["catch_Tstar"],
+                "interface_climb_velocity_Vstar_fit": trajectory[
+                    "climb_velocity_Vstar"
+                ],
+                "interface_climb_fit_R_squared": trajectory[
+                    "climb_fit_R_squared"
+                ],
+                "interface_catch_Tstar_fit_at_Ystar_0p63": trajectory[
+                    "climb_catch_Tstar_fit_at_Ystar_0p63"
+                ],
+                "interface_RMSE_best_repetition_no_shift": (
+                    min(finite_rmses) if finite_rmses else float("nan")
+                ),
+                "repetition_RMSE_Ystar_no_shift": repetition_rmses,
+                "repetition_samples_used": repetition_samples,
+            }
+        )
+
+    with (OUT / "openfoam_3d_interface_sensitivity.csv").open(
+        "w", newline="", encoding="utf-8"
+    ) as stream:
+        fieldnames = [
+            "interface_alpha_water_area_threshold",
+            "interface_liftoff_Tstar",
+            "interface_catch_Tstar",
+            "interface_climb_velocity_Vstar_fit",
+            "interface_climb_fit_R_squared",
+            "interface_catch_Tstar_fit_at_Ystar_0p63",
+            "interface_RMSE_best_repetition_no_shift",
+        ]
+        writer = csv.DictWriter(stream, fieldnames=fieldnames, lineterminator="\n")
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({key: row[key] for key in fieldnames})
+    return rows
 
 
 def parse_solver_provenance(log_path: Path) -> dict[str, object]:
@@ -239,7 +407,37 @@ def json_safe(value):
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     common = load_common_postprocessor()
-    common.main()
+    section_time, section_alpha = read_tower_cross_sections()
+    section_yint, section_yfs = extract_cross_section_levels(
+        common,
+        section_alpha,
+    )
+    common.main(
+        level_series=(section_time, section_yint, section_yfs),
+        level_sampling={
+            "method": "horizontal tower-section areaAverage(alpha.water)",
+            "vertical_spacing_m": 0.010,
+            "saved_field_interval_s": float(
+                np.median(np.diff(section_time))
+                if len(section_time) > 1
+                else float("nan")
+            ),
+            "interface_alpha_water_area_threshold": (
+                INTERFACE_SECTION_WATER_FRACTION
+            ),
+            "free_surface_alpha_water_area_threshold": (
+                FREE_SURFACE_SECTION_WATER_FRACTION
+            ),
+            "interface_definition": (
+                "bottom of the uppermost contiguous section interval with "
+                "at least 90% area-averaged water; this detects the rounded "
+                "air-pocket nose while excluding disconnected drops and wall film"
+            ),
+            "free_surface_definition": (
+                "highest section crossing of 50% area-averaged water"
+            ),
+        },
+    )
 
     for suffix in (
         "series.csv",
@@ -250,6 +448,12 @@ def main() -> None:
         "levels_comparison.pdf",
     ):
         (OUT / f"openfoam_2d_{suffix}").replace(OUT / f"openfoam_3d_{suffix}")
+    write_cross_section_audit(common, section_time, section_alpha)
+    sensitivity = interface_threshold_sensitivity(
+        common,
+        section_time,
+        section_alpha,
+    )
 
     plume = common.read_probe("plumeCentreline", "alpha.water")
     time = plume[:, 0]
@@ -308,6 +512,21 @@ def main() -> None:
     ]
     liftoff = metrics["interface_liftoff_Tstar"]
     catch = metrics["interface_catch_Tstar"]
+    model_velocity = metrics["interface_climb_velocity_Vstar_fit"]
+    experiment_repetition_velocities = [
+        item["climb_velocity_Vstar"]
+        for item in metrics["interface_repetition_comparison"]
+        if math.isfinite(item["climb_velocity_Vstar"])
+    ]
+    nearest_repetition_velocity = min(
+        experiment_repetition_velocities,
+        key=lambda value: abs(model_velocity - value),
+    )
+    repetition_velocity_range_error = max(
+        min(experiment_repetition_velocities) - model_velocity,
+        0.0,
+        model_velocity - max(experiment_repetition_velocities),
+    )
     liftoff_range_error = max(
         min(liftoff_repetitions) - liftoff,
         0.0,
@@ -340,6 +559,7 @@ def main() -> None:
                 "Integral of alpha.water*thermo:rho.water over all cells; "
                 "first sample at the first 0.005 s write"
             ),
+            "interface_threshold_sensitivity": sensitivity,
             "experimental_errors": {
                 "pressure_plateau_Hstar_signed": (
                     metrics["pressure_plateau_Hstar_mean_T1to7"]
@@ -376,25 +596,36 @@ def main() -> None:
                     catch_range_error
                 ),
                 "interface_climb_velocity_Vstar_signed": (
-                    metrics["interface_climb_velocity_Vstar_fit"]
-                    - interface_velocity_target
+                    model_velocity - interface_velocity_target
                 ),
                 "interface_climb_velocity_percent_signed": 100.0
-                * (
-                    metrics["interface_climb_velocity_Vstar_fit"]
-                    - interface_velocity_target
-                )
+                * (model_velocity - interface_velocity_target)
                 / interface_velocity_target,
+                "interface_climb_velocity_nearest_Fig7_repetition_signed": (
+                    model_velocity - nearest_repetition_velocity
+                ),
+                "interface_climb_velocity_nearest_Fig7_repetition_percent_signed": (
+                    100.0
+                    * (model_velocity - nearest_repetition_velocity)
+                    / nearest_repetition_velocity
+                ),
+                "interface_climb_velocity_distance_outside_Fig7_repetition_range": (
+                    repetition_velocity_range_error
+                ),
             },
             "mesh": parse_mesh_provenance(),
             "solver": parse_solver_provenance(HERE / "log.compressibleInterFoam"),
             "caveat": (
                 "Circular 3-D apparatus with an external atmosphere. Pressure is "
                 "mapped from the near-invert probe to the paper's pipe-crown datum; "
-                "the uncorrected probe value remains in the compact series. Fig. 7 "
-                "interface errors are reported both for the full marker cloud and "
-                "for each of the three repetitions. No event-time shift or fitted "
-                "wall/turbulence parameters were applied."
+                "the uncorrected probe value remains in the compact series. The "
+                "Fig. 7 air-pocket nose is extracted from horizontal section-area "
+                "phase fractions rather than one centreline, because the paper "
+                "documents an initially asymmetric rounded front and a descending "
+                "wall film. Threshold sensitivity from 0.80 to 0.95 is retained. "
+                "Interface errors are reported for the marker cloud and each of "
+                "the three repetitions. No event-time shift or fitted wall or "
+                "turbulence parameters were applied."
             ),
         }
     )

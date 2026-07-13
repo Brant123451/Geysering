@@ -31,6 +31,10 @@ PRESSURE_DATUM_CORRECTION_HSTAR = (CROWN_Y - TRANSDUCER_Y) / L_TOWER
 PRESSURE_PLATEAU_TARGET = 0.54
 FREE_SURFACE_TARGET = 0.63
 INTERFACE_VELOCITY_TARGET = 0.39
+MODEL_CLIMB_MIN_YSTAR = 0.04
+MODEL_CLIMB_MAX_YSTAR = 0.55
+MODEL_CATCH_MAX_GAP_YSTAR = 0.04
+MODEL_CATCH_MIN_FREE_SURFACE_YSTAR = 0.50
 
 
 def probe_files(name: str, field: str) -> list[Path]:
@@ -76,39 +80,71 @@ def crossing(y0: float, y1: float, a0: float, a1: float, target: float = 0.5) ->
     return y0 + f * (y1 - y0)
 
 
-def extract_levels(alpha: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    yint = np.zeros(alpha.shape[0])
-    yfs = np.zeros(alpha.shape[0])
+def extract_levels(
+    alpha: np.ndarray,
+    y_locations: np.ndarray = PROBE_Y,
+    interface_threshold: float = 0.5,
+    free_surface_threshold: float = 0.5,
+    connected_to_free_surface: bool = False,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Extract the air-pocket nose and free surface from vertical phase profiles.
+
+    For a three-dimensional section-average profile, isolated drops or wall-film
+    remnants can remain below the main water column.  ``connected_to_free_surface``
+    therefore selects the bottom of the uppermost contiguous wet interval instead
+    of the first wet sample anywhere in the profile.
+    """
+    alpha = np.asarray(alpha, dtype=float)
+    y_locations = np.asarray(y_locations, dtype=float)
+    if alpha.ndim != 2 or alpha.shape[1] != len(y_locations):
+        raise ValueError("alpha profiles and y_locations have incompatible shapes")
+    if not 0.0 < interface_threshold < 1.0:
+        raise ValueError("interface_threshold must lie strictly between zero and one")
+    if not 0.0 < free_surface_threshold < 1.0:
+        raise ValueError(
+            "free_surface_threshold must lie strictly between zero and one"
+        )
+
+    yint = np.full(alpha.shape[0], np.nan)
+    yfs = np.full(alpha.shape[0], np.nan)
     for row, profile in enumerate(alpha):
-        wet = profile >= 0.5
-        if not np.any(wet):
-            yint[row] = np.nan
-            yfs[row] = np.nan
-            continue
+        interface_wet = profile >= interface_threshold
+        interface_indices = np.flatnonzero(interface_wet)
+        if interface_indices.size:
+            first = int(interface_indices[0])
+            if connected_to_free_surface:
+                first = int(interface_indices[-1])
+                while first > 0 and interface_wet[first - 1]:
+                    first -= 1
 
-        first = int(np.argmax(wet))
-        last = int(len(wet) - 1 - np.argmax(wet[::-1]))
-
-        if first == 0:
+        if interface_indices.size and first == 0:
             lower = CROWN_Y
-        else:
+        elif interface_indices.size:
             lower = crossing(
-                PROBE_Y[first - 1],
-                PROBE_Y[first],
+                y_locations[first - 1],
+                y_locations[first],
                 profile[first - 1],
                 profile[first],
+                interface_threshold,
             )
-        if last == len(wet) - 1:
-            upper = PROBE_Y[-1]
+        if interface_indices.size:
+            yint[row] = max(lower - CROWN_Y, 0.0) / L_TOWER
+
+        surface_wet = profile >= free_surface_threshold
+        surface_indices = np.flatnonzero(surface_wet)
+        if not surface_indices.size:
+            continue
+        last = int(surface_indices[-1])
+        if last == len(surface_wet) - 1:
+            upper = y_locations[-1]
         else:
             upper = crossing(
-                PROBE_Y[last],
-                PROBE_Y[last + 1],
+                y_locations[last],
+                y_locations[last + 1],
                 profile[last],
                 profile[last + 1],
+                free_surface_threshold,
             )
-
-        yint[row] = max(lower - CROWN_Y, 0.0) / L_TOWER
         yfs[row] = max(upper - CROWN_Y, 0.0) / L_TOWER
     return yint, yfs
 
@@ -242,16 +278,113 @@ def first_time(time: np.ndarray, condition: np.ndarray) -> float:
     return float(time[idx[0]]) if idx.size else float("nan")
 
 
-def main() -> None:
+def analyse_interface_trajectory(
+    time: np.ndarray,
+    yint: np.ndarray,
+    yfs: np.ndarray,
+) -> dict[str, float | int]:
+    """Measure the first coherent rise before the air pocket surfaces."""
+    time = np.asarray(time, dtype=float)
+    yint = np.asarray(yint, dtype=float)
+    yfs = np.asarray(yfs, dtype=float)
+    liftoff = first_time(time, np.isfinite(yint) & (yint > 0.02))
+    catch = first_time(
+        time,
+        np.isfinite(yint)
+        & np.isfinite(yfs)
+        & (yint > 0.05)
+        & (yfs > MODEL_CATCH_MIN_FREE_SURFACE_YSTAR)
+        & ((yfs - yint) < MODEL_CATCH_MAX_GAP_YSTAR),
+    )
+
+    model_climb = (
+        np.isfinite(time)
+        & np.isfinite(yint)
+        & (yint >= MODEL_CLIMB_MIN_YSTAR)
+        & (yint <= MODEL_CLIMB_MAX_YSTAR)
+    )
+    if np.isfinite(liftoff):
+        model_climb &= time >= liftoff
+    if np.isfinite(catch):
+        model_climb &= time <= catch
+
+    sample_count = int(np.count_nonzero(model_climb))
+    if sample_count >= 2:
+        model_slope, model_intercept = np.polyfit(
+            time[model_climb],
+            yint[model_climb],
+            1,
+        )
+        prediction = model_slope * time[model_climb] + model_intercept
+        residual_sum = float(np.sum(np.square(yint[model_climb] - prediction)))
+        total_sum = float(
+            np.sum(
+                np.square(
+                    yint[model_climb] - np.mean(yint[model_climb])
+                )
+            )
+        )
+        model_r_squared = (
+            1.0 - residual_sum / total_sum if total_sum > 0.0 else float("nan")
+        )
+        if model_slope > 0.0:
+            model_liftoff_fit = -model_intercept / model_slope
+            model_catch_fit = (
+                FREE_SURFACE_TARGET - model_intercept
+            ) / model_slope
+        else:
+            model_slope = float("nan")
+            model_liftoff_fit = float("nan")
+            model_catch_fit = float("nan")
+    else:
+        model_slope = float("nan")
+        model_liftoff_fit = float("nan")
+        model_catch_fit = float("nan")
+        model_r_squared = float("nan")
+
+    return {
+        "liftoff_Tstar": liftoff,
+        "catch_Tstar": catch,
+        "climb_velocity_Vstar": float(model_slope),
+        "climb_liftoff_Tstar_fit": float(model_liftoff_fit),
+        "climb_catch_Tstar_fit_at_Ystar_0p63": float(model_catch_fit),
+        "climb_fit_samples": sample_count,
+        "climb_fit_R_squared": float(model_r_squared),
+    }
+
+
+def main(
+    level_series: tuple[np.ndarray, np.ndarray, np.ndarray] | None = None,
+    level_sampling: dict[str, object] | None = None,
+) -> None:
     transducer = read_probe("transducer", "p")
-    tower = read_probe("towerCentreline", "alpha.water")
 
     time = transducer[:, 0]
     p = transducer[:, 1]
-    t_tower = tower[:, 0]
-    alpha = tower[:, 1:]
-    if alpha.shape[1] != len(PROBE_Y):
-        raise RuntimeError(f"Expected {len(PROBE_Y)} tower probes, found {alpha.shape[1]}")
+    if level_series is None:
+        tower = read_probe("towerCentreline", "alpha.water")
+        t_tower = tower[:, 0]
+        alpha = tower[:, 1:]
+        if alpha.shape[1] != len(PROBE_Y):
+            raise RuntimeError(
+                f"Expected {len(PROBE_Y)} tower probes, found {alpha.shape[1]}"
+            )
+        yint, yfs = extract_levels(alpha)
+        level_sampling = {
+            "method": "vertical centreline probes",
+            "vertical_spacing_m": 0.010,
+            "interface_alpha_water_threshold": 0.5,
+            "free_surface_alpha_water_threshold": 0.5,
+            "connected_water_column": False,
+        }
+    else:
+        t_tower, yint, yfs = (
+            np.asarray(values, dtype=float) for values in level_series
+        )
+        if not (len(t_tower) == len(yint) == len(yfs)):
+            raise ValueError("level_series arrays must have equal lengths")
+        if level_sampling is None:
+            raise ValueError("level_sampling is required with an external level_series")
 
     hstar_probe_raw = (p - P_ATM) / (RHO_W * G * L_TOWER)
     hstar_probe = moving_average(time, hstar_probe_raw, 0.10)
@@ -261,7 +394,6 @@ def main() -> None:
     hstar = moving_average(time, hstar_raw, 0.10)
     tstar = time * TIME_SCALE
     tstar_tower = t_tower * TIME_SCALE
-    yint, yfs = extract_levels(alpha)
 
     pressure_exp = np.genfromtxt(
         CASE_A / "data" / "digitized" / "fig5_caseA_Hstar_band.csv",
@@ -319,26 +451,7 @@ def main() -> None:
         )
 
     plateau = (tstar >= 1.0) & (tstar <= min(7.0, np.nanmax(tstar)))
-    liftoff = first_time(tstar_tower, yint > 0.02)
-    catch = first_time(tstar_tower, (yint > 0.05) & ((yfs - yint) < 0.02))
-    model_climb = (
-        np.isfinite(yint)
-        & (yint >= 0.10)
-        & (yint <= 0.55)
-        & (tstar_tower <= catch)
-    )
-    if np.count_nonzero(model_climb) >= 2:
-        model_slope, model_intercept = np.polyfit(
-            tstar_tower[model_climb],
-            yint[model_climb],
-            1,
-        )
-        model_catch_fit = (
-            FREE_SURFACE_TARGET - model_intercept
-        ) / model_slope
-    else:
-        model_slope = float("nan")
-        model_catch_fit = float("nan")
+    trajectory = analyse_interface_trajectory(tstar_tower, yint, yfs)
     repetition_rmses = [
         item["RMSE_Ystar_no_shift"]
         for item in interface_repetition_metrics
@@ -375,7 +488,12 @@ def main() -> None:
             float(min(repetition_rmses)) if repetition_rmses else float("nan")
         ),
         "interface_repetition_comparison": interface_repetition_metrics,
-        "interface_climb_velocity_Vstar_fit": float(model_slope),
+        "interface_climb_velocity_Vstar_fit": trajectory[
+            "climb_velocity_Vstar"
+        ],
+        "interface_climb_fit_samples": trajectory["climb_fit_samples"],
+        "interface_climb_fit_R_squared": trajectory["climb_fit_R_squared"],
+        "level_sampling": level_sampling,
         "rmse_sample_coverage": {
             "pressure": {
                 "used": pressure_samples,
@@ -395,9 +513,14 @@ def main() -> None:
                 "digitized_finite": int(np.count_nonzero(int_mask)),
             },
         },
-        "interface_liftoff_Tstar": liftoff,
-        "interface_catch_Tstar": catch,
-        "interface_catch_Tstar_fit_at_Ystar_0p63": float(model_catch_fit),
+        "interface_liftoff_Tstar": trajectory["liftoff_Tstar"],
+        "interface_liftoff_Tstar_fit": trajectory[
+            "climb_liftoff_Tstar_fit"
+        ],
+        "interface_catch_Tstar": trajectory["catch_Tstar"],
+        "interface_catch_Tstar_fit_at_Ystar_0p63": trajectory[
+            "climb_catch_Tstar_fit_at_Ystar_0p63"
+        ],
         "geysering": bool(np.nanmax(yfs) >= 0.98),
         "comparison_targets": {
             "pressure_plateau_Hstar": PRESSURE_PLATEAU_TARGET,

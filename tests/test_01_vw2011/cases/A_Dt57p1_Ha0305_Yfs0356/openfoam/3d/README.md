@@ -76,6 +76,17 @@ samples to `outputs/openfoam_3d_water_mass.csv` and reports final and maximum
 relative mass drift in `outputs/openfoam_3d_metrics.json`; raw logs and fields
 remain untracked.
 
+The paper measures the **top of the rounded air-water interface** from video and
+documents that its initial rise is asymmetric and leaves a descending wall
+film. A single centreline probe can therefore jump between the rounded nose,
+film, and detached drops. After the solver finishes, `Allrun` samples
+`areaAverage(alpha.water)` on horizontal tower sections at `10 mm` intervals.
+The reported air-pocket nose is the bottom of the uppermost contiguous water
+column at a section-averaged water fraction of `0.90`; the free surface uses
+the conventional `0.50` crossing. The complete section averages, original
+centreline estimate, and a `0.80–0.95` nose-threshold sensitivity sweep are
+retained as compact CSV files.
+
 Fig. 7 contains three separate interface trajectories from repeated manual
 valve openings. The metrics retain the conservative RMSE against the complete
 marker cloud and also separate the approximately parallel trajectories,
