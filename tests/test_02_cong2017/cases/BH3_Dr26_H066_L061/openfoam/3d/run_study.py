@@ -61,12 +61,13 @@ VARIANTS = (
     Variant(
         "closed_base",
         "smoke",
-        mesh="prism",
+        mesh="prism_atmosphere",
         mode="closed",
         valve="closed",
         end_time=1.0,
         sample_interval=1.0e-3,
         n_hat_gradient_scheme="least-squares",
+        atmosphere_pressure_boundary="wave-transmissive",
     ),
     Variant(
         "closed_sigma_zero",
