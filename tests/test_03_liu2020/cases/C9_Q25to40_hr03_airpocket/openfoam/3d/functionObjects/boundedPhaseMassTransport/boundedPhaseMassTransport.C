@@ -23,6 +23,7 @@ License
 #include "fvmDdt.H"
 #include "fvmDiv.H"
 #include "fvmLaplacian.H"
+#include "fvmSup.H"
 #include "inletOutletFvPatchFields.H"
 #include "surfaceInterpolate.H"
 #include "zeroGradientFvPatchField.H"
@@ -266,6 +267,7 @@ boundedPhaseMassTransport
     potentialPtr_(nullptr),
     inventoryRhoPtr_(nullptr),
     sigmaPtr_(nullptr),
+    alphaRhoPrevPtr_(nullptr),
     tracerSourcePtr_(nullptr),
     carrierFluxPtr_(nullptr),
     tracerFluxPtr_(nullptr)
@@ -542,37 +544,6 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     // selecting inflow values.
     field.correctBoundaryConditions();
 
-    volScalarField& sigma = conservedDensity(alpha, phaseRho, field);
-    if (!sigma.nOldTimes())
-    {
-        // Seed once from the user-facing fraction.  Later steps advance the
-        // conserved density directly and never rebuild it from s.
-        sigma == alpha*phaseRho*field;
-        // Create an old-time slot without relying on it for the update below.
-        sigma.oldTime();
-    }
-    {
-        const volScalarField taggedDensity(alpha*phaseRho*field);
-        // Avoid boundaryFieldRef()'s default storeOldTimes side effect.
-        sigma.boundaryFieldRef(false) == taggedDensity.boundaryField();
-    }
-
-    // Snapshot before the update.  Manual Euler avoids GeometricField
-    // oldTime/storeOldTimes interactions inside function-object execute().
-    const volScalarField sigmaOld
-    (
-        IOobject
-        (
-            sigmaResultName_ + "Old",
-            mesh_.time().timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE,
-            IOobject::NO_REGISTER
-        ),
-        sigma
-    );
-
     const volScalarField alphaRho
     (
         IOobject
@@ -587,44 +558,108 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
         alpha*phaseRho
     );
 
-    // Tagged-mass flux is the projected carrier mass flux times the upwind
-    // fraction.  Avoid phi/(alpha*rho)_f, which blows up on vanishing-phase
-    // faces even when the mass flux itself is small.
+    volScalarField& sigma = conservedDensity(alpha, phaseRho, field);
+    if (!alphaRhoPrevPtr_.valid())
+    {
+        alphaRhoPrevPtr_.reset
+        (
+            new volScalarField
+            (
+                IOobject
+                (
+                    fieldName_ + "AlphaRhoPrev",
+                    mesh_.time().timeName(),
+                    mesh_,
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE,
+                    IOobject::NO_REGISTER
+                ),
+                alphaRho
+            )
+        );
+        sigma == alphaRho*field;
+    }
+
+    const volScalarField sigmaOld
+    (
+        IOobject
+        (
+            sigmaResultName_ + "Old",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            IOobject::NO_REGISTER
+        ),
+        sigma
+    );
+
+    // Volume flux of the carrier consistent with the projected mass flux.
+    // Floor with residualAlpha*rho_f so dry faces cannot explode phiSigma.
+    const surfaceScalarField alphaRhoFace(fvc::interpolate(alphaRho));
+    const surfaceScalarField rhoFace(fvc::interpolate(phaseRho));
+    surfaceScalarField phiSigma
+    (
+        IOobject
+        (
+            fieldName_ + "PhiSigma",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            IOobject::NO_REGISTER
+        ),
+        carrierFlux/max(alphaRhoFace, residualAlpha_*rhoFace)
+    );
+    phiSigma.oriented() = carrierFlux.oriented();
+
     const word divScheme("div(phi," + schemesField_ + ")");
     const dimensionedScalar dt(mesh_.time().deltaT());
+    scalar relaxCoeff = 0;
+    mesh_.relaxEquation(schemesField_, relaxCoeff);
+    const scalar resolveAlpha = max(residualAlpha_, 1e-3);
 
+    // Advect the fraction with the intensity form
+    //   ds/dt + div(u s) - s div(u) = 0
+    // so upwind keeps s bounded.  Then define sigma = alpha*rho*s.
+    // (The old Sp(ddt(alpha,rho)+div(phi)) form on fvm::ddt(alpha,rho,s)
+    // vanished under a tight carrier projection and fell back to the
+    // rejected non-conservative product-ddt inventory loss.)
+    field.oldTime();
     bool converged = false;
     label iteration = 0;
     tmp<surfaceScalarField> tracerFlux;
 
-    // Single explicit conservative update from the pre-step fraction.
-    // Do not refresh s inside Picard iterations: a temporary recovery
-    // overshoot would be re-injected into the upwind flux and grow.
+    for (label corr = 0; corr <= nCorr_; ++corr)
     {
+        fvScalarMatrix fieldEqn
+        (
+            fvm::ddt(field)
+          + fvm::div(phiSigma, field, divScheme)
+          - fvm::Sp(fvc::div(phiSigma), field)
+        );
+        fieldEqn.relax(relaxCoeff);
+
+        ++iteration;
+        const auto solverPerformance = fieldEqn.solve(schemesField_);
+        converged = solverPerformance.finalResidual() < tolerance_;
+
+        // Tagged-mass flux for the budget uses the carrier mass flux.
         tracerFlux = fvc::flux(carrierFlux, field, divScheme);
         tracerFlux.ref().oriented() = carrierFlux.oriented();
-
-        const volScalarField divFlux(fvc::div(tracerFlux()));
-        sigma.primitiveFieldRef() =
-            sigmaOld.primitiveField() - dt.value()*divFlux.primitiveField();
-
-        // Local bound projection onto the phase mass density: 0 ≤ sigma ≤
-        // alpha*rho.  This keeps the recovered fraction in [0,1] without a
-        // morphology clear.  Any clipped mass is a numerical residual and
-        // must remain below the 1% inventory budget.
-        {
-            scalarField& sigmaCells = sigma.primitiveFieldRef();
-            const scalarField& alphaRhoCells = alphaRho.primitiveField();
-            forAll(sigmaCells, celli)
-            {
-                sigmaCells[celli] =
-                    min(max(sigmaCells[celli], scalar(0)), alphaRhoCells[celli]);
-            }
-        }
-
-        iteration = 1;
-        converged = true;
     }
+
+    if (!converged)
+    {
+        FatalErrorInFunction
+            << field.name() << " did not reach linear-solver tolerance "
+            << tolerance_ << " after " << iteration << " solve(s)."
+            << exit(FatalError);
+    }
+
+    // Inventory density follows the bounded fraction by definition.
+    sigma == alphaRho*field;
+    alphaRhoPrevPtr_() == alphaRho;
 
     const scalar sigmaMass = gSum(mesh_.V()*sigma.primitiveField());
     const scalar sigmaMassOld = gSum(mesh_.V()*sigmaOld.primitiveField());
@@ -635,39 +670,8 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
             << sigmaMassOld << " -> " << sigmaMass << exit(FatalError);
     }
 
-    if (!converged)
-    {
-        FatalErrorInFunction
-            << sigma.name() << " did not reach linear-solver tolerance "
-            << tolerance_ << " after " << iteration << " solve(s)."
-            << exit(FatalError);
-    }
-
-    // Recover the phase mass fraction for output, BCs and arrival metrics.
-    // Do not divide by a residual-alpha floor: that amplifies any numerical
-    // sigma deposited in nearly dry cells into huge non-physical s values.
-    const scalar resolveAlpha = max(residualAlpha_, 1e-3);
-    scalarField& fieldCells = field.primitiveFieldRef();
-    const scalarField& sigmaCells = sigma.primitiveField();
-    const scalarField& alphaRhoCells = alphaRho.primitiveField();
+    const scalarField& fieldCells = field.primitiveField();
     const scalarField& alphaCells = alpha.primitiveField();
-    forAll(fieldCells, celli)
-    {
-        if (alphaCells[celli] > resolveAlpha)
-        {
-            fieldCells[celli] = sigmaCells[celli]/alphaRhoCells[celli];
-        }
-        else
-        {
-            fieldCells[celli] = 0;
-        }
-    }
-    field.correctBoundaryConditions();
-    {
-        const volScalarField taggedDensity(alphaRho*field);
-        sigma.boundaryFieldRef(false) == taggedDensity.boundaryField();
-    }
-
     scalar fieldMin = VGREAT;
     scalar fieldMax = -VGREAT;
     forAll(fieldCells, celli)

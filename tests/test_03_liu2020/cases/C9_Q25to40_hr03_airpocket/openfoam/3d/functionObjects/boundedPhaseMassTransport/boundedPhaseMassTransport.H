@@ -65,6 +65,7 @@ class boundedPhaseMassTransport
         autoPtr<volScalarField> potentialPtr_;
         autoPtr<volScalarField> inventoryRhoPtr_;
         autoPtr<volScalarField> sigmaPtr_;
+        autoPtr<volScalarField> alphaRhoPrevPtr_;
         autoPtr<volScalarField> tracerSourcePtr_;
         autoPtr<surfaceScalarField> carrierFluxPtr_;
         autoPtr<surfaceScalarField> tracerFluxPtr_;

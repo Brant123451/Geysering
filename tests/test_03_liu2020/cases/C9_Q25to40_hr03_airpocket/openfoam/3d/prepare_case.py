@@ -502,11 +502,9 @@ functions
 
     pocketBodyTracerTransport
     {{
-        // Project the air mass flux onto discrete phase continuity, then
-        // advance the conserved tagged-mass density sigma = alpha*rho*s with
-        // sigma := sigmaOld - dt*div(flux(phi, s)) using the projected air
-        // mass flux.  Recover s = sigma/max(alpha*rho, residualAlpha*rho)
-        // for output/BCs/arrival.  No Sp, no clamp/clear, no continuity source.
+        // Intensity advection of s with phiSigma = phi/(alpha*rho)_f:
+        // fvm::ddt(s) + fvm::div(phiSigma,s) - Sp(div(phiSigma),s), then
+        // sigma = alpha*rho*s.  No product-ddt Sp, no clamp/clear.
         type            boundedPhaseMassTransport;
         libs            ("libboundedPhaseMassTransport.so");
         field           pocketBodyTracer;
@@ -523,10 +521,8 @@ functions
         sourceResult    pocketBodyTracerMassSource;
         schemesField    pocketBodyTracer;
         tolerance       1e-8;
-        // Recovered s = sigma/(alpha*rho) can overshoot by O(1e-3) from
-        // discrete carrier compression even when ∫sigma is conserved.
-        // This guards the derived fraction only; sigma is never clipped.
-        boundsTolerance 1e-2;
+        // Derived from a solved fraction field (not sigma/alpha*rho recovery).
+        boundsTolerance 1e-6;
         continuityTolerance 1e-4;
         nCorr           0;
         nNonOrthCorr    1;
@@ -2246,9 +2242,9 @@ rm -f log.*
             ),
             "matrix_residual_air_fraction": 1e-8,
             "bounded_transport": (
-                "continuity-projected phase mass flux; conserved sigma="
-                "alpha*rho*s via fvm::ddt(sigma)+fvm::div(phi/(alpha*rho)_f,sigma); "
-                "s recovered for output/BCs/arrival only"
+                "continuity-projected phase mass flux; intensity advection "
+                "fvm::ddt(s)+fvm::div(phiSigma,s)-Sp(div(phiSigma),s) with "
+                "phiSigma=phi/(alpha*rho)_f; sigma=alpha*rho*s"
             ),
             "conservative_transport_with_bounds_guard": True,
             "inventory_weight": "alpha.air*thermo:rho.air",
