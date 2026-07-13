@@ -385,6 +385,9 @@ That measured-opening smoke completed the declared `0.25 s` window:
 `solver_completed=true`, maximum water-weighted speed `1.436 m/s`, gas-weighted
 speed `3.806 m/s`, temperature `291.8--303.1 K`, and water/gas/total mass
 residual fractions `1.17e-6` / `9.24e-7` / `1.91e-7`. Core and sensitivity event variants inherit the smoke Courant limits
-(`maxCo=0.1`, `maxAlphaCo=0.05`, `maxDeltaT=1e-4 s`); a first `base_nominal`
-attempt with the looser defaults diverged near `0.003 s`. Instantaneous
-opening remains a diagnostic, not the 13 s baseline.
+(`maxCo=0.1`, `maxAlphaCo=0.05`, `maxDeltaT=1e-4 s`) through the measured
+opening; a first `base_nominal` attempt with the looser defaults diverged near
+`0.003 s`. After the valve is fully open, the running 13 s event may restart
+from a written checkpoint with the looser defaults (`maxCo=0.25`) as a
+documented post-opening throughput control. Instantaneous opening remains a
+diagnostic, not the 13 s baseline.
