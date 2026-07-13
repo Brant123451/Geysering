@@ -70,7 +70,7 @@ solvers
     {
         solver smoothSolver;
         smoother symGaussSeidel;
-        tolerance 1e-8;
+        tolerance 1e-10;
         relTol 0;
         maxIter 200;
     }

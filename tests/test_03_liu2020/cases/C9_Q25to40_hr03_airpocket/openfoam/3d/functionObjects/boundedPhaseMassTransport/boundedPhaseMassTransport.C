@@ -396,6 +396,8 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     };
     scalar relativeContinuityError = GREAT;
     label projectionIterations = 0;
+    scalarField primaryPotential;
+    bool restorePrimaryPotential = false;
 
     for
     (
@@ -446,6 +448,21 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
         {
             break;
         }
+
+        if (projection == 0 && projection < nProjectionCorr_)
+        {
+            // Preserve the primary correction as the initial guess for the
+            // next physical time step.  Additional passes solve only the
+            // current non-orthogonal residual and should not replace it.
+            primaryPotential = Phi.primitiveField();
+            restorePrimaryPotential = true;
+        }
+    }
+
+    if (restorePrimaryPotential)
+    {
+        Phi.primitiveFieldRef() = primaryPotential;
+        Phi.correctBoundaryConditions();
     }
 
     if (relativeContinuityError > continuityTolerance_)
@@ -510,6 +527,8 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
         FatalErrorInFunction
             << field.name() << " left [0,1]: min/max = "
             << fieldMin << ' ' << fieldMax
+            << ", violations = " << max(-fieldMin, scalar(0))
+            << ' ' << max(fieldMax - 1, scalar(0))
             << ", tolerance = " << boundsTolerance_ << nl
             << "Refusing to continue with a non-physical source tracer."
             << exit(FatalError);
