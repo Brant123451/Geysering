@@ -169,7 +169,7 @@ class PocketBodyTracerTests(unittest.TestCase):
         self.assertIn("pocketBodyTracerSigma", fv_solution)
         self.assertRegex(
             fv_solution,
-            r"pocketBodyTracerSigma\s*\{[^}]*nLimiterIter 8;",
+            r"pocketBodyTracerSigma\s*\{[^}]*nLimiterIter 10;",
         )
 
 

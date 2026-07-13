@@ -1877,7 +1877,7 @@ solvers
     }}
     pocketBodyTracerSigma
     {{
-        nLimiterIter 8;
+        nLimiterIter 10;
     }}
     "U.*"
     {{
