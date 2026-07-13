@@ -1,13 +1,15 @@
 {
   "case": "BH6_Dr41_H066_L061",
-  "work_root": "/tmp/bh6-base-screen-work",
+  "work_root": "/tmp/bh6-multiple-work-roots",
   "work_root_retained": true,
   "campaign_status": "success",
   "profiles_requested": [
-    "base"
+    "base",
+    "valve-fast"
   ],
   "profiles_completed": [
-    "base"
+    "base",
+    "valve-fast"
   ],
   "profiles_incomplete": [],
   "results": [
@@ -34,6 +36,30 @@
       "gas_balance_relative_error": -2.8240560319201902e-05,
       "static_hold_pass": null,
       "static_max_speed_m_s": 80.3050155013
+    },
+    {
+      "profile": "valve-fast",
+      "requested_end_s": 13.0,
+      "simulation_end_s": 13.0,
+      "run_completed": true,
+      "cells": 150502,
+      "strict_checkMesh_pass": false,
+      "solver_mesh_gate_pass": true,
+      "maxCo": 0.5,
+      "maxAlphaCo": 0.25,
+      "opening_duration_s": 0.1,
+      "Ta_3d_s": 9.55,
+      "catch_time_3d_s": 11.47,
+      "Yfs_max_3d_m": 1.0202920463469707,
+      "vfs_average_3d_m_s": 0.2320054314973085,
+      "vint_average_3d_m_s": 0.5213002184336859,
+      "vnet_average_3d_m_s": 0.28929478693637745,
+      "PT1_post_arrival_peak_H_over_H0": 1.188115328614843,
+      "water_above_rim": false,
+      "liquid_balance_relative_error": 8.372272163306898e-05,
+      "gas_balance_relative_error": -2.873359884095236e-05,
+      "static_hold_pass": null,
+      "static_max_speed_m_s": 16.3397728679
     }
   ]
 }
