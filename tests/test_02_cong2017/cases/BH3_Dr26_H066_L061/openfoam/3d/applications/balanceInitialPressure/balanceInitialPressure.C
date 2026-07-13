@@ -320,6 +320,7 @@ int main(int argc, char* argv[])
     scalar lastFaceResidual = GREAT;
     scalar lastReconstructedResidual = GREAT;
     scalar lastPredictedWaterVelocityIncrement = GREAT;
+    scalar lastResidualCellPredictedVelocityIncrement = GREAT;
     label lastResidualCell = -1;
 
     for (label outer = 0; outer < nOuter; ++outer)
@@ -460,6 +461,9 @@ int main(int argc, char* argv[])
                 lastResidualCell = celli;
             }
         }
+        lastResidualCellPredictedVelocityIncrement =
+            alpha1[lastResidualCell]
+           *mag(predictedVelocityIncrement()[lastResidualCell]);
 
         Info<< "outer=" << outer + 1
             << " maxDeltaP_rgh=" << dp
@@ -508,10 +512,7 @@ int main(int argc, char* argv[])
             << ", C=" << mesh.C()[lastResidualCell]
             << ", alpha.water=" << alpha1[lastResidualCell]
             << ", predicted water-weighted deltaU="
-            << (
-                   alpha1[lastResidualCell]
-                  *mag(predictedVelocityIncrement()[lastResidualCell])
-               )
+            << lastResidualCellPredictedVelocityIncrement
             << " m/s" << nl;
     }
 
