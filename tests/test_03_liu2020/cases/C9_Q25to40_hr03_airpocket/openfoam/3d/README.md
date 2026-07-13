@@ -114,13 +114,15 @@ region. Its 873,032-cell mesh also passes both checks with zero concave cells;
 solver sensitivity remains required before selecting it as the production
 mesh.
 
-The default transient limits are `maxCo=0.35`, `maxAlphaCo=0.20`, and
-`maxDeltaT=5e-4 s`; the tighter timestep case halves these limits. MULES uses
-one alpha correction with two subcycles. Two pressure correctors and one
-non-orthogonal corrector are used, following the supplied v2512
-`compressibleInterFoam` tutorial structure. `max_co_070` and `max_co_100`
-are explicit throughput/stability sensitivities; they are not silently used
-to accelerate a production trajectory.
+The default transient limits are `maxCo=0.70`, `maxAlphaCo=0.20`, and
+`maxDeltaT=5e-4 s`. The interface remains under the tighter alpha-Courant
+limit. A prior corrected-EOS/RANS 0.70 benchmark completed the same interval
+about twice as fast as 0.35 with comparable pressure and interface histories;
+the new bounded-tracer 0.35 reference is preserved through solver time
+0.37 s. MULES uses one alpha correction with two subcycles. Two pressure
+correctors and one non-orthogonal corrector follow the supplied v2512
+`compressibleInterFoam` tutorial structure. `max_co_035`, `time_tight`, and
+`max_co_100` retain timestep sensitivity around the selected baseline.
 
 The production default does not clip velocity: the experimental 5.75 m/s
 maximum is a liquid-jet observation and is not a defensible global bound for

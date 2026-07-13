@@ -58,7 +58,7 @@
     "gate_contraction_length_m": 0.28
   },
   "velocity_limit_m_s": null,
-  "maxCo": 0.35,
+  "maxCo": 0.7,
   "maxAlphaCo": 0.2,
   "maxDeltaT": 0.0005,
   "nProcs": 4,

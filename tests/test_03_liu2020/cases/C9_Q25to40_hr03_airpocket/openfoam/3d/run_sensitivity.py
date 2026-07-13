@@ -44,7 +44,7 @@ VARIANTS = {
     "velocity_limit_12": ["--velocity-limit", "12"],
     "velocity_limit_20": ["--velocity-limit", "20"],
     "velocity_unlimited": ["--velocity-limit", "0"],
-    "max_co_070": ["--max-co", "0.70"],
+    "max_co_035": ["--max-co", "0.35"],
     "max_co_100": ["--max-co", "1.00"],
 }
 

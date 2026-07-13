@@ -84,6 +84,12 @@ compressible scalar branch does not apply its `bounded01` switch, so the source
 explicitly clears values where `alpha.air < 1e-6`, clamps the remaining mass
 fraction to `[0,1]`, and reports inventory with physical
 `alpha.air*thermo:rho.air` rather than the residual-stabilised matrix density.
+The first bounded-tracer `maxCo=0.35` reference remained in `[0,1]` through
+solver time 0.37 s and lost only about 0.5% of its paper-time-zero inventory by
+0.31 s, but cut-cell Courant control reduced its step to roughly \(3\times
+10^{-5}\) s. The selected baseline is now `maxCo=0.70` with
+`maxAlphaCo=0.20`, backed by the earlier same-physics 0.35/0.70 benchmark;
+0.35 remains an explicit sensitivity.
 
 Phase 1 is incomplete. Phase 2 and eight eruptions have not yet been
 reproduced.

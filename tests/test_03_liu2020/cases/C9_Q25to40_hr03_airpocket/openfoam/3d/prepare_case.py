@@ -2267,7 +2267,7 @@ def main() -> None:
             "case free of velocity clipping"
         ),
     )
-    parser.add_argument("--max-co", type=float, default=0.35)
+    parser.add_argument("--max-co", type=float, default=0.70)
     parser.add_argument("--max-alpha-co", type=float, default=0.20)
     parser.add_argument("--max-dt", type=float, default=0.0005)
     parser.add_argument("--np", type=int, default=4)

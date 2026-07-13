@@ -225,6 +225,8 @@ cd case
 长算例使用持久终端/tmux。启动前检查是否已有同一 solver 进程，避免重复运行。
 每个阶段结束后检查 solver log、function-object data、质量守恒、气相守恒、
 Courant number、alpha boundedness 和 limiter activation。
+当前基线为 `maxCo=0.70`、`maxAlphaCo=0.20`；`maxCo=0.35` 已保留为
+有界示踪时间步敏感性，不得通过放宽 alpha-Courant 限制加速界面输运。
 
 时间约定：
 
