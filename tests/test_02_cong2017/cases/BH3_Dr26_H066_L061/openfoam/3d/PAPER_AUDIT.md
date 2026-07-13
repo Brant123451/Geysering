@@ -297,6 +297,12 @@ Two physical-sigma fixed-partition repeats now produce byte-identical time
 series and identical metrics: `2.11e-5 m/s` maximum water-weighted speed and
 `3.28e-9` total-mass residual fraction. Their temperature extrema are
 `284.20--307.14 K`, both at the top of the external atmosphere, identifying
-the remaining gas/energy oscillation spatially. The deterministic 1 s hold is
-the active gate; no event calculation is released by the completed 0.05 s
-runs.
+the remaining gas/energy oscillation spatially. The deterministic 1 s hold
+subsequently failed at `t=0.086397 s`: the water-weighted speed remained only
+`2.11e-5 m/s`, and water-volume and total-mass residual fractions remained
+`2.39e-9` and `3.28e-9`, but the external-gas velocity rose abruptly and the
+temperature inversion reached its 100-iteration limit with non-finite-scale
+negative internal-energy temperatures. This localised gas/energy failure is
+not a static-hold pass. A matched fixed-pressure versus `waveTransmissive`
+atmosphere-boundary diagnostic is therefore required before another formal
+hold; no event calculation is released by the completed short runs.

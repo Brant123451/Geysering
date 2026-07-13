@@ -457,12 +457,21 @@ def annotate_metrics(
         solver_log = runtime / "log.compressibleInterFoam"
         if solver_log.is_file():
             text = solver_log.read_text(encoding="utf-8", errors="replace")
-            match = re.search(r"Negative initial temperature T0:\s*([^\n]+)", text)
-            data["solver_failure_reason"] = (
-                f"Negative initial temperature T0: {match.group(1).strip()}"
-                if match
-                else "compressibleInterFoam exited non-zero"
+            negative_temperature = re.search(
+                r"Negative initial temperature T0:\s*([^\n]+)", text
             )
+            temperature_iterations = re.search(
+                r"Maximum number of iterations exceeded:[^\n]+", text
+            )
+            if negative_temperature:
+                data["solver_failure_reason"] = (
+                    "Negative initial temperature T0: "
+                    f"{negative_temperature.group(1).strip()}"
+                )
+            elif temperature_iterations:
+                data["solver_failure_reason"] = temperature_iterations.group(0).strip()
+            else:
+                data["solver_failure_reason"] = "compressibleInterFoam exited non-zero"
     data["numerical_controls"] = {
         "mesh_profile": variant.mesh,
         "c_alpha": variant.c_alpha,

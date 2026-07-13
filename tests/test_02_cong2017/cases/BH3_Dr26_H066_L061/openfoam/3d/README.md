@@ -288,10 +288,18 @@ identical metrics: `2.11e-5 m/s` maximum water-weighted speed and `3.28e-9`
 total-mass residual fraction. The new extrema audit bounds temperature at
 `284.20--307.14 K`; both extrema occur at the top of the external atmosphere,
 which locates the remaining gas/energy oscillation. The deterministic 1 s
-hold is running, so neither repeat is yet a formal pass. Failed solvers emit
-compact partial metrics with an explicit failure reason; current runs
-additionally record per-step extrema and locations for temperature, pressure,
-velocity, turbulence fields, and volume fraction.
+hold then failed at `t=0.086397 s`. At failure, the water-weighted speed was
+still only `2.11e-5 m/s`, with water-volume and total-mass residual fractions
+of `2.39e-9` and `3.28e-9`; the external-gas velocity instead grew abruptly
+and the temperature inversion exceeded its 100-iteration limit. This rejects
+the current fixed atmospheric-pressure boundary for the formal hold without
+implicating water-side balance or global mass loss. The next declared A/B test
+keeps the mesh, initial fields, physical surface tension, gradient operator,
+and deterministic partition fixed while changing only atmospheric `p_rgh`
+from the hydrostatic fixed value to `waveTransmissive`. Failed solvers emit
+compact partial metrics with an explicit failure reason; current runs also
+record per-step extrema and locations for temperature, pressure, velocity,
+turbulence fields, and volume fraction.
 
 ## Required outputs
 
