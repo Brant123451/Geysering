@@ -141,9 +141,11 @@ rebuilt `sigma` from `alpha*rho*s` (`NO_READ`) while unresolved cells had
 written `s=0`, destroying excess inventory. That trajectory was archived
 under `results-smoke/rejected_restart_jump_*` and discarded.
 
-Fix (current tip): `READ_IF_PRESENT` for `pocketBodyTracerSigma` and do not
-reseed `sigma` from `α·ρ·s` on the first post-restart execute. Smoke was
-restarted from the same checkpoint with the rebuilt library.
+Fix (current tip): load `pocketBodyTracerSigma` via `findInstance` (and
+eager bind in the FO constructor) so restart does not miss the checkpoint
+after `++runTime`; never reseed from `α·ρ·s` when sigma was read. Smoke was
+restarted from the same checkpoint with the rebuilt library. Log confirms
+`read conserved inventory ... from time "0.3289420474"`.
 
 Multi-stage 30 min CPU watchdog monitors `log.smoke`; a
 smoke→conservation-gate→phase1 chain is armed. Smoke inventory acceptance
