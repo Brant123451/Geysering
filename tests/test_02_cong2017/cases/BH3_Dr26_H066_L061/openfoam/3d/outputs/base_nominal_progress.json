@@ -3,63 +3,66 @@
   "run_id": "base_nominal",
   "case": "BH3_Dr26_H066_L061",
   "paper_run": "B-H3",
-  "status": "running",
+  "status": "running_after_stability_restart",
   "check_source": "agent_30min",
-  "updated_at_unix": 1784052048.3169608,
-  "updated_at_iso": "2026-07-14T18:00:48Z",
+  "updated_at_unix": 1784055967.730368,
+  "updated_at_iso": "2026-07-14T19:06:07Z",
   "workdir": "/tmp/bh3-study-layered-d08978d/base_nominal",
-  "simulated_time_s": 3.068202078,
+  "simulated_time_s": 3.078243993,
   "event_end_time_s": 13.0,
-  "progress_fraction": 0.23601554446153847,
-  "execution_time_s": 54078.18,
-  "throughput_sim_s_per_wall_h": 0.20425109500356706,
-  "throughput_last_30min_sim_s_per_wall_h": 0.22825600582070202,
-  "eta_wall_h_at_overall_rate": 48.62543293501829,
+  "progress_fraction": 0.23678799946153847,
+  "throughput_sim_s_per_wall_h_since_restart": 0.05846945071880442,
+  "eta_wall_h_at_restart_rate": 169.69128125927568,
   "n_workers": 4,
-  "avg_worker_cpu_pct_lifetime": 68.05,
+  "avg_worker_cpu_pct_instant": 99.47,
   "workers": [
     {
-      "pid": 903099,
-      "pcpu": 68.0,
-      "pmem": 2.7,
-      "etime": "22:05:00"
+      "pid": 1035969,
+      "pcpu": 99.4,
+      "pmem": 3.7,
+      "etime": "28:59"
     },
     {
-      "pid": 903100,
-      "pcpu": 68.0,
-      "pmem": 2.5,
-      "etime": "22:05:00"
+      "pid": 1035970,
+      "pcpu": 99.6,
+      "pmem": 3.7,
+      "etime": "28:59"
     },
     {
-      "pid": 903101,
-      "pcpu": 68.1,
-      "pmem": 2.5,
-      "etime": "22:05:00"
+      "pid": 1035971,
+      "pcpu": 99.4,
+      "pmem": 3.7,
+      "etime": "28:59"
     },
     {
-      "pid": 903102,
-      "pcpu": 68.1,
-      "pmem": 2.5,
-      "etime": "22:05:00"
+      "pid": 1035972,
+      "pcpu": 99.5,
+      "pmem": 3.7,
+      "etime": "28:59"
     }
   ],
-  "note_cpu": "ps %CPU is lifetime average; instantaneous top fluctuates",
+  "note_cpu": "instantaneous ps %CPU after restart; ~100% on 4 workers with 0 idle is healthy",
+  "stability_incident": {
+    "crashed_at_s": 3.075130995,
+    "fatal": "Negative initial temperature T0 ~ -79505 K",
+    "symptom": "alpha.water max ~573 and Co_max ~4.8e6 under maxCo=0.25",
+    "last_good_write_s": 3.05,
+    "restarted_at_iso": "2026-07-14T18:37:00Z",
+    "new_controls": {
+      "maxCo": 0.1,
+      "maxAlphaCo": 0.05,
+      "maxDeltaT": 0.0001
+    },
+    "passed_prior_crash_time": true
+  },
   "health": {
     "status_level": "OK",
-    "foam_fatal_in_tail": false,
-    "T": {
-      "t": 3.068202078,
-      "min": 294.7181479,
-      "max": 297.08681503
-    },
-    "Umax": {
-      "t": 3.068202078,
-      "max": 4.1383089198
-    },
+    "foam_fatal_after_restart": false,
     "latest_field_write_s": 3.05,
     "n_field_writes": 10,
-    "deltaT_last": 9.243581861e-05,
-    "maxCo_last": 0.249582344
+    "deltaT_last": 3.871175538e-05,
+    "maxCo_last": 0.09995218756,
+    "alpha_max_last": 1.0
   },
   "paper_consistency_reverified_2026_07_14": true
 }

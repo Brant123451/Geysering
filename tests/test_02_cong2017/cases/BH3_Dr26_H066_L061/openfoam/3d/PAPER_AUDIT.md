@@ -421,8 +421,16 @@ constant-head `inlet`, 15 mm VOF band, contact angle 90°, and
 
 ## Live 13 s `base_nominal` status
 
-After the passed closed hold and measured-opening smoke, `base_nominal` is
-running on `prism_atmosphere` with post-opening Courant
-`maxCo=0.25` / `maxAlphaCo=0.15` from the written `t=0.25` checkpoint.
-Progress snapshots are written to `outputs/base_nominal_progress.json`.
-Classification remains a validation target and is not used to retune the case.
+After the passed closed hold and measured-opening smoke, `base_nominal`
+opened under smoke Courant limits and then continued from the written
+`t=0.25` checkpoint with looser post-opening Courant
+`maxCo=0.25` / `maxAlphaCo=0.15` for throughput. That looser segment ran
+to about `t=3.075 s` and then aborted (`FOAM FATAL`: negative `T0`, with
+`alpha.water` and Courant exploding in one step). The last healthy field
+write was `t=3.05 s`.
+
+On `2026-07-14T18:37Z` the event was restarted from `t=3.05` with the
+smoke Courant limits restored (`maxCo=0.1`, `maxAlphaCo=0.05`,
+`maxDeltaT=1e-4 s`). This is a stability control change only; geometry,
+IC/BC, valve model, and the geyser classification target are unchanged.
+Progress snapshots remain in `outputs/base_nominal_progress.json`.
