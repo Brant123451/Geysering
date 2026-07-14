@@ -54,8 +54,8 @@
       "Yfs_max_m": 1.4643174140384,
       "Yint_max_m": 1.2113423134956962,
       "closed_hold": null,
-      "ejected_water_final_m3": 0.0,
-      "end_time_s": 12.0,
+      "ejected_water_final_m3": 1.98348332e-14,
+      "end_time_s": 13.0,
       "geyser_model": false,
       "initial_audit": {
         "analytic_pocket": {
@@ -84,9 +84,9 @@
       "mass_conservation": {
         "max_abs_gas_error_kg": 4.425975130251629e-05,
         "max_abs_gas_relative_initial": 0.0003389418121607334,
-        "max_abs_total_error_kg": 0.01297227717405769,
-        "max_abs_total_relative_initial": 0.0010916983612383737,
-        "max_abs_water_error_kg": 0.012960427654796602
+        "max_abs_total_error_kg": 0.013324995367246517,
+        "max_abs_total_relative_initial": 0.0011213818060427493,
+        "max_abs_water_error_kg": 0.01333221149941305
       },
       "mesh": "base",
       "mesh_cells": 239660,
