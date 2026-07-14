@@ -164,3 +164,26 @@ separately.
 Generated OpenFOAM time directories, `processor*`, `postProcessing`,
 `constant/polyMesh`, `.msh` files, logs and frame data are ignored and must not
 be committed.
+
+## Baseline result status
+
+The production baseline has been completed through solver time `16.4 s`
+(`Q0` settle + `0.4 s` ramp + full `14 s` post-ramp window). Compact artefacts
+above were written with `postprocess_compare.py --primary`.
+
+Honest scalar summary versus the paper B3 targets:
+
+| quantity | paper | OpenFOAM 3-D baseline |
+|---|---:|---:|
+| PT2 peak | 55.03 kPa @ 1.47 s | 26.04 kPa @ 1.936 s |
+| PT3 peak | 51.76 kPa | 29.96 kPa @ 1.932 s |
+| PT2 / PT3 rebound min | -20.26 / -17.77 kPa | -12.47 / -9.29 kPa |
+| geyser | yes | yes (`0.10 m` above rim; `1.32 m` above lid) |
+| spilled water | mean 0.72 L | 1.47 L |
+| mass residual | — | 6.32% |
+
+Geometry, `Q0/Q1`, ramp duration and air volume were not altered to chase the
+55 kPa peak. Strict `checkMesh` still fails one check with 565 low-determinant
+boundary cells; the 50 m/s velocity limiter activated (max 8989 cells in one
+correction) and is reported as a numerical-quality warning. A refined mesh
+sensitivity run is executed independently to at least solver time `6.5 s`.

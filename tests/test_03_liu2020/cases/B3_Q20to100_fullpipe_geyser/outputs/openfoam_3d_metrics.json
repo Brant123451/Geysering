@@ -1,0 +1,199 @@
+{
+  "case": "Liu2020 B3 Q20to100 full-pipe single-shoot geyser",
+  "time_origin": "t=0 at start of the inflow ramp (OpenFOAM solver t=2.0 s)",
+  "solver": {
+    "name": "compressibleInterIsoFoam",
+    "version": "OpenFOAM-v2512",
+    "reason": "Two compressible immiscible phases are required for the 55 kPa slam and negative rebound; incompressible interFoam cannot validate their pressure amplitude. The geometric isoAdvector transport keeps the sharp tetrahedral free surface explicitly bounded.",
+    "water_equation_of_state": "perfectFluid, rho0=997.1107767 kg/m3, R=93025 m2/s2; rho(101325 Pa)=998.2 kg/m3",
+    "water_sound_speed_m_s": 305.0,
+    "compliance_representation": "The paper's approximately 305 m/s pressure-wave speed in the clear acrylic pipe is represented by an effective fluid EOS because the fluid-only mesh does not resolve pipe-wall deformation.",
+    "air_equation_of_state": "perfectGas"
+  },
+  "run": {
+    "mesh_label": "baseline",
+    "solver_start_s": 0.002,
+    "solver_end_s": 16.4,
+    "end_time_after_ramp_s": 14.399999999999999,
+    "full_14s_post_ramp_window": true,
+    "Q0_settle_duration_s": 2.0,
+    "ramp_duration_s": 0.3999999999999999,
+    "upstream_initial_depth_m": 0.08,
+    "chamber_initial_stage_m": 0.3,
+    "downstream_initial_depth_ratio": 1.0
+  },
+  "mesh": {
+    "cells": 105061,
+    "max_aspect_ratio": 12.706205,
+    "max_non_orthogonality_deg": 67.899521,
+    "mean_non_orthogonality_deg": 22.680787,
+    "max_skewness": 0.87209621,
+    "min_cell_volume_m3": 1.2311659e-08,
+    "underdetermined_tetrahedra": 565,
+    "low_interpolation_weight_faces": 0,
+    "failed_checks": 1,
+    "check_mesh_ok": false,
+    "command": "checkMesh -allGeometry -allTopology"
+  },
+  "paper": {
+    "source_note": "Verified directly against Liu, Shao & Zhu (2020), J. Hydraulic Engineering 146(2), 04019055, DOI 10.1061/(ASCE)HY.1943-7900.0001660; the locally supplied PDF has SHA-256 32abd351252725009ebbef98c8d5c7794b957a448ee23bf8729fcb347ce5c9c3.",
+    "geyser": true,
+    "upstream_initial_depth_m": 0.08,
+    "downstream_initial_depth_ratio": 1.0,
+    "valve_opening_duration_s_range": [
+      0.2,
+      0.4
+    ],
+    "acrylic_pipe_wave_speed_m_s": 305.0,
+    "bore_reach_chamber_s": 1.2,
+    "PT2_peak_kPa": 55.03,
+    "PT3_peak_kPa": 51.76,
+    "t_peak_s": 1.47,
+    "PT1_min_kPa": -8.3,
+    "PT2_min_kPa": -20.26,
+    "PT3_min_kPa": -17.77,
+    "osc_periods_s": [
+      0.51,
+      0.37,
+      0.37
+    ],
+    "PT1_final_kPa": 0.0,
+    "PT2_final_kPa": 1.82,
+    "PT3_final_kPa": 4.65,
+    "fig7a_slope": 0.6943,
+    "fig7a_intercept_m": 0.3086,
+    "fig7a_r2": 0.97,
+    "t_mist_s": 1.47,
+    "t_jet_out_s": 1.51,
+    "t_column_top_s": 1.65,
+    "t_break_s": [
+      1.7,
+      1.89
+    ],
+    "spilled_water_volume_trials_L": [
+      0.65,
+      0.78,
+      0.82
+    ],
+    "spilled_water_volume_mean_L": 0.72,
+    "B3_regression_height_m": 4.210355984421295
+  },
+  "one_dimensional": {
+    "geyser": true,
+    "PT1_peak_kPa": 4.1119596000000005,
+    "PT1_min_kPa": 0.0,
+    "PT2_peak_kPa": 30.837456696857966,
+    "PT2_min_kPa": -11.96831216743688,
+    "PT3_peak_kPa": 37.15200891655171,
+    "PT3_min_kPa": -4.984766219812257,
+    "peak_time_s": 1.6803219910326934,
+    "maximum_geyser_height_m": 2.1661437958007337,
+    "height_method": "ballistic estimate from the 1-D riser ejection velocity, measured above the chamber lid",
+    "mass_error_L": 1.341374927799066e-12
+  },
+  "openfoam_3d": {
+    "pressure": {
+      "PT1": {
+        "peak_kPa": 2.9007599999999947,
+        "peak_time_s": 2.4480000000000004,
+        "minimum_kPa": -5.207164000000004,
+        "minimum_time_s": 2.1639999999999997,
+        "final_mean_kPa": 1.4673137619263972,
+        "final_std_kPa": 0.006756892684595164,
+        "minimum_definition": "minimum from 0.02 to 0.62 s after the PT2 principal peak (paper first-rebound window)"
+      },
+      "PT2": {
+        "peak_kPa": 26.041520000000006,
+        "peak_time_s": 1.936,
+        "minimum_kPa": -12.465015,
+        "minimum_time_s": 2.2359999999999998,
+        "final_mean_kPa": 1.4305110540663335,
+        "final_std_kPa": 0.02056622348996171,
+        "minimum_definition": "minimum from 0.02 to 0.62 s after the PT2 principal peak (paper first-rebound window)"
+      },
+      "PT3": {
+        "peak_kPa": 29.963119999999996,
+        "peak_time_s": 1.932,
+        "minimum_kPa": -9.294336999999999,
+        "minimum_time_s": 2.2380000000000004,
+        "final_mean_kPa": 3.1944216083598365,
+        "final_std_kPa": 0.05770316523155648,
+        "minimum_definition": "minimum from 0.02 to 0.62 s after the PT2 principal peak (paper first-rebound window)"
+      }
+    },
+    "bore_arrival_time_s": 1.424,
+    "bore_arrival_definition": "first four samples with PT2 >= pre-ramp mean + 1 kPa",
+    "oscillation_periods_s": [
+      0.4240000000000004
+    ],
+    "geyser": true,
+    "first_reach_riser_top_s": 1.996,
+    "first_water_above_rim_s": 2.0060000000000002,
+    "maximum_geyser_height_above_lid_m": 1.3200000000000012,
+    "maximum_height_above_rim_m": 0.1000000000000012,
+    "maximum_sampled_vertical_velocity_m_s": 39.567957,
+    "height_detection": "highest centreline alpha.water >= 0.05 at 0.05 m spacing; height is measured above the chamber lid to match the Fig. 7 threshold",
+    "plume_domain_top_height_above_lid_m": 4.8,
+    "height_censored_by_domain": false,
+    "mass_balance": {
+      "initial_water_volume_m3": 0.4885652,
+      "final_water_volume_m3": 0.564727611,
+      "net_integrated_outward_water_flux_m3": 0.04726179561781833,
+      "numerical_mass_error_m3": 0.12342420661781836,
+      "numerical_mass_error_L": 123.42420661781836,
+      "numerical_mass_error_percent": 6.321778661995194,
+      "signed_numerical_mass_error_percent": 6.321778661995194,
+      "maximum_absolute_mass_error_L": 123.42420661781836,
+      "integrated_outward_water_flux_by_boundary_L": {
+        "waterFluxInlet": -1463.7999999999772,
+        "waterFluxOutlet": 1509.5878780895,
+        "waterFluxAtmosphere": 1.4739175283184678
+      },
+      "net_atmosphere_water_outflow_L": 1.4739175283184678,
+      "gross_atmosphere_water_outflow_L": 1.4739175283184678,
+      "spilled_water_volume_L": 1.4739175283184678,
+      "spilled_water_definition": "Net time-integrated outward alpha.water-weighted phi over every open atmosphere face. The paper reports water collected outside the riser, so gross outward crossings are also retained separately.",
+      "method": "Liquid-volume closure: V(alpha.water) change plus trapezoidal integral of alpha.water-weighted phi over inlet, submerged outlet and atmosphere. Small physical volume changes from water compressibility are included in this residual."
+    },
+    "inlet_flow": {
+      "Q0_mean_m3_s": 0.019999999999999997,
+      "Q0_relative_error_percent": 1.734723475976807e-14,
+      "Q1_mean_m3_s": 0.10000000000000002,
+      "Q1_relative_error_percent": 1.3877787807814457e-14
+    },
+    "numerical_safeguards": {
+      "velocity_limit_m_s": 50.0,
+      "limiter_calls": 2984924,
+      "calls_with_activation": 2530983,
+      "maximum_cells_limited_in_one_correction": 8989,
+      "activated": true,
+      "interpretation": "The 50 m/s bound is outside the expected B3 state. Any activation is reported as a numerical-quality warning, not a physical result."
+    }
+  },
+  "relative_error_percent": {
+    "PT1_min": 37.26308433734935,
+    "PT2_peak": 52.677594039614746,
+    "PT2_peak_time": 31.70068027210884,
+    "PT2_min": 38.47475320829221,
+    "PT3_peak": 42.11143740340031,
+    "PT3_peak_time": 31.428571428571427,
+    "PT3_min": 47.69647158131683,
+    "bore_arrival_time": 18.666666666666668,
+    "maximum_geyser_height_vs_Fig7_regression": 68.64873172520036,
+    "oscillation_periods": [
+      16.86274509803914
+    ],
+    "PT1_final_absolute_error_kPa": 1.4673137619263972,
+    "PT2_final": 21.400491534816844,
+    "PT3_final": 31.30276111054116,
+    "spilled_water_volume": 104.71076782200943
+  },
+  "unresolved_physics_and_input_uncertainty": [
+    "The exact Series-B overflow-weir geometry/rating and receiving-tank transient were not reported; H_tail=Dd is its declared hydrostatic full-pipe equivalent.",
+    "The exact B3 chamber stage was not tabulated; 0.30 m covers the 0.28 m downstream crown and is consistent with the Fig. 5(a) t=0 image, but remains a declared image-based initialisation.",
+    "A uniform 305 m/s effective wave speed represents acrylic-pipe compliance; spatial differences among the acrylic pipes/riser and PVC chamber remain unresolved because wall thickness and modulus were not reported.",
+    "The measured valve trace and exact experimental time-zero convention are not reported beyond a 0.2 to 0.4 s manual opening interval; a 0.4 s linear ramp is used.",
+    "VOF does not resolve sub-grid dispersed-air entrainment, bubble-size transport, cavitation or phase change.",
+    "Exact PT2 in-plane and PT3 horizontal coordinates are not reported; A2 sampling coordinates are retained."
+  ]
+}

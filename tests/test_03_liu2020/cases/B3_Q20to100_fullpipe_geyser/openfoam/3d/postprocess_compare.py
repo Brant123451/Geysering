@@ -322,13 +322,15 @@ def parse_velocity_limiter(case: Path) -> dict[str, object]:
     source = case / "log.compressibleInterIsoFoam"
     if not source.exists():
         source = case / "log.compressibleInterIsoFoam.smoke"
-    text = source.read_text(encoding="utf-8", errors="replace") if source.exists() else ""
-    counts = [
-        int(value)
-        for value in re.findall(
-            r"limitVelocity\s+\S+\s+Limited\s+(\d+)\s+\(", text
-        )
-    ]
+    pattern = re.compile(r"limitVelocity\s+\S+\s+Limited\s+(\d+)\s+\(")
+    counts: list[int] = []
+    if source.exists():
+        # Stream the solver log: full baseline runs exceed 1 GB.
+        with source.open("r", encoding="utf-8", errors="replace") as handle:
+            for line in handle:
+                match = pattern.search(line)
+                if match:
+                    counts.append(int(match.group(1)))
     return {
         "velocity_limit_m_s": 50.0,
         "limiter_calls": len(counts),
