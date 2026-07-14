@@ -44,7 +44,10 @@ setFields > log.setFields 2>&1
 setExprFields > log.setExprFields 2>&1
 decomposePar -force > log.decomposePar 2>&1
 sha256sum "${SOURCE_SCHEMA_FILES[@]}" > log.source.sha256
-trap 'cp system/controlDict.full system/controlDict' EXIT
 cp system/controlDict.initialize system/controlDict
+# Do not install an EXIT trap that rewrites controlDict while mpirun may still
+# be alive (runTimeModifiable would then extend endTime). Restore only after
+# the solver returns.
 mpirun -np "$NP" compressibleInterFoam -parallel > log.initialize 2>&1
+cp system/controlDict.full system/controlDict
 echo INITIALIZATION_DONE
