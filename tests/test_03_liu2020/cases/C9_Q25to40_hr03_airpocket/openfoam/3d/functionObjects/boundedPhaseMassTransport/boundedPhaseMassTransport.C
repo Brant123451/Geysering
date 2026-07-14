@@ -186,21 +186,29 @@ Foam::functionObjects::boundedPhaseMassTransport::conservedDensity
             }
         }
 
-        // READ_IF_PRESENT: on restart, keep the written conserved inventory.
-        // Reconstructing from alpha*rho*s destroys tagged mass in unresolved
-        // cells where recovered s was zeroed for flux intensity (alpha below
-        // resolveAlpha), which previously caused a ~5% restart jump.
+        // Prefer an existing on-disk inventory.  After restart, execute() runs
+        // at the advanced timeName where sigma has not been written yet, so
+        // search prior time directories (the checkpoint) via findInstance.
+        const fileName instance =
+            mesh_.time().findInstance
+            (
+                mesh_.dbDir(),
+                sigmaResultName_,
+                IOobject::READ_IF_PRESENT
+            );
+
         IOobject sigmaHeader
         (
             sigmaResultName_,
-            mesh_.time().timeName(),
+            instance,
             mesh_,
             IOobject::READ_IF_PRESENT,
             IOobject::NO_WRITE,
             IOobject::REGISTER
         );
         const bool readSigma =
-            sigmaHeader.typeHeaderOk<volScalarField>(true);
+            instance != mesh_.time().constant()
+         && sigmaHeader.typeHeaderOk<volScalarField>(true);
 
         sigmaPtr_.reset
         (
@@ -215,6 +223,11 @@ Foam::functionObjects::boundedPhaseMassTransport::conservedDensity
         if (!readSigma)
         {
             sigmaPtr_() == alpha*phaseRho*field;
+        }
+        else
+        {
+            Info<< "boundedPhaseMassTransport: read conserved inventory "
+                << sigmaResultName_ << " from time " << instance << nl;
         }
         mesh_.setFluxRequired(sigmaResultName_);
     }
@@ -294,6 +307,22 @@ boundedPhaseMassTransport
     if (resetOnStartUp_)
     {
         field == Zero;
+    }
+
+    // Bind sigma at construction time (still the restart timeName) so a
+    // checkpoint pocketBodyTracerSigma is loaded before the first ++runTime.
+    if
+    (
+        foundObject<volScalarField>(alphaName_)
+     && foundObject<volScalarField>(phaseRhoName_)
+    )
+    {
+        conservedDensity
+        (
+            lookupObject<volScalarField>(alphaName_),
+            lookupObject<volScalarField>(phaseRhoName_),
+            field
+        );
     }
 }
 
