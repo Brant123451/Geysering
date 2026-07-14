@@ -427,6 +427,8 @@ writePrecision  8;
 writeCompression off;
 timeFormat      general;
 timePrecision   10;
+// Keep yes so stopAt writeNow / emergency edits work; Allrun.* must not
+// replace controlDict until mpirun has returned (see Allrun.initialize).
 runTimeModifiable yes;
 
 adjustTimeStep  yes;

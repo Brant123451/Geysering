@@ -108,18 +108,35 @@ Latest tracer iteration (branch tip): upwind intensity fluxes
 `phi_air*s` with conservative donor-outflow positivity scaling; inventory
 is `sigma`; recovered `s` may exceed 1 when `alpha*rho` shrinks. Gate on
 integral `sigma` conservation (<1%), not pointwise `s∈[0,1]`. Rejected
-again this session: compressible MULES on `s` (SIGFPE), thin-floor
-`phiVol`, and unscaled intensity fluxes. Fresh `Allrun.initialize`
-required.
+paths (do not revive): clear/clamp; variable-density MULES on `s`; Sp(ddt);
+thin-floor `phiVol`; unscaled intensity `phi·s`; post-update sigma clip to
+`[0,αρ]`.
 
-The remaining rank-1 need is a **conservative limiter with local upper bound
-`alpha*rho`** (e.g. MULES on `sigma`) so that both `∫sigma` and `s∈[0,1]` hold.
-It has no post-solve morphology clear and aborts on a failed carrier
-projection.
-Physical inventory and tagged boundary fluxes must close within 1%; the
-integrated numerical tracer-balance residual must independently remain below
-1% before accepting chronology. This newest implementation still requires a
-fresh validation run.
+### Initialize conservation gate (passed)
+
+Fresh initialize with the positivity-scaled tracer completed through solver
+0.25 s. An accidental mid-run `controlDict.full` swap (now hardened in
+`Allrun.initialize` / `Allrun.resume`) overran to a clean `writeNow` stop at
+`0.3289420474` (paper ≈ 0.079 s). From
+`postProcessing/matrixPocketBodyTracerMass`:
+
+- `∫sigma = 1.67259665e-02` from 0.01 through 0.32 (relative change **0**);
+- numerical mass-source residual ~`1e-16`;
+- inlet/gate/atmosphere tagged fluxes all zero through 0.32 (pocket still
+  in-domain).
+
+Record: `case/results-init/initialize_conservation_gate.json` (gitignored
+runtime artifact).
+
+### Smoke (in progress on this VM)
+
+Resumed from checkpoint `0.3289420474` toward smoke `endTime=1.25`
+(paper 1.00 s) with 4-rank `compressibleInterFoam`, `maxCo=0.70`,
+`maxAlphaCo=0.20`. No Fatal as of the handoff update. Multi-stage 30 min
+CPU watchdog monitors `log.smoke`; a smoke→conservation-gate→phase1 chain
+is armed. Smoke inventory acceptance still uses `∫sigma` + boundary flux +
+residual <1% after `End`.
+
 The historical, now-rejected clear/clamp `maxCo=0.35` reference remained in
 `[0,1]` through solver time 0.37 s and lost about 0.5% of its paper-time-zero
 inventory by 0.31 s, but cut-cell Courant control reduced its step to roughly
@@ -127,8 +144,8 @@ inventory by 0.31 s, but cut-cell Courant control reduced its step to roughly
 `maxAlphaCo=0.20`, backed by the earlier same-physics 0.35/0.70 benchmark;
 0.35 remains an explicit sensitivity.
 
-Phase 1 is incomplete. Phase 2 and eight eruptions have not yet been
-reproduced.
+Phase 1 is incomplete. **Phase 2 and eight eruptions have not yet been
+reproduced.**
 
 ## Reproduce and continue
 

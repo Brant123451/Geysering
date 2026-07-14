@@ -192,6 +192,16 @@ small/base/large sensitivity 结果。
 
 ## 7. 当前真实验证状态
 
+**Phase 2 and eight eruptions have not yet been reproduced.**
+
+当前 VM（分支 tip）进度（勿与下方历史失败证据混淆）：
+
+- 正性缩放强度通量示踪：`boundedPhaseMassTransport`（`∫sigma` 为库存；点态 `s` 可不在 `[0,1]`）。
+- initialize 守恒门已过：`∫sigma` 在 0–0.32 s 相对变化为 0；检查点 `0.3289420474`。
+- smoke 正从该检查点跑向 solver `1.25 s`；完成后需再验 `∫sigma`/通量/残差 `<1%`，再 `phase1`→`full`。
+- 禁止恢复：clear/clamp、可变密度 MULES on `s`、Sp(ddt)、薄地板 `phiVol`、未缩放 `phi·s`、sigma 裁剪到 `[0,αρ]`。
+- 禁止移动/放大气囊。
+
 不要丢失或美化以下失败证据：
 
 - base mesh: `142,343` cells；
