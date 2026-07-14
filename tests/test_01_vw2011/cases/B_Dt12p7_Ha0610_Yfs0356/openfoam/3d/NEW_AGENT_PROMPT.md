@@ -550,6 +550,15 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     不得把 `nCorrectors=3` 写入 baseline。下一步回到已准入的
     `nCorrectors=2`，只把 `CASEB_N_OUTER_CORRECTORS` 从 1 提到 2，再跑
     0.12 s rim-onset 筛查。
+32. `nOuterCorrectors=2` 的全新 0.12 s 筛查已完成并被拒绝：
+    - solver 达到 0.119996 s；global/interface Co 为 0.160/0.153；
+    - 0.050 s 曾短暂出现 rim 纯气热点（U=0.795），随后回到自由面至 0.100 s；
+    - 0.110 s 同一 rim 单元再次锁定（U=1.691），0.120 s 增至 1.841，曲率为 0；
+    - \(H^*\) peak-to-peak 仅 0.000844，压力 alone 会再次误判。
+    不得单独把 `nOuterCorrectors=2` 写入 baseline。下一步把此前两个“仅推迟”
+    的控制叠在一起：`CASEB_N_CORRECTORS=3` 且 `CASEB_N_OUTER_CORRECTORS=2`，
+    再跑 0.12 s rim-onset；若仍失败，则离开 PIMPLE 耦合轴，改试
+    `CASEB_N_NON_ORTHOGONAL_CORRECTORS`。
 
 十、hold 验收
 
@@ -582,8 +591,8 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
 - CASEB_N_ALPHA_CORR=1
 - CASEB_N_ALPHA_SUBCYCLES=2
 - CASEB_N_OUTER_CORRECTORS=1
-- CASEB_N_CORRECTORS=2（`=3` 的 0.12 s rim 筛查已拒绝；勿写入 baseline）
-- CASEB_N_OUTER_CORRECTORS=1（下一 rim-onset 诊断可试 2；未通过前勿写入 baseline）
+- CASEB_N_CORRECTORS=2（`=3` 单独 0.12 s rim 筛查已拒绝；下一叠层诊断可再与 outer=2 联用）
+- CASEB_N_OUTER_CORRECTORS=1（`=2` 单独 0.12 s rim 筛查已拒绝；下一叠层诊断可再与 nCorrectors=3 联用）
 - CASEB_PRESSURE_FINAL_TOLERANCE=1e-7（诊断可收紧；当前候选为 1e-10）
 - CASEB_N_NON_ORTHOGONAL_CORRECTORS=0
 - CASEB_HA0=0.579|0.610|0.641

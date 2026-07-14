@@ -482,6 +482,18 @@ timestep controls.
     Do not promote `nCorrectors=3`.  Revert to the admitted `nCorrectors=2`
     baseline and raise only `CASEB_N_OUTER_CORRECTORS` from 1 to 2 through
     another fresh 0.12 s rim-onset screen.
+35. The fresh `nOuterCorrectors=2` 0.12 s screen completed and was rejected:
+    * solver time reached 0.119996 s; observed global/interface Courant maxima
+      were 0.160/0.153;
+    * a brief pure-gas rim sample appeared at 0.050 s (\(U=0.795\) m/s), free-
+      surface hotspots returned through 0.100 s, then the same rim cell locked
+      on at 0.110 s with \(U=1.691\) m/s and grew to 1.841 m/s at 0.120 s with
+      zero curvature;
+    * \(H^*\) peak-to-peak was only 0.000844, again a false pressure-only clear.
+    Do not promote `nOuterCorrectors=2` alone.  Next stack the two previously
+    isolated delayers (`CASEB_N_CORRECTORS=3` with `CASEB_N_OUTER_CORRECTORS=2`)
+    through another fresh 0.12 s rim-onset screen; if that still fails, leave
+    the PIMPLE-coupling axis and isolate non-orthogonal correctors.
 
 ## Still required
 
@@ -512,11 +524,12 @@ The scientific reproduction is **not complete**.  Continue in this order:
    short-window peak velocity of the three timestep members.  Its 0.04 s
    continuation also passes the pressure-drift admission gate.  The subsequent
    full-hold continuation was rejected at about 0.117 s for a growing rim
-   exterior-gas hotspot despite a falsely calm transducer \(H^*\).  The isolated
-   `nCorrectors=3` 0.12 s screen only delayed that rim mode to the final sample
-   and is rejected.  Revert to admitted `nCorrectors=2` and raise only
-   `CASEB_N_OUTER_CORRECTORS` from 1 to 2 through a fresh 0.12 s rim-onset
-   screen before any new 1.0 s hold.
+   exterior-gas hotspot despite a falsely calm transducer \(H^*\).  Isolated
+   `nCorrectors=3` and `nOuterCorrectors=2` 0.12 s screens each only delayed
+   or temporarily interrupted that rim mode and are rejected.  Next stack
+   `CASEB_N_CORRECTORS=3` with `CASEB_N_OUTER_CORRECTORS=2` through a fresh
+   0.12 s rim-onset screen before any new 1.0 s hold; if that stack fails,
+   leave the PIMPLE-coupling axis.
    Extend a candidate past the 0.04 s
    pressure-drift onset only if it stays within the declared Courant limits
    and reduces peak velocity, and only \(H^*\) peak-to-peak at or below 0.02

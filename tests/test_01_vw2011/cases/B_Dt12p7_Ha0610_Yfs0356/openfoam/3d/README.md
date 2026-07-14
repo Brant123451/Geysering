@@ -251,9 +251,12 @@ while transducer \(H^*\) peak-to-peak remained only 0.00100.  That rejected
 state must not be resumed.  The isolated `nCorrectors=3` 0.12 s screen then delayed the rim mode to the
 final sample (\(U=1.841\) m/s at \(y=0.657\) m, zero curvature) but did not
 remove it, while \(H^*\) peak-to-peak remained only 0.000879.  That setting is
-rejected.  The next isolated control reverts to admitted `nCorrectors=2` and
-raises only `CASEB_N_OUTER_CORRECTORS` from 1 to 2 through another fresh 0.12 s
-rim-onset screen.
+rejected.  The subsequent `nOuterCorrectors=2` screen likewise failed: after a
+brief rim sample at 0.050 s and free-surface recovery through 0.100 s, the same
+rim cell returned at 0.110 s (\(U=1.691\) m/s) and grew to 1.841 m/s at 0.120 s
+with \(H^*\) peak-to-peak only 0.000844.  The next screen stacks
+`CASEB_N_CORRECTORS=3` with `CASEB_N_OUTER_CORRECTORS=2` through another fresh
+0.12 s rim-onset window.
 
 Thermophysical choices are:
 
