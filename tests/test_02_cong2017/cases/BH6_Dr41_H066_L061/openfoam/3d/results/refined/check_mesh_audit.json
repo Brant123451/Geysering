@@ -1,0 +1,74 @@
+{
+  "generation": {
+    "geometry": "3-D circular pipe and T-junction with a vertically swept triangular-prism riser and conformal external air",
+    "element_types_3d": [
+      4,
+      6
+    ],
+    "element_counts_3d": {
+      "4": 225775,
+      "6": 49420
+    },
+    "riser_sweep": {
+      "bottom_z_m": 0.061,
+      "element": "triangular prism",
+      "lower_layers": 115,
+      "upper_layers": 238,
+      "free_surface_max_z_error_m": 0.0
+    },
+    "mesh_sizes_m": {
+      "pipe": 0.009,
+      "riser": 0.005,
+      "jet": 0.009,
+      "external": 0.025
+    }
+  },
+  "acceptance": {
+    "strict_checkMesh_pass": false,
+    "solver_quality_gate_pass": true,
+    "pre_baffle_warning_classification": "boundary tetrahedra with exactly two internal faces",
+    "post_baffle_warning_classification": "cyclicACMI-adjacent polyhedra"
+  },
+  "pre_baffle": {
+    "mesh_ok": false,
+    "failed_checks": 1,
+    "cells": 275195,
+    "hexahedra": 0,
+    "prisms": 49420,
+    "tetrahedra": 225775,
+    "polyhedra": 0,
+    "regions": 1,
+    "two_internal_face_cells": 319,
+    "duplicate_baffle_faces": null,
+    "max_aspect_ratio": 7.1644689,
+    "max_non_orthogonality_deg": 67.550287,
+    "severely_non_orthogonal_faces": null,
+    "max_skewness": 0.990612,
+    "minimum_cell_volume_m3": 5.8195335e-09,
+    "underdetermined_cells": 319,
+    "concave_cells": null,
+    "low_weight_faces": null,
+    "all_geometry_and_topology": true
+  },
+  "with_valve_baffle": {
+    "mesh_ok": false,
+    "failed_checks": 2,
+    "cells": 275195,
+    "hexahedra": 0,
+    "prisms": 49420,
+    "tetrahedra": 225289,
+    "polyhedra": 486,
+    "regions": 2,
+    "two_internal_face_cells": 389,
+    "duplicate_baffle_faces": 1458,
+    "max_aspect_ratio": 7.1644689,
+    "max_non_orthogonality_deg": 67.550287,
+    "severely_non_orthogonal_faces": null,
+    "max_skewness": 0.990612,
+    "minimum_cell_volume_m3": 5.8195335e-09,
+    "underdetermined_cells": 389,
+    "concave_cells": 486,
+    "low_weight_faces": null,
+    "all_geometry_and_topology": true
+  }
+}
