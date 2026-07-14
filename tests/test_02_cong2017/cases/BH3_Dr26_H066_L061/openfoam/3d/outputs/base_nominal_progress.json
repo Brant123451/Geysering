@@ -5,42 +5,42 @@
   "paper_run": "B-H3",
   "status": "running",
   "check_source": "agent_30min",
-  "updated_at_unix": 1784041086.1762884,
-  "updated_at_iso": "2026-07-14T14:58:06Z",
+  "updated_at_unix": 1784042910.3940833,
+  "updated_at_iso": "2026-07-14T15:28:30Z",
   "workdir": "/tmp/bh3-study-layered-d08978d/base_nominal",
-  "simulated_time_s": 2.761258151,
+  "simulated_time_s": 2.806507216,
   "event_end_time_s": 13.0,
-  "progress_fraction": 0.21240447315384614,
-  "execution_time_s": 48596.49,
-  "throughput_sim_s_per_wall_h": 0.20455241404471805,
-  "throughput_last_30min_sim_s_per_wall_h": 0.21114233558567344,
-  "eta_wall_h_at_overall_rate": 50.054368201011144,
+  "progress_fraction": 0.21588517046153846,
+  "execution_time_s": 49505.03,
+  "throughput_sim_s_per_wall_h": 0.20408887698078357,
+  "throughput_last_30min_sim_s_per_wall_h": 0.19354283572392464,
+  "eta_wall_h_at_overall_rate": 49.94634168602824,
   "n_workers": 4,
-  "avg_worker_cpu_pct_lifetime": 70.95,
+  "avg_worker_cpu_pct_lifetime": 70.375,
   "workers": [
     {
       "pid": 903099,
-      "pcpu": 70.9,
+      "pcpu": 70.3,
       "pmem": 2.7,
-      "etime": "19:02:19"
+      "etime": "19:32:43"
     },
     {
       "pid": 903100,
-      "pcpu": 70.9,
+      "pcpu": 70.4,
       "pmem": 2.5,
-      "etime": "19:02:19"
+      "etime": "19:32:43"
     },
     {
       "pid": 903101,
-      "pcpu": 71.0,
-      "pmem": 2.5,
-      "etime": "19:02:19"
+      "pcpu": 70.4,
+      "pmem": 2.4,
+      "etime": "19:32:43"
     },
     {
       "pid": 903102,
-      "pcpu": 71.0,
-      "pmem": 2.4,
-      "etime": "19:02:19"
+      "pcpu": 70.4,
+      "pmem": 2.5,
+      "etime": "19:32:43"
     }
   ],
   "note_cpu": "ps %CPU is lifetime average; instantaneous top fluctuates",
@@ -48,18 +48,18 @@
     "status_level": "OK",
     "foam_fatal_in_tail": false,
     "T": {
-      "t": 2.76117393,
-      "min": 295.603771,
-      "max": 298.87393696
+      "t": 2.806435327,
+      "min": 295.23316267,
+      "max": 298.5144699
     },
     "Umax": {
-      "t": 2.76117393,
-      "max": 2.7733348808
+      "t": 2.806435327,
+      "max": 2.3918674164
     },
-    "latest_field_write_s": 2.75,
+    "latest_field_write_s": 2.8,
     "n_field_writes": 10,
-    "deltaT_last": 8.422141058e-05,
-    "maxCo_last": 0.2498890759
+    "deltaT_last": 7.188889913e-05,
+    "maxCo_last": 0.2498734933
   },
   "paper_consistency_reverified_2026_07_14": true
 }
