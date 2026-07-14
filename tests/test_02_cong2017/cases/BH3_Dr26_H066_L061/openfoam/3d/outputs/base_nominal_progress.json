@@ -5,42 +5,42 @@
   "paper_run": "B-H3",
   "status": "running",
   "check_source": "agent_30min",
-  "updated_at_unix": 1784042910.3940833,
-  "updated_at_iso": "2026-07-14T15:28:30Z",
+  "updated_at_unix": 1784044736.1750479,
+  "updated_at_iso": "2026-07-14T15:58:56Z",
   "workdir": "/tmp/bh3-study-layered-d08978d/base_nominal",
-  "simulated_time_s": 2.806507216,
+  "simulated_time_s": 2.850627943,
   "event_end_time_s": 13.0,
-  "progress_fraction": 0.21588517046153846,
-  "execution_time_s": 49505.03,
-  "throughput_sim_s_per_wall_h": 0.20408887698078357,
-  "throughput_last_30min_sim_s_per_wall_h": 0.19354283572392464,
-  "eta_wall_h_at_overall_rate": 49.94634168602824,
+  "progress_fraction": 0.21927907253846154,
+  "execution_time_s": 50419.65,
+  "throughput_sim_s_per_wall_h": 0.2035369264721195,
+  "throughput_last_30min_sim_s_per_wall_h": 0.17707603463780217,
+  "eta_wall_h_at_overall_rate": 49.86501581269708,
   "n_workers": 4,
-  "avg_worker_cpu_pct_lifetime": 70.375,
+  "avg_worker_cpu_pct_lifetime": 69.875,
   "workers": [
     {
       "pid": 903099,
-      "pcpu": 70.3,
+      "pcpu": 69.8,
       "pmem": 2.7,
-      "etime": "19:32:43"
+      "etime": "20:03:08"
     },
     {
       "pid": 903100,
-      "pcpu": 70.4,
+      "pcpu": 69.9,
       "pmem": 2.5,
-      "etime": "19:32:43"
+      "etime": "20:03:08"
     },
     {
       "pid": 903101,
-      "pcpu": 70.4,
+      "pcpu": 69.9,
       "pmem": 2.4,
-      "etime": "19:32:43"
+      "etime": "20:03:08"
     },
     {
       "pid": 903102,
-      "pcpu": 70.4,
-      "pmem": 2.5,
-      "etime": "19:32:43"
+      "pcpu": 69.9,
+      "pmem": 2.4,
+      "etime": "20:03:08"
     }
   ],
   "note_cpu": "ps %CPU is lifetime average; instantaneous top fluctuates",
@@ -48,18 +48,18 @@
     "status_level": "OK",
     "foam_fatal_in_tail": false,
     "T": {
-      "t": 2.806435327,
-      "min": 295.23316267,
-      "max": 298.5144699
+      "t": 2.850627943,
+      "min": 294.92068201,
+      "max": 298.17678582
     },
     "Umax": {
-      "t": 2.806435327,
-      "max": 2.3918674164
+      "t": 2.850549451,
+      "max": 3.2611204207
     },
-    "latest_field_write_s": 2.8,
+    "latest_field_write_s": 2.85,
     "n_field_writes": 10,
-    "deltaT_last": 7.188889913e-05,
-    "maxCo_last": 0.2498734933
+    "deltaT_last": 7.849293564e-05,
+    "maxCo_last": 0.2498816095
   },
   "paper_consistency_reverified_2026_07_14": true
 }
