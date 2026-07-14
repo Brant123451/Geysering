@@ -90,8 +90,10 @@ canonical `-12…14.4 s` window.
 3. **base full**: finished `End` at `t=14.4001` (`ClockTime=96,789 s`,
    `ExecutionTime=43,290 s`). Compact outputs rewritten under Case
    `outputs/openfoam_3d_base_*` and primary `openfoam_3d_*`.
-4. **refined**: `NP=4 ./Allrun refined` started in tmux
-   `a2-refined-tankweir` after base completion. Until it finishes, any
+4. **refined**: `NP=4 ./Allrun refined` running in tmux
+   `a2-refined-tankweir`. Mesh: **251,664** tetrahedra, strict `Mesh OK`.
+   Smoke passed; full log advancing near `t ≈ -10.76 s` of `-12…14.4 s`
+   (≈4.7%), four ranks healthy, no fatal/FPE. Until it finishes, any
    `grid_sensitivity` block that still cites the old fixed-stage refined
    metrics is provisional and must be replaced.
 5. Paper↔model cross-check (journal + Liu 2018 thesis) confirms Case A2
