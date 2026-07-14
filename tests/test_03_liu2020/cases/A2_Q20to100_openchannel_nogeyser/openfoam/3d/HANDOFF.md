@@ -86,18 +86,22 @@ canonical `-12…14.4 s` window. Status at the latest agent check:
    skewness 0.845).
 2. **base smoke**: four-rank smoke completed (`SOLVE_DONE mode=smoke`).
 3. **base full**: `NP=4 ./Allrun base` running in tmux `a2-base-full`
-   (`log.interFoam.full`). Latest sample near `t ≈ 3.53 s` (≈59% of
+   (`log.interFoam.full`). Latest sample near `t ≈ 10.50 s` (≈85% of
    `-12…14.4 s`). Near `t=0` last-1 s means were inlet 19.993 L/s, weir
    20.120 L/s, volume slope −0.120 L/s, PT3 ≈ 0.795 kPa. After the ramp,
-   sampled inlet ≈ 91 L/s (wet-section weighted BC under Q1), weir rising
-   (~30 L/s at this sample), riser outlet still 0, PT3 ≈ 1.50 kPa, bore
-   probes wet by ~2.07 s; max Co ≈ 0.47; no fatal/FPE. Recent advance
-   ≈ 0.6–0.9 sim-s per wall-hour on this 4-core host. Written fields include
-   `-12`, `1`, `2`, `3`.
+   sampled inlet ≈ 91.5 L/s (wet-section weighted BC under prescribed
+   Q1=100 L/s), weir ≈ 79 L/s, riser outlet still 0, PT3 ≈ 2.47 kPa; max
+   Co ≈ 0.47; no fatal/FPE. Remaining sim ≈ 3.9 s. Written fields include
+   `-12`, `8`, `9`, `10`.
 4. **refined**: not started for the replacement model (prior refined tmux
    belongs to the superseded fixed-stage campaign).
 5. Do **not** treat incomplete `postProcessing` or partial CSV/JSON as final
    validation. No crest or BC retuning from transient/no-geyser evidence.
+6. Paper↔model cross-check (journal + Liu 2018 thesis) confirms Case A2
+   geometry, Q0/Q1, open-channel `hd/Dd=1/4`, valve 0.4 s, and atmospheric
+   openings match; documented non-measurements remain weir crest calibration
+   to `(Q0,hd)`, chamber IC `z=0.12` from PT3=0.99 kPa, and PT in-plane
+   placement.
 
 ## Reproduction
 
