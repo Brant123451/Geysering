@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "run_id": "base_nominal",
+  "case": "BH3_Dr26_H066_L061",
+  "paper_run": "B-H3",
+  "status": "running",
+  "updated_at_unix": 1783988396.0315354,
+  "updated_at_iso": "2026-07-14T00:19:56Z",
+  "workdir": "/tmp/bh3-study-layered-d08978d/base_nominal",
+  "simulated_time_s": 0.9981018519,
+  "event_end_time_s": 13.0,
+  "progress_fraction": 0.07677706553076923,
+  "execution_time_s": 15645.37,
+  "throughput_sim_s_per_wall_h": 0.22966325927990197,
+  "eta_wall_h_at_overall_rate": 52.258677272679016,
+  "n_workers": 4,
+  "health": {
+    "latest_field_write_s": 0.95,
+    "foam_fatal_in_tail": false
+  },
+  "paper_consistency_reverified_2026_07_14": true
+}

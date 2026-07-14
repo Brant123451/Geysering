@@ -391,3 +391,38 @@ opening; a first `base_nominal` attempt with the looser defaults diverged near
 from a written checkpoint with the looser defaults (`maxCo=0.25`) as a
 documented post-opening throughput control. Instantaneous opening remains a
 diagnostic, not the 13 s baseline.
+
+## PDF re-verification (2026-07-14)
+
+The primary offprint
+`tests/test_02_cong2017/_shared/reference/paper_source/cong2017_JHE2017_offprint.pdf`
+was re-extracted and checked against the live OpenFOAM sources
+(`make_geometry.py`, `Allrun`, `0.orig/*`, `setFieldsDict`,
+`MODELING_CONTRACT.json`). No wrong-run selection was found.
+
+Confirmed against Table 2 and the apparatus prose for **B-H3**:
+
+| Paper item | Paper value | Live 3-D source |
+|---|---:|---|
+| Run | B-H3, geyser | `BH3_Dr26_H066_L061` / contract `B-H3` |
+| `D` | 0.05 m | `PIPE_DIAMETER = 0.050` |
+| `Dr` | 0.026 m | `--riser-diameter` default `0.026` |
+| `H0` | 0.66 m from invert | `INITIAL_FREE_SURFACE_Z = 0.660`; inlet head `107786.65 Pa` |
+| `L0` | 0.61 m | pocket `5.98–6.59 m` |
+| Valve / T / cap | Fig. 1 chain → Valve #4 | `VALVE_X=5.980`, `TEE_X=3.470`, `PIPE_LENGTH=6.590` |
+| Physical riser | 1.8 m above soffit | `PHYSICAL_RISER_HEIGHT=1.800`, rim `z=1.850` |
+| Laboratory `T`, `ρw`, `σ` | 23 °C, 998 kg/m³, 0.072 N/m | `296.15 K`, EOS at 998, `surfaceTensionValue 0.072` |
+| IC partition | water upstream + riser to tank level; atmospheric pocket to cap | `x<5.98` water / pocket air / headspace air at atm |
+| Opening time | ~0.2 s (no aperture history) | event `valve=0.2` porous smoothstep |
+
+Declared translations unchanged: external air box to `z=3.0 m`, tank replaced by
+constant-head `inlet`, 15 mm VOF band, contact angle 90°, and
+`waveTransmissive` atmosphere. These are not relabeled as 2017 measurements.
+
+## Live 13 s `base_nominal` status
+
+After the passed closed hold and measured-opening smoke, `base_nominal` is
+running on `prism_atmosphere` with post-opening Courant
+`maxCo=0.25` / `maxAlphaCo=0.15` from the written `t=0.25` checkpoint.
+Progress snapshots are written to `outputs/base_nominal_progress.json`.
+Classification remains a validation target and is not used to retune the case.
