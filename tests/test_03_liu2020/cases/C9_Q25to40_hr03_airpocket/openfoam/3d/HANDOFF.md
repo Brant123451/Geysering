@@ -132,10 +132,22 @@ runtime artifact).
 
 Resumed from checkpoint `0.3289420474` toward smoke `endTime=1.25`
 (paper 1.00 s) with 4-rank `compressibleInterFoam`, `maxCo=0.70`,
-`maxAlphaCo=0.20`. No Fatal as of the handoff update. Multi-stage 30 min
-CPU watchdog monitors `log.smoke`; a smoke→conservation-gate→phase1 chain
-is armed. Smoke inventory acceptance still uses `∫sigma` + boundary flux +
-residual <1% after `End`.
+`maxAlphaCo=0.20`.
+
+A first smoke attempt after that checkpoint showed a **one-time ~5%
+`∫sigma` drop** (1.6726e-2 → 1.5893e-2) with zero open-boundary tagged
+flux, then perfect flatness. Root cause: on restart the function object
+rebuilt `sigma` from `alpha*rho*s` (`NO_READ`) while unresolved cells had
+written `s=0`, destroying excess inventory. That trajectory was archived
+under `results-smoke/rejected_restart_jump_*` and discarded.
+
+Fix (current tip): `READ_IF_PRESENT` for `pocketBodyTracerSigma` and do not
+reseed `sigma` from `α·ρ·s` on the first post-restart execute. Smoke was
+restarted from the same checkpoint with the rebuilt library.
+
+Multi-stage 30 min CPU watchdog monitors `log.smoke`; a
+smoke→conservation-gate→phase1 chain is armed. Smoke inventory acceptance
+still uses `∫sigma` + boundary flux + residual <1% after `End`.
 
 The historical, now-rejected clear/clamp `maxCo=0.35` reference remained in
 `[0,1]` through solver time 0.37 s and lost about 0.5% of its paper-time-zero

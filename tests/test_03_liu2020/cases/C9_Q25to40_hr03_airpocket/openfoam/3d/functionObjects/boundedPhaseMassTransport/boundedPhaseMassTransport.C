@@ -186,25 +186,36 @@ Foam::functionObjects::boundedPhaseMassTransport::conservedDensity
             }
         }
 
+        // READ_IF_PRESENT: on restart, keep the written conserved inventory.
+        // Reconstructing from alpha*rho*s destroys tagged mass in unresolved
+        // cells where recovered s was zeroed for flux intensity (alpha below
+        // resolveAlpha), which previously caused a ~5% restart jump.
+        IOobject sigmaHeader
+        (
+            sigmaResultName_,
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::READ_IF_PRESENT,
+            IOobject::NO_WRITE,
+            IOobject::REGISTER
+        );
+        const bool readSigma =
+            sigmaHeader.typeHeaderOk<volScalarField>(true);
+
         sigmaPtr_.reset
         (
             new volScalarField
             (
-                IOobject
-                (
-                    sigmaResultName_,
-                    mesh_.time().timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE,
-                    IOobject::REGISTER
-                ),
+                sigmaHeader,
                 mesh_,
                 dimensionedScalar(dimDensity, Zero),
                 patchFieldTypes
             )
         );
-        sigmaPtr_() == alpha*phaseRho*field;
+        if (!readSigma)
+        {
+            sigmaPtr_() == alpha*phaseRho*field;
+        }
         mesh_.setFluxRequired(sigmaResultName_);
     }
 
@@ -565,9 +576,11 @@ bool Foam::functionObjects::boundedPhaseMassTransport::execute()
     updateInventoryDensity(alpha, phaseRho);
 
     volScalarField& sigma = conservedDensity(alpha, phaseRho, field);
+    // Allocate old-time storage from the current inventory.  Never reseeds
+    // sigma from alpha*rho*s here: that would wipe excess inventory on the
+    // first post-restart execute even when sigma was read from disk.
     if (!sigma.nOldTimes())
     {
-        sigma == alphaRho*field;
         sigma.oldTime();
     }
     else

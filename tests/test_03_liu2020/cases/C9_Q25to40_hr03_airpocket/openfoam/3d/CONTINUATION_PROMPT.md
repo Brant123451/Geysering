@@ -198,6 +198,7 @@ small/base/large sensitivity 结果。
 
 - 正性缩放强度通量示踪：`boundedPhaseMassTransport`（`∫sigma` 为库存；点态 `s` 可不在 `[0,1]`）。
 - initialize 守恒门已过：`∫sigma` 在 0–0.32 s 相对变化为 0；检查点 `0.3289420474`。
+- 首次从检查点 resume 曾因 `sigma` `NO_READ` + 未解析单元 `s=0` 重建导致一次性 ~5% 库存跳跃；已修复为 `READ_IF_PRESENT`，并丢弃该错误轨迹后重跑 smoke。
 - smoke 正从该检查点跑向 solver `1.25 s`；完成后需再验 `∫sigma`/通量/残差 `<1%`，再 `phase1`→`full`。
 - 禁止恢复：clear/clamp、可变密度 MULES on `s`、Sp(ddt)、薄地板 `phiVol`、未缩放 `phi·s`、sigma 裁剪到 `[0,αρ]`。
 - 禁止移动/放大气囊。
