@@ -166,6 +166,33 @@ inconsistent 0.99 kPa pressure statement. No transient pressure, riser
 response, or geyser classification was used in this Q0 check. The fresh full
 run must reproduce these initialization diagnostics before acceptance.
 
+## Replacement-model base full result
+
+The tank/weir replacement base full (`-12…14.4 s`, 158,507 tetrahedra,
+strict `Mesh OK`) completed on OpenFOAM.com v2512 with four MPI ranks.
+Compact metrics are in `outputs/openfoam_3d_base_metrics.json`. Matching
+refined has been started; until it finishes, do not treat any mixed
+base/old-refined grid-sensitivity block as final.
+
+| Metric | Experiment / target | base |
+|---|---:|---:|
+| Pre-ramp inlet / weir | 20 / 20 L/s | 19.981 / 20.079 L/s |
+| Pre-ramp water-volume slope | ≈0 | −0.134 L/s |
+| Downstream depths `x=0.60/3.25/6.00` | `hd=0.070 m` | 0.062 / 0.068 / 0.078 m |
+| PT3 initial | 0.99 kPa | 0.796 kPa |
+| Bore arrival, ramp-start clock | 1.60 s | 1.538 s |
+| Bore local velocity | ≈4.56 m/s | 4.79 m/s |
+| PT2 / PT3 mean, paper 7–14 s | 2.15 / 4.99 kPa | 0.517 / 2.562 kPa |
+| First contiguous mixture column | ≈0.13 m | 0.06 m |
+| Max contiguous column / mixture front | <1.22 m | 0.22 / 0.38 m |
+| Reached riser top / water discharge | no | no / ≈0 |
+| Max Co / interface Co | interface ≤0.5 | 0.492 / 0.478 |
+| Final liquid-balance residual / inflow | — | +0.054% |
+
+Pre-ramp Q0 closure and bore timing are now acceptable. Steady PT2/PT3 and
+the first mixture-column height remain underpredicted. No crest or BC was
+retuned from transient pressure or no-geyser outcome.
+
 ## Superseded fixed-stage run results
 
 The values below belong to the former fixed-stage/headbox model. They are

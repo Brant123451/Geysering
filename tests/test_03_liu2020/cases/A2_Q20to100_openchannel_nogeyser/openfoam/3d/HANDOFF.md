@@ -80,28 +80,47 @@ must be replaced after the new full runs finish.
 
 Committed source now uses the thesis tank + movable circular weir
 (`z_crest=0.031 m` from Q0/`hd` only), `Dr=0.057 m`, no headbox, and a
-canonical `-12…14.4 s` window. Status at the latest agent check:
+canonical `-12…14.4 s` window.
+
+### Base full completed
 
 1. **base mesh**: 158,507 tetrahedra, strict `Mesh OK` (non-orth. max 59.76,
    skewness 0.845).
-2. **base smoke**: four-rank smoke completed (`SOLVE_DONE mode=smoke`).
-3. **base full**: `NP=4 ./Allrun base` running in tmux `a2-base-full`
-   (`log.interFoam.full`). Latest sample near `t ≈ 10.50 s` (≈85% of
-   `-12…14.4 s`). Near `t=0` last-1 s means were inlet 19.993 L/s, weir
-   20.120 L/s, volume slope −0.120 L/s, PT3 ≈ 0.795 kPa. After the ramp,
-   sampled inlet ≈ 91.5 L/s (wet-section weighted BC under prescribed
-   Q1=100 L/s), weir ≈ 79 L/s, riser outlet still 0, PT3 ≈ 2.47 kPa; max
-   Co ≈ 0.47; no fatal/FPE. Remaining sim ≈ 3.9 s. Written fields include
-   `-12`, `8`, `9`, `10`.
-4. **refined**: not started for the replacement model (prior refined tmux
-   belongs to the superseded fixed-stage campaign).
-5. Do **not** treat incomplete `postProcessing` or partial CSV/JSON as final
-   validation. No crest or BC retuning from transient/no-geyser evidence.
-6. Paper↔model cross-check (journal + Liu 2018 thesis) confirms Case A2
+2. **base smoke**: four-rank smoke completed.
+3. **base full**: finished `End` at `t=14.4001` (`ClockTime=96,789 s`,
+   `ExecutionTime=43,290 s`). Compact outputs rewritten under Case
+   `outputs/openfoam_3d_base_*` and primary `openfoam_3d_*`.
+4. **refined**: `NP=4 ./Allrun refined` started in tmux
+   `a2-refined-tankweir` after base completion. Until it finishes, any
+   `grid_sensitivity` block that still cites the old fixed-stage refined
+   metrics is provisional and must be replaced.
+5. Paper↔model cross-check (journal + Liu 2018 thesis) confirms Case A2
    geometry, Q0/Q1, open-channel `hd/Dd=1/4`, valve 0.4 s, and atmospheric
    openings match; documented non-measurements remain weir crest calibration
    to `(Q0,hd)`, chamber IC `z=0.12` from PT3=0.99 kPa, and PT in-plane
    placement.
+
+| Replacement-model base metric | Value | Paper / target |
+|---|---:|---:|
+| Pre-ramp inlet / weir | 19.981 / 20.079 L/s | 20 / 20 L/s |
+| Pre-ramp water-volume slope | −0.134 L/s | ≈0 |
+| Downstream depths `x=0.60/3.25/6.00` | 0.062 / 0.068 / 0.078 m | `hd=0.070 m` (station unreported) |
+| PT3 initial | 0.796 kPa | 0.99 kPa (also described as 0.10 m) |
+| Bore arrival, ramp clock | 1.538 s | 1.60 s |
+| Bore local velocity | 4.79 m/s | ≈4.56 m/s |
+| PT2 / PT3 paper 7–14 s means | 0.517 / 2.562 kPa | 2.15 / 4.99 kPa |
+| First contiguous mixture column | 0.06 m | ≈0.13 m |
+| Max contiguous column / mixture front | 0.22 / 0.38 m | <1.22 m (no geyser) |
+| Reached riser top / water discharge | no / ≈0 | no geyser |
+| Max Co / interface Co | 0.492 / 0.478 | interface target ≤0.5 |
+| Final liquid-balance residual / inflow | +0.054% | — |
+
+The replacement base run **closes the pre-ramp Q0 state** and reproduces bore
+timing closely, while still **underpredicting PT2/PT3 steady pressures** and
+the first mixture-column height. No crest or BC retuning from transient or
+no-geyser evidence was applied. Final acceptance still requires the matching
+refined full and an honest grid-sensitivity replace of the superseded
+fixed-stage refined files.
 
 ## Reproduction
 
