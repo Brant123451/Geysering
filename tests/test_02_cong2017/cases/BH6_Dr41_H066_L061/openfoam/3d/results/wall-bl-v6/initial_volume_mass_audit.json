@@ -1,0 +1,16 @@
+{
+  "numerical_sample_time_s": 0.0,
+  "analytical_initial_water_volume_m3": 0.01254705767352123,
+  "numerical_initial_water_volume_m3": 0.0124456799066,
+  "analytical_initial_pocket_volume_m3": 0.0011977321991811086,
+  "paper_nominal_riser_water_volume_m3": 0.000871367846362933,
+  "analytical_Vair_over_Vw": 1.3745425702594054,
+  "numerical_initial_downstream_air_volume_m3": 0.00118759989791,
+  "pocket_volume_relative_mesh_error": -0.008459571578718683,
+  "pocket_volume_mesh_error_within_one_percent": true,
+  "analytical_initial_pocket_air_mass_kg": 0.0014275914828807323,
+  "numerical_initial_pocket_air_mass_kg": 0.00141551467017,
+  "whole_domain_initial_air_mass_kg": 0.0856446568064,
+  "apparatus_initial_air_mass_kg": 0.0032767092353,
+  "note": "The whole-domain gas mass includes the external atmosphere. Pocket mass is integrated in the valve-to-cap region at t=0."
+}
