@@ -1,0 +1,13 @@
+{
+  "profile": "wall-bl-v6",
+  "mesh": "make_mesh_wall_bl.py",
+  "first_wall_m": 0.004,
+  "bl_growth": 1.15,
+  "bl_layers": 3,
+  "end_time_s": 13.0,
+  "np": 4,
+  "stage": "running",
+  "work_dir": "/tmp/bh6-wall-bl-full",
+  "started_utc": "2026-07-15T04:11:28.293553+00:00",
+  "watch_interval_min": 20
+}
