@@ -434,3 +434,5 @@ smoke Courant limits restored (`maxCo=0.1`, `maxAlphaCo=0.05`,
 `maxDeltaT=1e-4 s`). This is a stability control change only; geometry,
 IC/BC, valve model, and the geyser classification target are unchanged.
 Progress snapshots remain in `outputs/base_nominal_progress.json`.
+A 20-minute watchdog (`/tmp/bh3-watchdog-20m.sh`) monitors stall/FATAL/α-blowup
+and auto-restarts from `latestTime` with smoke Courant limits when unhealthy.

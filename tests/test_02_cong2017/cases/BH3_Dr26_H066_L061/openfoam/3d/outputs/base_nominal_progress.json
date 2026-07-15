@@ -4,48 +4,48 @@
   "case": "BH3_Dr26_H066_L061",
   "paper_run": "B-H3",
   "status": "running_after_stability_restart",
-  "check_source": "agent_30min",
-  "updated_at_unix": 1784076031.438271,
-  "updated_at_iso": "2026-07-15T00:40:31Z",
+  "check_source": "agent_20min_switch",
+  "updated_at_unix": 1784077164.415643,
+  "updated_at_iso": "2026-07-15T00:59:24Z",
   "workdir": "/tmp/bh3-study-layered-d08978d/base_nominal",
-  "simulated_time_s": 3.269465249,
+  "simulated_time_s": 3.291102362,
   "event_end_time_s": 13.0,
-  "progress_fraction": 0.25149732684615383,
-  "throughput_sim_s_per_wall_h_since_restart": 0.03623864307861668,
-  "eta_wall_h_at_restart_rate": 268.51266836593265,
+  "progress_fraction": 0.2531617201538462,
+  "throughput_sim_s_per_wall_h_since_restart": 0.03784471345977768,
+  "eta_wall_h_at_restart_rate": 256.5456770684461,
   "n_workers": 4,
-  "avg_worker_cpu_pct_lifetime": 57.05,
+  "avg_worker_cpu_pct_lifetime": 58.65,
   "workers": [
     {
       "pid": 1035969,
-      "pcpu": 57.0,
+      "pcpu": 58.6,
       "pmem": 3.8,
-      "etime": "06:03:22"
+      "etime": "06:22:15"
     },
     {
       "pid": 1035970,
-      "pcpu": 57.1,
+      "pcpu": 58.7,
       "pmem": 3.7,
-      "etime": "06:03:22"
+      "etime": "06:22:15"
     },
     {
       "pid": 1035971,
-      "pcpu": 57.0,
+      "pcpu": 58.6,
       "pmem": 3.7,
-      "etime": "06:03:22"
+      "etime": "06:22:15"
     },
     {
       "pid": 1035972,
-      "pcpu": 57.1,
-      "pmem": 3.6,
-      "etime": "06:03:22"
+      "pcpu": 58.7,
+      "pmem": 3.7,
+      "etime": "06:22:15"
     }
   ],
-  "note_cpu": "ps %CPU is lifetime average (drifts down); top idle=0 means healthy compute",
+  "monitor_interval_s": 1200,
+  "auto_recover": true,
+  "note_cpu": "ps lifetime %CPU drifts; top idle~0 + time advancing = healthy",
   "stability_incident": {
     "crashed_at_s": 3.075130995,
-    "fatal": "Negative initial temperature T0 ~ -79505 K",
-    "last_good_write_s": 3.05,
     "restarted_at_iso": "2026-07-14T18:37:00Z",
     "new_controls": {
       "maxCo": 0.1,
@@ -59,10 +59,9 @@
     "foam_fatal_in_tail": false,
     "latest_field_write_s": 3.25,
     "n_field_writes": 14,
-    "deltaT_last": 3.826409915e-05,
-    "maxCo_last": 0.09995252422,
-    "alpha_max_last": 1.0,
-    "top_cpu_line": "%Cpu(s): 95.3 us,  4.7 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st"
+    "deltaT_last": 3.937007874e-05,
+    "maxCo_last": 0.100048564,
+    "alpha_max_last": 1.0
   },
   "paper_consistency_reverified_2026_07_14": true
 }
