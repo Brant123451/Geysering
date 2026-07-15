@@ -110,11 +110,11 @@ def build_ogrid_disk(
     growth: float,
     n_radial: int,
 ) -> tuple[list[int], float, float]:
-    """Rotated-square core + 4 annular sectors on a circular outer wall.
+    """Octagon-core O-grid: 8 annular sectors + 4 central quads.
 
-    Vertices sit at 45/135/... degrees so the core edges are less poorly
-    aligned with the cardinal wall-normal directions than an axis-aligned
-    square.  This targets the persistent ~72 deg non-orthogonality plateau.
+    Includes vertices on the cylinder seam (0 deg) so OCC fragment does not
+    split outer arcs.  An octagon core replaces the square-corner topology that
+    pinned max non-orthogonality near 72.6 deg in v1-v5.
     """
     ring = radial_ring_thickness(first_wall, growth, n_radial)
     if ring >= 0.85 * RISER_RADIUS:
@@ -123,8 +123,7 @@ def build_ogrid_disk(
         )
     ri = RISER_RADIUS - ring
     center = occ.addPoint(TEE_X, 0.0, z)
-    # Outer and inner vertices at 45-degree offsets.
-    angles = [math.pi / 4.0 + i * math.pi / 2.0 for i in range(4)]
+    angles = [i * math.pi / 4.0 for i in range(8)]
     outer = [
         occ.addPoint(
             TEE_X + RISER_RADIUS * math.cos(angle),
@@ -142,18 +141,28 @@ def build_ogrid_disk(
         for angle in angles
     ]
     arcs = [
-        occ.addCircleArc(outer[i], center, outer[(i + 1) % 4]) for i in range(4)
+        occ.addCircleArc(outer[i], center, outer[(i + 1) % 8]) for i in range(8)
     ]
-    inner_lines = [occ.addLine(inner[i], inner[(i + 1) % 4]) for i in range(4)]
-    radial = [occ.addLine(inner[i], outer[i]) for i in range(4)]
-    center_surface = occ.addPlaneSurface([occ.addWire(inner_lines)])
-    sectors: list[int] = []
-    for i in range(4):
+    inner_sides = [occ.addLine(inner[i], inner[(i + 1) % 8]) for i in range(8)]
+    radial = [occ.addLine(inner[i], outer[i]) for i in range(8)]
+    spokes = [occ.addLine(center, inner[i]) for i in range(0, 8, 2)]
+    # Four central quads: center -> inner[2k] -> inner[2k+1] -> inner[2k+2].
+    center_surfaces: list[int] = []
+    for k in range(4):
+        i0 = 2 * k
+        i1 = 2 * k + 1
+        i2 = (2 * k + 2) % 8
         loop = occ.addWire(
-            [inner_lines[i], radial[(i + 1) % 4], -arcs[i], -radial[i]]
+            [spokes[k], inner_sides[i0], inner_sides[i1], -spokes[(k + 1) % 4]]
+        )
+        center_surfaces.append(occ.addPlaneSurface([loop]))
+    sectors: list[int] = []
+    for i in range(8):
+        loop = occ.addWire(
+            [inner_sides[i], radial[(i + 1) % 8], -arcs[i], -radial[i]]
         )
         sectors.append(occ.addPlaneSurface([loop]))
-    return [center_surface, *sectors], ri, ring
+    return [*center_surfaces, *sectors], ri, ring
 
 
 def classify_curve_length(
@@ -161,15 +170,16 @@ def classify_curve_length(
     ri: float,
     ring: float,
 ) -> str:
-    outer_quarter = RISER_RADIUS * math.pi / 2.0
-    # Rotated square side length between adjacent 45-degree vertices.
-    inner_side = ri * math.sqrt(2.0)
-    if abs(length - outer_quarter) < 2.0e-5:
+    outer_eighth = RISER_RADIUS * math.pi / 4.0
+    inner_side = 2.0 * ri * math.sin(math.pi / 8.0)
+    if abs(length - outer_eighth) < 2.0e-5:
         return "outer_arc"
     if abs(length - inner_side) < 2.0e-5:
         return "inner_side"
     if abs(length - ring) < 2.0e-5:
         return "radial"
+    if abs(length - ri) < 2.0e-5:
+        return "spoke"
     raise RuntimeError(f"Unclassified O-grid curve length {length}")
 
 
@@ -181,6 +191,9 @@ def set_ogrid_transfinite(
     n_radial: int,
     growth: float,
 ) -> None:
+    if n_theta % 8 != 0:
+        raise ValueError("--n-theta must be divisible by 8 for octagon O-grid")
+    circumferential = n_theta // 8 + 1
     curves = {
         curve
         for surface in surfaces
@@ -192,8 +205,10 @@ def set_ogrid_transfinite(
     for curve in curves:
         length = gmsh.model.occ.getMass(1, curve)
         kind = classify_curve_length(length, ri, ring)
-        if kind in {"outer_arc", "inner_side"}:
-            gmsh.model.mesh.setTransfiniteCurve(curve, n_theta // 4 + 1)
+        if kind in {"outer_arc", "inner_side", "spoke"}:
+            # Center quads need equal opposite divisions; spokes match
+            # octagon-side counts so the four central blocks stay transfinite.
+            gmsh.model.mesh.setTransfiniteCurve(curve, circumferential)
         else:
             endpoints = gmsh.model.getBoundary(
                 [(1, curve)], combined=False, oriented=True
@@ -211,8 +226,8 @@ def set_ogrid_transfinite(
 
 def main() -> None:
     args = parse_args()
-    if args.n_theta % 4 != 0:
-        raise ValueError("--n-theta must be divisible by 4")
+    if args.n_theta % 8 != 0:
+        raise ValueError("--n-theta must be divisible by 8")
     if args.n_radial < 2:
         raise ValueError("--n-radial must be >= 2")
     if args.first_wall_m <= 0 or args.growth < 1.0:
