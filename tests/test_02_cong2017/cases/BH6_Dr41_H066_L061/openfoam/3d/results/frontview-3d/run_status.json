@@ -1,11 +1,17 @@
 {
   "profile": "base",
   "purpose": "real y=0 cuttingPlane front-view animation from 3D alpha.water",
-  "stage": "starting",
+  "stage": "RUNNING",
   "work_dir": "/tmp/bh6-frontview-3d",
   "started_utc": "2026-07-15T21:17:59.042962+00:00",
   "end_time_s": 13.0,
   "np": 4,
   "writeInterval_surface_s": 0.1,
-  "notes": "purgeWrite remains 3 for volume; surfaces accumulate independently"
+  "notes": "purgeWrite remains 3 for volume; surfaces accumulate independently",
+  "last_watch_utc": "2026-07-15T21:23:37.455944+00:00",
+  "watch_n": 1,
+  "cut_frames": 0,
+  "sim_time_s": 0.08920099256,
+  "restarted_utc": "2026-07-15T21:19:57.846720+00:00",
+  "solver": "compressibleInterFoam -parallel np=4"
 }
