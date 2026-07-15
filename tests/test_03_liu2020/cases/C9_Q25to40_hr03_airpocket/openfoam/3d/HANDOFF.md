@@ -149,9 +149,11 @@ restarted from the same checkpoint with the rebuilt library. Log confirms
 
 Multi-stage **20 min** monitor (`/tmp/c9_20min_monitor.sh`, log
 `case/log.monitor_20min`) checks alive/CPU/`∫sigma`/Fatal and **auto-resumes**
-on true hang or unexpected death; smoke→phase1 chain remains armed. Mid-smoke
-samples keep `∫sigma = 1.67259665e-02` (relative change 0). Host suspends inflate
-ClockTime but are not treated as hangs unless ExecutionTime also freezes.
+on true hang or unexpected death; smoke→phase1 chain remains armed. Stall
+detection requires low CPU plus frozen ExecutionTime over a full 20 min window
+(avoids false kills right after a monitor sample write). Mid-smoke `∫sigma`
+remains `1.67259665e-02` (rel 0). Host suspends inflate ClockTime but are not
+treated as hangs unless ExecutionTime also freezes.
 
 The historical, now-rejected clear/clamp `maxCo=0.35` reference remained in
 `[0,1]` through solver time 0.37 s and lost about 0.5% of its paper-time-zero
