@@ -10,12 +10,12 @@
   "work_dir": "/tmp/bh6-wall-bl-full",
   "started_utc": "2026-07-15T04:11:28.293553+00:00",
   "watch_interval_min": 20,
-  "last_watch_utc": "2026-07-15T06:14:29.924367+00:00",
-  "sim_time_s": 3.825423789,
-  "progress_pct": 29.43,
-  "exec_time_s": 5382.69,
-  "eta_wall_s_est": 12909,
+  "last_watch_utc": "2026-07-15T06:34:45.787271+00:00",
+  "sim_time_s": 4.585912698,
+  "progress_pct": 35.28,
+  "exec_time_s": 6285.16,
+  "eta_wall_s_est": 11532,
   "healthy": true,
   "notes": "watch#1 Co~0.35, dt~1.5e-4, 4 ranks active",
-  "watch": "#6"
+  "watch": "#7"
 }
