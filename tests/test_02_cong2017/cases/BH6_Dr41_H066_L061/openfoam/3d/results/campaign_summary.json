@@ -7,13 +7,15 @@
     "base",
     "valve-fast",
     "valve-slow",
-    "refined"
+    "refined",
+    "wall-bl-v6"
   ],
   "profiles_completed": [
     "base",
     "valve-fast",
     "valve-slow",
-    "refined"
+    "refined",
+    "wall-bl-v6"
   ],
   "profiles_incomplete": [],
   "results": [
@@ -112,6 +114,38 @@
       "gas_balance_relative_error": -3.243738695480219e-05,
       "static_hold_pass": null,
       "static_max_speed_m_s": 168.97390758
+    },
+    {
+      "profile": "wall-bl-v6",
+      "requested_end_s": 13.0,
+      "simulation_end_s": 13.0,
+      "run_completed": true,
+      "cells": 172529,
+      "strict_checkMesh_pass": false,
+      "solver_mesh_gate_pass": true,
+      "maxCo": 0.5,
+      "maxAlphaCo": 0.25,
+      "opening_duration_s": 0.2,
+      "mesh_script": "make_mesh_wall_bl.py",
+      "first_wall_m": 0.004,
+      "bl_growth": 1.15,
+      "bl_layers": 3,
+      "max_non_orthogonality_deg": 68.228601,
+      "Ta_3d_s": 9.63,
+      "catch_time_3d_s": 11.58,
+      "Yfs_max_3d_m": 1.0610994772872875,
+      "vfs_average_3d_m_s": 0.2466033089155483,
+      "vint_average_3d_m_s": 0.532524839020146,
+      "vnet_average_3d_m_s": 0.28592153010459787,
+      "PT1_post_arrival_peak_H_over_H0": 1.2151405081134432,
+      "water_above_rim": false,
+      "geyser_3d": false,
+      "liquid_balance_relative_error": 2.7154220623297878e-05,
+      "gas_balance_relative_error": -8.886356120098145e-06,
+      "static_hold_pass": null,
+      "static_max_speed_m_s": 13.1863191674
     }
-  ]
+  ],
+  "near_wall_note": "wall-bl-v6: Distance/Threshold near-wall on riser walls below rim; passed solver gate (max_nonOrth=68.23\u00b0, severe=0, low_w=0); full 13s NO GEYSER",
+  "updated_utc": "2026-07-15T11:33:32.592294+00:00"
 }
