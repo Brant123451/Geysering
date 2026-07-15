@@ -9,5 +9,12 @@
   "stage": "running",
   "work_dir": "/tmp/bh6-wall-bl-full",
   "started_utc": "2026-07-15T04:11:28.293553+00:00",
-  "watch_interval_min": 20
+  "watch_interval_min": 20,
+  "last_watch_utc": "2026-07-15T04:31:49.291143+00:00",
+  "sim_time_s": 0.5857,
+  "progress_pct": 4.51,
+  "exec_time_s": 839.4,
+  "eta_wall_s_est": 17800,
+  "healthy": true,
+  "notes": "watch#1 Co~0.35, dt~1.5e-4, 4 ranks active"
 }
