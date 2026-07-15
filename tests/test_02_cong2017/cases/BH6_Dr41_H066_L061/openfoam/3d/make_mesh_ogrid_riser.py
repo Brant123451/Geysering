@@ -558,11 +558,14 @@ def main() -> None:
         gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
         gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
         gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 24)
-        # Debian gmsh build has no Netgen. Extruded hex volumes are already
-        # filled; Delaunay meshes the remaining tet regions. Shared quad faces
-        # require pyramid/tet transition handled by the Delaunay recovery path.
-        gmsh.option.setNumber("Mesh.Algorithm3D", 1)
+        # Debian gmsh has no Netgen. Extruded hex volumes are already filled;
+        # remaining tet regions need an algorithm that can recover against the
+        # quad hex/tet interfaces (HXT rejects quads). Frontal often yields
+        # better non-orthogonality than plain Delaunay on this hybrid.
+        gmsh.option.setNumber("Mesh.Algorithm3D", 4)
         gmsh.option.setNumber("Mesh.Optimize", 1)
+        gmsh.option.setNumber("Mesh.OptimizeThreshold", 0.3)
+        gmsh.option.setNumber("Mesh.Smoothing", 100)
         gmsh.option.setNumber("Mesh.OptimizeNetgen", 0)
         gmsh.option.setNumber("Mesh.MshFileVersion", 2.2)
         gmsh.option.setNumber("Mesh.Binary", 0)
@@ -570,11 +573,12 @@ def main() -> None:
         gmsh.model.mesh.generate(3)
         gmsh.model.mesh.removeDuplicateNodes()
         # Mild node relocation after hybrid fill; helps hex/tet join faces.
-        for method in ("Laplace2D", "Relocate2D", "Relocate3D"):
-            try:
-                gmsh.model.mesh.optimize(method)
-            except Exception:
-                pass
+        for _ in range(3):
+            for method in ("Laplace2D", "Relocate2D", "Relocate3D"):
+                try:
+                    gmsh.model.mesh.optimize(method)
+                except Exception:
+                    pass
 
         hex_type = gmsh.model.mesh.getElementType("Hexahedron", 1)
         for volume in hex_volumes:

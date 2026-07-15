@@ -113,6 +113,24 @@
       "low_weight": 0,
       "solver_gate": false,
       "note": "low-weight cleared; remaining 2 severe faces moved to x~0.69 and x~2.83"
+    },
+    {
+      "name": "v8_four_hotspots",
+      "first_wall_m": 0.002,
+      "n_radial": 3,
+      "n_theta": 32,
+      "growth": 1.1,
+      "pipe_size": 0.007,
+      "riser_size": 0.004,
+      "hotspot_boxes": 4,
+      "cells": 445971,
+      "hexahedra": 70720,
+      "pyramids": 320,
+      "max_non_orth": 72.2875,
+      "severe_faces": 2,
+      "max_skew": 1.1328,
+      "low_weight": 0,
+      "solver_gate": false
     }
   ],
   "notes": [
@@ -121,6 +139,8 @@
     "v4-v6 face-set audit: persistent >70 deg faces are tet faces in the pipe near x~1.13 and x~4.79, not O-grid core corners",
     "low-weight faces cluster on hex/tet interfaces at z=0.061 and rim z=1.825",
     "v6 octagon core worsened max_non (74.3) vs square; v7 restores square + local pipe/interface refinement",
-    "v7: low_weight cleared (min w=0.066); max_non=71.49 with 2 severe tet faces at new pipe sites x~0.69/2.83"
+    "v7: low_weight cleared (min w=0.066); max_non=71.49 with 2 severe tet faces at new pipe sites x~0.69/2.83",
+    "v8 four hotspots+pipe7mm; gate=False; max_non=72.2875, severe=2, low_w=0",
+    "v9: try Frontal 3D (algo 4) + stronger optimize; HXT unusable on quad hex/tet interfaces"
   ]
 }
