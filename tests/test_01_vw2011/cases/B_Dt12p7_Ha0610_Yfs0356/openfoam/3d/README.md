@@ -254,9 +254,14 @@ remove it, while \(H^*\) peak-to-peak remained only 0.000879.  That setting is
 rejected.  The subsequent `nOuterCorrectors=2` screen likewise failed: after a
 brief rim sample at 0.050 s and free-surface recovery through 0.100 s, the same
 rim cell returned at 0.110 s (\(U=1.691\) m/s) and grew to 1.841 m/s at 0.120 s
-with \(H^*\) peak-to-peak only 0.000844.  The next screen stacks
-`CASEB_N_CORRECTORS=3` with `CASEB_N_OUTER_CORRECTORS=2` through another fresh
-0.12 s rim-onset window.
+with \(H^*\) peak-to-peak only 0.000844.  Stacking `CASEB_N_CORRECTORS=3` with
+`CASEB_N_OUTER_CORRECTORS=2` likewise failed: free-surface hotspots persisted
+through 0.080 s, then the same rim cell locked on from 0.090 s and grew
+\(1.389\rightarrow1.540\rightarrow1.691\rightarrow1.841\) m/s by 0.120 s with
+zero curvature and \(H^*\) peak-to-peak only 0.000852.  Leave the
+PIMPLE-coupling axis.  The next screen raises only
+`CASEB_N_NON_ORTHOGONAL_CORRECTORS` from 0 to 1 on the admitted baseline through
+another fresh 0.12 s rim-onset window.
 
 Thermophysical choices are:
 
