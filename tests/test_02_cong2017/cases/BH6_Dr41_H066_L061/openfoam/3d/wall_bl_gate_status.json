@@ -148,7 +148,8 @@
     "v4 still one low-weight near rim (~0.0485); cap DistMax at 8mm for v5",
     "v5 DistMax<=8mm; gate=False; max_non=72.4737, severe=6, low_w=13, skew=1.19399",
     "v5 DistMax cap regressed; exclude rim-lip wall surfaces instead",
-    "v6 exclude rim lip; gate=True; max_non=68.2286, severe=None, low_w=0, skew=1.22674"
+    "v6 exclude rim lip; gate=True; max_non=68.2286, severe=None, low_w=0, skew=1.22674",
+    "wall_bl_v6 smoke: solver completed 0.3 s (Allrun via BH6_MESH_SCRIPT)"
   ],
   "passed": "wall_bl_v6",
   "best": {
@@ -157,5 +158,14 @@
     "severe_faces": 0,
     "low_weight": 0,
     "first_wall_m": 0.004
+  },
+  "smoke": {
+    "profile": "smoke",
+    "end_time": 0.3,
+    "np": 4,
+    "solver": "completed_to_0.3s",
+    "mesh_script": "make_mesh_wall_bl.py",
+    "first_wall_m": 0.004,
+    "note": "compressibleInterFoam reached Time=0.3 End; postprocess failed only due to missing digitized CSV outside case tree"
   }
 }
