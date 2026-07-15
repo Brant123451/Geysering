@@ -5,40 +5,40 @@
   "paper_run": "B-H3",
   "status": "running_after_stability_restart",
   "check_source": "agent_20min",
-  "updated_at_unix": 1784124814.88298,
-  "updated_at_iso": "2026-07-15T14:13:34Z",
+  "updated_at_unix": 1784126030.153356,
+  "updated_at_iso": "2026-07-15T14:33:50Z",
   "workdir": "/tmp/bh3-study-layered-d08978d/base_nominal",
-  "simulated_time_s": 3.946187901,
+  "simulated_time_s": 3.962788249,
   "event_end_time_s": 13.0,
-  "progress_fraction": 0.30355291546153845,
-  "throughput_sim_s_per_wall_h_since_restart": 0.04570703034029412,
-  "eta_wall_h_at_restart_rate": 198.08357776896295,
+  "progress_fraction": 0.3048298653076923,
+  "throughput_sim_s_per_wall_h_since_restart": 0.045765904324452315,
+  "eta_wall_h_at_restart_rate": 197.46603687609203,
   "n_workers": 4,
-  "avg_worker_cpu_pct_lifetime": 69.17,
+  "avg_worker_cpu_pct_lifetime": 69.28,
   "workers": [
     {
       "pid": 1035969,
-      "pcpu": 69.1,
+      "pcpu": 69.2,
       "pmem": 3.8,
-      "etime": "19:36:26"
+      "etime": "19:56:41"
     },
     {
       "pid": 1035970,
-      "pcpu": 69.2,
-      "pmem": 3.8,
-      "etime": "19:36:26"
+      "pcpu": 69.3,
+      "pmem": 3.7,
+      "etime": "19:56:41"
     },
     {
       "pid": 1035971,
-      "pcpu": 69.2,
-      "pmem": 3.6,
-      "etime": "19:36:26"
+      "pcpu": 69.3,
+      "pmem": 3.7,
+      "etime": "19:56:41"
     },
     {
       "pid": 1035972,
-      "pcpu": 69.2,
-      "pmem": 3.8,
-      "etime": "19:36:26"
+      "pcpu": 69.3,
+      "pmem": 3.7,
+      "etime": "19:56:41"
     }
   ],
   "monitor_interval_s": 1200,
@@ -56,9 +56,9 @@
   "health": {
     "status_level": "OK",
     "foam_fatal_in_tail": false,
-    "latest_field_write_s": 3.9,
-    "deltaT_last": 3.465544306e-05,
-    "maxCo_last": 0.09532008834,
+    "latest_field_write_s": 3.95,
+    "deltaT_last": 3.684331745e-05,
+    "maxCo_last": 0.09995230705,
     "alpha_max_last": 1.0,
     "advanced": true,
     "stall_count": 0,
