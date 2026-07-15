@@ -67,12 +67,37 @@
         "wall_surface_count": 7,
         "riser_wall_surface_count": 4
       }
+    },
+    {
+      "name": "wall_bl_v4",
+      "first_wall_m": 0.005,
+      "bl_growth": 1.15,
+      "bl_layers": 3,
+      "scope": "riser_walls",
+      "cells": 187695,
+      "prisms": 32760,
+      "max_non_orth": 67.9674,
+      "severe_faces": null,
+      "max_skew": 1.25229,
+      "low_weight": 1,
+      "solver_gate": false,
+      "audit_bl": {
+        "method": "Distance+Threshold",
+        "first_wall_m": 0.005,
+        "growth": 1.15,
+        "layers": 3,
+        "thickness_m": 0.0173625,
+        "wall_surface_count": 7,
+        "riser_wall_surface_count": 4
+      }
     }
   ],
   "notes": [
     "Debian gmsh BoundaryLayer is 2-D only; use Distance+Threshold",
     "v1 first_wall=1mm on all walls destroyed quality; next: softer + riser-only",
     "v2 riser-only first=3mm; gate=False; max_non=70.6749, severe=1, low_w=1, skew=1.37431",
-    "v3 riser-only first=4mm; gate=False; max_non=67.776, severe=None, low_w=1, skew=1.22674"
+    "v3 riser-only first=4mm; gate=False; max_non=67.776, severe=None, low_w=1, skew=1.22674",
+    "v4 riser-only first=5mm; gate=False; max_non=67.9674, severe=None, low_w=1, skew=1.25229",
+    "v4 still one low-weight near rim (~0.0485); cap DistMax at 8mm for v5"
   ]
 }

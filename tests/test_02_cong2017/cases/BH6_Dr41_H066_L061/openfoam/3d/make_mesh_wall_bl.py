@@ -464,7 +464,13 @@ def main() -> None:
         field.setNumber(threshold, "SizeMin", args.first_wall_m)
         field.setNumber(threshold, "SizeMax", args.riser_size)
         field.setNumber(threshold, "DistMin", args.first_wall_m)
-        field.setNumber(threshold, "DistMax", max(bl_thickness, args.riser_size))
+        # Keep the fine band inside the riser bore; larger DistMax reaches the
+        # rim/atmosphere junction and leaves a stubborn low-weight face.
+        field.setNumber(
+            threshold,
+            "DistMax",
+            min(max(bl_thickness, args.first_wall_m), 0.008),
+        )
         field.setNumber(threshold, "StopAtDistMax", 1)
         minimum = field.add("Min")
         field.setNumbers(
