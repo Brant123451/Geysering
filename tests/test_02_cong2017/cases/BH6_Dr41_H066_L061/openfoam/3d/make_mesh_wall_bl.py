@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""B-H6 mesh with near-wall BoundaryLayer on the prism-riser baseline.
+"""B-H6 mesh with near-wall Distance/Threshold sizing on the prism baseline.
 
-Keeps the paper-audited geometry and HXT tet fill from make_mesh.py, and adds
-a Gmsh BoundaryLayer field on wall curves so near-wall spacing can be studied
-without hybrid hex/tet interfaces that fail the solver quality gate.
+Keeps the paper-audited geometry and HXT tet fill from make_mesh.py. Debian
+gmsh only supports 2-D BoundaryLayer fields, so near-wall refinement uses a
+Distance+Threshold size field on wall surfaces instead of hybrid hex/tet.
 """
 
 from __future__ import annotations
@@ -64,19 +64,19 @@ def parse_args() -> argparse.Namespace:
         "--first-wall-m",
         type=float,
         default=0.001,
-        help="First near-wall BoundaryLayer size [m]",
+        help="Near-wall Distance/Threshold SizeMin [m]",
     )
     parser.add_argument(
         "--bl-growth",
         type=float,
         default=1.2,
-        help="BoundaryLayer geometric growth ratio",
+        help="Kept for CLI compatibility; unused with Distance/Threshold",
     )
     parser.add_argument(
         "--bl-layers",
         type=int,
         default=4,
-        help="Number of BoundaryLayer cells through the wall-normal thickness",
+        help="Controls near-wall band thickness via first_wall*(growth^n-1)/(g-1)",
     )
     return parser.parse_args()
 
@@ -212,7 +212,7 @@ def main() -> None:
 
     gmsh.initialize()
     try:
-        gmsh.model.add("Cong2017_BH6_3D")
+        gmsh.model.add("Cong2017_BH6_3D_wall_bl")
         occ = gmsh.model.occ
 
         gmsh.option.setNumber("Geometry.OCCBooleanPreserveNumbering", 1)
@@ -426,17 +426,10 @@ def main() -> None:
                 ATMOSPHERE_TOP_Z,
             ),
         )
-        minimum = field.add("Min")
-        field.setNumbers(
-            minimum,
-            "FieldsList",
-            [pipe_field, riser_field, valve_field, jet_field],
-        )
-        field.setAsBackgroundMesh(minimum)
-
-        # Near-wall BoundaryLayer from wall-surface edges into the fluid volume.
+        # Near-wall refinement. Debian gmsh BoundaryLayer is 2-D only
+        # ("curve adjacent to 2 surfaces"), so use Distance+Threshold on walls.
         if args.bl_layers < 1 or args.first_wall_m <= 0 or args.bl_growth < 1.0:
-            raise ValueError("Invalid BoundaryLayer parameters")
+            raise ValueError("Invalid near-wall sizing parameters")
         if abs(args.bl_growth - 1.0) < 1.0e-12:
             bl_thickness = args.first_wall_m * args.bl_layers
         else:
@@ -445,24 +438,23 @@ def main() -> None:
                 * (args.bl_growth**args.bl_layers - 1.0)
                 / (args.bl_growth - 1.0)
             )
-        wall_curves = sorted(
-            {
-                curve
-                for surface in wall_surfaces
-                for dim, curve in gmsh.model.getBoundary(
-                    [(2, surface)], combined=False, oriented=False
-                )
-                if dim == 1
-            }
+        distance = field.add("Distance")
+        field.setNumbers(distance, "SurfacesList", wall_surfaces)
+        field.setNumber(distance, "Sampling", 100)
+        threshold = field.add("Threshold")
+        field.setNumber(threshold, "InField", distance)
+        field.setNumber(threshold, "SizeMin", args.first_wall_m)
+        field.setNumber(threshold, "SizeMax", args.pipe_size)
+        field.setNumber(threshold, "DistMin", args.first_wall_m)
+        field.setNumber(threshold, "DistMax", bl_thickness)
+        field.setNumber(threshold, "StopAtDistMax", 1)
+        minimum = field.add("Min")
+        field.setNumbers(
+            minimum,
+            "FieldsList",
+            [pipe_field, riser_field, valve_field, jet_field, threshold],
         )
-        bl_field = field.add("BoundaryLayer")
-        field.setNumbers(bl_field, "CurvesList", wall_curves)
-        field.setNumber(bl_field, "Size", args.first_wall_m)
-        field.setNumber(bl_field, "Ratio", args.bl_growth)
-        field.setNumber(bl_field, "Thickness", bl_thickness)
-        field.setNumber(bl_field, "Quads", 1)
-        field.setNumber(bl_field, "AnisoMax", 10.0)
-        field.setAsBoundaryLayer(bl_field)
+        field.setAsBackgroundMesh(minimum)
 
         gmsh.option.setNumber(
             "Mesh.MeshSizeMin",
@@ -538,9 +530,9 @@ def main() -> None:
             "geometry": (
                 "3-D circular pipe and T-junction with a vertically swept "
                 "triangular-prism riser, conformal external air, and wall "
-                "BoundaryLayer near-wall sizing"
+                "Distance/Threshold near-wall sizing"
             ),
-            "prototype": "wall_boundary_layer",
+            "prototype": "wall_distance_threshold",
             "element_types_3d": [int(value) for value in element_types],
             "element_counts_3d": element_counts,
             "cells_3d": cell_count,
@@ -573,11 +565,12 @@ def main() -> None:
                 "external": args.external_size,
             },
             "wall_boundary_layer": {
+                "method": "Distance+Threshold",
                 "first_wall_m": args.first_wall_m,
                 "growth": args.bl_growth,
                 "layers": args.bl_layers,
                 "thickness_m": bl_thickness,
-                "wall_curve_count": len(wall_curves),
+                "wall_surface_count": len(wall_surfaces),
             },
             "patch_surface_counts": {
                 "reservoir": len(reservoir_surfaces),
