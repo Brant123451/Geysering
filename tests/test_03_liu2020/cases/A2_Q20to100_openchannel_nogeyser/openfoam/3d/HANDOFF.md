@@ -157,6 +157,6 @@ directories, logs, frames, or caches.
 `README.md` record which requirements passed and which runtime checks failed.
 Generated meshes, decomposed fields, logs, and time directories remain
 non-versioned; all compact evidence needed to audit the conclusions is under
-the Case `outputs/` directory. Until the replacement-model base and refined
-fulls finish and replace those files, treat committed `outputs/openfoam_3d_*`
-as the superseded fixed-stage baseline only.
+the Case `outputs/` directory. Replacement-model base and refined fulls are
+complete; committed `outputs/openfoam_3d_*` now reflect those runs rather
+than the superseded fixed-stage baseline.
