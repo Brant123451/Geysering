@@ -131,6 +131,12 @@
       "max_skew": 1.1328,
       "low_weight": 0,
       "solver_gate": false
+    },
+    {
+      "name": "v9_frontal_optimize",
+      "algo3d": 4,
+      "solver_gate": false,
+      "error": "Frontal algorithm requires Netgen (unavailable on Debian gmsh 4.12.1)"
     }
   ],
   "notes": [
@@ -141,6 +147,7 @@
     "v6 octagon core worsened max_non (74.3) vs square; v7 restores square + local pipe/interface refinement",
     "v7: low_weight cleared (min w=0.066); max_non=71.49 with 2 severe tet faces at new pipe sites x~0.69/2.83",
     "v8 four hotspots+pipe7mm; gate=False; max_non=72.2875, severe=2, low_w=0",
-    "v9: try Frontal 3D (algo 4) + stronger optimize; HXT unusable on quad hex/tet interfaces"
+    "v9: try Frontal 3D (algo 4) + stronger optimize; HXT unusable on quad hex/tet interfaces",
+    "v9 Frontal failed: Debian gmsh has HXT/TetGen but no Netgen; reverting to Delaunay+Untangle/Winslow"
   ]
 }
