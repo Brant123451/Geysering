@@ -1,0 +1,41 @@
+{
+  "prototype": "make_mesh_ogrid_riser.py",
+  "goal": "hex O-grid riser + tet pipe/atmosphere passing solver quality gate",
+  "gate_thresholds": {
+    "max_non_orth_deg": 70,
+    "max_skew": 4,
+    "severe_faces": 0,
+    "low_weight_faces": 0
+  },
+  "iterations": [
+    {
+      "name": "v1",
+      "first_wall_m": 0.0005,
+      "n_radial": 5,
+      "n_theta": 16,
+      "growth": 1.2,
+      "max_non_orth": 140.862,
+      "severe_faces": 82,
+      "low_weight": 20,
+      "hexahedra": 24192,
+      "solver_gate": false
+    },
+    {
+      "name": "v2_soft",
+      "first_wall_m": 0.001,
+      "n_radial": 3,
+      "n_theta": 24,
+      "growth": 1.15,
+      "max_non_orth": 74.637,
+      "severe_faces": 4,
+      "low_weight": 21,
+      "hexahedra": 27216,
+      "solver_gate": false
+    }
+  ],
+  "notes": [
+    "Debian gmsh lacks Netgen; hybrid hex/tet uses Delaunay + pyramids",
+    "Softer near-wall spacing sharply reduces max nonOrth (140 -> 74.6) and severe faces (82 -> 4)",
+    "Remaining failures are at hex-tet transition / low-weight faces; v3 iteration running"
+  ]
+}
