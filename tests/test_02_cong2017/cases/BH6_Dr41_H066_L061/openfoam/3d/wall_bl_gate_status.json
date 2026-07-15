@@ -1,0 +1,30 @@
+{
+  "prototype": "make_mesh_wall_bl.py",
+  "goal": "near-wall Distance/Threshold on HXT prism baseline passing solver gate",
+  "gate_thresholds": {
+    "max_non_orth_deg": 70,
+    "max_skew": 4,
+    "severe_faces": 0,
+    "low_weight_faces": 0
+  },
+  "iterations": [
+    {
+      "name": "wall_bl_v1",
+      "first_wall_m": 0.001,
+      "bl_growth": 1.2,
+      "bl_layers": 4,
+      "scope": "all_walls",
+      "cells": 669260,
+      "prisms": 138348,
+      "max_non_orth": 85.4758,
+      "severe_faces": 8810,
+      "max_skew": 7.77732,
+      "low_weight": 14987,
+      "solver_gate": false
+    }
+  ],
+  "notes": [
+    "Debian gmsh BoundaryLayer is 2-D only; use Distance+Threshold",
+    "v1 first_wall=1mm on all walls destroyed quality; next: softer + riser-only"
+  ]
+}

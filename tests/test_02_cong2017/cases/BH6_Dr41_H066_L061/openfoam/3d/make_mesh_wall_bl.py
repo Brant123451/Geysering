@@ -427,7 +427,9 @@ def main() -> None:
             ),
         )
         # Near-wall refinement. Debian gmsh BoundaryLayer is 2-D only
-        # ("curve adjacent to 2 surfaces"), so use Distance+Threshold on walls.
+        # ("curve adjacent to 2 surfaces"), so use Distance+Threshold.
+        # Restrict the fine band to riser walls; refining the whole pipe at
+        # 1 mm destroyed non-orthogonality in wall_bl_v1.
         if args.bl_layers < 1 or args.first_wall_m <= 0 or args.bl_growth < 1.0:
             raise ValueError("Invalid near-wall sizing parameters")
         if abs(args.bl_growth - 1.0) < 1.0e-12:
@@ -438,15 +440,31 @@ def main() -> None:
                 * (args.bl_growth**args.bl_layers - 1.0)
                 / (args.bl_growth - 1.0)
             )
+        riser_wall_surfaces: list[int] = []
+        for tag in wall_surfaces:
+            xmin, ymin, zmin, xmax, ymax, zmax = gmsh.model.getBoundingBox(
+                2, tag
+            )
+            spans_riser = zmax >= SWEEP_BOTTOM_Z - 1.0e-6 and zmin <= RIM_Z + 1.0e-6
+            near_tee = (
+                xmin <= TEE_X + RISER_RADIUS + 0.02
+                and xmax >= TEE_X - RISER_RADIUS - 0.02
+                and ymin <= RISER_RADIUS + 0.02
+                and ymax >= -RISER_RADIUS - 0.02
+            )
+            if spans_riser and near_tee:
+                riser_wall_surfaces.append(tag)
+        if not riser_wall_surfaces:
+            raise RuntimeError("No riser wall surfaces found for near-wall sizing")
         distance = field.add("Distance")
-        field.setNumbers(distance, "SurfacesList", wall_surfaces)
+        field.setNumbers(distance, "SurfacesList", riser_wall_surfaces)
         field.setNumber(distance, "Sampling", 100)
         threshold = field.add("Threshold")
         field.setNumber(threshold, "InField", distance)
         field.setNumber(threshold, "SizeMin", args.first_wall_m)
-        field.setNumber(threshold, "SizeMax", args.pipe_size)
+        field.setNumber(threshold, "SizeMax", args.riser_size)
         field.setNumber(threshold, "DistMin", args.first_wall_m)
-        field.setNumber(threshold, "DistMax", bl_thickness)
+        field.setNumber(threshold, "DistMax", max(bl_thickness, args.riser_size))
         field.setNumber(threshold, "StopAtDistMax", 1)
         minimum = field.add("Min")
         field.setNumbers(
@@ -571,6 +589,7 @@ def main() -> None:
                 "layers": args.bl_layers,
                 "thickness_m": bl_thickness,
                 "wall_surface_count": len(wall_surfaces),
+                "riser_wall_surface_count": len(riser_wall_surfaces),
             },
             "patch_surface_counts": {
                 "reservoir": len(reservoir_surfaces),
