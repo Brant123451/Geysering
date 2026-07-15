@@ -498,6 +498,12 @@ def main() -> None:
 
         gmsh.model.mesh.generate(3)
         gmsh.model.mesh.removeDuplicateNodes()
+        # Mild node relocation after hybrid fill; helps hex/tet join faces.
+        for method in ("Laplace2D", "Relocate2D", "Relocate3D"):
+            try:
+                gmsh.model.mesh.optimize(method)
+            except Exception:
+                pass
 
         hex_type = gmsh.model.mesh.getElementType("Hexahedron", 1)
         for volume in hex_volumes:

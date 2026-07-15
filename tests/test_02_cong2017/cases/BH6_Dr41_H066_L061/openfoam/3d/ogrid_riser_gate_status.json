@@ -46,11 +46,27 @@
       "max_skew": 1.12175,
       "low_weight": 13,
       "solver_gate": false
+    },
+    {
+      "name": "v4",
+      "first_wall_m": 0.002,
+      "n_radial": 3,
+      "n_theta": 32,
+      "growth": 1.1,
+      "cells": 222071,
+      "hexahedra": 40320,
+      "pyramids": 320,
+      "max_non_orth": 72.6427,
+      "severe_faces": 3,
+      "max_skew": 0.947426,
+      "low_weight": 8,
+      "solver_gate": false
     }
   ],
   "notes": [
     "Debian gmsh lacks Netgen; hybrid hex/tet uses Delaunay + pyramids",
     "Softer near-wall spacing sharply reduces max nonOrth (140 -> 74.6) and severe faces (82 -> 4)",
-    "Remaining failures are at hex-tet transition / low-weight faces; v3 iteration running"
+    "Remaining failures are at hex-tet transition / low-weight faces; v3 iteration running",
+    "v4 shows residual ~72.6 deg / 3 severe faces persist despite thicker wall; likely square-core corner topology"
   ]
 }
