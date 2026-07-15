@@ -107,10 +107,10 @@ tested and rejected after that projection:
 Latest tracer iteration (branch tip): upwind intensity fluxes
 `phi_air*s` with conservative donor-outflow positivity scaling; inventory
 is `sigma`; recovered `s` may exceed 1 when `alpha*rho` shrinks. Gate on
-integral `sigma` conservation (<1%), not pointwise `s∈[0,1]`. Rejected
-paths (do not revive): clear/clamp; variable-density MULES on `s`; Sp(ddt);
-thin-floor `phiVol`; unscaled intensity `phi·s`; post-update sigma clip to
-`[0,αρ]`.
+integral `sigma` **plus tagged boundary flux** residual (<1%), not
+inventory-only drift and not pointwise `s∈[0,1]`. Rejected paths (do not
+revive): clear/clamp; variable-density MULES on `s`; Sp(ddt); thin-floor
+`phiVol`; unscaled intensity `phi·s`; post-update sigma clip to `[0,αρ]`.
 
 ### Initialize conservation gate (passed)
 
@@ -143,12 +143,19 @@ First `Allrun.resume phase1` failed: `latestTime` formatted as
 `1.228942047` while the on-disk directory is `1.2289420474`. Fixed by raising
 `timePrecision` to 14 in controlDict templates / `Allrun.resume`. Phase 1
 restarted from `1.2289420474` with sigma read confirmed; target solver
-`6.75 s` (paper 6.50 s).
+`6.75 s` (paper 6.50 s). As of mid-run (~1.33 s) the solver is healthy
+(`maxCo≈0.70`, 4 ranks busy).
 
-Multi-stage **20 min** monitor (`/tmp/c9_20min_monitor.sh`, log
-`case/log.monitor_20min`) checks alive/CPU/`∫sigma`/Fatal and **auto-resumes**
-on true hang or unexpected death. Stall detection requires low CPU plus frozen
-ExecutionTime over a full 20 min window.
+Inventory-only `|Δ∫sigma|/ref` crossed 1% near solver 1.32 s because tagged
+mass is leaving through `atmosphere`. Full gate
+`dM + ∫(atm+in+gate flux) − ∫source` residual is **~0.005%** (pass). Evidence:
+`case/results-phase1/phase1_midrun_conservation_gate.json`. The 20 min monitor
+was updated to use this flux-corrected residual (`scripts/c9_20min_monitor.sh`
+and `/tmp/c9_20min_monitor.sh`); inventory-only alerts are false positives.
+
+Multi-stage **20 min** monitor checks alive/CPU/flux-corrected `∫sigma`/Fatal
+and **auto-resumes** on true hang or unexpected death. Stall detection
+requires low CPU plus frozen ExecutionTime over a full 20 min window.
 
 **Phase 2 and eight eruptions have not yet been reproduced.**
 

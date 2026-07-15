@@ -48,6 +48,11 @@ cp system/controlDict.initialize system/controlDict
 # Do not install an EXIT trap that rewrites controlDict while mpirun may still
 # be alive (runTimeModifiable would then extend endTime). Restore only after
 # the solver returns.
+if ! grep -q '^timePrecision' system/controlDict; then
+    sed -i '/^writePrecision/a timePrecision   14;' system/controlDict
+else
+    sed -i 's/^timePrecision.*/timePrecision   14;/' system/controlDict
+fi
 mpirun -np "$NP" compressibleInterFoam -parallel > log.initialize 2>&1
 cp system/controlDict.full system/controlDict
 echo INITIALIZATION_DONE
