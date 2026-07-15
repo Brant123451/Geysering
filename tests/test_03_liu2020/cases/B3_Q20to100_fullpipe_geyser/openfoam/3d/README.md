@@ -209,3 +209,29 @@ Refinement does **not** close the gap to the paper 55 kPa peak; the shortfall is
 therefore not cured by this mesh densification alone. Mass closure improves on
 the shorter refined window, while the velocity limiter still activates and
 strict `checkMesh` still fails (626 low-determinant cells).
+
+## Front-view water/air motion animation
+
+`controlDict` uses `purgeWrite 4`, so intermediate volume fields were discarded
+and a VTK cutting-plane movie of every write interval is not recoverable from
+the finished run. The completed baseline does retain the full `16.4 s`
+`riserCentreline` `alpha.water` series (`Δt = 0.002 s`) plus PT probes.
+
+Render the front elevation (x–z) animation from those probes:
+
+```bash
+python3 render_front_view_animation.py --case case --focus geyser
+python3 render_front_view_animation.py --case case --focus full \
+  --output ../../outputs/openfoam_3d_front_view_full_apparatus.mp4 --dt 0.08
+```
+
+Outputs (under `outputs/`):
+
+- `openfoam_3d_front_view_motion.mp4` — chamber/riser zoom, full `16.4 s`
+- `openfoam_3d_front_view_motion.gif` — geyser-window preview
+- `openfoam_3d_front_view_full_apparatus.mp4` — full pipe/chamber elevation
+- `openfoam_3d_front_view_t_*.png` — stills near ramp / peak / late time
+
+Pipe free-surface evolution away from the riser centreline is shown only as the
+declared initial fill (upstream `0.08 m`, downstream full); the animated jet is
+the measured 3-D centreline `α.water`.
