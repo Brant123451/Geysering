@@ -78,13 +78,14 @@ elif (( NP < 1 )); then
     NP=1
 fi
 
-python3 make_mesh.py \
+python3 "${BH6_MESH_SCRIPT:-make_mesh.py}" \
     --output bh6-3d.msh \
     --audit-json geometry_audit.runtime.json \
     --pipe-size "$PIPE_SIZE" \
     --riser-size "$RISER_SIZE" \
     --jet-size "$JET_SIZE" \
     --external-size "$EXTERNAL_SIZE" \
+    ${BH6_MESH_EXTRA_ARGS:-} \
     > log.gmsh 2>&1
 
 gmshToFoam bh6-3d.msh > log.gmshToFoam 2>&1
