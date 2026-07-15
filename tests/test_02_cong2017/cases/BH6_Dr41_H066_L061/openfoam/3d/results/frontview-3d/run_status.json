@@ -8,10 +8,12 @@
   "np": 4,
   "writeInterval_surface_s": 0.1,
   "notes": "purgeWrite remains 3 for volume; surfaces accumulate independently",
-  "last_watch_utc": "2026-07-15T21:23:37.455944+00:00",
+  "last_watch_utc": "2026-07-15T21:44:19.473386+00:00",
   "watch_n": 1,
-  "cut_frames": 0,
-  "sim_time_s": 0.08920099256,
+  "cut_frames": 6,
+  "sim_time_s": 0.6933766234,
   "restarted_utc": "2026-07-15T21:19:57.846720+00:00",
-  "solver": "compressibleInterFoam -parallel np=4"
+  "solver": "compressibleInterFoam -parallel np=4",
+  "progress_pct": 5.33,
+  "healthy": true
 }
