@@ -21,10 +21,34 @@
       "max_skew": 7.77732,
       "low_weight": 14987,
       "solver_gate": false
+    },
+    {
+      "name": "wall_bl_v2",
+      "first_wall_m": 0.003,
+      "bl_growth": 1.15,
+      "bl_layers": 3,
+      "scope": "riser_walls",
+      "cells": 234641,
+      "prisms": 55692,
+      "max_non_orth": 70.6749,
+      "severe_faces": 1,
+      "max_skew": 1.37431,
+      "low_weight": 1,
+      "solver_gate": false,
+      "audit_bl": {
+        "method": "Distance+Threshold",
+        "first_wall_m": 0.003,
+        "growth": 1.15,
+        "layers": 3,
+        "thickness_m": 0.010417500000000001,
+        "wall_surface_count": 7,
+        "riser_wall_surface_count": 4
+      }
     }
   ],
   "notes": [
     "Debian gmsh BoundaryLayer is 2-D only; use Distance+Threshold",
-    "v1 first_wall=1mm on all walls destroyed quality; next: softer + riser-only"
+    "v1 first_wall=1mm on all walls destroyed quality; next: softer + riser-only",
+    "v2 riser-only first=3mm; gate=False; max_non=70.6749, severe=1, low_w=1, skew=1.37431"
   ]
 }
