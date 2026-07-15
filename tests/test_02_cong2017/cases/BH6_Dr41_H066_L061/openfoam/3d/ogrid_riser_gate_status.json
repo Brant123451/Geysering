@@ -61,6 +61,22 @@
       "max_skew": 0.947426,
       "low_weight": 8,
       "solver_gate": false
+    },
+    {
+      "name": "v5",
+      "first_wall_m": 0.001,
+      "n_radial": 4,
+      "n_theta": 48,
+      "growth": 1.15,
+      "optimize": true,
+      "cells": 269411,
+      "hexahedra": 84672,
+      "pyramids": 672,
+      "max_non_orth": 72.6459,
+      "severe_faces": 2,
+      "max_skew": 1.1731,
+      "low_weight": 92,
+      "solver_gate": false
     }
   ],
   "notes": [
