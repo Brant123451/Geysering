@@ -31,6 +31,21 @@
       "low_weight": 21,
       "hexahedra": 27216,
       "solver_gate": false
+    },
+    {
+      "name": "v3",
+      "first_wall_m": 0.0015,
+      "n_radial": 3,
+      "n_theta": 32,
+      "growth": 1.1,
+      "cells": 222482,
+      "hexahedra": 40320,
+      "pyramids": 320,
+      "max_non_orth": 72.6427,
+      "severe_faces": 4,
+      "max_skew": 1.12175,
+      "low_weight": 13,
+      "solver_gate": false
     }
   ],
   "notes": [
