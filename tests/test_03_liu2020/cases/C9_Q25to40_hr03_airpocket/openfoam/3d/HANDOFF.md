@@ -147,12 +147,11 @@ after `++runTime`; never reseed from `α·ρ·s` when sigma was read. Smoke was
 restarted from the same checkpoint with the rebuilt library. Log confirms
 `read conserved inventory ... from time "0.3289420474"`.
 
-Multi-stage 30 min CPU watchdog monitors `log.smoke`; a
-smoke→conservation-gate→phase1 chain is armed. Mid-smoke samples through
-at least solver `0.5089 s` keep `∫sigma = 1.67259665e-02` (relative change
-0). Smoke inventory acceptance still uses `∫sigma` + boundary flux +
-residual <1% after `End`. Host CPU is often throttled (~25–40%/rank on
-4 cores), so wall-clock to `1.25 s` is long.
+Multi-stage **20 min** monitor (`/tmp/c9_20min_monitor.sh`, log
+`case/log.monitor_20min`) checks alive/CPU/`∫sigma`/Fatal and **auto-resumes**
+on true hang or unexpected death; smoke→phase1 chain remains armed. Mid-smoke
+samples keep `∫sigma = 1.67259665e-02` (relative change 0). Host suspends inflate
+ClockTime but are not treated as hangs unless ExecutionTime also freezes.
 
 The historical, now-rejected clear/clamp `maxCo=0.35` reference remained in
 `[0,1]` through solver time 0.37 s and lost about 0.5% of its paper-time-zero
