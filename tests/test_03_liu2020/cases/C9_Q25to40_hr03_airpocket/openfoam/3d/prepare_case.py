@@ -426,7 +426,7 @@ writeFormat     binary;
 writePrecision  8;
 writeCompression off;
 timeFormat      general;
-timePrecision   10;
+timePrecision   14;
 // Keep yes so stopAt writeNow / emergency edits work; Allrun.* must not
 // replace controlDict until mpirun has returned (see Allrun.initialize).
 runTimeModifiable yes;
@@ -2070,9 +2070,15 @@ setFields > log.setFields 2>&1
 setExprFields > log.setExprFields 2>&1
 decomposePar -force > log.decomposePar 2>&1
 sha256sum "${{SOURCE_SCHEMA_FILES[@]}}" > log.source.sha256
-trap 'cp system/controlDict.full system/controlDict' EXIT
 cp system/controlDict.initialize system/controlDict
+# Raise timePrecision so written time directories round-trip under latestTime.
+if ! grep -q '^timePrecision' system/controlDict; then
+    sed -i '/^writePrecision/a timePrecision   14;' system/controlDict
+else
+    sed -i 's/^timePrecision.*/timePrecision   14;/' system/controlDict
+fi
 mpirun -np "$NP" {application} -parallel > log.initialize 2>&1
+cp system/controlDict.full system/controlDict
 echo INITIALIZATION_DONE
 """,
         executable=True,
@@ -2101,13 +2107,21 @@ for field in pocketBodyTracer k omega; do
         exit 2
     }}
 done
-pgrep -f '[c]ompressibleInterFoam.*-parallel|[c]ompressibleInterIsoFoam.*-parallel' >/dev/null && {{
+# Match only real solver binaries (not this script / agent command lines).
+if pgrep -f '/compressibleInter(Foam|IsoFoam)( |$)' >/dev/null; then
     echo "A C9 solver is already running" >&2
     exit 2
-}}
-trap 'cp system/controlDict.full system/controlDict' EXIT
+fi
 cp "system/controlDict.${{STAGE}}" system/controlDict
+if ! grep -q '^timePrecision' system/controlDict; then
+    sed -i '/^writePrecision/a timePrecision   14;' system/controlDict
+else
+    sed -i 's/^timePrecision.*/timePrecision   14;/' system/controlDict
+fi
+# Keep startFrom latestTime; timePrecision 14 avoids 1.2289420474 -> 1.228942047 misses.
+foamDictionary system/controlDict -entry startFrom -set latestTime >/dev/null || true
 mpirun -np "$NP" {application} -parallel >> "log.${{STAGE}}" 2>&1
+cp system/controlDict.full system/controlDict
 echo "${{STAGE^^}}_DONE"
 """,
         executable=True,

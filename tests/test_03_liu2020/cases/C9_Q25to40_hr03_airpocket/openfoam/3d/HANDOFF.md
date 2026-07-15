@@ -128,42 +128,29 @@ Fresh initialize with the positivity-scaled tracer completed through solver
 Record: `case/results-init/initialize_conservation_gate.json` (gitignored
 runtime artifact).
 
-### Smoke (in progress on this VM)
+### Smoke (complete on this VM)
 
-Resumed from checkpoint `0.3289420474` toward smoke `endTime=1.25`
-(paper 1.00 s) with 4-rank `compressibleInterFoam`, `maxCo=0.70`,
-`maxAlphaCo=0.20`.
+Smoke finished at solver `1.25 s` (paper 1.00 s). Conservation gate
+`results-smoke/smoke_conservation_gate.json`:
 
-A first smoke attempt after that checkpoint showed a **one-time ~5%
-`∫sigma` drop** (1.6726e-2 → 1.5893e-2) with zero open-boundary tagged
-flux, then perfect flatness. Root cause: on restart the function object
-rebuilt `sigma` from `alpha*rho*s` (`NO_READ`) while unresolved cells had
-written `s=0`, destroying excess inventory. That trajectory was archived
-under `results-smoke/rejected_restart_jump_*` and discarded.
+- `∫sigma` ref (0.25 s) `1.67259665e-02` → last `1.66656704e-02`
+- relative change **−0.360%** (pass `<1%`); atmosphere tagged flux non-zero
+- Restart inventory read via `findInstance` verified
 
-Fix (current tip): load `pocketBodyTracerSigma` via `findInstance` (and
-eager bind in the FO constructor) so restart does not miss the checkpoint
-after `++runTime`; never reseed from `α·ρ·s` when sigma was read. Smoke was
-restarted from the same checkpoint with the rebuilt library. Log confirms
-`read conserved inventory ... from time "0.3289420474"`.
+### Phase 1 (in progress)
+
+First `Allrun.resume phase1` failed: `latestTime` formatted as
+`1.228942047` while the on-disk directory is `1.2289420474`. Fixed by raising
+`timePrecision` to 14 in controlDict templates / `Allrun.resume`. Phase 1
+restarted from `1.2289420474` with sigma read confirmed; target solver
+`6.75 s` (paper 6.50 s).
 
 Multi-stage **20 min** monitor (`/tmp/c9_20min_monitor.sh`, log
 `case/log.monitor_20min`) checks alive/CPU/`∫sigma`/Fatal and **auto-resumes**
-on true hang or unexpected death; smoke→phase1 chain remains armed. Stall
-detection requires low CPU plus frozen ExecutionTime over a full 20 min window
-(avoids false kills right after a monitor sample write). Mid-smoke `∫sigma`
-remains `1.67259665e-02` (rel 0). Host suspends inflate ClockTime but are not
-treated as hangs unless ExecutionTime also freezes.
+on true hang or unexpected death. Stall detection requires low CPU plus frozen
+ExecutionTime over a full 20 min window.
 
-The historical, now-rejected clear/clamp `maxCo=0.35` reference remained in
-`[0,1]` through solver time 0.37 s and lost about 0.5% of its paper-time-zero
-inventory by 0.31 s, but cut-cell Courant control reduced its step to roughly
-\(3\times 10^{-5}\) s. The selected baseline is now `maxCo=0.70` with
-`maxAlphaCo=0.20`, backed by the earlier same-physics 0.35/0.70 benchmark;
-0.35 remains an explicit sensitivity.
-
-Phase 1 is incomplete. **Phase 2 and eight eruptions have not yet been
-reproduced.**
+**Phase 2 and eight eruptions have not yet been reproduced.**
 
 ## Reproduce and continue
 

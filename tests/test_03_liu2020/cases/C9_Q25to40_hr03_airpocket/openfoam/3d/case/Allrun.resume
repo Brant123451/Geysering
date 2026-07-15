@@ -61,6 +61,13 @@ if pgrep -f '/compressibleInter(Foam|IsoFoam)( |$)' >/dev/null; then
     exit 2
 fi
 cp "system/controlDict.${STAGE}" system/controlDict
+if ! grep -q '^timePrecision' system/controlDict; then
+    sed -i '/^writePrecision/a timePrecision   14;' system/controlDict
+else
+    sed -i 's/^timePrecision.*/timePrecision   14;/' system/controlDict
+fi
+# Keep startFrom latestTime; timePrecision 14 avoids 1.2289420474 -> 1.228942047 misses.
+foamDictionary system/controlDict -entry startFrom -set latestTime >/dev/null || true
 mpirun -np "$NP" compressibleInterFoam -parallel >> "log.${STAGE}" 2>&1
 cp system/controlDict.full system/controlDict
 echo "${STAGE^^}_DONE"
