@@ -110,7 +110,12 @@ def build_ogrid_disk(
     growth: float,
     n_radial: int,
 ) -> tuple[list[int], float, float]:
-    """Square core + 4 annular sectors on a circular outer wall."""
+    """Rotated-square core + 4 annular sectors on a circular outer wall.
+
+    Vertices sit at 45/135/... degrees so the core edges are less poorly
+    aligned with the cardinal wall-normal directions than an axis-aligned
+    square.  This targets the persistent ~72 deg non-orthogonality plateau.
+    """
     ring = radial_ring_thickness(first_wall, growth, n_radial)
     if ring >= 0.85 * RISER_RADIUS:
         raise ValueError(
@@ -118,17 +123,23 @@ def build_ogrid_disk(
         )
     ri = RISER_RADIUS - ring
     center = occ.addPoint(TEE_X, 0.0, z)
+    # Outer and inner vertices at 45-degree offsets.
+    angles = [math.pi / 4.0 + i * math.pi / 2.0 for i in range(4)]
     outer = [
-        occ.addPoint(TEE_X + RISER_RADIUS, 0.0, z),
-        occ.addPoint(TEE_X, RISER_RADIUS, z),
-        occ.addPoint(TEE_X - RISER_RADIUS, 0.0, z),
-        occ.addPoint(TEE_X, -RISER_RADIUS, z),
+        occ.addPoint(
+            TEE_X + RISER_RADIUS * math.cos(angle),
+            RISER_RADIUS * math.sin(angle),
+            z,
+        )
+        for angle in angles
     ]
     inner = [
-        occ.addPoint(TEE_X + ri, 0.0, z),
-        occ.addPoint(TEE_X, ri, z),
-        occ.addPoint(TEE_X - ri, 0.0, z),
-        occ.addPoint(TEE_X, -ri, z),
+        occ.addPoint(
+            TEE_X + ri * math.cos(angle),
+            ri * math.sin(angle),
+            z,
+        )
+        for angle in angles
     ]
     arcs = [
         occ.addCircleArc(outer[i], center, outer[(i + 1) % 4]) for i in range(4)
@@ -151,6 +162,7 @@ def classify_curve_length(
     ring: float,
 ) -> str:
     outer_quarter = RISER_RADIUS * math.pi / 2.0
+    # Rotated square side length between adjacent 45-degree vertices.
     inner_side = ri * math.sqrt(2.0)
     if abs(length - outer_quarter) < 2.0e-5:
         return "outer_arc"
