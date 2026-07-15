@@ -174,7 +174,8 @@
     "v9b untangle/winslow; gate=False; max_non=93.3735, severe=8, low_w=5",
     "v9b untangle/winslow worsened max_non to 93.4; revert to mild Relocate-only cleanup",
     "Best hybrid so far remains v7 (max_non=71.49, severe=2, low_w=0); cannot clear <70 without Netgen/HXT on hex interfaces",
-    "Parallel path: make_mesh_wall_bl.py adds Gmsh BoundaryLayer on the HXT prism baseline for near-wall study"
+    "Parallel path: make_mesh_wall_bl.py adds Gmsh BoundaryLayer on the HXT prism baseline for near-wall study",
+    "Near-wall gate passed via make_mesh_wall_bl.py wall_bl_v6 (HXT prism + riser Distance/Threshold, rim lip excluded); hybrid hex O-grid remains blocked ~71.5 deg without Netgen"
   ],
   "best_hybrid_so_far": "v7_square_hotspot_refine"
 }
