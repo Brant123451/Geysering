@@ -561,30 +561,20 @@ def main() -> None:
         # Debian gmsh has no Netgen, so Frontal-3D is unavailable. Extruded hex
         # volumes are already filled; Delaunay meshes remaining tet regions and
         # recovers pyramids against shared hex quads (HXT rejects those quads).
+        # Keep cleanup mild: Untangle/Winslow (v9b) raised max nonOrth to ~93 deg.
         gmsh.option.setNumber("Mesh.Algorithm3D", 1)
         gmsh.option.setNumber("Mesh.Optimize", 1)
-        gmsh.option.setNumber("Mesh.OptimizeThreshold", 0.3)
-        gmsh.option.setNumber("Mesh.Smoothing", 100)
         gmsh.option.setNumber("Mesh.OptimizeNetgen", 0)
         gmsh.option.setNumber("Mesh.MshFileVersion", 2.2)
         gmsh.option.setNumber("Mesh.Binary", 0)
 
         gmsh.model.mesh.generate(3)
         gmsh.model.mesh.removeDuplicateNodes()
-        # Stronger cleanup after hybrid fill (Winslow/Untangle available in
-        # this Debian build; Netgen optimize is not).
-        for _ in range(3):
-            for method in (
-                "Laplace2D",
-                "Relocate2D",
-                "Relocate3D",
-                "UntangleMeshGeometry",
-                "WinslowUntangler",
-            ):
-                try:
-                    gmsh.model.mesh.optimize(method)
-                except Exception:
-                    pass
+        for method in ("Laplace2D", "Relocate2D", "Relocate3D"):
+            try:
+                gmsh.model.mesh.optimize(method)
+            except Exception:
+                pass
 
         hex_type = gmsh.model.mesh.getElementType("Hexahedron", 1)
         for volume in hex_volumes:

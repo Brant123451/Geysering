@@ -137,6 +137,28 @@
       "algo3d": 4,
       "solver_gate": false,
       "error": "Frontal algorithm requires Netgen (unavailable on Debian gmsh 4.12.1)"
+    },
+    {
+      "name": "v9b_untangle_winslow",
+      "algo3d": 1,
+      "optimize": [
+        "UntangleMeshGeometry",
+        "WinslowUntangler"
+      ],
+      "first_wall_m": 0.002,
+      "n_radial": 3,
+      "n_theta": 32,
+      "growth": 1.1,
+      "pipe_size": 0.009,
+      "riser_size": 0.004,
+      "cells": 400999,
+      "hexahedra": 70720,
+      "pyramids": 320,
+      "max_non_orth": 93.3735,
+      "severe_faces": 8,
+      "max_skew": 1.23477,
+      "low_weight": 5,
+      "solver_gate": false
     }
   ],
   "notes": [
@@ -148,6 +170,11 @@
     "v7: low_weight cleared (min w=0.066); max_non=71.49 with 2 severe tet faces at new pipe sites x~0.69/2.83",
     "v8 four hotspots+pipe7mm; gate=False; max_non=72.2875, severe=2, low_w=0",
     "v9: try Frontal 3D (algo 4) + stronger optimize; HXT unusable on quad hex/tet interfaces",
-    "v9 Frontal failed: Debian gmsh has HXT/TetGen but no Netgen; reverting to Delaunay+Untangle/Winslow"
-  ]
+    "v9 Frontal failed: Debian gmsh has HXT/TetGen but no Netgen; reverting to Delaunay+Untangle/Winslow",
+    "v9b untangle/winslow; gate=False; max_non=93.3735, severe=8, low_w=5",
+    "v9b untangle/winslow worsened max_non to 93.4; revert to mild Relocate-only cleanup",
+    "Best hybrid so far remains v7 (max_non=71.49, severe=2, low_w=0); cannot clear <70 without Netgen/HXT on hex interfaces",
+    "Parallel path: make_mesh_wall_bl.py adds Gmsh BoundaryLayer on the HXT prism baseline for near-wall study"
+  ],
+  "best_hybrid_so_far": "v7_square_hotspot_refine"
 }
