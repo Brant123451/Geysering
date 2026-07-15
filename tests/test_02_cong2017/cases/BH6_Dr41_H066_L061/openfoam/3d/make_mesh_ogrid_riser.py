@@ -110,11 +110,11 @@ def build_ogrid_disk(
     growth: float,
     n_radial: int,
 ) -> tuple[list[int], float, float]:
-    """Octagon-core O-grid: 8 annular sectors + 4 central quads.
+    """Square-core O-grid: 4 annular sectors + 1 central quad.
 
-    Includes vertices on the cylinder seam (0 deg) so OCC fragment does not
-    split outer arcs.  An octagon core replaces the square-corner topology that
-    pinned max non-orthogonality near 72.6 deg in v1-v5.
+    Outer vertices stay on the cylinder seam angles (0/90/...) so OCC
+    fragment does not split the outer arcs.  Gate failures in v1-v6 are
+    dominated by tet faces in the pipe, not the core topology.
     """
     ring = radial_ring_thickness(first_wall, growth, n_radial)
     if ring >= 0.85 * RISER_RADIUS:
@@ -123,46 +123,31 @@ def build_ogrid_disk(
         )
     ri = RISER_RADIUS - ring
     center = occ.addPoint(TEE_X, 0.0, z)
-    angles = [i * math.pi / 4.0 for i in range(8)]
     outer = [
-        occ.addPoint(
-            TEE_X + RISER_RADIUS * math.cos(angle),
-            RISER_RADIUS * math.sin(angle),
-            z,
-        )
-        for angle in angles
+        occ.addPoint(TEE_X + RISER_RADIUS, 0.0, z),
+        occ.addPoint(TEE_X, RISER_RADIUS, z),
+        occ.addPoint(TEE_X - RISER_RADIUS, 0.0, z),
+        occ.addPoint(TEE_X, -RISER_RADIUS, z),
     ]
     inner = [
-        occ.addPoint(
-            TEE_X + ri * math.cos(angle),
-            ri * math.sin(angle),
-            z,
-        )
-        for angle in angles
+        occ.addPoint(TEE_X + ri, 0.0, z),
+        occ.addPoint(TEE_X, ri, z),
+        occ.addPoint(TEE_X - ri, 0.0, z),
+        occ.addPoint(TEE_X, -ri, z),
     ]
     arcs = [
-        occ.addCircleArc(outer[i], center, outer[(i + 1) % 8]) for i in range(8)
+        occ.addCircleArc(outer[i], center, outer[(i + 1) % 4]) for i in range(4)
     ]
-    inner_sides = [occ.addLine(inner[i], inner[(i + 1) % 8]) for i in range(8)]
-    radial = [occ.addLine(inner[i], outer[i]) for i in range(8)]
-    spokes = [occ.addLine(center, inner[i]) for i in range(0, 8, 2)]
-    # Four central quads: center -> inner[2k] -> inner[2k+1] -> inner[2k+2].
-    center_surfaces: list[int] = []
-    for k in range(4):
-        i0 = 2 * k
-        i1 = 2 * k + 1
-        i2 = (2 * k + 2) % 8
-        loop = occ.addWire(
-            [spokes[k], inner_sides[i0], inner_sides[i1], -spokes[(k + 1) % 4]]
-        )
-        center_surfaces.append(occ.addPlaneSurface([loop]))
+    inner_lines = [occ.addLine(inner[i], inner[(i + 1) % 4]) for i in range(4)]
+    radial = [occ.addLine(inner[i], outer[i]) for i in range(4)]
+    center_surface = occ.addPlaneSurface([occ.addWire(inner_lines)])
     sectors: list[int] = []
-    for i in range(8):
+    for i in range(4):
         loop = occ.addWire(
-            [inner_sides[i], radial[(i + 1) % 8], -arcs[i], -radial[i]]
+            [inner_lines[i], radial[(i + 1) % 4], -arcs[i], -radial[i]]
         )
         sectors.append(occ.addPlaneSurface([loop]))
-    return [*center_surfaces, *sectors], ri, ring
+    return [center_surface, *sectors], ri, ring
 
 
 def classify_curve_length(
@@ -170,16 +155,14 @@ def classify_curve_length(
     ri: float,
     ring: float,
 ) -> str:
-    outer_eighth = RISER_RADIUS * math.pi / 4.0
-    inner_side = 2.0 * ri * math.sin(math.pi / 8.0)
-    if abs(length - outer_eighth) < 2.0e-5:
+    outer_quarter = RISER_RADIUS * math.pi / 2.0
+    inner_side = ri * math.sqrt(2.0)
+    if abs(length - outer_quarter) < 2.0e-5:
         return "outer_arc"
     if abs(length - inner_side) < 2.0e-5:
         return "inner_side"
     if abs(length - ring) < 2.0e-5:
         return "radial"
-    if abs(length - ri) < 2.0e-5:
-        return "spoke"
     raise RuntimeError(f"Unclassified O-grid curve length {length}")
 
 
@@ -191,9 +174,9 @@ def set_ogrid_transfinite(
     n_radial: int,
     growth: float,
 ) -> None:
-    if n_theta % 8 != 0:
-        raise ValueError("--n-theta must be divisible by 8 for octagon O-grid")
-    circumferential = n_theta // 8 + 1
+    if n_theta % 4 != 0:
+        raise ValueError("--n-theta must be divisible by 4")
+    circumferential = n_theta // 4 + 1
     curves = {
         curve
         for surface in surfaces
@@ -205,9 +188,7 @@ def set_ogrid_transfinite(
     for curve in curves:
         length = gmsh.model.occ.getMass(1, curve)
         kind = classify_curve_length(length, ri, ring)
-        if kind in {"outer_arc", "inner_side", "spoke"}:
-            # Center quads need equal opposite divisions; spokes match
-            # octagon-side counts so the four central blocks stay transfinite.
+        if kind in {"outer_arc", "inner_side"}:
             gmsh.model.mesh.setTransfiniteCurve(curve, circumferential)
         else:
             endpoints = gmsh.model.getBoundary(
@@ -226,8 +207,8 @@ def set_ogrid_transfinite(
 
 def main() -> None:
     args = parse_args()
-    if args.n_theta % 8 != 0:
-        raise ValueError("--n-theta must be divisible by 8")
+    if args.n_theta % 4 != 0:
+        raise ValueError("--n-theta must be divisible by 4")
     if args.n_radial < 2:
         raise ValueError("--n-radial must be >= 2")
     if args.first_wall_m <= 0 or args.growth < 1.0:
@@ -498,11 +479,80 @@ def main() -> None:
                 ATMOSPHERE_TOP_Z,
             ),
         )
+        # Hot-spot boxes around persistent >70 deg tet faces seen in v4-v6.
+        hotspot_size = min(args.pipe_size, 0.006)
+        hotspot_upstream = field.add("Box")
+        add_box_field(
+            hotspot_upstream,
+            hotspot_size,
+            args.external_size,
+            (
+                1.05,
+                1.25,
+                -PIPE_RADIUS - 0.01,
+                PIPE_RADIUS + 0.01,
+                -PIPE_RADIUS - 0.01,
+                PIPE_RADIUS + 0.01,
+            ),
+        )
+        hotspot_valve = field.add("Box")
+        add_box_field(
+            hotspot_valve,
+            hotspot_size,
+            args.external_size,
+            (
+                4.70,
+                4.90,
+                -PIPE_RADIUS - 0.01,
+                PIPE_RADIUS + 0.01,
+                -PIPE_RADIUS - 0.01,
+                PIPE_RADIUS + 0.01,
+            ),
+        )
+        # Match tet size to hex face scale near the extruded-riser interfaces.
+        interface_size = min(args.riser_size, 0.004)
+        interface_bottom = field.add("Box")
+        add_box_field(
+            interface_bottom,
+            interface_size,
+            args.external_size,
+            (
+                TEE_X - RISER_RADIUS - 0.02,
+                TEE_X + RISER_RADIUS + 0.02,
+                -RISER_RADIUS - 0.02,
+                RISER_RADIUS + 0.02,
+                SWEEP_BOTTOM_Z - 0.03,
+                SWEEP_BOTTOM_Z + 0.03,
+            ),
+        )
+        interface_rim = field.add("Box")
+        add_box_field(
+            interface_rim,
+            interface_size,
+            args.external_size,
+            (
+                TEE_X - RISER_RADIUS - 0.03,
+                TEE_X + RISER_RADIUS + 0.03,
+                -RISER_RADIUS - 0.03,
+                RISER_RADIUS + 0.03,
+                RIM_Z - 0.03,
+                RIM_Z + 0.05,
+            ),
+        )
         minimum = field.add("Min")
         field.setNumbers(
             minimum,
             "FieldsList",
-            [pipe_field, riser_field, valve_field, jet_field],
+            [
+                pipe_field,
+                riser_field,
+                valve_field,
+                jet_field,
+                hotspot_upstream,
+                hotspot_valve,
+                interface_bottom,
+                interface_rim,
+            ],
         )
         field.setAsBackgroundMesh(minimum)
 
