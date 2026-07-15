@@ -93,6 +93,26 @@
       "max_skew": 1.1731,
       "low_weight": 7,
       "solver_gate": false
+    },
+    {
+      "name": "v7_square_hotspot_refine",
+      "first_wall_m": 0.002,
+      "n_radial": 3,
+      "n_theta": 32,
+      "growth": 1.1,
+      "pipe_size": 0.009,
+      "riser_size": 0.004,
+      "hotspot_boxes": true,
+      "interface_boxes": true,
+      "cells": 365151,
+      "hexahedra": 70720,
+      "pyramids": 320,
+      "max_non_orth": 71.4908,
+      "severe_faces": 2,
+      "max_skew": 1.0668,
+      "low_weight": 0,
+      "solver_gate": false,
+      "note": "low-weight cleared; remaining 2 severe faces moved to x~0.69 and x~2.83"
     }
   ],
   "notes": [
@@ -100,6 +120,7 @@
     "Softer near-wall spacing sharply reduces max nonOrth (140 -> 74.6) and severe faces (82 -> 4)",
     "v4-v6 face-set audit: persistent >70 deg faces are tet faces in the pipe near x~1.13 and x~4.79, not O-grid core corners",
     "low-weight faces cluster on hex/tet interfaces at z=0.061 and rim z=1.825",
-    "v6 octagon core worsened max_non (74.3) vs square; v7 restores square + local pipe/interface refinement"
+    "v6 octagon core worsened max_non (74.3) vs square; v7 restores square + local pipe/interface refinement",
+    "v7: low_weight cleared (min w=0.066); max_non=71.49 with 2 severe tet faces at new pipe sites x~0.69/2.83"
   ]
 }

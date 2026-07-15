@@ -479,36 +479,31 @@ def main() -> None:
                 ATMOSPHERE_TOP_Z,
             ),
         )
-        # Hot-spot boxes around persistent >70 deg tet faces seen in v4-v6.
-        hotspot_size = min(args.pipe_size, 0.006)
-        hotspot_upstream = field.add("Box")
-        add_box_field(
-            hotspot_upstream,
-            hotspot_size,
-            args.external_size,
-            (
-                1.05,
-                1.25,
-                -PIPE_RADIUS - 0.01,
-                PIPE_RADIUS + 0.01,
-                -PIPE_RADIUS - 0.01,
-                PIPE_RADIUS + 0.01,
-            ),
-        )
-        hotspot_valve = field.add("Box")
-        add_box_field(
-            hotspot_valve,
-            hotspot_size,
-            args.external_size,
-            (
-                4.70,
-                4.90,
-                -PIPE_RADIUS - 0.01,
-                PIPE_RADIUS + 0.01,
-                -PIPE_RADIUS - 0.01,
-                PIPE_RADIUS + 0.01,
-            ),
-        )
+        # Hot-spot boxes around persistent >70 deg tet faces seen in v4-v7.
+        hotspot_size = min(args.pipe_size, 0.005)
+        hotspot_boxes = [
+            (0.60, 0.80),   # v7 survivor
+            (1.05, 1.25),   # v4-v6 survivor
+            (2.70, 2.95),   # v7 survivor
+            (4.70, 4.90),   # v4-v6 survivor
+        ]
+        hotspot_fields: list[int] = []
+        for xmin, xmax in hotspot_boxes:
+            hotspot = field.add("Box")
+            add_box_field(
+                hotspot,
+                hotspot_size,
+                args.external_size,
+                (
+                    xmin,
+                    xmax,
+                    -PIPE_RADIUS - 0.01,
+                    PIPE_RADIUS + 0.01,
+                    -PIPE_RADIUS - 0.01,
+                    PIPE_RADIUS + 0.01,
+                ),
+            )
+            hotspot_fields.append(hotspot)
         # Match tet size to hex face scale near the extruded-riser interfaces.
         interface_size = min(args.riser_size, 0.004)
         interface_bottom = field.add("Box")
@@ -548,8 +543,7 @@ def main() -> None:
                 riser_field,
                 valve_field,
                 jet_field,
-                hotspot_upstream,
-                hotspot_valve,
+                *hotspot_fields,
                 interface_bottom,
                 interface_rim,
             ],
