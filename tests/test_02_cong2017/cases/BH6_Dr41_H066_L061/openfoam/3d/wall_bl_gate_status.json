@@ -90,6 +90,30 @@
         "wall_surface_count": 7,
         "riser_wall_surface_count": 4
       }
+    },
+    {
+      "name": "wall_bl_v5",
+      "first_wall_m": 0.004,
+      "bl_growth": 1.15,
+      "bl_layers": 3,
+      "scope": "riser_walls",
+      "dist_max_cap_m": 0.008,
+      "cells": 189975,
+      "prisms": 38052,
+      "max_non_orth": 72.4737,
+      "severe_faces": 6,
+      "max_skew": 1.19399,
+      "low_weight": 13,
+      "solver_gate": false,
+      "audit_bl": {
+        "method": "Distance+Threshold",
+        "first_wall_m": 0.004,
+        "growth": 1.15,
+        "layers": 3,
+        "thickness_m": 0.013890000000000001,
+        "wall_surface_count": 7,
+        "riser_wall_surface_count": 4
+      }
     }
   ],
   "notes": [
@@ -98,6 +122,8 @@
     "v2 riser-only first=3mm; gate=False; max_non=70.6749, severe=1, low_w=1, skew=1.37431",
     "v3 riser-only first=4mm; gate=False; max_non=67.776, severe=None, low_w=1, skew=1.22674",
     "v4 riser-only first=5mm; gate=False; max_non=67.9674, severe=None, low_w=1, skew=1.25229",
-    "v4 still one low-weight near rim (~0.0485); cap DistMax at 8mm for v5"
+    "v4 still one low-weight near rim (~0.0485); cap DistMax at 8mm for v5",
+    "v5 DistMax<=8mm; gate=False; max_non=72.4737, severe=6, low_w=13, skew=1.19399",
+    "v5 DistMax cap regressed; exclude rim-lip wall surfaces instead"
   ]
 }

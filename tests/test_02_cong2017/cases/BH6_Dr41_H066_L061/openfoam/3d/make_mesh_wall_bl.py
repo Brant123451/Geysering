@@ -445,14 +445,19 @@ def main() -> None:
             xmin, ymin, zmin, xmax, ymax, zmax = gmsh.model.getBoundingBox(
                 2, tag
             )
-            spans_riser = zmax >= SWEEP_BOTTOM_Z - 1.0e-6 and zmin <= RIM_Z + 1.0e-6
+            spans_riser = (
+                zmax >= SWEEP_BOTTOM_Z - 1.0e-6 and zmin <= RIM_Z + 1.0e-6
+            )
             near_tee = (
                 xmin <= TEE_X + RISER_RADIUS + 0.02
                 and xmax >= TEE_X - RISER_RADIUS - 0.02
                 and ymin <= RISER_RADIUS + 0.02
                 and ymax >= -RISER_RADIUS - 0.02
             )
-            if spans_riser and near_tee:
+            # Exclude the rim lip: Distance from that face seeds a persistent
+            # low-weight tet in the atmosphere (seen in wall_bl_v3/v4).
+            below_rim = zmax < RIM_Z - 0.01
+            if spans_riser and near_tee and below_rim:
                 riser_wall_surfaces.append(tag)
         if not riser_wall_surfaces:
             raise RuntimeError("No riser wall surfaces found for near-wall sizing")
@@ -464,13 +469,7 @@ def main() -> None:
         field.setNumber(threshold, "SizeMin", args.first_wall_m)
         field.setNumber(threshold, "SizeMax", args.riser_size)
         field.setNumber(threshold, "DistMin", args.first_wall_m)
-        # Keep the fine band inside the riser bore; larger DistMax reaches the
-        # rim/atmosphere junction and leaves a stubborn low-weight face.
-        field.setNumber(
-            threshold,
-            "DistMax",
-            min(max(bl_thickness, args.first_wall_m), 0.008),
-        )
+        field.setNumber(threshold, "DistMax", max(bl_thickness, args.riser_size))
         field.setNumber(threshold, "StopAtDistMax", 1)
         minimum = field.add("Min")
         field.setNumbers(
