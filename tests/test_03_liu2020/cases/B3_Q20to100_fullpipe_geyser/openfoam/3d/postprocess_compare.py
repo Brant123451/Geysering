@@ -820,7 +820,12 @@ def main() -> None:
         4,
     )
 
-    riser_path = OUT / "openfoam_3d_riser_series.csv"
+    # Keep the primary baseline riser CSV intact when appending a mesh-sensitivity row.
+    riser_path = (
+        OUT / "openfoam_3d_riser_series.csv"
+        if args.primary
+        else OUT / f"openfoam_3d_riser_series_{args.mesh_label}.csv"
+    )
     riser_metrics = write_riser_csv(
         riser_path, solver_time, report_time, alpha, velocity
     )

@@ -187,3 +187,25 @@ Geometry, `Q0/Q1`, ramp duration and air volume were not altered to chase the
 boundary cells; the 50 m/s velocity limiter activated (max 8989 cells in one
 correction) and is reported as a numerical-quality warning. A refined mesh
 sensitivity run is executed independently to at least solver time `6.5 s`.
+
+## Refined mesh sensitivity status
+
+An independent refined copy (`~141681` tets) was solved to `6.5 s` and appended
+to `openfoam_3d_mesh_sensitivity.csv` (critical-region window only;
+`end_time_after_ramp_s = 4.5`). Primary baseline CSV/PNG/JSON artefacts were not
+replaced.
+
+| quantity | baseline (16.4 s) | refined (6.5 s) |
+|---|---:|---:|
+| PT2 peak | 26.04 kPa @ 1.936 s | 19.17 kPa @ 2.002 s |
+| PT3 peak | 29.96 kPa | 23.71 kPa @ 1.998 s |
+| PT2 / PT3 rebound min | -12.47 / -9.29 kPa | -10.26 / -7.16 kPa |
+| geyser height above lid | 1.32 m | 1.27 m |
+| spilled water | 1.47 L | 0.69 L |
+| mass residual | 6.32% | 1.15% |
+| max velocity-limited cells | 8989 | 11649 |
+
+Refinement does **not** close the gap to the paper 55 kPa peak; the shortfall is
+therefore not cured by this mesh densification alone. Mass closure improves on
+the shorter refined window, while the velocity limiter still activates and
+strict `checkMesh` still fails (626 low-determinant cells).
