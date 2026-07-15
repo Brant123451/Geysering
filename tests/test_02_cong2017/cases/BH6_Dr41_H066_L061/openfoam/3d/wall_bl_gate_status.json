@@ -149,7 +149,8 @@
     "v5 DistMax<=8mm; gate=False; max_non=72.4737, severe=6, low_w=13, skew=1.19399",
     "v5 DistMax cap regressed; exclude rim-lip wall surfaces instead",
     "v6 exclude rim lip; gate=True; max_non=68.2286, severe=None, low_w=0, skew=1.22674",
-    "wall_bl_v6 smoke: solver completed 0.3 s (Allrun via BH6_MESH_SCRIPT)"
+    "wall_bl_v6 smoke: solver completed 0.3 s (Allrun via BH6_MESH_SCRIPT)",
+    "full 13s done: Ta=9.63s (exp 8.1, err 1.5300000000000011s), Yfs=1.061m (exp 1.21), vfs=0.2466 (exp 0.246), NO GEYSER"
   ],
   "passed": "wall_bl_v6",
   "best": {
@@ -167,5 +168,15 @@
     "mesh_script": "make_mesh_wall_bl.py",
     "first_wall_m": 0.004,
     "note": "compressibleInterFoam reached Time=0.3 End; postprocess failed only due to missing digitized CSV outside case tree"
+  },
+  "full_13s_validation": {
+    "completed": true,
+    "Ta_3d_s": 9.63,
+    "Yfs_max_3d_m": 1.0610994772872875,
+    "vfs_average_rise_3d_m_s": 0.2466033089155483,
+    "vint_average_rise_3d_m_s": 0.532524839020146,
+    "geyser_3d": false,
+    "Ta_error_s": 1.5300000000000011,
+    "vfs_average_error_m_s": 0.0006033089155483007
   }
 }
