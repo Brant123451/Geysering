@@ -62,6 +62,11 @@ base/refined 完整运行完成前，
 [`openfoam/3d/README.md`](openfoam/3d/README.md) 与
 [`openfoam/3d/PAPER_AUDIT.md`](openfoam/3d/PAPER_AUDIT.md)。
 
+替换模型的 base/refined 全瞬态（`-12…14.4 s`）均已完成：涌波到达约
+1.53 s（论文 ramp 时钟 1.60 s），两套网格均判为 no-geyser；稳态 PT2/PT3
+仍偏低（约 0.4–0.5 / 2.6–2.8 kPa vs 2.15 / 4.99 kPa）。紧凑结果见
+`outputs/openfoam_3d_*`。
+
 复跑：
 
 ```bash

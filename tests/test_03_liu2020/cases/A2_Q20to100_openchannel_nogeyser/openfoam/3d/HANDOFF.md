@@ -82,47 +82,43 @@ Committed source now uses the thesis tank + movable circular weir
 (`z_crest=0.031 m` from Q0/`hd` only), `Dr=0.057 m`, no headbox, and a
 canonical `-12…14.4 s` window.
 
-### Base full completed
+### Base and refined fulls completed
 
-1. **base mesh**: 158,507 tetrahedra, strict `Mesh OK` (non-orth. max 59.76,
-   skewness 0.845).
-2. **base smoke**: four-rank smoke completed.
-3. **base full**: finished `End` at `t=14.4001` (`ClockTime=96,789 s`,
-   `ExecutionTime=43,290 s`). Compact outputs rewritten under Case
-   `outputs/openfoam_3d_base_*` and primary `openfoam_3d_*`.
-4. **refined**: `NP=4 ./Allrun refined` running in tmux
-   `a2-refined-tankweir`. Mesh: **251,664** tetrahedra, strict `Mesh OK`.
-   Smoke passed; full log advancing near `t ≈ -10.76 s` of `-12…14.4 s`
-   (≈4.7%), four ranks healthy, no fatal/FPE. Until it finishes, any
-   `grid_sensitivity` block that still cites the old fixed-stage refined
-   metrics is provisional and must be replaced.
+1. **base mesh**: 158,507 tetrahedra, strict `Mesh OK`.
+2. **refined mesh**: 251,664 tetrahedra, strict `Mesh OK`.
+3. **base full**: finished `End` at `t=14.4001` (`ClockTime=96,789 s`).
+4. **refined full**: finished `End` (`ClockTime=131,650 s`); compact
+   `outputs/openfoam_3d_refined_*` rewritten. During refined, one ~17 h
+   wall-clock scheduling stall occurred near `t≈-8.25` (no FOAM FATAL);
+   after 20-minute wake monitoring began, progress remained continuous
+   until completion.
 5. Paper↔model cross-check (journal + Liu 2018 thesis) confirms Case A2
    geometry, Q0/Q1, open-channel `hd/Dd=1/4`, valve 0.4 s, and atmospheric
    openings match; documented non-measurements remain weir crest calibration
    to `(Q0,hd)`, chamber IC `z=0.12` from PT3=0.99 kPa, and PT in-plane
    placement.
 
-| Replacement-model base metric | Value | Paper / target |
-|---|---:|---:|
-| Pre-ramp inlet / weir | 19.981 / 20.079 L/s | 20 / 20 L/s |
-| Pre-ramp water-volume slope | −0.134 L/s | ≈0 |
-| Downstream depths `x=0.60/3.25/6.00` | 0.062 / 0.068 / 0.078 m | `hd=0.070 m` (station unreported) |
-| PT3 initial | 0.796 kPa | 0.99 kPa (also described as 0.10 m) |
-| Bore arrival, ramp clock | 1.538 s | 1.60 s |
-| Bore local velocity | 4.79 m/s | ≈4.56 m/s |
-| PT2 / PT3 paper 7–14 s means | 0.517 / 2.562 kPa | 2.15 / 4.99 kPa |
-| First contiguous mixture column | 0.06 m | ≈0.13 m |
-| Max contiguous column / mixture front | 0.22 / 0.38 m | <1.22 m (no geyser) |
-| Reached riser top / water discharge | no / ≈0 | no geyser |
-| Max Co / interface Co | 0.492 / 0.478 | interface target ≤0.5 |
-| Final liquid-balance residual / inflow | +0.054% | — |
+| Metric | Experiment / target | base | refined |
+|---|---:|---:|---:|
+| Cells | — | 158,507 | 251,664 |
+| Pre-ramp inlet / weir (L/s) | 20 / 20 | 19.981 / 20.079 | 19.453 / 20.106 |
+| Pre-ramp water-volume slope (L/s) | ≈0 | −0.134 | −0.655 |
+| Downstream depths `x=0.60/3.25/6.00` (m) | `hd=0.070` | 0.062/0.068/0.078 | 0.058/0.067/0.068 |
+| PT3 initial (kPa) | 0.99 | 0.796 | 0.823 |
+| Bore arrival, ramp clock (s) | 1.60 | 1.538 | 1.525 |
+| PT2 / PT3 paper 7–14 s means (kPa) | 2.15 / 4.99 | 0.517 / 2.562 | 0.417 / 2.750 |
+| First contiguous mixture column (m) | ≈0.13 | 0.06 | 0.04 |
+| Max contiguous column / mixture front (m) | <1.22 | 0.22 / 0.38 | 0.24 / 0.32 |
+| Reached riser top / geyser | no | no / no | no / no |
+| Max Co / interface Co | interface ≤0.5 | 0.492 / 0.478 | 0.538 / 0.473 |
+| Final liquid-balance residual / inflow | — | +0.054% | +0.039% |
 
-The replacement base run **closes the pre-ramp Q0 state** and reproduces bore
-timing closely, while still **underpredicting PT2/PT3 steady pressures** and
-the first mixture-column height. No crest or BC retuning from transient or
-no-geyser evidence was applied. Final acceptance still requires the matching
-refined full and an honest grid-sensitivity replace of the superseded
-fixed-stage refined files.
+Grid sensitivity (replacement model): bore arrival changes by 0.013 s
+(0.85%); PT3 paper-window mean by 0.19 kPa (6.8%); PT2 by 0.10 kPa
+(23.9% of the small base value). Both meshes underpredict steady PT2/PT3
+and the first mixture-column height, while closing Q0 far better than the
+superseded fixed-stage runs and reproducing bore timing. No crest or BC
+retuning from transient or no-geyser evidence was applied.
 
 ## Reproduction
 
