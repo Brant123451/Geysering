@@ -145,13 +145,12 @@ First `Allrun.resume phase1` failed: `latestTime` formatted as
 restarted from `1.2289420474` with sigma read confirmed; target solver
 `6.75 s` (paper 6.50 s).
 
-**Live status (UTC 2026-07-16 ~05:57):** solver `t ≈ 4.073 / 6.75`
-(~51.5% of phase1 span from 1.2289), 4-rank `compressibleInterFoam`
-healthy (~293% CPU sum, `maxCo≈0.70`, `Δt~8.6e-5`), no Fatal/SIGFPE.
+**Live status (UTC 2026-07-16 ~11:34):** solver `t ≈ 5.103 / 6.75`
+(~70.2% of phase1 span from 1.2289), 4-rank `compressibleInterFoam`
+healthy (~292% CPU sum, `maxCo≈0.70`), no Fatal/SIGFPE.
 `purgeWrite 4` checkpoints on processors include
-`3.2289` / `3.4789` / `3.7289` / `3.9789` (next expected near `4.2289`).
-Wall clock since this phase1 start ~21 h; remaining ~2.68 s of simulation
-at ~0.13–0.14 sim-s per wall-hour.
+`4.2289` / `4.4789` / `4.7289` / `4.9789` (next expected near `5.2289`).
+Remaining ~1.65 s of simulation at ~0.18–0.19 sim-s per wall-hour.
 
 Inventory-only `|Δ∫sigma|/ref` crossed 1% near solver 1.32 s because tagged
 mass is leaving through `atmosphere` (now `inv_rel ≈ −45.7%`). Full gate
