@@ -74,20 +74,10 @@ def draw_apparatus(ax):
     ax.fill_between(xs, zax - RU, zax + RU, color="#d9d9d9", alpha=0.55, zorder=0)
     # chamber
     ax.add_patch(Rectangle((0, 0), LC, HC, fill=False, ec="#333", lw=1.2, zorder=2))
-    # downstream pipe
-    ax.add_patch(
-        FancyBboxPatch(
-            (LC, 0),
-            LD,
-            DD,
-            boxstyle="square,pad=0",
-            fill=True,
-            fc="#d9d9d9",
-            ec="#333",
-            alpha=0.55,
-            zorder=0,
-        )
-    )
+    # downstream pipe outline only (do not fill the bore, or water looks absent)
+    ax.plot([LC, LC + LD], [0.0, 0.0], color="#333", lw=1.0, zorder=2)
+    ax.plot([LC, LC + LD], [DD, DD], color="#333", lw=1.0, zorder=2)
+    ax.plot([LC + LD, LC + LD], [0.0, DD], color="#333", lw=1.0, zorder=2)
     # riser
     xr0 = LC / 2 - DR / 2
     ax.add_patch(Rectangle((xr0, HC), DR, HR, fill=False, ec="#333", lw=1.2, zorder=2))
@@ -254,15 +244,16 @@ def render_full_motion_collage() -> Path:
                     Rectangle((LC / 2 - DR / 2, zi - 0.01), DR, 0.02, color="#9ecae1", alpha=0.7, zorder=3)
                 )
 
-        # downstream depths
-        for tx, Ax, xx in (
-            (t060, A060, 0.60),
-            (t325, A325, 3.25),
-            (t600, A600, 6.00),
-        ):
+        # Continuous downstream free surface from the three wet-area stations.
+        # Previous thin station bars made the right-hand pipe look empty.
+        hs = []
+        for tx, Ax in ((t060, A060), (t325, A325), (t600, A600)):
             j = np.argmin(np.abs(tx - t))
-            h = area_to_depth(Ax[j], DD)
-            ax.add_patch(Rectangle((xx - 0.08, 0.0), 0.16, h, color="#2b6cb0", alpha=0.8, zorder=1))
+            hs.append(area_to_depth(Ax[j], DD))
+        x_dn = np.linspace(LC, LC + LD, 80)
+        h_dn = np.interp(x_dn, [0.60, 3.25, 6.00], hs)
+        h_dn = np.clip(h_dn, 0.0, DD)
+        ax.fill_between(x_dn, 0.0, h_dn, color="#2b6cb0", alpha=0.85, zorder=1)
 
         # tank stage
         i = np.argmin(np.abs(t_tank - t))
@@ -337,10 +328,13 @@ def render_motion_gif() -> Path:
                 ax.add_patch(Rectangle((LC / 2 - DR / 2, zi - 0.01), DR, 0.02, color="#2b6cb0", alpha=0.9))
             elif ai >= 0.2:
                 ax.add_patch(Rectangle((LC / 2 - DR / 2, zi - 0.01), DR, 0.02, color="#9ecae1", alpha=0.7))
-        for tx, Ax, xx in ((t060, A060, 0.60), (t325, A325, 3.25), (t600, A600, 6.00)):
+        hs = []
+        for tx, Ax in ((t060, A060), (t325, A325), (t600, A600)):
             j = np.argmin(np.abs(tx - t))
-            h = area_to_depth(Ax[j], DD)
-            ax.add_patch(Rectangle((xx - 0.08, 0.0), 0.16, h, color="#2b6cb0", alpha=0.8))
+            hs.append(area_to_depth(Ax[j], DD))
+        x_dn = np.linspace(LC, LC + LD, 80)
+        h_dn = np.clip(np.interp(x_dn, [0.60, 3.25, 6.00], hs), 0.0, DD)
+        ax.fill_between(x_dn, 0.0, h_dn, color="#2b6cb0", alpha=0.85)
         i = np.argmin(np.abs(t_tank - t))
         z_free_t = water_surface_from_alpha_column(a_tank[i], z_tank)
         tank_x0 = LC + LD
