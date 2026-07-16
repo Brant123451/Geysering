@@ -1,0 +1,169 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+
+application     compressibleInterIsoFoam;
+
+startFrom       startTime;
+startTime       0;
+stopAt          endTime;
+// 2.0 s Q0 settle + 0.4 s ramp + 14.0 s post-ramp coverage.
+endTime         16.4;
+
+deltaT          1e-5;
+
+writeControl    adjustableRunTime;
+writeInterval   0.25;
+purgeWrite      4;
+writeFormat     binary;
+writePrecision  8;
+writeCompression on;
+
+timeFormat      general;
+timePrecision   9;
+runTimeModifiable yes;
+
+adjustTimeStep  yes;
+// Permit the v2512 tutorial-standard bulk-flow Courant limit while retaining
+// the stricter interface limit during bore impact and ejection.
+maxCo           0.50;
+maxAlphaCo      0.15;
+maxDeltaT       0.001;
+
+functions
+{
+    probesPT
+    {
+        type                probes;
+        libs                (sampling);
+        fields              (p p_rgh alpha.water U);
+        interpolationScheme cellPoint;
+        probeLocations
+        (
+            (0.02 0.05 0.02)       // PT3: front-wall side, +0.02 m
+            (0.10 0.05 0.44)       // PT2: one cell below chamber lid
+            (0.15 0.027 1.25)      // PT1: riser wall, lid +0.80 m
+            (-0.30 0.0 0.378)      // PT4: upstream crown diagnostic
+        );
+        writeControl        adjustableRunTime;
+        writeInterval       0.002;
+    }
+
+    riserCentreline
+    {
+        type                probes;
+        libs                (sampling);
+        fields              (alpha.water U);
+        interpolationScheme cellPoint;
+        probeLocations
+        (
+            #include "riserProbeLocations"
+        );
+        writeControl        adjustableRunTime;
+        writeInterval       0.002;
+    }
+
+    interfaceHeightCentre
+    {
+        type                interfaceHeight;
+        libs                (fieldFunctionObjects);
+        locations           ((0.15 0.0 0.46));
+        alpha               alpha.water;
+        direction           (0 0 1);
+        liquid              true;
+        interpolationScheme cellPoint;
+        writeToFile         true;
+        log                 false;
+        writeControl        adjustableRunTime;
+        writeInterval       0.002;
+    }
+
+    waterVolume
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        fields          (alpha.water);
+        operation       volIntegrate;
+        regionType      all;
+        postOperation   none;
+        writeFields     false;
+        log             false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }
+
+    waterFluxInlet
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            inlet;
+        operation       weightedSum;
+        weightField     alpha.water;
+        fields          (phi);
+        writeFields     false;
+        log             false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.002;
+    }
+
+    waterFluxOutlet
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            outlet;
+        operation       weightedSum;
+        weightField     alpha.water;
+        fields          (phi);
+        writeFields     false;
+        log             false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.002;
+    }
+
+    waterFluxAtmosphere
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            atmosphere;
+        operation       weightedSum;
+        weightField     alpha.water;
+        fields          (phi);
+        writeFields     false;
+        log             false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.002;
+    }
+
+    mixtureFluxInlet
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            inlet;
+        operation       sum;
+        fields          (phi);
+        writeFields     false;
+        log             false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.002;
+    }
+
+    extrema
+    {
+        type            fieldMinMax;
+        libs            (fieldFunctionObjects);
+        fields          (p alpha.water U T);
+        mode            magnitude;
+        location        true;
+        log             false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }
+}

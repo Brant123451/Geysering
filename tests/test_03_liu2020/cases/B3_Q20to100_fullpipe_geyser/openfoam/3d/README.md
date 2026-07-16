@@ -235,3 +235,13 @@ Outputs (under `outputs/`):
 Pipe free-surface evolution away from the riser centreline is shown only as the
 declared initial fill (upstream `0.08 m`, downstream full); the animated jet is
 the measured 3-D centreline `α.water`.
+
+## Uploaded simulation data (`sim_data/`)
+
+Retained meshes, reconstructed volume fields, full `postProcessing` series and
+ParaView `VTK/` exports are stored at:
+
+`tests/test_03_liu2020/cases/B3_Q20to100_fullpipe_geyser/sim_data/`
+
+See `sim_data/README.md` for the purgeWrite limitation and how to open the data
+locally. Compact validation plots/CSVs remain under `outputs/`.

@@ -1,0 +1,151 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2512                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    arch        "LSB;label=32;scalar=64";
+    class       dictionary;
+    location    "6.5/uniform/functionObjects";
+    object      functionObjectProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+cdf7e925f5746741c316f5fbcf39ad0dfca90775
+{
+    probesPT
+    {
+        scalar
+        {
+            average(alpha.water) 0.4891981323147804;
+            min(alpha.water) 0;
+            max(alpha.water) 0.999999860234512;
+            average(p)      102923.4702546176;
+            min(p)          101969.0077796672;
+            max(p)          104178.4142132185;
+            average(p_rgh)  103896.6958628759;
+            min(p_rgh)      102776.1716488219;
+            max(p_rgh)      105664.9056890267;
+        }
+        label
+        {
+            size(alpha.water) 4;
+            size(p)         4;
+            size(p_rgh)     4;
+            size(U)         4;
+        }
+        vector
+        {
+            average(U)      ( -0.027934875 -0.10802724 -0.78947716 );
+            min(U)          ( -0.951806 -0.32644307 -3.1687015 );
+            max(U)          ( 0.52665777 -0.0011415854 0.08349978 );
+        }
+    }
+    riserCentreline
+    {
+        scalar
+        {
+            average(alpha.water) 3.900767191930545e-10;
+            min(alpha.water) 0;
+            max(alpha.water) 2.475688421001424e-08;
+        }
+        label
+        {
+            size(alpha.water) 96;
+            size(U)         96;
+        }
+        vector
+        {
+            average(U)      ( 0.0072254815 -0.012839406 -38.37869 );
+            min(U)          ( -0.59986298 -0.61393363 -50 );
+            max(U)          ( 1.7259186 0.56813271 -5.4335516 );
+        }
+    }
+    waterFluxInlet
+    {
+        scalar
+        {
+            weightedSum(inlet,phi) -0.09999999999999999;
+        }
+    }
+    waterFluxOutlet
+    {
+        scalar
+        {
+            weightedSum(outlet,phi) 0.1153602554235132;
+        }
+    }
+    waterFluxAtmosphere
+    {
+        scalar
+        {
+            weightedSum(atmosphere,phi) 0;
+        }
+    }
+    mixtureFluxInlet
+    {
+        scalar
+        {
+            sum(inlet,phi)  -0.09999999999999999;
+        }
+    }
+    waterVolume
+    {
+        scalar
+        {
+            volIntegrate(alpha.water) 0.5730623546499158;
+        }
+    }
+    extrema
+    {
+        scalar
+        {
+            min(T)          292.3257750938797;
+            max(T)          294.3310617378303;
+            min(mag(U))     0;
+            max(mag(U))     50.00000000000001;
+            min(alpha.water) 0;
+            max(alpha.water) 1;
+            min(p)          87201.65568559758;
+            max(p)          112497.3675859586;
+        }
+        label
+        {
+            min(T)_cell     13859;
+            min(T)_processor 1;
+            max(T)_cell     33198;
+            max(T)_processor 3;
+            min(mag(U))_cell 0;
+            min(mag(U))_processor 0;
+            max(mag(U))_cell 27173;
+            max(mag(U))_processor 1;
+            min(alpha.water)_cell 13;
+            min(alpha.water)_processor 0;
+            max(alpha.water)_cell 1;
+            max(alpha.water)_processor 0;
+            min(p)_cell     33481;
+            min(p)_processor 0;
+            max(p)_cell     13372;
+            max(p)_processor 0;
+        }
+        vector
+        {
+            min(T)_position ( 6.2466738 0.03835791 0.26499034 );
+            max(T)_position ( 0.16592116 0.016567254 0.45442174 );
+            min(mag(U))_position ( -4.7201618 0.092419484 0.36339164 );
+            max(mag(U))_position ( 0.38205547 0.08583703299999999 2.9971343 );
+            min(alpha.water)_position ( 0.1289134 -0.016404989 1.5217921 );
+            max(alpha.water)_position ( -5.9190579 -0.1013357 0.23763557 );
+            min(p)_position ( -5.7949477 0.09535913 0.36697713 );
+            max(p)_position ( -6.145288 0.13856963 0.188 );
+        }
+    }
+}
+
+
+// ************************************************************************* //
