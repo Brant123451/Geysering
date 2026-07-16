@@ -4,17 +4,43 @@
   "case": "BH3_Dr26_H066_L061",
   "paper_run": "B-H3",
   "status": "running_after_stability_restart",
-  "check_source": "watchdog_20m",
-  "updated_at_unix": 1784236520.1577218,
-  "updated_at_iso": "2026-07-16T21:15:20Z",
+  "check_source": "agent_20min",
+  "updated_at_unix": 1784237750.898492,
+  "updated_at_iso": "2026-07-16T21:35:50Z",
   "workdir": "/tmp/bh3-study-layered-d08978d/base_nominal",
-  "simulated_time_s": 5.09966443,
+  "simulated_time_s": 5.115424744,
   "event_end_time_s": 13.0,
-  "progress_fraction": 0.39228187923076924,
-  "throughput_sim_s_per_wall_h_since_restart": 0.04047809243462376,
-  "eta_wall_h_at_restart_rate": 195.17558992583076,
+  "progress_fraction": 0.3934942110769231,
+  "throughput_sim_s_per_wall_h_since_restart": 0.04051573696014648,
+  "eta_wall_h_at_restart_rate": 194.60525335515194,
   "n_workers": 4,
   "avg_worker_cpu_pct_lifetime": 62.3,
+  "workers": [
+    {
+      "pid": 1035969,
+      "pcpu": 62.3,
+      "pmem": 3.9,
+      "etime": "2-02:58:42"
+    },
+    {
+      "pid": 1035970,
+      "pcpu": 62.3,
+      "pmem": 3.5,
+      "etime": "2-02:58:42"
+    },
+    {
+      "pid": 1035971,
+      "pcpu": 62.3,
+      "pmem": 3.7,
+      "etime": "2-02:58:42"
+    },
+    {
+      "pid": 1035972,
+      "pcpu": 62.3,
+      "pmem": 3.6,
+      "etime": "2-02:58:42"
+    }
+  ],
   "monitor_interval_s": 1200,
   "auto_recover": true,
   "stability_incident": {
@@ -30,12 +56,14 @@
   "health": {
     "status_level": "OK",
     "foam_fatal_in_tail": false,
-    "latest_field_write_s": 5.05,
-    "deltaT_last": 3.355704698e-05,
-    "maxCo_last": 0.09977464669,
+    "latest_field_write_s": 5.1,
+    "deltaT_last": 3.542546746e-05,
+    "maxCo_last": 0.1000407541,
     "alpha_max_last": 1.0,
-    "advanced": "yes",
-    "stall_count": 0
+    "advanced": false,
+    "stall_count": 1,
+    "idle_pct": 2.4,
+    "top_cpu_line": "%Cpu(s): 90.2 us,  7.3 sy,  0.0 ni,  2.4 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st"
   },
   "paper_consistency_reverified_2026_07_14": true
 }
