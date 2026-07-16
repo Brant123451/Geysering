@@ -264,6 +264,13 @@ never develops the measured positive lid pressure. The mixture-front metric is
 also grid-sensitive (0.02 to 0.08 m), although both values remain far below
 the riser top and the experimental first-column scalar.
 
+## Simulation data for local rendering
+
+See [`SIMDATA.md`](SIMDATA.md). The refined run products under `case/`
+(`VTK/`, reconstructed times `-12/12/13/14`, `postProcessing/`, `polyMesh/`)
+are force-committed on this branch so you can rebuild front elevations locally
+without re-solving. Large probe/VTK blobs use Git LFS.
+
 ## Front-elevation renders
 
 `render_front_water_air.py` writes complete front views under `outputs/`:

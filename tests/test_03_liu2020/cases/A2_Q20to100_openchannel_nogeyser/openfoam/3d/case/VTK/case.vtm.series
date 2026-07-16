@@ -1,0 +1,9 @@
+{
+  "file-series-version" : "1.0",
+  "files" : [
+    { "name" : "case_0.vtm", "time" : -12 },
+    { "name" : "case_232258.vtm", "time" : 12 },
+    { "name" : "case_238055.vtm", "time" : 13 },
+    { "name" : "case_243803.vtm", "time" : 14 }
+  ]
+}
