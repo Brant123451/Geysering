@@ -276,7 +276,10 @@ the riser top and the experimental first-column scalar.
   dual panels;
 * `openfoam_3d_refined_front_motion_timeline.png` / `_motion.gif` — full
   `-12…14.4 s` dual-panel motion from continuous probes (volume fields between
-  dumps were purged).
+  dumps were purged);
+* `openfoam_3d_refined_front_complete_motion.gif` — denser complete dual-panel
+  animation (~130 frames, adaptive cadence, timeline scrubber); true VTK
+  `y=0` fields at retained dumps, probe reconstruction elsewhere.
 
 The pipe-zoom panel is required because open-channel `hd≈0.07–0.19 m` is only
 a thin band when the full 1.22 m riser is drawn to scale.

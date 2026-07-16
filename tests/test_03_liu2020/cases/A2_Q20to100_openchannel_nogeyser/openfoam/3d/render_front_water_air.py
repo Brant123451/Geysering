@@ -415,7 +415,62 @@ def render_full_motion_collage() -> Path:
     return out
 
 
+def _adaptive_timeline(t0: float, t1: float) -> np.ndarray:
+    """Dense sampling around the valve ramp / bore; coarser elsewhere."""
+    parts = [
+        np.arange(t0, min(0.0, t1) + 1e-9, 0.40),
+        np.arange(max(0.0, t0), min(4.0, t1) + 1e-9, 0.08),
+        np.arange(max(4.0, t0), t1 + 1e-9, 0.20),
+        np.array([t0, t1], dtype=float),
+    ]
+    # Force true VTK dump times into the schedule.
+    forced = np.array([t for t, _ in TIMES], dtype=float)
+    forced = forced[(forced >= t0 - 1e-9) & (forced <= t1 + 1e-9)]
+    t = np.unique(np.round(np.concatenate(parts + [forced]), 6))
+    return t[(t >= t0 - 1e-9) & (t <= t1 + 1e-9)]
+
+
+def _draw_vtk_dual(ax_full, ax_zoom, triangulation: Triangulation, alpha: np.ndarray, t: float):
+    _paint_tripcolor(ax_full, triangulation, alpha, Z_FULL)
+    ax_full.set_title(
+        f"TRUE VTK y=0 field   t = {t:.2f} s   (volume dump)",
+        fontsize=12,
+        color="#0b3d5c",
+    )
+    _paint_tripcolor(ax_zoom, triangulation, alpha, Z_PIPE)
+    ax_zoom.set_title(
+        "Pipe zoom — true alpha.water (open-channel water = blue band)",
+        fontsize=11,
+        color="#0b3d5c",
+    )
+
+
+def _draw_probe_dual(ax_full, ax_zoom, t: float, src: dict):
+    _draw_probe_frame(ax_full, t, src, Z_FULL)
+    ax_full.set_title(f"Complete front elevation   t = {t:.2f} s", fontsize=12)
+    _draw_probe_frame(ax_zoom, t, src, Z_PIPE)
+    ax_zoom.set_title(
+        "Pipe zoom — downstream depths labeled (probe-reconstructed)",
+        fontsize=11,
+    )
+
+
+def _draw_time_scrubber(ax, t: float, t0: float, t1: float):
+    ax.clear()
+    ax.set_xlim(t0, t1)
+    ax.set_ylim(0, 1)
+    ax.axvspan(0.0, 0.4, color="#f6ad55", alpha=0.35, label="Q0→Q1 valve")
+    ax.axvline(1.60, color="#c53030", lw=1.0, ls="--", label="paper bore 1.60 s")
+    ax.axvline(t, color="#1a365d", lw=2.5)
+    ax.set_yticks([])
+    ax.set_xlabel("simulation time t (s)")
+    ax.set_title(f"timeline scrubber   now t = {t:.2f} s", fontsize=10)
+    for spine in ("top", "left", "right"):
+        ax.spines[spine].set_visible(False)
+
+
 def render_motion_gif() -> Path:
+    """Legacy shorter dual-panel GIF (kept for compatibility)."""
     src = _load_motion_sources()
     frames_t = np.linspace(max(-12.0, src["t_riser"][0]), min(14.4, src["t_riser"][-1]), 72)
 
@@ -427,16 +482,112 @@ def render_motion_gif() -> Path:
         t = float(frames_t[k])
         ax_full.clear()
         ax_zoom.clear()
-        _draw_probe_frame(ax_full, t, src, Z_FULL)
-        ax_full.set_title(f"Full front elevation   t = {t:.2f} s", fontsize=12)
-        _draw_probe_frame(ax_zoom, t, src, Z_PIPE)
-        ax_zoom.set_title("Pipe zoom — downstream water depth labeled", fontsize=11)
+        _draw_probe_dual(ax_full, ax_zoom, t, src)
 
     anim = FuncAnimation(fig, update, frames=len(frames_t), interval=100)
     out = OUT / "openfoam_3d_refined_front_motion.gif"
     anim.save(out, writer=PillowWriter(fps=10))
     anim.save(ART / out.name, writer=PillowWriter(fps=10))
     plt.close(fig)
+    return out
+
+
+def render_complete_front_gif() -> Path:
+    """Very complete dual-panel front-elevation GIF over the full run.
+
+    Adaptive time grid (~130 frames): dense around valve/bore, coarser in
+    Q0 init and late steady state. At retained VTK dump times the frame is
+    the true y=0 alpha.water field; all other frames use continuous probes.
+    """
+    from PIL import Image
+
+    src = _load_motion_sources()
+    t0 = float(max(-12.0, src["t_riser"][0]))
+    t1 = float(min(14.4, src["t_riser"][-1]))
+    frames_t = _adaptive_timeline(t0, t1)
+
+    print(f"  complete GIF frames: {len(frames_t)}  t=[{frames_t[0]:.3f}, {frames_t[-1]:.3f}]")
+    print("  caching VTK triangulations for dump times...")
+    vtk_cache: dict[float, tuple[Triangulation, np.ndarray]] = {}
+    for t_vtk, folder in TIMES:
+        if t0 - 0.05 <= t_vtk <= t1 + 0.05:
+            vtk_cache[float(t_vtk)] = vtk_slice_triangulation(folder)
+
+    tmp_dir = ART / "_complete_front_frames"
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    frame_paths: list[Path] = []
+
+    fig = plt.figure(figsize=(16.5, 8.2))
+    ax_full = fig.add_axes([0.05, 0.50, 0.90, 0.42])
+    ax_zoom = fig.add_axes([0.05, 0.14, 0.90, 0.30])
+    ax_scrub = fig.add_axes([0.05, 0.035, 0.90, 0.055])
+
+    for k, t in enumerate(frames_t):
+        t = float(t)
+        ax_full.clear()
+        ax_zoom.clear()
+        # Prefer true VTK within 0.05 s of a retained dump.
+        dump_t = None
+        for tv in vtk_cache:
+            if abs(t - tv) <= 0.05:
+                dump_t = tv
+                break
+        if dump_t is not None:
+            triangulation, alpha = vtk_cache[dump_t]
+            _draw_vtk_dual(ax_full, ax_zoom, triangulation, alpha, dump_t)
+            mode = "VTK"
+        else:
+            _draw_probe_dual(ax_full, ax_zoom, t, src)
+            mode = "probe"
+        _draw_time_scrubber(ax_scrub, t, t0, t1)
+        fig.suptitle(
+            "Liu 2020 Case A2 refined — COMPLETE front elevation water/air motion\n"
+            f"frame {k + 1}/{len(frames_t)}   source={mode}   "
+            "blue=water, cream/white=air",
+            fontsize=13,
+            y=0.995,
+        )
+        fp = tmp_dir / f"frame_{k:04d}.png"
+        fig.savefig(fp, dpi=110)
+        frame_paths.append(fp)
+        if k % 20 == 0 or k + 1 == len(frames_t):
+            print(f"  rendered frame {k + 1}/{len(frames_t)}  t={t:.2f}s  ({mode})")
+
+    plt.close(fig)
+
+    print("  assembling GIF...")
+    images = [Image.open(p).convert("P", palette=Image.ADAPTIVE, colors=256) for p in frame_paths]
+    out = OUT / "openfoam_3d_refined_front_complete_motion.gif"
+    # Hold first/last a bit longer for readability.
+    durations = [80] * len(images)
+    durations[0] = 500
+    durations[-1] = 700
+    for i, t in enumerate(frames_t):
+        if any(abs(float(t) - tv) <= 0.05 for tv in vtk_cache):
+            durations[i] = 450  # linger on true VTK frames
+    images[0].save(
+        out,
+        save_all=True,
+        append_images=images[1:],
+        duration=durations,
+        loop=0,
+        optimize=False,
+    )
+    images[0].save(
+        ART / out.name,
+        save_all=True,
+        append_images=images[1:],
+        duration=durations,
+        loop=0,
+        optimize=False,
+    )
+    # Cleanup frame PNGs to avoid clutter (keep GIF only).
+    for p in frame_paths:
+        p.unlink(missing_ok=True)
+    try:
+        tmp_dir.rmdir()
+    except OSError:
+        pass
     return out
 
 
@@ -476,6 +627,9 @@ def main() -> None:
     print("rendering dual-panel motion gif...")
     p3 = render_motion_gif()
     print("wrote", p3)
+    print("rendering COMPLETE front-elevation motion gif...")
+    p3b = render_complete_front_gif()
+    print("wrote", p3b)
     print("rendering downstream zoom...")
     p4 = render_downstream_zoom()
     print("wrote", p4)
