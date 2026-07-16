@@ -507,6 +507,18 @@ timestep controls.
     admitted baseline (`nCorrectors=2`, `nOuterCorrectors=1`) and raise only
     `CASEB_N_NON_ORTHOGONAL_CORRECTORS` from 0 to 1 through a fresh 0.12 s
     rim-onset screen.
+37. The fresh `nNonOrthogonalCorrectors=1` 0.12 s screen completed and was
+    rejected:
+    * solver reached 0.120003 s (with a mid-run stall near 0.1017 s resumed from
+      the 0.099998 dump); observed global/interface Courant maxima were
+      0.162/0.152;
+    * free-surface hotspots persisted through 0.100 s; at 0.110 s the same
+      pure-gas rim location (\(y=0.657\) m) locked on with \(U=1.690\) m/s and
+      grew to 1.841 m/s at 0.120 s with zero curvature;
+    * \(H^*\) peak-to-peak was only 0.001016, again a false pressure-only clear.
+    Do not promote `nNonOrthogonalCorrectors=1`.  Next raise only
+    `CASEB_N_NON_ORTHOGONAL_CORRECTORS` from 1 to 2 on the admitted baseline
+    through another fresh 0.12 s rim-onset screen.
 
 ## Still required
 
@@ -538,11 +550,12 @@ The scientific reproduction is **not complete**.  Continue in this order:
    continuation also passes the pressure-drift admission gate.  The subsequent
    full-hold continuation was rejected at about 0.117 s for a growing rim
    exterior-gas hotspot despite a falsely calm transducer \(H^*\).  Isolated
-   `nCorrectors=3`, isolated `nOuterCorrectors=2`, and their stack
-   (`nCorrectors=3` + `nOuterCorrectors=2`) 0.12 s screens are all rejected for
-   the same growing rim exterior-gas mode.  Leave the PIMPLE-coupling axis and
-   raise only `CASEB_N_NON_ORTHOGONAL_CORRECTORS` from 0 to 1 on the admitted
-   baseline through a fresh 0.12 s rim-onset screen before any new 1.0 s hold.
+   `nCorrectors=3`, isolated `nOuterCorrectors=2`, their stack, and
+   `nNonOrthogonalCorrectors=1` 0.12 s screens are all rejected for the same
+   growing rim exterior-gas mode (non-ortho=1 only delayed onset to 0.110 s).
+   Next raise only `CASEB_N_NON_ORTHOGONAL_CORRECTORS` from 1 to 2 on the
+   admitted baseline through a fresh 0.12 s rim-onset screen before any new
+   1.0 s hold.
    Extend a candidate past the 0.04 s
    pressure-drift onset only if it stays within the declared Courant limits
    and reduces peak velocity, and only \(H^*\) peak-to-peak at or below 0.02

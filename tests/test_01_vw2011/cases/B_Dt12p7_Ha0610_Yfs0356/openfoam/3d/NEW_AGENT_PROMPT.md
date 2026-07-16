@@ -569,6 +569,15 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     不得把该叠层写入 baseline。PIMPLE 耦合轴在本 onset 窗口已穷尽。下一步
     回到已准入的 `nCorrectors=2`、`nOuterCorrectors=1`，只把
     `CASEB_N_NON_ORTHOGONAL_CORRECTORS` 从 0 提到 1，再跑 0.12 s rim-onset。
+34. `nNonOrthogonalCorrectors=1` 的全新 0.12 s 筛查已完成并被拒绝：
+    - solver 达到 0.120003 s（中途约 0.1017 s 停滞，已从 0.099998 dump 续算）；
+      global/interface Co 为 0.162/0.152；
+    - 直至 0.100 s 热点仍在自由面；0.110 s 跳到 rim 纯气（U=1.690），
+      0.120 s 增至 1.841，曲率为 0；
+    - \(H^*\) peak-to-peak 仅 0.001016，压力 alone 会再次误判；
+    - 相对叠层（rim 自 0.090 s）仅推迟 onset，终态速度几乎相同。
+    不得把 `nNonOrthogonalCorrectors=1` 写入 baseline。下一步只把
+    `CASEB_N_NON_ORTHOGONAL_CORRECTORS` 从 1 提到 2，再跑 0.12 s rim-onset。
 
 十、hold 验收
 
@@ -604,7 +613,7 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
 - CASEB_N_CORRECTORS=2（`=3` 单独及与 outer=2 叠层的 0.12 s rim 筛查均已拒绝）
 - CASEB_N_OUTER_CORRECTORS=1（`=2` 单独及与 nCorrectors=3 叠层的 0.12 s rim 筛查均已拒绝）
 - CASEB_PRESSURE_FINAL_TOLERANCE=1e-7（诊断可收紧；当前候选为 1e-10）
-- CASEB_N_NON_ORTHOGONAL_CORRECTORS=0（下一隔离诊断：提到 1 做 0.12 s rim 筛查）
+- CASEB_N_NON_ORTHOGONAL_CORRECTORS=0（`=1` 的 0.12 s rim 筛查已拒绝；下一隔离诊断提到 2）
 - CASEB_HA0=0.579|0.610|0.641
 - CASEB_GAS_EOS=perfectGas|rhoConst
 

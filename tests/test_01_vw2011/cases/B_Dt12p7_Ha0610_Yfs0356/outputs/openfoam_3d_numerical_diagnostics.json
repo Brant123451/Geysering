@@ -2226,5 +2226,131 @@
       "next_action": "Leave the PIMPLE-coupling axis. Revert to the admitted baseline (nCorrectors=2, nOuterCorrectors=1) and raise only CASEB_N_NON_ORTHOGONAL_CORRECTORS from 0 to 1 through a fresh 0.12 s rim-onset screen."
     },
     "completion_claim": "This is a rejected 0.12 s PIMPLE-stack screen, not a passed hold, smoke run, or completed reproduction."
+  },
+  "tight_pressure_maxco_0p15_nonortho_1_screen_0p12_s": {
+    "status": "rejected_delayed_rim_exterior_gas_hotspot",
+    "source_commit": "31b0478",
+    "purpose": "Test whether raising only CASEB_N_NON_ORTHOGONAL_CORRECTORS from 0 to 1 on the admitted baseline suppresses the delayed rim exterior-gas mode through the 0.12 s onset window.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "hydrostatic_initialization": "discrete",
+      "hydrostatic_correctors": 10,
+      "pressure_final_tolerance": 1e-10,
+      "n_outer_correctors": 1,
+      "n_pressure_correctors": 2,
+      "n_non_orthogonal_correctors": 1,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.15,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "field_write_interval_s": 0.01,
+      "requested_end_time_s": 0.12
+    },
+    "clean_run_result_0p12_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.120002714,
+      "postprocessed_probe_duration_s": 0.11999431,
+      "execution_time_s_resume_segment": 5181.95,
+      "clock_time_s_resume_segment": 6933,
+      "note": "Run stalled mid-step near 0.1017 s and was resumed from the 0.09999768749 dump; ExecutionTime/ClockTime above are the resume segment only.",
+      "final_delta_t_s": 8.4050163e-06,
+      "maximum_courant_number": 0.16236774,
+      "maximum_interface_courant_number": 0.15156604,
+      "maximum_capillary_number": 0.25261938,
+      "Hstar_peak_to_peak": 0.0010161838375480903,
+      "Yfs_star_max_drift": 0.0024590163934427034,
+      "gas_mass_error_pct_max_abs": 4.189191442076812e-06,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "final_logged_velocity_m_per_s": 1.8405,
+      "final_logged_velocity_location_m": [
+        3.5246578,
+        0.65725576,
+        -0.00011479415
+      ],
+      "final_logged_alpha_water": 0.0,
+      "final_logged_curvature_per_m": 0.0,
+      "final_logged_cell": 40369,
+      "final_logged_proc": 2
+    },
+    "logged_velocity_history_m_per_s": {
+      "0.010005": {
+        "U": 1.9909,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.020004": {
+        "U": 1.1551,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.030006": {
+        "U": 1.7308,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.040000": {
+        "U": 1.5563,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.050007": {
+        "U": 1.7002,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.060000": {
+        "U": 1.6268,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.070002": {
+        "U": 1.795,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.080002": {
+        "U": 1.8761,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.090001": {
+        "U": 1.6883,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.099998": {
+        "U": 2.0065,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.109998": {
+        "U": 1.6904,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      },
+      "0.119994": {
+        "U": 1.8405,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      }
+    },
+    "interpretation": {
+      "finding": "nNonOrthogonalCorrectors=1 delayed but did not suppress the rim exterior-gas mode. Free-surface hotspots persisted through 0.100 s; at 0.110 s the pure-gas rim cell locked on (U=1.690 m/s, zero curvature) and grew to 1.841 m/s by 0.120 s.",
+      "pressure_caveat": "Transducer Hstar peak-to-peak was only 0.001016, so pressure drift alone would again falsely clear the candidate.",
+      "comparison": "Relative to the rejected PIMPLE stack (rim from 0.090 s) and the original nCorrectors=2 hold (rim from ~0.066 s), non-orthogonal correctors=1 pushed sustained rim onset to 0.110 s but ended at essentially the same final rim velocity (~1.84 m/s).",
+      "ops_note": "A mid-run stall near 0.1017 s required a manual Allrun.resume from the 0.099997 dump after the watchdog's OpenFOAM-env resume failed.",
+      "decision": "Reject nNonOrthogonalCorrectors=1. Do not promote it or start a 1.0 s hold with this setting alone.",
+      "next_action": "Keep the admitted baseline (nCorrectors=2, nOuterCorrectors=1) and raise only CASEB_N_NON_ORTHOGONAL_CORRECTORS from 1 to 2 through another fresh 0.12 s rim-onset screen."
+    },
+    "completion_claim": "This is a rejected 0.12 s non-orthogonal-corrector screen, not a passed hold, smoke run, or completed reproduction."
   }
 }
