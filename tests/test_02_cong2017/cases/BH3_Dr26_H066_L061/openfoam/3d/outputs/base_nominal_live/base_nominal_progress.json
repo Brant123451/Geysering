@@ -5,40 +5,40 @@
   "paper_run": "B-H3",
   "status": "running_after_stability_restart",
   "check_source": "agent_20min",
-  "updated_at_unix": 1784237750.898492,
-  "updated_at_iso": "2026-07-16T21:35:50Z",
+  "updated_at_unix": 1784238980.440254,
+  "updated_at_iso": "2026-07-16T21:56:20Z",
   "workdir": "/tmp/bh3-study-layered-d08978d/base_nominal",
-  "simulated_time_s": 5.115424744,
+  "simulated_time_s": 5.132256523,
   "event_end_time_s": 13.0,
-  "progress_fraction": 0.3934942110769231,
-  "throughput_sim_s_per_wall_h_since_restart": 0.04051573696014648,
-  "eta_wall_h_at_restart_rate": 194.60525335515194,
+  "progress_fraction": 0.3947889633076923,
+  "throughput_sim_s_per_wall_h_since_restart": 0.04057419706956931,
+  "eta_wall_h_at_restart_rate": 193.91002275435824,
   "n_workers": 4,
-  "avg_worker_cpu_pct_lifetime": 62.3,
+  "avg_worker_cpu_pct_lifetime": 62.38,
   "workers": [
     {
       "pid": 1035969,
       "pcpu": 62.3,
       "pmem": 3.9,
-      "etime": "2-02:58:42"
+      "etime": "2-03:19:11"
     },
     {
       "pid": 1035970,
-      "pcpu": 62.3,
-      "pmem": 3.5,
-      "etime": "2-02:58:42"
+      "pcpu": 62.4,
+      "pmem": 3.7,
+      "etime": "2-03:19:11"
     },
     {
       "pid": 1035971,
-      "pcpu": 62.3,
-      "pmem": 3.7,
-      "etime": "2-02:58:42"
+      "pcpu": 62.4,
+      "pmem": 3.6,
+      "etime": "2-03:19:11"
     },
     {
       "pid": 1035972,
-      "pcpu": 62.3,
+      "pcpu": 62.4,
       "pmem": 3.6,
-      "etime": "2-02:58:42"
+      "etime": "2-03:19:11"
     }
   ],
   "monitor_interval_s": 1200,
@@ -57,13 +57,13 @@
     "status_level": "OK",
     "foam_fatal_in_tail": false,
     "latest_field_write_s": 5.1,
-    "deltaT_last": 3.542546746e-05,
-    "maxCo_last": 0.1000407541,
+    "deltaT_last": 3.643424537e-05,
+    "maxCo_last": 0.09996087169,
     "alpha_max_last": 1.0,
-    "advanced": false,
-    "stall_count": 1,
-    "idle_pct": 2.4,
-    "top_cpu_line": "%Cpu(s): 90.2 us,  7.3 sy,  0.0 ni,  2.4 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st"
+    "advanced": true,
+    "stall_count": 0,
+    "idle_pct": 0.0,
+    "top_cpu_line": "%Cpu(s): 72.7 us, 27.3 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st"
   },
   "paper_consistency_reverified_2026_07_14": true
 }
