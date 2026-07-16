@@ -1,10 +1,11 @@
 # BH3 base_nominal 交接文档（HANDOFF）
 
-> 状态：**IN_PROGRESS**（约 38%，事件尚未跑满 13 s）  
+> 状态：**IN_PROGRESS**（约 40%，事件尚未跑满 13 s）  
 > 论文工况：Cong, Chan & Lee (2017) Series B **Run B-H3**  
 > Case：`tests/test_02_cong2017/cases/BH3_Dr26_H066_L061/openfoam/3d/`  
 > 分支：`cursor/test2-bh3-3d-e294`  
-> 更新策略：未完成时每 **20 分钟**巡检并推送进度；**算完后**自动打包 `outputs/base_nominal_handoff/` 并改写本文为 COMPLETED
+> 更新策略：未完成时每 **20 分钟**巡检并推送进度；**算完后**自动打包 `outputs/base_nominal_handoff/` 并改写本文为 COMPLETED  
+> 注意：若 GitHub token 过期，进度会先落在本地 commit，token 恢复后再 push
 
 ## 1. 模拟是什么
 
