@@ -1,0 +1,26 @@
+{
+  "normalization": "V* = V / sqrt(g*Dt),  sqrt(g*Dt) = 0.7484 m/s",
+  "model": {
+    "Vint_ms": 0.3037484586485751,
+    "Vint_star": 0.40584623835537825,
+    "Vfs_ms": -7.131624569613088e-17,
+    "Vfs_star": -9.528749603595207e-17,
+    "fit_window_s": [
+      6.160079755722403,
+      7.22005749519308
+    ]
+  },
+  "paper_table2_Dt0607": {
+    "Vfs_star": 0.048,
+    "Vint_star": 0.39
+  },
+  "paper_fig4": {
+    "front_span_m": [
+      0.05,
+      0.26
+    ],
+    "duration_s": 0.56,
+    "avg_speed_ms": 0.375,
+    "avg_speed_star": 0.5010472812286674
+  }
+}

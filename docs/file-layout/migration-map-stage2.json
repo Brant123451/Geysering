@@ -1,0 +1,110 @@
+{
+  "directories": [
+    "tests/test_01_vw2011/_shared/model_sources",
+    "tests/test_01_vw2011/_archive/legacy_tools",
+    "tests/test_02_cong2017/_archive/legacy_bh1_runners",
+    "tests/test_03_liu2020/_shared/metadata"
+  ],
+  "moves": [
+    {
+      "source": "tests/test_01_vw2011/_staging_legacy/Vasconcelos_Wright_2011_JHE.pdf",
+      "target": "tests/test_01_vw2011/_shared/reference/Vasconcelos_Wright_2011_JHE.pdf"
+    },
+    {
+      "source": "tests/test_01_vw2011/_staging_legacy/Wright_Lewis_Vasconcelos_2011_note.pdf",
+      "target": "tests/test_01_vw2011/_shared/reference/Wright_Lewis_Vasconcelos_2011_note.pdf"
+    },
+    {
+      "source": "tests/test_01_vw2011/_staging_legacy/_paper_figs",
+      "target": "tests/test_01_vw2011/_shared/reference/paper_scans"
+    },
+    {
+      "source": "tests/test_01_vw2011/_staging_legacy/paper_reference",
+      "target": "tests/test_01_vw2011/_shared/reference/legacy_paper_reference"
+    },
+    {
+      "source": "tests/test_01_vw2011/_staging_legacy/paper_parameters_VW2011_JHE.md",
+      "target": "tests/test_01_vw2011/_shared/metadata/paper_parameters_VW2011_JHE.md"
+    },
+    {
+      "source": "tests/test_01_vw2011/_staging_legacy/paper_source_LewisWright2012_R245-02_documents_VW2011_experiments.txt",
+      "target": "tests/test_01_vw2011/_shared/metadata/paper_source_VW2011_experiments.txt"
+    },
+    {
+      "source": "tests/test_01_vw2011/_staging_legacy/SELECTED_TEST_REPRODUCTION.md",
+      "target": "tests/test_01_vw2011/_shared/metadata/SELECTED_TEST_REPRODUCTION_legacy.md"
+    },
+    {
+      "source": "tests/test_01_vw2011/_staging_legacy/vw2011_experimental_data.csv",
+      "target": "tests/test_01_vw2011/_shared/metadata/vw2011_experimental_data.csv"
+    },
+    {
+      "source": "tests/test_01_vw2011/_staging_legacy/vw2011_network_twofluid.py",
+      "target": "tests/test_01_vw2011/_shared/model_sources/vw2011_network_twofluid.py"
+    },
+    {
+      "source": "tests/test_01_vw2011/_staging_legacy/compare_selected_case_vs_paper.py",
+      "target": "tests/test_01_vw2011/_shared/tools/compare_selected_case_vs_paper.py"
+    },
+    {
+      "source": "tests/test_01_vw2011/_staging_legacy/crop_paper_panels.py",
+      "target": "tests/test_01_vw2011/_shared/tools/crop_paper_panels.py"
+    },
+    {
+      "source": "tests/test_01_vw2011/_staging_legacy/diag_two_cases.py",
+      "target": "tests/test_01_vw2011/_shared/tools/diag_two_cases.py"
+    },
+    {
+      "source": "tests/test_01_vw2011/_staging_legacy/diag_two_cases_results.json",
+      "target": "tests/test_01_vw2011/_shared/tools/diag_two_cases_results.json"
+    },
+    {
+      "source": "tests/test_01_vw2011/_staging_legacy/digitize_paper_curves.py",
+      "target": "tests/test_01_vw2011/_shared/tools/digitize_paper_curves.py"
+    },
+    {
+      "source": "tests/test_01_vw2011/_staging_legacy/make_deliverables.py",
+      "target": "tests/test_01_vw2011/_shared/tools/make_deliverables.py"
+    },
+    {
+      "source": "tests/test_01_vw2011/_staging_legacy/debug_pocket.py",
+      "target": "tests/test_01_vw2011/_archive/legacy_tools/debug_pocket.py"
+    },
+    {
+      "source": "tests/test_01_vw2011/_staging_legacy/diag_dev.py",
+      "target": "tests/test_01_vw2011/_archive/legacy_tools/diag_dev.py"
+    },
+    {
+      "source": "tests/test_02_cong2017/_staging_legacy/README.md",
+      "target": "tests/test_02_cong2017/README.md"
+    },
+    {
+      "source": "tests/test_02_cong2017/_staging_legacy/paper_source",
+      "target": "tests/test_02_cong2017/_shared/reference/paper_source"
+    },
+    {
+      "source": "tests/test_02_cong2017/_staging_legacy/real_solver",
+      "target": "tests/test_02_cong2017/_archive/legacy_real_solver"
+    },
+    {
+      "source": "tests/test_02_cong2017/_staging_legacy/run_cong2017_bh1_complete_own_model.py",
+      "target": "tests/test_02_cong2017/_archive/legacy_bh1_runners/run_cong2017_bh1_complete_own_model.py"
+    },
+    {
+      "source": "tests/test_02_cong2017/_staging_legacy/run_cong2017_bh1_own_model.py",
+      "target": "tests/test_02_cong2017/_archive/legacy_bh1_runners/run_cong2017_bh1_own_model.py"
+    },
+    {
+      "source": "tests/test_02_cong2017/_staging_legacy/outputs",
+      "target": "tests/test_02_cong2017/_archive/legacy_outputs"
+    },
+    {
+      "source": "tests/test_03_liu2020/_staging_legacy/README.md",
+      "target": "tests/test_03_liu2020/README.md"
+    },
+    {
+      "source": "tests/test_03_liu2020/_staging_legacy/paper_reference",
+      "target": "tests/test_03_liu2020/_shared/metadata/paper_reference"
+    }
+  ]
+}

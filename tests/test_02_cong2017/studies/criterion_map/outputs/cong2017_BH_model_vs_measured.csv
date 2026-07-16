@@ -1,0 +1,8 @@
+run,Dr_over_D,Vair_star,Ta_meas_s,Ta_model_s,geyser_meas,geyser_model,match,vfs_meas,vfs_model,vint_meas,vint_model
+B-H1,0.32,9.03,8.07,8.27,True,True,OK,0.924,1.218,1.231,1.337
+B-H2,0.42,5.24,7.84,8.27,True,True,OK,0.768,1.125,1.022,1.264
+B-H3,0.52,3.42,8.18,8.27,True,True,OK,0.657,0.614,0.916,0.771
+B-H4,0.62,2.4,8.14,8.27,False,False,OK,0.207,0.0,0.418,0.172
+B-H5,0.72,1.78,8.1,8.27,False,False,OK,0.261,0.0,0.481,0.187
+B-H6,0.82,1.37,8.1,8.27,False,False,OK,0.246,0.0,0.476,0.201
+B-H7,0.92,1.09,8.22,8.27,False,False,OK,0.203,0.0,0.441,0.214

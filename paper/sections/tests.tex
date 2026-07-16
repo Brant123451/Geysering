@@ -1,0 +1,897 @@
+\section{Test cases}
+\label{sec:tests}
+
+The evaluation is organized as a sequence of test campaigns against published
+geysering experiments. Within each campaign, individual configurations are
+selected to span the experimentally observed regimes, and all configurations
+are computed with the single frozen solver configuration of
+Section~\ref{sec:model:numerics}. Simulations start from the documented
+experimental initial conditions; the shaft motion, the air release, and the
+regime selection are outcomes of the computation. No prescribed release rate,
+scripted geyser height, overflow accumulator, or per-case parameter fitting
+is used.
+
+Three campaigns are selected from the experimental geysering literature so
+that each contributes a different kind of evidence.
+Campaign~1 (Section~\ref{sec:tests:vw2011}) reproduces the water-filled
+ventilation-shaft experiments of Vasconcelos and Wright
+\cite{vasconcelos2011}---the most widely cited controlled geysering
+experiments and the standard benchmark for geysering models---and tests the
+time-resolved histories in both regimes: Test~A in the non-geysering branch
+and Test~B in the geysering branch.
+Campaign~2 (Section~\ref{sec:tests:cong2017}) reproduces the
+horizontal-pipe/vertical-riser experiments of Cong, Chan and Lee
+\cite{cong2017}, the only campaign that condenses its outcome into an
+explicit two-parameter geysering criterion; it therefore tests the model as
+a regime classifier across a systematic parameter sweep rather than in
+individual histories.
+Campaign~3 (Section~\ref{sec:tests:liu2020}) addresses the
+prototype-motivated junction-chamber experiments of Liu, Shao and Zhu
+\cite{liu2020}, which connect the laboratory benchmarks to a field-scale
+dropshaft geometry.
+Other experimental studies---the field observations of
+\cite{wright2011note}, the larger-scale releases of \cite{muller2017}
+designed for three-dimensional CFD calibration, the covered-manhole geysers
+of \cite{zhang2022}, the mitigation study of \cite{qian2020}, and the
+vertical-pipe violent geysers of \cite{leon2018}---are used as corroborating
+references rather than as reproduction targets, either because their
+geometry is not controlled at the level needed for one-dimensional
+comparison or because their focus (cover dynamics, mitigation devices,
+flashing-driven eruption) lies outside the entrapped-air release mechanism
+studied here.
+
+\subsection{Campaign 1: water-filled ventilation shafts
+(Vasconcelos and Wright, 2011)}
+\label{sec:tests:vw2011}
+
+The apparatus of \cite{vasconcelos2011} consists of a horizontal acrylic
+pipe of diameter $D=0.094$~m with both far ends closed, a ventilation tower
+of length $L=0.610$~m and variable diameter $D_t$ mounted on a coupling
+$3.516$~m from the upstream end, and an upstream air chamber of length
+$0.546$~m separated from the water-filled reach by a butterfly valve
+(Fig.~\ref{fig:apparatus}). The air chamber is pressurized to an initial
+gauge head $H_{a0}$, the tower is partially filled to an initial level
+$Y_{fs,0}$, and the run starts when the valve is opened by hand in less than
+one second. The pressurized pocket then propagates along the pipe crown
+toward the tower and vents through the water column inside it. A pressure
+transducer is located $1.07$~m downstream of the valve. The experimental
+programme varied $D_t\in\{57.1,\,44.4,\,25.4,\,12.7\}$~mm
+($D_t/D=0.607$--$0.135$), $H_{a0}\in\{0.305,\,0.610,\,0.915\}$~m, and
+$Y_{fs,0}\in\{0.254,\,0.356,\,0.457\}$~m. The controlling variable was found
+to be the tower diameter: for $D_t/D=0.607$ the free-surface rise never
+exceeded 10\% of $L$, whereas for $D_t/D=0.135$ the free surface reached the
+tower top in every repetition.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[x=2.6cm, y=2.6cm, line cap=round]
+% ---- geometry (metres) ----
+% pipe axis at y=0, pipe half-height drawn 0.047*3 exaggerated
+\def\ph{0.10}            % drawn pipe half-height
+\def\towx{3.516}         % tower x-position
+\def\toww{0.06}          % drawn tower half-width
+\def\towh{0.61}          % tower height (true scale in x-units)
+% ---- water/air fill ----
+\fill[blue!25] (0.546,-\ph) rectangle (4.006,\ph);              % water in pipe
+\fill[blue!25] (\towx-\toww,\ph) rectangle (\towx+\toww,\ph+0.356); % water in tower
+\fill[gray!15] (0,-\ph) rectangle (0.546,\ph);                  % pressurized air
+\fill[gray!15] (\towx-\toww,\ph+0.356) rectangle (\towx+\toww,\ph+\towh); % air in tower
+% ---- pipe walls ----
+\draw[thick] (0,\ph) -- (\towx-\toww,\ph);
+\draw[thick] (\towx+\toww,\ph) -- (4.006,\ph);
+\draw[thick] (0,-\ph) -- (4.006,-\ph);
+\draw[thick] (0,-\ph) -- (0,\ph);                                % upstream closed end
+\draw[thick] (4.006,-\ph) -- (4.006,\ph);                        % downstream closed end
+% ---- tower walls ----
+\draw[thick] (\towx-\toww,\ph) -- (\towx-\toww,\ph+\towh);
+\draw[thick] (\towx+\toww,\ph) -- (\towx+\toww,\ph+\towh);
+\node[above] at (\towx,\ph+\towh) {\scriptsize open top};
+% ---- valve ----
+\draw[very thick] (0.546,-\ph-0.03) -- (0.546,\ph+0.03);
+\node[above] at (0.546,\ph+0.05) {\scriptsize butterfly valve};
+% ---- transducer ----
+\fill (1.616,-\ph) circle (0.02);
+\draw (1.616,-\ph) -- (1.9,-\ph-0.08);
+\node[right] at (1.9,-\ph-0.08) {\scriptsize transducer ($1.07$ m from valve)};
+% ---- labels ----
+\node at (0.27,0) {\scriptsize air, $H_{a0}$};
+\node at (2.3,0) {\scriptsize water};
+\node[left] at (\towx-\toww-0.02,\ph+0.18) {\scriptsize $Y_{fs,0}$};
+\draw[{Latex}-{Latex}] (\towx-\toww-0.09,\ph) -- (\towx-\toww-0.09,\ph+0.356);
+\node[right] at (\towx+\toww+0.02,\ph+0.30) {\scriptsize $L=0.610$ m, diameter $D_t$};
+% ---- dimension lines ----
+\draw[{Latex}-{Latex}] (0,-\ph-0.16) -- (0.546,-\ph-0.16)
+  node[midway,below] {\scriptsize $0.546$ m};
+\draw[{Latex}-{Latex}] (0.546,-\ph-0.26) -- (3.516,-\ph-0.26)
+  node[midway,below] {\scriptsize $2.970$ m};
+\draw[{Latex}-{Latex}] (3.516,-\ph-0.16) -- (4.006,-\ph-0.16)
+  node[midway,below] {\scriptsize $0.490$ m};
+\node[right] at (4.02,0) {\scriptsize closed};
+\node[left] at (-0.02,0) {\scriptsize closed};
+\end{tikzpicture}
+\caption{Schematic of the Vasconcelos and Wright \cite{vasconcelos2011}
+apparatus as discretized in the model (not to scale in the transverse
+direction). The horizontal pipe ($D=0.094$~m) is closed at both far ends; the
+upstream chamber holds the pressurized air pocket; the ventilation tower
+(length $L=0.610$~m, diameter $D_t$) is open at the top and partially filled
+to $Y_{fs,0}$.}
+\label{fig:apparatus}
+\end{figure}
+
+Two configurations are selected to span the two regimes
+(Table~\ref{tab:cases}). Following \cite{vasconcelos2011}, results are
+non-dimensionalized by the tower length and the tower gravity-velocity
+scale: elevations and pressure heads as $Y^{*}=Y/L$ and $H^{*}=H/L$, and time
+as $T^{*}=t\sqrt{gD_t}/L$. Geysering is defined as the free surface
+$Y^{*}_{fs}$ reaching the tower top ($Y^{*}=1$) before the rising air--water
+interface $Y^{*}_{int}$ catches the free surface.
+
+\begin{table}[htbp]
+\centering
+\caption{Selected test configurations from the experimental matrix of
+\cite{vasconcelos2011}.}
+\label{tab:cases}
+\begin{tabular}{lcccccc}
+\toprule
+Test & $D_t$ (mm) & $D_t/D$ & $H_{a0}$ (m) & $Y_{fs,0}$ (m) &
+$L/\sqrt{gD_t}$ (s) & Observed regime \\
+\midrule
+A & 57.1 & 0.607 & 0.305 & 0.356 & 0.815 & no geysering \\
+B & 12.7 & 0.135 & 0.610 & 0.356 & 1.728 & geysering (every run) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The model geometry follows the apparatus exactly: upstream air chamber
+$0.546$~m (the initial pocket volume, $3.79\times10^{-3}$~m$^3$), middle pipe
+$2.970$~m, downstream closed pipe $0.490$~m, tower at $x=3.516$~m, and the
+transducer sampled at $x=1.616$~m. The initial pocket pressure is
+$P_{a0}=P_{\mathrm{atm}}+\rho_l g H_{a0}$; the pipe downstream of the valve
+and the tower below $Y_{fs,0}$ are initially at rest and water-filled. The
+experimental curves used for comparison were digitized from the published
+figures of \cite{vasconcelos2011} (pressure head from Figs.~5 and~6;
+free-surface and interface trajectories from Figs.~7 and~8, three
+experimental repetitions each); the digitized repetitions are shown either
+individually or as a band.
+
+\subsubsection{Test A: large tower, non-geysering branch
+($D_t/D=0.607$)}
+\label{sec:tests:vw2011:caseA}
+
+In the experiment this configuration vents the pocket without geysering: the
+tower free surface rises by less than 10\% of $L$, the transducer head holds
+a long plateau near $H^{*}\approx0.54$ while the pocket discharges, and the
+head then decays to zero once the pocket is exhausted. The computed run
+reproduces this branch. The free surface peaks at $Y^{*}_{fs}=0.66$ (measured
+maximum 0.63), the rising gas core catches the free surface inside the
+tower, and no overflow occurs.
+
+Figure~\ref{fig:caseA_pressure} compares the transducer pressure head. The
+model reproduces the plateau level (cycle-averaged $H^{*}=0.51$ against the
+digitized experimental plateau $H^{*}=0.54$) over the full venting window
+$1\lesssim T^{*}\lesssim7.5$, and reproduces the terminal decay
+associated with pocket exhaustion, beginning at $T^{*}\approx8.9$ in the
+model against $8.3$ in the experiment. Two differences are visible. First, in
+$0<T^{*}\lesssim5$ the raw model trace carries a water-column--pocket spring
+oscillation with a period of about $0.7$~s that decays by $t\approx4$~s;
+mass-conservation and phase checks identify it as a genuine
+volume--pressure oscillation of the release piston rather than a numerical
+artefact, but the experimental traces are more strongly damped. The plotted
+model curve is therefore cycle-averaged over a $0.8$~s window. Second, the
+venting stage runs late and more gradually in the model: the measured head
+starts falling at $T^{*}\approx8.3$ and reaches zero near $9.3$, while the
+model holds its plateau to $T^{*}\approx8.9$ and decays to about
+$H^{*}\approx0.21$ by the end of the window. Both features reflect the
+slower discharge of the pocket through the tower once the (dissipative)
+cavity celerity feeds the vent at the reduced rate; the arrival-stage
+timing gains of the celerity value are traded against the venting-stage
+lag (Section~\ref{sec:discussion}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{caseA_pressure.pdf}
+\caption{Test A ($D_t/D=0.607$, $H_{a0}=0.305$~m, $Y_{fs,0}=0.356$~m):
+transducer pressure head $H^{*}$ against $T^{*}$. Black lines: the three
+experimental repetitions of \cite{vasconcelos2011}, digitized point by point
+from their Fig.~5; red line: model, cycle-averaged over a $0.8$~s window.}
+\label{fig:caseA_pressure}
+\end{figure}
+
+Figure~\ref{fig:caseA_levels} compares the tower free-surface and
+air--water-interface trajectories in the published observation window
+($T^{*}=7$--$10$, Fig.~7 of \cite{vasconcelos2011}).
+The model holds the free surface near $Y^{*}_{fs}\approx0.6$ throughout the
+venting plateau, consistent with the measured level, and produces the
+interface climb through the tower with the correct slope: the fitted
+non-dimensional interface velocity is $V^{*}_{int}=0.41$, against the
+experimental Table-2 average of $0.39$ and a photograph-based estimate of
+$0.50$ for this tower size. The interface leaves the tower base at
+$T^{*}=7.5$, inside the spread of the three experimental repetitions (climb
+onsets at $7.3$, $7.8$, and $7.9$), and catches the free surface at
+$T^{*}=8.8$ against the measured $8.4$
+(Table~\ref{tab:caseA_metrics}). Two systematic differences in the level
+histories are noted. First, the measured free surface creeps upward during
+the interface climb (from $0.59$ to $0.65$), which
+\cite{vasconcelos2011} attribute to the expansion of the depressurizing
+pocket as it occupies the tower; the computed level stays at its plateau
+value because the volume-neutral counter-current exchange at the mouth
+transits gas through the standing column without net volume addition, so
+the computed climb-phase free-surface velocity is
+$V^{*}_{fs}\approx0$ against the measured $0.048$ (the measured maximum
+level itself is matched: $Y^{*}_{fs,\max}=0.66$ computed against $0.63$
+measured). Second, after the interface reaches the free surface, the
+measured tower level stays near $0.6L$ to the end of the observation
+window, while the model level decays faster once venting is established;
+the counter-current flooding limit at the tower mouth
+(Section~\ref{sec:model:junction}) bounds but does not eliminate this
+too-fast drainage. Both differences trace to the same film-flow pocket
+topology discussed in Section~\ref{sec:discussion}.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{caseA_levels.pdf}
+\caption{Test A: tower free-surface elevation $Y^{*}_{fs}$ (solid) and
+air--water interface elevation $Y^{*}_{int}$ (dashed) against $T^{*}$ in the
+published observation window ($T^{*}=7$--$10$). Symbols: the three
+experimental repetitions of \cite{vasconcelos2011}, digitized from their
+Fig.~7 (triangles: free surface; circles: interface). The model gas-front
+curve ends where it catches the free surface (beyond that instant the two
+interfaces merge and a distinct front no longer exists); the model
+free-surface curve is shown over the extent of the experimental coverage.}
+\label{fig:caseA_levels}
+\end{figure}
+
+Figure~\ref{fig:caseA_snapshots} places the published photographic sequence
+and the computed tower snapshots together at the same $0.14$~s spacing
+during the interface climb. The gas core width in the computed row is drawn
+from the local two-fluid gas fraction without thresholding. The computed
+front positions track the photographed front to within $0.03$~m over the
+sequence, and the mean front speed over the photographed interval is
+$0.375$~m/s in the experiment-based estimate against $0.31$~m/s in the model
+fit window.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{caseA_fig4_experiment_model.pdf}
+\caption{Test A, direct comparison with Fig.~4 of
+\cite{vasconcelos2011}. Top: the five published experimental photographs.
+Bottom: computed tower fields at the same $0.14$~s spacing. Blue: water;
+white: gas core (local two-fluid gas fraction); grey: atmosphere above the
+free surface. The red dashed line marks the computed pocket gas front
+$Y_{int}$ and the panel captions give the computed and photographed front
+elevations.}
+\label{fig:caseA_snapshots}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\caption{Test A: measured against computed quantities. Times are
+non-dimensional ($T^{*}=t\sqrt{gD_t}/L$); velocities are normalized by
+$\sqrt{gD_t}$. Experimental values are digitized from
+\cite{vasconcelos2011} (Figs.~4, 5, 7 and Table~2).}
+\label{tab:caseA_metrics}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcc}
+\toprule
+Quantity & Experiment & Model \\
+\midrule
+Regime & no geysering & no geysering \\
+Maximum free-surface rise $Y^{*}_{fs,\max}$ & 0.63 & 0.66 \\
+Pressure-head plateau $H^{*}$ & 0.54 & 0.51 \\
+Onset of terminal head decay $T^{*}$ & 8.3 & 8.9 \\
+Interface liftoff from tower base $T^{*}$ & 7.3/7.8/7.9 (3 reps) & 7.5 \\
+Interface catches free surface $T^{*}$ & 8.4 & 8.8 \\
+Interface climb velocity $V^{*}_{int}$ & 0.39 (Table~2), 0.50 (Fig.~4) & 0.41 \\
+Climb-phase free-surface velocity $V^{*}_{fs}$ & 0.048 & $\approx0$ \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+Finally, Fig.~\ref{fig:caseA_tpa} compares the present model directly
+against the numerical model of \cite{vasconcelos2011} themselves (their
+two-phase-analysis (TPA) model, a lumped pocket formulation with a
+Batchelor-type laminar film-flow closure). That comparison is reported for
+the neighbouring configuration $D_t/D=0.607$, $H_{a0}=0.305$~m,
+$Y_{fs,0}=0.254$~m---the same tower and pocket pressure as Test~A with a
+lower initial level---so the frozen solver is re-run at that initial
+condition. The TPA-model curves and the experimental traces were digitized
+from Fig.~10 of \cite{vasconcelos2011} and are replotted here together with
+the present computation for the two panels that carry the discussion: the
+interface trajectory and the transducer head. Because the valve is opened
+by hand, a rigid time shift between the model and the published time axis
+would be legitimate; none is needed for the interface panel (the computed
+climb onset sits $+0.2$ from the published model curve, inside the
+repetition scatter) and none is applied. The interface trajectory
+$Y^{*}_{int}$ reproduces the climb slope and span of both the measurements
+and the TPA model; the interface-velocity plateau
+($V^{*}_{int}\approx0.37$ computed, $\approx0.4$ TPA and measured, from the
+velocity panels of their Fig.~10) agrees; the pressure-head decay runs
+about $0.7$ time units late (the venting-stage lag of the reduced cavity
+feed, as in Test~A); and the head panel shows the structural difference
+already noted: the measured head and the TPA model decay \emph{during} the climb,
+following the shrinking water column above the pocket nose, while the
+present model holds its plateau until breakthrough and then collapses. The TPA model
+obtains the during-climb decay by construction---its pocket is a lumped
+volume whose pressure is tied to the column above the nose through the
+film-flow closure---whereas in the present field formulation the tower
+base carries the weight of the full standing column as long as the gas
+transits it as a dispersed phase. Section~\ref{sec:discussion} discusses
+this topological limitation and the closure experiment performed on it.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{caseA_tpa_redrawn.pdf}
+\caption{Campaign 1, configuration $D_t/D=0.607$, $H_{a0}=0.305$~m,
+$Y_{fs,0}=0.254$~m: present model (red) against the TPA model of
+\cite{vasconcelos2011} (black) and their measurements (grey), both
+digitized from Fig.~10 of \cite{vasconcelos2011}. Left: air--water
+interface elevation $Y^{*}_{int}$ (circles: experimental repetitions).
+Right: transducer pressure head $H^{*}$ (shaded: envelope of the three
+experimental repetitions). No time shift is applied to the present-model
+histories (see text).}
+\label{fig:caseA_tpa}
+\end{figure}
+
+For completeness, Fig.~\ref{fig:caseA_tpa_full} retains all five panels of
+the published Fig.~10 comparison rather than only the two panels replotted
+above. The complete view makes two additional findings explicit. The
+computed interface-velocity level is comparable with the measurements and
+TPA result during the coherent climb, whereas the computed free-surface
+velocity lacks the measured oscillatory positive pulses. The latter is the
+velocity-space counterpart of the volume-neutral mouth-exchange limitation
+already visible in the free-surface trajectory.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{caseA_fig10_full_comparison.pdf}
+\caption{Campaign 1, neighbouring $Y_{fs,0}=0.254$~m configuration: complete
+five-panel comparison corresponding to Fig.~10 of
+\cite{vasconcelos2011}. Left: published measurements and TPA model. Right:
+present model on the same axes, with no time shift. The panels show
+$Y^{*}_{int}$, $Y^{*}_{fs}$, $V^{*}_{int}$, $V^{*}_{fs}$ and $H^{*}$,
+respectively. The reproduced source panel is included here for direct visual
+verification; the two quantitatively discussed traces are independently
+digitized and redrawn in Fig.~\ref{fig:caseA_tpa}.}
+\label{fig:caseA_tpa_full}
+\end{figure}
+
+\FloatBarrier
+
+\subsubsection{Test B: small tower, geysering branch
+($D_t/D=0.135$)}
+\label{sec:tests:vw2011:caseB}
+
+In the experiment this configuration geysered in every repetition: the tower
+level first rises to a quasi-static stand near $Y^{*}_{fs}\approx0.82$ while
+the pocket propagates along the pipe crown, then the air--water interface
+enters the tower at $T^{*}\approx3.65$ and the aerated free surface
+accelerates to the tower top at $T^{*}\approx3.9$, before the interface
+(at the top near $T^{*}\approx4.1$) catches it. The transducer head holds a
+plateau near $H^{*}\approx0.76$ and collapses sharply at $T^{*}\approx4.05$
+when the pocket vents.
+
+Three elements of the junction closure are specific to this narrow-shaft
+run and are stated before the comparison; each uses a geometric fact or a
+literature-scale constant, not a fitted value. (i) \emph{Crown-datum base
+coupling}: the tower taps the pipe at its crown, so the shaft-base pressure
+is the crown pressure---one bore below the invert piezometric line while
+the junction is water-sealed---rather than the invert value; with the
+invert coupling the narrow tower is over-driven by up to
+$\rho_l g D$ ($0.15L$) and its column is pinned at the rim from the release
+transient onward. (ii) \emph{Pocket-fed core}: while the pocket holds
+overpressure and the junction carries gas, the gas body in the shaft is
+connected to the pocket, so mass entering the mouth raises the core nose
+(the same fill-to-body-level closure used for the crown cavity in the
+horizontal pipe) instead of accumulating at the base cell, where the
+dispersed-bubble drag would cap the climb at the Taylor scale.
+(iii) \emph{Flooding-limited entry}: the driven blow-through of a narrow
+shaft is bounded by the counter-current flooding (Wallis) scale, with
+superficial gas velocity $j_g\le C_w^{2}\sqrt{gD_t\,\Delta\rho/\rho_l}$ and
+$C_w=0.9$ for a smooth tube end. The measured climb velocity
+$V^{*}_{int}=1.43$ (Table~2 of \cite{vasconcelos2011}) is then the
+flooding-limited nose speed of the pocket-fed core; no coefficient is tuned
+to it. Elements (ii) and (iii) are inactive in Test~A, where the pocket
+holds no overpressure margin ($H_{a0}<Y_{fs,0}$); Test~A uses the invert
+base coupling, and the consolidation of the two base-datum treatments into
+a single junction closure is discussed in Section~\ref{sec:discussion}.
+
+With these closures the computed run reproduces the geysering branch
+quantitatively up to a uniform time offset
+(Figs.~\ref{fig:caseB_pressure} and~\ref{fig:caseB_levels},
+Table~\ref{tab:caseB_metrics}). The free surface rises to the quasi-static
+stand $Y^{*}_{fs}=0.84$ (measured $0.82$)---the level at which the
+isothermal pocket expansion balances the tower column---and holds it until
+the interface enters the tower; the eruption then proceeds to the rim, as in
+every experimental repetition. The transducer plateau, read at the crown
+datum (the tap and tower-base elevation), is $H^{*}=0.76$ against the
+measured $0.76$; the invert-datum record ($0.91$) is retained in
+Fig.~\ref{fig:caseB_pressure} as the faint trace, and the measured plateau
+is consistent with the crown-referenced reading of the isothermal pocket
+state combined with the measured tower level to within $0.02L$. The final
+free-surface climb velocity is $V^{*}_{fs}=0.39$ against $0.44$; the fitted
+interface velocity is $V^{*}_{int}=0.71$ against the Table-2 average of
+$1.43$---underpredicted by half, though still twice the Taylor-bubble scale
+$0.35$ that a dispersed-drag closure would give, because the pocket-fed
+core inherits the reduced feed rate of the dissipative cavity celerity. The
+sharp plateau--collapse of the head at pocket venting is reproduced with
+the measured shape.
+
+The remaining discrepancy is a stretching of the gas-phase sequence rather
+than a shift. The arrival events land within the repetition scatter:
+interface entry at $T^{*}=3.52$ against $3.65$, and the free surface at the
+top at $3.70$ against $3.90$. The subsequent venting-stage events run late:
+the interface reaches $0.85L$ at $4.44$ against $3.85$, and the head
+collapses at $4.49$ against $4.05$. The stretching is the same
+venting-stage lag as in Test~A: the in-tower climb of the pocket-fed core
+and the pocket blowdown are both fed by the crown current, so they inherit
+the reduced celerity that centres the arrival timing.
+Figure~\ref{fig:caseB_levels} also shows the model trajectories rigidly
+shifted by $+0.24$ time units (the mean arrival offset) as a slope
+reference. The early-time model trace also carries the underdamped
+release-piston oscillation noted in Test~A (the experimental traces damp
+within about one time unit; the schematic of \cite{vasconcelos2011}
+explicitly annotates this release oscillation), and the model column
+briefly splashes to the rim during the release swing before settling at the
+quasi-static stand.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{caseB_pressure.pdf}
+\caption{Test B ($D_t/D=0.135$, $H_{a0}=0.610$~m, $Y_{fs,0}=0.356$~m):
+transducer pressure head $H^{*}$ against $T^{*}$. Grey band and dark line:
+envelope and median of the three experimental repetitions, digitized from
+Fig.~6 of \cite{vasconcelos2011}; thick red line: model head cycle-averaged
+over a $0.4$~s window and referenced at the crown datum (the transducer tap
+and tower-base elevation, $-D/L$ relative to the invert record); faint red
+line: the same trace at the invert datum as recorded.}
+\label{fig:caseB_pressure}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{caseB_levels.pdf}
+\caption{Test B: tower free-surface elevation $Y^{*}_{fs}$ (solid) and
+air--water interface elevation $Y^{*}_{int}$ (dashed) against $T^{*}$ in the
+published observation window ($T^{*}=3$--$5$). Symbols: digitized
+experimental points from Fig.~8 of \cite{vasconcelos2011} (triangles: free
+surface; circles: interface). The faint curves repeat the model
+trajectories rigidly shifted by $+0.24$ time units (the mean arrival
+offset) as a slope reference; model curves are shown over the extent of the
+experimental coverage.}
+\label{fig:caseB_levels}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\caption{Test B: measured against computed quantities. Times are
+non-dimensional ($T^{*}=t\sqrt{gD_t}/L$); velocities are normalized by
+$\sqrt{gD_t}$. Experimental values are digitized from
+\cite{vasconcelos2011} (Figs.~6 and~8, and Table~2). The model pressure
+plateau is read at the crown datum (invert record $0.91$).}
+\label{tab:caseB_metrics}
+\begin{tabular}{lcc}
+\toprule
+Quantity & Experiment & Model \\
+\midrule
+Regime & geysering (every run) & geysering \\
+Pre-eruption stand of the free surface $Y^{*}_{fs}$ & 0.82 & 0.84 \\
+Pressure-head plateau $H^{*}$ (crown datum) & 0.76 & 0.75 \\
+Interface climb velocity $V^{*}_{int}$ & 1.43 & 0.71 \\
+Free-surface climb velocity $V^{*}_{fs}$ & 0.44 & 0.39 \\
+Interface enters tower $T^{*}$ & 3.65 & 3.52 \\
+Free surface reaches tower top $T^{*}$ & 3.90 & 3.70 \\
+Interface reaches $0.85L$ $T^{*}$ & 3.85 & 4.44 \\
+Sharp head drop at pocket venting $T^{*}$ & 4.05 & 4.49 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Taken together, Tests A and B show that the framework discriminates the two
+experimental regimes of \cite{vasconcelos2011} from first
+principles---venting without overflow in the wide tower, eruption to the
+rim in the narrow tower---and reproduces the pressure plateaus, the
+pre-eruption stand and eruption of the narrow-tower column, the terminal
+venting decay, and the interface kinematics in both branches. The remaining
+biases are a consistent early arrival of the crown cavity (a fraction of a
+time unit in Test~A, $0.5$--$0.7$ units in Test~B) and the underdamped
+release oscillation; the narrow-shaft closure elements introduced for
+Test~B and their consolidation with the wide-tower configuration are
+discussed in Section~\ref{sec:discussion}.
+
+\FloatBarrier
+
+\subsection{Campaign 2: entrapped-air release from a horizontal pipe into a
+vertical riser (Cong, Chan and Lee, 2017)}
+\label{sec:tests:cong2017}
+
+\subsubsection{Experimental apparatus and test conditions}
+\label{sec:tests:cong2017:setup}
+
+The apparatus of \cite{cong2017} consists of a horizontal acrylic pipe of
+diameter $D=0.05$~m and length approximately $6$~m, connected at its
+upstream end to a constant-head tank and carrying a vertical riser of height
+$1.8$~m and variable diameter ($D_r=16$--$46$~mm) mounted through a
+tee-junction. An air pocket of prescribed initial length $L_0$ is created in
+the horizontal pipe between ball valves; releasing it under the upstream
+head $H_0$ drives the pocket along the pipe crown to the riser, where it
+vents through the initially water-filled column. Air--water interface
+trajectories in the pipe and riser were measured by video and high-speed
+camera, and pressures near the pipe end and at the riser base by
+transducers. From their parameter study the authors condensed the outcome
+into a two-parameter geysering criterion,
+\begin{equation}
+\frac{D_r}{D}\le 0.62
+\qquad\text{and}\qquad
+V^{*}_{air}=\frac{V_{air}}{(\pi D_r^2/4)\,H_0}\ge 3.42,
+\label{eq:cong_criterion}
+\end{equation}
+i.e.\ geysering requires both a sufficiently narrow riser and a pocket
+volume large relative to the riser water column.
+
+This campaign therefore evaluates the model in a different role from
+Campaign~1: not against individual time histories, but as a regime
+classifier over a systematic sweep. Two comparisons are made. First, the
+seven high-speed-camera runs of the experimental Series~B
+(B-H1\,--\,B-H7: $H_0=0.66$~m, $L_0=0.61$~m, riser diameters
+$D_r/D=0.32$--$0.92$) are computed individually and compared against the
+measured classification, pocket arrival times, and mean rise velocities.
+Second, a broader synthetic sweep over the experimental parameter ranges
+($D_r=16$--$46$~mm, $L_0=0.61$--$1.8$~m, $H_0=0.66$--$0.88$~m; 63
+configurations) is computed and the model classification is compared
+against the experimental criterion, Eq.~(\ref{eq:cong_criterion}).
+
+All runs of this campaign use the same fully synchronous junction coupling
+as Campaign~1, with the identical frozen solver configuration (the
+Campaign-1 Test-B closure set; no parameter is changed between campaigns or
+between runs). Two geometric elements are specific to the apparatus: the
+upstream boundary is the constant-head tank, and the pocket is created
+\emph{downstream} of the riser tee, so the released pocket travels upstream
+along the crown toward the riser. The tee position (2.88~m from the tank)
+is fixed from the experiment's own kinematics---the measured arrival times
+and front speeds of Table~2 of \cite{cong2017} give a valve-to-tee distance
+$T_a\,U_f$ of $2.51$/$1.92$/$1.32$~m for the three pocket lengths
+$L_0=0.61$/$1.2$/$1.8$~m, all placing the tee at the same station---and is
+held fixed across the sweep. An earlier version of this campaign used a
+staged horizontal/vertical treatment whose classifier reduced to a static
+volume--diameter criterion; those results were circular as a validation of
+Eq.~(\ref{eq:cong_criterion}) and are superseded by the fully coupled
+results reported here.
+
+\subsubsection{Series B: classification, arrival times, and rise velocities}
+\label{sec:tests:cong2017:seriesB}
+
+Table~\ref{tab:cong_bh} and Fig.~\ref{fig:cong_bh} summarize the seven
+Series-B runs. The model reproduces the measured classification in five of
+the seven: geysering for B-H1 ($D_r/D=0.32$) and no geysering for
+B-H4--B-H7 ($D_r/D=0.62$--$0.92$), with no false positives. The two
+intermediate geysering runs B-H2 and B-H3 ($D_r/D=0.42$, $0.52$) are
+misclassified as non-geysering: the computed free surface is driven to
+$0.87$ and $0.82$~m but does not reach the rim. The miss is one-sided---the
+model errs only toward under-predicting eruption---and its mechanism is
+identified in Section~\ref{sec:discussion}: the volume-neutral mouth
+exchange, which is what lets the narrow-riser pocket rebuild the
+overpressure that powers the B-H1 geyser, also cancels part of the
+one-to-one column lift in the reservoir-fed layout, and the deficit grows
+with riser width. The computed arrival times are late by $1.5$~s on
+average (largest for the widest riser, where the arrested crown current
+covers the final reach slowly), against a measured spread of
+$7.84$--$8.22$~s.
+
+In the geysering run B-H1 the computed eruption-window climb speeds
+($v_{fs}=1.71$, $v_{int}=1.28$~m/s as the fastest sustained $0.6$-s climb)
+bracket the measured whole-event means ($0.92$, $1.23$~m/s): the eruption
+jet itself is over-sharp, the same narrow-riser bias identified in Test~B
+of Campaign~1. In the no-geysering branch the computed gas-nose climbs
+($0.69$--$1.20$~m/s) exceed the measured $0.42$--$0.48$~m/s because the
+computed climb concentrates in surge pulses rather than the steady
+Taylor-scale ascent observed; the computed free-surface response
+($0.20$--$0.65$~m/s during the pulses, zero sustained rise) shows the same
+pulsed character against the measured steady $0.2$--$0.26$~m/s.
+
+The computed pipe-end pressure transient now differentiates the branches
+under the synchronous coupling: the geysering case B-H1 develops a
+compression surge to $1.71\,H_0$ (cycle-averaged) against about
+$1.9\,H_0$ reported, while the no-geysering case B-H6 shows only a gentle
+post-arrival hump to $1.02\,H_0$ against about $1.4\,H_0$ reported. The
+staged treatment gave both runs the same $2.07\,H_0$ peak; recovering the
+experimental differentiation---a wide riser vents the pocket and thereby
+damps the pipe-end pressure---is the principal gain of the synchronous
+coupling, obtained at the cost of the two intermediate-diameter
+classification misses discussed above.
+
+\begin{table}[htbp]
+\centering
+\caption{Campaign 2, experimental Series B of \cite{cong2017}
+($H_0=0.66$~m, $L_0=0.61$~m): measured against computed classification,
+pocket arrival time $T_a$, maximum computed free-surface height
+$Y_{fs,\max}$ (riser top at $1.8$~m), and rise speeds of the free surface
+($v_{fs}$) and gas nose ($v_{int}$). Measured speeds are whole-event means
+(Table~2 of \cite{cong2017}); computed speeds are the fastest sustained
+$0.6$-s climb in the venting window. Misclassified runs are marked
+$^{\dagger}$.}
+\label{tab:cong_bh}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccccccccc}
+\toprule
+& & & \multicolumn{2}{c}{Geysering} & \multicolumn{2}{c}{$T_a$ (s)}
+& & \multicolumn{2}{c}{$v_{fs}$ (m/s)} & $v_{int}$ (m/s) \\
+\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){9-10}
+Run & $D_r/D$ & $V^{*}_{air}$ & Meas. & Model & Meas. & Model
+& $Y_{fs,\max}$ (m) & Meas. & Model & Meas. / Model \\
+\midrule
+B-H1 & 0.32 & 9.03 & yes & yes & 8.07 & 7.56 & 1.80 & 0.92 & 1.71 & 1.23 / 1.28 \\
+B-H2$^{\dagger}$ & 0.42 & 5.24 & yes & no & 7.84 & --   & 0.87 & 0.77 & --   & 1.02 / -- \\
+B-H3$^{\dagger}$ & 0.52 & 3.42 & yes & no & 8.18 & 9.56 & 0.82 & 0.66 & 0.43 & 0.92 / 1.24 \\
+B-H4 & 0.62 & 2.40 & no & no & 8.14 & 9.40  & 0.82 & 0.21 & 0.53 & 0.42 / 1.20 \\
+B-H5 & 0.72 & 1.78 & no & no & 8.10 & 9.88  & 0.86 & 0.26 & 0.65 & 0.48 / 1.05 \\
+B-H6 & 0.82 & 1.37 & no & no & 8.10 & 9.16  & 0.78 & 0.25 & 0.39 & 0.48 / 1.05 \\
+B-H7 & 0.92 & 1.09 & no & no & 8.22 & 11.44 & 0.79 & 0.20 & 0.20 & 0.44 / 0.69 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{cong2017_bh_series.png}
+\caption{Campaign 2, Series B of \cite{cong2017}: measured against computed
+(a) geysering classification, (b) pocket arrival time at the riser,
+(c) mean free-surface rise speed, and (d) mean gas-nose rise speed, as
+functions of the riser-to-pipe diameter ratio $D_r/D$.}
+\label{fig:cong_bh}
+\end{figure}
+
+Figure~\ref{fig:cong_signature} shows the two signature runs in detail
+(these are the runs examined as individual time histories in
+Sections~\ref{sec:tests:cong2017:seriesB} and the case folders; the
+per-run comparisons against the digitized level and pressure histories of
+\cite{cong2017} Figs.~7, 9 and~10 are reported with the archived
+reproduction). In B-H1 ($D_r/D=0.32$) the released pocket arrives at
+$7.56$~s (measured $8.07$~s), the entering gas drives the free surface up
+in two surge pulses, and the arrest of the supply-line counter-flow
+compresses the pocket to $1.71\,H_0$ (cycle-averaged; reported
+$\approx1.9\,H_0$), ejecting the column---the free surface reaches the rim
+with the gas nose still below it, the geysering signature. In B-H6
+($D_r/D=0.82$) the same release delivers the same pocket, but the wide
+riser passes the gas with a gentle push of the free surface to $0.78$~m
+and the pocket vents without eruption; its pressure never exceeds
+$1.02\,H_0$ after arrival. The branch differentiation of the pipe-end
+pressure---the experiment's cleanest controlled contrast, since only
+$D_r$ changes---is reproduced in sign and ranking, though both levels are
+under-predicted (the $1.4\,H_0$ no-geyser hump is missed because the
+computed free-surface lift is under-predicted in the reservoir-fed layout,
+Section~\ref{sec:discussion}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{cong2017_signature.png}
+\caption{Campaign 2, signature runs of \cite{cong2017} under the fully
+synchronous coupling: (a) computed riser free-surface and gas-nose
+trajectories for the geysering run B-H1 ($D_r=16$~mm); (b) the same for
+the no-geysering run B-H6 ($D_r=41$~mm); (c) computed pocket pressure head
+($0.5$~s average) for both runs against the reported peak levels
+($\approx1.9\,H_0$ geyser surge; $\approx1.4\,H_0$ no-geyser hump).}
+\label{fig:cong_signature}
+\end{figure}
+
+\subsubsection{Regime map against the experimental criterion}
+\label{sec:tests:cong2017:map}
+
+Figure~\ref{fig:cong_map} shows the 63-configuration sweep in the criterion
+plane $(D_r/D,\ V^{*}_{air})$. Each configuration is one full synchronous
+simulation classified with no knowledge of Eq.~(\ref{eq:cong_criterion});
+the criterion lines are drawn for comparison only. The model classification
+agrees with the experimental criterion in 39 of 63 configurations, and the
+24 disagreements are strictly one-sided: in every one the criterion
+predicts geysering and the model does not. There are no false positives---%
+every configuration the model erupts lies inside the criterion's geysering
+region, and the no-geysering half-plane $D_r/D>0.62$ is classified
+correctly throughout, as is the small-volume region
+$V^{*}_{air}<3.42$. The misses concentrate at intermediate diameters
+($D_r/D=0.42$--$0.62$) combined with large pocket volumes ($L_0\ge1.2$~m),
+where the computed free surface is driven to $1.0$--$1.6$~m but falls short
+of the $1.8$-m rim; seven of the 24 reach within $0.45$~m of it. The
+pattern is the Series-B under-lift bias extended over the parameter plane:
+the model captures the physical structure of the regime boundary---both
+end members and the interaction sense that eruption requires narrow risers
+\emph{and} large relative pocket volume---but places the eruption
+threshold conservatively, under-predicting eruption in the transition
+band. For screening use the bias direction matters: the model as frozen
+errs toward missing geysers near the boundary, not toward false alarms.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{cong2017_criterion_map.png}
+\caption{Campaign 2: model geysering classification for 63 configurations
+spanning the experimental parameter ranges of \cite{cong2017}
+($D_r=16$--$46$~mm, $L_0=0.61$--$1.8$~m, $H_0=0.66$--$0.88$~m), each a
+full synchronous simulation, plotted in the criterion plane of
+Eq.~(\ref{eq:cong_criterion}). Filled triangles: model geysers; open
+circles: model does not geyser (filled light circles: free surface within
+$0.45$~m of the rim); black rings: disagreement with the criterion; dashed
+lines: the criterion thresholds $D_r/D=0.62$ and $V^{*}_{air}=3.42$. The
+model agrees in 39 of 63 configurations; all 24 disagreements are
+criterion-geyser/model-no, with no false positives.}
+\label{fig:cong_map}
+\end{figure}
+
+\FloatBarrier
+
+\subsection{Campaign 3: stormwater geyser in a vertical shaft above a
+junction chamber (Liu, Shao and Zhu, 2020)}
+\label{sec:tests:liu2020}
+
+\subsubsection{Experimental apparatus and one-dimensional representation}
+\label{sec:tests:liu2020:setup}
+
+The apparatus of \cite{liu2020} is a 1:20-scale model of a 27~m deep
+Edmonton prototype dropshaft. A 5.80~m upstream pipe ($D=0.20$~m,
+slope 1:100) feeds a transparent junction chamber
+($0.30\times0.30\times0.45$~m) with an invert drop of $0.18$~m to a
+5.95~m downstream pipe ($D_d=0.28$~m). A vertical shaft of diameter
+$d_r=0.06$~m and height $1.22$~m is mounted at the chamber lid centre
+and vents to the atmosphere. Inflow is imposed as a flow step
+$Q_0\to Q_1$ with valve opening time $T_v\approx0.4$~s. Pressure
+transducers PT1--PT4 monitor the shaft, the chamber lid (PT2, the
+primary datum), the chamber floor, and the upstream crown.
+
+Three configurations are computed with the same frozen solver as
+Campaigns~1--2. The horizontal reach is represented as a single
+composite one-dimensional domain---upstream pipe, chamber, and
+downstream pipe---with internal momentum faces at the chamber
+connections and a rigid-column ordinary differential equation for the
+shaft water column coupled at the lid tap. This is a reduced
+one-dimensional formulation: three-dimensional chamber mixing, slug
+venting at the chamber gas port, and the arrival of a compressing
+air pocket along the upstream crown in the late-time regime are not
+resolved at the level of the companion two-fluid/RTRP framework and are
+stated explicitly where they limit the comparison.
+
+\subsubsection{Branch pair A2/B3: downstream boundary flips the outcome}
+\label{sec:tests:liu2020:AB}
+
+Cases A2 and B3 share the same inflow step ($Q_0=20$, $Q_1=100$~L/s) and
+differ only in the downstream tail: A2 discharges to an open channel
+(weir-controlled, $h_d/D_d=1/4$), whereas B3 is initially surcharged
+with a submerged tail gate. In the experiment A2 never geysered while
+B3 produced a single-shoot eruption on every repetition
+(Fig.~5 of \cite{liu2020}).
+
+The model reproduces this branch flip without retuning. For A2 the
+riser column remains below the rim ($h_{r,\max}=0.47$~m against a
+shaft height of $1.22$~m) and the steady chamber pressures agree with
+the digitized Fig.~3 record: PT3 $5.26$~kPa against $4.99$~kPa
+($-5\%$) and PT2 $1.80$~kPa against $2.15$~kPa ($+16\%$ in the
+standing-column head that emerges from the composite domain rather than
+being prescribed). For B3 the computed run geysered, with the free
+surface reaching the shaft top and overflow. The eruption timing is
+close---peak PT2 at $1.68$~s against $1.47$~s---but the compressive
+peak amplitudes are underpredicted with the frozen elastic branch
+celerity $a_{wh}=40$~m/s: PT2 peak $31$~kPa against $55$~kPa
+($-44\%$). A sensitivity run at $a_{wh}=80$~m/s gives $63.5$~kPa,
+confirming that the deficit scales with the acoustic wave speed rather
+than with a missing branch-specific closure. The computed jet height
+$h=2.17$~m lies on the experimental regression line of
+Fig.~7(a) ($h=0.694\,P_{\max}/\rho g+0.309$~m, $R^2=0.97$).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{liu2020_a2_pressure.png}
+\caption{Case A2 ($Q$: 20$\to$100~L/s, downstream open channel):
+chamber and shaft pressures against time. Blue: digitized experimental
+PT2/PT3 from Fig.~3 of \cite{liu2020}; red: present model.}
+\label{fig:liu_a2_pressure}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{liu2020_b3_pressure.png}
+\caption{Case B3 ($Q$: 20$\to$100~L/s, downstream surcharged): PT1--PT3
+against time. Blue: digitized Fig.~5(b) of \cite{liu2020}; red: present
+model. The model selects the geysering branch; compressive peaks are
+acoustically under-resolved at the frozen $a_{wh}=40$~m/s.}
+\label{fig:liu_b3_pressure}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.72\textwidth]{liu2020_b3_h_pmax.png}
+\caption{Case B3 on the eruption-height--peak-pressure diagram of
+Fig.~7(a) of \cite{liu2020}. Open symbols: experimental family; filled
+red circle: present model ($h=2.17$~m, $P_{\max}=31$~kPa at
+$a_{wh}=40$~m/s).}
+\label{fig:liu_b3_h_pmax}
+\end{figure}
+
+\subsubsection{Case C9: transient-driven geysers and the analytic
+mass-oscillation model}
+\label{sec:tests:liu2020:C9}
+
+Case C9 ($Q_0=25\to Q_1=40$~L/s, surcharged downstream tail,
+initial shaft column $h_{r0}=0.30$~m, sealed air wedge on the upstream
+crown in the experiment) is the authors' detailed two-stage case: the
+first two geysers are driven by the hydraulic transient before the
+trapped pocket reaches the chamber at $t\approx6.46$~s; geysers
+3--8 are pocket-driven and lie outside the present reduced solver.
+
+For the phase-one comparison the pocket is omitted in the computation
+(the all-water variant assumed in Eq.~(7) of \cite{liu2020}), while the
+sealed-pocket run is retained as a qualitative cushioning check. The
+analytic head at the chamber lid is
+\begin{equation}
+H_s(t)=h_{r0}+\frac{L_d}{gA_d}\frac{\mathrm{d}Q_u}{\mathrm{d}t}
+\left(1-\cos\frac{2\pi t}{T}\right),
+\qquad
+T=2\pi\sqrt{\frac{L_d A_r}{gA_d}+\frac{h_{r0}}{g}},
+\label{eq:liu_eq7}
+\end{equation}
+with $T=1.52$~s for C9.
+
+Figure~\ref{fig:liu_c9_phase1} compares the digitized PT2 record of
+Fig.~9 (converted to head at the chamber-top datum) against
+Eq.~(\ref{eq:liu_eq7}) and the all-water model over the first
+5~s. The first peak is reproduced in timing and magnitude: measured
+$P_{1m}=10.69$~kPa at $t=0.50$~s, model $11.5$~kPa at $0.54$~s; the
+free surface reaches the shaft top at $0.73$~s in the experiment and
+$0.93$~s in the model. The oscillation period is $T=1.45$~s in the
+paper (Eq.~(8)) against $1.13$~s in the model and $1.52$~s in
+Eq.~(\ref{eq:liu_eq7}); the model is closer to the analytic value than
+to the measured period but still fast, consistent with the stiff
+one-dimensional tail-gate coupling. Steady heads after the first
+transient agree within $\approx20\%$ (PT2 final $8.79$ vs $10.6$~kPa).
+The sealed-pocket variant delays and cushions the first peak as in the
+experiment qualitatively, then drifts after $\approx4$~s when the wedge
+compresses through the reduced gas model---declared out of scope for
+phase two.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{liu2020_c9_phase1.png}
+\caption{Case C9, phase~1 ($t<5$~s): head $H_s$ at PT2 (chamber-top
+datum). Blue: digitized Fig.~9 of \cite{liu2020}; orange dashed:
+Eq.~(\ref{eq:liu_eq7}); red: present model (all-water variant); purple
+dotted: sealed-pocket variant (50~ms smoothed). Pocket-driven geysers
+after $t\approx6.5$~s are not computed.}
+\label{fig:liu_c9_phase1}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{liu2020_c9_riser.png}
+\caption{Case C9: shaft water-column height $h_r$ for the all-water
+(solid) and sealed-pocket (dotted) variants. The dashed line marks the
+experimental time at which the free surface first reaches the shaft
+top in phase~1.}
+\label{fig:liu_c9_riser}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\caption{Campaign~3 summary metrics. Acoustic peaks use the frozen
+$a_{wh}=40$~m/s; no coefficient is retuned between cases.}
+\label{tab:liu_summary}
+\begin{tabular}{lccc}
+\toprule
+Quantity & A2 (no geyser) & B3 (geyser) & C9 phase~1 \\
+\midrule
+Geyser? & no / no & yes / yes & yes / yes \\
+PT2 steady or peak [kPa] & $1.80$ / $2.15$ & $31$ / $55$ & $11.5$ / $10.7$ \\
+Peak or top-arrival time [s] & --- & $1.68$ / $1.47$ & $0.54$ / $0.50$ \\
+Shaft top reached [s] & --- & $\approx1.65$ & $0.93$ / $0.73$ \\
+Oscillation period [s] & $0.30$ (PT2--PT3) & --- & $1.13$ / $1.45$ \\
+\bottomrule
+\multicolumn{4}{l}{\footnotesize Each cell: model / experiment.}\\
+\end{tabular}
+\end{table}
+
+Taken together, the three cases show that the composite-domain
+formulation extends the frozen Campaign~1--2 solver to a
+prototype-motivated junction geometry: a downstream-boundary branch
+pair (A2/B3) and a transient mass-oscillation geyser (C9 phase~1) are
+reproduced at the level of regime selection, timing, and---where the
+physics is hydraulic rather than acoustic---amplitude. The principal
+residual in this campaign is compressive under-resolution of short
+pressure spikes when the frozen elastic celerity is used, and the
+deliberate omission of pocket-transport physics after the pocket
+arrives at the chamber.

@@ -1,0 +1,8 @@
+{
+  "case": "C9",
+  "flow_lps_initial": 25,
+  "flow_lps_final": 40,
+  "initial_riser_level_m": 0.3,
+  "air_pocket": true,
+  "computed_scope": "phase_1"
+}

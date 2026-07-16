@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Clean-clone entrypoint: mesh, smoke test, full transient, compact outputs.
+set -euo pipefail
+cd "$(dirname "$0")"
+
+PROFILE="${1:-base}"
+case "$PROFILE" in
+    base|refined) ;;
+    *) echo "usage: ./Allrun [base|refined]" >&2; exit 2 ;;
+esac
+
+./Allclean
+./Allrun.mesh "$PROFILE"
+./Allrun.solve smoke
+./Allrun.solve full
+
+if [[ "$PROFILE" == base || ! -f ../../../outputs/openfoam_3d_metrics.json ]]; then
+    python3 ../postprocess_compare.py --profile "$PROFILE"
+else
+    python3 ../postprocess_compare.py --profile refined --no-primary
+fi
+
+echo "ALLRUN_DONE profile=$PROFILE"

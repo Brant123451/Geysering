@@ -1,0 +1,153 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2512                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    arch        "LSB;label=32;scalar=64";
+    class       dictionary;
+    location    "12/uniform/functionObjects";
+    object      functionObjectProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+cdf7e925f5746741c316f5fbcf39ad0dfca90775
+{
+    probesPT
+    {
+        scalar
+        {
+            average(alpha.water) 0.4910953532850863;
+            min(alpha.water) 0.0006941974752073744;
+            max(alpha.water) 0.916818699091871;
+            average(p)      1015.79610715722;
+            min(p)          1.756342388660659;
+            max(p)          2765.571752793892;
+            average(p_rgh)  1883.027978490363;
+            min(p_rgh)      24.94598472618636;
+            max(p_rgh)      2934.808346984032;
+        }
+        label
+        {
+            size(alpha.water) 3;
+            size(p)         3;
+            size(p_rgh)     3;
+        }
+    }
+    riserAlpha
+    {
+        scalar
+        {
+            average(alpha.water) 0.01775090917535417;
+            min(alpha.water) 5.343135969483966e-07;
+            max(alpha.water) 0.4566517781385168;
+        }
+        label
+        {
+            size(alpha.water) 305;
+        }
+    }
+    chamberLevel
+    {
+        scalar
+        {
+            average(alpha.water) 0.8023989786615072;
+            min(alpha.water) 0.09821413772314062;
+            max(alpha.water) 0.9998931892718623;
+        }
+        label
+        {
+            size(alpha.water) 10;
+        }
+    }
+    boreAlpha
+    {
+        scalar
+        {
+            average(alpha.water) 0.9940167845689191;
+            min(alpha.water) 0.9741384816153661;
+            max(alpha.water) 0.9999364492010161;
+        }
+        label
+        {
+            size(alpha.water) 10;
+        }
+    }
+    tankLevel
+    {
+        scalar
+        {
+            average(alpha.water) 0.9563648748349438;
+            min(alpha.water) 0.1844134088799058;
+            max(alpha.water) 0.9998796690682176;
+        }
+        label
+        {
+            size(alpha.water) 85;
+        }
+    }
+    downstreamWetAreaX060
+    {
+        scalar
+        {
+            areaIntegrate(x060,alpha.water) 0.03774682281320561;
+        }
+    }
+    downstreamWetAreaX325
+    {
+        scalar
+        {
+            areaIntegrate(x325,alpha.water) 0.03453644320505284;
+        }
+    }
+    downstreamWetAreaX600
+    {
+        scalar
+        {
+            areaIntegrate(x600,alpha.water) 0.04241110150065157;
+        }
+    }
+    waterVolume
+    {
+        scalar
+        {
+            volIntegrate(alpha.water) 0.6585952280097918;
+        }
+    }
+    waterFluxInlet
+    {
+        scalar
+        {
+            weightedSum(inlet,phi) -0.09361951839629468;
+        }
+    }
+    waterFluxTankAtmosphere
+    {
+        scalar
+        {
+            weightedSum(tankAtmosphere,phi) 0.003783515402277245;
+        }
+    }
+    waterFluxWeirOutlet
+    {
+        scalar
+        {
+            weightedSum(weirOutlet,phi) 0.08305110886889623;
+        }
+    }
+    waterFluxRiserOutlet
+    {
+        scalar
+        {
+            weightedSum(riserOutlet,phi) 1.012426973953972e-08;
+        }
+    }
+}
+
+
+// ************************************************************************* //

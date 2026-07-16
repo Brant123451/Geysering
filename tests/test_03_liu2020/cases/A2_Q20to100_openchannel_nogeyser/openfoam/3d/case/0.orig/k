@@ -1,0 +1,50 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      k;
+}
+
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform 1e-4;
+
+boundaryField
+{
+    inlet
+    {
+        // 5% intensity at the reported Q0 open-channel velocity (1.704 m/s).
+        // A fixed positive value also prevents k=0 on the dry inlet faces.
+        type            fixedValue;
+        value           uniform 0.01089;
+    }
+    tankAtmosphere
+    {
+        type            inletOutlet;
+        inletValue      uniform 1e-4;
+        value           uniform 1e-4;
+    }
+    riserOutlet
+    {
+        type            inletOutlet;
+        inletValue      uniform 1e-4;
+        value           uniform 1e-4;
+    }
+    weirOutlet
+    {
+        type            inletOutlet;
+        inletValue      uniform 1e-4;
+        value           uniform 1e-4;
+    }
+    solidWalls
+    {
+        type            kqRWallFunction;
+        value           uniform 1e-4;
+    }
+    solidRiserWall
+    {
+        type            kqRWallFunction;
+        value           uniform 1e-4;
+    }
+}

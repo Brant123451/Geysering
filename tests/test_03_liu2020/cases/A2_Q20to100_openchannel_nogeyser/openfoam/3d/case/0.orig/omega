@@ -1,0 +1,50 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      omega;
+}
+
+dimensions      [0 0 -1 0 0 0 0];
+
+internalField   uniform 5;
+
+boundaryField
+{
+    inlet
+    {
+        // sqrt(k)/(Cmu^0.25 L) with k=0.01089 and L=0.02 m.
+        // Keep dry inlet faces positive to avoid a k/omega singularity.
+        type            fixedValue;
+        value           uniform 9.53;
+    }
+    tankAtmosphere
+    {
+        type            inletOutlet;
+        inletValue      uniform 5;
+        value           uniform 5;
+    }
+    riserOutlet
+    {
+        type            inletOutlet;
+        inletValue      uniform 5;
+        value           uniform 5;
+    }
+    weirOutlet
+    {
+        type            inletOutlet;
+        inletValue      uniform 5;
+        value           uniform 5;
+    }
+    solidWalls
+    {
+        type            omegaWallFunction;
+        value           uniform 5;
+    }
+    solidRiserWall
+    {
+        type            omegaWallFunction;
+        value           uniform 5;
+    }
+}

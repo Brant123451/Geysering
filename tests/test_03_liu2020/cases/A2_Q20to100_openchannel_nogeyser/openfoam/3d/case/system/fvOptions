@@ -1,0 +1,18 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvOptions;
+}
+
+// guard against single-cell velocity singularities (sliver cells at the
+// pipe-wall junction lips): physical velocities in this rig stay < 5 m/s,
+// the cap only ever acts on degenerate cells
+limitU
+{
+    type            limitVelocity;
+    active          yes;
+    selectionMode   all;
+    max             10.0;
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "test": "test_03_liu2020",
+  "id": "A2_Q20to100_openchannel_nogeyser",
+  "source": "Liu, Shao & Zhu (2020), Journal of Hydraulic Engineering",
+  "status": "validated_primary_case",
+  "self_contained": true,
+  "entrypoints": [
+    "scripts/caseA_digitize_and_compare.py",
+    "openfoam/3d/case/Allrun",
+    "openfoam/3d/case/Allrun.mesh",
+    "openfoam/3d/case/Allrun.solve",
+    "openfoam/3d/postprocess_compare.py"
+  ]
+}

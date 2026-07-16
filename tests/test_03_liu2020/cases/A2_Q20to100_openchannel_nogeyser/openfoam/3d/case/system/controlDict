@@ -1,0 +1,224 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| Liu2020 A2: full 3-D interFoam validation                                  |
+| t=-12..0 s Q0 initialization; t=0..0.4 s Q0->Q1; end t=14.4 s             |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+
+application     interFoam;
+startFrom       startTime;
+startTime       -12;
+stopAt          endTime;
+endTime         14.4;
+deltaT          0.00005;
+
+writeControl    adjustableRunTime;
+writeInterval   1.0;
+purgeWrite      3;
+writeFormat     binary;
+writePrecision  7;
+writeCompression off;
+timeFormat      general;
+timePrecision   6;
+runTimeModifiable yes;
+
+adjustTimeStep  yes;
+maxCo           0.47;
+maxAlphaCo      0.35;
+maxDeltaT       0.002;
+
+functions
+{
+    // Order is PT1, PT2, PT3.  The paper gives elevation/wall but not the
+    // in-plane or circumferential coordinates; those choices are documented.
+    probesPT
+    {
+        type            probes;
+        libs            (sampling);
+        writeControl    timeStep;
+        writeInterval   5;
+        fields          (p p_rgh alpha.water);
+        probeLocations
+        (
+            (0.15  0.025 1.25)
+            (0.08  0.080 0.445)
+            (0.15 -0.145 0.020)
+        );
+    }
+
+    // 61 levels x 5 radial samples; generated deterministically before solve.
+    riserAlpha
+    {
+        type            probes;
+        libs            (sampling);
+        writeControl    timeStep;
+        writeInterval   10;
+        fields          (alpha.water);
+        probeLocations
+        (
+            #include "riserProbeLocations"
+        );
+    }
+
+    chamberLevel
+    {
+        type            probes;
+        libs            (sampling);
+        writeControl    timeStep;
+        writeInterval   10;
+        fields          (alpha.water);
+        probeLocations
+        (
+            (0.05 0.05 0.02) (0.05 0.05 0.10) (0.05 0.05 0.20)
+            (0.05 0.05 0.30) (0.05 0.05 0.44)
+            (0.25 0.05 0.02) (0.25 0.05 0.10) (0.25 0.05 0.20)
+            (0.25 0.05 0.30) (0.25 0.05 0.44)
+        );
+    }
+
+    // Two upstream stations x 5 initially dry samples.  The downstream
+    // station is 10 mm before the chamber and measures filling-bore arrival
+    // from alpha rather than inferring it from a delayed pressure response.
+    boreAlpha
+    {
+        type            probes;
+        libs            (sampling);
+        writeControl    timeStep;
+        writeInterval   10;
+        fields          (alpha.water);
+        probeLocations
+        (
+            #include "boreProbeLocations"
+        );
+    }
+
+    // Vertical stage samples in the receiving tank, away from the inflow jet
+    // and circular weir.  Generated with the riser samples.
+    tankLevel
+    {
+        type            probes;
+        libs            (sampling);
+        writeControl    timeStep;
+        writeInterval   10;
+        fields          (alpha.water);
+        probeLocations
+        (
+            #include "tankProbeLocations"
+        );
+    }
+
+    // The paper prescribes hd/Dd=1/4 in the downstream pipe but does not
+    // report an axial measurement station.  Integrating alpha on three
+    // cross-sections records the gradually varied Q0 depth without equating
+    // the receiving-tank stage to the pipe depth.
+    downstreamWetAreaX060
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        writeControl    timeStep;
+        writeInterval   20;
+        log             false;
+        writeFields     false;
+        regionType      sampledSurface;
+        name            x060;
+        sampledSurfaceDict
+        {
+            type        cuttingPlane;
+            point       (0.60 0 0.14);
+            normal      (1 0 0);
+            interpolate true;
+        }
+        operation       areaIntegrate;
+        fields          (alpha.water);
+    }
+
+    downstreamWetAreaX325
+    {
+        $downstreamWetAreaX060;
+        name            x325;
+        sampledSurfaceDict
+        {
+            type        cuttingPlane;
+            point       (3.25 0 0.14);
+            normal      (1 0 0);
+            interpolate true;
+        }
+    }
+
+    downstreamWetAreaX600
+    {
+        $downstreamWetAreaX060;
+        name            x600;
+        sampledSurfaceDict
+        {
+            type        cuttingPlane;
+            point       (6.00 0 0.14);
+            normal      (1 0 0);
+            interpolate true;
+        }
+    }
+
+    // Interpolate alpha to faces, then integrate phase-weighted boundary
+    // fluxes.  Together with waterVolume these give an independent liquid
+    // continuity residual.
+    alphaWaterFace
+    {
+        type            surfaceInterpolate;
+        libs            (fieldFunctionObjects);
+        fields          ((alpha.water alphaWaterFace));
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    none;
+    }
+
+    waterVolume
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        writeControl    timeStep;
+        writeInterval   20;
+        log             false;
+        writeFields     false;
+        regionType      all;
+        operation       volIntegrate;
+        fields          (alpha.water);
+    }
+
+    waterFluxInlet
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        writeControl    timeStep;
+        writeInterval   20;
+        log             false;
+        writeFields     false;
+        regionType      patch;
+        name            inlet;
+        operation       weightedSum;
+        weightField     alphaWaterFace;
+        fields          (phi);
+    }
+
+    waterFluxTankAtmosphere
+    {
+        $waterFluxInlet;
+        name            tankAtmosphere;
+    }
+
+    waterFluxWeirOutlet
+    {
+        $waterFluxInlet;
+        name            weirOutlet;
+    }
+
+    waterFluxRiserOutlet
+    {
+        $waterFluxInlet;
+        name            riserOutlet;
+    }
+}

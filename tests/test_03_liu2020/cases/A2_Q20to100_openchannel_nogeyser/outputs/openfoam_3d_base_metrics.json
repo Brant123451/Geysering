@@ -1,0 +1,142 @@
+{
+  "case": "Liu2020 A2 Q20to100 open-channel no-geyser",
+  "profile": "base",
+  "time_origin": {
+    "simulation_and_1d": "t=0 at inflow-ramp start",
+    "paper_and_digitized_figure": "t=0 when valve fully open",
+    "experimental_shift_applied_s": 0.4
+  },
+  "paper": {
+    "PT3_initial_kPa": 0.99,
+    "PT2_final_kPa": 2.15,
+    "PT3_final_kPa": 4.99,
+    "downstream_initial_depth_m": 0.07,
+    "riser_diameter_m": 0.057,
+    "bore_reach_paper_clock_s": 1.2,
+    "bore_reach_ramp_clock_s": 1.6,
+    "first_mixture_column_m": 0.13,
+    "bernoulli_estimate_m": 0.33,
+    "geyser": false
+  },
+  "openfoam_3d": {
+    "solver": "interFoam",
+    "openfoam_build": "_bd2b6720-20260127 OPENFOAM=2512 version=2512",
+    "mpi_ranks": 4,
+    "cells": 158507,
+    "mesh_ok": true,
+    "max_non_orthogonality": 59.76391,
+    "max_skewness": 0.8450465,
+    "min_cell_determinant": 0.001481867,
+    "minimum_delta_t_s": 5.79824e-05,
+    "maximum_courant_number": 0.4917437,
+    "maximum_interface_courant_number": 0.478148,
+    "clock_time_s": 96789.0,
+    "simulation_start_s": -11.99955,
+    "simulation_end_s": 14.39986,
+    "PT1_initial_kPa": -0.02359341188665175,
+    "PT2_initial_kPa": -0.021369458575689785,
+    "PT3_initial_kPa": 0.7959210286353469,
+    "PT2_paper_window_kPa": 0.51663640955379,
+    "PT3_paper_window_kPa": 2.5620394183179904,
+    "tank_stage_initial_m": 0.0750133128826642,
+    "tank_stage_paper_window_m": 0.4288136835030711,
+    "downstream_depth_initial_m": {
+      "x_0p60_m": 0.06163977601359512,
+      "x_3p25_m": 0.06795159387709082,
+      "x_6p00_m": 0.0780401677222176
+    },
+    "bore_arrival_ramp_clock_s": 1.538326,
+    "bore_local_velocity_mps": 4.794339373098788,
+    "PT3_pressure_response_ramp_clock_s": 1.710192,
+    "first_contiguous_mixture_column_m": 0.06,
+    "maximum_contiguous_mixture_column_m": 0.22,
+    "maximum_mixture_front_m": 0.38,
+    "maximum_water_equivalent_riser_height_m": 0.0850495486122668,
+    "reached_riser_top": false,
+    "riser_water_discharge_m3": 2.3165439237276273e-21,
+    "geyser": false
+  },
+  "model_1d": {
+    "PT2_paper_window_kPa": 0.09385995109106401,
+    "PT3_paper_window_kPa": 5.090849174355916,
+    "maximum_riser_height_m": 0.41297588140167374,
+    "bore_arrival_ramp_clock_s": 1.4101668270476129,
+    "mass_error_L": 8.215650382226158e-12,
+    "geyser": false
+  },
+  "mass_conservation": {
+    "initial_water_volume_m3": 0.2705409,
+    "final_water_volume_m3": 0.66986476,
+    "final_balance_residual_m3": 0.0008341791914210361,
+    "maximum_abs_balance_residual_m3": 0.0008341791914210361,
+    "final_residual_percent_of_inflow": 0.054202606202806404,
+    "pre_ramp_inlet_m3s": 0.0199814190119403,
+    "pre_ramp_outlet_m3s": 0.020079238501807307,
+    "pre_ramp_volume_slope_m3s": -0.00013391857717891332,
+    "transient_samples": 3984
+  },
+  "errors": {
+    "PT3_initial_minus_paper_kPa": -0.19407897136465313,
+    "PT2_steady_minus_paper_kPa": -1.6333635904462098,
+    "PT3_steady_minus_paper_kPa": -2.42796058168201,
+    "first_column_minus_paper_m": -0.07,
+    "downstream_midpipe_depth_initial_minus_paper_m": -0.0020484061229091854,
+    "PT1_RMSE_vs_digitized_kPa": 0.1463027025755094,
+    "PT2_RMSE_vs_digitized_kPa": 1.7819963800398444,
+    "PT3_RMSE_vs_digitized_kPa": 2.3652978668457587,
+    "PT3_1d_RMSE_vs_digitized_kPa": 1.4779633319552912
+  },
+  "limitations": [
+    "The journal article omits the receiving tank/weir geometry; dimensions come from Liu's open-access 2018 thesis describing the same rig.",
+    "The journal rounds the riser diameter to 0.06 m; the model uses the thesis A2 test-table value of 0.057 m.",
+    "The movable-weir crest is calibrated only to the reported Q0=20 L/s and hd=0.070 m operating point; it is not fitted to transient pressures or geyser outcome.",
+    "The sources prescribe downstream-pipe depth but do not report its axial measurement station; three cross-sectional wet areas are therefore reported instead of treating the receiving-tank stage as hd.",
+    "The tank's absolute vertical placement is inferred because neither source dimensions its floor relative to the downstream-pipe invert.",
+    "A 10 mm mesh-resolved weir wall thickness is numerical because the thesis reports only the 0.30 m outside diameter.",
+    "Probe circumferential/in-plane coordinates are not reported by Liu et al.",
+    "interFoam omits acoustic water hammer, air compressibility, bubble slip, breakup and coalescence.",
+    "The experimental 0.13 m riser datum is a digitized first-column scalar, not a time series."
+  ],
+  "grid_sensitivity": {
+    "base_cells": 158507.0,
+    "refined_cells": 187195.0,
+    "quantities": {
+      "PT2_paper_window_kPa": {
+        "base": 0.51663640955379,
+        "refined": -0.0413497933050093,
+        "refined_minus_base": -0.5579862028587993,
+        "absolute_relative_change_percent": 1349.429243195763
+      },
+      "PT3_paper_window_kPa": {
+        "base": 2.5620394183179904,
+        "refined": 1.7876954993361072,
+        "refined_minus_base": -0.7743439189818833,
+        "absolute_relative_change_percent": 43.31520212863151
+      },
+      "bore_arrival_ramp_clock_s": {
+        "base": 1.538326,
+        "refined": 2.848506,
+        "refined_minus_base": 1.31018,
+        "absolute_relative_change_percent": 45.995339311203836
+      },
+      "first_contiguous_mixture_column_m": {
+        "base": 0.06,
+        "refined": 0.0,
+        "refined_minus_base": -0.06,
+        "absolute_relative_change_percent": 6000000000000.0
+      },
+      "maximum_contiguous_mixture_column_m": {
+        "base": 0.22,
+        "refined": 0.02,
+        "refined_minus_base": -0.2,
+        "absolute_relative_change_percent": 1000.0
+      },
+      "maximum_mixture_front_m": {
+        "base": 0.38,
+        "refined": 0.08,
+        "refined_minus_base": -0.3,
+        "absolute_relative_change_percent": 375.0
+      }
+    }
+  }
+}

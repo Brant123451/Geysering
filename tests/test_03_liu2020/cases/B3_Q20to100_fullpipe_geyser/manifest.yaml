@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "test": "test_03_liu2020",
+  "id": "B3_Q20to100_fullpipe_geyser",
+  "source": "Liu, Shao & Zhu (2020), Journal of Hydraulic Engineering",
+  "status": "validated_primary_case",
+  "self_contained": true,
+  "entrypoints": [
+    "scripts/caseB_digitize_and_compare.py"
+  ]
+}

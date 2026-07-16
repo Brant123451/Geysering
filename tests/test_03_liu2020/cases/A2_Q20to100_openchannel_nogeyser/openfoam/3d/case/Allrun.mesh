@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Generate the conformal base/refined mesh and require the full checkMesh pass.
+set -euo pipefail
+cd "$(dirname "$0")"
+
+PROFILE="${1:-base}"
+case "$PROFILE" in
+    base|refined) ;;
+    *) echo "usage: bash Allrun.mesh [base|refined]" >&2; exit 2 ;;
+esac
+
+OF_LAUNCH="${OPENFOAM_LAUNCH:-/usr/bin/openfoam2512}"
+if [[ ! -x "$OF_LAUNCH" ]]; then
+    echo "OpenFOAM v2512 launcher not found: $OF_LAUNCH" >&2
+    exit 2
+fi
+if ! python3 -c "import gmsh" >/dev/null 2>&1; then
+    echo "Python gmsh is required (tested with 4.15.2)." >&2
+    exit 2
+fi
+
+GMSH_THREADS="${GMSH_THREADS:-1}"
+TMP_MSH="$(mktemp "/tmp/liu2020-A2-${PROFILE}-XXXXXX.msh")"
+trap 'rm -f "$TMP_MSH"' EXIT
+
+rm -rf constant/polyMesh processor* 0 postProcessing
+python3 ../make_geometry.py --case-dir .
+python3 ../prepare_runtime.py --case-dir .
+"$OF_LAUNCH" -- surfaceCheck constant/triSurface/geometry.stl > log.surfaceCheck 2>&1
+if ! rg -q "Surface is closed\\. All edges connected to two faces\\." log.surfaceCheck; then
+    echo "source geometry is not closed" >&2
+    exit 1
+fi
+
+python3 ../make_gmsh_mesh.py \
+    --profile "$PROFILE" \
+    --threads "$GMSH_THREADS" \
+    --output "$TMP_MSH" > log.gmsh 2>&1
+"$OF_LAUNCH" -- gmshToFoam "$TMP_MSH" > log.gmshToFoam 2>&1
+"$OF_LAUNCH" -- createPatch -overwrite > log.createPatch 2>&1
+"$OF_LAUNCH" -- checkMesh -allGeometry -allTopology > log.checkMesh 2>&1
+
+if rg -q "Failed [1-9]" log.checkMesh || ! rg -q "Mesh OK\\." log.checkMesh; then
+    echo "full checkMesh failed" >&2
+    rg "cells:|non-orthogonality|skewness|determinant|Failed|Mesh OK" log.checkMesh >&2
+    exit 1
+fi
+
+printf '%s\n' "$PROFILE" > mesh.profile
+echo "MESH_DONE profile=$PROFILE"
+rg "cells:|non-orthogonality|skewness|determinant|Mesh OK" log.checkMesh
