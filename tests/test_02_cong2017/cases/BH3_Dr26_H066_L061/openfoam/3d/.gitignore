@@ -16,3 +16,9 @@ log.*
 *.foam
 *.msh
 _work/
+
+# Allow packaged run artifacts for local handoff / rendering
+!outputs/base_nominal_live/
+!outputs/base_nominal_live/**
+!outputs/base_nominal_handoff/
+!outputs/base_nominal_handoff/**

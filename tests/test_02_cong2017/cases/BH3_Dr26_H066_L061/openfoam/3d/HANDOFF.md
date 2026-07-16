@@ -23,14 +23,14 @@
 ## 2. 你现在就能用的文件
 
 - `outputs/base_nominal_progress.json` — 最新进度 / 健康度  
-- `outputs/base_nominal_live/postProcessing/` — 巡检时同步的探针/通量时序（进行中备份）  
+- `outputs/base_nominal_live/functionObjects/` — 巡检时同步的探针/通量时序（进行中备份）  
 - `PAPER_AUDIT.md`、`MODELING_CONTRACT.json`、`README.md`
 
 ## 3. 算完后会自动上传什么（供你本地渲染）
 
 目录：`outputs/base_nominal_handoff/`
 
-- `postProcessing/` — 全量函数对象/探针（中心线、压力、通量、水体积等）  
+- `functionObjects/` — 全量函数对象/探针（中心线、压力、通量、水体积等）  
 - `fields_vtk/` — `foamToVTK`，ParaView 直接打开  
 - `fields_reconstructed/` — 关键时间步重建场（体积允许时）  
 - `metrics/` — `postprocess.py` 的 metrics / timeseries / 图  
