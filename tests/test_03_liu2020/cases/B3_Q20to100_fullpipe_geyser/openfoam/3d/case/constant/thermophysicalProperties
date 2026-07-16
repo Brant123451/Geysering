@@ -1,0 +1,19 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      thermophysicalProperties;
+}
+
+phases          (water air);
+
+// Below the measured ~81 kPa absolute rebound pressure.  The model does not
+// claim to resolve cavitation or phase change.
+pMin            2000;
+
+sigma
+{
+    type        constant;
+    sigma       0.072;
+}

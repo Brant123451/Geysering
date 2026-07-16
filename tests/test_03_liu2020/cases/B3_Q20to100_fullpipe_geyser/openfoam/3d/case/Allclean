@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+cd "$(dirname "$0")"
+
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
+
+foamListTimes -rm >/dev/null 2>&1 || true
+rm -rf \
+    0 \
+    processor* \
+    postProcessing \
+    constant/polyMesh \
+    b3_3d.msh \
+    log.* \
+    mesh-metadata.txt \
+    system/decomposeParDict.runtime \
+    system/controlDict.full-run
+
+echo "B3_3D_CLEAN"

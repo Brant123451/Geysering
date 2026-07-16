@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+cd "$(dirname "$0")"
+
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
+
+if [[ ! -d constant/polyMesh ]]; then
+    echo "No mesh found; run ./Allrun.mesh first." >&2
+    exit 1
+fi
+
+rm -rf 0
+cp -a 0.orig 0
+setFields > log.setFields 2>&1
+setExprFields > log.setExprFields 2>&1
+
+echo "B3_3D_INITIALISED"

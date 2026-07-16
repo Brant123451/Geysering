@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+cd "$(dirname "$0")"
+
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
+
+AVAILABLE_NP="$(nproc)"
+NP="${OPENFOAM_NP:-$AVAILABLE_NP}"
+if (( NP > AVAILABLE_NP )); then NP="$AVAILABLE_NP"; fi
+if (( NP < 1 )); then NP=1; fi
+
+rm -rf processor* postProcessing
+./Allrun.init
+
+if [[ -f system/controlDict.full-run ]]; then
+    echo "Stale system/controlDict.full-run found; restore or remove it first." >&2
+    exit 1
+fi
+cp system/controlDict system/controlDict.full-run
+restore_control()
+{
+    if [[ -f system/controlDict.full-run ]]; then
+        mv system/controlDict.full-run system/controlDict
+    fi
+}
+trap restore_control EXIT
+
+foamDictionary system/controlDict -entry endTime -set 0.02 >/dev/null
+foamDictionary system/controlDict -entry writeInterval -set 0.01 >/dev/null
+foamDictionary system/controlDict -entry maxDeltaT -set 0.0002 >/dev/null
+
+cp system/decomposeParDict system/decomposeParDict.runtime
+foamDictionary system/decomposeParDict.runtime \
+    -entry numberOfSubdomains -set "$NP" >/dev/null
+decomposePar -force -decomposeParDict system/decomposeParDict.runtime \
+    > log.decomposePar.smoke 2>&1
+
+mpirun -np "$NP" compressibleInterIsoFoam -parallel \
+    -decomposeParDict system/decomposeParDict.runtime \
+    > log.compressibleInterIsoFoam.smoke 2>&1
+
+reconstructPar -latestTime > log.reconstructPar.smoke 2>&1
+restore_control
+trap - EXIT
+
+echo "B3_3D_SMOKE_DONE endTime=0.02"

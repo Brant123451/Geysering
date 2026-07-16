@@ -1,0 +1,16 @@
+*.vtu filter=lfs diff=lfs merge=lfs -text
+*.vtp filter=lfs diff=lfs merge=lfs -text
+*.msh filter=lfs diff=lfs merge=lfs -text
+**/polyMesh/points filter=lfs diff=lfs merge=lfs -text
+**/polyMesh/faces filter=lfs diff=lfs merge=lfs -text
+**/polyMesh/owner filter=lfs diff=lfs merge=lfs -text
+**/polyMesh/neighbour filter=lfs diff=lfs merge=lfs -text
+**/riserCentreline/**/U filter=lfs diff=lfs merge=lfs -text
+**/riserCentreline/**/alpha.water filter=lfs diff=lfs merge=lfs -text
+**/[0-9]*/U filter=lfs diff=lfs merge=lfs -text
+**/[0-9]*/alpha.water filter=lfs diff=lfs merge=lfs -text
+**/[0-9]*/p filter=lfs diff=lfs merge=lfs -text
+**/[0-9]*/p_rgh filter=lfs diff=lfs merge=lfs -text
+**/[0-9]*/T filter=lfs diff=lfs merge=lfs -text
+**/[0-9]*/phi filter=lfs diff=lfs merge=lfs -text
+**/[0-9]*/rho filter=lfs diff=lfs merge=lfs -text
