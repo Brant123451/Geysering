@@ -1,5 +1,8 @@
 # B-H6 paper-faithful 3-D OpenFOAM case
 
+**交接 / 本地渲染：** 先读 [`HANDOFF.md`](HANDOFF.md)。正视主数据在  
+`results/frontview-3d/cuttingPlane/<time>/yMid.vtp`（130 帧真三维 `alpha.water` 切片）。
+
 This directory models Cong, Chan & Lee (2017) Series-B run B-H6 and defines the
 paper-audited 3-D baseline for its intended strict B-H1/B-H6 comparison.  A
 B-H1 OpenFOAM 3-D source case is not present in this repository, so file-level
