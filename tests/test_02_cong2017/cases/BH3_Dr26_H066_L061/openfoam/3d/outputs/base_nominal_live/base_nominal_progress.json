@@ -5,40 +5,40 @@
   "paper_run": "B-H3",
   "status": "running_after_stability_restart",
   "check_source": "agent_20min",
-  "updated_at_unix": 1784216806.694696,
-  "updated_at_iso": "2026-07-16T15:46:46Z",
+  "updated_at_unix": 1784216862.338764,
+  "updated_at_iso": "2026-07-16T15:47:42Z",
   "workdir": "/tmp/bh3-study-layered-d08978d/base_nominal",
-  "simulated_time_s": 4.938262962,
+  "simulated_time_s": 4.938993441,
   "event_end_time_s": 13.0,
-  "progress_fraction": 0.3798663816923077,
-  "throughput_sim_s_per_wall_h_since_restart": 0.041812474477939676,
-  "eta_wall_h_at_restart_rate": 192.80698257294924,
+  "progress_fraction": 0.3799225723846154,
+  "throughput_sim_s_per_wall_h_since_restart": 0.04181424672483444,
+  "eta_wall_h_at_restart_rate": 192.78134105934717,
   "n_workers": 4,
-  "avg_worker_cpu_pct_lifetime": 63.7,
+  "avg_worker_cpu_pct_lifetime": 63.75,
   "workers": [
     {
       "pid": 1035969,
       "pcpu": 63.7,
-      "pmem": 3.8,
-      "etime": "1-21:09:37"
+      "pmem": 3.9,
+      "etime": "1-21:10:33"
     },
     {
       "pid": 1035970,
       "pcpu": 63.7,
       "pmem": 3.7,
-      "etime": "1-21:09:37"
+      "etime": "1-21:10:33"
     },
     {
       "pid": 1035971,
-      "pcpu": 63.7,
+      "pcpu": 63.8,
       "pmem": 3.7,
-      "etime": "1-21:09:37"
+      "etime": "1-21:10:33"
     },
     {
       "pid": 1035972,
-      "pcpu": 63.7,
+      "pcpu": 63.8,
       "pmem": 3.7,
-      "etime": "1-21:09:37"
+      "etime": "1-21:10:33"
     }
   ],
   "monitor_interval_s": 1200,
@@ -57,11 +57,11 @@
     "status_level": "OK",
     "foam_fatal_in_tail": false,
     "latest_field_write_s": 4.9,
-    "deltaT_last": 2.807903865e-05,
-    "maxCo_last": 0.1000638259,
+    "deltaT_last": 2.814976671e-05,
+    "maxCo_last": 0.1000824057,
     "alpha_max_last": 1.0,
-    "advanced": true,
-    "stall_count": 0,
+    "advanced": false,
+    "stall_count": 1,
     "idle_pct": 0.0,
     "top_cpu_line": "%Cpu(s):100.0 us,  0.0 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st"
   },
