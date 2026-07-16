@@ -264,6 +264,10 @@ never develops the measured positive lid pressure. The mixture-front metric is
 also grid-sensitive (0.02 to 0.08 m), although both values remain far below
 the riser top and the experimental first-column scalar.
 
+## Local agent handoff
+
+**Start here:** [`../LOCAL_AGENT_HANDOFF.md`](../LOCAL_AGENT_HANDOFF.md)
+
 ## Simulation data for local rendering
 
 See [`SIMDATA.md`](SIMDATA.md). The refined run products under `case/`

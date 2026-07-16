@@ -1,5 +1,7 @@
 # Refined A2 simulation data for local rendering
 
+> Local agent entry point: [`../LOCAL_AGENT_HANDOFF.md`](../LOCAL_AGENT_HANDOFF.md)
+
 This directory retains the refined-mesh `interFoam` result products needed to
 rebuild ParaView/VTK front elevations and probe-based motion figures locally.
 

@@ -1,5 +1,9 @@
 # 新 Cursor Cloud Agent 完整提示词
 
+> **若你是本地 Agent（只做渲染/接手，不再 Cloud 复算）：**  
+> 请改读 Case 根目录 [`../LOCAL_AGENT_HANDOFF.md`](../LOCAL_AGENT_HANDOFF.md)。  
+> 本文件保留 Cloud 验收与硬约束；其中「禁止提交 postProcessing」已被本分支为本地渲染而 force-add 覆盖。
+
 把本文件全文作为新 Agent 的任务上下文；任务名称使用：
 
 `geysering test 3 caseA2`

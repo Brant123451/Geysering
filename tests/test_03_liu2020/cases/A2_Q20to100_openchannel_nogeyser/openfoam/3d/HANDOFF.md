@@ -155,8 +155,19 @@ directories, logs, frames, or caches.
 `NEW_AGENT_PROMPT.md` preserves the original acceptance requirements.
 `PAPER_AUDIT.md`, this handoff, the 3-D `README.md`, and the Case root
 `README.md` record which requirements passed and which runtime checks failed.
-Generated meshes, decomposed fields, logs, and time directories remain
-non-versioned; all compact evidence needed to audit the conclusions is under
-the Case `outputs/` directory. Replacement-model base and refined fulls are
-complete; committed `outputs/openfoam_3d_*` now reflect those runs rather
-than the superseded fixed-stage baseline.
+Replacement-model base and refined fulls are complete; committed
+`outputs/openfoam_3d_*` now reflect those runs rather than the superseded
+fixed-stage baseline.
+
+**Local-agent takeover (2026-07-16):** refined simulation products needed for
+local rendering were force-committed under `case/` (VTK dumps, reconstructed
+times `-12/12/13/14`, `postProcessing/`, `polyMesh/`) with Git LFS for the
+largest blobs. See:
+
+* Case-root **[`../LOCAL_AGENT_HANDOFF.md`](../LOCAL_AGENT_HANDOFF.md)** — single
+  entry point for a local Cursor agent
+* [`SIMDATA.md`](SIMDATA.md) — what was uploaded / what was skipped
+
+The older “do not commit `postProcessing` / `polyMesh`” guidance still applies
+to *new* full re-solves by default; the committed refined snapshot is an
+explicit exception so local agents can re-render without re-solving.

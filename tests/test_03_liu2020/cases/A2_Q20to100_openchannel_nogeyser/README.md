@@ -1,5 +1,9 @@
 # Case A — Liu, Shao & Zhu (2020) Case A2（下游明渠，不喷发分支）
 
+> **本地 Agent 接手请先读：** [`LOCAL_AGENT_HANDOFF.md`](LOCAL_AGENT_HANDOFF.md)  
+> 三维模拟数据清单：[`openfoam/3d/SIMDATA.md`](openfoam/3d/SIMDATA.md)  
+> Cloud/历史交接：[`openfoam/3d/HANDOFF.md`](openfoam/3d/HANDOFF.md)
+
 ## 终版（2026-07-08，复合域自然演化版）
 
 按用户要求把整个过程改为**基于物理数学模型的自然计算演化**：抛弃集总节点+代数
