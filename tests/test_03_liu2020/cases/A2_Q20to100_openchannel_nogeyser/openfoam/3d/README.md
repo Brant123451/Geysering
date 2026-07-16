@@ -264,6 +264,23 @@ never develops the measured positive lid pressure. The mixture-front metric is
 also grid-sensitive (0.02 to 0.08 m), although both values remain far below
 the riser top and the experimental first-column scalar.
 
+## Front-elevation renders
+
+`render_front_water_air.py` writes complete front views under `outputs/`:
+
+* `openfoam_3d_refined_front_water_air.png` — true VTK `y=0` `alpha.water`
+  collage at the retained volume dumps (`t=-12, 12, 13, 14 s`; `purgeWrite=3`);
+* `openfoam_3d_refined_front_full_t*.png` — dual panel (full apparatus +
+  horizontal-pipe zoom) for each retained dump;
+* `openfoam_3d_refined_front_complete_strip.png` — four-time strip of the same
+  dual panels;
+* `openfoam_3d_refined_front_motion_timeline.png` / `_motion.gif` — full
+  `-12…14.4 s` dual-panel motion from continuous probes (volume fields between
+  dumps were purged).
+
+The pipe-zoom panel is required because open-channel `hd≈0.07–0.19 m` is only
+a thin band when the full 1.22 m riser is drawn to scale.
+
 ## Limitations
 
 The journal article omits the downstream tank/weir geometry; the replacement
