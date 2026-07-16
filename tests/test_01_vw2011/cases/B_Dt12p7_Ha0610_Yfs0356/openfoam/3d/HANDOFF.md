@@ -534,6 +534,17 @@ timestep controls.
     to `=1`).  Revert to the admitted baseline (`nNonOrthogonalCorrectors=0`)
     and tighten only `CASEB_MAX_CO` from 0.15 to 0.10 through a fresh 0.12 s
     rim-onset screen.
+39. The fresh `maxCo=0.10` 0.12 s screen completed and was rejected:
+    * solver reached 0.120002 s; observed peak/global Courant maxima were
+      about 0.109/0.100 (cap respected after startup);
+    * free-surface hotspots persisted only through 0.060 s; from 0.070 s the
+      same pure-gas rim cell (\(y=0.657\) m) locked on and grew monotonically
+      \(1.099\rightarrow1.242\rightarrow1.395\rightarrow1.548\rightarrow1.698\rightarrow1.849\)
+      m/s by 0.120 s with zero curvature;
+    * \(H^*\) peak-to-peak was only 0.001435, again a false pressure-only clear.
+    Do not promote `maxCo=0.10`.  Do not keep shrinking `maxCo` alone.
+    Field/VTK archives for local rendering are under
+    `outputs/sim_data/maxco010_0p12_screen/` (see `RENDER_HANDOFF.md`).
 
 ## Still required
 
@@ -565,13 +576,14 @@ The scientific reproduction is **not complete**.  Continue in this order:
    continuation also passes the pressure-drift admission gate.  The subsequent
    full-hold continuation was rejected at about 0.117 s for a growing rim
    exterior-gas hotspot despite a falsely calm transducer \(H^*\).  Isolated
-   `nCorrectors=3`, isolated `nOuterCorrectors=2`, their stack, and
-   `nNonOrthogonalCorrectors=1|2` 0.12 s screens are all rejected for the same
-   growing rim exterior-gas mode (`=1` delayed onset to 0.110 s; `=2` advanced
-   onset to 0.080 s; both end near 1.84 m/s).  Leave the non-orthogonal-
-   corrector axis.  Next tighten only `CASEB_MAX_CO` from 0.15 to 0.10 on the
-   admitted baseline through a fresh 0.12 s rim-onset screen before any new
-   1.0 s hold.
+   `nCorrectors=3`, isolated `nOuterCorrectors=2`, their stack,
+   `nNonOrthogonalCorrectors=1|2`, and `maxCo=0.10` 0.12 s screens are all
+   rejected for the same growing rim exterior-gas mode (`maxCo=0.10` advanced
+   onset to 0.070 s and ended near 1.85 m/s).  Leave the PIMPLE /
+   non-orthogonal / `maxCo=0.10` axes.  Choose a new numerical axis outside
+   those exhausted screens before any new 1.0 s hold.  Local-render archives
+   for the rejected `maxCo=0.10` run live under
+   `outputs/sim_data/maxco010_0p12_screen/`.
    Extend a candidate past the 0.04 s
    pressure-drift onset only if it stays within the declared Courant limits
    and reduces peak velocity, and only \(H^*\) peak-to-peak at or below 0.02
@@ -581,8 +593,10 @@ The scientific reproduction is **not complete**.  Continue in this order:
 3. Run the 10.5 s base case through \(T^*\ge6\).
 4. Run the refined grid and required timestep/valve/compressibility
    sensitivities.
-5. Commit only compact CSV/JSON/plots; never commit meshes, time directories,
-   `processor*`, `postProcessing`, logs, or dynamic-code output.
+5. Commit compact CSV/JSON/plots as usual.  Runtime `processor*` /
+   `postProcessing` / `log.*` under `openfoam/3d/` remain gitignored.  The
+   intentional exception is curated archives under
+   `outputs/sim_data/<screen_id>/` (LFS `*.tar.xz`) for local rendering.
 6. Update the PR without claiming a completed experiment until the acceptance
    fields in `outputs/openfoam_3d_metrics.json` pass.
 

@@ -1,0 +1,86 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2512                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : _bd2b6720-20260127 OPENFOAM=2512 version=2512
+Arch   : "LSB;label=32;scalar=64"
+Exec   : caseBHydrostaticInit -nCorrectors 10
+Date   : Jul 16 2026
+Time   : 10:59:21
+Host   : cursor
+PID    : 1214527
+I/O    : uncollated
+Case   : /workspace/tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356/openfoam/3d
+nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+memory pool : not available
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Create mesh for time = 0
+
+Reading field p_rgh
+
+Reading field U
+
+Reading/calculating face flux field phi
+
+Constructing twoPhaseModelThermo
+
+Selecting phaseModel for water: pureMovingPhaseModel
+Selecting thermodynamics package 
+{
+    type            heRhoThermo;
+    mixture         pureMixture;
+    transport       const;
+    thermo          hConst;
+    equationOfState perfectFluid;
+    specie          specie;
+    energy          sensibleInternalEnergy;
+}
+
+Selecting phaseModel for air: pureMovingPhaseModel
+Selecting thermodynamics package 
+{
+    type            heRhoThermo;
+    mixture         pureMixture;
+    transport       const;
+    thermo          hConst;
+    equationOfState perfectGas;
+    specie          specie;
+    energy          sensibleInternalEnergy;
+}
+
+CASEB_HYDROSTATIC_REGIONS count=2 unventedReferences=1
+CASEB_HYDROSTATIC_REFERENCE cell=1860184 region=1 value(Pa)=107298.3 location=(0.54535213 -0.0024928321 -0.046394368)
+CASEB_HYDROSTATIC_INIT stage=before iteration=0 maxForceResidual(Pa/m)=1661428 location=(3.5100134 0.40288431 0.00034467938) maxAlgebraicResidual(Pa)=0.00043484627
+GAMG:  Solving for p_rgh, Initial residual = 0.00046488944, Final residual = 3.8207934e-06, No Iterations 2
+CASEB_HYDROSTATIC_INIT stage=corrector iteration=1 maxForceResidual(Pa/m)=1333216.2 location=(3.5100134 0.40288431 0.00034467938) maxAlgebraicResidual(Pa)=0.0078425805
+GAMG:  Solving for p_rgh, Initial residual = 0.00043219118, Final residual = 2.7239143e-06, No Iterations 2
+CASEB_HYDROSTATIC_INIT stage=corrector iteration=2 maxForceResidual(Pa/m)=120301.74 location=(3.5196174 0.40303439 -0.0041990701) maxAlgebraicResidual(Pa)=0.009232958
+GAMG:  Solving for p_rgh, Initial residual = 8.6985376e-05, Final residual = 8.0145595e-07, No Iterations 2
+CASEB_HYDROSTATIC_INIT stage=corrector iteration=3 maxForceResidual(Pa/m)=37538.787 location=(3.5196174 0.40303439 -0.0041990701) maxAlgebraicResidual(Pa)=0.001785095
+GAMG:  Solving for p_rgh, Initial residual = 1.9010665e-05, Final residual = 9.8346042e-08, No Iterations 3
+CASEB_HYDROSTATIC_INIT stage=corrector iteration=4 maxForceResidual(Pa/m)=11517.421 location=(3.5214538 0.40357786 -0.00080470454) maxAlgebraicResidual(Pa)=0.00046353105
+GAMG:  Solving for p_rgh, Initial residual = 5.4732427e-06, Final residual = 5.6005526e-08, No Iterations 2
+CASEB_HYDROSTATIC_INIT stage=corrector iteration=5 maxForceResidual(Pa/m)=2498.7098 location=(3.5196174 0.40303439 -0.0041990701) maxAlgebraicResidual(Pa)=0.00013229156
+GAMG:  Solving for p_rgh, Initial residual = 1.6886803e-06, Final residual = 6.2205549e-08, No Iterations 1
+CASEB_HYDROSTATIC_INIT stage=corrector iteration=6 maxForceResidual(Pa/m)=1021.3449 location=(3.5144812 0.40242351 0.0010191192) maxAlgebraicResidual(Pa)=2.8970593e-05
+GAMG:  Solving for p_rgh, Initial residual = 4.4878056e-07, Final residual = 2.8277396e-08, No Iterations 1
+CASEB_HYDROSTATIC_INIT stage=corrector iteration=7 maxForceResidual(Pa/m)=1017.6403 location=(3.5144812 0.40242351 0.0010191192) maxAlgebraicResidual(Pa)=1.5577083e-05
+GAMG:  Solving for p_rgh, Initial residual = 1.9876929e-07, Final residual = 1.4324132e-08, No Iterations 1
+CASEB_HYDROSTATIC_INIT stage=corrector iteration=8 maxForceResidual(Pa/m)=1017.9579 location=(3.5144812 0.40242351 0.0010191192) maxAlgebraicResidual(Pa)=3.0224037e-06
+GAMG:  Solving for p_rgh, Initial residual = 6.3450297e-08, Final residual = 6.3450297e-08, No Iterations 0
+CASEB_HYDROSTATIC_INIT stage=corrector iteration=9 maxForceResidual(Pa/m)=1017.9579 location=(3.5144812 0.40242351 0.0010191192) maxAlgebraicResidual(Pa)=1.3096724e-10
+GAMG:  Solving for p_rgh, Initial residual = 6.3450298e-08, Final residual = 6.3450298e-08, No Iterations 0
+CASEB_HYDROSTATIC_INIT stage=corrector iteration=10 maxForceResidual(Pa/m)=1017.9579 location=(3.5144812 0.40242351 0.0010191192) maxAlgebraicResidual(Pa)=1.4551915e-11
+CASEB_HYDROSTATIC_INIT stage=final iteration=10 maxForceResidual(Pa/m)=1017.9579 location=(3.5144812 0.40242351 0.0010191192) maxAlgebraicResidual(Pa)=1.4551915e-11
+CASEB_HYDROSTATIC_INIT_SUMMARY correctors=10 beforeMaxForceResidual(Pa/m)=1661428 afterMaxForceResidual(Pa/m)=1017.9579 afterMaxAlgebraicResidual(Pa)=1.4551915e-11
+End
+

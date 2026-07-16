@@ -1,0 +1,36 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setExprFieldsReducedPressureDict;
+}
+
+// Run this dictionary in a separate setExprFields process after the absolute
+// pressure dictionary.  setExprFields writes modified fields through
+// unregistered objects, so a later expression in the same process would still
+// see the pressure cached by readFields before those writes.
+readFields (alpha.water p p_rgh T);
+
+expressions
+(
+    mixtureReducedPressure
+    {
+        field p_rgh;
+        dimensions [1 -1 -2 0 0 0 0];
+        keepPatches true;
+        // compressibleInterFlow reconstructs p as p_rgh + rho*gh using
+        // alpha-weighted phase density.  Use that same mixture density in
+        // geometric cut cells instead of switching p_rgh at alpha=0.5.
+        expression
+        #{
+            p
+          + (
+                alpha.water
+               *(998.153943 + p/(7504.690432*293.15))
+              + (1 - alpha.water)*(p/(287.058*293.15))
+            )
+           *9.81*pos().y()
+        #};
+    }
+);

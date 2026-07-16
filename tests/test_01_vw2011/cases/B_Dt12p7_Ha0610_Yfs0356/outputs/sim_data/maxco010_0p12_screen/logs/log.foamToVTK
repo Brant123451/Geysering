@@ -1,0 +1,106 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2512                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : _bd2b6720-20260127 OPENFOAM=2512 version=2512
+Arch   : "LSB;label=32;scalar=64"
+Exec   : foamToVTK -time 0,0.05999530981,0.06999554795,0.07999910259,0.08999773643,0.1000012701,0.1099995153,0.1200015035 -fields (alpha.water U p p_rgh T rho)
+Date   : Jul 16 2026
+Time   : 21:11:04
+Host   : cursor
+PID    : 1278922
+I/O    : uncollated
+Case   : /workspace/tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356/openfoam/3d
+nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+memory pool : not available
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Including fields (alpha.water U p p_rgh T rho)
+
+Create time
+
+Initial memory 125336 kB
+Create mesh for time = 0
+
+VTK mesh topology: 0.25 s, 358260 kB
+Time: 0
+    volScalar    : T alpha.water p p_rgh
+    volVector    : U
+    Internal  : "VTK/3d_0/internal.vtu"
+    Boundary  : "VTK/3d_0/boundary/valveWallUpstream.vtp"
+    Boundary  : "VTK/3d_0/boundary/valveWallDownstream.vtp"
+    Boundary  : "VTK/3d_0/boundary/walls.vtp"
+    Boundary  : "VTK/3d_0/boundary/atmosphere.vtp"
+Wrote in 3.93 s, 1152128 kB
+Time: 0.05999530981
+    volScalar    : T alpha.water p p_rgh rho
+    volVector    : U
+    Internal  : "VTK/3d_3428/internal.vtu"
+    Boundary  : "VTK/3d_3428/boundary/valveWallUpstream.vtp"
+    Boundary  : "VTK/3d_3428/boundary/valveWallDownstream.vtp"
+    Boundary  : "VTK/3d_3428/boundary/walls.vtp"
+    Boundary  : "VTK/3d_3428/boundary/atmosphere.vtp"
+Wrote in 1.32 s, 1238016 kB
+Time: 0.06999554795
+    volScalar    : T alpha.water p p_rgh rho
+    volVector    : U
+    Internal  : "VTK/3d_4416/internal.vtu"
+    Boundary  : "VTK/3d_4416/boundary/valveWallUpstream.vtp"
+    Boundary  : "VTK/3d_4416/boundary/valveWallDownstream.vtp"
+    Boundary  : "VTK/3d_4416/boundary/walls.vtp"
+    Boundary  : "VTK/3d_4416/boundary/atmosphere.vtp"
+Wrote in 1.14 s, 1118032 kB
+Time: 0.07999910259
+    volScalar    : T alpha.water p p_rgh rho
+    volVector    : U
+    Internal  : "VTK/3d_5550/internal.vtu"
+    Boundary  : "VTK/3d_5550/boundary/valveWallUpstream.vtp"
+    Boundary  : "VTK/3d_5550/boundary/valveWallDownstream.vtp"
+    Boundary  : "VTK/3d_5550/boundary/walls.vtp"
+    Boundary  : "VTK/3d_5550/boundary/atmosphere.vtp"
+Wrote in 1.18 s, 1132904 kB
+Time: 0.08999773643
+    volScalar    : T alpha.water p p_rgh rho
+    volVector    : U
+    Internal  : "VTK/3d_6829/internal.vtu"
+    Boundary  : "VTK/3d_6829/boundary/valveWallUpstream.vtp"
+    Boundary  : "VTK/3d_6829/boundary/valveWallDownstream.vtp"
+    Boundary  : "VTK/3d_6829/boundary/walls.vtp"
+    Boundary  : "VTK/3d_6829/boundary/atmosphere.vtp"
+Wrote in 1.19 s, 1147776 kB
+Time: 0.1000012701
+    volScalar    : T alpha.water p p_rgh rho
+    volVector    : U
+    Internal  : "VTK/3d_8253/internal.vtu"
+    Boundary  : "VTK/3d_8253/boundary/valveWallUpstream.vtp"
+    Boundary  : "VTK/3d_8253/boundary/valveWallDownstream.vtp"
+    Boundary  : "VTK/3d_8253/boundary/walls.vtp"
+    Boundary  : "VTK/3d_8253/boundary/atmosphere.vtp"
+Wrote in 1.18 s, 1147776 kB
+Time: 0.1099995153
+    volScalar    : T alpha.water p p_rgh rho
+    volVector    : U
+    Internal  : "VTK/3d_9820/internal.vtu"
+    Boundary  : "VTK/3d_9820/boundary/valveWallUpstream.vtp"
+    Boundary  : "VTK/3d_9820/boundary/valveWallDownstream.vtp"
+    Boundary  : "VTK/3d_9820/boundary/walls.vtp"
+    Boundary  : "VTK/3d_9820/boundary/atmosphere.vtp"
+Wrote in 1.19 s, 1147776 kB
+Time: 0.1200015035
+    volScalar    : T alpha.water p p_rgh rho
+    volVector    : U
+    Internal  : "VTK/3d_11532/internal.vtu"
+    Boundary  : "VTK/3d_11532/boundary/valveWallUpstream.vtp"
+    Boundary  : "VTK/3d_11532/boundary/valveWallDownstream.vtp"
+    Boundary  : "VTK/3d_11532/boundary/walls.vtp"
+    Boundary  : "VTK/3d_11532/boundary/atmosphere.vtp"
+Wrote in 1.19 s, 1147776 kB
+
+End: 12.57 s, 1327248 kB (peak)
+

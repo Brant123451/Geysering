@@ -588,6 +588,17 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     不得把 `nNonOrthogonalCorrectors=2` 写入 baseline。非正交修正轴在本 onset
     窗口已穷尽。下一步回到已准入的 `nNonOrthogonalCorrectors=0`，只把
     `CASEB_MAX_CO` 从 0.15 收到 0.10，再跑 0.12 s rim-onset。
+36. `maxCo=0.10` 的全新 0.12 s 筛查已完成并被拒绝：
+    - solver 达到 0.120002 s；峰值/运行 Co 约 0.109/0.100；
+    - 直至 0.060 s 热点仍在自由面；从 0.070 s 起同一 rim 纯气单元锁定并单调
+      增长 \(1.099\rightarrow1.242\rightarrow1.395\rightarrow1.548\rightarrow1.698\rightarrow1.849\)
+      m/s，曲率为 0；
+    - \(H^*\) peak-to-peak 仅 0.001435，压力 alone 会再次误判；
+    - 相对 `maxCo=0.15` 基线拒绝（rim ~0.117 s）反而更早 onset，终态速度几乎相同。
+    不得把 `maxCo=0.10` 写入 baseline，也勿再单独继续压小 `maxCo`。
+    场数据/VTK 已归档到 `outputs/sim_data/maxco010_0p12_screen/`（见
+    `RENDER_HANDOFF.md`）。下一步须换新数值轴，不能从已拒绝 decomposed state
+    续 1.0 s hold。
 
 十、hold 验收
 
@@ -624,7 +635,7 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
 - CASEB_N_OUTER_CORRECTORS=1（`=2` 单独及与 nCorrectors=3 叠层的 0.12 s rim 筛查均已拒绝）
 - CASEB_PRESSURE_FINAL_TOLERANCE=1e-7（诊断可收紧；当前候选为 1e-10）
 - CASEB_N_NON_ORTHOGONAL_CORRECTORS=0（`=1` 与 `=2` 的 0.12 s rim 筛查均已拒绝；勿再沿该轴抬升）
-- CASEB_MAX_CO=0.15（下一隔离诊断收到 0.10；`0.30` 仍为必做敏感性）
+- CASEB_MAX_CO=0.15（`=0.10` 的 0.12 s rim 筛查已拒绝；勿再单独压小；`0.30` 仍为必做敏感性）
 - CASEB_HA0=0.579|0.610|0.641
 - CASEB_GAS_EOS=perfectGas|rhoConst
 

@@ -2476,5 +2476,140 @@
       "next_action": "Keep the admitted baseline (nCorrectors=2, nOuterCorrectors=1, nNonOrthogonalCorrectors=0) and tighten only CASEB_MAX_CO from 0.15 to 0.10 through a fresh 0.12 s rim-onset screen."
     },
     "completion_claim": "This is a rejected 0.12 s non-orthogonal-corrector screen, not a passed hold, smoke run, or completed reproduction."
+  },
+  "tight_pressure_maxco_0p10_screen_0p12_s": {
+    "status": "rejected_earlier_rim_exterior_gas_hotspot",
+    "source_commit": "06179f3",
+    "purpose": "Test whether tightening only CASEB_MAX_CO from 0.15 to 0.10 on the admitted baseline (nCorrectors=2, nOuterCorrectors=1, nNonOrthogonalCorrectors=0) suppresses the delayed rim exterior-gas mode through the 0.12 s onset window.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "hydrostatic_initialization": "discrete",
+      "hydrostatic_correctors": 10,
+      "pressure_final_tolerance": 1e-10,
+      "n_outer_correctors": 1,
+      "n_pressure_correctors": 2,
+      "n_non_orthogonal_correctors": 0,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.1,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "field_write_interval_s": 0.01,
+      "requested_end_time_s": 0.12
+    },
+    "clean_run_result_0p12_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.1200015035,
+      "postprocessed_probe_duration_s": 0.1200015,
+      "execution_time_s": 27050.65,
+      "clock_time_s": 36234,
+      "final_delta_t_s": 5.6051795e-06,
+      "maximum_courant_number": 0.10899103,
+      "maximum_interface_courant_number": 0.085729623,
+      "maximum_capillary_number": 0.16581598,
+      "Hstar_peak_to_peak": 0.0014347109535063352,
+      "Yfs_star_max_drift": 0.0024590163934427034,
+      "gas_mass_error_pct_max_abs": 5.792563919592446e-06,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "final_logged_velocity_m_per_s": 1.8493748,
+      "final_logged_velocity_location_m": [
+        3.5224317,
+        0.65712313,
+        -0.0059459223
+      ],
+      "final_logged_alpha_water": 0.0,
+      "final_logged_curvature_per_m": 0.0,
+      "final_logged_cell": 336999,
+      "final_logged_proc": 2
+    },
+    "logged_velocity_history_m_per_s": {
+      "0.009991": {
+        "U": 2.0171,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.019994": {
+        "U": 1.57,
+        "y_m": 0.404025,
+        "mode": "free_surface"
+      },
+      "0.029999": {
+        "U": 1.5531,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.039994": {
+        "U": 1.1353,
+        "y_m": 0.404056,
+        "mode": "free_surface"
+      },
+      "0.049997": {
+        "U": 1.2513,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.059995": {
+        "U": 0.9797,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.069996": {
+        "U": 1.0988,
+        "y_m": 0.657367,
+        "mode": "rim_exterior_gas"
+      },
+      "0.079999": {
+        "U": 1.2419,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      },
+      "0.089998": {
+        "U": 1.3954,
+        "y_m": 0.657123,
+        "mode": "rim_exterior_gas"
+      },
+      "0.100001": {
+        "U": 1.5475,
+        "y_m": 0.657123,
+        "mode": "rim_exterior_gas"
+      },
+      "0.110000": {
+        "U": 1.6982,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      },
+      "0.120002": {
+        "U": 1.8494,
+        "y_m": 0.657123,
+        "mode": "rim_exterior_gas"
+      }
+    },
+    "interpretation": {
+      "finding": "maxCo=0.10 advanced rim exterior-gas onset to 0.070 s (earlier than the maxCo=0.15 baseline rejection near 0.117 s and earlier than nNonOrthogonalCorrectors=1 onset at 0.110 s). Rim U grew monotonically 1.099\u21921.242\u21921.395\u21921.547\u21921.698\u21921.849 m/s from 0.070 to 0.120 s at y\u22480.657 m with alpha=0, rho\u22481.204, K=0.",
+      "pressure_caveat": "Transducer Hstar peak-to-peak was only 0.00143471, so pressure drift alone would again falsely clear the candidate.",
+      "comparison": "Tightening maxCo from 0.15 to 0.10 did not suppress the rim mode; it advanced onset and ended at essentially the same final rim speed (~1.85 m/s) as previous rejected PIMPLE/non-orthogonal screens.",
+      "decision": "Reject maxCo=0.10. Do not promote it or start a 1.0 s hold with this setting. The Courant/non-orthogonal/PIMPLE corrector axes screened so far all reproduce the same rim exterior-gas hotspot.",
+      "next_action": "Do not continue shrinking maxCo alone. Leave the admitted baseline settings and choose a new numerical axis outside the exhausted PIMPLE/non-orthogonal/maxCo=0.10 screens (for example a different free-surface/pressure coupling treatment), after reviewing the uploaded maxCo=0.10 field archive under outputs/sim_data/maxco010_0p12_screen/."
+    },
+    "artifact_paths": {
+      "sim_data_root": "outputs/sim_data/maxco010_0p12_screen",
+      "processors_archives": [
+        "outputs/sim_data/maxco010_0p12_screen/fields/processor0_all_times.tar.xz",
+        "outputs/sim_data/maxco010_0p12_screen/fields/processor1_all_times.tar.xz",
+        "outputs/sim_data/maxco010_0p12_screen/fields/processor2_all_times.tar.xz",
+        "outputs/sim_data/maxco010_0p12_screen/fields/processor3_all_times.tar.xz"
+      ],
+      "vtk_archive": "outputs/sim_data/maxco010_0p12_screen/fields/vtk_key_times.tar.xz",
+      "render_handoff": "outputs/sim_data/maxco010_0p12_screen/RENDER_HANDOFF.md"
+    },
+    "completion_claim": "This is a rejected 0.12 s maxCo=0.10 rim-onset screen with uploaded field/VTK archives for local rendering, not a passed hold, smoke run, or completed reproduction."
   }
 }

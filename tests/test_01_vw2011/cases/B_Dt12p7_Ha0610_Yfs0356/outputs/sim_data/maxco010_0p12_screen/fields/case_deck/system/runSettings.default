@@ -1,0 +1,9 @@
+cAlpha                  1.0;
+advectionScheme         isoAdvection;
+reconstructionScheme    plicRDF;
+iterations              5;
+tol                     1e-6;
+interpolateNormal       false;
+nAlphaBounds            5;
+clip                    false;
+snapTol                 0;

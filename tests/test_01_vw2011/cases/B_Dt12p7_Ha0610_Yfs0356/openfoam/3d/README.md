@@ -266,9 +266,14 @@ That setting is rejected.  Raising only `CASEB_N_NON_ORTHOGONAL_CORRECTORS` from
 1 to 2 advanced rim onset to 0.080 s and the same pure-gas rim cell then grew
 \(1.245\rightarrow1.389\rightarrow1.540\rightarrow1.690\rightarrow1.841\) m/s by
 0.120 s with \(H^*\) peak-to-peak only 0.000948.  That setting is rejected and
-the non-orthogonal-corrector axis is exhausted.  The next screen tightens only
-`CASEB_MAX_CO` from 0.15 to 0.10 on the admitted baseline
-(`nNonOrthogonalCorrectors=0`) through another fresh 0.12 s rim-onset window.
+the non-orthogonal-corrector axis is exhausted.  The subsequent `maxCo=0.10`
+screen on the admitted baseline also failed: free-surface hotspots lasted only
+through 0.060 s, then the same pure-gas rim cell locked on from 0.070 s and
+grew \(1.099\rightarrow1.242\rightarrow1.395\rightarrow1.548\rightarrow1.698\rightarrow1.849\)
+m/s by 0.120 s with \(H^*\) peak-to-peak only 0.001435.  That setting is
+rejected; do not keep shrinking `maxCo` alone.  Field/VTK archives for local
+rendering are under `outputs/sim_data/maxco010_0p12_screen/`
+(`RENDER_HANDOFF.md`).
 
 Thermophysical choices are:
 

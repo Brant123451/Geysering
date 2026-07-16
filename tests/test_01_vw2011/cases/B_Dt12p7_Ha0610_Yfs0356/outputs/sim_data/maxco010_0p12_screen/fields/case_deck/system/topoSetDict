@@ -1,0 +1,73 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      topoSetDict;
+}
+
+actions
+(
+    {
+        name valveCells;
+        type cellSet;
+        action new;
+        source boxToCell;
+        sourceInfo
+        {
+            box (0.540 -0.050 -0.050) (0.552 0.050 0.050);
+        }
+    }
+    {
+        name valveZone;
+        type cellZoneSet;
+        action new;
+        source setToCellZone;
+        sourceInfo
+        {
+            set valveCells;
+        }
+    }
+    {
+        name atmosphereCells;
+        type cellSet;
+        action new;
+        source boxToCell;
+        sourceInfo
+        {
+            box (3.396 0.657001 -0.120) (3.636 1.857001 0.120);
+        }
+    }
+    {
+        name atmosphereZone;
+        type cellZoneSet;
+        action new;
+        source setToCellZone;
+        sourceInfo
+        {
+            set atmosphereCells;
+        }
+    }
+    {
+        name towerCells;
+        type cellSet;
+        action new;
+        source cylinderToCell;
+        sourceInfo
+        {
+            point1 (3.516 0.047 0);
+            point2 (3.516 0.657 0);
+            radius 0.00635;
+        }
+    }
+    {
+        name towerZone;
+        type cellZoneSet;
+        action new;
+        source setToCellZone;
+        sourceInfo
+        {
+            set towerCells;
+        }
+    }
+);

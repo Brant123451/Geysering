@@ -1,0 +1,13 @@
+{
+  "file-series-version" : "1.0",
+  "files" : [
+    { "name" : "3d_0.vtm", "time" : 0 },
+    { "name" : "3d_3428.vtm", "time" : 0.05999531 },
+    { "name" : "3d_4416.vtm", "time" : 0.069995548 },
+    { "name" : "3d_5550.vtm", "time" : 0.079999103 },
+    { "name" : "3d_6829.vtm", "time" : 0.089997736 },
+    { "name" : "3d_8253.vtm", "time" : 0.10000127 },
+    { "name" : "3d_9820.vtm", "time" : 0.10999952 },
+    { "name" : "3d_11532.vtm", "time" : 0.1200015 }
+  ]
+}

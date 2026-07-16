@@ -1,0 +1,320 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2512                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : _bd2b6720-20260127 OPENFOAM=2512 version=2512
+Arch   : "LSB;label=32;scalar=64"
+Exec   : reconstructPar -time 0,0.05999530981,0.06999554795,0.07999910259,0.08999773643,0.1000012701,0.1099995153,0.1200015035
+Date   : Jul 16 2026
+Time   : 21:10:56
+Host   : cursor
+PID    : 1278920
+I/O    : uncollated
+Case   : /workspace/tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356/openfoam/3d
+nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+memory pool : not available
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+
+
+Reconstructing fields
+region=region0
+
+Time = 0.05999530981
+
+Reconstructing FV fields
+
+    Reconstructing volScalarFields
+
+        K_
+        T
+        T.air
+        T.water
+        alpha.air
+        alpha.water
+        alpha.water_0
+        p
+        p_rgh
+        reconstructedDistanceFunction
+        rho
+
+    Reconstructing volVectorFields
+
+        U
+        interfaceCentre.water
+        interfaceNormal.water
+
+    Reconstructing surfaceScalarFields
+
+        alphaPhi0.water
+        phi
+
+    Reconstructing surfaceVectorFields
+
+        Uf
+
+Reconstructing point fields
+
+No point fields
+
+No lagrangian fields
+
+No finite-area fields
+
+Time = 0.06999554795
+
+Reconstructing FV fields
+
+    Reconstructing volScalarFields
+
+        K_
+        T
+        T.air
+        T.water
+        alpha.air
+        alpha.water
+        alpha.water_0
+        p
+        p_rgh
+        reconstructedDistanceFunction
+        rho
+
+    Reconstructing volVectorFields
+
+        U
+        interfaceCentre.water
+        interfaceNormal.water
+
+    Reconstructing surfaceScalarFields
+
+        alphaPhi0.water
+        phi
+
+    Reconstructing surfaceVectorFields
+
+        Uf
+
+Reconstructing point fields
+
+No point fields
+
+No lagrangian fields
+
+No finite-area fields
+
+Time = 0.07999910259
+
+Reconstructing FV fields
+
+    Reconstructing volScalarFields
+
+        K_
+        T
+        T.air
+        T.water
+        alpha.air
+        alpha.water
+        alpha.water_0
+        p
+        p_rgh
+        reconstructedDistanceFunction
+        rho
+
+    Reconstructing volVectorFields
+
+        U
+        interfaceCentre.water
+        interfaceNormal.water
+
+    Reconstructing surfaceScalarFields
+
+        alphaPhi0.water
+        phi
+
+    Reconstructing surfaceVectorFields
+
+        Uf
+
+Reconstructing point fields
+
+No point fields
+
+No lagrangian fields
+
+No finite-area fields
+
+Time = 0.08999773643
+
+Reconstructing FV fields
+
+    Reconstructing volScalarFields
+
+        K_
+        T
+        T.air
+        T.water
+        alpha.air
+        alpha.water
+        alpha.water_0
+        p
+        p_rgh
+        reconstructedDistanceFunction
+        rho
+
+    Reconstructing volVectorFields
+
+        U
+        interfaceCentre.water
+        interfaceNormal.water
+
+    Reconstructing surfaceScalarFields
+
+        alphaPhi0.water
+        phi
+
+    Reconstructing surfaceVectorFields
+
+        Uf
+
+Reconstructing point fields
+
+No point fields
+
+No lagrangian fields
+
+No finite-area fields
+
+Time = 0.1000012701
+
+Reconstructing FV fields
+
+    Reconstructing volScalarFields
+
+        K_
+        T
+        T.air
+        T.water
+        alpha.air
+        alpha.water
+        alpha.water_0
+        p
+        p_rgh
+        reconstructedDistanceFunction
+        rho
+
+    Reconstructing volVectorFields
+
+        U
+        interfaceCentre.water
+        interfaceNormal.water
+
+    Reconstructing surfaceScalarFields
+
+        alphaPhi0.water
+        phi
+
+    Reconstructing surfaceVectorFields
+
+        Uf
+
+Reconstructing point fields
+
+No point fields
+
+No lagrangian fields
+
+No finite-area fields
+
+Time = 0.1099995153
+
+Reconstructing FV fields
+
+    Reconstructing volScalarFields
+
+        K_
+        T
+        T.air
+        T.water
+        alpha.air
+        alpha.water
+        alpha.water_0
+        p
+        p_rgh
+        reconstructedDistanceFunction
+        rho
+
+    Reconstructing volVectorFields
+
+        U
+        interfaceCentre.water
+        interfaceNormal.water
+
+    Reconstructing surfaceScalarFields
+
+        alphaPhi0.water
+        phi
+
+    Reconstructing surfaceVectorFields
+
+        Uf
+
+Reconstructing point fields
+
+No point fields
+
+No lagrangian fields
+
+No finite-area fields
+
+Time = 0.1200015035
+
+Reconstructing FV fields
+
+    Reconstructing volScalarFields
+
+        K_
+        T
+        T.air
+        T.water
+        alpha.air
+        alpha.water
+        alpha.water_0
+        p
+        p_rgh
+        reconstructedDistanceFunction
+        rho
+
+    Reconstructing volVectorFields
+
+        U
+        interfaceCentre.water
+        interfaceNormal.water
+
+    Reconstructing surfaceScalarFields
+
+        alphaPhi0.water
+        phi
+
+    Reconstructing surfaceVectorFields
+
+        Uf
+
+Reconstructing point fields
+
+No point fields
+
+No lagrangian fields
+
+No finite-area fields
+
+
+End
+

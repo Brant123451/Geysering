@@ -1,0 +1,21 @@
+{
+  "case_definition_ok": true,
+  "solver_source_check": "compressibleInterFlow at pinned TwoPhaseFlow commit with isoAdvection, plicRDF reconstruction without normal interpolation, materialised reconstruction convergence controls, RDF curvature and TwoPhaseFlow-reference corrector counts; conformal no-slip closed baffle and runTime output control",
+  "geometry_source_check": "configured 3-D circular Boolean pipe/tower/exterior atmosphere with a conformal valve-plane face zone; generated mesh remains authoritative",
+  "initial_pressure_source_check": "absolute p is written before a separate process reloads it to construct mixture-density p_rgh; optional discrete projection uses the same face gravity-force operator as compressibleInterFlow",
+  "initial_alpha_source_check": "tower-water geometric selector extends halfway into the assumed solid wall and remains 1 mm inside the exterior fluid boundary",
+  "pipe_length_m": 4.006,
+  "pipe_diameter_m": 0.094,
+  "tower_diameter_m": 0.0127,
+  "tower_height_above_crown_m": 0.61,
+  "tower_rim_y_m": 0.657,
+  "exterior_top_y_m": 1.857,
+  "exterior_bottom_y_m": 0.257,
+  "assumed_tower_wall_thickness_m": 0.002,
+  "initial_air_pocket_volume_m3": 0.0037891188817918,
+  "initial_water_volume_m3": 0.024056729439997968,
+  "initial_air_absolute_pressure_Pa": 107298.32862,
+  "initial_free_surface_y_m": 0.40299999999999997,
+  "dimensionless_time_scale_s": 1.7281978911310492,
+  "Tstar_6_physical_time_s": 10.369187346786294
+}
