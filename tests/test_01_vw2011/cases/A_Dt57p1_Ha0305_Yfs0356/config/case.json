@@ -1,0 +1,6 @@
+{
+  "tower_diameter_m": 0.0571,
+  "initial_air_pressure_head_m": 0.305,
+  "initial_water_level_m": 0.356,
+  "observed_branch": "no_geyser"
+}

@@ -1,0 +1,88 @@
+{
+  "moves": [
+    {
+      "source": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/scripts/caseA_fig10_compare.py",
+      "target": "tests/test_01_vw2011/cases/Fig10_Dt57p1_Ha0305_Yfs0254/scripts/caseA_fig10_compare.py"
+    },
+    {
+      "source": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/scripts/caseA_fig10_overlay.py",
+      "target": "tests/test_01_vw2011/cases/Fig10_Dt57p1_Ha0305_Yfs0254/scripts/caseA_fig10_overlay.py"
+    },
+    {
+      "source": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/scripts/caseA_fig10_redraw.py",
+      "target": "tests/test_01_vw2011/cases/Fig10_Dt57p1_Ha0305_Yfs0254/scripts/caseA_fig10_redraw.py"
+    },
+    {
+      "source": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/outputs/caseA_fig10_digitized.json",
+      "target": "tests/test_01_vw2011/cases/Fig10_Dt57p1_Ha0305_Yfs0254/data/digitized/caseA_fig10_digitized.json"
+    },
+    {
+      "source": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/outputs/caseA_fig10_full_comparison.pdf",
+      "target": "tests/test_01_vw2011/cases/Fig10_Dt57p1_Ha0305_Yfs0254/outputs/caseA_fig10_full_comparison.pdf"
+    },
+    {
+      "source": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/outputs/caseA_fig10_full_comparison.png",
+      "target": "tests/test_01_vw2011/cases/Fig10_Dt57p1_Ha0305_Yfs0254/outputs/caseA_fig10_full_comparison.png"
+    },
+    {
+      "source": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/outputs/caseA_fig10_metrics.json",
+      "target": "tests/test_01_vw2011/cases/Fig10_Dt57p1_Ha0305_Yfs0254/outputs/caseA_fig10_metrics.json"
+    },
+    {
+      "source": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/outputs/caseA_fig10_model_panels.png",
+      "target": "tests/test_01_vw2011/cases/Fig10_Dt57p1_Ha0305_Yfs0254/outputs/caseA_fig10_model_panels.png"
+    },
+    {
+      "source": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/outputs/caseA_fig10_model_series_WL0254.csv",
+      "target": "tests/test_01_vw2011/cases/Fig10_Dt57p1_Ha0305_Yfs0254/outputs/caseA_fig10_model_series_WL0254.csv"
+    },
+    {
+      "source": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/outputs/caseA_fig10_overlay.png",
+      "target": "tests/test_01_vw2011/cases/Fig10_Dt57p1_Ha0305_Yfs0254/outputs/caseA_fig10_overlay.png"
+    },
+    {
+      "source": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/outputs/caseA_fig10_overlay_meta.json",
+      "target": "tests/test_01_vw2011/cases/Fig10_Dt57p1_Ha0305_Yfs0254/outputs/caseA_fig10_overlay_meta.json"
+    },
+    {
+      "source": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/outputs/debug_fig10_redraw_extract.png",
+      "target": "tests/test_01_vw2011/cases/Fig10_Dt57p1_Ha0305_Yfs0254/outputs/debug_fig10_redraw_extract.png"
+    },
+    {
+      "source": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/reference/paper_scans/fig10_full.png",
+      "target": "tests/test_01_vw2011/cases/Fig10_Dt57p1_Ha0305_Yfs0254/reference/paper_scans/fig10_full.png"
+    },
+    {
+      "source": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/reference/paper_scans/_fig10_axes_debug.png",
+      "target": "tests/test_01_vw2011/cases/Fig10_Dt57p1_Ha0305_Yfs0254/reference/paper_scans/_fig10_axes_debug.png"
+    },
+    {
+      "source": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/reference/paper_scans/_fig10_boxes_debug.png",
+      "target": "tests/test_01_vw2011/cases/Fig10_Dt57p1_Ha0305_Yfs0254/reference/paper_scans/_fig10_boxes_debug.png"
+    },
+    {
+      "source": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/reference/paper_scans/_fig10_calib.png",
+      "target": "tests/test_01_vw2011/cases/Fig10_Dt57p1_Ha0305_Yfs0254/reference/paper_scans/_fig10_calib.png"
+    },
+    {
+      "source": "tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356/scripts/caseB_fig11_compare.py",
+      "target": "tests/test_01_vw2011/cases/Fig11_Dt12p7_Ha0305_Yfs0254/scripts/caseB_fig11_compare.py"
+    },
+    {
+      "source": "tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356/outputs/caseB_fig11_metrics.json",
+      "target": "tests/test_01_vw2011/cases/Fig11_Dt12p7_Ha0305_Yfs0254/outputs/caseB_fig11_metrics.json"
+    },
+    {
+      "source": "tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356/outputs/caseB_fig11_model_panels.png",
+      "target": "tests/test_01_vw2011/cases/Fig11_Dt12p7_Ha0305_Yfs0254/outputs/caseB_fig11_model_panels.png"
+    },
+    {
+      "source": "tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356/outputs/caseB_fig11_overlay.png",
+      "target": "tests/test_01_vw2011/cases/Fig11_Dt12p7_Ha0305_Yfs0254/outputs/caseB_fig11_overlay.png"
+    },
+    {
+      "source": "tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356/reference/paper_scans/fig11_full.png",
+      "target": "tests/test_01_vw2011/cases/Fig11_Dt12p7_Ha0305_Yfs0254/reference/paper_scans/fig11_full.png"
+    }
+  ]
+}

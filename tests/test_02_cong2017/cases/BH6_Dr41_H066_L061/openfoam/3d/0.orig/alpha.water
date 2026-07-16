@@ -1,0 +1,39 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| OpenFOAM v2512: Cong2017 B-H6                                      |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      alpha.water;
+}
+
+dimensions      [0 0 0 0 0 0 0];
+internalField   uniform 0;
+
+boundaryField
+{
+    reservoir
+    {
+        type            inletOutlet;
+        inletValue      uniform 1;
+        value           uniform 1;
+    }
+    walls
+    {
+        // The paper does not report acrylic wetting; neutral and unfitted.
+        type            constantAlphaContactAngle;
+        theta0          90;
+        limit           gradient;
+        value           uniform 0;
+    }
+    atmosphere
+    {
+        type            inletOutlet;
+        inletValue      uniform 0;
+        value           uniform 0;
+    }
+}
+
+// ************************************************************************* //

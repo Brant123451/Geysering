@@ -1,0 +1,22 @@
+/* y=0 midplane cutting surface for true front-view alpha rendering */
+frontViewCut
+{
+    type            surfaces;
+    libs            (sampling);
+    writeControl    adjustableRunTime;
+    writeInterval   0.20;
+    surfaceFormat   vtk;
+    fields          (alpha.water);
+    interpolationScheme cellPoint;
+
+    surfaces
+    {
+        yMid
+        {
+            type        cuttingPlane;
+            point       (3.47 0 0);
+            normal      (0 1 0);
+            interpolate true;
+        }
+    }
+}

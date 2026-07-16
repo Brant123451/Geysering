@@ -1,0 +1,51 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| OpenFOAM v2512                                                        |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setFieldsDict;
+}
+
+defaultFieldValues
+(
+    volScalarFieldValue alpha.water 0
+    volScalarFieldValue p_rgh       101325
+    volScalarFieldValue p           101325
+    volScalarFieldValue T           296.15
+);
+
+regions
+(
+    // Main pipe upstream of the selected valve is initially water-filled.
+    boxToCell
+    {
+        box (-0.01 -0.03 -0.03) (5.98 0.03 0.03);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+            volScalarFieldValue p_rgh       101325
+            volScalarFieldValue p           107541.89
+            volScalarFieldValue T           296.15
+        );
+    }
+
+    // Series-B riser water level is H0=0.66 m above pipe invert, z=0.635 m.
+    cylinderToCell
+    {
+        point1 (3.47 0 -0.03);
+        point2 (3.47 0 0.635);
+        radius 0.0205;
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+            volScalarFieldValue p_rgh       101325
+            volScalarFieldValue p           107541.89
+            volScalarFieldValue T           296.15
+        );
+    }
+);
+
+// ************************************************************************* //

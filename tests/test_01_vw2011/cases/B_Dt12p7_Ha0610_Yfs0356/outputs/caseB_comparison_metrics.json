@@ -1,0 +1,37 @@
+{
+  "case": {
+    "Dr": 0.0127,
+    "air_head": 0.61,
+    "init_water_level": 0.356,
+    "L": 0.61,
+    "Dt_over_D": 0.1351063829787234
+  },
+  "Tstar_scale_s": 1.7281978911310492,
+  "datum_note": "model heads are recorded on the pipe INVERT; the crown-datum value (invert - D/L = invert - 0.154) is what compares with the paper's H* panel (transducer tap / tower base elevation)",
+  "model": {
+    "geyser": true,
+    "geyser_Tstar": 3.70332359168467,
+    "int_liftoff_Tstar": 3.5181344269257027,
+    "int_top_Tstar": 4.443978549747798,
+    "Hstar_collapse_Tstar": 4.490267339916116,
+    "Hstar_plateau_tr": 0.907886052251355,
+    "Hstar_plateau_tr_crown": 0.7537876915956173,
+    "Yfs_plateau_pre_arrival": 0.8360655737704918,
+    "Vint_star": 0.7144471046849419,
+    "Vfs_star": 0.39398317721079773,
+    "Hstar_max": 1.0106593677333604,
+    "Yfs_max": 1.0
+  },
+  "paper": {
+    "geyser": true,
+    "geyser_Tstar": 3.9,
+    "int_liftoff_Tstar": 3.6484375,
+    "int_top_Tstar": 3.846875,
+    "Hstar_plateau": 0.7575566750629722,
+    "Hstar_drop_Tstar": 4.048013245033112,
+    "Yfs_pre_arrival": 0.8225,
+    "Vint_star_table2": 1.43,
+    "Vfs_star_table2": 0.44,
+    "Yfs0": 0.5836065573770491
+  }
+}

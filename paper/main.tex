@@ -1,0 +1,110 @@
+\documentclass[preprint,review,12pt]{elsarticle}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{placeins}
+\usepackage{lineno}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,positioning,patterns}
+\usepackage[colorlinks]{hyperref}
+
+\hypersetup{hypertexnames=false}
+\renewcommand{\linenumberfont}{\normalfont\tiny\color{gray}}
+\graphicspath{{figures/}}
+
+% Placeholder marker for content still to be decided/completed.
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+% Jump bracket for Rankine--Hugoniot conditions.
+\newcommand{\jump}[1]{\left[\!\left[#1\right]\!\right]}
+
+% TODO: replace with the actual target journal once decided (e.g. J. Hydraul. Eng.,
+% J. Hydraul. Res., Water Research, J. Hydro-environ. Res.).
+\journal{(target journal to be decided)}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{One-dimensional simulation of geysering driven by entrapped-air release
+through water-filled vertical shafts using a decoupled two-fluid mixed-flow
+framework}
+
+\author{Zijian Xue, Ling Zhou, and David Z. Zhu\corref{cor1}}
+\cortext[cor1]{Corresponding author}
+
+\begin{abstract}
+Geysering in stormwater and combined-sewer systems occurs when entrapped air
+pockets are released through vertical shafts and expel the overlying water
+column above ground. System-scale prediction relies on reduced
+one-dimensional models, but most existing mixed-flow formulations prescribe
+the air phase through boundary data or lumped pocket laws, so the coupled
+air-pocket--water-column dynamics that select between benign venting and
+geysering are not part of the computed state. This paper applies a
+one-dimensional decoupled two-fluid cut-cell finite-volume framework,
+developed in a companion methods paper, to laboratory geysering experiments.
+The framework retains gas mass and gas momentum as conserved variables in
+stratified reaches, treats moving pressurized--stratified fronts as
+Regime-Transition Riemann problems, and represents the vertical shaft as the
+same one-dimensional two-fluid system rotated to the vertical, coupled to the
+horizontal conduit through a junction with local-loss closures. All
+simulations start from the experimental initial conditions and use one frozen
+solver configuration, without prescribed release rates, scripted geyser
+heights, or per-case fitting. The model is first evaluated against published
+ventilation-shaft experiments in which a pressurized air pocket is released
+toward a partially filled tower, with a wide-tower configuration in the
+non-geysering branch and a narrow-tower configuration in the geysering
+branch. The correct branch is selected in both configurations. In the
+non-geysering branch, the computed pressure-head plateau, terminal venting
+decay, air--water interface climb velocity, and maximum free-surface rise
+agree with the measurements. In the geysering branch, the pre-eruption
+stand of the tower column, the pressure plateau, the eruption to the shaft
+rim observed in every experimental repetition, the interface and
+free-surface climb velocities, and the sharp head collapse at pocket
+venting are reproduced, with the gas-phase event times uniformly early by
+about half a non-dimensional time unit. The model is
+then evaluated as a regime classifier against published
+horizontal-pipe/vertical-riser experiments, using the same frozen
+configuration under the fully coupled junction treatment: it reproduces
+both end members of the published two-parameter geysering criterion---the
+narrow-riser eruption with its pocket-compression pressure surge, and the
+benign venting of every wide-riser and small-pocket configuration---and
+the measured branch differentiation of the pipe-end pressure peak. Its
+classification errors over the experimental parameter sweep are strictly
+one-sided: near the regime boundary it under-predicts eruption, driving
+the water column high into the riser without expelling it, and it produces
+no false geyser. The conservative bias is traced to a single identified
+closure---the volume-neutral gas--water exchange at the junction mouth,
+whose demands in the two branches conflict---together with
+one-dimensional limitations in junction transmission and annular film
+entrainment. A campaign against prototype-motivated
+junction-chamber experiments will complete the evaluation in a subsequent
+revision.
+\end{abstract}
+
+\begin{keyword}
+geysering \sep entrapped air pocket \sep stormwater system \sep vertical shaft
+\sep two-fluid model \sep transient mixed flow
+\end{keyword}
+
+\end{frontmatter}
+\linenumbers
+
+\input{sections/introduction}
+\input{sections/model}
+\input{sections/tests}
+\input{sections/discussion}
+
+\section*{Data Availability Statement}
+
+The frozen solver snapshots, digitized experimental curves, and comparison
+scripts used to produce the results in Section~\ref{sec:tests} are available
+from the corresponding author on request.
+
+\input{sections/bibliography}
+
+\end{document}

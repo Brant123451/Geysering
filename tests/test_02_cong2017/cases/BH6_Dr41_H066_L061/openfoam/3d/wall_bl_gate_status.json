@@ -1,0 +1,182 @@
+{
+  "prototype": "make_mesh_wall_bl.py",
+  "goal": "near-wall Distance/Threshold on HXT prism baseline passing solver gate",
+  "gate_thresholds": {
+    "max_non_orth_deg": 70,
+    "max_skew": 4,
+    "severe_faces": 0,
+    "low_weight_faces": 0
+  },
+  "iterations": [
+    {
+      "name": "wall_bl_v1",
+      "first_wall_m": 0.001,
+      "bl_growth": 1.2,
+      "bl_layers": 4,
+      "scope": "all_walls",
+      "cells": 669260,
+      "prisms": 138348,
+      "max_non_orth": 85.4758,
+      "severe_faces": 8810,
+      "max_skew": 7.77732,
+      "low_weight": 14987,
+      "solver_gate": false
+    },
+    {
+      "name": "wall_bl_v2",
+      "first_wall_m": 0.003,
+      "bl_growth": 1.15,
+      "bl_layers": 3,
+      "scope": "riser_walls",
+      "cells": 234641,
+      "prisms": 55692,
+      "max_non_orth": 70.6749,
+      "severe_faces": 1,
+      "max_skew": 1.37431,
+      "low_weight": 1,
+      "solver_gate": false,
+      "audit_bl": {
+        "method": "Distance+Threshold",
+        "first_wall_m": 0.003,
+        "growth": 1.15,
+        "layers": 3,
+        "thickness_m": 0.010417500000000001,
+        "wall_surface_count": 7,
+        "riser_wall_surface_count": 4
+      }
+    },
+    {
+      "name": "wall_bl_v3",
+      "first_wall_m": 0.004,
+      "bl_growth": 1.15,
+      "bl_layers": 3,
+      "scope": "riser_walls",
+      "cells": 202220,
+      "prisms": 40572,
+      "max_non_orth": 67.776,
+      "severe_faces": null,
+      "max_skew": 1.22674,
+      "low_weight": 1,
+      "solver_gate": false,
+      "audit_bl": {
+        "method": "Distance+Threshold",
+        "first_wall_m": 0.004,
+        "growth": 1.15,
+        "layers": 3,
+        "thickness_m": 0.013890000000000001,
+        "wall_surface_count": 7,
+        "riser_wall_surface_count": 4
+      }
+    },
+    {
+      "name": "wall_bl_v4",
+      "first_wall_m": 0.005,
+      "bl_growth": 1.15,
+      "bl_layers": 3,
+      "scope": "riser_walls",
+      "cells": 187695,
+      "prisms": 32760,
+      "max_non_orth": 67.9674,
+      "severe_faces": null,
+      "max_skew": 1.25229,
+      "low_weight": 1,
+      "solver_gate": false,
+      "audit_bl": {
+        "method": "Distance+Threshold",
+        "first_wall_m": 0.005,
+        "growth": 1.15,
+        "layers": 3,
+        "thickness_m": 0.0173625,
+        "wall_surface_count": 7,
+        "riser_wall_surface_count": 4
+      }
+    },
+    {
+      "name": "wall_bl_v5",
+      "first_wall_m": 0.004,
+      "bl_growth": 1.15,
+      "bl_layers": 3,
+      "scope": "riser_walls",
+      "dist_max_cap_m": 0.008,
+      "cells": 189975,
+      "prisms": 38052,
+      "max_non_orth": 72.4737,
+      "severe_faces": 6,
+      "max_skew": 1.19399,
+      "low_weight": 13,
+      "solver_gate": false,
+      "audit_bl": {
+        "method": "Distance+Threshold",
+        "first_wall_m": 0.004,
+        "growth": 1.15,
+        "layers": 3,
+        "thickness_m": 0.013890000000000001,
+        "wall_surface_count": 7,
+        "riser_wall_surface_count": 4
+      }
+    },
+    {
+      "name": "wall_bl_v6",
+      "first_wall_m": 0.004,
+      "bl_growth": 1.15,
+      "bl_layers": 3,
+      "scope": "riser_walls_below_rim",
+      "cells": 172529,
+      "prisms": 40572,
+      "max_non_orth": 68.2286,
+      "severe_faces": null,
+      "max_skew": 1.22674,
+      "low_weight": 0,
+      "solver_gate": true,
+      "audit_bl": {
+        "method": "Distance+Threshold",
+        "first_wall_m": 0.004,
+        "growth": 1.15,
+        "layers": 3,
+        "thickness_m": 0.013890000000000001,
+        "wall_surface_count": 7,
+        "riser_wall_surface_count": 2
+      }
+    }
+  ],
+  "notes": [
+    "Debian gmsh BoundaryLayer is 2-D only; use Distance+Threshold",
+    "v1 first_wall=1mm on all walls destroyed quality; next: softer + riser-only",
+    "v2 riser-only first=3mm; gate=False; max_non=70.6749, severe=1, low_w=1, skew=1.37431",
+    "v3 riser-only first=4mm; gate=False; max_non=67.776, severe=None, low_w=1, skew=1.22674",
+    "v4 riser-only first=5mm; gate=False; max_non=67.9674, severe=None, low_w=1, skew=1.25229",
+    "v4 still one low-weight near rim (~0.0485); cap DistMax at 8mm for v5",
+    "v5 DistMax<=8mm; gate=False; max_non=72.4737, severe=6, low_w=13, skew=1.19399",
+    "v5 DistMax cap regressed; exclude rim-lip wall surfaces instead",
+    "v6 exclude rim lip; gate=True; max_non=68.2286, severe=None, low_w=0, skew=1.22674",
+    "wall_bl_v6 smoke: solver completed 0.3 s (Allrun via BH6_MESH_SCRIPT)",
+    "full 13s done: Ta=9.63s (exp 8.1, err 1.5300000000000011s), Yfs=1.061m (exp 1.21), vfs=0.2466 (exp 0.246), NO GEYSER"
+  ],
+  "passed": "wall_bl_v6",
+  "best": {
+    "name": "wall_bl_v6",
+    "max_non_orth": 68.2286,
+    "severe_faces": 0,
+    "low_weight": 0,
+    "first_wall_m": 0.004
+  },
+  "smoke": {
+    "profile": "smoke",
+    "end_time": 0.3,
+    "np": 4,
+    "solver": "completed_to_0.3s",
+    "mesh_script": "make_mesh_wall_bl.py",
+    "first_wall_m": 0.004,
+    "note": "compressibleInterFoam reached Time=0.3 End; postprocess failed only due to missing digitized CSV outside case tree"
+  },
+  "full_13s_validation": {
+    "completed": true,
+    "Ta_3d_s": 9.63,
+    "Yfs_max_3d_m": 1.0610994772872875,
+    "vfs_average_rise_3d_m_s": 0.2466033089155483,
+    "vint_average_rise_3d_m_s": 0.532524839020146,
+    "geyser_3d": false,
+    "Ta_error_s": 1.5300000000000011,
+    "vfs_average_error_m_s": 0.0006033089155483007
+  }
+}

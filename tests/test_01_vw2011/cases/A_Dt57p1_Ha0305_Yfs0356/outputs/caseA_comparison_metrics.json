@@ -1,0 +1,29 @@
+{
+  "case": {
+    "Dr": 0.0571,
+    "air_head": 0.305,
+    "init_water_level": 0.356,
+    "L": 0.61,
+    "Dt_over_D": 0.6074468085106383
+  },
+  "Tstar_scale_s": 0.8150369107986323,
+  "model": {
+    "Yfs_max": 0.6557377049180328,
+    "rise_frac": 0.07213114754098371,
+    "geyser": false,
+    "int_liftoff_Tstar": 7.484324383579612,
+    "int_catch_fs_Tstar": 8.784897642219654,
+    "Hstar_plateau_tr": 0.503532892314034,
+    "Hstar_max": 1.1229999339050876
+  },
+  "paper": {
+    "Yfs_plateau": 0.5928217821782178,
+    "Yfs_max": 0.6311881188118812,
+    "geyser": false,
+    "int_first_Tstar": 7.285739644970414,
+    "int_catch_fs_Tstar": 8.43327332242226,
+    "Hstar_plateau": 0.5370603015075377,
+    "Hstar_drop_Tstar": 8.28099173553719,
+    "Yfs0": 0.5836065573770491
+  }
+}

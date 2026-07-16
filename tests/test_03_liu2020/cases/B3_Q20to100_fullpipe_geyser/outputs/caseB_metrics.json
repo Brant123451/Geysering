@@ -1,0 +1,52 @@
+{
+  "case": "Liu2020 B3: Q 20->100 L/s, downstream full pipe",
+  "model": {
+    "geyser": true,
+    "hr_max": 1.22,
+    "wr_eject": 4.308519615089426,
+    "h_jet": 2.1661437958007306,
+    "PT2_peak_kPa": 30.837456696858325,
+    "PT3_peak_kPa": 37.152008916552155,
+    "t_peak_s": 1.6803219910326934,
+    "PT1_min_kPa": 0.0,
+    "PT2_min_kPa": -11.968312167435508,
+    "PT3_min_kPa": -4.984766219810915,
+    "osc_periods_s": [
+      0.25,
+      1.52,
+      0.42
+    ],
+    "PT1_final_kPa": 0.0,
+    "PT2_final_kPa": 2.8498627509669316,
+    "PT3_final_kPa": 9.962424256356796,
+    "overflow_L": 2.9462883019058435,
+    "mass_error_L": -7.311859451242242e-13
+  },
+  "paper": {
+    "geyser": true,
+    "bore_reach_chamber_s": 1.2,
+    "PT2_peak_kPa": 55.03,
+    "PT3_peak_kPa": 51.76,
+    "t_peak_s": 1.47,
+    "PT1_min_kPa": -8.3,
+    "PT2_min_kPa": -20.26,
+    "PT3_min_kPa": -17.77,
+    "osc_periods_s": [
+      0.51,
+      0.37,
+      0.37
+    ],
+    "PT2_final_kPa": 1.82,
+    "PT3_final_kPa": 4.65,
+    "PT1_final_kPa": 0.0,
+    "fig7a_slope": 0.6943,
+    "fig7a_intercept": 0.3086,
+    "t_mist_s": 1.47,
+    "t_jet_out_s": 1.51,
+    "t_column_top_s": 1.65,
+    "t_break_s": [
+      1.7,
+      1.89
+    ]
+  }
+}

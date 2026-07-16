@@ -1,0 +1,35 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| OpenFOAM v2512: Cong2017 B-H6                                      |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      T;
+}
+
+dimensions      [0 0 0 1 0 0 0];
+internalField   uniform 296.15;
+
+boundaryField
+{
+    reservoir
+    {
+        type            inletOutlet;
+        inletValue      uniform 296.15;
+        value           uniform 296.15;
+    }
+    walls
+    {
+        type            zeroGradient;
+    }
+    atmosphere
+    {
+        type            inletOutlet;
+        inletValue      uniform 296.15;
+        value           uniform 296.15;
+    }
+}
+
+// ************************************************************************* //

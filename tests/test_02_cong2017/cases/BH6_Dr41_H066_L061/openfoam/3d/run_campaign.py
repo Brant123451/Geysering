@@ -1,0 +1,272 @@
+#!/usr/bin/env python3
+"""Run the required B-H6 checks in disposable work directories."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import shutil
+import subprocess
+import tempfile
+from pathlib import Path
+
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+
+HERE = Path(__file__).resolve().parent
+DEFAULT_PROFILES = (
+    "static",
+    "smoke",
+    "base",
+    "refined",
+    "valve-fast",
+    "valve-slow",
+)
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "profiles",
+        nargs="*",
+        choices=DEFAULT_PROFILES,
+        default=None,
+    )
+    parser.add_argument(
+        "--results-dir",
+        type=Path,
+        default=HERE / "results",
+    )
+    parser.add_argument("--work-root", type=Path)
+    parser.add_argument("--np", type=int, default=min(os.cpu_count() or 1, 6))
+    parser.add_argument(
+        "--keep-work",
+        action="store_true",
+        help="Retain generated mesh, fields, and processor directories",
+    )
+    args = parser.parse_args()
+    if not args.profiles:
+        args.profiles = list(DEFAULT_PROFILES)
+    return args
+
+
+def source_ignore(_directory: str, names: list[str]) -> set[str]:
+    ignored = {
+        "results",
+        "0",
+        "postProcessing",
+        "dynamicCode",
+        "__pycache__",
+        "bh6-3d.msh",
+        "geometry_audit.runtime.json",
+        "valve_schedule.runtime.json",
+        "valveAreaTable",
+    }
+    ignored.update(name for name in names if name.startswith("processor"))
+    ignored.update(name for name in names if name.startswith("log."))
+    ignored.update(
+        name
+        for name in names
+        if name.replace(".", "", 1).isdigit() and name != "0.orig"
+    )
+    return ignored.intersection(names)
+
+
+def run_profile(
+    profile: str,
+    work_root: Path,
+    results_root: Path,
+    ranks: int,
+) -> None:
+    work_case = work_root / profile
+    shutil.copytree(HERE, work_case, ignore=source_ignore)
+    result_dir = (results_root / profile).resolve()
+    if result_dir.exists():
+        shutil.rmtree(result_dir)
+    result_dir.mkdir(parents=True)
+
+    env = os.environ.copy()
+    env.update(
+        {
+            "BH6_PROFILE": profile,
+            "BH6_RESULTS_DIR": str(result_dir),
+            "BH6_REFERENCE_CASE_ROOT": str(HERE.parents[1]),
+            "OPENFOAM_NP": str(ranks),
+        }
+    )
+    print(f"[campaign] {profile}: work={work_case} results={result_dir}", flush=True)
+    subprocess.run(["bash", "Allrun"], cwd=work_case, env=env, check=True)
+
+
+def aggregate(
+    results_root: Path,
+    requested_profiles: list[str],
+    completed_profiles: list[str],
+    work_root: Path,
+    work_retained: bool,
+    failed: bool,
+) -> None:
+    rows: list[dict] = []
+    for profile in completed_profiles:
+        path = results_root / profile / "metrics.json"
+        if path.exists():
+            metrics = json.loads(path.read_text(encoding="utf-8"))
+            rows.append(
+                {
+                    "profile": profile,
+                    "requested_end_s": metrics.get("requested_end_s"),
+                    "simulation_end_s": metrics.get("simulation_end_s"),
+                    "run_completed": metrics.get("run_completed"),
+                    "cells": metrics.get("mesh", {}).get("cells"),
+                    "strict_checkMesh_pass": metrics.get("mesh", {})
+                    .get("acceptance", {})
+                    .get("strict_checkMesh_pass"),
+                    "solver_mesh_gate_pass": metrics.get("mesh", {})
+                    .get("acceptance", {})
+                    .get("solver_quality_gate_pass"),
+                    "maxCo": metrics.get("time_stepping", {}).get("maxCo"),
+                    "maxAlphaCo": metrics.get("time_stepping", {}).get(
+                        "maxAlphaCo"
+                    ),
+                    "opening_duration_s": metrics.get("valve", {}).get(
+                        "opening_duration_s"
+                    ),
+                    "Ta_3d_s": metrics.get("events", {}).get("Ta_3d_s"),
+                    "catch_time_3d_s": metrics.get("events", {}).get(
+                        "interface_catch_3d_s"
+                    ),
+                    "Yfs_max_3d_m": metrics.get("events", {}).get(
+                        "Yfs_max_3d_m"
+                    ),
+                    "vfs_average_3d_m_s": metrics.get("events", {}).get(
+                        "vfs_average_rise_3d_m_s"
+                    ),
+                    "vint_average_3d_m_s": metrics.get("events", {}).get(
+                        "vint_average_rise_3d_m_s"
+                    ),
+                    "vnet_average_3d_m_s": metrics.get("events", {}).get(
+                        "vnet_average_rise_3d_m_s"
+                    ),
+                    "PT1_post_arrival_peak_H_over_H0": metrics.get(
+                        "pressure", {}
+                    ).get("post_arrival_peak_H_over_H0"),
+                    "water_above_rim": metrics.get("events", {}).get(
+                        "water_above_rim"
+                    ),
+                    "liquid_balance_relative_error": metrics.get(
+                        "conservation", {}
+                    ).get("liquid_volume_relative_residual"),
+                    "gas_balance_relative_error": metrics.get(
+                        "conservation", {}
+                    ).get("gas_mass_relative_residual"),
+                    "static_hold_pass": metrics.get(
+                        "static_diagnostics", {}
+                    ).get("pass"),
+                    "static_max_speed_m_s": metrics.get(
+                        "static_diagnostics", {}
+                    ).get("max_speed_m_s"),
+                }
+            )
+
+    rows_by_profile = {row["profile"]: row for row in rows}
+    incomplete_profiles = [
+        profile
+        for profile in requested_profiles
+        if profile not in rows_by_profile
+        or not rows_by_profile[profile]["run_completed"]
+    ]
+    summary = {
+        "case": "BH6_Dr41_H066_L061",
+        "work_root": str(work_root),
+        "work_root_retained": work_retained,
+        "campaign_status": (
+            "failed"
+            if failed and not completed_profiles
+            else "partial"
+            if failed or len(completed_profiles) != len(requested_profiles)
+            else "success"
+        ),
+        "profiles_requested": requested_profiles,
+        "profiles_completed": [row["profile"] for row in rows],
+        "profiles_incomplete": incomplete_profiles,
+        "results": rows,
+    }
+    results_root.mkdir(parents=True, exist_ok=True)
+    (results_root / "campaign_summary.json").write_text(
+        json.dumps(summary, indent=2, allow_nan=True) + "\n",
+        encoding="utf-8",
+    )
+
+    full_rows = [
+        row
+        for row in rows
+        if row["profile"] in {"base", "refined", "valve-fast", "valve-slow"}
+    ]
+    if not full_rows:
+        return
+    labels = [row["profile"] for row in full_rows]
+    yfs = [row["Yfs_max_3d_m"] for row in full_rows]
+    pressure = [
+        row["PT1_post_arrival_peak_H_over_H0"] for row in full_rows
+    ]
+    fig, axes = plt.subplots(1, 2, figsize=(8.0, 3.4))
+    axes[0].bar(labels, yfs, color="#4c78a8")
+    axes[0].axhline(1.21, color="0.2", ls="--", label="experiment")
+    axes[0].axhline(1.8, color="#b22222", ls=":", label="physical rim")
+    axes[0].set_ylabel("maximum $Y_{fs}$ [m]")
+    axes[0].tick_params(axis="x", rotation=25)
+    axes[0].legend(frameon=False, fontsize=8)
+    axes[1].bar(labels, pressure, color="#f58518")
+    axes[1].axhline(
+        1.4,
+        color="0.2",
+        ls="--",
+        label="B-32 same-condition proxy",
+    )
+    axes[1].set_ylabel("post-arrival PT1 peak $H/H_0$")
+    axes[1].tick_params(axis="x", rotation=25)
+    axes[1].legend(frameon=False, fontsize=8)
+    fig.tight_layout()
+    fig.savefig(results_root / "campaign_sensitivity.png", dpi=180)
+    plt.close(fig)
+
+
+def main() -> None:
+    args = parse_args()
+    results_root = args.results_dir.resolve()
+    if args.work_root:
+        work_root = args.work_root.resolve()
+        work_root.mkdir(parents=True, exist_ok=False)
+    else:
+        work_root = Path(tempfile.mkdtemp(prefix="cong-bh6-3d-"))
+    print(f"[campaign] disposable work root: {work_root}", flush=True)
+
+    completed: list[str] = []
+    failed = False
+    try:
+        for profile in args.profiles:
+            run_profile(profile, work_root, results_root, args.np)
+            completed.append(profile)
+    except BaseException:
+        failed = True
+        raise
+    finally:
+        work_retained = args.keep_work or failed
+        aggregate(
+            results_root,
+            list(args.profiles),
+            completed,
+            work_root,
+            work_retained,
+            failed,
+        )
+        if not work_retained:
+            shutil.rmtree(work_root)
+
+
+if __name__ == "__main__":
+    main()

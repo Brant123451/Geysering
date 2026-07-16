@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "test": "test_01_vw2011",
+  "id": "Fig10_Dt57p1_Ha0305_Yfs0254",
+  "source": "Vasconcelos & Wright (2011), Journal of Hydraulic Engineering",
+  "status": "validated_auxiliary_case",
+  "self_contained": true,
+  "entrypoints": [
+    "scripts/caseA_fig10_compare.py"
+  ]
+}

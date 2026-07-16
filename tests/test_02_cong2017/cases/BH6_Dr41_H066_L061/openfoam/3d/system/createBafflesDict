@@ -1,0 +1,147 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| OpenFOAM v2512: variable-area zero-thickness B-H6 valve             |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      createBafflesDict;
+}
+
+internalFacesOnly true;
+
+baffles
+{
+    valveFaces
+    {
+        type        searchableSurface;
+        surface     plate;
+        origin      (5.98 -0.030 -0.030);
+        span        (0 0.060 0.060);
+
+        patches
+        {
+            master
+            {
+                name            valve_half0;
+                type            cyclicACMI;
+                neighbourPatch  valve_half1;
+                nonOverlapPatch valve_wall0;
+                scale
+                {
+                    type            table;
+                    values
+                    #include "$FOAM_CASE/constant/valveAreaTable"
+                    ;
+                }
+
+                patchFields
+                {
+                    alpha.water
+                    {
+                        type            cyclicACMI;
+                        value           uniform 1;
+                    }
+                    T
+                    {
+                        type            cyclicACMI;
+                        value           uniform 296.15;
+                    }
+                }
+            }
+
+            slave
+            {
+                name            valve_half1;
+                type            cyclicACMI;
+                neighbourPatch  valve_half0;
+                nonOverlapPatch valve_wall1;
+
+                patchFields
+                {
+                    alpha.water
+                    {
+                        type            cyclicACMI;
+                        value           uniform 0;
+                    }
+                    T
+                    {
+                        type            cyclicACMI;
+                        value           uniform 296.15;
+                    }
+                }
+            }
+
+            master2
+            {
+                name            valve_wall0;
+                type            wall;
+                patchFields
+                {
+                    U
+                    {
+                        type            noSlip;
+                    }
+                    p
+                    {
+                        type            calculated;
+                        value           uniform 101325;
+                    }
+                    p_rgh
+                    {
+                        type            fixedFluxPressure;
+                        value           uniform 101325;
+                    }
+                    alpha.water
+                    {
+                        type            constantAlphaContactAngle;
+                        theta0          90;
+                        limit           gradient;
+                        value           uniform 1;
+                    }
+                    T
+                    {
+                        type            zeroGradient;
+                    }
+                }
+            }
+
+            slave2
+            {
+                name            valve_wall1;
+                type            wall;
+                patchFields
+                {
+                    U
+                    {
+                        type            noSlip;
+                    }
+                    p
+                    {
+                        type            calculated;
+                        value           uniform 101325;
+                    }
+                    p_rgh
+                    {
+                        type            fixedFluxPressure;
+                        value           uniform 101325;
+                    }
+                    alpha.water
+                    {
+                        type            constantAlphaContactAngle;
+                        theta0          90;
+                        limit           gradient;
+                        value           uniform 0;
+                    }
+                    T
+                    {
+                        type            zeroGradient;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ************************************************************************* //

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh"><head><meta charset="utf-8">
+<title>Liu2020 Case B3 复现 — 交汇室竖井（单发喷发分支）</title>
+<style>
+body{font-family:-apple-system,Segoe UI,Arial,'Microsoft YaHei',sans-serif;margin:0;background:#f6f8fb;color:#1f2937}
+.wrap{max-width:1180px;margin:24px auto;padding:0 18px}
+.panel{background:#fff;border:1px solid #ddd;border-radius:12px;padding:16px;margin-bottom:16px}
+img{width:100%;border:1px solid #ddd;border-radius:10px;background:#fff}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #eee}
+th{background:#f3f4f6}
+h1{font-size:22px} h2{font-size:17px}
+.muted{font-size:13px;color:#6b7280}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>Liu, Shao &amp; Zhu (2020) Case B3 复现 — 交汇室上方竖井，单发喷发分支</h1>
+<p>工况 <b>B3</b>：进口流量 20&rarr;100 L/s（阀门 ~0.4 s 斜坡），下游管<b>初始满管</b>
+（尾门控制）；与 Case A2 <b>只差下游初始条件</b>，实验结果翻转为单发（single-shoot）
+geyser。实测：涌波 t=1.20 s 到室 &rarr; PT2/PT3 冲击峰 55.03/51.76 kPa（t&asymp;1.47 s）
+&rarr; 混合物 t=1.51 s 喷出管顶 &rarr; 回弹负压 PT2 &minus;20.26 kPa &rarr; 两个衰减惯性
+振荡（周期 0.51/0.37 s）&rarr; 终稳态 PT2/PT3 = 1.82/4.65 kPa。
+模型：与 A2 同一冻结复合域求解器，仅 (i) 下游满管初始/淹没出流边界（Series B 工况开关），
+(ii) 竖管由准静态列改为<b>带惯量的刚性水柱 ODE</b>（喷发速度与冲击峰正是本分支的观测量）。</p>
+
+<div class="panel">
+  <h2 style="margin-top:0">压力对比 — PT2（室顶盖）/ PT3（室底）/ PT1（竖管 +0.80 m）</h2>
+  <p class="muted">彩色包络+中位线 = 论文 Fig.5(b) 数字化（逐列取色）；黑线 = 模型。
+  t=0 为流量斜坡起点。</p>
+  <img src="outputs/caseB_comparison_pressure.png">
+  <div class="grid2" style="margin-top:10px">
+    <div><h3 style="margin:4px 0">论文原图 Fig.5(b)（扫描）</h3><img src="digitized/_fig5b_crop_probe.png"></div>
+    <div><h3 style="margin:4px 0">数字化质量检查</h3><img src="digitized/debug_fig5b_extract.png"></div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2 style="margin-top:0">竖管混合柱 — 喷发判别与时序</h2>
+  <img src="outputs/caseB_riser_column.png">
+</div>
+
+<div class="panel">
+  <h2 style="margin-top:0">喷发高度—峰压关系 — 对标 Fig.7(a)</h2>
+  <img src="outputs/caseB_h_vs_pmax.png">
+  <p class="muted">论文对 Series B 全部喷发工况给出回归
+  h = 0.6943&middot;P<sub>Max</sub>/&rho;g + 0.3086（R&sup2;=0.97）。模型点
+  (P<sub>Max</sub>/&rho;g = 3.15 m, h<sub>jet</sub> = 2.17 m)；
+  按回归线，该峰压对应 h = 2.50 m。</p>
+</div>
+
+<div class="panel">
+  <h2 style="margin-top:0">指标对照</h2>
+  <table>
+    <tr><th>量</th><th>实验（论文正文/图）</th><th>模型</th></tr>
+    <tr><td>分支判别</td><td>单发 geyser</td>
+        <td>geyser（柱到顶，喷出速度 4.3 m/s）</td></tr>
+    <tr><td>PT2 冲击峰</td><td>55.0 kPa（t=1.47 s）</td>
+        <td>30.8 kPa（t=1.68 s）</td></tr>
+    <tr><td>PT3 冲击峰</td><td>51.8 kPa</td>
+        <td>37.2 kPa</td></tr>
+    <tr><td>回弹负压 PT2 / PT3</td><td>-20.3 / -17.8 kPa</td>
+        <td>-12.0 / -5.0 kPa</td></tr>
+    <tr><td>惯性振荡周期</td><td>0.51 / 0.37 s</td>
+        <td>0.25 / 1.52 / 0.42 s</td></tr>
+    <tr><td>终稳态 PT2 / PT3</td><td>1.82 / 4.65 kPa</td>
+        <td>2.85 / 9.96 kPa</td></tr>
+    <tr><td>喷发高度 h（回归推算）</td><td>4.21 m（实测回归）</td>
+        <td>2.17 m</td></tr>
+    <tr><td>体积守恒误差</td><td>—</td><td>-0.000000 L</td></tr>
+  </table>
+  <p class="muted">诚实说明：(1) <b>冲击峰幅值被低估（31 vs 55 kPa）且偏晚 0.2 s</b>。
+  峰值是声学量：满管弹性支路用的是全局冻结的降速数值波速 a=40 m/s（为避免网格尺度
+  微空穴的刚性振铃，见 A2 报告），Joukowsky 尺度 &rho;a&Delta;u 直接随 a 线性缩放——
+  敏感性验证：a=80 m/s 时峰值 63.5 kPa（接近实测 55），但回弹负压过深（&minus;48 kPa）
+  且时间步减半；按冻结配置政策保留 a=40 并如实报告。偏晚 0.2 s 与 A2 的涌波到达偏晚
+  （~1.4 vs 1.20 s）同源。(2) <b>模型的 (P<sub>Max</sub>, h) 点落在实验回归线附近</b>
+  （按模型自身峰压 3.1 m 回归应为 h=2.50 m，模型
+  h<sub>jet</sub>=2.17 m）——即高度—峰压的<b>物理关系</b>被正确复现，误差
+  集中在声学峰幅本身。(3) 回弹后 2.4–3.3 s 模型持续亚大气（实测很快回正）；随后
+  第二次柱涌起（3.5–4.5 s）与实测"自由面再振荡两周期后趋稳"定性一致。
+  (4) 惯性振荡周期：实测 0.51/0.37 s；论文自家解析模型 Eq.(7) 对本几何给
+  T&asymp;1.05 s（也偏慢一倍）；模型给出 0.25 / 1.52 / 0.42 s
+  的混合振荡，同样偏慢——单相水柱 + 通风室不含掺气弹性，此项列为已知短板。
+  (5) 室内"水气混合加压"（论文原述机制）尝试过封闭气囊 EOS 方案：气囊在涌波到达前
+  就加压喷发（正反馈：柱堵住排气路），已回退为通风室 + 液相惯量方案并记录。
+  (6) 下游边界为淹没出流对固定尾水位 H_tail=Dd（尾门开度论文未报告；取与"初始满管"
+  一致的最低水位，未对任何瞬态/终态结果拟合）。</p>
+</div>
+</div></body></html>

@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>描线工具 v2 — 论文曲线数字化</title>
+<style>
+  :root {
+    --bg:#1e2127; --panel:#262a33; --panel2:#2e333e; --border:#3a4150;
+    --fg:#d8dee9; --dim:#8a93a5; --acc:#4da3ff; --ok:#3fca7f; --warn:#ffb454; --red:#ff5555;
+  }
+  * { box-sizing:border-box; }
+  html,body { height:100%; margin:0; }
+  body { background:var(--bg); color:var(--fg); font:13px/1.5 "Segoe UI","Microsoft YaHei",sans-serif;
+         display:flex; flex-direction:column; overflow:hidden; }
+  header { display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:6px 10px;
+           background:var(--panel); border-bottom:1px solid var(--border); }
+  header .title { font-weight:600; margin-right:4px; }
+  button, label.filebtn { background:var(--panel2); color:var(--fg); border:1px solid var(--border);
+    border-radius:5px; padding:4px 10px; cursor:pointer; font:inherit; white-space:nowrap; }
+  button:hover, label.filebtn:hover { border-color:var(--acc); }
+  button.primary { background:#17436e; border-color:#2a6db3; }
+  button:disabled { opacity:.4; cursor:default; }
+  .modes { display:flex; border:1px solid var(--border); border-radius:5px; overflow:hidden; }
+  .modes button { border:none; border-radius:0; padding:4px 12px; }
+  .modes button.active { background:#17436e; color:#fff; }
+  .chk { display:flex; align-items:center; gap:4px; padding:0 4px; }
+  input[type=checkbox] { accent-color:var(--acc); }
+  main { flex:1; display:flex; min-height:0; }
+  #stage { flex:1; position:relative; min-width:0; background:#14161a; overflow:hidden; }
+  #cv { position:absolute; inset:0; width:100%; height:100%; }
+  #banner { position:absolute; top:10px; left:50%; transform:translateX(-50%);
+    background:rgba(23,67,110,.92); color:#fff; padding:5px 16px; border-radius:16px;
+    font-size:13px; pointer-events:none; white-space:nowrap; z-index:5;
+    box-shadow:0 2px 8px rgba(0,0,0,.4); }
+  #banner.warn { background:rgba(160,105,20,.94); }
+  #banner.ok { background:rgba(28,110,66,.94); }
+  /* calibration popup */
+  #calpop { position:absolute; z-index:10; background:var(--panel); border:1px solid var(--acc);
+    border-radius:8px; padding:10px 12px; box-shadow:0 4px 16px rgba(0,0,0,.5); display:none; min-width:200px; }
+  #calpop h4 { margin:0 0 8px; font-size:13px; color:var(--acc); }
+  #calpop .row { display:flex; align-items:center; gap:6px; margin:5px 0; }
+  #calpop input[type=text] { width:100px; background:#1b1e24; color:var(--fg);
+    border:1px solid var(--border); border-radius:4px; padding:3px 6px; font:inherit; }
+  #calpop .btns { display:flex; gap:6px; margin-top:8px; justify-content:flex-end; }
+  aside { width:320px; background:var(--panel); border-left:1px solid var(--border);
+    overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:10px; }
+  .box { background:var(--panel2); border:1px solid var(--border); border-radius:6px; padding:8px 10px; }
+  .box h3 { margin:0 0 6px; font-size:13px; color:var(--acc); }
+  .calrow { display:flex; align-items:center; gap:6px; margin:3px 0; cursor:pointer;
+    padding:2px 4px; border-radius:4px; }
+  .calrow:hover { background:#333947; }
+  .calrow .tag { width:64px; flex:none; text-align:center; border-radius:4px; padding:1px 0;
+    background:#3a4150; font-size:12px; }
+  .calrow .tag.set { background:#1f5c3d; color:#b5eccd; }
+  .calrow .tag.next { background:#6e4c17; color:#ffd9a0; }
+  .calrow .val { font-family:Consolas,monospace; font-size:12px; }
+  .calrow .px { color:var(--dim); font-size:11px; margin-left:auto; }
+  .small { font-size:12px; color:var(--dim); }
+  .serow { display:flex; align-items:center; gap:6px; padding:3px 4px; border-radius:4px; cursor:pointer; }
+  .serow.active { background:#17436e; }
+  .serow .dot { width:11px; height:11px; border-radius:50%; flex:none; }
+  .serow .nm { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .serow .cnt { color:var(--dim); font-size:11px; }
+  .serow button { padding:0 6px; font-size:11px; }
+  #pttable { max-height:220px; overflow-y:auto; }
+  #pttable table { border-collapse:collapse; width:100%; font-family:Consolas,monospace; font-size:11.5px; }
+  #pttable th, #pttable td { padding:1px 6px; text-align:right; border-bottom:1px solid #363c49; }
+  #pttable th { color:var(--dim); position:sticky; top:0; background:var(--panel2); }
+  #pttable tr.sel td { background:#17436e; }
+  #pttable tr:hover td { background:#333947; }
+  #pttable td.del { cursor:pointer; color:var(--red); text-align:center; }
+  #status { font-family:Consolas,monospace; font-size:12px; white-space:pre; }
+  kbd { background:#3a4150; border-radius:3px; padding:0 4px; font-size:11px; font-family:Consolas,monospace; }
+  .hint p { margin:3px 0; }
+</style>
+</head>
+<body>
+<header>
+  <span class="title">描线 v2</span>
+  <label class="filebtn">打开图片<input type="file" id="file" accept="image/*" hidden></label>
+  <div class="modes">
+    <button id="m-pan" title="快捷键 1">1 平移</button>
+    <button id="m-cal" title="快捷键 2">2 标定</button>
+    <button id="m-trace" title="快捷键 3">3 描点</button>
+  </div>
+  <label class="chk" title="加点时自动吸附到附近曲线的深色像素中心">
+    <input type="checkbox" id="snap" checked>吸附曲线</label>
+  <button id="undo" title="Ctrl+Z">撤销</button>
+  <button id="redo" title="Ctrl+Y">重做</button>
+  <button id="zin">＋</button><button id="zout">－</button><button id="fit">适配</button>
+  <span style="flex:1"></span>
+  <button id="sess-save">保存会话</button>
+  <label class="filebtn">载入会话<input type="file" id="sess-file" accept=".json" hidden></label>
+  <button id="copy">复制当前曲线</button>
+  <button id="csv" class="primary">导出 CSV</button>
+</header>
+<main>
+  <div id="stage">
+    <canvas id="cv"></canvas>
+    <div id="banner">先贴图：Ctrl+V 粘贴截图 / 拖拽图片进来 / 点「打开图片」</div>
+    <div id="calpop">
+      <h4 id="cp-title">输入该点真实坐标</h4>
+      <div class="row" id="cp-row1"><span id="cp-lab1" style="width:20px">x=</span><input type="text" id="cp-in1"></div>
+      <div class="row" id="cp-row2"><span id="cp-lab2" style="width:20px">y=</span><input type="text" id="cp-in2"></div>
+      <div class="btns"><button id="cp-cancel">取消</button><button id="cp-ok" class="primary">确定 ⏎</button></div>
+    </div>
+  </div>
+  <aside>
+    <div class="box">
+      <h3>① 三点标定 <span class="small">（点行可重新输入）</span></h3>
+      <div class="calrow" data-ci="0"><span class="tag" id="t0">原点</span>
+        <span class="val" id="v0">—</span><span class="px" id="p0">未取</span></div>
+      <div class="calrow" data-ci="1"><span class="tag" id="t1">X轴参考</span>
+        <span class="val" id="v1">—</span><span class="px" id="p1">未取</span></div>
+      <div class="calrow" data-ci="2"><span class="tag" id="t2">Y轴参考</span>
+        <span class="val" id="v2">—</span><span class="px" id="p2">未取</span></div>
+      <div class="calrow" style="cursor:default">
+        <label><input type="checkbox" id="logx"> X 对数轴</label>
+        <label><input type="checkbox" id="logy"> Y 对数轴</label>
+        <button id="recal" style="margin-left:auto">重新标定</button>
+      </div>
+    </div>
+    <div class="box">
+      <h3>② 曲线</h3>
+      <div id="series"></div>
+      <button id="addser" style="margin-top:6px">＋ 新增曲线</button>
+      <label class="chk" style="margin-top:6px"><input type="checkbox" id="sortx" checked>导出时按 X 排序</label>
+    </div>
+    <div class="box">
+      <h3>③ 点表 <span class="small" id="ptcount"></span></h3>
+      <div id="pttable"></div>
+    </div>
+    <div class="box">
+      <h3>光标</h3>
+      <div id="status">像素:  -\n数据:  -</div>
+    </div>
+    <div class="box hint">
+      <h3>操作</h3>
+      <p><b>描点</b>：左键加点（自动吸附曲线）；拖已有点=移动；右键=删除；<kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> 撤销/重做</p>
+      <p><b>视图</b>：滚轮缩放；<b>任何模式</b>按住 <kbd>空格</kbd> 或中键拖动平移</p>
+      <p><b>选中点</b>：<kbd>Del</kbd> 删除，方向键微调 1px（<kbd>Shift</kbd>=5px）</p>
+      <p>右上角放大镜自动跟随，供精确落点</p>
+    </div>
+  </aside>
+</main>
+<script>
+"use strict";
+const PALETTE = ["#ff5555","#4da3ff","#3fca7f","#ffb454","#c792ea","#4dd0e1","#f06292","#aeea00"];
+const el = id => document.getElementById(id);
+const cv = el("cv"), ctx = cv.getContext("2d");
+const S = {
+  img:null, imgName:"", imgData:null,
+  view:{s:1,ox:0,oy:0},
+  mode:"pan",
+  cal:{ px:[null,null,null], vals:{xA:0,yA:0,xB:1,yC:1}, pending:-1 },
+  series:[], active:0, sel:null, hoverPi:-1,
+  cursor:null, panning:null, space:false, drag:null, dragMoved:false,
+  undoStack:[], redoStack:[],
+};
+addSeries();
+
+/* ================= view & coords ================= */
+function dpr(){ return window.devicePixelRatio||1; }
+function resize(){ const r=cv.getBoundingClientRect(); cv.width=r.width*dpr(); cv.height=r.height*dpr(); redraw(); }
+window.addEventListener("resize", resize);
+function evPos(e){ const r=cv.getBoundingClientRect();
+  const sx=e.clientX-r.left, sy=e.clientY-r.top;
+  return {x:(sx-S.view.ox)/S.view.s, y:(sy-S.view.oy)/S.view.s, sx, sy}; }
+function toScreen(p){ return {x:p.x*S.view.s+S.view.ox, y:p.y*S.view.s+S.view.oy}; }
+function fitView(){ if(!S.img) return; const r=cv.getBoundingClientRect();
+  const s=Math.min(r.width/S.img.width, r.height/S.img.height)*0.97;
+  S.view.s=s; S.view.ox=(r.width-S.img.width*s)/2; S.view.oy=(r.height-S.img.height*s)/2; redraw(); }
+function zoomAt(f, sx, sy){ S.view.ox=sx-(sx-S.view.ox)*f; S.view.oy=sy-(sy-S.view.oy)*f; S.view.s*=f; redraw(); }
+
+/* ================= undo / redo ================= */
+function snapshot(){ return JSON.stringify({
+  cal:{px:S.cal.px, vals:S.cal.vals, logx:el("logx").checked, logy:el("logy").checked},
+  series:S.series.map(s=>({name:s.name,color:s.color,show:s.show,pts:s.pts})), active:S.active }); }
+function pushUndo(){ S.undoStack.push(snapshot()); if(S.undoStack.length>200) S.undoStack.shift(); S.redoStack.length=0; }
+function restore(js){ const o=JSON.parse(js);
+  S.cal.px=o.cal.px; S.cal.vals=o.cal.vals;
+  el("logx").checked=o.cal.logx; el("logy").checked=o.cal.logy;
+  S.series=o.series; S.active=Math.min(o.active,S.series.length-1); S.sel=null;
+  seriesUI(); calUI(); ptTableUI(); redraw(); }
+function doUndo(){ if(!S.undoStack.length) return; S.redoStack.push(snapshot()); restore(S.undoStack.pop()); }
+function doRedo(){ if(!S.redoStack.length) return; S.undoStack.push(snapshot()); restore(S.redoStack.pop()); }
+
+/* ================= calibration ================= */
+function calReady(){ const v=S.cal.vals;
+  if(S.cal.px.some(p=>!p)) return false;
+  if(![v.xA,v.yA,v.xB,v.yC].every(Number.isFinite)) return false;
+  if(v.xB===v.xA || v.yC===v.yA) return false;
+  if(el("logx").checked && (v.xA<=0||v.xB<=0)) return false;
+  if(el("logy").checked && (v.yA<=0||v.yC<=0)) return false;
+  return true; }
+function imgToData(p){ if(!calReady()) return null;
+  const v=S.cal.vals, [A,B,C]=S.cal.px;
+  const bx=B.x-A.x, by=B.y-A.y, cx=C.x-A.x, cy=C.y-A.y;
+  const det=bx*cy-cx*by; if(Math.abs(det)<1e-12) return null;
+  const dx=p.x-A.x, dy=p.y-A.y;
+  const u=(cy*dx-cx*dy)/det, w=(-by*dx+bx*dy)/det;
+  const x = el("logx").checked ? Math.pow(10, Math.log10(v.xA)+u*(Math.log10(v.xB)-Math.log10(v.xA))) : v.xA+u*(v.xB-v.xA);
+  const y = el("logy").checked ? Math.pow(10, Math.log10(v.yA)+w*(Math.log10(v.yC)-Math.log10(v.yA))) : v.yA+w*(v.yC-v.yA);
+  return {x,y}; }
+const fmt = v => Number(v.toPrecision(6)).toString();
+function calUI(){ const names=["原点","X轴参考","Y轴参考"]; const v=S.cal.vals;
+  const nextIdx=S.cal.px.findIndex(p=>!p);
+  const valTxt=[`(${fmt(v.xA)}, ${fmt(v.yA)})`, `x=${fmt(v.xB)}`, `y=${fmt(v.yC)}`];
+  for(let i=0;i<3;i++){
+    el("t"+i).textContent=names[i];
+    el("t"+i).className="tag"+(S.cal.px[i]?" set":(S.mode==="cal"&&i===nextIdx?" next":""));
+    el("v"+i).textContent=S.cal.px[i]?valTxt[i]:"—";
+    el("p"+i).textContent=S.cal.px[i]?`(${S.cal.px[i].x.toFixed(1)},${S.cal.px[i].y.toFixed(1)})px`:"未取";
+  }
+  bannerUI(); }
+
+/* ---- calibration popup ---- */
+let popCtx=null; // {idx, px:{x,y}, isNew}
+function openCalPop(idx, imgPx, screenPos){
+  popCtx={idx, px:imgPx};
+  const pop=el("calpop"), v=S.cal.vals;
+  const conf=[
+    {title:"标定 1/3 · 原点坐标", l1:"x=", d1:v.xA, l2:"y=", d2:v.yA},
+    {title:"标定 2/3 · X轴参考点", l1:"x=", d1:v.xB, l2:null},
+    {title:"标定 3/3 · Y轴参考点", l1:"y=", d1:v.yC, l2:null},
+  ][idx];
+  el("cp-title").textContent=conf.title;
+  el("cp-lab1").textContent=conf.l1; el("cp-in1").value=conf.d1;
+  el("cp-row2").style.display=conf.l2?"flex":"none";
+  if(conf.l2){ el("cp-lab2").textContent=conf.l2; el("cp-in2").value=conf.d2; }
+  const st=el("stage").getBoundingClientRect();
+  let px=screenPos.sx+18, py=screenPos.sy+14;
+  if(px+230>st.width) px=screenPos.sx-238;
+  if(py+130>st.height) py=screenPos.sy-140;
+  pop.style.left=px+"px"; pop.style.top=py+"px"; pop.style.display="block";
+  el("cp-in1").focus(); el("cp-in1").select(); redraw(); }
+function closeCalPop(commit){
+  const pop=el("calpop");
+  if(commit && popCtx){
+    const a=parseFloat(el("cp-in1").value), b=parseFloat(el("cp-in2").value);
+    if(!Number.isFinite(a)){ el("cp-in1").focus(); return; }
+    pushUndo();
+    const i=popCtx.idx, v=S.cal.vals;
+    if(i===0){ if(!Number.isFinite(b)){ el("cp-in2").focus(); return; } v.xA=a; v.yA=b; }
+    else if(i===1){ v.xB=a; }
+    else { v.yC=a; }
+    S.cal.px[i]=popCtx.px;
+    if(calReady()){ setMode("trace"); flashBanner("✔ 标定完成，已切到描点模式，开始描线","ok"); }
+  }
+  popCtx=null; pop.style.display="none"; calUI(); ptTableUI(); redraw(); }
+el("cp-ok").onclick=()=>closeCalPop(true);
+el("cp-cancel").onclick=()=>closeCalPop(false);
+["cp-in1","cp-in2"].forEach(id=>el(id).addEventListener("keydown",e=>{
+  if(e.key==="Enter") closeCalPop(true);
+  if(e.key==="Escape") closeCalPop(false);
+  e.stopPropagation(); }));
+
+/* ================= series & points ================= */
+function addSeries(name){ const i=S.series.length;
+  S.series.push({name:name||("曲线"+(i+1)), color:PALETTE[i%PALETTE.length], pts:[], show:true});
+  S.active=i; if(document.getElementById("series")) { seriesUI(); ptTableUI(); } }
+function seriesUI(){ const host=el("series"); host.innerHTML="";
+  S.series.forEach((s,i)=>{
+    const row=document.createElement("div");
+    row.className="serow"+(i===S.active?" active":"");
+    row.onclick=()=>{ S.active=i; S.sel=null; seriesUI(); ptTableUI(); redraw(); };
+    const dot=document.createElement("span"); dot.className="dot"; dot.style.background=s.color;
+    const nm=document.createElement("span"); nm.className="nm"; nm.textContent=s.name; nm.title="双击改名";
+    nm.ondblclick=e=>{ e.stopPropagation(); const v=prompt("曲线名称：",s.name); if(v){s.name=v;seriesUI();} };
+    const cnt=document.createElement("span"); cnt.className="cnt"; cnt.textContent=s.pts.length+"点";
+    const vis=document.createElement("input"); vis.type="checkbox"; vis.checked=s.show; vis.title="显示/隐藏";
+    vis.onclick=e=>{ e.stopPropagation(); s.show=vis.checked; redraw(); };
+    const dl=document.createElement("button"); dl.textContent="✕"; dl.title="删除曲线";
+    dl.onclick=e=>{ e.stopPropagation();
+      if(s.pts.length && !confirm(`删除 ${s.name}（${s.pts.length} 点）？`)) return;
+      pushUndo(); S.series.splice(i,1);
+      if(!S.series.length) addSeries();
+      S.active=Math.min(S.active,S.series.length-1); S.sel=null;
+      seriesUI(); ptTableUI(); redraw(); };
+    row.append(dot,nm,cnt,vis,dl); host.appendChild(row); }); }
+function ptTableUI(){
+  const s=S.series[S.active], host=el("pttable");
+  el("ptcount").textContent=`（${s.name}，${s.pts.length} 点）`;
+  if(!s.pts.length){ host.innerHTML="<div class='small'>暂无点</div>"; return; }
+  const cal=calReady();
+  let h="<table><tr><th>#</th><th>"+(cal?"x":"px")+"</th><th>"+(cal?"y":"py")+"</th><th></th></tr>";
+  s.pts.forEach((p,i)=>{
+    const d=cal?imgToData(p):p;
+    const selc=(S.sel&&S.sel.si===S.active&&S.sel.pi===i)?" class='sel'":"";
+    h+=`<tr${selc} data-pi="${i}"><td>${i+1}</td><td>${fmt(d.x)}</td><td>${fmt(d.y)}</td><td class="del" data-di="${i}">✕</td></tr>`; });
+  host.innerHTML=h+"</table>";
+  host.querySelectorAll("tr[data-pi]").forEach(tr=>{
+    tr.onclick=e=>{
+      if(e.target.classList.contains("del")){
+        pushUndo(); s.pts.splice(+e.target.dataset.di,1); S.sel=null;
+        seriesUI(); ptTableUI(); redraw(); return; }
+      S.sel={si:S.active, pi:+tr.dataset.pi}; ptTableUI(); redraw(); }; }); }
+function nearestPoint(p, maxScreenDist){
+  let best=null, bd=maxScreenDist/S.view.s;
+  S.series.forEach((s,si)=>{ if(!s.show) return;
+    s.pts.forEach((q,pi)=>{ const d=Math.hypot(q.x-p.x,q.y-p.y);
+      if(d<bd){ bd=d; best={si,pi}; } }); });
+  return best; }
+
+/* ---- snap to dark curve pixel ---- */
+function buildImgData(){ S.imgData=null; if(!S.img) return;
+  try{ const c=document.createElement("canvas");
+    c.width=S.img.width; c.height=S.img.height;
+    const g=c.getContext("2d",{willReadFrequently:true});
+    g.drawImage(S.img,0,0);
+    S.imgData=g.getImageData(0,0,c.width,c.height);
+  }catch(e){ S.imgData=null; } }
+function snapPoint(p){
+  if(!el("snap").checked || !S.imgData) return p;
+  const R=8, W=S.imgData.width, H=S.imgData.height, d=S.imgData.data;
+  const cx=Math.round(p.x), cy=Math.round(p.y);
+  let bx=p.x, by=p.y, bestScore=1e9, bestLum=255;
+  for(let dy=-R;dy<=R;dy++){ const y=cy+dy; if(y<0||y>=H) continue;
+    for(let dx=-R;dx<=R;dx++){ const x=cx+dx; if(x<0||x>=W) continue;
+      const k=4*(y*W+x);
+      const lum=0.299*d[k]+0.587*d[k+1]+0.114*d[k+2];
+      const dist=Math.hypot(dx,dy);
+      const score=lum+10*dist;
+      if(score<bestScore){ bestScore=score; bx=x; by=y; bestLum=lum; } } }
+  return bestLum<190 ? {x:bx,y:by} : p; }
+
+/* ================= drawing ================= */
+function redraw(){
+  ctx.setTransform(dpr(),0,0,dpr(),0,0);
+  ctx.clearRect(0,0,cv.width,cv.height);
+  if(!S.img) return;
+  ctx.save();
+  ctx.translate(S.view.ox,S.view.oy); ctx.scale(S.view.s,S.view.s);
+  ctx.imageSmoothingEnabled=S.view.s<3;
+  ctx.drawImage(S.img,0,0);
+  ctx.restore();
+  // calibration markers
+  const names=["原点","X参考","Y参考"], colors=["#ffe100","#ff8c00","#00e5ff"];
+  S.cal.px.forEach((p,i)=>{ if(!p) return; const q=toScreen(p);
+    ctx.strokeStyle=colors[i]; ctx.fillStyle=colors[i]; ctx.lineWidth=1.6;
+    ctx.beginPath(); ctx.moveTo(q.x-10,q.y); ctx.lineTo(q.x+10,q.y);
+    ctx.moveTo(q.x,q.y-10); ctx.lineTo(q.x,q.y+10); ctx.stroke();
+    ctx.beginPath(); ctx.arc(q.x,q.y,3.4,0,7); ctx.stroke();
+    ctx.font="11px sans-serif"; ctx.fillText(names[i],q.x+8,q.y-8); });
+  // pending calibration click
+  if(popCtx){ const q=toScreen(popCtx.px);
+    ctx.strokeStyle="#fff"; ctx.setLineDash([4,3]); ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.arc(q.x,q.y,7,0,7); ctx.stroke(); ctx.setLineDash([]); }
+  // series
+  S.series.forEach((s,si)=>{ if(!s.show||!s.pts.length) return;
+    ctx.strokeStyle=s.color; ctx.lineWidth=1.2; ctx.globalAlpha=.8;
+    ctx.beginPath();
+    s.pts.forEach((p,i)=>{ const q=toScreen(p); i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y); });
+    ctx.stroke(); ctx.globalAlpha=1;
+    s.pts.forEach((p,pi)=>{ const q=toScreen(p);
+      const seld=S.sel&&S.sel.si===si&&S.sel.pi===pi;
+      ctx.fillStyle=s.color;
+      ctx.beginPath(); ctx.arc(q.x,q.y,seld?6:4.2,0,7); ctx.fill();
+      ctx.strokeStyle="#fff"; ctx.lineWidth=seld?1.8:0.9; ctx.stroke(); }); });
+  // crosshair + loupe
+  if(S.cursor && !popCtx){
+    const q=toScreen(S.cursor), r=cv.getBoundingClientRect();
+    ctx.strokeStyle="rgba(255,255,255,.22)"; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(0,q.y); ctx.lineTo(r.width,q.y);
+    ctx.moveTo(q.x,0); ctx.lineTo(q.x,r.height); ctx.stroke();
+    drawLoupe(q,r); } }
+function drawLoupe(q,r){
+  const box=190, mag=6, half=box/(2*mag), c=S.cursor;
+  let bx=r.width-box-12, by=12;
+  if(q.x>bx-30 && q.y<by+box+30) bx=12;
+  ctx.save();
+  ctx.fillStyle="#000"; ctx.fillRect(bx-1,by-1,box+2,box+2);
+  ctx.beginPath(); ctx.rect(bx,by,box,box); ctx.clip();
+  ctx.imageSmoothingEnabled=false;
+  ctx.drawImage(S.img, c.x-half, c.y-half, box/mag, box/mag, bx, by, box, box);
+  const l2s=p=>({x:bx+(p.x-(c.x-half))*mag, y:by+(p.y-(c.y-half))*mag});
+  S.series.forEach(s=>{ if(!s.show) return; ctx.fillStyle=s.color;
+    s.pts.forEach(p=>{ if(Math.abs(p.x-c.x)<half+2 && Math.abs(p.y-c.y)<half+2){
+      const q2=l2s(p); ctx.beginPath(); ctx.arc(q2.x,q2.y,4,0,7); ctx.fill();
+      ctx.strokeStyle="#fff"; ctx.lineWidth=1; ctx.stroke(); } }); });
+  ctx.strokeStyle="#ff2d2d"; ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.moveTo(bx+box/2,by); ctx.lineTo(bx+box/2,by+box);
+  ctx.moveTo(bx,by+box/2); ctx.lineTo(bx+box,by+box/2); ctx.stroke();
+  ctx.restore();
+  ctx.strokeStyle="#3a4150"; ctx.lineWidth=1; ctx.strokeRect(bx-1,by-1,box+2,box+2); }
+function statusUI(){ const s=el("status");
+  if(!S.cursor){ s.textContent="像素:  -\n数据:  -"; return; }
+  const d=imgToData(S.cursor);
+  s.textContent=`像素:  (${S.cursor.x.toFixed(1)}, ${S.cursor.y.toFixed(1)})\n数据:  `+(d?`(${fmt(d.x)}, ${fmt(d.y)})`:"（未标定）"); }
+function bannerUI(msgOverride, cls){
+  const b=el("banner"); b.className=cls||"";
+  if(msgOverride){ b.textContent=msgOverride; return; }
+  if(!S.img){ b.textContent="先贴图：Ctrl+V 粘贴截图 / 拖拽图片进来 / 点「打开图片」"; return; }
+  if(S.mode==="cal"){
+    const i=S.cal.px.findIndex(p=>!p);
+    if(i<0){ b.textContent = calReady()?"标定完成 ✔ 切到「3 描点」开始描线":"三点已取，请核对坐标值（点侧栏行修改）"; b.className=calReady()?"ok":"warn"; }
+    else b.textContent=`标定 ${i+1}/3：请点击图上的【${["原点","X 轴上的参考点","Y 轴上的参考点"][i]}】，点完当场输入坐标`;
+    return; }
+  if(S.mode==="trace"){
+    if(!calReady()){ b.textContent="⚠ 尚未标定——先切到「2 标定」取三个点"; b.className="warn"; return; }
+    const s=S.series[S.active];
+    b.textContent=`描点中 → ${s.name}（${s.pts.length} 点）｜左键加点·拖动移点·右键删点`; return; }
+  b.textContent="平移模式：拖动移动视图，滚轮缩放"; }
+let flashTimer=null;
+function flashBanner(msg, cls){ bannerUI(msg, cls);
+  clearTimeout(flashTimer); flashTimer=setTimeout(()=>bannerUI(),2600); }
+
+/* ================= modes ================= */
+function setMode(m){ S.mode=m; S.sel=null;
+  for(const [id,k] of [["m-pan","pan"],["m-cal","cal"],["m-trace","trace"]])
+    el(id).classList.toggle("active",k===m);
+  cv.style.cursor = m==="pan"?"grab":"crosshair";
+  calUI(); redraw(); }
+el("m-pan").onclick=()=>setMode("pan");
+el("m-cal").onclick=()=>setMode("cal");
+el("m-trace").onclick=()=>setMode("trace");
+setMode("pan");
+
+/* ================= mouse ================= */
+cv.addEventListener("contextmenu",e=>e.preventDefault());
+cv.addEventListener("wheel",e=>{ if(!S.img) return; e.preventDefault();
+  const r=cv.getBoundingClientRect();
+  zoomAt(e.deltaY<0?1.15:1/1.15, e.clientX-r.left, e.clientY-r.top); },{passive:false});
+cv.addEventListener("mousedown",e=>{
+  if(!S.img || popCtx) return;
+  const p=evPos(e);
+  if(e.button===1 || S.space || S.mode==="pan" && e.button===0 && !nearestPoint(p,9)){
+    if(e.button===1||S.space||S.mode==="pan"){
+      S.panning={sx:e.clientX,sy:e.clientY,ox:S.view.ox,oy:S.view.oy};
+      cv.style.cursor="grabbing"; e.preventDefault(); return; } }
+  if(e.button===2){
+    if(S.mode==="trace"){ const hit=nearestPoint(p,12);
+      if(hit){ pushUndo(); S.series[hit.si].pts.splice(hit.pi,1); S.sel=null;
+        seriesUI(); ptTableUI(); redraw(); } }
+    return; }
+  if(e.button!==0) return;
+  if(S.mode==="cal"){
+    let idx=S.cal.px.findIndex(q=>!q);
+    // clicking near an existing marker re-takes that point
+    for(let i=0;i<3;i++){ const q=S.cal.px[i];
+      if(q && Math.hypot(q.x-p.x,q.y-p.y)*S.view.s<12){ idx=i; break; } }
+    if(idx<0) idx=0;
+    openCalPop(idx,{x:p.x,y:p.y},p);
+    return; }
+  if(S.mode==="trace"){
+    const hit=nearestPoint(p,10);
+    if(hit && hit.si===S.active){
+      pushUndo(); S.sel=hit; S.drag={...hit}; S.dragMoved=false; redraw(); return; }
+    // add point
+    if(!calReady()){ flashBanner("⚠ 未标定，先完成三点标定","warn"); setMode("cal"); return; }
+    pushUndo();
+    const sp=snapPoint(p);
+    S.series[S.active].pts.push({x:sp.x,y:sp.y});
+    S.sel={si:S.active, pi:S.series[S.active].pts.length-1};
+    seriesUI(); ptTableUI(); redraw(); } });
+window.addEventListener("mousemove",e=>{
+  if(S.panning){ S.view.ox=S.panning.ox+(e.clientX-S.panning.sx);
+    S.view.oy=S.panning.oy+(e.clientY-S.panning.sy); redraw(); return; }
+  if(e.target!==cv && !S.drag) return;
+  const p=evPos(e);
+  S.cursor={x:p.x,y:p.y};
+  if(S.drag){ const pt=S.series[S.drag.si].pts[S.drag.pi];
+    pt.x=p.x; pt.y=p.y; S.dragMoved=true; ptTableUI(); }
+  statusUI(); redraw(); });
+window.addEventListener("mouseup",()=>{
+  if(S.drag && S.dragMoved && el("snap").checked){
+    const pt=S.series[S.drag.si].pts[S.drag.pi];
+    const sp=snapPoint(pt); pt.x=sp.x; pt.y=sp.y; ptTableUI(); redraw(); }
+  if(S.drag && !S.dragMoved){ S.undoStack.pop(); } // click-select only: discard snapshot
+  S.panning=null; S.drag=null;
+  cv.style.cursor=S.mode==="pan"?"grab":"crosshair"; });
+cv.addEventListener("mouseleave",()=>{ S.cursor=null; statusUI(); redraw(); });
+
+/* ================= keyboard ================= */
+window.addEventListener("keydown",e=>{
+  if(e.target.tagName==="INPUT") return;
+  if(e.code==="Space"){ S.space=true; cv.style.cursor="grab"; e.preventDefault(); return; }
+  if(e.ctrlKey && e.key.toLowerCase()==="z"){ e.shiftKey?doRedo():doUndo(); e.preventDefault(); return; }
+  if(e.ctrlKey && e.key.toLowerCase()==="y"){ doRedo(); e.preventDefault(); return; }
+  if(e.key==="1") setMode("pan");
+  if(e.key==="2") setMode("cal");
+  if(e.key==="3") setMode("trace");
+  if(S.sel){ const pt=S.series[S.sel.si].pts[S.sel.pi]; const st=e.shiftKey?5:1; let used=true;
+    if(e.key==="Delete"||e.key==="Backspace"){ pushUndo();
+      S.series[S.sel.si].pts.splice(S.sel.pi,1); S.sel=null; seriesUI(); ptTableUI(); }
+    else if(e.key==="ArrowLeft") pt.x-=st;
+    else if(e.key==="ArrowRight") pt.x+=st;
+    else if(e.key==="ArrowUp") pt.y-=st;
+    else if(e.key==="ArrowDown") pt.y+=st;
+    else used=false;
+    if(used){ e.preventDefault(); ptTableUI(); redraw(); } } });
+window.addEventListener("keyup",e=>{ if(e.code==="Space"){ S.space=false;
+  cv.style.cursor=S.mode==="pan"?"grab":"crosshair"; } });
+window.addEventListener("blur",()=>{ S.space=false; S.panning=null; S.drag=null; });
+
+/* ================= image loading ================= */
+function loadImage(src,name){
+  const doLoad=()=>{ const img=new Image();
+    img.onload=()=>{ S.img=img; S.imgName=name||""; buildImgData();
+      S.cal.px=[null,null,null];
+      S.series=[]; addSeries(); S.sel=null;
+      S.undoStack.length=0; S.redoStack.length=0;
+      fitView(); setMode("cal"); };
+    img.src=src; };
+  const hasWork=S.series.some(s=>s.pts.length)||S.cal.px.some(p=>p);
+  if(S.img && hasWork){ if(!confirm("载入新图片将清空当前标定与描点，继续？")) return; }
+  doLoad(); }
+el("file").addEventListener("change",e=>{ const f=e.target.files[0];
+  if(f) loadImage(URL.createObjectURL(f),f.name); e.target.value=""; });
+document.addEventListener("paste",e=>{
+  for(const it of e.clipboardData.items)
+    if(it.type.startsWith("image/")){ loadImage(URL.createObjectURL(it.getAsFile()),"clipboard"); return; } });
+document.addEventListener("dragover",e=>e.preventDefault());
+document.addEventListener("drop",e=>{ e.preventDefault();
+  const f=[...e.dataTransfer.files].find(f=>f.type.startsWith("image/"));
+  if(f) loadImage(URL.createObjectURL(f),f.name); });
+
+/* ================= toolbar ================= */
+el("fit").onclick=fitView;
+el("zin").onclick=()=>{ const r=cv.getBoundingClientRect(); zoomAt(1.25,r.width/2,r.height/2); };
+el("zout").onclick=()=>{ const r=cv.getBoundingClientRect(); zoomAt(1/1.25,r.width/2,r.height/2); };
+el("undo").onclick=doUndo;
+el("redo").onclick=doRedo;
+el("recal").onclick=()=>{ pushUndo(); S.cal.px=[null,null,null]; setMode("cal"); calUI(); redraw(); };
+el("addser").onclick=()=>{ pushUndo(); addSeries(); };
+document.querySelectorAll(".calrow[data-ci]").forEach(row=>{
+  row.onclick=()=>{ const i=+row.dataset.ci;
+    if(!S.cal.px[i]){ setMode("cal"); return; }
+    const q=toScreen(S.cal.px[i]);
+    openCalPop(i,S.cal.px[i],{sx:q.x,sy:q.y}); }; });
+["logx","logy"].forEach(id=>el(id).addEventListener("change",()=>{ calUI(); ptTableUI(); statusUI(); }));
+
+function exportRows(){
+  if(!calReady()){ alert("请先完成三点标定。"); return null; }
+  const sort=el("sortx").checked, rows=[];
+  S.series.forEach(s=>{ let data=s.pts.map(p=>imgToData(p));
+    if(sort) data=data.slice().sort((a,b)=>a.x-b.x);
+    data.forEach(d=>rows.push([s.name,fmt(d.x),fmt(d.y)])); });
+  return rows; }
+el("csv").onclick=()=>{ const rows=exportRows(); if(!rows) return;
+  const csv="series,x,y\n"+rows.map(r=>r.join(",")).join("\n")+"\n";
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv"}));
+  a.download=(S.imgName?S.imgName.replace(/\.[^.]+$/,"")+"_":"")+"digitized.csv";
+  a.click(); };
+el("copy").onclick=async()=>{
+  if(!calReady()){ alert("请先完成三点标定。"); return; }
+  const s=S.series[S.active], sort=el("sortx").checked;
+  let data=s.pts.map(p=>imgToData(p));
+  if(sort) data=data.slice().sort((a,b)=>a.x-b.x);
+  await navigator.clipboard.writeText(data.map(d=>fmt(d.x)+"\t"+fmt(d.y)).join("\n"));
+  flashBanner(`已复制 ${s.name} 的 ${data.length} 个点（x[TAB]y）`,"ok"); };
+
+/* ================= session ================= */
+el("sess-save").onclick=()=>{
+  const sess={tool:"curve_digitizer",version:2,image:S.imgName,
+    cal:{px:S.cal.px, vals:S.cal.vals, logx:el("logx").checked, logy:el("logy").checked},
+    series:S.series.map(s=>({name:s.name,color:s.color,pts:s.pts}))};
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(sess,null,1)],{type:"application/json"}));
+  a.download=(S.imgName?S.imgName.replace(/\.[^.]+$/,"")+"_":"")+"session.json";
+  a.click(); };
+el("sess-file").addEventListener("change",e=>{
+  const f=e.target.files[0]; if(!f) return;
+  f.text().then(t=>{ const sess=JSON.parse(t);
+    if(sess.tool!=="curve_digitizer"){ alert("不是本工具的会话文件。"); return; }
+    pushUndo();
+    S.cal.px=sess.cal.px;
+    S.cal.vals=sess.cal.vals||{xA:0,yA:0,xB:1,yC:1};
+    el("logx").checked=!!sess.cal.logx; el("logy").checked=!!sess.cal.logy;
+    S.series=sess.series.map(s=>({...s,show:true}));
+    if(!S.series.length) addSeries();
+    S.active=0; S.sel=null;
+    seriesUI(); calUI(); ptTableUI(); redraw();
+    if(sess.image) flashBanner(`会话已载入（原图：${sess.image}），请打开同一张图片`,"warn"); });
+  e.target.value=""; });
+
+/* ================= demo (#demo) ================= */
+function makeDemo(){
+  const c=document.createElement("canvas"); c.width=800; c.height=600;
+  const g=c.getContext("2d");
+  g.fillStyle="#fff"; g.fillRect(0,0,800,600);
+  const X0=90,Y0=520,X1=740,Y1=70;
+  g.strokeStyle="#ddd";
+  for(let i=0;i<=10;i++){ const x=X0+(X1-X0)*i/10;
+    g.beginPath(); g.moveTo(x,Y0); g.lineTo(x,Y1); g.stroke(); }
+  for(let j=0;j<=8;j++){ const y=Y0+(Y1-Y0)*j/8;
+    g.beginPath(); g.moveTo(X0,y); g.lineTo(X1,y); g.stroke(); }
+  g.strokeStyle="#000"; g.lineWidth=1.5;
+  g.strokeRect(X0,Y1,X1-X0,Y0-Y1);
+  g.fillStyle="#000"; g.font="14px sans-serif"; g.textAlign="center";
+  for(let i=0;i<=10;i+=2) g.fillText(i,X0+(X1-X0)*i/10,Y0+20);
+  g.textAlign="right";
+  for(let j=0;j<=8;j+=2) g.fillText((j*0.25).toFixed(1),X0-8,Y0+(Y1-Y0)*j/8+5);
+  g.strokeStyle="#d40000"; g.lineWidth=2;
+  g.beginPath();
+  for(let i=0;i<=200;i++){ const xd=i/20, yd=1+0.8*Math.sin(0.6*xd);
+    const x=X0+(X1-X0)*xd/10, y=Y0+(Y1-Y0)*yd/2;
+    i?g.lineTo(x,y):g.moveTo(x,y); }
+  g.stroke();
+  g.fillStyle="#d40000"; g.textAlign="left";
+  g.fillText("y = 1 + 0.8 sin(0.6x)",X0+20,Y1+25);
+  loadImage(c.toDataURL(),"demo"); }
+if(location.hash.includes("demo")) makeDemo();
+resize(); calUI(); ptTableUI();
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "test": "test_01_vw2011",
+  "id": "A_Dt57p1_Ha0305_Yfs0356",
+  "source": "Vasconcelos & Wright (2011), Journal of Hydraulic Engineering",
+  "status": "validated_primary_case",
+  "self_contained": true,
+  "entrypoints": [
+    "scripts/caseA_digitize_and_compare.py",
+    "openfoam/2d/Allrun",
+    "openfoam/3d/Allrun"
+  ]
+}

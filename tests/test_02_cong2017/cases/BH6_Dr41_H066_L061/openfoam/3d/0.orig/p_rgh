@@ -1,0 +1,36 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| OpenFOAM v2512: Cong2017 B-H6                                      |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p_rgh;
+}
+
+dimensions      [1 -1 -2 0 0 0 0];
+internalField   uniform 101325;
+
+boundaryField
+{
+    reservoir
+    {
+        // hRef is the initial free surface, so p_rgh equals p_atm in water.
+        type            fixedValue;
+        value           uniform 101325;
+    }
+    walls
+    {
+        type            fixedFluxPressure;
+        value           uniform 101325;
+    }
+    atmosphere
+    {
+        // Constant reduced pressure gives hydrostatic ambient absolute pressure.
+        type            fixedValue;
+        value           uniform 101325;
+    }
+}
+
+// ************************************************************************* //
