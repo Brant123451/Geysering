@@ -2352,5 +2352,129 @@
       "next_action": "Keep the admitted baseline (nCorrectors=2, nOuterCorrectors=1) and raise only CASEB_N_NON_ORTHOGONAL_CORRECTORS from 1 to 2 through another fresh 0.12 s rim-onset screen."
     },
     "completion_claim": "This is a rejected 0.12 s non-orthogonal-corrector screen, not a passed hold, smoke run, or completed reproduction."
+  },
+  "tight_pressure_maxco_0p15_nonortho_2_screen_0p12_s": {
+    "status": "rejected_earlier_rim_exterior_gas_hotspot",
+    "source_commit": "075a263",
+    "purpose": "Test whether raising only CASEB_N_NON_ORTHOGONAL_CORRECTORS from 1 to 2 on the admitted baseline suppresses the delayed rim exterior-gas mode through the 0.12 s onset window.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "hydrostatic_initialization": "discrete",
+      "hydrostatic_correctors": 10,
+      "pressure_final_tolerance": 1e-10,
+      "n_outer_correctors": 1,
+      "n_pressure_correctors": 2,
+      "n_non_orthogonal_correctors": 2,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.15,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "field_write_interval_s": 0.01,
+      "requested_end_time_s": 0.12
+    },
+    "clean_run_result_0p12_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.1199968361,
+      "postprocessed_probe_duration_s": 0.11999684,
+      "execution_time_s": 20250.54,
+      "clock_time_s": 28271,
+      "final_delta_t_s": 8.4054303e-06,
+      "maximum_courant_number": 0.16254421,
+      "maximum_interface_courant_number": 0.15442217,
+      "maximum_capillary_number": 0.25539783,
+      "Hstar_peak_to_peak": 0.0009475453905302134,
+      "Yfs_star_max_drift": 0.0024590163934427034,
+      "gas_mass_error_pct_max_abs": 4.001495380443298e-06,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "final_logged_velocity_m_per_s": 1.8405563,
+      "final_logged_velocity_location_m": [
+        3.5246578,
+        0.65725576,
+        -0.00011479415
+      ],
+      "final_logged_alpha_water": 0.0,
+      "final_logged_curvature_per_m": 0.0,
+      "final_logged_cell": 37500,
+      "final_logged_proc": 2
+    },
+    "logged_velocity_history_m_per_s": {
+      "0.009985": {
+        "U": 1.9664,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.019985": {
+        "U": 1.0128,
+        "y_m": 0.404025,
+        "mode": "free_surface"
+      },
+      "0.029995": {
+        "U": 1.7599,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.040007": {
+        "U": 1.3075,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.049993": {
+        "U": 0.872,
+        "y_m": 0.404409,
+        "mode": "free_surface"
+      },
+      "0.060005": {
+        "U": 1.1735,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.070006": {
+        "U": 1.0978,
+        "y_m": 0.404025,
+        "mode": "free_surface"
+      },
+      "0.080006": {
+        "U": 1.2453,
+        "y_m": 0.657367,
+        "mode": "rim_exterior_gas"
+      },
+      "0.090005": {
+        "U": 1.3885,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      },
+      "0.100001": {
+        "U": 1.54,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      },
+      "0.110001": {
+        "U": 1.6904,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      },
+      "0.119997": {
+        "U": 1.8406,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      }
+    },
+    "interpretation": {
+      "finding": "nNonOrthogonalCorrectors=2 advanced, rather than delayed, rim onset. Free-surface hotspots persisted only through 0.070 s; from 0.080 s the same pure-gas rim cell (proc=2, cell=37500, y=0.657 m) locked on and grew monotonically 1.245 -> 1.389 -> 1.540 -> 1.690 -> 1.841 m/s by 0.120 s with zero curvature.",
+      "pressure_caveat": "Transducer Hstar peak-to-peak was only 0.000948, so pressure drift alone would again falsely clear the candidate.",
+      "comparison": "Relative to nNonOrthogonalCorrectors=1 (rim from 0.110 s) and the rejected PIMPLE stack (rim from 0.090 s), non-orthogonal correctors=2 moved sustained rim onset earlier to 0.080 s while ending at the same final rim velocity (~1.84 m/s). The non-orthogonal-corrector axis is exhausted for this onset window.",
+      "decision": "Reject nNonOrthogonalCorrectors=2. Do not promote it or start a 1.0 s hold with this setting. Leave the non-orthogonal-corrector axis and revert to the admitted baseline (nNonOrthogonalCorrectors=0).",
+      "next_action": "Keep the admitted baseline (nCorrectors=2, nOuterCorrectors=1, nNonOrthogonalCorrectors=0) and tighten only CASEB_MAX_CO from 0.15 to 0.10 through a fresh 0.12 s rim-onset screen."
+    },
+    "completion_claim": "This is a rejected 0.12 s non-orthogonal-corrector screen, not a passed hold, smoke run, or completed reproduction."
   }
 }

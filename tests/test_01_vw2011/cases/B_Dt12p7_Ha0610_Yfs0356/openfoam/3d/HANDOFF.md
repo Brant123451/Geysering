@@ -519,6 +519,21 @@ timestep controls.
     Do not promote `nNonOrthogonalCorrectors=1`.  Next raise only
     `CASEB_N_NON_ORTHOGONAL_CORRECTORS` from 1 to 2 on the admitted baseline
     through another fresh 0.12 s rim-onset screen.
+38. The fresh `nNonOrthogonalCorrectors=2` 0.12 s screen completed and was
+    rejected:
+    * solver reached 0.119997 s; observed global/interface Courant maxima were
+      0.163/0.154;
+    * free-surface hotspots persisted only through 0.070 s; from 0.080 s the
+      same pure-gas rim cell (proc=2, cell=37500, \(y=0.657\) m) locked on and
+      grew monotonically
+      \(1.245\rightarrow1.389\rightarrow1.540\rightarrow1.690\rightarrow1.841\)
+      m/s by 0.120 s with zero curvature;
+    * \(H^*\) peak-to-peak was only 0.000948, again a false pressure-only clear.
+    Do not promote `nNonOrthogonalCorrectors=2`.  The non-orthogonal-corrector
+    axis is exhausted for this onset window (and `=2` advanced onset relative
+    to `=1`).  Revert to the admitted baseline (`nNonOrthogonalCorrectors=0`)
+    and tighten only `CASEB_MAX_CO` from 0.15 to 0.10 through a fresh 0.12 s
+    rim-onset screen.
 
 ## Still required
 
@@ -551,9 +566,10 @@ The scientific reproduction is **not complete**.  Continue in this order:
    full-hold continuation was rejected at about 0.117 s for a growing rim
    exterior-gas hotspot despite a falsely calm transducer \(H^*\).  Isolated
    `nCorrectors=3`, isolated `nOuterCorrectors=2`, their stack, and
-   `nNonOrthogonalCorrectors=1` 0.12 s screens are all rejected for the same
-   growing rim exterior-gas mode (non-ortho=1 only delayed onset to 0.110 s).
-   Next raise only `CASEB_N_NON_ORTHOGONAL_CORRECTORS` from 1 to 2 on the
+   `nNonOrthogonalCorrectors=1|2` 0.12 s screens are all rejected for the same
+   growing rim exterior-gas mode (`=1` delayed onset to 0.110 s; `=2` advanced
+   onset to 0.080 s; both end near 1.84 m/s).  Leave the non-orthogonal-
+   corrector axis.  Next tighten only `CASEB_MAX_CO` from 0.15 to 0.10 on the
    admitted baseline through a fresh 0.12 s rim-onset screen before any new
    1.0 s hold.
    Extend a candidate past the 0.04 s

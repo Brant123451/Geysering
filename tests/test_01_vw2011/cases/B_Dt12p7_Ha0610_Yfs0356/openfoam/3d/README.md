@@ -262,9 +262,13 @@ zero curvature and \(H^*\) peak-to-peak only 0.000852.  Leave the
 PIMPLE-coupling axis.  Raising only `CASEB_N_NON_ORTHOGONAL_CORRECTORS` from 0
 to 1 delayed rim onset to 0.110 s but the same pure-gas rim cell then grew
 \(1.690\rightarrow1.841\) m/s by 0.120 s with \(H^*\) peak-to-peak only 0.001016.
-That setting is rejected.  The next screen raises only
-`CASEB_N_NON_ORTHOGONAL_CORRECTORS` from 1 to 2 on the admitted baseline through
-another fresh 0.12 s rim-onset window.
+That setting is rejected.  Raising only `CASEB_N_NON_ORTHOGONAL_CORRECTORS` from
+1 to 2 advanced rim onset to 0.080 s and the same pure-gas rim cell then grew
+\(1.245\rightarrow1.389\rightarrow1.540\rightarrow1.690\rightarrow1.841\) m/s by
+0.120 s with \(H^*\) peak-to-peak only 0.000948.  That setting is rejected and
+the non-orthogonal-corrector axis is exhausted.  The next screen tightens only
+`CASEB_MAX_CO` from 0.15 to 0.10 on the admitted baseline
+(`nNonOrthogonalCorrectors=0`) through another fresh 0.12 s rim-onset window.
 
 Thermophysical choices are:
 
