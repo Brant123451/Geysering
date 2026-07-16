@@ -5,14 +5,14 @@
   "paper_run": "B-H3",
   "status": "running_after_stability_restart",
   "check_source": "agent_20min",
-  "updated_at_unix": 1784245337.259091,
-  "updated_at_iso": "2026-07-16T23:42:17Z",
+  "updated_at_unix": 1784246381.784725,
+  "updated_at_iso": "2026-07-16T23:59:41Z",
   "workdir": "/tmp/bh3-study-layered-d08978d/base_nominal",
-  "simulated_time_s": 5.221800635,
+  "simulated_time_s": 5.235222042,
   "event_end_time_s": 13.0,
-  "progress_fraction": 0.40167697192307694,
-  "throughput_sim_s_per_wall_h_since_restart": 0.040911329122799676,
-  "eta_wall_h_at_restart_rate": 190.12336024705803,
+  "progress_fraction": 0.40270938784615384,
+  "throughput_sim_s_per_wall_h_since_restart": 0.040940502056705116,
+  "eta_wall_h_at_restart_rate": 189.66005710543814,
   "n_workers": 4,
   "avg_worker_cpu_pct_lifetime": 62.77,
   "workers": [
@@ -20,25 +20,25 @@
       "pid": 1035969,
       "pcpu": 62.7,
       "pmem": 3.9,
-      "etime": "2-05:05:08"
+      "etime": "2-05:22:32"
     },
     {
       "pid": 1035970,
       "pcpu": 62.8,
       "pmem": 3.7,
-      "etime": "2-05:05:08"
+      "etime": "2-05:22:32"
     },
     {
       "pid": 1035971,
       "pcpu": 62.8,
-      "pmem": 3.6,
-      "etime": "2-05:05:08"
+      "pmem": 3.7,
+      "etime": "2-05:22:32"
     },
     {
       "pid": 1035972,
       "pcpu": 62.8,
-      "pmem": 3.6,
-      "etime": "2-05:05:08"
+      "pmem": 3.8,
+      "etime": "2-05:22:32"
     }
   ],
   "monitor_interval_s": 1200,
@@ -57,13 +57,13 @@
     "status_level": "OK",
     "foam_fatal_in_tail": false,
     "latest_field_write_s": 5.2,
-    "deltaT_last": 3.681379189e-05,
-    "maxCo_last": 0.09995324082,
+    "deltaT_last": 3.703748753e-05,
+    "maxCo_last": 0.0999414143,
     "alpha_max_last": 1.0,
     "advanced": true,
     "stall_count": 0,
     "idle_pct": 0.0,
-    "top_cpu_line": "%Cpu(s): 97.8 us,  2.2 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st"
+    "top_cpu_line": "%Cpu(s):100.0 us,  0.0 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st"
   },
   "paper_consistency_reverified_2026_07_14": true
 }
