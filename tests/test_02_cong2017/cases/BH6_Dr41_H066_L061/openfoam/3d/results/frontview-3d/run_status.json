@@ -1,15 +1,10 @@
 {
+  "stage": "DONE",
   "profile": "base",
-  "purpose": "real y=0 cuttingPlane front-view",
-  "stage": "RUNNING_ACCELERATED",
-  "work_dir": "/tmp/bh6-frontview-3d",
-  "sim_time_s": 3.590967742,
-  "cut_frames": 35,
-  "progress_pct": 27.62,
-  "maxAlphaCo": 0.5,
-  "conservationAudit": false,
-  "eta_note": "~2.5h remaining after accel",
-  "last_watch_utc": "2026-07-16T07:55:33.473167+00:00",
-  "healthy": true,
-  "end_time_s": 13.0
+  "sim_end_s": 13.0,
+  "cut_frames": 130,
+  "gif": "results/animations/BH6_base_real_y0_frontview.gif",
+  "mp4": "results/animations/BH6_base_real_y0_frontview.mp4",
+  "source": "OpenFOAM y=0 cuttingPlane alpha.water (true 3D midplane)",
+  "completed_utc": "2026-07-16T11:48:05.575098+00:00"
 }
