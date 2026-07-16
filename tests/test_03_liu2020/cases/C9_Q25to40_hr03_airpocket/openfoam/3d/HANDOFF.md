@@ -143,15 +143,23 @@ First `Allrun.resume phase1` failed: `latestTime` formatted as
 `1.228942047` while the on-disk directory is `1.2289420474`. Fixed by raising
 `timePrecision` to 14 in controlDict templates / `Allrun.resume`. Phase 1
 restarted from `1.2289420474` with sigma read confirmed; target solver
-`6.75 s` (paper 6.50 s). As of mid-run (~1.33 s) the solver is healthy
-(`maxCo≈0.70`, 4 ranks busy).
+`6.75 s` (paper 6.50 s).
+
+**Live status (UTC 2026-07-16 ~05:57):** solver `t ≈ 4.073 / 6.75`
+(~51.5% of phase1 span from 1.2289), 4-rank `compressibleInterFoam`
+healthy (~293% CPU sum, `maxCo≈0.70`, `Δt~8.6e-5`), no Fatal/SIGFPE.
+`purgeWrite 4` checkpoints on processors include
+`3.2289` / `3.4789` / `3.7289` / `3.9789` (next expected near `4.2289`).
+Wall clock since this phase1 start ~21 h; remaining ~2.68 s of simulation
+at ~0.13–0.14 sim-s per wall-hour.
 
 Inventory-only `|Δ∫sigma|/ref` crossed 1% near solver 1.32 s because tagged
-mass is leaving through `atmosphere`. Full gate
-`dM + ∫(atm+in+gate flux) − ∫source` residual is **~0.005%** (pass). Evidence:
-`case/results-phase1/phase1_midrun_conservation_gate.json`. The 20 min monitor
-was updated to use this flux-corrected residual (`scripts/c9_20min_monitor.sh`
-and `/tmp/c9_20min_monitor.sh`); inventory-only alerts are false positives.
+mass is leaving through `atmosphere` (now `inv_rel ≈ −45.7%`). Full gate
+`dM + ∫(atm+in+gate flux) − ∫source` residual stays **~0.01%–0.05%** (pass).
+Evidence: `case/results-phase1/phase1_midrun_conservation_gate.json`. The
+20 min monitor uses this flux-corrected residual
+(`scripts/c9_20min_monitor.sh`); inventory-only alerts are false positives.
+Latest monitor line `status=OK action=none` at `05:57:35Z`.
 
 Multi-stage **20 min** monitor checks alive/CPU/flux-corrected `∫sigma`/Fatal
 and **auto-resumes** on true hang or unexpected death. Stall detection
