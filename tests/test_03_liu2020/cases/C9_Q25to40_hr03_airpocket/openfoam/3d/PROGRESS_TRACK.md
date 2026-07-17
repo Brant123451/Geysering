@@ -36,3 +36,8 @@ Updated every ~20 minutes while phase1 runs toward solver `6.75`.
 | 2026-07-17T01:49:48Z | 6.727822 | 99.6% | 0.022 | yes | `OK action=none` |
 | 2026-07-17T02:05:19Z | 6.749989 | 100.0% | 0.000 | yes | `OK action=none` |
 | 2026-07-17T02:08:50Z | 6.750000 | 100.0% | 0.000 | done | `phase1 End @ 6.75; render artifacts packaged` |
+| 2026-07-17T02:44:40Z | 6.732166 | full 28.9% / p2 0.0% | 13.518 | yes | `OK action=none` |
+| 2026-07-17T02:46:13Z | 6.730269 | full 28.9% / p2 0.0% | 13.520 | yes | `single resume OK after dual-kill` |
+| 2026-07-17T03:06:47Z | 6.778249 | full 29.2% / p2 0.2% | 13.472 | yes | `OK action=none` |
+| 2026-07-17T03:27:28Z | 6.829177 | full 29.4% / p2 0.6% | 13.421 | yes | `OK action=none` |
+| 2026-07-17T03:48:08Z | 6.878463 | full 29.7% / p2 1.0% | 13.372 | yes | `OK action=none` |
