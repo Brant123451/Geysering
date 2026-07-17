@@ -599,6 +599,7 @@ Cloud Agent 没有旧 VM runtime，必须重新生成。
     场数据/VTK 已归档到 `outputs/sim_data/maxco010_0p12_screen/`（见
     `RENDER_HANDOFF.md`）。下一步须换新数值轴，不能从已拒绝 decomposed state
     续 1.0 s hold。
+37. 按用户要求已启动 **refined** 网格路径：先跑已准入基线（`maxCo=0.15` 等）的 0.12 s 闭阀 rim-onset 筛查（`run_refined_0p12_screen.sh`）。通过后才可进入 refined 1.0 s hold / 10.5 s full。勿使用已拒绝的 `maxCo=0.10`。
 
 十、hold 验收
 

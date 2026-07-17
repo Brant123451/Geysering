@@ -545,6 +545,15 @@ timestep controls.
     Do not promote `maxCo=0.10`.  Do not keep shrinking `maxCo` alone.
     Field/VTK archives for local rendering are under
     `outputs/sim_data/maxco010_0p12_screen/` (see `RENDER_HANDOFF.md`).
+40. At user request, start the **refined-mesh** path even though the base-mesh
+    closed-valve hold is not yet admitted.  The first refined gate is a fresh
+    0.12 s closed-valve rim-onset screen on the admitted numerical baseline
+    (`CASEB_MESH=refined`, `maxCo=0.15`, `nCorrectors=2`, `nOuterCorrectors=1`,
+    `nNonOrthogonalCorrectors=0`, discrete hydrostatic, `p_rghFinal=1e-10`,
+    RDF+plicRDF).  Scripts: `run_refined_0p12_screen.sh`,
+    `watchdog_refined.sh`.  Do **not** use the rejected `maxCo=0.10` setting.
+    A passing refined 0.12 s screen is required before any refined 1.0 s hold
+    or 10.5 s full run.
 
 ## Still required
 

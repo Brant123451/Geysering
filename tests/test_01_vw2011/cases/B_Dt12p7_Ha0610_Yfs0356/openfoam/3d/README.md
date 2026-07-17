@@ -275,6 +275,10 @@ rejected; do not keep shrinking `maxCo` alone.  Field/VTK archives for local
 rendering are under `outputs/sim_data/maxco010_0p12_screen/`
 (`RENDER_HANDOFF.md`).
 
+At user request the **refined** mesh path is now active: first gate is a 0.12 s
+closed-valve rim-onset screen on the admitted baseline (`CASEB_MESH=refined`,
+`maxCo=0.15`, not the rejected `maxCo=0.10`).  See `run_refined_0p12_screen.sh`.
+
 Thermophysical choices are:
 
 * air: `perfectGas`, molecular weight 28.965 kg/kmol, \(C_p=1005\) J/kg/K,
