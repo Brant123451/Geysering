@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
-# Reassemble split handoff archives in this directory.
 set -euo pipefail
 cd "$(dirname "$0")"
-for base in fields_late.tar.xz processors_early.tar.xz processors_late.tar.xz; do
-  parts=( ${base}.part-* )
-  if [[ -e "${parts[0]}" ]]; then
-    echo "Assembling $base from ${#parts[@]} parts"
-    cat "${parts[@]}" > "$base"
+for base in fields_early fields_mid fields_late processors_early processors_late; do
+  if compgen -G "${base}.tar.xz.part-*" > /dev/null; then
+    echo "assembling ${base}.tar.xz"
+    cat ${base}.tar.xz.part-* > "${base}.tar.xz"
   fi
 done
-echo "Done. Extract with: tar -xJf <archive.tar.xz> -C <openfoam/3d>"
+echo "done: assembled any split archives present"
+ls -lh *.tar.xz 2>/dev/null || true

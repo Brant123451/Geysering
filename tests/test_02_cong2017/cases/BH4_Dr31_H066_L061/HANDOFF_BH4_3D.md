@@ -42,14 +42,24 @@
 |---|---|
 | `polyMesh.tar.xz` | `constant/polyMesh`（渲染必需） |
 | `postProcessing.tar.xz` | 探针/通量时序原始 FO 输出 |
-| `fields_early.tar.xz` | 重构后串行场：`0,4,8,9` |
-| `fields_late.tar.xz.part-00/01` | 重构后串行场：`11.41…13.01`（需先拼回） |
-| `processors_*.tar.xz.part-*` | 并行 `processor0..3` 全部分解场（可选，用于 resume/并行可视化） |
+| `fields_early.tar.xz.part-*` | 重构串行场：`0 … 4`（含 0.5/1/1.5/3/3.5） |
+| `fields_mid.tar.xz` | 重构串行场：`7.5 … 9.214`（含气囊启动段） |
+| `fields_late.tar.xz.part-*` | 重构串行场：`11.41 … 13.01`（后期密采样，适合动画） |
+| `processors_*.tar.xz.part-*` | 并行 `processor0..3` 全部分解场（可选，resume/并行可视化） |
 | `reassemble.sh` | 把 `*.part-*` 拼回完整 `.tar.xz` |
-| `MANIFEST.json` / `field_times.txt` | 时间列表与清单 |
+| `MANIFEST.json` / `field_times.txt` | 24 个时间步列表与清单 |
 | `bh4_3d.foam` | 空 sentinel；解压到 case 后可复制/打开 |
 
-> GitHub 单文件约 100 MB 限制，故较大包已按 90 MB 分片。
+已上传的重构串行时间步（共 24 个，覆盖本地全部可用 checkpoint）：
+
+```
+0, 0.5, 1, 1.5, 3, 3.5, 4,
+7.5, 8, 8.5, 9, 9.214,
+11.414, 11.514, 11.614,
+12.214, 12.314, 12.414, 12.514, 12.614, 12.714, 12.814, 12.914, 13.014
+```
+
+> GitHub 单文件约 100 MB 限制，故较大包已按 90 MB 分片。handoff 总包约 **781 MB**。
 
 ## 本地还原与渲染（推荐路径）
 
@@ -62,9 +72,10 @@ HAND=tests/test_02_cong2017/cases/BH4_Dr31_H066_L061/outputs/openfoam3d/handoff
 # 1) 拼回分片
 ( cd "$HAND" && ./reassemble.sh )
 
-# 2) 解压网格 + 重构场（ParaView 最省事）
+# 2) 解压网格 + 全部重构场（ParaView 最省事）
 tar -xJf "$HAND/polyMesh.tar.xz" -C "$CASE/constant"
 tar -xJf "$HAND/fields_early.tar.xz" -C "$CASE"
+tar -xJf "$HAND/fields_mid.tar.xz" -C "$CASE"
 tar -xJf "$HAND/fields_late.tar.xz" -C "$CASE"
 
 # 3) （可选）探针原始数据
@@ -83,6 +94,7 @@ ParaView：
    - 立管中心竖直切片看 `Yfs`（冠上最大约 1.59 m，rim=1.8 m）
    - 外空气域检查是否有水体外溢（本基线无实质喷出）
    - 气囊区域看压力响应（PT1 为口袋体积平均代理）
+   - 动画优先用 `11.4–13.0` 密采样段
 
 ## 模拟说明（给你本地渲染时对齐语义）
 
