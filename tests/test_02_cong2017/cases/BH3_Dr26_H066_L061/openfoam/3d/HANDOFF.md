@@ -1,6 +1,6 @@
 # BH3 base_nominal 交接文档（HANDOFF）
 
-> 状态：**IN_PROGRESS**（约 42.4%；t≈5.517/13 s；更新 2026-07-17T06:02:10Z）  
+> 状态：**IN_PROGRESS**（约 42.6%；t≈5.533/13 s；更新 2026-07-17T06:22:40Z）  
 > 论文工况：Cong, Chan & Lee (2017) Series B **Run B-H3**  
 > Case：`tests/test_02_cong2017/cases/BH3_Dr26_H066_L061/openfoam/3d/`  
 > 分支：`cursor/test2-bh3-3d-e294`  
