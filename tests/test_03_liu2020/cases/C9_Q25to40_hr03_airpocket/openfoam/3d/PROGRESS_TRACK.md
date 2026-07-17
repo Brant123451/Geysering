@@ -54,3 +54,5 @@ Updated every ~20 minutes while phase1 runs toward solver `6.75`.
 | 2026-07-17T07:35:18Z | 7.336693 | full 32.1% / p2 4.3% | 12.913 | yes | `OK action=none` |
 | 2026-07-17T07:55:52Z | 7.376210 | full 32.3% / p2 4.6% | 12.874 | yes | `OK action=none` |
 | 2026-07-17T08:16:13Z | 7.414433 | full 32.5% / p2 4.9% | 12.836 | yes | `OK action=none` |
+| 2026-07-17T08:37:21Z | 7.456868 | full 32.7% / p2 5.2% | 12.793 | yes | `OK action=none` |
+| 2026-07-17T08:58:13Z | 7.494048 | full 32.9% / p2 5.5% | 12.756 | yes | `OK action=none` |
