@@ -137,7 +137,7 @@ Smoke finished at solver `1.25 s` (paper 1.00 s). Conservation gate
 - relative change **−0.360%** (pass `<1%`); atmosphere tagged flux non-zero
 - Restart inventory read via `findInstance` verified
 
-### Phase 1 (in progress)
+### Phase 1 (complete)
 
 First `Allrun.resume phase1` failed: `latestTime` formatted as
 `1.228942047` while the on-disk directory is `1.2289420474`. Fixed by raising
@@ -145,24 +145,17 @@ First `Allrun.resume phase1` failed: `latestTime` formatted as
 restarted from `1.2289420474` with sigma read confirmed; target solver
 `6.75 s` (paper 6.50 s).
 
-**Live status (UTC 2026-07-16 ~11:34):** solver `t ≈ 5.103 / 6.75`
-(~70.2% of phase1 span from 1.2289), 4-rank `compressibleInterFoam`
-healthy (~292% CPU sum, `maxCo≈0.70`), no Fatal/SIGFPE.
-`purgeWrite 4` checkpoints on processors include
-`4.2289` / `4.4789` / `4.7289` / `4.9789` (next expected near `5.2289`).
-Remaining ~1.65 s of simulation at ~0.18–0.19 sim-s per wall-hour.
+**Phase1 COMPLETE (UTC 2026-07-17 ~02:05):** solver reached `endTime 6.75`
+(`End` / `Finalising parallel run`). Flux-corrected conservation residual
+stayed ~`1.6e-4` through the run. Render package for local ParaView is at
+`artifacts/phase1_render/` — see `artifacts/phase1_render/RENDER_HANDOFF.md`.
+Available 3D snapshots: early `0`–`1.2289` and late `5.9789`–`6.7289`
+(`purgeWrite 4` removed mid-run times). Full-time probes/fluxes are in
+`artifacts/phase1_render/postProcessing/`.
 
 Inventory-only `|Δ∫sigma|/ref` crossed 1% near solver 1.32 s because tagged
-mass is leaving through `atmosphere` (now `inv_rel ≈ −45.7%`). Full gate
-`dM + ∫(atm+in+gate flux) − ∫source` residual stays **~0.01%–0.05%** (pass).
-Evidence: `case/results-phase1/phase1_midrun_conservation_gate.json`. The
-20 min monitor uses this flux-corrected residual
-(`scripts/c9_20min_monitor.sh`); inventory-only alerts are false positives.
-Latest monitor line `status=OK action=none` at `05:57:35Z`.
-
-Multi-stage **20 min** monitor checks alive/CPU/flux-corrected `∫sigma`/Fatal
-and **auto-resumes** on true hang or unexpected death. Stall detection
-requires low CPU plus frozen ExecutionTime over a full 20 min window.
+mass left through `atmosphere` (`inv_rel ≈ −46%`). Full gate
+`dM + ∫(atm+in+gate flux) − ∫source` residual stayed **~0.01%–0.05%** (pass).
 
 **Phase 2 and eight eruptions have not yet been reproduced.**
 

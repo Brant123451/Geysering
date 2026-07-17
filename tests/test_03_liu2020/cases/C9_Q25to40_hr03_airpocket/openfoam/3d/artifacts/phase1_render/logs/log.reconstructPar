@@ -1,0 +1,527 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2512                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : _bd2b6720-20260127 OPENFOAM=2512 version=2512
+Arch   : "LSB;label=32;scalar=64"
+Exec   : reconstructPar
+Date   : Jul 17 2026
+Time   : 02:06:25
+Host   : cursor
+PID    : 736927
+I/O    : uncollated
+Case   : /workspace/tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket/openfoam/3d/case
+nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+memory pool : not available
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+
+
+Reconstructing fields
+region=region0
+
+Time = 0.3289420474
+
+Reconstructing FV fields
+
+    Reconstructing volScalarFields
+
+        T
+        T.air
+        T.water
+        alpha.water
+        alpha.water_0
+        alphat
+        k
+        nut
+        omega
+        p
+        p_rgh
+        pocketBodyTracer
+        pocketBodyTracerSigma
+        rho
+
+    Reconstructing volVectorFields
+
+        U
+
+    Reconstructing surfaceScalarFields
+
+        alphaPhi0.water
+        phi
+
+Reconstructing point fields
+
+No point fields
+
+No lagrangian fields
+
+No finite-area fields
+
+Time = 0.5289420474
+
+Reconstructing FV fields
+
+    Reconstructing volScalarFields
+
+        T
+        T.air
+        T.water
+        alpha.water
+        alpha.water_0
+        alphat
+        k
+        nut
+        omega
+        p
+        p_rgh
+        pocketBodyTracer
+        pocketBodyTracerSigma
+        rho
+
+    Reconstructing volVectorFields
+
+        U
+
+    Reconstructing surfaceScalarFields
+
+        alphaPhi0.water
+        phi
+
+Reconstructing point fields
+
+No point fields
+
+No lagrangian fields
+
+No finite-area fields
+
+Time = 0.6289420474
+
+Reconstructing FV fields
+
+    Reconstructing volScalarFields
+
+        T
+        T.air
+        T.water
+        alpha.water
+        alpha.water_0
+        alphat
+        k
+        nut
+        omega
+        p
+        p_rgh
+        pocketBodyTracer
+        pocketBodyTracerSigma
+        rho
+
+    Reconstructing volVectorFields
+
+        U
+
+    Reconstructing surfaceScalarFields
+
+        alphaPhi0.water
+        phi
+
+Reconstructing point fields
+
+No point fields
+
+No lagrangian fields
+
+No finite-area fields
+
+Time = 0.7289420474
+
+Reconstructing FV fields
+
+    Reconstructing volScalarFields
+
+        T
+        T.air
+        T.water
+        alpha.water
+        alpha.water_0
+        alphat
+        k
+        nut
+        omega
+        p
+        p_rgh
+        pocketBodyTracer
+        pocketBodyTracerSigma
+        rho
+
+    Reconstructing volVectorFields
+
+        U
+
+    Reconstructing surfaceScalarFields
+
+        alphaPhi0.water
+        phi
+
+Reconstructing point fields
+
+No point fields
+
+No lagrangian fields
+
+No finite-area fields
+
+Time = 0.8289420474
+
+Reconstructing FV fields
+
+    Reconstructing volScalarFields
+
+        T
+        T.air
+        T.water
+        alpha.water
+        alpha.water_0
+        alphat
+        k
+        nut
+        omega
+        p
+        p_rgh
+        pocketBodyTracer
+        pocketBodyTracerSigma
+        rho
+
+    Reconstructing volVectorFields
+
+        U
+
+    Reconstructing surfaceScalarFields
+
+        alphaPhi0.water
+        phi
+
+Reconstructing point fields
+
+No point fields
+
+No lagrangian fields
+
+No finite-area fields
+
+Time = 0.9289420474
+
+Reconstructing FV fields
+
+    Reconstructing volScalarFields
+
+        T
+        T.air
+        T.water
+        alpha.water
+        alpha.water_0
+        alphat
+        k
+        nut
+        omega
+        p
+        p_rgh
+        pocketBodyTracer
+        pocketBodyTracerSigma
+        rho
+
+    Reconstructing volVectorFields
+
+        U
+
+    Reconstructing surfaceScalarFields
+
+        alphaPhi0.water
+        phi
+
+Reconstructing point fields
+
+No point fields
+
+No lagrangian fields
+
+No finite-area fields
+
+Time = 1.0289420474
+
+Reconstructing FV fields
+
+    Reconstructing volScalarFields
+
+        T
+        T.air
+        T.water
+        alpha.water
+        alpha.water_0
+        alphat
+        k
+        nut
+        omega
+        p
+        p_rgh
+        pocketBodyTracer
+        pocketBodyTracerSigma
+        rho
+
+    Reconstructing volVectorFields
+
+        U
+
+    Reconstructing surfaceScalarFields
+
+        alphaPhi0.water
+        phi
+
+Reconstructing point fields
+
+No point fields
+
+No lagrangian fields
+
+No finite-area fields
+
+Time = 1.1289420474
+
+Reconstructing FV fields
+
+    Reconstructing volScalarFields
+
+        T
+        T.air
+        T.water
+        alpha.water
+        alpha.water_0
+        alphat
+        k
+        nut
+        omega
+        p
+        p_rgh
+        pocketBodyTracer
+        pocketBodyTracerSigma
+        rho
+
+    Reconstructing volVectorFields
+
+        U
+
+    Reconstructing surfaceScalarFields
+
+        alphaPhi0.water
+        phi
+
+Reconstructing point fields
+
+No point fields
+
+No lagrangian fields
+
+No finite-area fields
+
+Time = 1.2289420474
+
+Reconstructing FV fields
+
+    Reconstructing volScalarFields
+
+        T
+        T.air
+        T.water
+        alpha.water
+        alpha.water_0
+        alphat
+        k
+        nut
+        omega
+        p
+        p_rgh
+        pocketBodyTracer
+        pocketBodyTracerSigma
+        rho
+
+    Reconstructing volVectorFields
+
+        U
+
+    Reconstructing surfaceScalarFields
+
+        alphaPhi0.water
+        phi
+
+Reconstructing point fields
+
+No point fields
+
+No lagrangian fields
+
+No finite-area fields
+
+Time = 5.9789420474
+
+Reconstructing FV fields
+
+    Reconstructing volScalarFields
+
+        T
+        T.air
+        T.water
+        alpha.water
+        alpha.water_0
+        alphat
+        k
+        nut
+        omega
+        p
+        p_rgh
+        pocketBodyTracer
+        pocketBodyTracerSigma
+        rho
+
+    Reconstructing volVectorFields
+
+        U
+
+    Reconstructing surfaceScalarFields
+
+        alphaPhi0.water
+        phi
+
+Reconstructing point fields
+
+No point fields
+
+No lagrangian fields
+
+No finite-area fields
+
+Time = 6.2289420474
+
+Reconstructing FV fields
+
+    Reconstructing volScalarFields
+
+        T
+        T.air
+        T.water
+        alpha.water
+        alpha.water_0
+        alphat
+        k
+        nut
+        omega
+        p
+        p_rgh
+        pocketBodyTracer
+        pocketBodyTracerSigma
+        rho
+
+    Reconstructing volVectorFields
+
+        U
+
+    Reconstructing surfaceScalarFields
+
+        alphaPhi0.water
+        phi
+
+Reconstructing point fields
+
+No point fields
+
+No lagrangian fields
+
+No finite-area fields
+
+Time = 6.4789420474
+
+Reconstructing FV fields
+
+    Reconstructing volScalarFields
+
+        T
+        T.air
+        T.water
+        alpha.water
+        alpha.water_0
+        alphat
+        k
+        nut
+        omega
+        p
+        p_rgh
+        pocketBodyTracer
+        pocketBodyTracerSigma
+        rho
+
+    Reconstructing volVectorFields
+
+        U
+
+    Reconstructing surfaceScalarFields
+
+        alphaPhi0.water
+        phi
+
+Reconstructing point fields
+
+No point fields
+
+No lagrangian fields
+
+No finite-area fields
+
+Time = 6.7289420474
+
+Reconstructing FV fields
+
+    Reconstructing volScalarFields
+
+        T
+        T.air
+        T.water
+        alpha.water
+        alpha.water_0
+        alphat
+        k
+        nut
+        omega
+        p
+        p_rgh
+        pocketBodyTracer
+        pocketBodyTracerSigma
+        rho
+
+    Reconstructing volVectorFields
+
+        U
+
+    Reconstructing surfaceScalarFields
+
+        alphaPhi0.water
+        phi
+
+Reconstructing point fields
+
+No point fields
+
+No lagrangian fields
+
+No finite-area fields
+
+
+End
+

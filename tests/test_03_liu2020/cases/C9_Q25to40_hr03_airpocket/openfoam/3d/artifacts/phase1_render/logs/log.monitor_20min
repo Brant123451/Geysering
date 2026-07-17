@@ -1,0 +1,153 @@
+2026-07-15T00:55:28Z monitor_20min: start interval=1200s
+2026-07-15T00:55:28Z alive=1 cpu=44.8% log=log.smoke stage=smoke time=0.5735383597/1.25 exec=9571.7s clock=85288s sigma_t=0.5689420474 sigma_rel=0.000000e+00 status=OK action=none
+2026-07-15T01:15:28Z alive=1 cpu=49.6% log=log.smoke stage=smoke time=0.5879802658/1.25 exec=10767.66s clock=86488s sigma_t=0.5789420474 sigma_rel=0.000000e+00 status=OK action=none
+2026-07-15T01:35:29Z alive=1 cpu=54.4% log=log.smoke stage=smoke time=0.6094559847/1.25 exec=11965.18s clock=87688s sigma_t=0.6089420474 sigma_rel=0.000000e+00 status=OK action=none
+2026-07-15T01:55:29Z alive=1 cpu=59.2% log=log.smoke stage=smoke time=0.625233859/1.25 exec=13162.56s clock=88888s sigma_t=0.6189420474 sigma_rel=0.000000e+00 status=OK action=none
+2026-07-15T02:15:29Z alive=1 cpu=63.6% log=log.smoke stage=smoke time=0.6504134755/1.25 exec=14361.35s clock=90089s sigma_t=0.6489420474 sigma_rel=0.000000e+00 status=OK action=none
+2026-07-15T02:35:30Z alive=1 cpu=68.0% log=log.smoke stage=smoke time=0.6803856139/1.25 exec=15558.22s clock=91289s sigma_t=0.6789420474 sigma_rel=0.000000e+00 status=OK action=none
+2026-07-15T02:57:05Z alive=1 cpu=72.0% log=log.smoke stage=smoke time=0.7070783545/1.25 exec=16665.52s clock=92399s sigma_t=0.6989420474 sigma_rel=0.000000e+00 status=OK action=none
+2026-07-15T03:17:22Z alive=1 cpu=74.8% log=log.smoke stage=smoke time=0.7261236066/1.25 exec=17579.22s clock=93502s sigma_t=0.7189420474 sigma_rel=0.000000e+00 status=OK action=none
+2026-07-15T03:37:36Z alive=1 cpu=77.7% log=log.smoke stage=smoke time=0.7436833197/1.25 exec=18501.92s clock=94727s sigma_t=0.7389420474 sigma_rel=0.000000e+00 status=OK action=none
+2026-07-15T03:57:51Z alive=1 cpu=80.4% log=log.smoke stage=smoke time=0.7617745677/1.25 exec=19410.34s clock=95926s sigma_t=0.7589420474 sigma_rel=0.000000e+00 status=OK action=none
+2026-07-15T04:18:07Z alive=1 cpu=83.5% log=log.smoke stage=smoke time=0.7813415007/1.25 exec=20345.73s clock=97169s sigma_t=0.7789420474 sigma_rel=0.000000e+00 status=OK action=none
+2026-07-15T04:38:22Z alive=1 cpu=86.0% log=log.smoke stage=smoke time=0.8043765784/1.25 exec=21252.93s clock=98357s sigma_t=0.7989420474 sigma_rel=0.000000e+00 status=OK action=none
+2026-07-15T04:58:38Z alive=1 cpu=88.8% log=log.smoke stage=smoke time=0.8313788651/1.25 exec=22177.45s clock=99589s sigma_t=0.8289420474 sigma_rel=0.000000e+00 status=OK action=none
+2026-07-15T04:59:52Z AGENT: recovered from false RESUME_STALL; resumed from 0.8289420474; wake checks now use mon-interval Δ
+2026-07-15T05:00:22Z monitor_20min: start interval=1200s
+2026-07-15T05:00:22Z alive=1 cpu=394.6% log=log.smoke stage=smoke time=0.8314661702/1.25 exec=76.94s clock=78s sigma_t=0.8289420474 sigma_rel=0.000000e+00 status=OK action=none
+2026-07-15T05:21:31Z alive=1 cpu=262.8% log=log.smoke stage=smoke time=0.8592888273/1.25 exec=884.31s clock=889s sigma_t=0.8589420474 sigma_rel=0.000000e+00 status=OK action=none
+2026-07-15T05:42:16Z alive=1 cpu=277.6% log=log.smoke stage=smoke time=0.8935659845/1.25 exec=1798.63s clock=2264s sigma_t=0.8889420474 sigma_rel=0.000000e+00 status=OK action=none
+2026-07-15T06:02:53Z alive=1 cpu=281.9% log=log.smoke stage=smoke time=0.9277920474/1.25 exec=2698.7s clock=3495s sigma_t=0.9189420474 sigma_rel=0.000000e+00 status=OK action=none
+2026-07-15T06:23:08Z alive=1 cpu=288.3% log=log.smoke stage=smoke time=0.9672084618/1.25 exec=3632.7s clock=4767s sigma_t=0.9589420474 sigma_rel=0.000000e+00 status=OK action=none
+2026-07-15T06:43:46Z alive=1 cpu=289.1% log=log.smoke stage=smoke time=1.01059474/1.25 exec=4541.88s clock=5955s sigma_t=1.008942047 sigma_rel=0.000000e+00 status=OK action=none
+2026-07-15T07:04:25Z alive=1 cpu=289.5% log=log.smoke stage=smoke time=1.0570624992/1.25 exec=5442.66s clock=7185s sigma_t=1.048942047 sigma_rel=0.000000e+00 status=OK action=none
+2026-07-15T07:24:39Z alive=1 cpu=291.5% log=log.smoke stage=smoke time=1.0891241635/1.25 exec=6363.29s clock=8445s sigma_t=1.088942047 sigma_rel=5.380855e-08 status=OK action=none
+2026-07-15T07:45:18Z alive=1 cpu=291.5% log=log.smoke stage=smoke time=1.1190478675/1.25 exec=7270.84s clock=9645s sigma_t=1.118942047 sigma_rel=1.064214e-06 status=OK action=none
+2026-07-15T08:05:32Z alive=1 cpu=292.0% log=log.smoke stage=smoke time=1.1635334703/1.25 exec=8170.04s clock=10877s sigma_t=1.158942047 sigma_rel=4.391376e-05 status=OK action=none
+2026-07-15T08:26:13Z alive=1 cpu=292.3% log=log.smoke stage=smoke time=1.199062148/1.25 exec=9082.52s clock=12430s sigma_t=1.198942047 sigma_rel=5.547841e-04 status=OK action=none
+2026-07-15T08:46:40Z alive=1 cpu=292.7% log=log.smoke stage=smoke time=1.2344019874/1.25 exec=9988.76s clock=13337s sigma_t=1.228942047 sigma_rel=1.970654e-03 status=OK action=none
+2026-07-15T09:06:41Z alive=1 cpu=398.1% log=log.phase1 stage=phase1 time=1.2400685089648/1.25 exec=345.88s clock=348s sigma_t=1.248942047 sigma_rel=3.604940e-03 status=OK action=none
+2026-07-15T09:26:41Z alive=1 cpu=258.5% log=log.phase1 stage=phase1 time=1.2655759028845/1.25 exec=999.94s clock=1547s sigma_t=1.258942047 sigma_rel=4.569153e-03 status=OK action=none
+2026-07-15T09:46:42Z alive=1 cpu=319.8% log=log.phase1 stage=phase1 time=1.3001962527419/1.25 exec=2196.71s clock=2749s sigma_t=1.298942047 sigma_rel=8.770351e-03 status=OK action=none
+2026-07-15T10:06:43Z alive=1 cpu=308.2% log=log.phase1 stage=phase1 time=1.3291577010555/1.25 exec=3041.35s clock=3949s sigma_t=1.328942047 sigma_rel=1.127470e-02 status=ALERT_SIGMA action=investigate_sigma
+2026-07-15T10:06:43Z NEED_HUMAN_OR_AGENT: investigate_sigma — not auto-destroying checkpoint
+2026-07-15T10:18:33Z monitor_20min: start interval=1200s (flux-corrected sigma gate)
+2026-07-15T10:18:33Z ACTION: re-arm smoke→phase1 chain
+2026-07-15T10:18:33Z alive=1 cpu=281.5% log=log.phase1 stage=phase1 time=1.3371186368392/6.75 exec=3277.93s clock=4658s sigma_t=1.328942047 inv_rel=1.127470e-02 bal_rel=5.200145e-05 status=OK action=none
+2026-07-15T10:19:18Z monitor_20min: start interval=1200s (flux-corrected sigma gate)
+2026-07-15T10:19:18Z alive=1 cpu=282.7% log=log.phase1 stage=phase1 time=1.3386109449361/6.75 exec=3322.81s clock=4704s sigma_t=1.328942047 inv_rel=1.127470e-02 bal_rel=5.200145e-05 status=OK action=none
+2026-07-15T10:40:21Z alive=1 cpu=273.1% log=log.phase1 stage=phase1 time=1.3605618789777/6.75 exec=4074.76s clock=5458s sigma_t=1.358942047 inv_rel=1.310444e-02 bal_rel=5.366639e-05 status=OK action=none
+2026-07-15T11:00:37Z alive=1 cpu=277.5% log=log.phase1 stage=phase1 time=1.3861698200626/6.75 exec=4978.99s clock=6876s sigma_t=1.378942047 inv_rel=1.403404e-02 bal_rel=5.522820e-05 status=OK action=none
+2026-07-15T11:21:00Z alive=1 cpu=280.4% log=log.phase1 stage=phase1 time=1.4112006618057/6.75 exec=5890.86s clock=8099s sigma_t=1.408942047 inv_rel=1.508602e-02 bal_rel=5.162354e-05 status=OK action=none
+2026-07-15T11:41:17Z alive=1 cpu=283.1% log=log.phase1 stage=phase1 time=1.4357113253094/6.75 exec=6811.31s clock=9329s sigma_t=1.428942047 inv_rel=1.560347e-02 bal_rel=5.262043e-05 status=OK action=none
+2026-07-15T12:01:35Z alive=1 cpu=285.0% log=log.phase1 stage=phase1 time=1.4630174808697/6.75 exec=7718.37s clock=10533s sigma_t=1.458942047 inv_rel=1.622372e-02 bal_rel=4.095920e-05 status=OK action=none
+2026-07-15T12:21:50Z alive=1 cpu=286.7% log=log.phase1 stage=phase1 time=1.4927042107284/6.75 exec=8638.27s clock=11764s sigma_t=1.488942047 inv_rel=1.668082e-02 bal_rel=3.057474e-05 status=OK action=none
+2026-07-15T12:42:05Z alive=1 cpu=287.5% log=log.phase1 stage=phase1 time=1.5243374326877/6.75 exec=9540.06s clock=12960s sigma_t=1.518942047 inv_rel=1.710782e-02 bal_rel=2.970469e-05 status=OK action=none
+2026-07-15T13:02:29Z alive=1 cpu=288.7% log=log.phase1 stage=phase1 time=1.556133938926/6.75 exec=10455.96s clock=14190s sigma_t=1.548942047 inv_rel=1.764050e-02 bal_rel=2.940333e-05 status=OK action=none
+2026-07-15T13:22:59Z alive=1 cpu=289.5% log=log.phase1 stage=phase1 time=1.5872478665835/6.75 exec=11377.4s clock=15420s sigma_t=1.578942047 inv_rel=1.831884e-02 bal_rel=2.930186e-05 status=OK action=none
+2026-07-15T13:43:17Z alive=1 cpu=290.4% log=log.phase1 stage=phase1 time=1.6174977884229/6.75 exec=12298.6s clock=16651s sigma_t=1.608942047 inv_rel=1.923989e-02 bal_rel=2.671820e-05 status=OK action=none
+2026-07-15T14:03:33Z alive=1 cpu=291.1% log=log.phase1 stage=phase1 time=1.6431175146044/6.75 exec=13202.91s clock=17850s sigma_t=1.638942047 inv_rel=2.039379e-02 bal_rel=2.877158e-05 status=OK action=none
+2026-07-15T14:23:49Z alive=1 cpu=291.9% log=log.phase1 stage=phase1 time=1.6707539432395/6.75 exec=14128.46s clock=19086s sigma_t=1.668942047 inv_rel=2.170557e-02 bal_rel=2.953257e-05 status=OK action=none
+2026-07-15T14:44:20Z alive=1 cpu=291.9% log=log.phase1 stage=phase1 time=1.698194248124/6.75 exec=15032.28s clock=20282s sigma_t=1.688942047 inv_rel=2.270387e-02 bal_rel=3.803219e-05 status=OK action=none
+2026-07-15T15:04:37Z alive=1 cpu=292.2% log=log.phase1 stage=phase1 time=1.7243293713437/6.75 exec=15934.72s clock=21512s sigma_t=1.718942047 inv_rel=2.504066e-02 bal_rel=3.072381e-05 status=OK action=none
+2026-07-15T15:24:55Z alive=1 cpu=292.7% log=log.phase1 stage=phase1 time=1.7497307289123/6.75 exec=16851.03s clock=22742s sigma_t=1.748942047 inv_rel=2.898884e-02 bal_rel=3.291404e-05 status=OK action=none
+2026-07-15T15:45:14Z alive=1 cpu=293.0% log=log.phase1 stage=phase1 time=1.7750485439226/6.75 exec=17760.74s clock=23953s sigma_t=1.768942047 inv_rel=3.255563e-02 bal_rel=3.800245e-05 status=OK action=none
+2026-07-15T16:05:36Z alive=1 cpu=293.1% log=log.phase1 stage=phase1 time=1.8002552092014/6.75 exec=18670.3s clock=25172s sigma_t=1.798942047 inv_rel=3.991889e-02 bal_rel=4.894532e-05 status=OK action=none
+2026-07-15T16:26:00Z alive=1 cpu=293.5% log=log.phase1 stage=phase1 time=1.8239103394088/6.75 exec=19587.47s clock=26404s sigma_t=1.818942047 inv_rel=4.651198e-02 bal_rel=8.892749e-05 status=OK action=none
+2026-07-15T16:46:24Z alive=1 cpu=293.9% log=log.phase1 stage=phase1 time=1.8476407646695/6.75 exec=20519.77s clock=27644s sigma_t=1.838942047 inv_rel=5.542496e-02 bal_rel=1.243782e-04 status=OK action=none
+2026-07-15T17:06:43Z alive=1 cpu=293.9% log=log.phase1 stage=phase1 time=1.8653421639012/6.75 exec=21420.12s clock=28833s sigma_t=1.858942047 inv_rel=6.880875e-02 bal_rel=1.223038e-04 status=OK action=none
+2026-07-15T17:27:00Z alive=1 cpu=294.3% log=log.phase1 stage=phase1 time=1.8823628234039/6.75 exec=22331.68s clock=30063s sigma_t=1.878942047 inv_rel=8.567955e-02 bal_rel=1.206169e-05 status=OK action=none
+2026-07-15T17:47:18Z alive=1 cpu=294.7% log=log.phase1 stage=phase1 time=1.9099757770928/6.75 exec=23255.94s clock=31293s sigma_t=1.908942047 inv_rel=1.056476e-01 bal_rel=9.839814e-05 status=OK action=none
+2026-07-15T18:07:40Z alive=1 cpu=294.7% log=log.phase1 stage=phase1 time=1.9427561249619/6.75 exec=24169.85s clock=32500s sigma_t=1.938942047 inv_rel=1.205257e-01 bal_rel=5.926706e-05 status=OK action=none
+2026-07-15T18:27:57Z alive=1 cpu=295.1% log=log.phase1 stage=phase1 time=1.9778511383091/6.75 exec=25085.21s clock=33724s sigma_t=1.968942047 inv_rel=1.303519e-01 bal_rel=1.224557e-04 status=OK action=none
+2026-07-15T18:48:17Z alive=1 cpu=295.1% log=log.phase1 stage=phase1 time=2.0051340254597/6.75 exec=25983.06s clock=34924s sigma_t=1.998942047 inv_rel=1.415983e-01 bal_rel=6.473882e-05 status=OK action=none
+2026-07-15T19:08:36Z alive=1 cpu=295.1% log=log.phase1 stage=phase1 time=2.0420834031406/6.75 exec=26893.09s clock=36155s sigma_t=2.038942047 inv_rel=1.574454e-01 bal_rel=1.604069e-04 status=OK action=none
+2026-07-15T19:28:52Z alive=1 cpu=295.4% log=log.phase1 stage=phase1 time=2.0740747315761/6.75 exec=27813.06s clock=37385s sigma_t=2.068942047 inv_rel=1.736954e-01 bal_rel=6.414187e-05 status=OK action=none
+2026-07-15T19:49:27Z alive=1 cpu=295.1% log=log.phase1 stage=phase1 time=2.1091080992491/6.75 exec=28717.26s clock=38585s sigma_t=2.108942047 inv_rel=1.940431e-01 bal_rel=7.424565e-05 status=OK action=none
+2026-07-15T20:10:07Z alive=1 cpu=295.1% log=log.phase1 stage=phase1 time=2.14946644323/6.75 exec=29618.42s clock=39816s sigma_t=2.148942047 inv_rel=2.139160e-01 bal_rel=2.241537e-04 status=OK action=none
+2026-07-15T20:30:25Z alive=1 cpu=295.3% log=log.phase1 stage=phase1 time=2.1790525896979/6.75 exec=30535.88s clock=41076s sigma_t=2.178942047 inv_rel=2.388232e-01 bal_rel=1.880009e-04 status=OK action=none
+2026-07-15T20:51:08Z alive=1 cpu=295.1% log=log.phase1 stage=phase1 time=2.2101506268427/6.75 exec=31438.05s clock=42276s sigma_t=2.208942047 inv_rel=2.615569e-01 bal_rel=2.157358e-04 status=OK action=none
+2026-07-15T21:11:31Z alive=1 cpu=295.5% log=log.phase1 stage=phase1 time=2.2620251733914/6.75 exec=32366.98s clock=43547s sigma_t=2.258942047 inv_rel=2.770465e-01 bal_rel=3.632610e-04 status=OK action=none
+2026-07-15T21:31:53Z alive=1 cpu=295.4% log=log.phase1 stage=phase1 time=2.3110206622807/6.75 exec=33265.38s clock=44737s sigma_t=2.308942047 inv_rel=2.881316e-01 bal_rel=5.617038e-04 status=OK action=none
+2026-07-15T22:01:13Z alive=1 cpu=291.9% log=log.phase1 stage=phase1 time=2.3683911989637/6.75 exec=34172.56s clock=45969s sigma_t=2.358942047 inv_rel=2.992486e-01 bal_rel=4.139776e-04 status=OK action=none
+2026-07-15T22:21:33Z alive=1 cpu=292.3% log=log.phase1 stage=phase1 time=2.4331531567527/6.75 exec=35087.36s clock=47737s sigma_t=2.428942047 inv_rel=3.103509e-01 bal_rel=8.456841e-04 status=OK action=none
+2026-07-15T22:41:53Z alive=1 cpu=292.5% log=log.phase1 stage=phase1 time=2.503162553259/6.75 exec=36013.99s clock=48968s sigma_t=2.498942047 inv_rel=3.144406e-01 bal_rel=8.278390e-04 status=OK action=none
+2026-07-15T23:02:12Z alive=1 cpu=292.7% log=log.phase1 stage=phase1 time=2.5844591293543/6.75 exec=36933.08s clock=50181s sigma_t=2.578942047 inv_rel=3.300498e-01 bal_rel=5.584201e-04 status=OK action=none
+2026-07-15T23:22:30Z alive=1 cpu=292.9% log=log.phase1 stage=phase1 time=2.6646335498751/6.75 exec=37850.09s clock=51397s sigma_t=2.658942047 inv_rel=3.552460e-01 bal_rel=5.681027e-04 status=OK action=none
+2026-07-15T23:43:14Z alive=1 cpu=292.9% log=log.phase1 stage=phase1 time=2.7455003071016/6.75 exec=38763.06s clock=52611s sigma_t=2.738942047 inv_rel=3.835755e-01 bal_rel=5.688060e-04 status=OK action=none
+2026-07-16T00:03:33Z alive=1 cpu=293.1% log=log.phase1 stage=phase1 time=2.8224398040243/6.75 exec=39668.62s clock=53848s sigma_t=2.818942047 inv_rel=4.038170e-01 bal_rel=6.130246e-04 status=OK action=none
+2026-07-16T00:23:52Z alive=1 cpu=293.1% log=log.phase1 stage=phase1 time=2.9068028903604/6.75 exec=40583.61s clock=55077s sigma_t=2.898942047 inv_rel=4.150087e-01 bal_rel=1.026402e-03 status=OK action=none
+2026-07-16T00:44:18Z alive=1 cpu=293.1% log=log.phase1 stage=phase1 time=2.9906603416209/6.75 exec=41479.18s clock=56277s sigma_t=2.988942047 inv_rel=4.240477e-01 bal_rel=1.405907e-04 status=OK action=none
+2026-07-16T01:04:59Z alive=1 cpu=293.1% log=log.phase1 stage=phase1 time=3.0754211327691/6.75 exec=42393.53s clock=57521s sigma_t=3.068942047 inv_rel=4.339372e-01 bal_rel=2.004053e-04 status=OK action=none
+2026-07-16T01:25:21Z alive=1 cpu=293.5% log=log.phase1 stage=phase1 time=3.1587913386527/6.75 exec=43319.43s clock=58774s sigma_t=3.148942047 inv_rel=4.426366e-01 bal_rel=2.041005e-04 status=OK action=none
+2026-07-16T01:46:12Z alive=1 cpu=293.3% log=log.phase1 stage=phase1 time=3.239960776947/6.75 exec=44221.73s clock=59974s sigma_t=3.238942047 inv_rel=4.458779e-01 bal_rel=2.050966e-04 status=OK action=none
+2026-07-16T02:07:07Z alive=1 cpu=293.2% log=log.phase1 stage=phase1 time=3.3101694457627/6.75 exec=45135.26s clock=61235s sigma_t=3.308942047 inv_rel=4.474524e-01 bal_rel=2.849133e-04 status=OK action=none
+2026-07-16T02:28:02Z alive=1 cpu=293.3% log=log.phase1 stage=phase1 time=3.3821588216104/6.75 exec=46059.68s clock=62501s sigma_t=3.378942047 inv_rel=4.493035e-01 bal_rel=2.816711e-04 status=OK action=none
+2026-07-16T02:48:50Z alive=1 cpu=293.4% log=log.phase1 stage=phase1 time=3.4518635205011/6.75 exec=46984.88s clock=63756s sigma_t=3.448942047 inv_rel=4.511096e-01 bal_rel=2.384898e-04 status=OK action=none
+2026-07-16T03:09:43Z alive=1 cpu=293.4% log=log.phase1 stage=phase1 time=3.5250552549472/6.75 exec=47901.69s clock=64997s sigma_t=3.518942047 inv_rel=4.533215e-01 bal_rel=3.258984e-04 status=OK action=none
+2026-07-16T03:30:33Z alive=1 cpu=293.3% log=log.phase1 stage=phase1 time=3.5962958342852/6.75 exec=48815.82s clock=66246s sigma_t=3.588942047 inv_rel=4.539086e-01 bal_rel=1.371649e-04 status=OK action=none
+2026-07-16T03:51:22Z alive=1 cpu=293.4% log=log.phase1 stage=phase1 time=3.6598666379052/6.75 exec=49738.46s clock=67506s sigma_t=3.658942047 inv_rel=4.549906e-01 bal_rel=1.844232e-04 status=OK action=none
+2026-07-16T04:12:23Z alive=1 cpu=293.2% log=log.phase1 stage=phase1 time=3.7187258311838/6.75 exec=50642.88s clock=68737s sigma_t=3.708942047 inv_rel=4.557731e-01 bal_rel=1.457950e-04 status=OK action=none
+2026-07-16T04:33:19Z alive=1 cpu=293.1% log=log.phase1 stage=phase1 time=3.7924278555377/6.75 exec=51547.51s clock=69997s sigma_t=3.788942047 inv_rel=4.563392e-01 bal_rel=1.238481e-04 status=OK action=none
+2026-07-16T04:54:12Z alive=1 cpu=293.1% log=log.phase1 stage=phase1 time=3.8604810540941/6.75 exec=52455.31s clock=71257s sigma_t=3.858942047 inv_rel=4.569767e-01 bal_rel=1.227234e-04 status=OK action=none
+2026-07-16T05:15:25Z alive=1 cpu=293.1% log=log.phase1 stage=phase1 time=3.9271839078651/6.75 exec=53371.04s clock=72518s sigma_t=3.918942047 inv_rel=4.571036e-01 bal_rel=1.228401e-04 status=OK action=none
+2026-07-16T05:36:36Z alive=1 cpu=292.9% log=log.phase1 stage=phase1 time=4.0027476420054/6.75 exec=54273.81s clock=73777s sigma_t=3.998942047 inv_rel=4.571746e-01 bal_rel=1.411521e-04 status=OK action=none
+2026-07-16T05:57:35Z alive=1 cpu=292.8% log=log.phase1 stage=phase1 time=4.0729420474/6.75 exec=55197.21s clock=75068s sigma_t=4.068942047 inv_rel=4.571760e-01 bal_rel=1.423870e-04 status=OK action=none
+2026-07-16T06:18:31Z alive=1 cpu=292.9% log=log.phase1 stage=phase1 time=4.1400482272857/6.75 exec=56125.63s clock=76333s sigma_t=4.138942047 inv_rel=4.571760e-01 bal_rel=1.423870e-04 status=OK action=none
+2026-07-16T06:41:16Z alive=1 cpu=292.3% log=log.phase1 stage=phase1 time=4.2093357481874/6.75 exec=57023.38s clock=77559s sigma_t=4.208942047 inv_rel=4.583630e-01 bal_rel=1.855122e-04 status=OK action=none
+2026-07-16T07:01:48Z alive=1 cpu=292.4% log=log.phase1 stage=phase1 time=4.2773306584042/6.75 exec=57935.4s clock=78938s sigma_t=4.268942047 inv_rel=4.588338e-01 bal_rel=1.628270e-04 status=OK action=none
+2026-07-16T07:22:40Z alive=1 cpu=292.3% log=log.phase1 stage=phase1 time=4.3353077661953/6.75 exec=58847.79s clock=80169s sigma_t=4.328942047 inv_rel=4.595141e-01 bal_rel=1.619014e-04 status=OK action=none
+2026-07-16T07:47:38Z alive=1 cpu=291.5% log=log.phase1 stage=phase1 time=4.3936032711452/6.75 exec=59768s clock=82005s sigma_t=4.388942047 inv_rel=4.598793e-01 bal_rel=1.569112e-04 status=OK action=none
+2026-07-16T08:08:04Z alive=1 cpu=291.9% log=log.phase1 stage=phase1 time=4.4532541864374/6.75 exec=60705.08s clock=83232s sigma_t=4.448942047 inv_rel=4.602096e-01 bal_rel=1.562833e-04 status=OK action=none
+2026-07-16T08:30:47Z alive=1 cpu=291.3% log=log.phase1 stage=phase1 time=4.5293283319793/6.75 exec=61594.67s clock=84130s sigma_t=4.528942047 inv_rel=4.602292e-01 bal_rel=1.557163e-04 status=OK action=none
+2026-07-16T08:51:23Z alive=1 cpu=291.4% log=log.phase1 stage=phase1 time=4.5956363921514/6.75 exec=62509.62s clock=85511s sigma_t=4.588942047 inv_rel=4.602566e-01 bal_rel=1.558449e-04 status=OK action=none
+2026-07-16T09:11:55Z alive=1 cpu=291.5% log=log.phase1 stage=phase1 time=4.6612507874681/6.75 exec=63421.17s clock=86746s sigma_t=4.658942047 inv_rel=4.602590e-01 bal_rel=1.557217e-04 status=OK action=none
+2026-07-16T09:32:15Z alive=1 cpu=291.5% log=log.phase1 stage=phase1 time=4.7267666088035/6.75 exec=64327.78s clock=87971s sigma_t=4.718942047 inv_rel=4.602590e-01 bal_rel=1.557217e-04 status=OK action=none
+2026-07-16T09:52:29Z alive=1 cpu=291.6% log=log.phase1 stage=phase1 time=4.7892914405592/6.75 exec=65245.26s clock=89201s sigma_t=4.788942047 inv_rel=4.602605e-01 bal_rel=1.562187e-04 status=OK action=none
+2026-07-16T10:12:46Z alive=1 cpu=291.8% log=log.phase1 stage=phase1 time=4.8493888683275/6.75 exec=66149.31s clock=90402s sigma_t=4.848942047 inv_rel=4.602638e-01 bal_rel=1.563048e-04 status=OK action=none
+2026-07-16T10:33:00Z alive=1 cpu=291.9% log=log.phase1 stage=phase1 time=4.9135201489258/6.75 exec=67065.69s clock=91632s sigma_t=4.908942047 inv_rel=4.602643e-01 bal_rel=1.562831e-04 status=OK action=none
+2026-07-16T10:53:22Z alive=1 cpu=291.9% log=log.phase1 stage=phase1 time=4.9720039943027/6.75 exec=67972.17s clock=92835s sigma_t=4.968942047 inv_rel=4.602645e-01 bal_rel=1.562830e-04 status=OK action=none
+2026-07-16T11:13:36Z alive=1 cpu=291.9% log=log.phase1 stage=phase1 time=5.0358561973132/6.75 exec=68882.57s clock=94062s sigma_t=5.028942047 inv_rel=4.602645e-01 bal_rel=1.562828e-04 status=OK action=none
+2026-07-16T11:33:55Z alive=1 cpu=292.0% log=log.phase1 stage=phase1 time=5.1029420474/6.75 exec=69780.39s clock=95263s sigma_t=5.098942047 inv_rel=4.602646e-01 bal_rel=1.563325e-04 status=OK action=none
+2026-07-16T11:54:15Z alive=1 cpu=292.2% log=log.phase1 stage=phase1 time=5.1694649964206/6.75 exec=70688.46s clock=96494s sigma_t=5.168942047 inv_rel=4.602649e-01 bal_rel=1.563206e-04 status=OK action=none
+2026-07-16T12:14:33Z alive=1 cpu=292.3% log=log.phase1 stage=phase1 time=5.2186605815618/6.75 exec=71605.63s clock=97723s sigma_t=5.208942047 inv_rel=4.602656e-01 bal_rel=1.563207e-04 status=OK action=none
+2026-07-16T12:34:50Z alive=1 cpu=292.3% log=log.phase1 stage=phase1 time=5.2666439195069/6.75 exec=72510.29s clock=98927s sigma_t=5.258942047 inv_rel=4.602668e-01 bal_rel=1.563107e-04 status=OK action=none
+2026-07-16T12:55:06Z alive=1 cpu=292.3% log=log.phase1 stage=phase1 time=5.3012303324155/6.75 exec=73426.19s clock=100154s sigma_t=5.298942047 inv_rel=4.602698e-01 bal_rel=1.563118e-04 status=OK action=none
+2026-07-16T13:15:26Z alive=1 cpu=292.5% log=log.phase1 stage=phase1 time=5.331353653935/6.75 exec=74335.49s clock=101365s sigma_t=5.328942047 inv_rel=4.602725e-01 bal_rel=1.563432e-04 status=OK action=none
+2026-07-16T13:36:07Z alive=1 cpu=292.6% log=log.phase1 stage=phase1 time=5.3662401958766/6.75 exec=75256.03s clock=102597s sigma_t=5.358942047 inv_rel=4.602733e-01 bal_rel=1.563254e-04 status=OK action=none
+2026-07-16T13:56:24Z alive=1 cpu=292.7% log=log.phase1 stage=phase1 time=5.4008970792775/6.75 exec=76155.02s clock=103814s sigma_t=5.398942047 inv_rel=4.602733e-01 bal_rel=1.563210e-04 status=OK action=none
+2026-07-16T14:16:50Z alive=1 cpu=292.7% log=log.phase1 stage=phase1 time=5.4358100767013/6.75 exec=77066.79s clock=105045s sigma_t=5.428942047 inv_rel=4.602733e-01 bal_rel=1.563208e-04 status=OK action=none
+2026-07-16T14:37:07Z alive=1 cpu=292.7% log=log.phase1 stage=phase1 time=5.4681302139585/6.75 exec=77983.07s clock=106276s sigma_t=5.458942047 inv_rel=4.602733e-01 bal_rel=1.563212e-04 status=OK action=none
+2026-07-16T14:57:25Z alive=1 cpu=292.7% log=log.phase1 stage=phase1 time=5.4985622173768/6.75 exec=78881.66s clock=107476s sigma_t=5.488942047 inv_rel=4.602733e-01 bal_rel=1.563213e-04 status=OK action=none
+2026-07-16T15:17:41Z alive=1 cpu=292.7% log=log.phase1 stage=phase1 time=5.5281196806107/6.75 exec=79789.96s clock=108703s sigma_t=5.518942047 inv_rel=4.602733e-01 bal_rel=1.563210e-04 status=OK action=none
+2026-07-16T15:37:50Z alive=1 cpu=293.1% log=log.phase1 stage=phase1 time=5.5633937690062/6.75 exec=80714.07s clock=109934s sigma_t=5.558942047 inv_rel=4.602733e-01 bal_rel=1.563211e-04 status=OK action=none
+2026-07-16T15:57:50Z alive=1 cpu=294.2% log=log.phase1 stage=phase1 time=5.6127513601967/6.75 exec=81904.87s clock=111417s sigma_t=5.608942047 inv_rel=4.602733e-01 bal_rel=1.563210e-04 status=OK action=none
+2026-07-16T16:17:51Z alive=1 cpu=293.9% log=log.phase1 stage=phase1 time=5.6543203580835/6.75 exec=82762.55s clock=112617s sigma_t=5.648942047 inv_rel=4.602733e-01 bal_rel=1.563209e-04 status=OK action=none
+2026-07-16T16:37:52Z alive=1 cpu=294.1% log=log.phase1 stage=phase1 time=5.6978333256605/6.75 exec=83665.86s clock=113818s sigma_t=5.688942047 inv_rel=4.602733e-01 bal_rel=1.563209e-04 status=OK action=none
+2026-07-16T16:57:52Z alive=1 cpu=293.9% log=log.phase1 stage=phase1 time=5.7410060603102/6.75 exec=84523.87s clock=115019s sigma_t=5.738942047 inv_rel=4.602733e-01 bal_rel=1.563213e-04 status=OK action=none
+2026-07-16T17:17:53Z alive=1 cpu=293.9% log=log.phase1 stage=phase1 time=5.7837097962627/6.75 exec=85415.11s clock=116220s sigma_t=5.778942047 inv_rel=4.602733e-01 bal_rel=1.563210e-04 status=OK action=none
+2026-07-16T17:37:54Z alive=1 cpu=294.2% log=log.phase1 stage=phase1 time=5.8315243286157/6.75 exec=86320.96s clock=117421s sigma_t=5.828942047 inv_rel=4.602733e-01 bal_rel=1.563208e-04 status=OK action=none
+2026-07-16T17:57:54Z alive=1 cpu=294.3% log=log.phase1 stage=phase1 time=5.8751373322073/6.75 exec=87213.76s clock=118621s sigma_t=5.868942047 inv_rel=4.602734e-01 bal_rel=1.563208e-04 status=OK action=none
+2026-07-16T18:17:55Z alive=1 cpu=294.3% log=log.phase1 stage=phase1 time=5.9156620167982/6.75 exec=88114.93s clock=119821s sigma_t=5.908942047 inv_rel=4.602734e-01 bal_rel=1.563217e-04 status=OK action=none
+2026-07-16T18:37:56Z alive=1 cpu=294.3% log=log.phase1 stage=phase1 time=5.9572660610054/6.75 exec=89027.31s clock=121022s sigma_t=5.948942047 inv_rel=4.602734e-01 bal_rel=1.563212e-04 status=OK action=none
+2026-07-16T18:57:57Z alive=1 cpu=294.3% log=log.phase1 stage=phase1 time=5.9954138811159/6.75 exec=89913.02s clock=122223s sigma_t=5.988942047 inv_rel=4.602734e-01 bal_rel=1.563214e-04 status=OK action=none
+2026-07-16T19:17:57Z alive=1 cpu=294.3% log=log.phase1 stage=phase1 time=6.0316516543105/6.75 exec=90800.59s clock=123423s sigma_t=6.028942047 inv_rel=4.602734e-01 bal_rel=1.563214e-04 status=OK action=none
+2026-07-16T19:37:58Z alive=1 cpu=294.3% log=log.phase1 stage=phase1 time=6.06859124326/6.75 exec=91697.17s clock=124625s sigma_t=6.058942047 inv_rel=4.602735e-01 bal_rel=1.563214e-04 status=OK action=none
+2026-07-16T19:57:59Z alive=1 cpu=294.3% log=log.phase1 stage=phase1 time=6.1070028649474/6.75 exec=92598.82s clock=125825s sigma_t=6.098942047 inv_rel=4.602735e-01 bal_rel=1.563214e-04 status=OK action=none
+2026-07-16T20:18:00Z alive=1 cpu=294.3% log=log.phase1 stage=phase1 time=6.1453139575711/6.75 exec=93482.94s clock=127026s sigma_t=6.138942047 inv_rel=4.602735e-01 bal_rel=1.563214e-04 status=OK action=none
+2026-07-16T20:38:00Z alive=1 cpu=294.3% log=log.phase1 stage=phase1 time=6.1843214396731/6.75 exec=94372.77s clock=128227s sigma_t=6.178942047 inv_rel=4.602735e-01 bal_rel=1.563214e-04 status=OK action=none
+2026-07-16T20:58:01Z alive=1 cpu=294.4% log=log.phase1 stage=phase1 time=6.2230610006117/6.75 exec=95260.44s clock=129428s sigma_t=6.218942047 inv_rel=4.602735e-01 bal_rel=1.563212e-04 status=OK action=none
+2026-07-16T21:18:02Z alive=1 cpu=294.5% log=log.phase1 stage=phase1 time=6.2608315459995/6.75 exec=96156.5s clock=130629s sigma_t=6.258942047 inv_rel=4.602735e-01 bal_rel=1.563217e-04 status=OK action=none
+2026-07-16T21:38:03Z alive=1 cpu=294.7% log=log.phase1 stage=phase1 time=6.2968034743346/6.75 exec=97055.33s clock=131829s sigma_t=6.288942047 inv_rel=4.602735e-01 bal_rel=1.563216e-04 status=OK action=none
+2026-07-16T21:58:04Z alive=1 cpu=294.6% log=log.phase1 stage=phase1 time=6.3320728414284/6.75 exec=97931.53s clock=133030s sigma_t=6.328942047 inv_rel=4.602735e-01 bal_rel=1.563215e-04 status=OK action=none
+2026-07-16T22:18:05Z alive=1 cpu=294.6% log=log.phase1 stage=phase1 time=6.3688917431568/6.75 exec=98809.32s clock=134231s sigma_t=6.358942047 inv_rel=4.602735e-01 bal_rel=1.563205e-04 status=OK action=none
+2026-07-16T22:38:05Z alive=1 cpu=294.6% log=log.phase1 stage=phase1 time=6.405923282223/6.75 exec=99696.28s clock=135431s sigma_t=6.398942047 inv_rel=4.602735e-01 bal_rel=1.563202e-04 status=OK action=none
+2026-07-16T23:00:01Z alive=1 cpu=293.5% log=log.phase1 stage=phase1 time=6.4298449193928/6.75 exec=100273.34s clock=136010s sigma_t=6.428942047 inv_rel=4.602735e-01 bal_rel=1.563205e-04 status=OK action=none
+2026-07-16T23:24:13Z alive=1 cpu=293.1% log=log.phase1 stage=phase1 time=6.4681051000435/6.75 exec=101233.83s clock=137711s sigma_t=6.458942047 inv_rel=4.602735e-01 bal_rel=1.563214e-04 status=OK action=none
+2026-07-16T23:46:41Z alive=1 cpu=292.7% log=log.phase1 stage=phase1 time=6.5053843802679/6.75 exec=102131.68s clock=139100s sigma_t=6.498942047 inv_rel=4.602735e-01 bal_rel=1.563289e-04 status=OK action=none
+2026-07-17T00:07:30Z alive=1 cpu=292.7% log=log.phase1 stage=phase1 time=6.5424317085553/6.75 exec=103031.74s clock=140450s sigma_t=6.538942047 inv_rel=4.602735e-01 bal_rel=1.563272e-04 status=OK action=none
+2026-07-17T00:27:52Z alive=1 cpu=292.7% log=log.phase1 stage=phase1 time=6.5805374416625/6.75 exec=103944.09s clock=141711s sigma_t=6.578942047 inv_rel=4.602735e-01 bal_rel=1.563269e-04 status=OK action=none
+2026-07-17T00:48:31Z alive=1 cpu=292.7% log=log.phase1 stage=phase1 time=6.6189420474/6.75 exec=104864.05s clock=142940s sigma_t=6.608942047 inv_rel=4.602735e-01 bal_rel=1.563267e-04 status=OK action=none
+2026-07-17T01:08:55Z alive=1 cpu=292.9% log=log.phase1 stage=phase1 time=6.6537799966134/6.75 exec=105773.16s clock=144170s sigma_t=6.648942047 inv_rel=4.602837e-01 bal_rel=1.659990e-04 status=OK action=none
+2026-07-17T01:29:23Z alive=1 cpu=293.0% log=log.phase1 stage=phase1 time=6.6903134759714/6.75 exec=106691.53s clock=145710s sigma_t=6.688942047 inv_rel=4.602891e-01 bal_rel=1.660431e-04 status=OK action=none
+2026-07-17T01:49:45Z alive=1 cpu=293.1% log=log.phase1 stage=phase1 time=6.7278220474/6.75 exec=107609.72s clock=146631s sigma_t=6.718942047 inv_rel=4.602935e-01 bal_rel=1.666595e-04 status=OK action=none

@@ -1,0 +1,200 @@
+smoothSolver:  Solving for k, Initial residual = 5.2407537e-08, Final residual = 3.5449959e-12, No Iterations 1
+ExecutionTime = 108186.56 s  ClockTime = 147511 s
+
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 8.2699058e-06, Final residual = 9.8673567e-09, No Iterations 4
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 2.5999765e-07, Final residual = 9.3346407e-09, No Iterations 1
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 1, Final residual = 6.6340221e-09, No Iterations 39
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 0.00038624787, Final residual = 6.338323e-09, No Iterations 11
+MULES: Solving for pocketBodyTracerSigma
+Courant Number mean: 0.015055921 max: 0.67683532
+Interface Courant Number mean: 2.0126947e-05 max: 0.1999896
+deltaT = 5.5116382e-05
+Time = 6.7496578997455
+
+PIMPLE: iteration 1
+MULES: Solving for alpha.water
+Phase-1 volume fraction = 0.62006061  Min(alpha.water) = -3.1184658e-19  Max(alpha.water) = 1
+MULES: Solving for alpha.water
+Phase-1 volume fraction = 0.62006062  Min(alpha.water) = -9.7949815e-20  Max(alpha.water) = 1
+smoothSolver:  Solving for Ux, Initial residual = 2.9424221e-06, Final residual = 4.7273668e-09, No Iterations 1
+smoothSolver:  Solving for Uy, Initial residual = 2.4126471e-05, Final residual = 4.1751001e-08, No Iterations 1
+smoothSolver:  Solving for Uz, Initial residual = 4.0900029e-07, Final residual = 4.0900029e-07, No Iterations 0
+smoothSolver:  Solving for T, Initial residual = 3.4989178e-05, Final residual = 6.7669379e-09, No Iterations 1
+GAMG:  Solving for p_rgh, Initial residual = 2.9788027e-07, Final residual = 1.2371523e-09, No Iterations 1
+GAMG:  Solving for p_rgh, Initial residual = 2.7007129e-09, Final residual = 2.7007129e-09, No Iterations 0
+GAMG:  Solving for p_rgh, Initial residual = 8.0340949e-09, Final residual = 8.0340949e-09, No Iterations 0
+GAMGPCG:  Solving for p_rgh, Initial residual = 8.0340949e-09, Final residual = 8.0340949e-09, No Iterations 0
+smoothSolver:  Solving for omega, Initial residual = 2.743026e-07, Final residual = 5.5798998e-12, No Iterations 1
+smoothSolver:  Solving for k, Initial residual = 5.242295e-08, Final residual = 3.5522636e-12, No Iterations 1
+ExecutionTime = 108187.91 s  ClockTime = 147512 s
+
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 8.3438077e-06, Final residual = 5.4952358e-09, No Iterations 5
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 2.9477689e-07, Final residual = 8.1026841e-09, No Iterations 1
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 1, Final residual = 6.1293667e-09, No Iterations 36
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 0.00031385947, Final residual = 9.5375862e-09, No Iterations 11
+MULES: Solving for pocketBodyTracerSigma
+Courant Number mean: 0.015055955 max: 0.67680567
+Interface Courant Number mean: 2.0124829e-05 max: 0.19996484
+deltaT = 5.5129634e-05
+Time = 6.7497130293794
+
+PIMPLE: iteration 1
+MULES: Solving for alpha.water
+Phase-1 volume fraction = 0.62006062  Min(alpha.water) = -2.513573e-19  Max(alpha.water) = 1
+MULES: Solving for alpha.water
+Phase-1 volume fraction = 0.62006062  Min(alpha.water) = -1.1137268e-19  Max(alpha.water) = 1
+smoothSolver:  Solving for Ux, Initial residual = 2.9338953e-06, Final residual = 4.6406922e-09, No Iterations 1
+smoothSolver:  Solving for Uy, Initial residual = 2.353266e-05, Final residual = 3.9894764e-08, No Iterations 1
+smoothSolver:  Solving for Uz, Initial residual = 4.02513e-07, Final residual = 4.02513e-07, No Iterations 0
+smoothSolver:  Solving for T, Initial residual = 3.4705901e-05, Final residual = 6.6132245e-09, No Iterations 1
+GAMG:  Solving for p_rgh, Initial residual = 2.9354271e-07, Final residual = 1.3002545e-09, No Iterations 1
+GAMG:  Solving for p_rgh, Initial residual = 2.827646e-09, Final residual = 2.827646e-09, No Iterations 0
+GAMG:  Solving for p_rgh, Initial residual = 7.8707344e-09, Final residual = 7.8707344e-09, No Iterations 0
+GAMGPCG:  Solving for p_rgh, Initial residual = 7.8707344e-09, Final residual = 7.8707344e-09, No Iterations 0
+smoothSolver:  Solving for omega, Initial residual = 2.7424318e-07, Final residual = 5.5362162e-12, No Iterations 1
+smoothSolver:  Solving for k, Initial residual = 5.2428692e-08, Final residual = 3.5534797e-12, No Iterations 1
+ExecutionTime = 108189.25 s  ClockTime = 147514 s
+
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 8.4676658e-06, Final residual = 4.8135835e-09, No Iterations 5
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 2.8680068e-07, Final residual = 7.1703899e-09, No Iterations 1
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 1, Final residual = 6.0111603e-09, No Iterations 36
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 0.00031786206, Final residual = 6.3713072e-09, No Iterations 11
+MULES: Solving for pocketBodyTracerSigma
+Courant Number mean: 0.015059609 max: 0.67695559
+Interface Courant Number mean: 2.015093e-05 max: 0.19999028
+deltaT = 5.5129634e-05
+Time = 6.7497681590134
+
+PIMPLE: iteration 1
+MULES: Solving for alpha.water
+Phase-1 volume fraction = 0.62006062  Min(alpha.water) = -5.9247029e-19  Max(alpha.water) = 1
+MULES: Solving for alpha.water
+Phase-1 volume fraction = 0.62006062  Min(alpha.water) = -4.8166259e-19  Max(alpha.water) = 1
+smoothSolver:  Solving for Ux, Initial residual = 2.9300914e-06, Final residual = 4.5805175e-09, No Iterations 1
+smoothSolver:  Solving for Uy, Initial residual = 2.3219135e-05, Final residual = 3.8770167e-08, No Iterations 1
+smoothSolver:  Solving for Uz, Initial residual = 3.986237e-07, Final residual = 3.986237e-07, No Iterations 0
+smoothSolver:  Solving for T, Initial residual = 3.4369825e-05, Final residual = 6.352281e-09, No Iterations 1
+GAMG:  Solving for p_rgh, Initial residual = 2.8787275e-07, Final residual = 1.1546268e-09, No Iterations 1
+GAMG:  Solving for p_rgh, Initial residual = 2.5956701e-09, Final residual = 2.5956701e-09, No Iterations 0
+GAMG:  Solving for p_rgh, Initial residual = 7.3421288e-09, Final residual = 7.3421288e-09, No Iterations 0
+GAMGPCG:  Solving for p_rgh, Initial residual = 7.3421288e-09, Final residual = 7.3421288e-09, No Iterations 0
+smoothSolver:  Solving for omega, Initial residual = 2.7418158e-07, Final residual = 5.5134356e-12, No Iterations 1
+smoothSolver:  Solving for k, Initial residual = 5.2451692e-08, Final residual = 3.5589054e-12, No Iterations 1
+ExecutionTime = 108190.58 s  ClockTime = 147515 s
+
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 8.082906e-06, Final residual = 5.1952554e-09, No Iterations 4
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 2.7212841e-07, Final residual = 7.8079114e-09, No Iterations 1
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 1, Final residual = 7.2488273e-09, No Iterations 35
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 0.00042844407, Final residual = 9.0906271e-09, No Iterations 13
+MULES: Solving for pocketBodyTracerSigma
+Courant Number mean: 0.015059642 max: 0.67694973
+Interface Courant Number mean: 2.0161747e-05 max: 0.19996864
+deltaT = 5.5142899e-05
+Time = 6.7498233019124
+
+PIMPLE: iteration 1
+MULES: Solving for alpha.water
+Phase-1 volume fraction = 0.62006063  Min(alpha.water) = -3.3214613e-19  Max(alpha.water) = 1
+MULES: Solving for alpha.water
+Phase-1 volume fraction = 0.62006063  Min(alpha.water) = -5.6330277e-19  Max(alpha.water) = 1
+smoothSolver:  Solving for Ux, Initial residual = 2.9300934e-06, Final residual = 4.5693665e-09, No Iterations 1
+smoothSolver:  Solving for Uy, Initial residual = 2.3132467e-05, Final residual = 3.8208862e-08, No Iterations 1
+smoothSolver:  Solving for Uz, Initial residual = 3.9723536e-07, Final residual = 3.9723536e-07, No Iterations 0
+smoothSolver:  Solving for T, Initial residual = 3.3846405e-05, Final residual = 5.4470494e-09, No Iterations 1
+GAMG:  Solving for p_rgh, Initial residual = 2.7966273e-07, Final residual = 1.0439029e-09, No Iterations 1
+GAMG:  Solving for p_rgh, Initial residual = 2.4829013e-09, Final residual = 2.4829013e-09, No Iterations 0
+GAMG:  Solving for p_rgh, Initial residual = 7.0123934e-09, Final residual = 7.0123934e-09, No Iterations 0
+GAMGPCG:  Solving for p_rgh, Initial residual = 7.0123934e-09, Final residual = 7.0123934e-09, No Iterations 0
+smoothSolver:  Solving for omega, Initial residual = 2.7414584e-07, Final residual = 5.4807474e-12, No Iterations 1
+smoothSolver:  Solving for k, Initial residual = 5.2466836e-08, Final residual = 3.5580657e-12, No Iterations 1
+ExecutionTime = 108191.93 s  ClockTime = 147516 s
+
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 6.9708397e-06, Final residual = 5.5563728e-09, No Iterations 4
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 2.2631921e-07, Final residual = 6.899382e-09, No Iterations 1
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 1, Final residual = 9.2237304e-09, No Iterations 37
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 0.00052768678, Final residual = 6.4991642e-09, No Iterations 12
+MULES: Solving for pocketBodyTracerSigma
+Courant Number mean: 0.015063297 max: 0.67711372
+Interface Courant Number mean: 2.0188005e-05 max: 0.19999612
+deltaT = 5.5142899e-05
+Time = 6.7498784448115
+
+PIMPLE: iteration 1
+MULES: Solving for alpha.water
+Phase-1 volume fraction = 0.62006063  Min(alpha.water) = -2.8924014e-19  Max(alpha.water) = 1
+MULES: Solving for alpha.water
+Phase-1 volume fraction = 0.62006063  Min(alpha.water) = -4.3370456e-19  Max(alpha.water) = 1
+smoothSolver:  Solving for Ux, Initial residual = 2.9293537e-06, Final residual = 4.5682439e-09, No Iterations 1
+smoothSolver:  Solving for Uy, Initial residual = 2.319771e-05, Final residual = 3.8310415e-08, No Iterations 1
+smoothSolver:  Solving for Uz, Initial residual = 3.9772879e-07, Final residual = 3.9772879e-07, No Iterations 0
+smoothSolver:  Solving for T, Initial residual = 3.3335335e-05, Final residual = 4.6141702e-09, No Iterations 1
+GAMG:  Solving for p_rgh, Initial residual = 2.7181945e-07, Final residual = 9.0158323e-10, No Iterations 1
+GAMG:  Solving for p_rgh, Initial residual = 2.2326246e-09, Final residual = 2.2326246e-09, No Iterations 0
+GAMG:  Solving for p_rgh, Initial residual = 6.575797e-09, Final residual = 6.575797e-09, No Iterations 0
+GAMGPCG:  Solving for p_rgh, Initial residual = 6.575797e-09, Final residual = 6.575797e-09, No Iterations 0
+smoothSolver:  Solving for omega, Initial residual = 2.7415414e-07, Final residual = 5.4559036e-12, No Iterations 1
+smoothSolver:  Solving for k, Initial residual = 5.2484499e-08, Final residual = 3.5570503e-12, No Iterations 1
+ExecutionTime = 108193.28 s  ClockTime = 147518 s
+
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 6.5142143e-06, Final residual = 9.730666e-09, No Iterations 3
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 2.112071e-07, Final residual = 7.8192451e-09, No Iterations 1
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 1, Final residual = 6.4180237e-09, No Iterations 37
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 0.00045998129, Final residual = 8.6640299e-09, No Iterations 14
+MULES: Solving for pocketBodyTracerSigma
+Courant Number mean: 0.015063327 max: 0.67711322
+Interface Courant Number mean: 2.0186233e-05 max: 0.19997564
+deltaT = 5.5156177e-05
+Time = 6.7499336009884
+
+PIMPLE: iteration 1
+MULES: Solving for alpha.water
+Phase-1 volume fraction = 0.62006063  Min(alpha.water) = -7.7623426e-20  Max(alpha.water) = 1
+MULES: Solving for alpha.water
+Phase-1 volume fraction = 0.62006064  Min(alpha.water) = -2.6431144e-19  Max(alpha.water) = 1
+smoothSolver:  Solving for Ux, Initial residual = 2.9283119e-06, Final residual = 4.5787322e-09, No Iterations 1
+smoothSolver:  Solving for Uy, Initial residual = 2.3210947e-05, Final residual = 3.8170666e-08, No Iterations 1
+smoothSolver:  Solving for Uz, Initial residual = 3.9825156e-07, Final residual = 3.9825156e-07, No Iterations 0
+smoothSolver:  Solving for T, Initial residual = 3.2733462e-05, Final residual = 3.8825556e-09, No Iterations 1
+GAMG:  Solving for p_rgh, Initial residual = 2.6413364e-07, Final residual = 8.9563301e-10, No Iterations 1
+GAMG:  Solving for p_rgh, Initial residual = 2.2287265e-09, Final residual = 2.2287265e-09, No Iterations 0
+GAMG:  Solving for p_rgh, Initial residual = 6.4540627e-09, Final residual = 6.4540627e-09, No Iterations 0
+GAMGPCG:  Solving for p_rgh, Initial residual = 6.4540627e-09, Final residual = 6.4540627e-09, No Iterations 0
+smoothSolver:  Solving for omega, Initial residual = 2.7414255e-07, Final residual = 5.4222825e-12, No Iterations 1
+smoothSolver:  Solving for k, Initial residual = 5.2488471e-08, Final residual = 3.552963e-12, No Iterations 1
+ExecutionTime = 108194.64 s  ClockTime = 147519 s
+
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 6.3406659e-06, Final residual = 5.6787127e-09, No Iterations 4
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 2.0947839e-07, Final residual = 6.1789755e-09, No Iterations 1
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 1, Final residual = 6.0689149e-09, No Iterations 36
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 0.00036610117, Final residual = 6.3062809e-09, No Iterations 11
+MULES: Solving for pocketBodyTracerSigma
+Courant Number mean: 0.015066983 max: 0.67727659
+Interface Courant Number mean: 2.0193072e-05 max: 0.20000383
+deltaT = 5.5156177e-05
+Time = 6.7499887571652
+
+PIMPLE: iteration 1
+MULES: Solving for alpha.water
+Phase-1 volume fraction = 0.62006064  Min(alpha.water) = -5.3455795e-19  Max(alpha.water) = 1
+MULES: Solving for alpha.water
+Phase-1 volume fraction = 0.62006064  Min(alpha.water) = -1.1347585e-19  Max(alpha.water) = 1
+smoothSolver:  Solving for Ux, Initial residual = 2.9232757e-06, Final residual = 4.5814887e-09, No Iterations 1
+smoothSolver:  Solving for Uy, Initial residual = 2.3131334e-05, Final residual = 3.7957314e-08, No Iterations 1
+smoothSolver:  Solving for Uz, Initial residual = 3.9795809e-07, Final residual = 3.9795809e-07, No Iterations 0
+smoothSolver:  Solving for T, Initial residual = 3.2331227e-05, Final residual = 3.5512291e-09, No Iterations 1
+GAMG:  Solving for p_rgh, Initial residual = 2.5939654e-07, Final residual = 8.1171065e-10, No Iterations 1
+GAMG:  Solving for p_rgh, Initial residual = 2.0818664e-09, Final residual = 2.0818664e-09, No Iterations 0
+GAMG:  Solving for p_rgh, Initial residual = 6.1828247e-09, Final residual = 6.1828247e-09, No Iterations 0
+GAMGPCG:  Solving for p_rgh, Initial residual = 6.1828247e-09, Final residual = 6.1828247e-09, No Iterations 0
+smoothSolver:  Solving for omega, Initial residual = 2.7415588e-07, Final residual = 5.3994123e-12, No Iterations 1
+smoothSolver:  Solving for k, Initial residual = 5.2495939e-08, Final residual = 3.5507655e-12, No Iterations 1
+ExecutionTime = 108195.98 s  ClockTime = 147521 s
+
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 6.6557878e-06, Final residual = 6.500526e-09, No Iterations 4
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 2.2865944e-07, Final residual = 6.9674931e-09, No Iterations 1
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 1, Final residual = 4.5032552e-09, No Iterations 42
+GAMG:  Solving for pocketBodyTracerCarrierPotential, Initial residual = 0.0099112316, Final residual = 8.6622489e-09, No Iterations 18
+MULES: Solving for pocketBodyTracerSigma
+End
+
+Finalising parallel run

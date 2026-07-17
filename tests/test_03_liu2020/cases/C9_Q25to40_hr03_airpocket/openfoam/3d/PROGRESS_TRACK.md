@@ -32,3 +32,7 @@ Updated every ~20 minutes while phase1 runs toward solver `6.75`.
 | 2026-07-17T00:27:54Z | 6.580597 | 96.9% | 0.169 | yes | `OK action=none` |
 | 2026-07-17T00:48:33Z | 6.618942 | 97.6% | 0.131 | yes | `OK action=none` |
 | 2026-07-17T01:08:57Z | 6.653780 | 98.3% | 0.096 | yes | `OK action=none` |
+| 2026-07-17T01:29:24Z | 6.690313 | 98.9% | 0.060 | yes | `OK action=none` |
+| 2026-07-17T01:49:48Z | 6.727822 | 99.6% | 0.022 | yes | `OK action=none` |
+| 2026-07-17T02:05:19Z | 6.749989 | 100.0% | 0.000 | yes | `OK action=none` |
+| 2026-07-17T02:08:50Z | 6.750000 | 100.0% | 0.000 | done | `phase1 End @ 6.75; render artifacts packaged` |
