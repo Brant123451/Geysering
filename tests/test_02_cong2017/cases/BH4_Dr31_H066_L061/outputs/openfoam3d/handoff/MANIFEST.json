@@ -2,6 +2,7 @@
   "case": "B-H4",
   "label": "base_topen0p20",
   "solver": "compressibleInterFoam",
+  "openfoam_version": "v2512",
   "endTime_s": 13.05,
   "classification_3d": "NO_GEYSER",
   "classification_match": true,
@@ -9,6 +10,7 @@
   "event_window_complete": true,
   "Yfs_max_above_crown_m": 1.59,
   "Ta_3d_s": 8.41,
+  "Ta_experiment_s": 8.14,
   "reconstructed_field_times": [
     "0",
     "0.5",
@@ -35,8 +37,12 @@
     "12.914145873400001",
     "13.0141458734"
   ],
+  "handoff_total_bytes": 936813465,
   "files": [
     "MANIFEST.json",
+    "SHA256SUMS.txt",
+    "agent_loop_history.tsv",
+    "bh4-physical.stl.xz",
     "bh4_3d.foam",
     "field_times.txt",
     "fields_early.tar.xz.part-00",
@@ -45,6 +51,10 @@
     "fields_late.tar.xz.part-01",
     "fields_late.tar.xz.part-02",
     "fields_mid.tar.xz",
+    "log.compressibleInterFoam.aborted_restart.20260716T234246Z.xz",
+    "log.compressibleInterFoam.rotated.20260716T042847Z.xz",
+    "log.compressibleInterFoam.rotated.20260716T160652Z.xz",
+    "logs_solver.tar.xz",
     "polyMesh.tar.xz",
     "postProcessing.tar.xz",
     "processors_early.tar.xz.part-00",
@@ -52,13 +62,18 @@
     "processors_late.tar.xz.part-00",
     "processors_late.tar.xz.part-01",
     "processors_late.tar.xz.part-02",
-    "reassemble.sh"
+    "reassemble.sh",
+    "system_runtime.tar.xz",
+    "watchdog_history20.tsv"
   ],
   "reassemble": "./reassemble.sh then tar -xJf <archive> -C openfoam/3d",
   "notes": [
-    "Prefer reconstructed fields_{early,mid,late}.tar.xz + polyMesh.tar.xz for ParaView.",
-    "All available reconstructed serial times are included (24 steps).",
-    "processors_* archives are optional full parallel checkpoints.",
-    "Split parts are 90 MiB for GitHub file-size limits."
+    "Prefer reconstructed fields_{early,mid,late} + polyMesh for ParaView.",
+    "All 24 available reconstructed serial times are included.",
+    "processors_* are optional full parallel checkpoints.",
+    "logs_solver.tar.xz = final/active solver + mesh logs; rotated/aborted xz are earlier segments.",
+    "bh4-physical.stl.xz = multi-solid physical geometry used for cfMesh.",
+    "Split parts are 90 MiB for GitHub hard 100 MiB limit.",
+    "Verify with sha256sum -c SHA256SUMS.txt"
   ]
 }
