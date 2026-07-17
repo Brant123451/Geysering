@@ -1,11 +1,11 @@
 # BH3 base_nominal 交接文档（HANDOFF）
 
-> 状态：**IN_PROGRESS**（约 40%，事件尚未跑满 13 s）  
+> 状态：**IN_PROGRESS**（约 41.5%；t≈5.394/13 s；更新 2026-07-17T03:23:17Z）  
 > 论文工况：Cong, Chan & Lee (2017) Series B **Run B-H3**  
 > Case：`tests/test_02_cong2017/cases/BH3_Dr26_H066_L061/openfoam/3d/`  
 > 分支：`cursor/test2-bh3-3d-e294`  
-> 更新策略：未完成时每 **20 分钟**巡检并推送进度；**算完后**自动打包 `outputs/base_nominal_handoff/` 并改写本文为 COMPLETED  
-> 注意：若 GitHub token 过期，进度会先落在本地 commit，token 恢复后再 push
+> 更新策略：未完成时每 **20 分钟**巡检、同步 `outputs/base_nominal_live/` 并推送进度；**算完后**自动打包 `outputs/base_nominal_handoff/` 并改写本文为 COMPLETED  
+> 注意：云环境空闲可能整机休眠（墙钟“真空时间”）；监控脚本本身已激活
 
 ## 1. 模拟是什么
 
@@ -21,39 +21,34 @@
 
 稳定性：`t≈3.075` 曾负温度崩溃 → 从 `t=3.05` 健康场重启并已越过该点。详见 `PAPER_AUDIT.md` / `README.md`。
 
-## 2. 你现在就能用的文件
+## 2. 你现在就能用的文件（进行中）
 
 - `outputs/base_nominal_progress.json` — 最新进度 / 健康度  
-- `outputs/base_nominal_live/functionObjects/` — 巡检时同步的探针/通量时序（进行中备份）  
+- `outputs/base_nominal_live/functionObjects/` — 探针/通量时序（中心线、压力、水体积等；已排除超大 `stabilityExtrema`）  
+- `outputs/base_nominal_live/logs/log.compressibleInterFoam.tail5M.txt` — 求解日志尾部  
+- `outputs/base_nominal_live/write_times.txt` — 已写出场时间步  
 - `PAPER_AUDIT.md`、`MODELING_CONTRACT.json`、`README.md`
 
 ## 3. 算完后会自动上传什么（供你本地渲染）
 
 目录：`outputs/base_nominal_handoff/`
 
-- `functionObjects/` — 全量函数对象/探针（中心线、压力、通量、水体积等）  
+- `functionObjects/` — 全量函数对象/探针  
 - `fields_vtk/` — `foamToVTK`，ParaView 直接打开  
 - `fields_reconstructed/` — 关键时间步重建场（体积允许时）  
 - `metrics/` — `postprocess.py` 的 metrics / timeseries / 图  
 - `logs/`、`system_snapshot/`、`write_times.txt`
 
-**不会**把完整 `processor*` / `polyMesh` 塞进 git（过大且在 `.gitignore`）。本地渲染请用 VTK / 重建场 / 探针。
+**不会**把完整 `processor*` / `polyMesh` / 整份巨型 solver log 塞进 git。本地渲染请用 VTK / 重建场 / 探针。
 
 ## 4. 本地渲染建议（完成后）
 
-1. `git pull` 本分支  
-2. ParaView 打开 `outputs/base_nominal_handoff/fields_vtk/`  
-3. 看 `alpha.water`（或等价相分数）0.5 等值面 + 立管压力/中心线曲线  
-4. 定量对比用 `metrics/` 与论文 B-H3
+1. `git pull` 分支 `cursor/test2-bh3-3d-e294`
+2. ParaView 打开 `outputs/base_nominal_handoff/fields_vtk/`
+3. 看 `alpha.water`（或等价相分数）等值面 0.5；曲线看 `functionObjects/riserCentreline`、`pressureProbes`
+4. 定量对照 `metrics/` 与论文 `Ta=8.18 s`
 
-## 5. 云端现场（可能被休眠）
+## 5. 运行现场（云端，未必长期保留）
 
-- 运行目录：`/tmp/bh3-study-layered-d08978d/base_nominal`  
-- tmux：`bh3-base-nominal-13s` / `bh3-watchdog-20m` / `bh3-agent-20min-loop`  
-- 空闲时整机可能休眠（检查脚本本身是激活的）；有交互会唤醒并继续
-
-## 6. 你本地还需要做的
-
-- ParaView 渲染界面演化 / 喷发形态  
-- 对照论文 `Ta` 与喷发特征出图  
-- 本交接在 **COMPLETED** 后以 `outputs/base_nominal_handoff/` 为准
+- 工作目录：`/tmp/bh3-study-layered-d08978d/base_nominal`
+- tmux：`bh3-base-nominal-13s` / `bh3-watchdog-20m` / `bh3-agent-20min-loop`
