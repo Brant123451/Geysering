@@ -1,9 +1,17 @@
 # Case B 3D simulation data archives
 
-Curated solver archives for local rendering. Runtime trees under `openfoam/3d/` remain gitignored.
+Curated archives under this folder are tracked in git (large `*.tar.xz` via LFS).
+Runtime trees under `openfoam/3d/` remain gitignored.
 
-| Screen | Status | Path |
-|--------|--------|------|
-| maxCo=0.10, 0.12 s closed-valve rim-onset | rejected | `maxco010_0p12_screen/` |
+| Archive | Status | Path | Start here |
+|--------|--------|------|------------|
+| maxCo=0.10, 0.12 s closed-valve rim-onset | **rejected** (rim gas hotspot) | `maxco010_0p12_screen/` | `RENDER_HANDOFF.md` |
+| refined mesh, Relocate optimizer | **mesh gate failed**; no solver | `refined_mesh_relocate/` | `MESH_HANDOFF.md` |
 
-Start with `maxco010_0p12_screen/RENDER_HANDOFF.md`. Pull LFS objects with `git lfs pull`.
+Case-level Chinese handoff for local AI continuation:
+
+`../LOCAL_HANDOFF.md`
+
+```bash
+git lfs pull
+```

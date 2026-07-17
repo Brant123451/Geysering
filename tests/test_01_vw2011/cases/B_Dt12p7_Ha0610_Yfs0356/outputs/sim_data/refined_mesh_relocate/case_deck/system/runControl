@@ -1,0 +1,10 @@
+endTime         0.12;
+writeControl    runTime;
+writeInterval   0.01;
+maxCo           0.15;
+maxAlphaCo      0.2;
+maxCapillaryNum 1;
+maxDeltaT       0.00025;
+caseBProbeInterval      0.005;
+caseBPlumeInterval      0.01;
+caseBAccountingInterval 0.01;

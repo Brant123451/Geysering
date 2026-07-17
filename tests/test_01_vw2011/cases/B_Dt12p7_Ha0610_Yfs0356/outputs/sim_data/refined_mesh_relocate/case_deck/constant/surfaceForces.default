@@ -1,0 +1,8 @@
+surfaceForces
+{
+    sigma                       0.072;
+    surfaceTensionForceModel    RDF;
+    curvFromTr                  true;
+    accelerationForceModel      gravity;
+    deltaFunctionModel          alphaCSF;
+}

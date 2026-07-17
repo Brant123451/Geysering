@@ -3,11 +3,9 @@
 工况参数：`Dt = 12.7 mm`（Dt/D = 0.135）、`Ha0 = 0.610 m`、`WL_init = 0.356 m`。
 对标论文数据：Fig.6（压头 H*，中心面板）与 Fig.8（Y*fs / Y*int，中心面板），均为 Dt*=0.135。
 
-> 当前权威审计与三维算例见
-> [`openfoam/3d/PAPER_AUDIT.md`](openfoam/3d/PAPER_AUDIT.md) 和
-> [`openfoam/3d/README.md`](openfoam/3d/README.md)。本文件后半部保留的
-> 一维快照历史记录不是三维验证结果；其中 crown-datum、Wallis 限速及
-> `T*=3.85` 界面点均存在审计限定，不能作为 CFD 调参依据。
+> **本机继续请先读 [`LOCAL_HANDOFF.md`](LOCAL_HANDOFF.md)**（论文/case 身份、已准入基线、已拒轴、数据归档位置、下一步）。  
+> 模拟数据：[`outputs/sim_data/`](outputs/sim_data/)。三维审计：[`openfoam/3d/PAPER_AUDIT.md`](openfoam/3d/PAPER_AUDIT.md)。  
+> 本文件后半部保留的一维快照历史**不是**三维验证结果，不能作为 CFD 调参依据。
 
 ## 文件夹自包含（代码冻结）
 

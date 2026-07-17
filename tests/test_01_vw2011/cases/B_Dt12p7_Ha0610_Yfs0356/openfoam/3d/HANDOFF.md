@@ -1,5 +1,12 @@
 # Cloud-agent handoff — Geysering Test 1 Case B 3D
 
+> **2026-07-17 local handoff:** Cloud solving/meshing was stopped at user
+> request. Prefer the Chinese case-root document
+> `../LOCAL_HANDOFF.md` for local AI continuation. Archived data:
+> `../outputs/sim_data/maxco010_0p12_screen/` (rejected rim screen fields) and
+> `../outputs/sim_data/refined_mesh_relocate/` (refined mesh attempt; strict
+> gate failed; solver never started). Do not resume cloud-scale runs here.
+
 ## Repository state
 
 * Pull request: `https://github.com/brant123451/geysering/pull/10`
@@ -8,6 +15,7 @@
 * Case root:
   `tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356`
 * CFD root: `openfoam/3d`
+* Local Chinese handoff: `../LOCAL_HANDOFF.md`
 * Complete copy/paste prompt: `openfoam/3d/NEW_AGENT_PROMPT.md`
 
 All source changes and compact base-mesh evidence are committed and pushed.
@@ -554,6 +562,14 @@ timestep controls.
     `watchdog_refined.sh`.  Do **not** use the rejected `maxCo=0.10` setting.
     A passing refined 0.12 s screen is required before any refined 1.0 s hold
     or 10.5 s full run.
+41. Refined meshing with Relocate (Netgen unavailable in the cloud Gmsh build)
+    produced 5,522,016 tets.  Standard `checkMesh` reported `Mesh OK.`, but
+    strict checks failed three ways (866 under-determined cells, 2 low-weight
+    faces, 2 low volume-ratio faces), so `postprocess.py --mesh-only` rejected
+    the mesh and the solver never started.  At user request the cloud jobs were
+    stopped and artifacts archived under
+    `outputs/sim_data/refined_mesh_relocate/` for local continuation; see
+    case-root `LOCAL_HANDOFF.md`.
 
 ## Still required
 
@@ -592,7 +608,10 @@ The scientific reproduction is **not complete**.  Continue in this order:
    non-orthogonal / `maxCo=0.10` axes.  Choose a new numerical axis outside
    those exhausted screens before any new 1.0 s hold.  Local-render archives
    for the rejected `maxCo=0.10` run live under
-   `outputs/sim_data/maxco010_0p12_screen/`.
+   `outputs/sim_data/maxco010_0p12_screen/`.  The refined Relocate mesh attempt
+   failed the strict mesh gate and is archived under
+   `outputs/sim_data/refined_mesh_relocate/`; continue locally via
+   `LOCAL_HANDOFF.md`.  Cloud meshing/solving was stopped at user request.
    Extend a candidate past the 0.04 s
    pressure-drift onset only if it stays within the declared Courant limits
    and reduces peak velocity, and only \(H^*\) peak-to-peak at or below 0.02
