@@ -4,43 +4,17 @@
   "case": "BH3_Dr26_H066_L061",
   "paper_run": "B-H3",
   "status": "running_after_stability_restart",
-  "check_source": "agent_20min",
-  "updated_at_unix": 1784293926.554368,
-  "updated_at_iso": "2026-07-17T13:12:06Z",
+  "check_source": "watchdog_20m",
+  "updated_at_unix": 1784295154.037386,
+  "updated_at_iso": "2026-07-17T13:32:34Z",
   "workdir": "/tmp/bh3-study-layered-d08978d/base_nominal",
-  "simulated_time_s": 5.866967456,
+  "simulated_time_s": 5.883868739,
   "event_end_time_s": 13.0,
-  "progress_fraction": 0.4513051889230769,
-  "throughput_sim_s_per_wall_h_since_restart": 0.04230792559606504,
-  "eta_wall_h_at_restart_rate": 168.59802137553692,
+  "progress_fraction": 0.45260528761538465,
+  "throughput_sim_s_per_wall_h_since_restart": 0.04234482706402408,
+  "eta_wall_h_at_restart_rate": 168.0519618191055,
   "n_workers": 4,
-  "avg_worker_cpu_pct_lifetime": 64.57,
-  "workers": [
-    {
-      "pid": 1035969,
-      "pcpu": 64.5,
-      "pmem": 3.8,
-      "etime": "2-18:34:57"
-    },
-    {
-      "pid": 1035970,
-      "pcpu": 64.6,
-      "pmem": 3.7,
-      "etime": "2-18:34:57"
-    },
-    {
-      "pid": 1035971,
-      "pcpu": 64.6,
-      "pmem": 3.5,
-      "etime": "2-18:34:57"
-    },
-    {
-      "pid": 1035972,
-      "pcpu": 64.6,
-      "pmem": 3.7,
-      "etime": "2-18:34:57"
-    }
-  ],
+  "avg_worker_cpu_pct_lifetime": 64.6,
   "monitor_interval_s": 1200,
   "auto_recover": true,
   "stability_incident": {
@@ -57,13 +31,11 @@
     "status_level": "OK",
     "foam_fatal_in_tail": false,
     "latest_field_write_s": 5.85,
-    "deltaT_last": 3.451676529e-05,
-    "maxCo_last": 0.1000181698,
+    "deltaT_last": 3.454231434e-05,
+    "maxCo_last": 0.09993334235,
     "alpha_max_last": 1.0,
-    "advanced": false,
-    "stall_count": 1,
-    "idle_pct": 0.0,
-    "top_cpu_line": "%Cpu(s): 81.8 us, 18.2 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st"
+    "advanced": "yes",
+    "stall_count": 0
   },
   "paper_consistency_reverified_2026_07_14": true
 }
