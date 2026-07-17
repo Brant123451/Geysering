@@ -28,3 +28,7 @@ Updated every ~20 minutes while phase1 runs toward solver `6.75`.
 | 2026-07-16T23:00:03Z | 6.429901 | 94.2% | 0.320 | yes | `OK action=none` |
 | 2026-07-16T23:24:14Z | 6.468105 | 94.9% | 0.282 | yes | `OK action=none` |
 | 2026-07-16T23:46:43Z | 6.505384 | 95.6% | 0.245 | yes | `OK action=none` |
+| 2026-07-17T00:07:32Z | 6.542432 | 96.2% | 0.208 | yes | `OK action=none` |
+| 2026-07-17T00:27:54Z | 6.580597 | 96.9% | 0.169 | yes | `OK action=none` |
+| 2026-07-17T00:48:33Z | 6.618942 | 97.6% | 0.131 | yes | `OK action=none` |
+| 2026-07-17T01:08:57Z | 6.653780 | 98.3% | 0.096 | yes | `OK action=none` |
