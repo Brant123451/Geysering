@@ -1,0 +1,33 @@
+{
+  "case": "B-H4",
+  "label": "base_topen0p20",
+  "solver": "compressibleInterFoam",
+  "endTime_s": 13.05,
+  "classification_3d": "NO_GEYSER",
+  "classification_match": true,
+  "simulated_end_time_s": 13.034146,
+  "event_window_complete": true,
+  "Yfs_max_above_crown_m": 1.5900000000000003,
+  "Ta_3d_s": 8.41,
+  "files": [
+    "bh4_3d.foam",
+    "field_times.txt",
+    "fields_early.tar.xz",
+    "fields_late.tar.xz.part-00",
+    "fields_late.tar.xz.part-01",
+    "polyMesh.tar.xz",
+    "postProcessing.tar.xz",
+    "processors_early.tar.xz.part-00",
+    "processors_early.tar.xz.part-01",
+    "processors_late.tar.xz.part-00",
+    "processors_late.tar.xz.part-01",
+    "processors_late.tar.xz.part-02",
+    "reassemble.sh"
+  ],
+  "reassemble": "./reassemble.sh then tar -xJf <archive> -C openfoam/3d",
+  "notes": [
+    "Prefer reconstructed fields_*.tar.xz + polyMesh.tar.xz for ParaView.",
+    "processors_* archives are optional full parallel checkpoints.",
+    "Split parts are 90 MiB for GitHub file-size limits."
+  ]
+}
