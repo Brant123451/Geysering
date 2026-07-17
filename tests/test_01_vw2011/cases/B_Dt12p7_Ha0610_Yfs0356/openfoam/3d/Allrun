@@ -53,8 +53,10 @@ export CASEB_GAS_EOS="${CASEB_GAS_EOS:-perfectGas}"
 
 python3 validate_case.py > log.preflight 2>&1
 python3 prepare_run.py > log.prepare 2>&1
+MESH_OPTIMIZER="${CASEB_MESH_OPTIMIZER:-gmsh}"
 python3 make_mesh.py \
     --preset "$MESH" \
+    --optimizer "$MESH_OPTIMIZER" \
     --output caseB3d.msh \
     --metadata "outputs/runtime/mesh_${MESH}.json" \
     > log.gmsh 2>&1

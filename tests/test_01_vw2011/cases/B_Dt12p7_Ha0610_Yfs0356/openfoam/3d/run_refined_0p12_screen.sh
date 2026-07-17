@@ -28,6 +28,9 @@ export CASEB_RECONSTRUCTION_SCHEME=plicRDF
 export CASEB_RECONSTRUCTION_ITERATIONS=5
 export CASEB_RECONSTRUCTION_TOL=1e-6
 export CASEB_ADVECTION_SCHEME=isoAdvection
+# Refined gmsh default left 2 low-weight/vol-ratio faces and tet excess=6,
+# which fails the documented strict exception. Prefer Netgen optimize.
+export CASEB_MESH_OPTIMIZER="${CASEB_MESH_OPTIMIZER:-netgen}"
 export OPENFOAM_NP=4
 
 echo "START_REFINED_0P12 $(date -u +%Y-%m-%dT%H:%M:%SZ)"
