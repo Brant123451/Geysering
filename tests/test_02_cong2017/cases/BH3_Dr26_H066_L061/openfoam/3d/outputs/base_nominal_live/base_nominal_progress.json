@@ -5,14 +5,14 @@
   "paper_run": "B-H3",
   "status": "running_after_stability_restart",
   "check_source": "agent_20min",
-  "updated_at_unix": 1784286561.206492,
-  "updated_at_iso": "2026-07-17T11:09:21Z",
+  "updated_at_unix": 1784287788.491868,
+  "updated_at_iso": "2026-07-17T11:29:48Z",
   "workdir": "/tmp/bh3-study-layered-d08978d/base_nominal",
-  "simulated_time_s": 5.765285423,
+  "simulated_time_s": 5.782357143,
   "event_end_time_s": 13.0,
-  "progress_fraction": 0.44348349407692306,
-  "throughput_sim_s_per_wall_h_since_restart": 0.04207353064924333,
-  "eta_wall_h_at_restart_rate": 171.95406388196974,
+  "progress_fraction": 0.4447967033076923,
+  "throughput_sim_s_per_wall_h_since_restart": 0.042115635513082346,
+  "eta_wall_h_at_restart_rate": 171.37680030396288,
   "n_workers": 4,
   "avg_worker_cpu_pct_lifetime": 64.28,
   "workers": [
@@ -20,25 +20,25 @@
       "pid": 1035969,
       "pcpu": 64.2,
       "pmem": 3.8,
-      "etime": "2-16:32:12"
+      "etime": "2-16:52:39"
     },
     {
       "pid": 1035970,
       "pcpu": 64.3,
       "pmem": 3.7,
-      "etime": "2-16:32:12"
+      "etime": "2-16:52:39"
     },
     {
       "pid": 1035971,
       "pcpu": 64.3,
       "pmem": 3.7,
-      "etime": "2-16:32:12"
+      "etime": "2-16:52:39"
     },
     {
       "pid": 1035972,
       "pcpu": 64.3,
       "pmem": 3.7,
-      "etime": "2-16:32:12"
+      "etime": "2-16:52:39"
     }
   ],
   "monitor_interval_s": 1200,
@@ -57,13 +57,13 @@
     "status_level": "OK",
     "foam_fatal_in_tail": false,
     "latest_field_write_s": 5.75,
-    "deltaT_last": 3.567787971e-05,
-    "maxCo_last": 0.1000140714,
+    "deltaT_last": 3.571428571e-05,
+    "maxCo_last": 0.09998310755,
     "alpha_max_last": 1.0,
     "advanced": false,
     "stall_count": 1,
     "idle_pct": 0.0,
-    "top_cpu_line": "%Cpu(s): 85.7 us, 14.3 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st"
+    "top_cpu_line": "%Cpu(s): 83.7 us, 16.3 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st"
   },
   "paper_consistency_reverified_2026_07_14": true
 }
