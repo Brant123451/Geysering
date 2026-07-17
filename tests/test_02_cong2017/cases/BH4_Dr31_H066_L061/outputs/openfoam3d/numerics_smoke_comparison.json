@@ -1,0 +1,37 @@
+{
+  "case": "B-H4",
+  "window_s": 0.3,
+  "status": "candidate_rejected",
+  "purpose": "Short-window comparison of a faster candidate; this is not an event classification.",
+  "reference": {
+    "label": "open_smoke",
+    "maxCo": 0.2,
+    "maxAlphaCo": 0.1,
+    "nOuterCorrectors": 3
+  },
+  "candidate": {
+    "label": "open_smoke_prod",
+    "maxCo": 0.4,
+    "maxAlphaCo": 0.1,
+    "nOuterCorrectors": 2
+  },
+  "candidate_relative_to_reference": {
+    "pocket_pressure_peak_gauge_head_m": 0.0026217062099093253,
+    "pt2_pressure_peak_gauge_head_m": 0.004587755247521011,
+    "valve_volume_flux_peak_abs_m3_s": -0.0011328164405140866,
+    "pocket_volume_min_m3": -0.0006658230252530635,
+    "riser_interface_mixed_volume_max_m3": 0.006427792033923003
+  },
+  "candidate_conservation": {
+    "max_water_volume_balance_relative": 0.0002801579690949285,
+    "max_gas_mass_balance_relative": 0.000033112678720283234
+  },
+  "extended_candidate_failure": {
+    "time_s": 0.5071204845,
+    "max_courant_number": 2.3819575,
+    "max_interface_courant_number": 0.17466121,
+    "failure": "Negative initial temperature T0: -24.839621",
+    "result_used": false
+  },
+  "conclusion": "Despite agreement within 0.7% over 0.3 s, the two-outer-corrector candidate failed the extended stability gate and was rejected. The factors were subsequently isolated in numerics_stability_gate.json."
+}

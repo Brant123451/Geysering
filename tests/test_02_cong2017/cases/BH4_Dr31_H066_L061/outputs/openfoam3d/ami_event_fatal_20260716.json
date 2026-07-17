@@ -1,0 +1,19 @@
+{
+  "ts_utc": "2026-07-16T05:21:10Z",
+  "event": "solver_fatal_then_watchdog_thrash",
+  "fatal_sim_time_s": 11.7102260101,
+  "fatal_message": "AMI is up to event:1073741873 mesh points are up to time \"constant\" patch:valveCoupleUpstream",
+  "fatal_source": "Foam::cyclicACMIPolyPatch::updateAreas()",
+  "rotated_log": "log.compressibleInterFoam.rotated.20260716T042847Z",
+  "resume_field": "11.6141458734",
+  "lost_unwritten_progress_approx_s": 0.096,
+  "watchdog_issue": "Negative advance after resume was treated as STALLED; agent_check sourced watchdog20.sh (infinite loop), creating duplicate watchdogs that repeatedly killed the live run.",
+  "remediation": [
+    "Killed duplicate sourced watchdog loops",
+    "Fixed agent_check restore_controls to never source watchdog20.sh",
+    "Negative advance now resets time baseline instead of restarting",
+    "Stall restart requires two consecutive low-advance intervals",
+    "watchdog20 uses flock single-instance lock"
+  ],
+  "status_after_remediation": "solver resumed from 11.614; monitoring repaired"
+}

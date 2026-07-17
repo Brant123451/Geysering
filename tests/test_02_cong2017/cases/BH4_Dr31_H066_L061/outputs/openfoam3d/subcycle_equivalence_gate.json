@@ -1,0 +1,45 @@
+{
+  "case": "B-H4",
+  "purpose": "Restart equivalence gate for VOF subcycling; not an event-classification result",
+  "checkpoint_time_s": 8.5,
+  "common_comparison_times_s": [
+    8.52,
+    8.54
+  ],
+  "conservative_controls": {
+    "maxCo": 0.4,
+    "maxAlphaCo": 0.1,
+    "nAlphaSubCycles": 2,
+    "maximum_alpha_courant_per_subcycle": 0.05
+  },
+  "equivalent_controls": {
+    "maxCo": 0.4,
+    "maxAlphaCo": 0.2,
+    "nAlphaSubCycles": 4,
+    "maximum_alpha_courant_per_subcycle": 0.05
+  },
+  "comparison_at_8p54_s": {
+    "Yfs_absolute_difference_m": 0.0,
+    "Yint_absolute_difference_m": 0.0,
+    "pocket_gauge_head_relative_difference": 9.683e-05,
+    "pt2_gauge_head_relative_difference": 0.00035664,
+    "pocket_gas_volume_relative_difference": 5.41e-07,
+    "pocket_gas_mass_relative_difference": 4.541e-06,
+    "riser_mixed_volume_relative_difference": 0.00056062
+  },
+  "event_metric_checks": {
+    "Ta_conservative_s": 8.41,
+    "Ta_equivalent_s": 8.41,
+    "vint_conservative_m_per_s": 0.25,
+    "vint_equivalent_m_per_s": 0.25
+  },
+  "maximum_key_relative_difference": 0.00056062,
+  "acceptance_limit": 0.005,
+  "fatal_error_detected": false,
+  "result": "PASS",
+  "notes": [
+    "Both branches begin from the same 8.5 s field checkpoint.",
+    "The per-subcycle interface Courant bound and the global Courant bound are unchanged.",
+    "The comparison precedes any final geyser/no-geyser classification."
+  ]
+}

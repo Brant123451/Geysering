@@ -1,0 +1,11 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      turbulenceProperties;
+}
+
+// No inlet turbulence or fitted closure is reported.  A laminar baseline
+// avoids using numerical/RANS dissipation to force the known no-geyser branch.
+simulationType  laminar;

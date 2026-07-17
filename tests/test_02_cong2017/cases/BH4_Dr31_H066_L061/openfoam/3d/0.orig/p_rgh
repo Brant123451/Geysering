@@ -1,0 +1,36 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p_rgh;
+}
+
+dimensions      [1 -1 -2 0 0 0 0];
+internalField   uniform 101325;
+
+boundaryField
+{
+    walls
+    {
+        type            fixedFluxPressure;
+        value           uniform 101325;
+    }
+    closedEnd
+    {
+        type            fixedFluxPressure;
+        value           uniform 101325;
+    }
+    reservoir
+    {
+        // p_rgh is constant over a hydrostatic section at head H0=0.66 m.
+        type            fixedValue;
+        value           uniform 107786.6508;
+    }
+    atmosphere
+    {
+        // Reduced pressure for p=101325 Pa at the initial free-surface height.
+        type            fixedValue;
+        value           uniform 101332.717209;
+    }
+}

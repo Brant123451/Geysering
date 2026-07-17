@@ -1,0 +1,22 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      repairTopoSetDict;
+}
+
+// checkMesh writes this faceSet only when a warped internal face cannot be
+// decomposed into positive-volume tets.  Select the two adjacent cells for a
+// local geometric split; the final full check remains the acceptance gate.
+actions
+(
+    {
+        name badTetCells;
+        type cellSet;
+        action new;
+        source faceToCell;
+        set lowQualityTetFaces;
+        option any;
+    }
+);

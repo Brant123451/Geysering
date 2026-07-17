@@ -1,0 +1,36 @@
+{
+  "case": "B-H4",
+  "window_s": 0.7,
+  "purpose": "Isolate Courant limit from the rejected two-outer-corrector configuration; this is not an event classification.",
+  "reference_branch": {
+    "maxCo_0_to_0p5_s": 0.2,
+    "maxCo_0p5_to_0p7_s": 0.4,
+    "maxAlphaCo": 0.1,
+    "nOuterCorrectors": 3
+  },
+  "independent_candidate": {
+    "label": "co40_outer3_from0",
+    "maxCo": 0.4,
+    "maxAlphaCo": 0.1,
+    "nOuterCorrectors": 3,
+    "completed": true,
+    "classification": "INDETERMINATE"
+  },
+  "candidate_relative_to_reference": {
+    "pocket_pressure_peak_gauge_head_m": 0.0003605115393763288,
+    "pt2_pressure_peak_gauge_head_m": 0.0005265213539816278,
+    "valve_volume_flux_peak_abs_m3_s": -0.0012537672707790123,
+    "pocket_volume_min_m3": -0.0007145324612189126,
+    "riser_interface_mixed_volume_max_m3": 0.0007606900116393682
+  },
+  "candidate_health": {
+    "temperature_min_K": 292.5213,
+    "temperature_max_K": 297.22442,
+    "velocity_max_m_per_s": 2.078977,
+    "alpha_water_min": -5.6506215e-11,
+    "alpha_water_max": 1.0,
+    "max_water_volume_balance_relative": 0.00028014626009390247,
+    "max_gas_mass_balance_relative": 0.000032668728836108775
+  },
+  "conclusion": "With three outer correctors, maxCo=0.4 independently crossed the 0.507 s failure region and completed 0.7 s. Key state diagnostics agree with the conservative-start branch within 0.13%; this configuration advances to the full-event gate."
+}

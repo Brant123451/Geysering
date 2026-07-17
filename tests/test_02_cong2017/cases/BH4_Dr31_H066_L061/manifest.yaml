@@ -6,6 +6,7 @@
   "status": "series_scan_case",
   "self_contained": true,
   "entrypoints": [
-    "scripts/run_series_case.py"
+    "scripts/run_series_case.py",
+    "openfoam/3d/Allrun"
   ]
 }

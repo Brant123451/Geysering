@@ -1,0 +1,30 @@
+{
+  "case": "B-H4",
+  "purpose": "Live throughput trial after air arrival; not an event-classification result",
+  "checkpoint_time_s": 9.2141458734,
+  "candidate_controls": {
+    "maxCo": 0.5,
+    "maxAlphaCo": 0.4,
+    "nAlphaSubCycles": 2,
+    "nOuterCorrectors": 2
+  },
+  "retained_controls": {
+    "maxCo": 0.4,
+    "maxAlphaCo": 0.2,
+    "nAlphaSubCycles": 4,
+    "nOuterCorrectors": 3,
+    "writeInterval_s": 0.1
+  },
+  "observed": {
+    "failed_near_time_s": 9.231247356,
+    "courant_max_before_fail": 1.2474961,
+    "interface_courant_max_before_fail": 0.25711735,
+    "fatal_error": "Negative initial temperature T0: -2.8392513"
+  },
+  "result": "REJECTED",
+  "reason": "Raising maxCo to 0.50 with fewer alpha subcycles and outer correctors produced a Courant spike above 1 and a fatal negative temperature. Production controls are restored and the run resumes from the last healthy field write.",
+  "notes": [
+    "Earlier maxAlphaCo-only raise also left the step limited by global Courant ~0.40, so it did not improve throughput.",
+    "writeInterval remains 0.10 s only to densify restart checkpoints; it does not change the physics controls."
+  ]
+}

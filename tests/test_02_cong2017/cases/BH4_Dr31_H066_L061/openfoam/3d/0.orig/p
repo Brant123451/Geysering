@@ -1,0 +1,34 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p;
+}
+
+dimensions      [1 -1 -2 0 0 0 0];
+internalField   uniform 101325;
+
+boundaryField
+{
+    walls
+    {
+        type            calculated;
+        value           uniform 101325;
+    }
+    closedEnd
+    {
+        type            calculated;
+        value           uniform 101325;
+    }
+    reservoir
+    {
+        type            calculated;
+        value           uniform 107786.6508;
+    }
+    atmosphere
+    {
+        type            calculated;
+        value           uniform 101325;
+    }
+}

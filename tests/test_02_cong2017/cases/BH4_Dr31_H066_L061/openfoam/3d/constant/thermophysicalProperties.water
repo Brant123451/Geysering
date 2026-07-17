@@ -1,0 +1,42 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      thermophysicalProperties;
+}
+
+thermoType
+{
+    type            heRhoThermo;
+    mixture         pureMixture;
+    transport       const;
+    thermo          hConst;
+    equationOfState rhoConst;
+    specie          specie;
+    energy          sensibleInternalEnergy;
+}
+
+mixture
+{
+    specie
+    {
+        molWeight   18.01528;
+    }
+    equationOfState
+    {
+        // Liquid compressibility is negligible on the seconds-long event scale.
+        // Air remains compressible through its separate perfectGas model.
+        rho         998;
+    }
+    thermodynamics
+    {
+        Cp          4182;
+        Hf          0;
+    }
+    transport
+    {
+        mu          9.32e-4;
+        Pr          6.50;
+    }
+}
