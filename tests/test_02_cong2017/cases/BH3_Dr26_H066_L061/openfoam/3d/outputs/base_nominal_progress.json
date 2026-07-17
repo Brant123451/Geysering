@@ -5,40 +5,40 @@
   "paper_run": "B-H3",
   "status": "running_after_stability_restart",
   "check_source": "agent_20min",
-  "updated_at_unix": 1784310058.371361,
-  "updated_at_iso": "2026-07-17T17:40:58Z",
+  "updated_at_unix": 1784311310.960842,
+  "updated_at_iso": "2026-07-17T18:01:50Z",
   "workdir": "/tmp/bh3-study-layered-d08978d/base_nominal",
-  "simulated_time_s": 6.069705379,
+  "simulated_time_s": 6.085298673,
   "event_end_time_s": 13.0,
-  "progress_fraction": 0.4669004137692308,
-  "throughput_sim_s_per_wall_h_since_restart": 0.04249299088219084,
-  "eta_wall_h_at_restart_rate": 163.09265309692623,
+  "progress_fraction": 0.4680998979230769,
+  "throughput_sim_s_per_wall_h_since_restart": 0.04250424075897963,
+  "eta_wall_h_at_restart_rate": 162.68262186377652,
   "n_workers": 4,
-  "avg_worker_cpu_pct_lifetime": 65.07,
+  "avg_worker_cpu_pct_lifetime": 65.17,
   "workers": [
     {
       "pid": 1035969,
-      "pcpu": 65.0,
-      "pmem": 3.7,
-      "etime": "2-23:03:49"
+      "pcpu": 65.1,
+      "pmem": 3.9,
+      "etime": "2-23:24:42"
     },
     {
       "pid": 1035970,
-      "pcpu": 65.1,
-      "pmem": 3.6,
-      "etime": "2-23:03:49"
+      "pcpu": 65.2,
+      "pmem": 3.7,
+      "etime": "2-23:24:42"
     },
     {
       "pid": 1035971,
-      "pcpu": 65.1,
-      "pmem": 3.5,
-      "etime": "2-23:03:49"
+      "pcpu": 65.2,
+      "pmem": 3.6,
+      "etime": "2-23:24:42"
     },
     {
       "pid": 1035972,
-      "pcpu": 65.1,
-      "pmem": 3.7,
-      "etime": "2-23:03:49"
+      "pcpu": 65.2,
+      "pmem": 3.6,
+      "etime": "2-23:24:42"
     }
   ],
   "monitor_interval_s": 1200,
@@ -57,13 +57,13 @@
     "status_level": "OK",
     "foam_fatal_in_tail": false,
     "latest_field_write_s": 6.05,
-    "deltaT_last": 3.31450999e-05,
-    "maxCo_last": 0.09997391988,
+    "deltaT_last": 3.318584071e-05,
+    "maxCo_last": 0.09994533849,
     "alpha_max_last": 1.0,
-    "advanced": false,
-    "stall_count": 1,
+    "advanced": true,
+    "stall_count": 0,
     "idle_pct": 0.0,
-    "top_cpu_line": "%Cpu(s): 95.2 us,  4.8 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st"
+    "top_cpu_line": "%Cpu(s): 85.7 us, 14.3 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st"
   },
   "paper_consistency_reverified_2026_07_14": true
 }
