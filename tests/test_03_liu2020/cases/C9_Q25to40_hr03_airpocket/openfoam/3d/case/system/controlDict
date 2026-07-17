@@ -20,7 +20,7 @@ writeFormat     binary;
 writePrecision  8;
 writeCompression off;
 timeFormat      general;
-timePrecision   10;
+timePrecision   14;
 runTimeModifiable yes;
 
 adjustTimeStep  yes;

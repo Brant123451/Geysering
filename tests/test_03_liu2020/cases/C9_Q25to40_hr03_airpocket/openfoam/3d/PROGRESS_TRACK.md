@@ -60,3 +60,5 @@ Updated every ~20 minutes while phase1 runs toward solver `6.75`.
 | 2026-07-17T09:39:55Z | 7.567799 | full 33.3% / p2 6.1% | 12.682 | yes | `OK action=none` |
 | 2026-07-17T10:01:17Z | 7.605949 | full 33.5% / p2 6.3% | 12.644 | yes | `OK action=none` |
 | 2026-07-17T10:21:36Z | 7.644589 | full 33.7% / p2 6.6% | 12.605 | yes | `OK action=none` |
+| 2026-07-17T10:22:39Z | 7.647131 | full 33.7% / p2 6.6% | 12.603 | yes | `live poll; single mpirun; rate~0.11 sim-s/wall-h` |
+| 2026-07-17T10:41:35Z | 7.692409 | full 34.0% / p2 7.0% | 12.558 | yes | `OK action=none` |
