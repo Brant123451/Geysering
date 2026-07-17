@@ -4,9 +4,9 @@
   "case": "BH3_Dr26_H066_L061",
   "paper_run": "B-H3",
   "status": "running_after_stability_restart",
-  "check_source": "watchdog_20m",
-  "updated_at_unix": 1784317543.8342476,
-  "updated_at_iso": "2026-07-17T19:45:43Z",
+  "check_source": "agent_20min",
+  "updated_at_unix": 1784317544.778919,
+  "updated_at_iso": "2026-07-17T19:45:44Z",
   "workdir": "/tmp/bh3-study-layered-d08978d/base_nominal",
   "simulated_time_s": 6.168974735,
   "event_end_time_s": 13.0,
@@ -15,6 +15,32 @@
   "eta_wall_h_at_restart_rate": 160.19432759505779,
   "n_workers": 4,
   "avg_worker_cpu_pct_lifetime": 65.3,
+  "workers": [
+    {
+      "pid": 1035969,
+      "pcpu": 65.3,
+      "pmem": 3.9,
+      "etime": "3-01:08:35"
+    },
+    {
+      "pid": 1035970,
+      "pcpu": 65.3,
+      "pmem": 3.7,
+      "etime": "3-01:08:35"
+    },
+    {
+      "pid": 1035971,
+      "pcpu": 65.3,
+      "pmem": 3.6,
+      "etime": "3-01:08:35"
+    },
+    {
+      "pid": 1035972,
+      "pcpu": 65.3,
+      "pmem": 3.8,
+      "etime": "3-01:08:35"
+    }
+  ],
   "monitor_interval_s": 1200,
   "auto_recover": true,
   "stability_incident": {
@@ -34,8 +60,10 @@
     "deltaT_last": 3.937216357e-05,
     "maxCo_last": 0.09998707104,
     "alpha_max_last": 1.0,
-    "advanced": "yes",
-    "stall_count": 0
+    "advanced": false,
+    "stall_count": 1,
+    "idle_pct": 0.0,
+    "top_cpu_line": "%Cpu(s): 97.7 us,  2.3 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st"
   },
   "paper_consistency_reverified_2026_07_14": true
 }
