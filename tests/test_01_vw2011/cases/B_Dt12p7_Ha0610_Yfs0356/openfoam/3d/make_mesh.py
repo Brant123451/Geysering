@@ -380,12 +380,18 @@ def main() -> None:
 
         gmsh.model.mesh.generate(3)
         if args.optimizer != "none":
-            gmsh.model.mesh.optimize("", niter=2)
+            # Extra passes help refined tet quality near the conformal valve.
+            niter = 5 if args.preset == "refined" else 2
+            gmsh.model.mesh.optimize("", niter=niter)
         if args.optimizer == "netgen":
-            gmsh.model.mesh.optimize("Netgen", niter=1)
+            try:
+                gmsh.model.mesh.optimize("Netgen", niter=1)
+            except Exception as exc:  # noqa: BLE001 - fall back when Netgen absent
+                print(f"Netgen optimize unavailable ({exc}); continuing with gmsh optimize")
+                gmsh.model.mesh.optimize("", niter=3)
         elif args.optimizer == "relocate":
             gmsh.model.mesh.optimize("Relocate3D", niter=5)
-            gmsh.model.mesh.optimize("", niter=1)
+            gmsh.model.mesh.optimize("", niter=2)
         gmsh.write(str(args.output))
 
         element_tags = gmsh.model.mesh.getElements(3)[1]

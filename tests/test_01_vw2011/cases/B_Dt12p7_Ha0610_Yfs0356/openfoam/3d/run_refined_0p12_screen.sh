@@ -29,8 +29,9 @@ export CASEB_RECONSTRUCTION_ITERATIONS=5
 export CASEB_RECONSTRUCTION_TOL=1e-6
 export CASEB_ADVECTION_SCHEME=isoAdvection
 # Refined gmsh default left 2 low-weight/vol-ratio faces and tet excess=6,
-# which fails the documented strict exception. Prefer Netgen optimize.
-export CASEB_MESH_OPTIMIZER="${CASEB_MESH_OPTIMIZER:-netgen}"
+# which fails the documented strict exception. Prefer Relocate3D (Netgen is
+# not compiled into the environment Gmsh).
+export CASEB_MESH_OPTIMIZER="${CASEB_MESH_OPTIMIZER:-relocate}"
 export OPENFOAM_NP=4
 
 echo "START_REFINED_0P12 $(date -u +%Y-%m-%dT%H:%M:%SZ)"
