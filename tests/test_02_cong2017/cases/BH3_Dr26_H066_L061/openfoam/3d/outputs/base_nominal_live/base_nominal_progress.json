@@ -5,40 +5,40 @@
   "paper_run": "B-H3",
   "status": "running_after_stability_restart",
   "check_source": "agent_20min",
-  "updated_at_unix": 1784363856.415332,
-  "updated_at_iso": "2026-07-18T08:37:36Z",
+  "updated_at_unix": 1784365174.326559,
+  "updated_at_iso": "2026-07-18T08:59:34Z",
   "workdir": "/tmp/bh3-study-layered-d08978d/base_nominal",
-  "simulated_time_s": 6.871260582,
+  "simulated_time_s": 6.892088495,
   "event_end_time_s": 13.0,
-  "progress_fraction": 0.5285585063076923,
-  "throughput_sim_s_per_wall_h_since_restart": 0.04442938792547162,
-  "eta_wall_h_at_restart_rate": 137.94336821116457,
+  "progress_fraction": 0.5301606534615385,
+  "throughput_sim_s_per_wall_h_since_restart": 0.044482202904050555,
+  "eta_wall_h_at_restart_rate": 137.3113538952859,
   "n_workers": 4,
-  "avg_worker_cpu_pct_lifetime": 66.1,
+  "avg_worker_cpu_pct_lifetime": 66.12,
   "workers": [
     {
       "pid": 1035969,
       "pcpu": 66.1,
       "pmem": 3.9,
-      "etime": "3-14:00:27"
+      "etime": "3-14:22:25"
     },
     {
       "pid": 1035970,
       "pcpu": 66.1,
       "pmem": 3.7,
-      "etime": "3-14:00:27"
+      "etime": "3-14:22:25"
     },
     {
       "pid": 1035971,
       "pcpu": 66.1,
       "pmem": 3.7,
-      "etime": "3-14:00:27"
+      "etime": "3-14:22:25"
     },
     {
       "pid": 1035972,
-      "pcpu": 66.1,
-      "pmem": 3.6,
-      "etime": "3-14:00:27"
+      "pcpu": 66.2,
+      "pmem": 3.7,
+      "etime": "3-14:22:25"
     }
   ],
   "monitor_interval_s": 1200,
@@ -57,13 +57,13 @@
     "status_level": "OK",
     "foam_fatal_in_tail": false,
     "latest_field_write_s": 6.85,
-    "deltaT_last": 4.354457298e-05,
-    "maxCo_last": 0.1000455091,
+    "deltaT_last": 4.653826452e-05,
+    "maxCo_last": 0.0999330628,
     "alpha_max_last": 1.0,
     "advanced": true,
     "stall_count": 0,
     "idle_pct": 0.0,
-    "top_cpu_line": "%Cpu(s): 98.0 us,  2.0 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st"
+    "top_cpu_line": "%Cpu(s): 85.0 us, 15.0 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st"
   },
   "paper_consistency_reverified_2026_07_14": true
 }
