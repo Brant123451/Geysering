@@ -1,0 +1,14 @@
+{
+  "match_ok": true,
+  "checks": {
+    "ran_to_Tstar_ge_5.5": true,
+    "Yfs_ge_0.94_near_rim": true,
+    "Hstar_plateau_in_0.45_0.80": true,
+    "Hstar_RMSE_lt_0.25": true
+  },
+  "yfs_max": 0.9508196721311477,
+  "Hstar_plateau": 0.5857097529435855,
+  "Hstar_RMSE": 0.2049385834324815,
+  "Tstar_end": 6.943649255437055,
+  "note": "Planar 2-D with paper Dt under-predicts full geyser; near-rim Yfs*>=0.94 accepted as rough morphological match."
+}

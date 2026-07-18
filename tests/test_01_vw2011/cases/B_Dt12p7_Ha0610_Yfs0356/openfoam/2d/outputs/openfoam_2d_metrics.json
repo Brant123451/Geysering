@@ -3,18 +3,30 @@
   "dimension": "2d_planar",
   "simulation_end_s": 12.0,
   "simulation_end_Tstar": 6.943649255437055,
-  "pressure_plateau_Hstar_mean_T1to7": 0.5744456984967343,
-  "pressure_RMSE_Hstar_no_shift": 0.20071475726723106,
-  "free_surface_max_Ystar": 0.9514588519691094,
-  "free_surface_RMSE_Ystar_no_shift": 0.18695736676149166,
-  "interface_RMSE_Ystar_no_shift": 0.41930657199658483,
-  "interface_liftoff_Tstar": 3.8710844599061587,
-  "interface_catch_Tstar": 5.711151512596978,
+  "pressure_plateau_Hstar_mean_T1to7": 0.5857097529435855,
+  "pressure_RMSE_Hstar_no_shift": 0.2049385834324815,
+  "free_surface_max_Ystar": 0.9508196721311477,
+  "free_surface_RMSE_Ystar_no_shift": 0.18982346290491142,
+  "interface_RMSE_Ystar_no_shift": 0.4267309693576637,
+  "interface_liftoff_Tstar": 3.8768708342856897,
+  "interface_catch_Tstar": 6.081479472886954,
   "geysering": false,
+  "geyser_before_catch": false,
   "comparison_targets": {
     "observed_geysering": true,
     "figure_pressure": "Fig.6",
-    "figure_levels": "Fig.8"
+    "figure_levels": "Fig.8",
+    "pressure_plateau_Hstar_exp_median_approx": 0.7
   },
-  "caveat": "Planar 2-D area ratio Dt/D=0.135; physical circular area ratio (Dt/D)^2=0.018. Instantaneous valve opening; no above-rim exterior atmosphere. Morphological / time-history diagnostic only."
+  "paper_inputs": {
+    "D_m": 0.094,
+    "Dt_m": 0.0127,
+    "L_m": 0.61,
+    "Ha0_m": 0.61,
+    "Yfs0_m": 0.356,
+    "chamber_m": 0.546,
+    "middle_m": 2.97,
+    "downstream_m": 0.49
+  },
+  "caveat": "Planar 2-D keeps paper lengths, D, Ha0, Yfs0 and BCs. Tower width uses hydraulic equivalence W=Dt^2/D so W/D=(Dt/D)^2 (physical Dt as drawn width underpredicts geyser). Valve opening instantaneous (paper: manual <1 s). Headroom above rim allows Y*>1 spill detection."
 }
