@@ -4,10 +4,10 @@
 The mesh is the Boolean union of a circular 94 mm main pipe, a circular
 12.7 mm tower, and an exterior atmosphere above the physical rim.  Refinement
 is local: the long main pipe remains affordable while the base preset retains
-about twelve nominal edge lengths across the small tower and the refined
-preset retains about eighteen.  A conformal internal disk at the valve plane
-is an ordinary face zone for opening runs and becomes a two-sided wall baffle
-for the closed-valve hold.
+about ten nominal edge lengths across the small tower (compliance floor) and
+the refined preset retains about eighteen.  A conformal internal disk at the
+valve plane is an ordinary face zone for opening runs and becomes a two-sided
+wall baffle for the closed-valve hold.
 """
 from __future__ import annotations
 
@@ -46,13 +46,15 @@ OPTIMIZE_THRESHOLD = 0.35
 ALGORITHMS = {"hxt": 10, "delaunay": 1}
 
 PRESETS = {
+    # Coarsened base (~half the previous ~1.90M cells) while keeping the
+    # tower at the ten-cell compliance floor (tower_size <= Dt/10).
     "base": {
-        "pipe_size": 0.0100,
-        "valve_size": 0.0030,
-        "tower_size": 0.00105,
-        "near_jet_size": 0.00160,
-        "jet_size": 0.0040,
-        "atmosphere_size": 0.0250,
+        "pipe_size": 0.0130,
+        "valve_size": 0.0040,
+        "tower_size": 0.00126,
+        "near_jet_size": 0.00220,
+        "jet_size": 0.0055,
+        "atmosphere_size": 0.0350,
     },
     "refined": {
         "pipe_size": 0.0080,

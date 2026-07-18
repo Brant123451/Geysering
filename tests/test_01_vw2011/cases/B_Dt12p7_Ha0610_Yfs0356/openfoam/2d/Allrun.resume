@@ -1,0 +1,26 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+source /usr/share/modules/init/bash 2>/dev/null || true
+set +e
+set +u
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
+
+if [[ ! -d processor0 ]]; then
+    echo "No decomposed solution exists; run ./Allrun first." >&2
+    exit 1
+fi
+if pgrep -x compressibleInterFoam >/dev/null; then
+    echo "compressibleInterFoam is already running." >&2
+    exit 1
+fi
+
+processors=(processor[0-9]*)
+NP="${#processors[@]}"
+OMPI_ALLOW_RUN_AS_ROOT=1 \
+OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
+mpirun -np "$NP" compressibleInterFoam -parallel \
+    >> log.compressibleInterFoam 2>&1
+python3 postprocess_compare.py > log.postprocess 2>&1
+echo "CASE_B_2D_DONE"
