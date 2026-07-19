@@ -5,14 +5,14 @@
   "paper_run": "B-H3",
   "status": "running_after_stability_restart",
   "check_source": "agent_20min",
-  "updated_at_unix": 1784445652.382674,
-  "updated_at_iso": "2026-07-19T07:20:52Z",
+  "updated_at_unix": 1784446973.926894,
+  "updated_at_iso": "2026-07-19T07:42:53Z",
   "workdir": "/tmp/bh3-study-layered-d08978d/base_nominal",
-  "simulated_time_s": 7.825424706,
+  "simulated_time_s": 7.83333122,
   "event_end_time_s": 13.0,
-  "progress_fraction": 0.6019557466153846,
-  "throughput_sim_s_per_wall_h_since_restart": 0.04392058959642126,
-  "eta_wall_h_at_restart_rate": 117.81661725282565,
+  "progress_fraction": 0.60256394,
+  "throughput_sim_s_per_wall_h_since_restart": 0.043845223725317954,
+  "eta_wall_h_at_restart_rate": 117.83880525660456,
   "n_workers": 4,
   "avg_worker_cpu_pct_lifetime": 66.7,
   "workers": [
@@ -20,25 +20,25 @@
       "pid": 1035969,
       "pcpu": 66.7,
       "pmem": 3.9,
-      "etime": "4-12:43:43"
+      "etime": "4-13:05:45"
     },
     {
       "pid": 1035970,
       "pcpu": 66.7,
       "pmem": 3.7,
-      "etime": "4-12:43:43"
+      "etime": "4-13:05:45"
     },
     {
       "pid": 1035971,
       "pcpu": 66.7,
       "pmem": 3.8,
-      "etime": "4-12:43:43"
+      "etime": "4-13:05:45"
     },
     {
       "pid": 1035972,
       "pcpu": 66.7,
-      "pmem": 3.7,
-      "etime": "4-12:43:43"
+      "pmem": 3.8,
+      "etime": "4-13:05:45"
     }
   ],
   "monitor_interval_s": 1200,
@@ -57,13 +57,13 @@
     "status_level": "OK",
     "foam_fatal_in_tail": false,
     "latest_field_write_s": 7.8,
-    "deltaT_last": 1.697188834e-05,
-    "maxCo_last": 0.04999432578,
+    "deltaT_last": 1.658585088e-05,
+    "maxCo_last": 0.04999020096,
     "alpha_max_last": 1.0,
     "advanced": true,
     "stall_count": 0,
-    "idle_pct": 2.2,
-    "top_cpu_line": "%Cpu(s): 87.0 us, 10.9 sy,  0.0 ni,  2.2 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st"
+    "idle_pct": 0.0,
+    "top_cpu_line": "%Cpu(s): 95.2 us,  4.8 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st"
   },
   "paper_consistency_reverified_2026_07_14": true
 }
