@@ -5,14 +5,14 @@
   "paper_run": "B-H3",
   "status": "running_after_stability_restart",
   "check_source": "agent_20min",
-  "updated_at_unix": 1784566061.276287,
-  "updated_at_iso": "2026-07-20T16:47:41Z",
+  "updated_at_unix": 1784567373.197709,
+  "updated_at_iso": "2026-07-20T17:09:33Z",
   "workdir": "/tmp/bh3-study-layered-d08978d/base_nominal",
-  "simulated_time_s": 8.339564964,
+  "simulated_time_s": 8.344519681,
   "event_end_time_s": 13.0,
-  "progress_fraction": 0.6415049972307691,
-  "throughput_sim_s_per_wall_h_since_restart": 0.03720446136701105,
-  "eta_wall_h_at_restart_rate": 125.26548872798298,
+  "progress_fraction": 0.6418861293076923,
+  "throughput_sim_s_per_wall_h_since_restart": 0.037144097663813665,
+  "eta_wall_h_at_restart_rate": 125.33566870128706,
   "n_workers": 4,
   "avg_worker_cpu_pct_lifetime": 67.17,
   "workers": [
@@ -20,25 +20,25 @@
       "pid": 1035969,
       "pcpu": 67.1,
       "pmem": 3.9,
-      "etime": "5-22:10:32"
+      "etime": "5-22:32:24"
     },
     {
       "pid": 1035970,
       "pcpu": 67.2,
       "pmem": 3.7,
-      "etime": "5-22:10:32"
+      "etime": "5-22:32:24"
     },
     {
       "pid": 1035971,
       "pcpu": 67.2,
       "pmem": 3.6,
-      "etime": "5-22:10:32"
+      "etime": "5-22:32:24"
     },
     {
       "pid": 1035972,
       "pcpu": 67.2,
       "pmem": 3.8,
-      "etime": "5-22:10:32"
+      "etime": "5-22:32:24"
     }
   ],
   "monitor_interval_s": 1200,
@@ -57,13 +57,13 @@
     "status_level": "OK",
     "foam_fatal_in_tail": false,
     "latest_field_write_s": 8.3,
-    "deltaT_last": 1.088116338e-05,
-    "maxCo_last": 0.09998095197,
+    "deltaT_last": 7.026050134e-06,
+    "maxCo_last": 0.06467187185,
     "alpha_max_last": 1.0,
     "advanced": true,
     "stall_count": 0,
     "idle_pct": 0.0,
-    "top_cpu_line": "%Cpu(s): 97.7 us,  2.3 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st"
+    "top_cpu_line": "%Cpu(s): 95.3 us,  4.7 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st"
   },
   "paper_consistency_reverified_2026_07_14": true
 }
