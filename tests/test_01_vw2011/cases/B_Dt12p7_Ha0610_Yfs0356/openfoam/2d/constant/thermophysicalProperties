@@ -18,10 +18,12 @@ phases          (water air);
 
 pMin            50000;
 
+// W≈1.72 mm area-equivalent bore: physical sigma makes Bo~O(1) and
+// capillary-locks the column. Disable surface tension for planar pilot.
 sigma
 {
     type        constant;
-    sigma       0.072;
+    sigma       0;
 }
 
 

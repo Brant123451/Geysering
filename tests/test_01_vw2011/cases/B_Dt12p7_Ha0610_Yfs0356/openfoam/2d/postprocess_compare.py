@@ -222,10 +222,12 @@ def main() -> None:
         },
         "caveat": (
             "Planar 2-D keeps paper lengths, D, Ha0, Yfs0 and BCs. Tower width "
-            "uses hydraulic equivalence W=Dt^2/D so W/D=(Dt/D)^2 (physical Dt "
-            "as drawn width underpredicts geyser). Valve opening instantaneous "
+            "uses hydraulic equivalence W=Dt^2/D so W/D=(Dt/D)^2; sigma=0 to "
+            "avoid capillary lock in the thin bore. Valve opening instantaneous "
             "(paper: manual <1 s). Headroom above rim allows Y*>1 spill detection."
         ),
+        "planar_tower_width_m": 0.0127**2 / 0.094,
+        "sigma": 0.0,
     }
 
     with (OUT / "openfoam_2d_series.csv").open("w", newline="", encoding="utf-8") as stream:
