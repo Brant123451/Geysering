@@ -1,0 +1,51 @@
+{
+  "handoff_date_utc": "2026-07-21",
+  "branch": "cursor/test1-case-a-openfoam-78de",
+  "case_path": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/openfoam/3d",
+  "committed_outputs_belong_to": {
+    "mesh_label": "uniform_core_8mm",
+    "cells": 342135,
+    "core_size_m": 0.008,
+    "plume_size_m": 0.02,
+    "tower_size_m": null,
+    "wall_size_m": null,
+    "simulation_end_s": 9.0,
+    "complete": true,
+    "key_metrics": {
+      "Hstar": 0.5521680765837348,
+      "Yfs_star": 0.6230748557539674,
+      "Vstar": 0.4647636667524073,
+      "liftoff_Tstar": 7.607017446516368,
+      "catch_Tstar": 8.711261914559065,
+      "geysering": false
+    },
+    "Vstar_Fig7_target_band": [0.4255345195061351, 0.4307872631296409],
+    "note": "V* is about +8% fast vs Fig.7 repetition fits; H*/Yfs*/non-geyser are close."
+  },
+  "intended_next_run": {
+    "mesh_label": "wall_refined",
+    "target_cells_approx": 463060,
+    "core_size_m": 0.008,
+    "tower_size_m": 0.005,
+    "wall_size_m": 0.0025,
+    "plume_size_m": 0.02,
+    "endTime_s": 9.0,
+    "solver": "compressibleInterFoam",
+    "openfoam": "v2512",
+    "schemes_notes": [
+      "div(phirb,alpha)=Gauss interfaceCompression",
+      "div(rhoPhi,U)=Gauss upwind (limitedLinearV caused FPE)",
+      "div(rhoPhi,T)=Gauss limitedLinear 1",
+      "MULESCorr yes, nLimiterIter 8"
+    ],
+    "cloud_progress_before_env_reset": {
+      "approx_sim_time_s": 6.5,
+      "approx_percent_of_9s": 72.0,
+      "runtime_fields_recoverable": false,
+      "must_rerun_from_clean_Allrun": true
+    },
+    "goal": "Reduce V* into Fig.7 band ~0.426-0.431 while keeping H*/Yfs*/non-geyser."
+  },
+  "do_not_change": ["geometry", "Ha0=0.305m", "Yfs0=0.356m"],
+  "handoff_doc": "HANDOFF_LOCAL.md"
+}

@@ -48,6 +48,14 @@ piezometric datum difference
 probe history is retained beside the crown-datum history in the compact CSV;
 this is an elevation-datum conversion, not a fitted pressure offset.
 
+## Local handoff
+
+If you are continuing this case on a local workstation after the cloud agent
+stopped, read **`HANDOFF_LOCAL.md` first**. It states which compact results are
+already committed (uniform 8 mm / 342k, full 9 s), which wall-refined run was
+lost mid-flight (~463k, ~72%), and the exact commands to regenerate the
+wall-refined validation locally.
+
 ## Run
 
 The cloud image needs OpenFOAM v2512, Gmsh, NumPy, and Matplotlib, all declared
@@ -58,11 +66,13 @@ chmod +x Allrun Allrun.resume
 ./Allrun
 ```
 
-The defaults use an `8 mm` nominal tetrahedron edge in the apparatus, a
-`20 mm` atmosphere far field, at most six local MPI ranks, and an end time of
-`9 s`. `Allrun` records both a standard `checkMesh` result and a stricter
-all-topology/all-geometry audit. Override the mesh sizes for a grid study, or
-request the solver's serial single-step setup check for a smoke test:
+The defaults target a **tower-wall refined** mesh: core `8 mm`, tower `5 mm`,
+wall `2.5 mm` (~463k cells), plume `20 mm`, at most six local MPI ranks, and an
+end time of `9 s`. The committed `outputs/` below still come from the earlier
+completed uniform `8 mm` / 342k run until a new wall-refined post-process
+overwrites them. `Allrun` records both a standard `checkMesh` result and a
+stricter all-topology/all-geometry audit. Override the mesh sizes for a grid
+study, or request the solver's serial single-step setup check for a smoke test:
 
 ```bash
 CASEA_CORE_SIZE=0.012 CASEA_PLUME_SIZE=0.030 CASEA_DRY_RUN=1 ./Allrun
