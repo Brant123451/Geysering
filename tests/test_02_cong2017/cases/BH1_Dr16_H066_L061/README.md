@@ -121,3 +121,23 @@ python caseA_run_and_compare.py     # 真实耦合模拟 → 叠加图 → 指�
   形态锚点（释放振荡、平台、喷发前回落、激增）为主；模型平台 0.95H0 与静水头一致
 
 对比报告：`report.html`（论文相关图清单、扫描图、叠加图、指标表、逐帧查看器、GIF）。
+
+## 真实三维 OpenFOAM 结果（2026-07-21，精细网格 13 s）
+
+完整事件目录（本机/云盘约 37 GB，默认不入库）：
+`openfoam/3d/runs/refined-open-full-tau0/`。
+
+入库紧凑产物在 `outputs/openfoam3d/`：
+
+| 产物 | 说明 |
+|---|---|
+| `refined-open-full-tau0-metrics.json` | 守恒 / 温度 / 实验对比验收 |
+| `refined-open-full-tau0-series.csv` + `-comparison.png` | 时序与 Fig.9(a)/10(a)/1D 叠加 |
+| `refined-open-full-tau0-postProcessing.tar.xz` | 全部 function object |
+| `refined-open-full-tau0-VTK/` | 关键时刻 `alpha.water` VTK（0/8.2/9.5/10/11/13 s） |
+| `sensitivity-summary.*` | base / refined / τ=0.2 / τ=0.5 |
+| `LOCAL_RENDER_HANDOFF.md` | 本地 ParaView 渲染交接 |
+
+精细网格即时开阀结果要点：`Ta=8.195 s`（实验 8.07 s），`geyser=true`，
+温度与质量守恒验收通过；`vfs≈1.16 m/s`（实验 0.924 m/s）。阀时 0.2/0.5 s 与
+base 网格同样判为 GEYSER。

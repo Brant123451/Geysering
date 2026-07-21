@@ -1,0 +1,35 @@
+{
+  "interpretation": "The known GEYSER label was not used as a forcing or tuning criterion. Null event times mean the threshold was not crossed. base-open-full-tau0 is a legacy instantaneous-open base-mesh record without registered waterRhoPhi/airRhoPhi; mesh sensitivity uses it only for timing/peak morphology context. Valve and refined events carry exact phase-mass fluxes.",
+  "legacy_runs_without_exact_phase_mass_fluxes": [
+    "base-open-full-tau0"
+  ],
+  "mesh_sensitivity_refined_minus_base_over_base": {
+    "PT1_peak_over_H0": 0.014187114500090544,
+    "Ta_gas_enters_riser_s": 0.04195804195804197,
+    "ejected_water_cumulative_positive_m3": -0.4682890028320447,
+    "exterior_water_max_m3": -0.5000935756304975,
+    "t_free_surface_at_rim_s": 0.03483435538299651,
+    "vfs_first_passage_m_per_s": 0.003690036900369513,
+    "vint_first_passage_m_per_s": null
+  },
+  "valve_sensitivity": {
+    "0.2_s": {
+      "PT1_peak_over_H0": 0.007304869973135299,
+      "Ta_gas_enters_riser_s": 0.010171646535282908,
+      "ejected_water_cumulative_positive_m3": 0.023368270069615137,
+      "exterior_water_max_m3": -0.010918626852675433,
+      "t_free_surface_at_rim_s": 0.004154722595159526,
+      "vfs_first_passage_m_per_s": 0.0149253731343306,
+      "vint_first_passage_m_per_s": null
+    },
+    "0.5_s": {
+      "PT1_peak_over_H0": -0.004031541676611195,
+      "Ta_gas_enters_riser_s": 0.022886204704386487,
+      "ejected_water_cumulative_positive_m3": 0.05230249315459232,
+      "exterior_water_max_m3": 0.05717424652182188,
+      "t_free_surface_at_rim_s": 0.00959759062375261,
+      "vfs_first_passage_m_per_s": 0.04615384615384933,
+      "vint_first_passage_m_per_s": 0.02561800548655607
+    }
+  }
+}
