@@ -1,0 +1,56 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+source /usr/share/modules/init/bash 2>/dev/null || true
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
+
+if [[ -d 0 || -d processor0 || -d constant/polyMesh ]]; then
+    echo "Existing mesh or solution detected; use a clean checkout or ./Allrun.resume." >&2
+    exit 1
+fi
+
+NP="${OPENFOAM_NP:-$(nproc)}"
+if (( NP > 6 )); then
+    NP=6
+elif (( NP < 1 )); then
+    NP=1
+fi
+
+CORE_SIZE="${CASEA_CORE_SIZE:-0.008}"
+PLUME_SIZE="${CASEA_PLUME_SIZE:-0.020}"
+DRY_RUN="${CASEA_DRY_RUN:-0}"
+
+python3 make_mesh.py \
+    --output caseA3d.msh \
+    --core-size "$CORE_SIZE" \
+    --plume-size "$PLUME_SIZE" \
+    > log.gmsh 2>&1
+gmshToFoam caseA3d.msh > log.gmshToFoam 2>&1
+createPatch -overwrite > log.createPatch 2>&1
+checkMesh -allTopology -allGeometry > log.checkMesh 2>&1
+
+cp -a 0.orig 0
+setFields > log.setFields 2>&1
+
+DECOMP_DICT="system/decomposeParDict.runtime"
+cp system/decomposeParDict "$DECOMP_DICT"
+foamDictionary "$DECOMP_DICT" \
+    -entry numberOfSubdomains \
+    -set "$NP" >/dev/null
+
+decomposePar -decomposeParDict "$DECOMP_DICT" > log.decomposePar 2>&1
+solver_args=(-parallel)
+if [[ "$DRY_RUN" == "1" ]]; then
+    solver_args+=(-dry-run)
+fi
+OMPI_ALLOW_RUN_AS_ROOT=1 \
+OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
+mpirun -np "$NP" compressibleInterFoam "${solver_args[@]}" \
+    > log.compressibleInterFoam 2>&1
+if [[ "$DRY_RUN" == "1" ]]; then
+    echo "CASE_A_3D_DRY_RUN_DONE"
+    exit 0
+fi
+python3 postprocess_compare.py > log.postprocess 2>&1
+echo "CASE_A_3D_DONE"

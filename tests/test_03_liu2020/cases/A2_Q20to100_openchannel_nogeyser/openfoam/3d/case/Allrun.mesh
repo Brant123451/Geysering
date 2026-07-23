@@ -1,0 +1,15 @@
+#!/bin/bash
+# mesh generation only (serial snappy is fine at this size)
+cd "$(dirname "$0")" || exit 1
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+
+set -e
+blockMesh > log.blockMesh 2>&1
+surfaceFeatureExtract > log.surfaceFeatureExtract 2>&1
+decomposePar -copyZero > log.decomposePar.mesh 2>&1
+mpirun -np 6 snappyHexMesh -parallel -overwrite > log.snappyHexMesh 2>&1
+reconstructParMesh -constant > log.reconstructParMesh 2>&1
+rm -rf processor*
+checkMesh > log.checkMesh 2>&1
+echo "MESH_DONE"
+tail -30 log.checkMesh

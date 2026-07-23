@@ -1,0 +1,264 @@
+# C9 three-dimensional compressible OpenFOAM model
+
+This directory contains a source-complete OpenFOAM v2512 model for Liu et al.
+(2020) Case C9. It is intentionally separate from the validated phase-1
+one-dimensional model. A 1-D trace is never relabelled as a 3-D result.
+
+For cross-account continuation, read `HANDOFF.md` and paste the complete
+`CONTINUATION_PROMPT.md` into the replacement Cloud Agent.
+
+The governing solver is `compressibleInterFoam`: two compressible phases,
+VOF interface capture, gravity, surface tension, RANS \(k\)-\(\omega\) SST,
+perfect-gas air, and weakly compressible water. The rigid-wall
+`perfectFluid` closure uses the paper's approximately 305 m/s acrylic-pipe
+wave speed (\(K_{eff}=92.86\) MPa); intrinsic-water \(K=2.2\) GPa and laminar
+flow remain sensitivities. `compressibleInterIsoFoam` is available strictly as an
+isoAdvector-versus-MULES **interface transport** sensitivity; it is not
+misidentified as an isothermal gas solver. The model includes the full 5.80 m
+upstream pipe, 0.30 m junction
+chamber, 5.95 m downstream pipe, 1.22 m riser, an external atmospheric plume
+region, a resolved tailgate opening, and the upstream crown air pocket.
+
+Read `PAPER_AUDIT.md` first. In particular, the paper does **not** report the
+initial trapped-air length, volume, nose/tail coordinates, or tailgate
+opening. Those quantities are named sensitivity parameters, not measurements.
+The default analytic air volume is 12.642 L and the two bracketing priors are
+4.641 and 21.608 L; the mesh-integrated value is reported separately. The
+target gate discharge area is 0.00823 m² from the documented initial state,
+downstream-full closure, and \(Q_0\). Because the resolved sharp opening has
+\(C_d=0.817\) in the no-ramp hydraulic check, its geometric area is
+0.01008 m². This one-time initial-condition closure is not fitted to any
+geyser timing or peak.
+
+## Build and staged execution
+
+OpenFOAM v2512, its source headers, and `wmake` must be installed at
+`/usr/lib/openfoam/openfoam2512` (Debian packages `openfoam2512`,
+`openfoam2512-source`, and `openfoam2512-tools`). `Allrun.initialize`
+automatically rebuilds the local conservative tracer function object when its
+source changes.
+
+```bash
+cd tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket/openfoam/3d
+python3 -m pip install -r requirements.txt
+python3 prepare_case.py
+cd case
+./Allrun.mesh
+./Allrun.initialize   # solver 0–0.25 s: Q=25 L/s, no valve change
+./Allrun.resume smoke # to 1.25 s; paper time is solver time - 0.25 s
+./Allrun.resume phase1
+./Allrun.resume full
+./Allrun.postprocess
+```
+
+Convenience wrappers are `Allrun.smoke`, `Allrun.phase1`, `Allrun.phase2`, and
+`Allrun.solve`. The case runs on four MPI ranks by default. Every stage starts
+from `latestTime`; interrupted runs can be continued with:
+
+```bash
+./Allrun.resume full
+```
+
+`Allrun.reconstruct` reconstructs only the latest field time for inspection.
+Function-object histories are written directly to `postProcessing`. Runtime
+time directories, decomposed processors, meshes, and logs are ignored by Git.
+
+The time convention is deliberate:
+
+- solver time 0–0.25 s is initialization at \(Q_0=25\) L/s;
+- paper \(t=0\) is solver time 0.25 s;
+- flow ramps linearly to 40 L/s over the reported 0.4 s;
+- phase 1 ends at solver time 6.75 s (paper time 6.50 s);
+- the full run ends at solver time 20.25 s (paper time 20.00 s).
+
+The paper's synchronization text calls the fully-open valve instant raw
+\(t=0\), while its analytical forcing starts the 0.4 s increase at \(t=0\).
+The source follows the analytical convention; ramp alignment is therefore a
+declared timing uncertainty.
+
+## Initial and boundary conditions
+
+- The chamber/downstream HGL is 0.75 m: chamber roof 0.45 m plus the reported
+  initial 0.30 m riser column.
+- The riser and pipe water are initialized hydrostatically through uniform
+  `p_rgh`; the pocket is initialized at the local water pressure at its main
+  interface. Air temperature is 293.15 K.
+- The inlet is pure water with a tabulated volumetric flow-rate boundary.
+- The downstream pipe is full. The paper's flat tailgate has an unreported
+  opening; the model uses an explicitly labelled equivalent circular opening
+  against a 0.28 m tailwater HGL (`Dd`) with a derived
+  geometric/effective-area closure.
+- The riser opens into a 0.6 × 0.6 × 1.0 m atmospheric plume region. Its side,
+  top, and floor outside the riser use pressure/open boundaries, allowing
+  expelled water and air to leave the computational domain.
+- No-slip and a 90° equilibrium contact angle are defaults. Contact angle and
+  interface compression are explicit sensitivity dimensions.
+
+`setFields` creates the selected pocket as a long crown body followed by the
+thin crown layer described qualitatively in the paper. Its volume and initial
+pressure are recorded in `case/generated_case.json`.
+
+## Mesh and numerical controls
+
+The default mesh is generated by `cartesianMesh`/cfMesh; the retained
+`blockMesh` + parallel `snappyHexMesh` path is a declared mesh-generator
+sensitivity. Both standard `checkMesh` and
+`checkMesh -allGeometry -allTopology` are mandatory. The current
+481,874-cell Cartesian base mesh passes both checks with zero concave cells,
+maximum nonorthogonality 34.83, maximum skewness 1.23, maximum aspect ratio
+6.47, and minimum cell volume 2.08e-9 m³. The strict check records 10 mildly
+concave faces (maximum angle 20.08°) while reporting `Concave cell check OK`
+and `Mesh OK`.
+
+The 8 mm crown layer has a dedicated 5 mm base refinement (nominally 1.6
+cells through its thickness). Because this is not a resolution-independent
+representation, `--thin-layer-cell-size 0.0025` and sensitivity variant
+`thin_layer_refined` isolate a 3.2-cell layer without refining every other
+region. Its 873,032-cell mesh also passes both checks with zero concave cells;
+solver sensitivity remains required before selecting it as the production
+mesh.
+
+The default transient limits are `maxCo=0.70`, `maxAlphaCo=0.20`, and
+`maxDeltaT=5e-4 s`. The interface remains under the tighter alpha-Courant
+limit. A prior corrected-EOS/RANS 0.70 benchmark completed the same interval
+about twice as fast as 0.35 with comparable pressure and interface histories;
+the new bounded-tracer 0.35 reference is preserved through solver time
+0.37 s. MULES uses one alpha correction with two subcycles. Two pressure
+correctors and one non-orthogonal corrector follow the supplied v2512
+`compressibleInterFoam` tutorial structure. `max_co_035`, `time_tight`, and
+`max_co_100` retain timestep sensitivity around the selected baseline.
+
+The production default does not clip velocity: the experimental 5.75 m/s
+maximum is a liquid-jet observation and is not a defensible global bound for
+low-density gas. Positive `--velocity-limit` values remain explicit diagnostic
+sensitivities. The historical 12 m/s run is preserved because clipping reached
+12.8% of its old mesh. On the new Cartesian checkpoint, a 12-versus-20 m/s
+short-window comparison found 5,860 clipped cells at solver time 0.46 s for
+the 12 m/s case, while the 20 m/s case remained unclipped and reached
+14.50 m/s. PT2 already differed by about 2.3% after only 0.035 s of
+continuation, so the 12 m/s trajectory is not a production baseline.
+
+## Diagnostics and required artifacts
+
+The solver records PT1–PT4, 111 riser-centreline probes, 60 upstream-crown
+probes, zone water/air inventories, boundary volume/mass fluxes, and extrema.
+A conservative `pocketBodyTracer` is initialized only in the thick initial
+body, excluding the connected thin layer. It is transported with the
+air-phase mass flux, not the mixture flux. One-percent transfer is reported as
+early source-gas leakage; formal operational arrival requires sustained
+deep-line connectivity and 20% transfer into the chamber plus riser. Since
+20% is not a paper-reported threshold, 1/5/10/20/30/50% transfer times are
+reported together.
+After a run:
+
+```bash
+python3 postprocess_openfoam.py --case case
+```
+
+creates in the C9 `outputs/` directory:
+
+- `openfoam_3d_PT1_PT2_PT3_PT4.csv`
+- `openfoam_3d_riser_height.csv`
+- `openfoam_3d_air_pocket.csv`
+- `openfoam_3d_event_table.csv`
+- `openfoam_3d_metrics.json`
+- pressure, riser, and air-pocket comparison PNGs
+- `openfoam_3d_mesh_sensitivity.csv`
+
+The event table is generated only from actual `alpha.water` crossing the
+physical riser rim. Missing stages remain `not_run`, `initialization_only`,
+`partial_smoke`, `smoke_complete`, or `complete_phase1_only`; the
+postprocessor does not invent phase-2 eruptions. Main-pocket arrival uses the
+air-phase body tracer when available. The longest connected gas-dominant
+component on the deep crown-probe line remains an explicitly qualified
+morphology fallback. A small tracer leak or a connected finger cannot by
+itself establish main-body arrival: the paper reports a temporary crown
+passage near 1.30 s before the large-cross-section connection at 6.46 s.
+
+## Current validation status
+
+The committed output artifacts still describe the failed historical
+snappy/12 m/s-limiter generation through paper time 1.504 s. They are retained
+as provenance and do **not** validate the current source.
+
+The zero-concave Cartesian, no-clipping diagnostic was stopped safely at
+solver time 0.5568 s (paper time 0.3068 s). It found:
+
+- initialized PT2 = 3.242 kPa gauge versus 2.970 kPa;
+- upstream gas-mass retention = 94.6% at the last processed inventory;
+- deep main-body front near \(x=-0.92\) m, while detached/deep thin-layer gas
+  had reached the chamber-side probe;
+- zero limiter activation and maximum local velocity 43.7 m/s in
+  low-density crown gas, not in the liquid jet;
+- total/gas conservation residuals \(1.7\times10^{-6}\) and
+  \(3.4\times10^{-5}\).
+
+This diagnostic nevertheless used the erroneous historical
+`perfectFluid R=K/rho` mapping and laminar closure. Its effective water wave
+speed was about 25.4 km/s, so it is archived only as evidence that the old
+0.62 s signal conflated thin-layer gas with main-pocket transport. A corrected
+305 m/s, \(k\)-\(\omega\) SST, body-tracer smoke trajectory must replace it
+before phase 1 can be accepted.
+
+A later corrected-EOS/RANS smoke reached paper time 1.00 s and reproduced the
+first rim crossing at 0.655 s, but exposed a second tracer defect: transporting
+the tag with mixture `rhoPhi/rho` diluted its maximum value from 1 to 0.00285
+and produced a false 0.71 s “arrival.” That trajectory remains useful for
+pressure and Courant diagnostics but is rejected for pocket chronology. The
+source now constructs the air mass flux as
+`interpolate(rho.air)*(phi - alphaPhi0.water)`. This uses the complementary
+MULES phase-volume flux directly instead of subtracting a separately
+interpolated water mass flux from compressible mixture `rhoPhi`. The first
+explicit clear/clamp implementation was stopped at solver time 0.6401 s
+(paper time 0.3901 s): despite remaining in `[0,1]`, it had destroyed 7.65% of
+the paper-time-zero physical tracer inventory and is rejected. Two subsequent
+variable-density MULES integrations were also rejected: an artificial
+`alpha*rho` field had an invalid old-time level, and rebuilding both levels
+still violated MULES's low-order positivity requirement (`|tracer|` exceeded
+`1e24` by solver time 0.0202 s). The current local
+`boundedPhaseMassTransport` instead projects the raw air mass flux onto the
+discrete `alpha.air*rho.air` continuity equation and advances the conserved
+tagged-mass density `sigma = alpha*rho*s` with an explicit conservative
+update `sigma := sigmaOld - dt*div(flux(phi, s))` using the projected air
+mass flux. The fraction `s` is recovered only for output, boundary
+conditions and arrival diagnostics. Intensity-form Sp corrections
+(`fvm::ddt(alpha,rho,s) - Sp(fvc::ddt(alpha,rho)+fvc::div(phi),s) + ...`)
+were rejected: even with full material Sp they still lost about 5.9% of
+tagged mass by solver time 0.52 s, matching the earlier unprojected
+`fvm::ddt(alpha,rho,s)` erosion curve during pocket compression. It has no
+clamp and no carrier-continuity equation source. Physical inventory and
+tagged boundary fluxes must close within 1%, and the independently
+integrated numerical tracer-balance residual must also stay below 1%. The
+object aborts immediately if carrier projection exceeds the local relative
+tolerance `1e-4` or the recovered tracer leaves `[0,1]` in resolved-phase
+cells beyond `boundsTolerance=1e-3`; failed projections receive up to two
+incremental correction passes before aborting. The range check never clips
+the conserved density. A fresh run is required to validate this
+implementation.
+
+Phase 1 is incomplete. Phase 2 and eight eruptions have not yet been
+reproduced.
+
+## Sensitivities
+
+The matrix covers mesh, timestep/Courant limits, small/base/large pocket
+volumes, MULES versus isoAdvector interface transport, \(k\)-\(\omega\) SST
+versus laminar closure, adiabatic-like versus near-isothermal heat-capacity
+limits, measured acrylic-pipe wave speed ±20%, intrinsic-water 2.2 GPa,
+gate area ±20%, contact angle 60°/120°, and interface compression 0.5/1.5.
+These are declared closure sensitivities, not fitted eruption parameters.
+
+```bash
+# Materialize all source cases without running:
+python3 run_sensitivity.py --stage prepare --fresh
+
+# Example executable checks:
+python3 run_sensitivity.py --stage mesh \
+  --variants base,mesh_refined --fresh
+python3 run_sensitivity.py --stage smoke \
+  --variants base,time_tight,pocket_small,pocket_large --fresh
+```
+
+Sensitivity cases live in ignored `runs/` directories. The aggregate CSV
+contains real status and metrics; prepared but unexecuted rows have blank
+result fields.

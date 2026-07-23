@@ -1,0 +1,193 @@
+--> FOAM IOWarning :
+    Ignoring [v1806] '-noFaceZones' option
+
+    This option is 90 months old.
+
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2512                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : _bd2b6720-20260127 OPENFOAM=2512 version=2512
+Arch   : "LSB;label=32;scalar=64"
+Exec   : foamToVTK -fields (alpha.water U p pocketBodyTracerSigma pocketBodyTracer rho)
+Date   : Jul 17 2026
+Time   : 02:06:34
+Host   : cursor
+PID    : 737761
+I/O    : uncollated
+Case   : /workspace/tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket/openfoam/3d/case
+nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+memory pool : not available
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Including fields (alpha.water U p pocketBodyTracerSigma pocketBodyTracer rho)
+
+Create time
+
+Initial memory 125388 kB
+Create mesh for time = 0
+
+VTK mesh topology: 0.27 s, 230068 kB
+Time: 0
+    volScalar    : alpha.water p pocketBodyTracer
+    volVector    : U
+    Internal  : "VTK/case_0/internal.vtu"
+    Boundary  : "VTK/case_0/boundary/walls.vtp"
+    Boundary  : "VTK/case_0/boundary/riserWall.vtp"
+    Boundary  : "VTK/case_0/boundary/inlet.vtp"
+    Boundary  : "VTK/case_0/boundary/gateWall.vtp"
+    Boundary  : "VTK/case_0/boundary/gateOutlet.vtp"
+    Boundary  : "VTK/case_0/boundary/atmosphere.vtp"
+Wrote in 1.79 s, 633028 kB
+Time: 0.3289420474
+    volScalar    : alpha.water p pocketBodyTracer pocketBodyTracerSigma rho
+    volVector    : U
+    Internal  : "VTK/case_2506/internal.vtu"
+    Boundary  : "VTK/case_2506/boundary/walls.vtp"
+    Boundary  : "VTK/case_2506/boundary/riserWall.vtp"
+    Boundary  : "VTK/case_2506/boundary/inlet.vtp"
+    Boundary  : "VTK/case_2506/boundary/gateWall.vtp"
+    Boundary  : "VTK/case_2506/boundary/gateOutlet.vtp"
+    Boundary  : "VTK/case_2506/boundary/atmosphere.vtp"
+Wrote in 0.7 s, 614272 kB
+Time: 0.5289420474
+    volScalar    : alpha.water p pocketBodyTracer pocketBodyTracerSigma rho
+    volVector    : U
+    Internal  : "VTK/case_7684/internal.vtu"
+    Boundary  : "VTK/case_7684/boundary/walls.vtp"
+    Boundary  : "VTK/case_7684/boundary/riserWall.vtp"
+    Boundary  : "VTK/case_7684/boundary/inlet.vtp"
+    Boundary  : "VTK/case_7684/boundary/gateWall.vtp"
+    Boundary  : "VTK/case_7684/boundary/gateOutlet.vtp"
+    Boundary  : "VTK/case_7684/boundary/atmosphere.vtp"
+Wrote in 0.7 s, 614268 kB
+Time: 0.6289420474
+    volScalar    : alpha.water p pocketBodyTracer pocketBodyTracerSigma rho
+    volVector    : U
+    Internal  : "VTK/case_13018/internal.vtu"
+    Boundary  : "VTK/case_13018/boundary/walls.vtp"
+    Boundary  : "VTK/case_13018/boundary/riserWall.vtp"
+    Boundary  : "VTK/case_13018/boundary/inlet.vtp"
+    Boundary  : "VTK/case_13018/boundary/gateWall.vtp"
+    Boundary  : "VTK/case_13018/boundary/gateOutlet.vtp"
+    Boundary  : "VTK/case_13018/boundary/atmosphere.vtp"
+Wrote in 0.73 s, 621800 kB
+Time: 0.7289420474
+    volScalar    : alpha.water p pocketBodyTracer pocketBodyTracerSigma rho
+    volVector    : U
+    Internal  : "VTK/case_16482/internal.vtu"
+    Boundary  : "VTK/case_16482/boundary/walls.vtp"
+    Boundary  : "VTK/case_16482/boundary/riserWall.vtp"
+    Boundary  : "VTK/case_16482/boundary/inlet.vtp"
+    Boundary  : "VTK/case_16482/boundary/gateWall.vtp"
+    Boundary  : "VTK/case_16482/boundary/gateOutlet.vtp"
+    Boundary  : "VTK/case_16482/boundary/atmosphere.vtp"
+Wrote in 0.72 s, 614272 kB
+Time: 0.8289420474
+    volScalar    : alpha.water p pocketBodyTracer pocketBodyTracerSigma rho
+    volVector    : U
+    Internal  : "VTK/case_19913/internal.vtu"
+    Boundary  : "VTK/case_19913/boundary/walls.vtp"
+    Boundary  : "VTK/case_19913/boundary/riserWall.vtp"
+    Boundary  : "VTK/case_19913/boundary/inlet.vtp"
+    Boundary  : "VTK/case_19913/boundary/gateWall.vtp"
+    Boundary  : "VTK/case_19913/boundary/gateOutlet.vtp"
+    Boundary  : "VTK/case_19913/boundary/atmosphere.vtp"
+Wrote in 0.73 s, 614268 kB
+Time: 0.9289420474
+    volScalar    : alpha.water p pocketBodyTracer pocketBodyTracerSigma rho
+    volVector    : U
+    Internal  : "VTK/case_22028/internal.vtu"
+    Boundary  : "VTK/case_22028/boundary/walls.vtp"
+    Boundary  : "VTK/case_22028/boundary/riserWall.vtp"
+    Boundary  : "VTK/case_22028/boundary/inlet.vtp"
+    Boundary  : "VTK/case_22028/boundary/gateWall.vtp"
+    Boundary  : "VTK/case_22028/boundary/gateOutlet.vtp"
+    Boundary  : "VTK/case_22028/boundary/atmosphere.vtp"
+Wrote in 0.73 s, 614268 kB
+Time: 1.0289420474
+    volScalar    : alpha.water p pocketBodyTracer pocketBodyTracerSigma rho
+    volVector    : U
+    Internal  : "VTK/case_23770/internal.vtu"
+    Boundary  : "VTK/case_23770/boundary/walls.vtp"
+    Boundary  : "VTK/case_23770/boundary/riserWall.vtp"
+    Boundary  : "VTK/case_23770/boundary/inlet.vtp"
+    Boundary  : "VTK/case_23770/boundary/gateWall.vtp"
+    Boundary  : "VTK/case_23770/boundary/gateOutlet.vtp"
+    Boundary  : "VTK/case_23770/boundary/atmosphere.vtp"
+Wrote in 0.73 s, 614268 kB
+Time: 1.1289420474
+    volScalar    : alpha.water p pocketBodyTracer pocketBodyTracerSigma rho
+    volVector    : U
+    Internal  : "VTK/case_25769/internal.vtu"
+    Boundary  : "VTK/case_25769/boundary/walls.vtp"
+    Boundary  : "VTK/case_25769/boundary/riserWall.vtp"
+    Boundary  : "VTK/case_25769/boundary/inlet.vtp"
+    Boundary  : "VTK/case_25769/boundary/gateWall.vtp"
+    Boundary  : "VTK/case_25769/boundary/gateOutlet.vtp"
+    Boundary  : "VTK/case_25769/boundary/atmosphere.vtp"
+Wrote in 0.78 s, 614268 kB
+Time: 1.2289420474
+    volScalar    : alpha.water p pocketBodyTracer pocketBodyTracerSigma rho
+    volVector    : U
+    Internal  : "VTK/case_27636/internal.vtu"
+    Boundary  : "VTK/case_27636/boundary/walls.vtp"
+    Boundary  : "VTK/case_27636/boundary/riserWall.vtp"
+    Boundary  : "VTK/case_27636/boundary/inlet.vtp"
+    Boundary  : "VTK/case_27636/boundary/gateWall.vtp"
+    Boundary  : "VTK/case_27636/boundary/gateOutlet.vtp"
+    Boundary  : "VTK/case_27636/boundary/atmosphere.vtp"
+Wrote in 0.75 s, 614268 kB
+Time: 5.9789420474
+    volScalar    : alpha.water p pocketBodyTracer pocketBodyTracerSigma rho
+    volVector    : U
+    Internal  : "VTK/case_100040/internal.vtu"
+    Boundary  : "VTK/case_100040/boundary/walls.vtp"
+    Boundary  : "VTK/case_100040/boundary/riserWall.vtp"
+    Boundary  : "VTK/case_100040/boundary/inlet.vtp"
+    Boundary  : "VTK/case_100040/boundary/gateWall.vtp"
+    Boundary  : "VTK/case_100040/boundary/gateOutlet.vtp"
+    Boundary  : "VTK/case_100040/boundary/atmosphere.vtp"
+Wrote in 0.74 s, 618036 kB
+Time: 6.2289420474
+    volScalar    : alpha.water p pocketBodyTracer pocketBodyTracerSigma rho
+    volVector    : U
+    Internal  : "VTK/case_104164/internal.vtu"
+    Boundary  : "VTK/case_104164/boundary/walls.vtp"
+    Boundary  : "VTK/case_104164/boundary/riserWall.vtp"
+    Boundary  : "VTK/case_104164/boundary/inlet.vtp"
+    Boundary  : "VTK/case_104164/boundary/gateWall.vtp"
+    Boundary  : "VTK/case_104164/boundary/gateOutlet.vtp"
+    Boundary  : "VTK/case_104164/boundary/atmosphere.vtp"
+Wrote in 0.7 s, 614272 kB
+Time: 6.4789420474
+    volScalar    : alpha.water p pocketBodyTracer pocketBodyTracerSigma rho
+    volVector    : U
+    Internal  : "VTK/case_108447/internal.vtu"
+    Boundary  : "VTK/case_108447/boundary/walls.vtp"
+    Boundary  : "VTK/case_108447/boundary/riserWall.vtp"
+    Boundary  : "VTK/case_108447/boundary/inlet.vtp"
+    Boundary  : "VTK/case_108447/boundary/gateWall.vtp"
+    Boundary  : "VTK/case_108447/boundary/gateOutlet.vtp"
+    Boundary  : "VTK/case_108447/boundary/atmosphere.vtp"
+Wrote in 0.73 s, 614268 kB
+Time: 6.7289420474
+    volScalar    : alpha.water p pocketBodyTracer pocketBodyTracerSigma rho
+    volVector    : U
+    Internal  : "VTK/case_112791/internal.vtu"
+    Boundary  : "VTK/case_112791/boundary/walls.vtp"
+    Boundary  : "VTK/case_112791/boundary/riserWall.vtp"
+    Boundary  : "VTK/case_112791/boundary/inlet.vtp"
+    Boundary  : "VTK/case_112791/boundary/gateWall.vtp"
+    Boundary  : "VTK/case_112791/boundary/gateOutlet.vtp"
+    Boundary  : "VTK/case_112791/boundary/atmosphere.vtp"
+Wrote in 0.73 s, 614272 kB
+
+End: 11.53 s, 659168 kB (peak)
+

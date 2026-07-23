@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -eo pipefail
+cd "$(dirname "$0")"
+NP="${OPENFOAM_NP:-4}"
+TRACER_FUNCTION_OBJECT_DIR="../functionObjects/boundedPhaseMassTransport"
+TRACER_FUNCTION_OBJECT_LIB="${FOAM_USER_LIBBIN}/libboundedPhaseMassTransport.so"
+ensure_tracer_function_object()
+{
+    if [[ ! -f "$TRACER_FUNCTION_OBJECT_LIB" ]] \
+        || [[ "$TRACER_FUNCTION_OBJECT_DIR/boundedPhaseMassTransport.C" -nt "$TRACER_FUNCTION_OBJECT_LIB" ]] \
+        || [[ "$TRACER_FUNCTION_OBJECT_DIR/boundedPhaseMassTransport.H" -nt "$TRACER_FUNCTION_OBJECT_LIB" ]] \
+        || [[ "$TRACER_FUNCTION_OBJECT_DIR/Make/files" -nt "$TRACER_FUNCTION_OBJECT_LIB" ]] \
+        || [[ "$TRACER_FUNCTION_OBJECT_DIR/Make/options" -nt "$TRACER_FUNCTION_OBJECT_LIB" ]] \
+        || [[ "../functionObjects/Allwmake" -nt "$TRACER_FUNCTION_OBJECT_LIB" ]]; then
+        ../functionObjects/Allwmake > log.wmake.boundedPhaseMassTransport 2>&1
+    fi
+}
+SOURCE_SCHEMA_FILES=(
+    generated_case.json
+    0.orig/alpha.water 0.orig/pocketBodyTracer 0.orig/U 0.orig/p 0.orig/p_rgh
+    0.orig/T 0.orig/k 0.orig/omega 0.orig/nut 0.orig/alphat
+    constant/thermophysicalProperties
+    constant/thermophysicalProperties.water
+    constant/thermophysicalProperties.air
+    constant/turbulenceProperties
+    system/fvSchemes system/fvSolution system/fvOptions
+    system/setFieldsDict system/setExprFieldsDict
+    system/controlDict.initialize system/controlDict.smoke
+    system/controlDict.phase1 system/controlDict.full
+    ../functionObjects/boundedPhaseMassTransport/boundedPhaseMassTransport.C
+    ../functionObjects/boundedPhaseMassTransport/boundedPhaseMassTransport.H
+    ../functionObjects/boundedPhaseMassTransport/Make/files
+    ../functionObjects/boundedPhaseMassTransport/Make/options
+    ../functionObjects/Allwmake
+)
+test "$NP" -eq 4 || {
+    echo "OPENFOAM_NP must match system/decomposeParDict (4)" >&2
+    exit 2
+}
+surfaceCheck constant/triSurface/c9Rig.stl -checkSelfIntersection > log.surfaceCheck 2>&1
+rg -q '^Surface is closed' log.surfaceCheck || {
+    echo "Combined C9 surface is not topologically closed; see log.surfaceCheck" >&2
+    exit 2
+}
+if rg -q '^Surface is self-intersecting' log.surfaceCheck; then
+    echo "Combined C9 surface self-intersects; see log.surfaceCheck" >&2
+    exit 2
+fi
+rm -rf constant/polyMesh processor*
+export LD_LIBRARY_PATH="${FOAM_LIBBIN}:${FOAM_LIBBIN}/sys-openmpi:${LD_LIBRARY_PATH:-}"
+cartesianMesh > log.cartesianMesh 2>&1
+rm -rf 0
+cp -r 0.orig 0
+
+topoSet > log.topoSet 2>&1
+checkMesh > log.checkMesh 2>&1
+checkMesh -allGeometry -allTopology > log.checkMesh.all 2>&1
+rg -q 'Mesh OK\.' log.checkMesh || {
+    echo "C9 mesh failed the standard check; see log.checkMesh" >&2
+    exit 3
+}
+rg -q 'Mesh OK\.' log.checkMesh.all || {
+    echo "C9 mesh failed the strict geometry/topology check; see log.checkMesh.all" >&2
+    exit 4
+}
+echo MESH_DONE

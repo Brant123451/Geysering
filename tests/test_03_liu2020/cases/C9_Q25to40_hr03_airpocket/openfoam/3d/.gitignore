@@ -1,0 +1,20 @@
+__pycache__/
+*.pyc
+case/[0-9]*/
+!case/0.orig/
+!case/0.orig/**
+case/processor*/
+case/postProcessing/
+case/constant/polyMesh/
+case/constant/extendedFeatureEdgeMesh/
+case/constant/triSurface/*.eMesh
+case/constant/triSurface/*.vtp
+case/log.*
+case/core
+case/*.foam
+case/VTK*/
+case/results-*/
+# Keep uploaded archives inside the case tree
+!case/computed_data/
+!case/computed_data/**
+runs/

@@ -1,0 +1,56 @@
+/* OpenFOAM v2512 — C9 2D fine mesh (Liu 2020) */
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+
+application     compressibleInterFoam;
+startFrom       latestTime;
+startTime       0;
+stopAt          endTime;
+endTime         1.25;
+deltaT          1e-6;
+writeControl    adjustableRunTime;
+writeInterval   0.1;
+purgeWrite      8;
+writeFormat     binary;
+writePrecision  8;
+writeCompression off;
+timeFormat      general;
+timePrecision   14;
+runTimeModifiable yes;
+
+adjustTimeStep  yes;
+maxCo           0.7;
+maxAlphaCo      0.2;
+maxDeltaT       0.0005;
+
+functions
+{
+    probesPT
+    {
+        type            probes;
+        libs            (sampling);
+        writeControl    timeStep;
+        writeInterval   2;
+        probeLocations
+        (
+            (0.15 0 1.25)   // PT1
+            (0.15 0 0.44)   // PT2
+            (0.15 0 0.02)   // PT3
+            (-0.30 0 0.376) // PT4 ~ crown interior
+        );
+        fields          (p alpha.water);
+    }
+    fieldMinMax1
+    {
+        type            fieldMinMax;
+        libs            (fieldFunctionObjects);
+        writeControl    timeStep;
+        writeInterval   20;
+        fields          (p U alpha.water);
+    }
+}

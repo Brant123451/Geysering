@@ -1,0 +1,7 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
+blockMesh > log.blockMesh 2>&1
+checkMesh > log.checkMesh 2>&1
+echo MESH_DONE

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh"><head><meta charset="utf-8">
+<title>Liu2020 Case C9 复现 — 交汇室竖井（两阶段喷发，第一阶段）</title>
+<style>
+body{font-family:-apple-system,Segoe UI,Arial,'Microsoft YaHei',sans-serif;margin:0;background:#f6f8fb;color:#1f2937}
+.wrap{max-width:1180px;margin:24px auto;padding:0 18px}
+.panel{background:#fff;border:1px solid #ddd;border-radius:12px;padding:16px;margin-bottom:16px}
+img{width:100%;border:1px solid #ddd;border-radius:10px;background:#fff}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #eee}
+th{background:#f3f4f6}
+h1{font-size:22px} h2{font-size:17px}
+.muted{font-size:13px;color:#6b7280}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>Liu, Shao &amp; Zhu (2020) Case C9 复现 — 上游封气囊，两阶段喷发（第一阶段·三方对照）</h1>
+<p>工况 <b>C9</b>：进口流量 25&rarr;40 L/s（Tv&asymp;0.4 s），下游满管（尾门强节流）、
+竖管初始水柱 h<sub>r0</sub>=0.30 m、上游管顶封闭气囊。实测：<b>两阶段共 8 次喷发</b>——
+第一阶段（0–5 s）为水力瞬变触发的第 1、2 次喷发（首峰 P<sub>1m</sub>=10.69 kPa @0.50 s，
+水面 0.73 s 到管顶）；第二阶段自气囊本体 t=6.46 s 抵达交汇室起，气囊释放触发第 3–8 次
+喷发。<b>本轮声明范围 = 第一阶段</b>：论文自家解析模型 Eq.(7) 也只在全水假设下描述这一
+阶段——这正是 Campaign 3 独有的"实测 + 解析 + 数值"三方对照。第二阶段的气泡/弹状流
+喷发列为一维简化的分辨率之外（如实报告）。</p>
+
+<div class="panel">
+  <h2 style="margin-top:0">第一阶段三方对照 — 实测 vs 解析 Eq.(7) vs 本模型</h2>
+  <p class="muted">纵轴为 PT2 测压头（基准取室顶）。模型跑两个声明变体：<b>全水变体</b>
+  （上游管初始全水——与 Eq.(7) 假设组完全一致）与<b>封气囊变体</b>（气垫缓冲演示）。</p>
+  <img src="outputs/caseC_phase1_threeway.png">
+</div>
+
+<div class="panel">
+  <h2 style="margin-top:0">全程压力对比 — PT2 / PT3 / PT4</h2>
+  <p class="muted">灰色虚线 = 实测气囊本体到达时刻（6.46 s，第二阶段起点）。模型
+  （全水变体）此后按纯水力路径趋稳；实测的 3–8 次喷发振荡为气囊释放驱动，模型
+  不表示（声明）。</p>
+  <img src="outputs/caseC_comparison_pressure.png">
+  <div class="grid2" style="margin-top:10px">
+    <div><h3 style="margin:4px 0">论文原图 Fig.9（扫描）</h3><img src="paper_scans/p09_fig9_C9_pressure_phases.png"></div>
+    <div><h3 style="margin:4px 0">数字化质量检查</h3><img src="digitized/debug_fig9_extract.png"></div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2 style="margin-top:0">竖管水柱 — 第一阶段喷发</h2>
+  <img src="outputs/caseC_riser_column.png">
+</div>
+
+<div class="panel">
+  <h2 style="margin-top:0">指标对照（第一阶段 + 终稳态）</h2>
+  <table>
+    <tr><th>量</th><th>实验</th><th>解析 Eq.(7)/(8)</th><th>模型（全水）</th></tr>
+    <tr><td>首峰 P<sub>1m</sub></td><td>10.69 kPa @ 0.50 s</td>
+        <td>幅值 2&times;0.37 m&asymp;10.2 kPa（无阻尼上限）</td>
+        <td>11.5 kPa @ 0.54 s</td></tr>
+    <tr><td>水面到管顶（第 1 次喷发）</td><td>0.73 s</td><td>—</td>
+        <td>0.93 s</td></tr>
+    <tr><td>振荡周期 T</td><td>1.45 s（论文引述）</td>
+        <td>1.52 s</td><td>1.13 s</td></tr>
+    <tr><td>终稳态 PT2 / PT3 / PT4</td>
+        <td>8.79 / 12.76 / 9.25 kPa</td><td>—</td>
+        <td>10.63 / 15.44 / 11.09 kPa</td></tr>
+    <tr><td>喷发判别</td><td>8 次（两阶段）</td><td>—</td>
+        <td>第一阶段喷发 ✓（h<sub>jet</sub>=1.27 m；Fig.11 回归按模型峰压给 2.41 m）</td></tr>
+    <tr><td>体积守恒误差</td><td>—</td><td>—</td><td>-0.000000 L</td></tr>
+  </table>
+  <p class="muted">诚实说明：(1) <b>范围</b>——第二阶段（气囊释放的 3–8 次喷发）需要
+  气相动量 + 分散相闭合，一维简化不表示，图中以灰虚线明示；封气囊变体演示了气垫对
+  首峰的缓冲（16.5 kPa @
+  3.72 s，偏晚），~4 s 后气囊被压缩穿过
+  满管阈值而漂移，属既定简化解算器的已声明极限。(2) <b>尾门定标</b>——A_gate 只用
+  文档化初值（PT2 初值 2.97 kPa = h<sub>r0</sub>）定一次，终稳态是预测：PT2 终值偏高
+  +1.8 kPa（实测终态含掺气混合物密度效应，
+  纯水模型天然偏高）。(3) 初始场为分析构造（全水/气囊楔 + 弹性超充使全域测压线
+  = HGL0），暖机 10 s 内自平衡。(4) 论文明言本 Series 的喷发"不能用界面-水面相对
+  运动分析"（弹状流机制）——与 Campaign 1/2 的机制学对照收进论文讨论章。</p>
+</div>
+</div></body></html>

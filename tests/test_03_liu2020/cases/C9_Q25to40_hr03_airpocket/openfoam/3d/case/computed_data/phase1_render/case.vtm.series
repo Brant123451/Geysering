@@ -1,0 +1,19 @@
+{
+  "file-series-version" : "1.0",
+  "files" : [
+    { "name" : "case_0.vtm", "time" : 0 },
+    { "name" : "case_2506.vtm", "time" : 0.32894205 },
+    { "name" : "case_7684.vtm", "time" : 0.52894205 },
+    { "name" : "case_13018.vtm", "time" : 0.62894205 },
+    { "name" : "case_16482.vtm", "time" : 0.72894205 },
+    { "name" : "case_19913.vtm", "time" : 0.82894205 },
+    { "name" : "case_22028.vtm", "time" : 0.92894205 },
+    { "name" : "case_23770.vtm", "time" : 1.028942 },
+    { "name" : "case_25769.vtm", "time" : 1.128942 },
+    { "name" : "case_27636.vtm", "time" : 1.228942 },
+    { "name" : "case_100040.vtm", "time" : 5.978942 },
+    { "name" : "case_104164.vtm", "time" : 6.228942 },
+    { "name" : "case_108447.vtm", "time" : 6.478942 },
+    { "name" : "case_112791.vtm", "time" : 6.728942 }
+  ]
+}

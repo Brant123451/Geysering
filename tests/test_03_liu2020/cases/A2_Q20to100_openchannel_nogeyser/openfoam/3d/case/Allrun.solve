@@ -1,0 +1,12 @@
+#!/bin/bash
+# initialize fields + parallel interFoam run
+cd "$(dirname "$0")" || exit 1
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+
+set -e
+rm -rf 0
+cp -r 0.orig 0
+setFields > log.setFields 2>&1
+decomposePar -force > log.decomposePar 2>&1
+mpirun -np 6 interFoam -parallel > log.interFoam 2>&1
+echo "SOLVE_DONE"

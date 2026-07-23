@@ -1,0 +1,2 @@
+variant,status,solver,interface_solver,cells,maxCo,maxDeltaT_s,pocket_profile,gate_area_m2,contact_angle_deg,cAlpha,air_Cp_J_kg_K,water_bulk_modulus_Pa,P1m_kPa,first_top_s,geyser_count,air_arrival_s,mass_error,gas_mass_error
+base,smoke_only,compressibleInterFoam,mules,142343,0.35,0.0005,base,0.01008,90.0,1.0,1005.0,2200000000.0,10.817660000000004,0.64,1,0.62,6.130065829910871e-06,0.0004057394960093709

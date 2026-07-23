@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "checkpoint_time_s": 0.3289420474,
+  "first_post_restart_sample_s": 0.3389420474,
+  "sigma_ref": 0.0167259665,
+  "sigma_first_post_restart": 0.0167259665,
+  "relative_change": 0.0,
+  "log_evidence": "boundedPhaseMassTransport: read conserved inventory pocketBodyTracerSigma from time \"0.3289420474\"",
+  "note": "findInstance + ctor bind; rejected prior ~5% jump trajectories archived under rejected_restart_jump_*"
+}

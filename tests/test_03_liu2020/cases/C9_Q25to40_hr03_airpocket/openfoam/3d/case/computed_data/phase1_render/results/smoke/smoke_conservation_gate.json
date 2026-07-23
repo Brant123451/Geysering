@@ -1,0 +1,14 @@
+{
+  "sigma_ref_time": 0.25,
+  "sigma_ref": 0.0167259665,
+  "sigma_last_time": 1.2489420474,
+  "sigma_last": 0.0166656704,
+  "relative_inventory_change": -0.003604939660736656,
+  "pass_lt_1pct": true,
+  "flux_last": {
+    "inlet": 0.0,
+    "gate": 0.0,
+    "atmosphere": 0.00152986226
+  },
+  "note": "Recorded at smoke End (~1.25). Later mid-run inventory-only drift is expected; use flux-corrected balance."
+}

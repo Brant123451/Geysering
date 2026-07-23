@@ -1,0 +1,346 @@
+#!/usr/bin/env python3
+"""Focused regression tests for C9 three-dimensional post-processing."""
+
+from __future__ import annotations
+
+import tempfile
+import unittest
+from pathlib import Path
+
+import numpy as np
+
+import postprocess_openfoam as post
+
+
+class DominantGasComponentTests(unittest.TestCase):
+    def test_detached_downstream_gas_is_not_the_main_body_front(self) -> None:
+        x = np.arange(-5.0, 1.0)
+        alpha_water = np.array([1.0, 0.0, 0.0, 0.0, 1.0, 0.0])
+
+        front, span, furthest = post.dominant_gas_component(x, alpha_water)
+
+        self.assertEqual(front, -2.0)
+        self.assertEqual(span, 2.0)
+        self.assertEqual(furthest, 0.0)
+
+    def test_contiguous_main_body_can_reach_the_last_probe(self) -> None:
+        x = np.arange(-5.0, 1.0)
+        alpha_water = np.array([1.0, 0.2, 0.1, 0.0, 0.3, 0.4])
+
+        front, span, furthest = post.dominant_gas_component(x, alpha_water)
+
+        self.assertEqual(front, 0.0)
+        self.assertEqual(span, 4.0)
+        self.assertEqual(furthest, 0.0)
+
+    def test_no_gas_returns_nan_fronts(self) -> None:
+        front, span, furthest = post.dominant_gas_component(
+            np.array([-1.0, 0.0]), np.array([1.0, 1.0])
+        )
+
+        self.assertTrue(np.isnan(front))
+        self.assertEqual(span, 0.0)
+        self.assertTrue(np.isnan(furthest))
+
+
+class TracerTransferTests(unittest.TestCase):
+    def test_bulk_transfer_requires_matching_destination_inventory(self) -> None:
+        total = np.ones(4)
+        upstream = np.array([1.0, 0.98, 0.79, 0.70])
+        chamber = np.array([0.0, 0.005, 0.10, 0.09])
+        riser = np.array([0.0, 0.005, 0.10, 0.09])
+
+        leakage = post.tracer_transfer_condition(
+            total, upstream, chamber, riser, 0, 0.01
+        )
+        bulk = post.tracer_transfer_condition(
+            total, upstream, chamber, riser, 0, 0.20
+        )
+
+        np.testing.assert_array_equal(leakage, [False, True, True, True])
+        np.testing.assert_array_equal(bulk, [False, False, True, False])
+
+    def test_upstream_loss_alone_is_not_transfer(self) -> None:
+        condition = post.tracer_transfer_condition(
+            np.ones(3),
+            np.array([1.0, 0.7, 0.5]),
+            np.zeros(3),
+            np.zeros(3),
+            0,
+            0.20,
+        )
+
+        self.assertFalse(np.any(condition))
+
+
+class TracerConservationTests(unittest.TestCase):
+    def test_outward_flux_accounts_for_inventory_loss(self) -> None:
+        cumulative_outflow, cumulative_source, residual, error = (
+            post.tracer_conservation_budget(
+                np.array([0.0, 1.0, 2.0]),
+                np.array([1.0, 0.9, 0.8]),
+                np.array([0.1, 0.1, 0.1]),
+                np.zeros(3),
+            )
+        )
+
+        np.testing.assert_allclose(cumulative_outflow, [0.0, 0.1, 0.2])
+        np.testing.assert_allclose(cumulative_source, 0.0)
+        np.testing.assert_allclose(residual, 0.0, atol=1e-15)
+        self.assertAlmostEqual(error, 0.0)
+
+    def test_continuity_source_accounts_for_inventory_gain(self) -> None:
+        _, cumulative_source, residual, error = post.tracer_conservation_budget(
+            np.array([0.0, 1.0, 2.0]),
+            np.array([1.0, 1.1, 1.2]),
+            np.zeros(3),
+            np.full(3, 0.1),
+        )
+
+        np.testing.assert_allclose(cumulative_source, [0.0, 0.1, 0.2])
+        np.testing.assert_allclose(residual, 0.0, atol=1e-15)
+        self.assertAlmostEqual(error, 0.0)
+
+    def test_unaccounted_inventory_loss_fails_budget(self) -> None:
+        _, _, residual, error = post.tracer_conservation_budget(
+            np.array([0.0, 1.0]),
+            np.array([1.0, 0.8]),
+            np.zeros(2),
+            np.zeros(2),
+        )
+
+        np.testing.assert_allclose(residual, [0.0, -0.2])
+        self.assertAlmostEqual(error, 0.2)
+
+
+class ProbeParsingTests(unittest.TestCase):
+    def test_scalar_probe_coordinates_come_from_header(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            post_dir = Path(directory)
+            output = post_dir / "deep" / "0" / "alpha.water"
+            output.parent.mkdir(parents=True)
+            output.write_text(
+                "\n".join(
+                    [
+                        "# Probe 0 (-1.2 0 0.4)",
+                        "# Probe 1 (-0.17 0 0.39)",
+                        "# Time",
+                        "0.0 0.0 1.0",
+                        "0.1 0.2 0.8",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            times, values, locations = post.parse_probe_scalar_with_locations(
+                post_dir, "deep", "alpha.water"
+            )
+
+        np.testing.assert_allclose(times, [0.0, 0.1])
+        np.testing.assert_allclose(values, [[0.0, 1.0], [0.2, 0.8]])
+        np.testing.assert_allclose(locations[:, 0], [-1.2, -0.17])
+
+    def test_scalar_probe_width_mismatch_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            post_dir = Path(directory)
+            output = post_dir / "deep" / "0" / "alpha.water"
+            output.parent.mkdir(parents=True)
+            output.write_text(
+                "\n".join(
+                    [
+                        "# Probe 0 (-1 0 0.4)",
+                        "# Probe 1 (0 0 0.4)",
+                        "0.0 0.0 1.0",
+                        "0.1 0.2",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "expected 2"):
+                post.parse_probe_scalar_with_locations(
+                    post_dir, "deep", "alpha.water"
+                )
+
+    def test_restart_header_rounding_is_accepted(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            post_dir = Path(directory)
+            first = post_dir / "deep" / "0" / "alpha.water"
+            restart = post_dir / "deep" / "0.25" / "alpha.water"
+            first.parent.mkdir(parents=True)
+            restart.parent.mkdir(parents=True)
+            first.write_text(
+                "# Probe 0 (0.15 0 2.54946)\n0.0 1.0\n",
+                encoding="utf-8",
+            )
+            restart.write_text(
+                "# Probe 0 (0.15 0 2.549455)\n0.25 0.8\n",
+                encoding="utf-8",
+            )
+
+            times, values, locations = post.parse_probe_scalar_with_locations(
+                post_dir, "deep", "alpha.water"
+            )
+
+        np.testing.assert_allclose(times, [0.0, 0.25])
+        np.testing.assert_allclose(values[:, 0], [1.0, 0.8])
+        self.assertAlmostEqual(locations[0, 2], 2.54946)
+
+    def test_sustained_state_does_not_bridge_output_gap(self) -> None:
+        time = np.array([0.00, 0.01, 0.02, 0.20, 0.21, 0.22])
+        active = np.ones(len(time), dtype=bool)
+
+        detected = post.first_sustained_time(
+            time,
+            active,
+            minimum_duration=0.05,
+            maximum_gap=0.025,
+        )
+
+        self.assertIsNone(detected)
+
+    def test_time_alignment_does_not_interpolate_across_missing_samples(self) -> None:
+        aligned = post.align_at_times(
+            np.array([0.0, 0.02]),
+            np.array([1.0, 3.0]),
+            np.array([0.0, 0.01, 0.02]),
+        )
+
+        np.testing.assert_allclose(aligned[[0, 2]], [1.0, 3.0])
+        self.assertTrue(np.isnan(aligned[1]))
+
+    def test_function_output_beyond_active_checkpoint_is_ignored(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            case = Path(directory)
+            post_dir = case / "postProcessing"
+            output = post_dir / "inventory" / "0" / "volFieldValue.dat"
+            output.parent.mkdir(parents=True)
+            output.write_text(
+                "# Time value\n0.10 1.0\n0.20 2.0\n",
+                encoding="utf-8",
+            )
+            (case / "processor0" / "0.15").mkdir(parents=True)
+
+            times, values, _ = post.parse_function(post_dir, "inventory")
+
+        np.testing.assert_allclose(times, [0.10])
+        np.testing.assert_allclose(values, [[1.0]])
+
+    def test_function_width_mismatch_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            post_dir = Path(directory)
+            output = post_dir / "inventory" / "0" / "volFieldValue.dat"
+            output.parent.mkdir(parents=True)
+            output.write_text(
+                "0.10 1.0\n0.20 2.0 3.0\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "row widths"):
+                post.parse_function(post_dir, "inventory")
+
+
+class LogParsingTests(unittest.TestCase):
+    def test_strict_mesh_pass_reports_zero_concave_cells(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            case = Path(directory)
+            (case / "log.checkMesh").write_text(
+                "cells: 873032\nMesh OK.\n", encoding="utf-8"
+            )
+            (case / "log.checkMesh.all").write_text(
+                "\n".join(
+                    [
+                        "cells: 873032",
+                        "Max aspect ratio = 6.47 OK.",
+                        "Min volume = 2.57e-10. Max volume = 1.",
+                        "Mesh non-orthogonality Max: 34.8 average: 3.9",
+                        "Max skewness = 1.23 OK.",
+                        "*There are 12 faces with concave angles between consecutive edges. "
+                        "Max concave angle = 23.25 degrees.",
+                        "Concave cell check OK.",
+                        "Mesh OK.",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            quality = post.parse_mesh_quality(case)
+
+        self.assertTrue(quality["strict_check_run"])
+        self.assertTrue(quality["all_geometry_passed"])
+        self.assertEqual(quality["concave_cells"], 0)
+        self.assertEqual(quality["concave_faces"], 12)
+        self.assertAlmostEqual(quality["max_concave_face_angle_deg"], 23.25)
+
+    def test_limiter_peak_keeps_stage_and_time(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            case = Path(directory)
+            (case / "log.smoke").write_text(
+                "\n".join(
+                    [
+                        "Time = 0.4",
+                        "limitVelocity limitU Limited 2 (0.1%) of cells, "
+                        "1 (0.2%) of faces, with max limit 12",
+                        "Time = 0.5",
+                        "limitVelocity limitU Limited 5 (0.3%) of cells, "
+                        "3 (0.4%) of faces, with max limit 12",
+                        "Time = 0.55",
+                        "limitVelocity limitU Limited 4 (0.25%) of cells, "
+                        "8 (1.2%) of faces, with max limit 12",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            numerics = post.parse_numerics(case, paper_time_offset=0.25)
+
+        self.assertEqual(numerics["maximum_limited_cells"], 5)
+        self.assertEqual(numerics["maximum_limited_faces"], 8)
+        self.assertAlmostEqual(numerics["maximum_limited_face_percent"], 1.2)
+        self.assertEqual(numerics["maximum_limited_stage"], "smoke")
+        self.assertAlmostEqual(numerics["maximum_limited_paper_time_s"], 0.25)
+        self.assertAlmostEqual(
+            numerics["limiter_by_stage"]["smoke"][
+                "first_activation_paper_time_s"
+            ],
+            0.15,
+        )
+
+    def test_stale_stage_beyond_field_history_is_ignored(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            case = Path(directory)
+            (case / "log.initialize").write_text(
+                "\n".join(
+                    [
+                        "Time = 0.25",
+                        "    max(mag(U)) = 4.5 in cell 1",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (case / "log.smoke").write_text(
+                "\n".join(
+                    [
+                        "Time = 0.4",
+                        "    max(mag(U)) = 12 in cell 2",
+                        "limitVelocity limitU Limited 50 (5%) of cells, "
+                        "10 (2%) of faces, with max limit 12",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            numerics = post.parse_numerics(
+                case,
+                paper_time_offset=0.25,
+                maximum_solver_time=0.25,
+            )
+
+        self.assertEqual(numerics["logs"], ["log.initialize"])
+        self.assertEqual(numerics["maximum_velocity_m_s"], 4.5)
+        self.assertFalse(numerics["velocity_limiter_activated"])
+        self.assertNotIn("smoke", numerics["limiter_by_stage"])
+
+
+if __name__ == "__main__":
+    unittest.main()

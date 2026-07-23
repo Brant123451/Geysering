@@ -1,0 +1,6 @@
+| interface residual correction |
+| apply_correction diagnostics |
+.false. .false.
+| correction weights |
+| omegaL omegaR |
+0.5 0.5

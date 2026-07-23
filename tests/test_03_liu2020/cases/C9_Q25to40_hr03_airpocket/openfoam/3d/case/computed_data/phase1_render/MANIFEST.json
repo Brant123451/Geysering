@@ -1,0 +1,46 @@
+{
+  "case": "C9_Q25to40_hr03_airpocket",
+  "path": "tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket/openfoam/3d/case/computed_data/phase1_render",
+  "branch": "cursor/c9-openfoam-3d-bf97",
+  "stage": "phase1_complete",
+  "solver_endTime": 6.75,
+  "paper_endTime_phase1": 6.5,
+  "solver": "compressibleInterFoam",
+  "openfoam": "v2512",
+  "nCells_approx": 481874,
+  "parallel_ranks": 4,
+  "note_purgeWrite": "purgeWrite=4 removed mid-run checkpoints between ~1.23 and ~5.98; available times listed below",
+  "available_times": [
+    "0",
+    "0.3289420474",
+    "0.5289420474",
+    "0.6289420474",
+    "0.7289420474",
+    "0.8289420474",
+    "0.9289420474",
+    "1.0289420474",
+    "1.1289420474",
+    "1.2289420474",
+    "5.9789420474",
+    "6.2289420474",
+    "6.4789420474",
+    "6.7289420474"
+  ],
+  "fields_vtk": [
+    "alpha.water",
+    "U",
+    "p",
+    "pocketBodyTracer",
+    "pocketBodyTracerSigma",
+    "rho"
+  ],
+  "artifacts": {
+    "VTK.tar.xz": "ParaView: extract then open case.vtm.series",
+    "reconstructed_render_fields.tar.xz": "serial OpenFOAM field files for available times (needs polyMesh)",
+    "mesh/polyMesh.tar.xz": "extract into case/constant/polyMesh",
+    "postProcessing/": "probes, fluxes, integrals over full run",
+    "case.vtm.series": "VTK series index (also inside archive)"
+  },
+  "phase2_status": "STARTED_THEN_LOST at ~t=8.04 (full~36%); Phase 2 and eight eruptions have not yet been reproduced.",
+  "parent_handoff": "../HANDOFF.md"
+}

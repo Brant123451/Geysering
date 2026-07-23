@@ -1,0 +1,21 @@
+/* OpenFOAM v2512 — C9 2D fine mesh (Liu 2020) */
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      alpha.water;
+}
+
+dimensions      [0 0 0 0 0 0 0];
+internalField   uniform 1;
+boundaryField
+{
+    inlet { type fixedValue; value uniform 1; }
+    gateOutlet { type inletOutlet; inletValue uniform 1; value uniform 1; }
+    atmosphere { type inletOutlet; inletValue uniform 0; value uniform 0; }
+    walls { type zeroGradient; }
+    riserWall { type zeroGradient; }
+    gateWall { type zeroGradient; }
+    frontAndBack { type empty; }
+}

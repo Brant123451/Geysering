@@ -1,0 +1,21 @@
+/* OpenFOAM v2512 — C9 2D fine mesh (Liu 2020) */
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p_rgh;
+}
+
+dimensions      [1 -1 -2 0 0 0 0];
+internalField   uniform 108669.256500;
+boundaryField
+{
+    inlet { type fixedFluxPressure; value uniform 108669.256500; }
+    gateOutlet { type fixedValue; value uniform 104066.855760; }
+    atmosphere { type prghPressure; p uniform 101325.000000; value uniform 101325.000000; }
+    walls { type fixedFluxPressure; value uniform 108669.256500; }
+    riserWall { type fixedFluxPressure; value uniform 108669.256500; }
+    gateWall { type fixedFluxPressure; value uniform 108669.256500; }
+    frontAndBack { type empty; }
+}

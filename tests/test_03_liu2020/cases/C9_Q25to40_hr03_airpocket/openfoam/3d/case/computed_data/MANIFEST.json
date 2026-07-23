@@ -1,0 +1,36 @@
+{
+  "case": "C9_Q25to40_hr03_airpocket",
+  "path": "tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket/openfoam/3d/case/computed_data",
+  "branch": "cursor/c9-openfoam-3d-bf97",
+  "updated_utc": "2026-07-23T01:45:00Z",
+  "handoff": "HANDOFF.md",
+  "preserved": {
+    "phase1_render": {
+      "status": "uploaded_git_lfs",
+      "solver_endTime": 6.75,
+      "nCells_approx": 481874,
+      "packages": [
+        "phase1_render/VTK.tar.xz",
+        "phase1_render/reconstructed_render_fields.tar.xz",
+        "phase1_render/mesh/polyMesh.tar.xz",
+        "phase1_render/postProcessing/",
+        "phase1_render/results/",
+        "phase1_render/logs/"
+      ],
+      "detail": "phase1_render/MANIFEST.json"
+    },
+    "progress_track": {
+      "file": "PROGRESS_TRACK.md",
+      "last_recorded_utc": "2026-07-17T13:29:39Z",
+      "last_solver_t": 8.034688,
+      "full_pct": 35.8,
+      "phase2_pct": 9.5
+    }
+  },
+  "lost_on_vm_reset": {
+    "note": "Cloud VM reset ~2026-07-23; live case/processor*, case/log.full, mid-phase2 volume fields were gitignored and not archived.",
+    "last_known_live_t": 8.04,
+    "resume_possible_from_checkpoint": false
+  },
+  "phase2_status": "STARTED_THEN_LOST — last tracked ~36% full / t≈8.04; Phase 2 and eight eruptions have not yet been reproduced."
+}

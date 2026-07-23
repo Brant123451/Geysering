@@ -1,0 +1,7 @@
+{
+  "case": "B3",
+  "flow_lps_initial": 20,
+  "flow_lps_final": 100,
+  "downstream": "full_pipe",
+  "observed_branch": "geyser"
+}

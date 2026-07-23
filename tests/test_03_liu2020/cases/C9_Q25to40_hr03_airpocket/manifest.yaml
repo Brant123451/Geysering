@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "test": "test_03_liu2020",
+  "id": "C9_Q25to40_hr03_airpocket",
+  "source": "Liu, Shao & Zhu (2020), Journal of Hydraulic Engineering",
+  "status": "validated_phase1_only",
+  "self_contained": true,
+  "entrypoints": [
+    "scripts/caseC_digitize_and_compare.py"
+  ]
+}
