@@ -1,0 +1,92 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setExprBoundaryFieldsDict;
+}
+
+initialPhaseBoundary
+{
+    field alpha.water;
+    phaseValue
+    {
+        target value;
+        expression
+        #{
+            (
+                pos().x() >= 5.98
+              ? 0
+              : (pos().z() <= 0.66 ? 1 : 0)
+            )
+        #};
+    }
+    expressions
+    (
+        { $phaseValue; patch inlet; }
+        { $phaseValue; patch closedEnd; }
+        { $phaseValue; patch walls; }
+        { $phaseValue; patch riserWall; }
+        { $phaseValue; patch atmosphere; }
+    );
+}
+
+initialAbsolutePressureBoundary
+{
+    field p;
+    pressureValue
+    {
+        target value;
+        expression
+        #{
+            alpha.water
+          * (
+                (101325 + 997.954035295*7443.55501481*296.15)
+              * exp(9.81*(0.66-pos().z())/(7443.55501481*296.15))
+              - 997.954035295*7443.55501481*296.15
+            )
+          + (1-alpha.water)
+          * (
+                pos().x() >= 5.98
+              ? 101325
+              * exp(-9.81*(pos().z()-0.025)/(287.0421396863*296.15))
+              : 101325
+              * exp(-9.81*(pos().z()-0.66)/(287.0421396863*296.15))
+            )
+        #};
+    }
+    expressions
+    (
+        { $pressureValue; patch inlet; }
+        { $pressureValue; patch closedEnd; }
+        { $pressureValue; patch walls; }
+        { $pressureValue; patch riserWall; }
+        { $pressureValue; patch atmosphere; }
+    );
+}
+
+initialReducedPressureBoundary
+{
+    field p_rgh;
+    reducedPressureValue
+    {
+        target value;
+        expression
+        #{
+            p
+          + (
+                alpha.water
+              * (997.954035295 + p/(7443.55501481*296.15))
+              + (1-alpha.water)*p/(287.0421396863*296.15)
+            )
+          * 9.81*pos().z()
+        #};
+    }
+    expressions
+    (
+        { $reducedPressureValue; patch closedEnd; }
+        { $reducedPressureValue; patch walls; }
+        { $reducedPressureValue; patch riserWall; }
+        { $reducedPressureValue; patch atmosphere; }
+    );
+}
