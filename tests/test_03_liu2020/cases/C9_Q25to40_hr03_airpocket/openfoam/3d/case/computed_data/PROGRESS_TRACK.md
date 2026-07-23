@@ -99,6 +99,7 @@ Updated every ~20 minutes while phase1 runs toward solver `6.75`.
 
 ## VM reset note (2026-07-23)
 
-Environment rebuilt; live Phase2 checkpoints lost. Canonical archive:
-`case/computed_data/` (see `case/computed_data/HANDOFF.md`). Last recorded
-progress: **t≈8.0347 / full≈35.8% / phase2≈9.5%**.
+Live solver stopped / environment rebuilt. Last table row above is the final
+recorded progress (**t≈8.0347, full≈35.8%, phase2≈9.5%**). Processor fields for
+that tip were **not** archived before reset — only this table and the Phase1
+`phase1_render/` package remain in Git. See `HANDOFF.md`.

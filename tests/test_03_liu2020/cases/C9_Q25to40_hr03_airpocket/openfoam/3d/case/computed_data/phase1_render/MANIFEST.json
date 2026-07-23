@@ -1,6 +1,6 @@
 {
   "case": "C9_Q25to40_hr03_airpocket",
-  "path": "tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket/openfoam/3d",
+  "path": "tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket/openfoam/3d/case/computed_data/phase1_render",
   "branch": "cursor/c9-openfoam-3d-bf97",
   "stage": "phase1_complete",
   "solver_endTime": 6.75,
@@ -41,5 +41,6 @@
     "postProcessing/": "probes, fluxes, integrals over full run",
     "case.vtm.series": "VTK series index (also inside archive)"
   },
-  "phase2_status": "NOT STARTED \u2014 Phase 2 and eight eruptions have not yet been reproduced."
+  "phase2_status": "STARTED_THEN_LOST at ~t=8.04 (full~36%); Phase 2 and eight eruptions have not yet been reproduced.",
+  "parent_handoff": "../HANDOFF.md"
 }

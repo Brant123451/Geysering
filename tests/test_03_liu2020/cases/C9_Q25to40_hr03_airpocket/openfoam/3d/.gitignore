@@ -14,4 +14,7 @@ case/core
 case/*.foam
 case/VTK*/
 case/results-*/
+# Keep uploaded archives inside the case tree
+!case/computed_data/
+!case/computed_data/**
 runs/

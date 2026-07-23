@@ -28,12 +28,17 @@ venv/
 !**/openfoam/**/artifacts/**
 !**/openfoam/**/artifacts/**/postProcessing/
 !**/openfoam/**/artifacts/**/postProcessing/**
+!**/openfoam/**/case/computed_data/**
+!**/openfoam/**/case/computed_data/**/postProcessing/
+!**/openfoam/**/case/computed_data/**/postProcessing/**
 **/openfoam/**/constant/polyMesh/
 **/openfoam/**/caseA3d.msh
 **/openfoam/**/decomposeParDict.runtime
 **/openfoam/**/log.*
 !**/openfoam/**/artifacts/**/logs/
 !**/openfoam/**/artifacts/**/logs/**
+!**/openfoam/**/case/computed_data/**/logs/
+!**/openfoam/**/case/computed_data/**/logs/**
 **/openfoam/2d/[0-9]*/
 **/openfoam/3d/[0-9]*/
 !**/openfoam/2d/0.orig/

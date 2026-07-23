@@ -14,10 +14,31 @@ This file is the cross-account continuation record for the agent named
   as failed/qualified provenance, not as the current production result.
 
 All source changes and small validation artifacts are committed to the PR.
-OpenFOAM meshes, decomposed processor directories, time directories, logs, and
-`postProcessing/` are intentionally ignored. Consequently, another Cloud Agent
-cannot resume the original VM's solver checkpoint and must regenerate the mesh
-and rerun the stages from committed source.
+
+### Computed-data archive (required read)
+
+**Canonical uploaded results now live inside the case tree:**
+
+```text
+tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket/openfoam/3d/case/computed_data/
+```
+
+See `case/computed_data/HANDOFF.md` and `case/computed_data/MANIFEST.json`.
+
+| What | Where |
+|------|--------|
+| Phase1 VTK / fields / mesh / probes | `case/computed_data/phase1_render/` (Git LFS) |
+| Progress table through ~t=8.04 | `case/computed_data/PROGRESS_TRACK.md` |
+| Future resume checkpoints | `case/computed_data/checkpoints/` (must be archived explicitly) |
+
+Live runtime paths (`case/processor*`, `case/[0-9]*`, `case/log.*`) remain
+gitignored. **2026-07-23 VM reset** destroyed the in-progress Phase2 state that
+had reached solver **t≈8.04 (~36% full)** because those processor directories were
+never packed into `computed_data/`. Percentage history survived in
+`PROGRESS_TRACK.md`; the fields did not. A replacement agent must regenerate
+the mesh and rerun stages from committed source — it cannot resume t≈8.04.
+
+`git lfs install && git lfs pull` is mandatory after clone.
 
 ## Completed work
 

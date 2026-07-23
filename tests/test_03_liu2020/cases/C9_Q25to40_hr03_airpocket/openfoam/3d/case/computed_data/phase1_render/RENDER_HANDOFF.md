@@ -6,7 +6,7 @@
 
 - **Phase1 已完成**：求解器 `endTime = 6.75`（论文 phase1 ≈ 6.50 s），日志出现 `End` / `Finalising parallel run`。
 - **Phase 2 and eight eruptions have not yet been reproduced.**
-  尚未启动 `./Allrun.resume full`（目标 solver `20.25` / 论文 20 s）。
+  Phase2 曾启动并跑到约 t≈8.04（full≈36%），但 VM 重置后检查点丢失；详见上级 `../HANDOFF.md`。
 
 ## Git / 路径
 
@@ -16,8 +16,10 @@
 - 本目录（相对仓库根）：
 
 ```text
-tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket/openfoam/3d/artifacts/phase1_render/
+tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket/openfoam/3d/case/computed_data/phase1_render/
 ```
+
+（原 `artifacts/phase1_render/` 已迁入 `case/computed_data/`。）
 
 大文件（`*.tar.xz`）经 **Git LFS** 跟踪。克隆后请执行：
 
@@ -84,7 +86,7 @@ paraview VTK/case.vtm.series
 ## 可选：OpenFOAM 原生重开
 
 ```bash
-CASE=../../case   # 指向 openfoam/3d/case
+CASE=../..   # 指向 openfoam/3d/case（本包在 case/computed_data/phase1_render）
 mkdir -p "$CASE/constant"
 tar -xJf mesh/polyMesh.tar.xz -C "$CASE/constant"
 tar -xJf reconstructed_render_fields.tar.xz -C "$CASE"
