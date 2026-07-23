@@ -20,10 +20,19 @@ tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket/openfoam/2d/
 - Inlet 2-D flow rate scaled to keep paper mean velocity
 
 ## Runtime status (UTC)
-- Mesh: OK, 1 region
+- Mesh: OK, 1 region, ~217004 cells
 - `Allrun.initialize` finished at solver **0.25**
-- `./Allrun.resume full` started toward **20.25**
-- Init-tip rate ≈ **2.9 sim-s/wall-h** → ETA for 20.25 roughly **7–12 h** (up to ~20 h if stiff)
+- `./Allrun.resume full` running toward **20.25**
+- Latest tip ~**t=7.15** (~35%); checkpoints archived:
+  - `case/computed_data/checkpoints/processor_T6.75.tar.xz`
+  - `case/computed_data/checkpoints/processor_T7.tar.xz`
+- Rate ~1.4–2.2 sim-s/wall-h → ETA ~**6–10 wall-h** remaining if host stays awake
+- Known gap vs paper: hydrostatic PT2/PT3 init not yet matched (to revisit after full trajectory)
+
+## Important
+**Phase 2 and eight eruptions have not yet been reproduced.**
+
+Archive further checkpoints every ~1 sim-s into `case/computed_data/checkpoints/` and `git lfs push`.
 
 ## Important
 **Phase 2 and eight eruptions have not yet been reproduced.**
