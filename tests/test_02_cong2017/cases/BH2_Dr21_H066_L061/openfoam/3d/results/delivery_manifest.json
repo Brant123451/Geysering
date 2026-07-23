@@ -1,0 +1,104 @@
+{
+  "case": "BH2_Dr21_H066_L061",
+  "paper_run": "B-H2",
+  "branch": "cursor/test2-bh2-3d-41f6",
+  "case_root": "tests/test_02_cong2017/cases/BH2_Dr21_H066_L061/openfoam/3d",
+  "delivered_utc": "2026-07-23T01:43:00Z",
+  "note": "Cloud environment was reset on 2026-07-23; runs/ processor field data were lost. Only git-tracked compact results remain and are listed here.",
+  "uploaded": {
+    "compact_results": [
+      "openfoam_base_baseline_metrics.json",
+      "openfoam_base_baseline_series.csv",
+      "openfoam_base_closed_metrics.json",
+      "openfoam_base_closed_series.csv",
+      "comparison_metrics.json",
+      "comparison_levels.png",
+      "comparison_pressure.png",
+      "comparison_flow_ejection.png",
+      "experiment_1d_3d.png",
+      "mass_conservation.png",
+      "variant_sensitivity.png",
+      "delivery_manifest.json"
+    ],
+    "docs": [
+      "HANDOFF.md",
+      "PAPER_AUDIT.md",
+      "MODEL_INPUTS.md",
+      "README.md",
+      "case_config.json"
+    ],
+    "case_template": [
+      "case/",
+      "Allrun",
+      "Allclean",
+      "make_mesh.py",
+      "postprocess.py",
+      "audit_initial.py"
+    ]
+  },
+  "runs": {
+    "base_closed": {
+      "status": "completed_compact_only",
+      "field_data_uploaded": false,
+      "reason_no_fields": "runs/ directory lost in environment reset; only postprocessed compact metrics/series were previously committed",
+      "artifacts": [
+        "openfoam_base_closed_metrics.json",
+        "openfoam_base_closed_series.csv"
+      ]
+    },
+    "base_baseline": {
+      "status": "completed_13s_compact_only",
+      "end_time_s": 13.0,
+      "mesh_cells": 239660,
+      "geyser_model": false,
+      "Ta_s": 8.330061380082668,
+      "Yfs_max_m": 1.4643174140384,
+      "vfs_m_s": 0.8303705343546338,
+      "vint_m_s": 1.0150551575048592,
+      "ejected_water_final_m3": 1.98348332e-14,
+      "field_data_uploaded": false,
+      "reason_no_fields": "runs/processor* lost in environment reset before LFS upload",
+      "artifacts": [
+        "openfoam_base_baseline_metrics.json",
+        "openfoam_base_baseline_series.csv"
+      ]
+    },
+    "refined_baseline": {
+      "status": "interrupted_lost",
+      "mesh_cells_approx": 580000,
+      "last_known_time_s": 8.472,
+      "last_known_pct": 65.17,
+      "last_known_written_time_s": 8.45,
+      "last_settings": {
+        "maxCo": 0.1,
+        "maxAlphaCo": 0.1,
+        "maxDeltaT": 1.5e-05,
+        "writeInterval": 0.05,
+        "np": 4
+      },
+      "crash_history": [
+        "t≈4.686 Negative initial temperature; resumed from latestTime≈4.6",
+        "t≈7.808 Negative initial temperature; resumed from 7.7/7.8 with maxCo≤0.10",
+        "t≈7.978 Negative initial temperature at maxCo=0.20; resumed from 7.9 with maxCo=0.10"
+      ],
+      "field_data_uploaded": false,
+      "compact_results_uploaded": false,
+      "reason": "Environment reset wiped runs/refined_baseline before End and before LFS field upload"
+    },
+    "base_instant": {
+      "status": "never_started",
+      "field_data_uploaded": false,
+      "compact_results_uploaded": false,
+      "reason": "Queued behind refined_baseline; never launched"
+    }
+  },
+  "experiment_vs_base_baseline": {
+    "experiment_geyser": true,
+    "model_geyser": false,
+    "geyser_match": false,
+    "Ta_delta_s": 0.4900613800826683,
+    "vfs_delta_m_s": 0.0623705343546338,
+    "vint_delta_m_s": -0.006944842495140824,
+    "tuning": "none; experimental classification was not used as a model input"
+  }
+}

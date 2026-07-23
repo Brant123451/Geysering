@@ -33,10 +33,12 @@ Case：`tests/test_02_cong2017/cases/BH2_Dr21_H066_L061/openfoam/3d`
 
 | Run ID | 网格 | 阀门 | 状态（交接时以最新 commit / `results/` 为准） |
 |---|---|---|---|
-| `base_closed` | base ~24 万单元 | 闭阀 | 短时静压 hold，已有紧凑结果 |
-| `base_baseline` | base ~24 万 | 0.2 s 线性开阀 | **13 s 已完成**，紧凑 CSV/JSON/PNG 已在 `results/` |
-| `refined_baseline` | refined ~58 万 | 0.2 s 线性开阀 | 运行中 / 或完成后上传场数据 |
-| `base_instant` | base ~24 万 | 瞬时全开 | 排队 / 或完成后上传 |
+| `base_closed` | base ~24 万单元 | 闭阀 | 短时静压 hold；**紧凑结果已上传** |
+| `base_baseline` | base ~24 万 | 0.2 s 线性开阀 | **13 s 已完成**；紧凑 CSV/JSON/PNG **已上传** |
+| `refined_baseline` | refined ~58 万 | 0.2 s 线性开阀 | 曾推进至约 **t=8.47/13（65%）** 后云环境重置，`runs/` 场数据丢失，**未能上传 processor\*** |
+| `base_instant` | base ~24 万 | 瞬时全开 | 未启动（排队于 refined 之后） |
+
+完整交付清单见 `results/delivery_manifest.json`。
 
 模板 case：`case/`  
 入口脚本：`Allrun`、`postprocess.py`、`make_mesh.py`
@@ -111,26 +113,32 @@ python3 postprocess.py --run refined_baseline
 
 ---
 
-## 5. 场数据上传策略（算完后执行）
+## 5. 已上传内容与场数据缺口（2026-07-23）
 
-目标：本地能渲染，尽量多给数据，同时避开巨型无用文件。
+### 5.1 已上传到本分支（普通 git，非 LFS）
 
-计划纳入 Git LFS（算完后由 agent 执行）：
+路径：`openfoam/3d/results/`
 
-- `runs/*/processor*/constant/polyMesh/**`（重建几何必需）
-- `runs/*/processor*/<time>/{alpha.water,U,p,p_rgh,T,phi}`（主渲染场）
-- `runs/*/system/**`、`runs/*/constant/thermophysical*`、`turbulenceProperties`、`g`、`hRef`
-- `runs/*/postProcessing/**`（探针与通量时间序列）
-- `runs/*/mesh_stats.json`、`initial_audit.json`
-- 可选：`runs/*/log.solve`（体积大，优先截取末尾或单独附件）
+- `openfoam_base_baseline_metrics.json` / `_series.csv`（完整 13 s 事件窗标量序列）
+- `openfoam_base_closed_metrics.json` / `_series.csv`
+- `comparison_metrics.json` 与各对比图 PNG
+- `delivery_manifest.json`（本交付清单）
 
-通常不上传：
+模板与审计文档：`case/`、`Allrun`、`postprocess.py`、`PAPER_AUDIT.md`、`MODEL_INPUTS.md`、本文档。
 
-- `*.msh` 原始 gmsh（可用 `make_mesh.py` 再生）
-- 完整 `log.*` 全量（数百 MB–GB）
-- 中间临时目录、`results/raw/`
+### 5.2 未能上传（环境重置丢失）
 
-若 GitHub 配额不够：优先保证 **`base_baseline` 全时程** + **refined / instant 稀疏时刻**（如每 0.5–1.0 s 或事件窗关键时刻）。
+- 全部 `runs/*/processor*` 场数据（含 `base_baseline` 完整场与 `refined_baseline` 至 t≈8.45 的写出场）
+- `runs/*/postProcessing/**`、`log.solve`、网格 `.msh`
+
+本地若需 ParaView 体渲染，只能按第 4.3 节重跑 `./Allrun solve ...` 再生场数据。
+
+### 5.3 原计划 LFS 策略（若将来重跑完成）
+
+- `runs/*/processor*/constant/polyMesh/**`
+- `runs/*/processor*/<time>/{alpha.water,U,p,p_rgh,T,phi}`
+- `runs/*/system/**`、物性与湍流字典、`postProcessing/**`
+- 通常不上传完整 `log.*` 与原始 `.msh`
 
 ---
 
@@ -156,15 +164,13 @@ mpirun --oversubscribe -np 4 compressibleInterIsoFoam -parallel 2>&1 | tee -a lo
 
 ---
 
-## 7. 当前进度快照（文档生成时）
+## 7. 最终进度快照（2026-07-23 交付）
 
-- 监控：每 20 分钟健康检查；异常则 `latestTime` 续算。
-- `base_baseline`：完成（13 s）。
-- `refined_baseline`：进行中（文档生成时约 38%+，以最新 `HANDOFF` / `results` / 进度消息为准）。
-- `base_instant`：refined 结束后自动启动。
-- 全部 `End` 后：运行交付脚本，把场数据 + 更新后的本文件推送到本分支。
-
-更新本文件时请同步改本节进度与“已上传内容清单”。
+- `base_baseline`：**完成 13 s**；紧凑结果已在 git。模型判 **no-geyser**（实验为 geyser；未调参）。
+- `base_closed`：紧凑结果已在 git。
+- `refined_baseline`：续算曾至约 **t=8.47/13（65.17%）**，`maxCo=0.10`；多次负温度崩溃后恢复；**云环境重置后场数据丢失，未完成、未上传场**。
+- `base_instant`：未启动。
+- 详见 `results/delivery_manifest.json`。
 
 ---
 
