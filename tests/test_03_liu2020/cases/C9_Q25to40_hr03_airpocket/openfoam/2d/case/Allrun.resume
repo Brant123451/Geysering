@@ -1,0 +1,17 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
+STAGE="${1:?smoke|phase1|full}"
+case "$STAGE" in
+  smoke) cp system/controlDict.smoke system/controlDict ;;
+  phase1) cp system/controlDict.phase1 system/controlDict ;;
+  full) cp system/controlDict.full system/controlDict ;;
+  *) echo "bad stage"; exit 2 ;;
+esac
+# ensure timePrecision
+sed -i 's/^timePrecision.*/timePrecision   14;/' system/controlDict || true
+NP=$(foamDictionary system/decomposeParDict -entry numberOfSubdomains -value)
+OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
+  mpirun -np "$NP" compressibleInterFoam -parallel > "log.$STAGE" 2>&1
+echo "RESUME_${STAGE}_DONE"

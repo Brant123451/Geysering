@@ -1,0 +1,5 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+foamListTimes -rm >/dev/null 2>&1 || true
+rm -rf processor* postProcessing VTK log.* 0

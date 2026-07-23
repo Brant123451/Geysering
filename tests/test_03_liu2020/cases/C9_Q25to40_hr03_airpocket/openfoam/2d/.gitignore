@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+case/[0-9]*/
+!case/0.orig/
+!case/0.orig/**
+case/processor*/
+case/postProcessing/
+case/constant/polyMesh/
+case/log.*
+case/core
+case/*.foam
+case/VTK*/
+!case/computed_data/
+!case/computed_data/**

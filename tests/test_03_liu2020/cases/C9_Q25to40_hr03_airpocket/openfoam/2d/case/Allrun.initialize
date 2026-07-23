@@ -1,0 +1,13 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
+rm -rf 0 processor* postProcessing
+cp -a 0.orig 0
+cp system/controlDict.initialize system/controlDict
+setFields > log.setFields 2>&1
+decomposePar -force > log.decomposePar 2>&1
+NP=$(foamDictionary system/decomposeParDict -entry numberOfSubdomains -value)
+OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
+  mpirun -np "$NP" compressibleInterFoam -parallel > log.initialize 2>&1
+echo INIT_DONE

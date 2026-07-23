@@ -1,0 +1,15 @@
+{
+  "n_vertices": 78,
+  "n_blocks": 24,
+  "n_cells_est": 217004,
+  "thickness_m": 0.01,
+  "h_gate_m": 0.0374241480470371,
+  "fine": true,
+  "nx_u": 1450,
+  "nz_u": 50,
+  "note_slope": "upstream invert flattened to z=drop for conformal 2D blocks; paper slope 1:100 retained as model note",
+  "q0_2d": 0.0015915494309189536,
+  "q1_2d": 0.0025464790894703256,
+  "U0": 0.7957747154594766,
+  "U1": 1.2732395447351625
+}

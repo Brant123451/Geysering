@@ -15,6 +15,17 @@ This file is the cross-account continuation record for the agent named
 
 All source changes and small validation artifacts are committed to the PR.
 
+### Active path switch (2026-07-23)
+
+**3-D Phase2 was abandoned after VM reset** (last tip ~t=8.04 / ~36% full lost).
+Production continuation is the **fine 2-D mid-plane case**:
+
+```text
+tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket/openfoam/2d/
+```
+
+See `../2d/HANDOFF.md`. 3-D `case/computed_data/` remains the Phase1 render archive only.
+
 ### Computed-data archive (required read)
 
 **Canonical uploaded results now live inside the case tree:**
