@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MODEL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+CASE_ROOT="$(cd "$MODEL_DIR/../.." && pwd)"
+RUNS_DIR="$MODEL_DIR/runs"
+OUTPUT_DIR="$CASE_ROOT/outputs/openfoam3d"
+
+MESH_LEVEL="${BH1_MESH_LEVEL:-base}"
+VALVE_STATE="${BH1_VALVE_STATE:-open}"
+RUN_NAME="${BH1_RUN_NAME:-${MESH_LEVEL}-${VALVE_STATE}}"
+REBUILD="${BH1_REBUILD:-0}"
+RUN_DIR="$RUNS_DIR/$RUN_NAME"
+
+case "$MESH_LEVEL" in
+    base)
+        ;;
+    refined)
+        ;;
+    *)
+        echo "BH1_MESH_LEVEL must be base or refined" >&2
+        exit 2
+        ;;
+esac
+
+if [[ "$VALVE_STATE" != "open" && "$VALVE_STATE" != "closed" ]]; then
+    echo "BH1_VALVE_STATE must be open or closed" >&2
+    exit 2
+fi
+if [[ ! -f /usr/lib/openfoam/openfoam2512/etc/bashrc ]]; then
+    echo "OpenFOAM v2512 is required at /usr/lib/openfoam/openfoam2512" >&2
+    exit 3
+fi
+
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
+mkdir -p "$RUNS_DIR" "$OUTPUT_DIR"
+if [[ -e "$RUN_DIR" ]]; then
+    if [[ "$REBUILD" != "1" ]]; then
+        echo "$RUN_DIR already exists; set BH1_REBUILD=1 to replace it" >&2
+        exit 4
+    fi
+    rm -rf -- "$RUN_DIR"
+fi
+cp -a "$SCRIPT_DIR" "$RUN_DIR"
+cd "$RUN_DIR"
+
+python3 "$MODEL_DIR/generate_probes.py" \
+    --output system/riserProbeLocations.runtime
+mkdir -p constant/triSurface
+python3 "$MODEL_DIR/make_geometry.py" \
+    --output-dir constant/triSurface \
+    --metadata "$OUTPUT_DIR/mesh-${RUN_NAME}.json" \
+    > log.gmsh 2>&1
+python3 "$MODEL_DIR/validate_paper_case.py" \
+    --case-dir "$RUN_DIR" \
+    --geometry "$OUTPUT_DIR/mesh-${RUN_NAME}.json" \
+    --output "$OUTPUT_DIR/paper-audit-${RUN_NAME}.json" \
+    > log.paperAudit 2>&1
+
+cp "system/snappyHexMeshDict.${MESH_LEVEL}" system/snappyHexMeshDict
+blockMesh > log.blockMesh 2>&1
+surfaceFeatureExtract > log.surfaceFeatureExtract 2>&1
+snappyHexMesh -overwrite > log.snappyHexMesh 2>&1
+createPatch -overwrite > log.createPatch 2>&1
+topoSet > log.topoSet 2>&1
+if ! checkMesh -allGeometry -allTopology > log.checkMesh 2>&1; then
+    echo "Extended checkMesh reported diagnostics; applying the documented acceptance policy."
+fi
+checkMesh > log.checkMesh.standard 2>&1
+
+python3 "$MODEL_DIR/audit_mesh.py" \
+    --run-dir "$RUN_DIR" \
+    --geometry "$OUTPUT_DIR/mesh-${RUN_NAME}.json" \
+    --output "$OUTPUT_DIR/checkMesh-${RUN_NAME}.json" \
+    --mesh-level "$MESH_LEVEL" \
+    --valve-state "$VALVE_STATE"
+
+echo "BH1_MESH_READY=$RUN_DIR"

@@ -1,0 +1,17 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      valveProperties;
+}
+
+// The instantaneous-opening baseline and static-hold check leave this source
+// inactive. configure_valve.py enables it only for the declared 0.2/0.5 s
+// opening-duration sensitivity cases.
+active                  false;
+model                   sineSquaredAreaForchheimer;
+cellZone                valveResistanceZone;
+openingDuration         0;
+minimumAreaFraction     0.001;
+resistanceLength        0.025;

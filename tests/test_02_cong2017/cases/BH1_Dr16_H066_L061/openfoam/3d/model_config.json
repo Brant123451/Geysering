@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "case": "BH1_Dr16_H066_L061",
+  "run": "B-H1",
+  "sources": {
+    "primary_experiment": {
+      "citation": "Cong, Chan & Lee (2017), J. Hydraul. Eng. 143(9), 04017039",
+      "doi": "10.1061/(ASCE)HY.1943-7900.0001332",
+      "repository_file": "../../../../_shared/reference/paper_source/cong2017_JHE2017_offprint.pdf",
+      "sha256": "6a2fd77ae65f6361ec5479780a3226e5f5cf69fde643866f692279588c16aa3e"
+    },
+    "companion_cfd": {
+      "citation": "Chan, Cong & Lee (2018), J. Hydraul. Eng. 144(3), 04017071",
+      "doi": "10.1061/(ASCE)HY.1943-7900.0001416",
+      "role": "methodological cross-check; its fine-grid B1 uses H0=0.88 m and is not B-H1"
+    }
+  },
+  "coordinate_system": {
+    "x": "horizontal pipe axis, upstream to capped end",
+    "y": "vertical, upward",
+    "z": "horizontal transverse",
+    "main_axis_y_m": 0.0,
+    "pipe_invert_y_m": -0.025,
+    "pipe_crown_y_m": 0.025
+  },
+  "geometry": {
+    "pipe_length_m": 6.6,
+    "pipe_inner_diameter_m": 0.05,
+    "tee_axis_x_m": 3.47,
+    "valve_x_m": 5.99,
+    "closed_cap_x_m": 6.6,
+    "initial_pocket_interval_x_m": [
+      5.99,
+      6.6
+    ],
+    "riser_inner_diameter_m": 0.016,
+    "riser_height_above_pipe_crown_m": 1.8,
+    "riser_rim_y_m": 1.825,
+    "external_atmosphere_width_m": 0.3,
+    "external_atmosphere_height_m": 1.2,
+    "external_atmosphere_top_y_m": 3.025
+  },
+  "initial_state": {
+    "velocity_m_per_s": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "H0_above_pipe_invert_m": 0.66,
+    "free_surface_y_m": 0.635,
+    "free_surface_height_above_crown_m": 0.61,
+    "pocket_length_m": 0.61,
+    "pocket_pressure_absolute_Pa": 101325.0,
+    "atmosphere_reference_pressure_absolute_Pa": 101325.0,
+    "atmosphere_reference_y_m": 0.635,
+    "headspace_p_rgh_Pa": 101332.42484,
+    "temperature_K": 296.15,
+    "analytic_pocket_volume_m3": 0.0011977322,
+    "analytic_pocket_air_mass_kg": 0.0014276
+  },
+  "materials": {
+    "water_reference_density_kg_per_m3": 998.2,
+    "water_bulk_modulus_Pa": 2200000000.0,
+    "water_perfectFluid_R_J_per_kg_K": 7442.063619292711,
+    "water_perfectFluid_rho0_kg_per_m3": 998.154026084091,
+    "water_dynamic_viscosity_Pa_s": 0.001003,
+    "air_equation_of_state": "perfectGas",
+    "air_molar_mass_kg_per_kmol": 28.965,
+    "air_dynamic_viscosity_Pa_s": 1.81e-05,
+    "surface_tension_N_per_m": 0.072,
+    "gravity_m_per_s2": 9.81
+  },
+  "boundaries": {
+    "inlet": "pressure-driven constant reservoir head H0=0.66 m",
+    "atmosphere": "hydrostatic p_rgh=101332.42484 Pa, referenced to 101325 Pa absolute at y=0.635 m",
+    "walls": "smooth no-slip acrylic; alpha.water zeroGradient",
+    "cap": "part of walls, closed",
+    "contact_angle": "not prescribed; no fitted value is available"
+  },
+  "valve": {
+    "baseline": "instantaneously fully open at t=0, matching Chan et al. (2018)",
+    "static_hold": "zero-thickness impermeable no-slip wall baffle at x=5.99 m",
+    "sensitivity_durations_s": [
+      0.2,
+      0.5
+    ],
+    "sensitivity_area_law": "A/A0=sin(pi*t/(2*tau))^2 for 0<t<tau",
+    "sensitivity_note": "equivalent passive-resistance uncertainty model, not a measured ball-angle law",
+    "minimum_area_fraction": 0.001,
+    "resistance_model": {
+      "type": "semi-implicit Forchheimer momentum sink",
+      "cell_zone": "valveResistanceZone",
+      "zone_x_interval_m": [
+        5.96,
+        5.985
+      ],
+      "resistance_length_m": 0.025,
+      "loss_coefficient": "K=(A0/A)^2-1",
+      "force_per_volume": "-0.5*rho*K*mag(U)*U/L",
+      "linearization": "non-negative 0.5*rho*K*mag(U_old)/L coefficient added to the momentum diagonal",
+      "zero_velocity_floor": false,
+      "zone_volume_check": "equivalent 50 mm-pipe length must agree with resistance_length within 20%",
+      "purpose": "passive mesh-coupled loss without the unstable old-flux pressure-jump feedback; no pressure or velocity source"
+    }
+  },
+  "meshes": {
+    "base": {
+      "pipe_size_m": 0.00625,
+      "riser_size_m": 0.0015625,
+      "plume_size_m": 0.0125
+    },
+    "refined": {
+      "pipe_size_m": 0.003125,
+      "riser_size_m": 0.00078125,
+      "plume_size_m": 0.00625,
+      "riser_wall_layers": 4,
+      "riser_wall_first_layer_thickness_m": 0.0001,
+      "riser_wall_total_layer_thickness_m": 0.00065,
+      "purpose": "resolve the approximately 0.55 mm Dr=16 mm falling film reported by Chan et al. (2018)"
+    },
+    "riser_refinement_extension_above_rim_m": 0.05,
+    "quality_acceptance": {
+      "standard_checkMesh_must_pass": true,
+      "extended_check_is_always_recorded": true,
+      "max_concave_cell_fraction": 0.01,
+      "max_low_determinant_cells": 10,
+      "min_cell_determinant": 0.0004,
+      "max_non_orthogonality_deg": 70.0,
+      "max_skewness": 4.0,
+      "negative_volume_cells_allowed": 0
+    }
+  },
+  "solver": {
+    "openfoam_release": "OpenCFD v2512",
+    "application": "bh1CompressibleInterFoam",
+    "base_solver": "compressibleInterFoam",
+    "energy_formulation": "total sensible enthalpy with pressure-time-derivative work and kinetic-energy transport",
+    "energy_formulation_reference": "standard OpenFOAM compressible total-enthalpy transformation used by rhoPimpleFoam",
+    "simulation_type": "laminar",
+    "turbulence_closure": {
+      "choice": "laminar preregistered OpenFOAM baseline",
+      "companion_cfd_difference": "Chan et al. (2018) used standard k-epsilon but did not report initial or inlet turbulence quantities",
+      "interpretation": "not a line-by-line reproduction of the companion FLUENT model; retain as a declared non-fitted closure rather than infer missing turbulence inputs from B-H1 outcomes"
+    },
+    "end_time_s": 13.0,
+    "max_Courant": 0.5,
+    "max_alpha_Courant": 0.5,
+    "temperature_acceptance": {
+      "bounds_K": [
+        200.0,
+        600.0
+      ],
+      "clipping": false,
+      "criterion": "all recorded extrema must remain within bounds"
+    },
+    "conservation_acceptance": {
+      "static_maximum_relative_error": 0.001,
+      "smoke_maximum_relative_error": 0.01,
+      "full_event_maximum_relative_error": 0.01,
+      "required_budgets": [
+        "water",
+        "gas",
+        "total"
+      ],
+      "phase_mass_fluxes": "registered solver waterRhoPhi and airRhoPhi with exact sum rhoPhi",
+      "total_mass_flux": "direct sum of solver rhoPhi over atmosphere and inlet"
+    },
+    "bounded_startup_numerics": {
+      "reference": "OpenFOAM v2512 compressibleInterFoam depthCharge3D",
+      "momentum_divergence": "Gauss upwind",
+      "laplacian": "Gauss linear uncorrected",
+      "surface_normal_gradient": "uncorrected",
+      "outer_correctors": 1,
+      "pressure_correctors": 2,
+      "non_orthogonal_correctors": 0
+    }
+  },
+  "postprocessing": {
+    "riser_height_datum": "height above horizontal-pipe crown",
+    "legacy_1d_height_shift_m": -0.05,
+    "legacy_1d_comparison": "tracked frozen CSV, consumed without regeneration; qualitative only because its effective pipe and tee geometry differ",
+    "pressure_comparison": "Fig.10(a) is Run B-1, not the B-H1 high-speed realization; same nominal Dr/H0/L0, morphology-only cross-run comparison using PT1_proxy",
+    "velocity_metric": {
+      "method": "height interval divided by interpolated first-passage time after gas first enters the riser",
+      "Yfs_height_window_m": [
+        0.65,
+        1.7
+      ],
+      "Yint_height_window_m": [
+        0.05,
+        1.65
+      ]
+    },
+    "geyser_detection": "Yfs reaches 98% of the physical rim height or cumulative positive rim water transfer reaches 1e-9 m3",
+    "ejected_water": "time integral of positive upward water flux through the physical riser mouth",
+    "exterior_water": "instantaneous water inventory above the physical rim"
+  },
+  "experimental_targets_not_used_as_forcing": {
+    "classification": "GEYSER",
+    "Ta_s": 8.07,
+    "vfs_m_per_s": 0.924,
+    "vint_m_per_s": 1.231,
+    "levels_csv": "../../data/digitized/fig9a_levels.csv",
+    "pressure_csv": "../../data/digitized/fig10a_pt1.csv",
+    "pressure_csv_run": "B-1 (different realization; not pointwise B-H1 validation)"
+  }
+}

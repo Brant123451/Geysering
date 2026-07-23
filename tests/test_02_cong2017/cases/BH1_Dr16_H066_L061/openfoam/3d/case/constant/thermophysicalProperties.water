@@ -1,0 +1,43 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      thermophysicalProperties;
+}
+
+thermoType
+{
+    type            heRhoThermo;
+    mixture         pureMixture;
+    transport       const;
+    thermo          hConst;
+    equationOfState perfectFluid;
+    specie          specie;
+    energy          sensibleEnthalpy;
+}
+
+mixture
+{
+    specie
+    {
+        molWeight   18.01528;
+    }
+    equationOfState
+    {
+        // perfectFluid uses rho=rho0+p/(R*T).  These values give
+        // rho(101325 Pa,296.15 K)=998.2 kg/m3 and K=rho*R*T=2.2 GPa.
+        R           7442.063619292711;
+        rho0        998.154026084091;
+    }
+    thermodynamics
+    {
+        Cp          4182;
+        Hf          0;
+    }
+    transport
+    {
+        mu          1.003e-3;
+        Pr          7.0;
+    }
+}

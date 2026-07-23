@@ -1,0 +1,136 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      snappyHexMeshDict;
+}
+
+castellatedMesh true;
+snap            true;
+addLayers       false;
+// Preserve split boundary faces.  Merging snapped faces creates non-convex
+// polyhedra that fail checkMesh -allGeometry even when the standard checks pass.
+mergePatchFaces false;
+
+geometry
+{
+    walls.stl      { type triSurfaceMesh; name walls; }
+    riserWall.stl  { type triSurfaceMesh; name riserWall; }
+    inlet.stl      { type triSurfaceMesh; name inlet; }
+    atmosphere.stl { type triSurfaceMesh; name atmosphere; }
+
+    pipeCore
+    {
+        type searchableCylinder;
+        point1 (0 0 0);
+        point2 (6.6 0 0);
+        radius 0.026;
+    }
+    riserCore
+    {
+        type searchableCylinder;
+        point1 (3.47 -0.005 0);
+        // Continue fine riser cells 50 mm into the exterior so the sharp
+        // physical rim is not also a level-5 to level-2 transition.
+        point2 (3.47 1.875 0);
+        radius 0.009;
+    }
+    plumeCore
+    {
+        type searchableBox;
+        min (3.42 1.80 -0.05);
+        max (3.52 3.025 0.05);
+    }
+}
+
+castellatedMeshControls
+{
+    maxLocalCells       1000000;
+    maxGlobalCells      2500000;
+    minRefinementCells  10;
+    maxLoadUnbalance    0.10;
+    nCellsBetweenLevels 2;
+
+    features
+    (
+        { file "walls.eMesh";      level 3; }
+        { file "riserWall.eMesh";  level 5; }
+        { file "inlet.eMesh";      level 3; }
+        { file "atmosphere.eMesh"; level 1; }
+    );
+
+    refinementSurfaces
+    {
+        walls      { level (2 3); patchInfo { type wall; } }
+        riserWall  { level (5 5); patchInfo { type wall; } }
+        inlet      { level (3 3); patchInfo { type patch; } }
+        atmosphere { level (1 1); patchInfo { type patch; } }
+    }
+
+    resolveFeatureAngle 30;
+
+    refinementRegions
+    {
+        pipeCore   { mode inside; levels ((1e15 3)); }
+        riserCore  { mode inside; levels ((1e15 5)); }
+        plumeCore  { mode inside; levels ((1e15 2)); }
+    }
+
+    locationInMesh (1.0 0 0);
+    allowFreeStandingZoneFaces true;
+}
+
+snapControls
+{
+    nSmoothPatch       5;
+    tolerance          2.0;
+    nSolveIter         100;
+    nRelaxIter         8;
+    nFeatureSnapIter   15;
+    implicitFeatureSnap false;
+    explicitFeatureSnap true;
+    multiRegionFeatureSnap false;
+}
+
+addLayersControls
+{
+    relativeSizes true;
+    layers {}
+    expansionRatio 1.2;
+    finalLayerThickness 0.5;
+    minThickness 0.25;
+    nGrow 0;
+    featureAngle 60;
+    slipFeatureAngle 30;
+    nRelaxIter 3;
+    nSmoothSurfaceNormals 1;
+    nSmoothNormals 3;
+    nSmoothThickness 10;
+    maxFaceThicknessRatio 0.5;
+    maxThicknessToMedialRatio 0.3;
+    minMedialAxisAngle 90;
+    nBufferCellsNoExtrude 0;
+    nLayerIter 50;
+}
+
+meshQualityControls
+{
+    maxNonOrtho 70;
+    maxBoundarySkewness 20;
+    maxInternalSkewness 4;
+    maxConcave 30;
+    minVol 1e-15;
+    minTetQuality 1e-20;
+    minArea -1;
+    minTwist 0.01;
+    minDeterminant 0.002;
+    minFaceWeight 0.02;
+    minVolRatio 0.005;
+    minTriangleTwist -1;
+    nSmoothScale 4;
+    errorReduction 0.75;
+}
+
+writeFlags ();
+mergeTolerance 1e-6;

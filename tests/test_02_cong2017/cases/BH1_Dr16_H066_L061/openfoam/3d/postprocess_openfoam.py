@@ -1,0 +1,774 @@
+#!/usr/bin/env python3
+"""Reduce a BH1 OpenFOAM run to compact validation and conservation outputs."""
+from __future__ import annotations
+
+import argparse
+import csv
+import json
+import math
+import re
+from pathlib import Path
+
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+PATM = 101325.0
+T0 = 296.15
+R_AIR = 287.05
+RHO_AIR_ATM = PATM / (R_AIR * T0)
+RHO_WATER = 998.2
+GRAVITY = 9.81
+H0 = 0.66
+PIPE_DIAMETER = 0.050
+RIM_HEIGHT = 1.80
+POCKET_VOLUME_TARGET = math.pi * 0.050**2 * 0.610 / 4
+POCKET_MASS_TARGET = POCKET_VOLUME_TARGET * RHO_AIR_ATM
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--run-dir", type=Path, required=True)
+    parser.add_argument("--mode", choices=("static", "smoke", "full"), required=True)
+    parser.add_argument("--valve-duration", type=float, required=True)
+    parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--experimental-levels", type=Path, required=True)
+    parser.add_argument("--experimental-pressure", type=Path, required=True)
+    parser.add_argument("--one-d", type=Path, required=True)
+    return parser.parse_args()
+
+
+def newest_data_file(run_dir: Path, function_name: str, filename: str) -> Path | None:
+    root = run_dir / "postProcessing" / function_name
+    candidates = list(root.glob(f"*/{filename}"))
+    if not candidates:
+        return None
+
+    def numeric_parent(path: Path) -> float:
+        try:
+            return float(path.parent.name)
+        except ValueError:
+            return -math.inf
+
+    return max(candidates, key=numeric_parent)
+
+
+def parse_table(path: Path | None) -> tuple[list[str], np.ndarray]:
+    if path is None or not path.exists():
+        return [], np.empty((0, 0))
+    header: list[str] = []
+    rows: list[list[float]] = []
+    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = raw.strip()
+        if line.startswith("# Time"):
+            header = re.split(r"\s+", line[2:].strip())
+        elif line and not line.startswith("#"):
+            try:
+                rows.append([float(value) for value in re.split(r"\s+", line)])
+            except ValueError:
+                continue
+    if not rows:
+        return header, np.empty((0, len(header)))
+    width = min(len(row) for row in rows)
+    return header[:width], np.asarray([row[:width] for row in rows], dtype=float)
+
+
+def parse_scalar_probes(path: Path | None) -> np.ndarray:
+    if path is None or not path.exists():
+        return np.empty((0, 0))
+    rows: list[list[float]] = []
+    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "(" in line:
+            continue
+        try:
+            rows.append([float(value) for value in re.split(r"\s+", line)])
+        except ValueError:
+            continue
+    if not rows:
+        return np.empty((0, 0))
+    width = min(len(row) for row in rows)
+    return np.asarray([row[:width] for row in rows], dtype=float)
+
+
+def field_extrema(
+    path: Path | None, field_name: str
+) -> tuple[float | None, float | None]:
+    if path is None or not path.exists():
+        return None, None
+    minima: list[float] = []
+    maxima: list[float] = []
+    pattern = re.compile(
+        rf"^\s*[0-9.eE+-]+\s+{re.escape(field_name)}\s+"
+        r"([0-9.eE+-]+)\s+\([^)]*\)\s+\d+\s+"
+        r"([0-9.eE+-]+)\s+\([^)]*\)\s+\d+\s*$"
+    )
+    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        match = pattern.match(raw)
+        if match:
+            minima.append(float(match.group(1)))
+            maxima.append(float(match.group(2)))
+    if not minima:
+        return None, None
+    return min(minima), max(maxima)
+
+
+def column(header: list[str], data: np.ndarray, needle: str) -> np.ndarray:
+    for index, name in enumerate(header):
+        if needle in name:
+            return data[:, index]
+    return np.full(data.shape[0], np.nan)
+
+
+def interp(source_t: np.ndarray, source_y: np.ndarray, target_t: np.ndarray) -> np.ndarray:
+    valid = np.isfinite(source_t) & np.isfinite(source_y)
+    if np.count_nonzero(valid) < 2:
+        return np.full(target_t.shape, np.nan)
+    return np.interp(
+        target_t,
+        source_t[valid],
+        source_y[valid],
+        left=np.nan,
+        right=np.nan,
+    )
+
+
+def first_crossing(
+    t: np.ndarray, y: np.ndarray, threshold: float, after: float | None = None
+) -> float | None:
+    valid = np.isfinite(t) & np.isfinite(y)
+    if after is not None:
+        valid &= t >= after
+    indices = np.flatnonzero(valid & (y >= threshold))
+    if not indices.size:
+        return None
+    index = int(indices[0])
+    previous = np.flatnonzero(valid[:index])
+    if not previous.size:
+        return float(t[index])
+    prior = int(previous[-1])
+    if y[prior] >= threshold or y[index] == y[prior] or t[index] == t[prior]:
+        return float(t[index])
+    fraction = (threshold - y[prior]) / (y[index] - y[prior])
+    return float(t[prior] + np.clip(fraction, 0.0, 1.0) * (t[index] - t[prior]))
+
+
+def trapz_flux(t: np.ndarray, q: np.ndarray) -> np.ndarray:
+    result = np.zeros_like(t)
+    valid = np.isfinite(q)
+    if t.size < 2 or not np.any(valid):
+        return np.full_like(t, np.nan)
+    clean = np.where(valid, q, 0.0)
+    result[1:] = np.cumsum(0.5 * (clean[1:] + clean[:-1]) * np.diff(t))
+    return result
+
+
+def read_csv_columns(path: Path) -> dict[str, np.ndarray]:
+    with path.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    if not rows:
+        return {}
+    return {
+        key: np.asarray([float(row[key]) for row in rows], dtype=float)
+        for key in rows[0]
+        if key != "kind"
+    } | (
+        {"kind": np.asarray([row["kind"] for row in rows])}
+        if "kind" in rows[0]
+        else {}
+    )
+
+
+def finite_relative(error: float, reference: float) -> float | None:
+    if not math.isfinite(error) or reference == 0:
+        return None
+    return error / reference
+
+
+def first_passage_speed(
+    t: np.ndarray,
+    y: np.ndarray,
+    low: float,
+    high: float,
+    after: float | None = None,
+) -> float | None:
+    """Average speed between first upward crossings of fixed height bounds."""
+    low_time = first_crossing(t, y, low, after)
+    high_time = first_crossing(t, y, high, after)
+    if low_time is None or high_time is None or high_time <= low_time:
+        return None
+    return (high - low) / (high_time - low_time)
+
+
+def profile_interfaces(profile: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    if profile.size == 0 or profile.shape[1] < 2:
+        return np.array([]), np.array([]), np.array([])
+    times = profile[:, 0]
+    alpha = profile[:, 1:]
+    heights = 0.005 + 0.010 * np.arange(alpha.shape[1])
+    yfs = np.zeros(times.size)
+    yint = np.zeros(times.size)
+    for row_index, values in enumerate(alpha):
+        liquid = np.flatnonzero(values >= 0.5)
+        yfs[row_index] = heights[liquid[-1]] if liquid.size else 0.0
+
+        # The gas core is counted only when it is connected to the first
+        # centreline sample above the tee. Initial riser headspace is thus not
+        # mistaken for the rising tunnel pocket.
+        if values[0] < 0.5:
+            core_end = 0
+            while core_end + 1 < values.size and values[core_end + 1] < 0.5:
+                core_end += 1
+            yint[row_index] = heights[core_end]
+    return times, yfs, yint
+
+
+def main() -> None:
+    args = parse_args()
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    run_name = args.run_dir.name
+
+    riser_profile = parse_scalar_probes(
+        newest_data_file(args.run_dir, "riserCentreline", "alpha.water")
+    )
+    time, yfs, yint = profile_interfaces(riser_profile)
+    if time.size == 0:
+        raise SystemExit("No riserCentreline alpha.water data were written")
+
+    pt_pressure = parse_scalar_probes(
+        newest_data_file(args.run_dir, "pt1Pt2", "p")
+    )
+    pt1_head = (
+        interp(pt_pressure[:, 0], (pt_pressure[:, 1] - PATM) / (RHO_WATER * GRAVITY), time)
+        if pt_pressure.shape[1] >= 3
+        else np.full(time.shape, np.nan)
+    )
+    pt2_head = (
+        interp(pt_pressure[:, 0], (pt_pressure[:, 2] - PATM) / (RHO_WATER * GRAVITY), time)
+        if pt_pressure.shape[1] >= 3
+        else np.full(time.shape, np.nan)
+    )
+
+    function_specs = {
+        "water_volume": ("waterVolume", "volFieldValue.dat", "alpha.water"),
+        "gas_volume": ("gasVolume", "volFieldValue.dat", "alpha.air"),
+        "water_mass": ("waterMass", "volFieldValue.dat", "alpha.water"),
+        "gas_mass": ("gasMass", "volFieldValue.dat", "alpha.air"),
+        "tunnel_gas_volume": (
+            "tunnelGasVolume",
+            "volFieldValue.dat",
+            "alpha.air",
+        ),
+        "ejected_water": (
+            "ejectedWaterInExterior",
+            "volFieldValue.dat",
+            "alpha.water",
+        ),
+        "riser_water": (
+            "riserWaterVolume",
+            "volFieldValue.dat",
+            "alpha.water",
+        ),
+    }
+    series: dict[str, np.ndarray] = {}
+    for key, (function_name, filename, needle) in function_specs.items():
+        header, data = parse_table(
+            newest_data_file(args.run_dir, function_name, filename)
+        )
+        values = column(header, data, needle)
+        series[key] = (
+            interp(data[:, 0], values, time)
+            if data.shape[0]
+            else np.full(time.shape, np.nan)
+        )
+
+    pocket_header, pocket_data = parse_table(
+        newest_data_file(args.run_dir, "endPocketGasAverage", "volFieldValue.dat")
+    )
+    pocket_pressure = column(pocket_header, pocket_data, "p")
+    pocket_head = (
+        interp(
+            pocket_data[:, 0],
+            (pocket_pressure - PATM) / (RHO_WATER * GRAVITY),
+            time,
+        )
+        if pocket_data.shape[0]
+        else np.full(time.shape, np.nan)
+    )
+
+    boundary_flux: dict[str, np.ndarray] = {}
+    for prefix, function_name in (
+        ("atmosphere", "atmosphereFluxes"),
+        ("inlet", "inletFluxes"),
+        ("rim", "riserMouthFluxes"),
+    ):
+        header, data = parse_table(
+            newest_data_file(args.run_dir, function_name, "surfaceFieldValue.dat")
+        )
+        for key, needle in (
+            ("total_phi", "sum(phi)"),
+            ("water_phi", "alphaPhi0.water"),
+            ("air_phi", "airPhi"),
+            ("water_mass_phi", "waterRhoPhi"),
+            ("air_mass_phi", "airRhoPhi"),
+            ("mass_phi", "rhoPhi"),
+        ):
+            values = column(header, data, needle)
+            boundary_flux[f"{prefix}_{key}"] = (
+                interp(data[:, 0], values, time)
+                if data.shape[0]
+                else np.full(time.shape, np.nan)
+            )
+
+    net_water_volume_out = (
+        boundary_flux["atmosphere_water_phi"] + boundary_flux["inlet_water_phi"]
+    )
+    net_total_mass_out = (
+        boundary_flux["atmosphere_mass_phi"] + boundary_flux["inlet_mass_phi"]
+    )
+    exact_phase_mass_flux = bool(
+        np.all(
+            np.isfinite(
+                np.column_stack(
+                    [
+                        boundary_flux["atmosphere_water_mass_phi"],
+                        boundary_flux["inlet_water_mass_phi"],
+                        boundary_flux["atmosphere_air_mass_phi"],
+                        boundary_flux["inlet_air_mass_phi"],
+                    ]
+                )
+            )
+        )
+    )
+    if exact_phase_mass_flux:
+        net_water_mass_out = (
+            boundary_flux["atmosphere_water_mass_phi"]
+            + boundary_flux["inlet_water_mass_phi"]
+        )
+        net_air_mass_out = (
+            boundary_flux["atmosphere_air_mass_phi"]
+            + boundary_flux["inlet_air_mass_phi"]
+        )
+        phase_flux_method = (
+            "registered solver waterRhoPhi and airRhoPhi; "
+            "waterRhoPhi+airRhoPhi=rhoPhi by construction"
+        )
+    else:
+        # Compatibility fallback for runs made before exact phase mass fluxes
+        # were registered.  New acceptance runs require exact_phase_mass_flux.
+        net_water_mass_out = net_water_volume_out * RHO_WATER
+        net_air_mass_out = net_total_mass_out - net_water_mass_out
+        phase_flux_method = (
+            "legacy fallback: alphaPhi0.water times 998.2 kg/m3 and "
+            "air residual from rhoPhi"
+        )
+    phase_mass_flux_closure = (
+        net_water_mass_out + net_air_mass_out - net_total_mass_out
+    )
+    cumulative_water_out_mass = trapz_flux(time, net_water_mass_out)
+    cumulative_air_out_mass = trapz_flux(time, net_air_mass_out)
+    cumulative_total_out_mass = trapz_flux(time, net_total_mass_out)
+    cumulative_rim_water_net = trapz_flux(
+        time, boundary_flux["rim_water_phi"]
+    )
+    cumulative_rim_water_ejected = trapz_flux(
+        time, np.maximum(boundary_flux["rim_water_phi"], 0.0)
+    )
+
+    water_mass = series["water_mass"]
+    gas_mass = series["gas_mass"]
+    total_mass = water_mass + gas_mass
+    water_budget = water_mass + cumulative_water_out_mass
+    gas_budget = gas_mass + cumulative_air_out_mass
+    total_budget = total_mass + cumulative_total_out_mass
+    water_budget_error = (
+        float(water_budget[-1] - water_budget[0])
+        if np.all(np.isfinite(water_budget[[0, -1]]))
+        else math.nan
+    )
+    gas_budget_error = (
+        float(gas_budget[-1] - gas_budget[0])
+        if np.all(np.isfinite(gas_budget[[0, -1]]))
+        else math.nan
+    )
+    total_budget_error = (
+        float(total_budget[-1] - total_budget[0])
+        if np.all(np.isfinite(total_budget[[0, -1]]))
+        else math.nan
+    )
+
+    output_csv = args.output_dir / f"{run_name}-series.csv"
+    columns = [
+        "t_s",
+        "Yfs_m",
+        "Yint_m",
+        "PT1_head_m",
+        "PT2_head_m",
+        "pocket_head_m",
+        "tunnel_gas_volume_m3",
+        "riser_water_volume_m3",
+        "exterior_water_volume_m3",
+        "rim_water_flow_m3_s",
+        "atmosphere_water_flow_m3_s",
+        "atmosphere_air_flow_m3_s",
+        "atmosphere_total_mass_flow_kg_s",
+        "inlet_total_mass_flow_kg_s",
+        "net_water_mass_flow_kg_s",
+        "net_air_mass_flow_kg_s",
+        "net_total_mass_flow_kg_s",
+        "cumulative_rim_water_net_m3",
+        "cumulative_rim_water_ejected_m3",
+        "water_mass_kg",
+        "gas_mass_kg",
+        "total_mass_kg",
+        "water_mass_budget_kg",
+        "gas_mass_budget_kg",
+        "total_mass_budget_kg",
+    ]
+    matrix = np.column_stack(
+        [
+            time,
+            yfs,
+            yint,
+            pt1_head,
+            pt2_head,
+            pocket_head,
+            series["tunnel_gas_volume"],
+            series["riser_water"],
+            series["ejected_water"],
+            boundary_flux["rim_water_phi"],
+            boundary_flux["atmosphere_water_phi"],
+            boundary_flux["atmosphere_air_phi"],
+            boundary_flux["atmosphere_mass_phi"],
+            boundary_flux["inlet_mass_phi"],
+            net_water_mass_out,
+            net_air_mass_out,
+            net_total_mass_out,
+            cumulative_rim_water_net,
+            cumulative_rim_water_ejected,
+            water_mass,
+            gas_mass,
+            total_mass,
+            water_budget,
+            gas_budget,
+            total_budget,
+        ]
+    )
+    with output_csv.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(columns)
+        writer.writerows(
+            [[f"{value:.9g}" if math.isfinite(value) else "" for value in row] for row in matrix]
+        )
+
+    ta = first_crossing(time, yint, 0.02)
+    t_rim = first_crossing(time, yfs, 0.98 * RIM_HEIGHT)
+    vfs = first_passage_speed(time, yfs, 0.65, 1.70, ta)
+    vint = first_passage_speed(time, yint, 0.05, 1.65, ta)
+    initial_tunnel_gas = float(series["tunnel_gas_volume"][0])
+    pocket_volume_error = initial_tunnel_gas - POCKET_VOLUME_TARGET
+    reached_end = float(time[-1])
+    cumulative_ejected_water = float(cumulative_rim_water_ejected[-1])
+    observed_geyser = bool(
+        np.nanmax(yfs) >= 0.98 * RIM_HEIGHT
+        or cumulative_ejected_water >= 1e-9
+    )
+    temperature_min, temperature_max = field_extrema(
+        newest_data_file(args.run_dir, "extrema", "fieldMinMax.dat"), "T"
+    )
+    thermal_pass = bool(
+        temperature_min is not None
+        and temperature_max is not None
+        and temperature_min >= 200.0
+        and temperature_max <= 600.0
+    )
+    metrics = {
+        "run": run_name,
+        "mode": args.mode,
+        "solver": "bh1CompressibleInterFoam",
+        "valve_duration_s": args.valve_duration,
+        "valve_model": (
+            "25 mm semi-implicit passive Forchheimer resistance zone"
+            if args.valve_duration > 0
+            else "instantaneously unobstructed internal connection"
+        ),
+        "reached_time_s": reached_end,
+        "observed_3d_geyser": observed_geyser,
+        "geyser_ejection_threshold_m3": 1e-9,
+        "Ta_gas_enters_riser_s": ta,
+        "t_free_surface_at_rim_s": t_rim,
+        "vfs_first_passage_m_per_s": vfs,
+        "vint_first_passage_m_per_s": vint,
+        # Compatibility aliases for early BH1 output readers.
+        "vfs_fit_m_per_s": vfs,
+        "vint_fit_m_per_s": vint,
+        "velocity_metric": {
+            "method": (
+                "height interval divided by interpolated first-passage time "
+                "after gas first enters the riser"
+            ),
+            "Yfs_height_window_m": [0.65, 1.70],
+            "Yint_height_window_m": [0.05, 1.65],
+        },
+        "Yfs_max_m": float(np.nanmax(yfs)),
+        "Yint_max_m": float(np.nanmax(yint)),
+        "PT1_peak_over_H0": float(np.nanmax(pt1_head / H0)),
+        "pocket_peak_over_H0": float(np.nanmax(pocket_head / H0)),
+        "ejected_water_max_m3": float(np.nanmax(series["ejected_water"])),
+        "exterior_water_max_m3": float(np.nanmax(series["ejected_water"])),
+        "ejected_water_cumulative_positive_m3": cumulative_ejected_water,
+        "rim_water_net_transfer_m3": float(cumulative_rim_water_net[-1]),
+        "rim_water_flow_peak_m3_s": float(
+            np.nanmax(np.abs(boundary_flux["rim_water_phi"]))
+        ),
+        "atmosphere_water_outflow_peak_m3_s": float(
+            np.nanmax(boundary_flux["atmosphere_water_phi"])
+        ),
+        "temperature_validity": {
+            "minimum_K": temperature_min,
+            "maximum_K": temperature_max,
+            "acceptance_bounds_K": [200.0, 600.0],
+            "clipping_applied": False,
+            "pass": thermal_pass,
+        },
+        "initial_inventory": {
+            "water_volume_m3": float(series["water_volume"][0]),
+            "total_gas_volume_m3": float(series["gas_volume"][0]),
+            "tunnel_pocket_volume_m3": initial_tunnel_gas,
+            "analytic_pocket_volume_m3": POCKET_VOLUME_TARGET,
+            "pocket_volume_relative_error": finite_relative(
+                pocket_volume_error, POCKET_VOLUME_TARGET
+            ),
+            "analytic_pocket_air_mass_kg": POCKET_MASS_TARGET,
+            "mesh_pocket_air_mass_at_initial_state_kg": (
+                initial_tunnel_gas * RHO_AIR_ATM
+            ),
+            "pocket_air_mass_relative_error": finite_relative(
+                initial_tunnel_gas * RHO_AIR_ATM - POCKET_MASS_TARGET,
+                POCKET_MASS_TARGET,
+            ),
+            "total_domain_gas_mass_kg": float(gas_mass[0]),
+        },
+        "conservation": {
+            "exact_phase_mass_fluxes_recorded": exact_phase_mass_flux,
+            "phase_mass_flux_method": phase_flux_method,
+            "maximum_phase_flux_closure_kg_per_s": float(
+                np.nanmax(np.abs(phase_mass_flux_closure))
+            ),
+            "water_budget_error_kg": water_budget_error,
+            "water_budget_relative_error": finite_relative(
+                water_budget_error, float(water_budget[0])
+            ),
+            "gas_budget_error_kg": gas_budget_error,
+            "gas_budget_relative_error": finite_relative(
+                gas_budget_error, float(gas_budget[0])
+            ),
+            "total_budget_error_kg": total_budget_error,
+            "total_budget_relative_error": finite_relative(
+                total_budget_error, float(total_budget[0])
+            ),
+            "budget_definition": "final inventory + integrated outward boundary flux - initial inventory",
+            "water_flux_definition": phase_flux_method,
+            "gas_flux_definition": phase_flux_method,
+            "total_flux_definition": (
+                "solver rhoPhi summed directly over atmosphere and inlet"
+            ),
+        },
+        "experimental_targets": {
+            "classification": "GEYSER",
+            "Ta_s": 8.07,
+            "vfs_m_per_s": 0.924,
+            "vint_m_per_s": 1.231,
+        },
+        "comparison_to_experiment": {
+            "classification_match": observed_geyser,
+            "Ta_error_s": None if ta is None else ta - 8.07,
+            "Ta_relative_error": (
+                None if ta is None else finite_relative(ta - 8.07, 8.07)
+            ),
+            "vfs_error_m_per_s": None if vfs is None else vfs - 0.924,
+            "vfs_relative_error": (
+                None if vfs is None else finite_relative(vfs - 0.924, 0.924)
+            ),
+            "vint_error_m_per_s": None if vint is None else vint - 1.231,
+            "vint_relative_error": (
+                None if vint is None else finite_relative(vint - 1.231, 1.231)
+            ),
+        },
+        "comparison_warning": (
+            "Fig.10(a) is Run B-1, not the B-H1 high-speed realization. It has "
+            "the same nominal Dr/H0/L0 and is used only for pressure morphology. "
+            "The exact PT1 axial offset was not reported, so the 3-D curve is "
+            "labelled PT1_proxy; no pointwise pressure error is claimed."
+        ),
+        "one_d_comparison_warning": (
+            "The frozen 1-D model uses a 6.0 m effective pipe and x_tee=2.88 m, "
+            "not the audited 3-D geometry. Its riser coordinates are shifted "
+            "down by D=0.05 m in the plot to share the above-crown datum; the "
+            "comparison is qualitative. The tracked legacy CSV is consumed "
+            "without runtime regeneration."
+        ),
+    }
+
+    water_rel = metrics["conservation"]["water_budget_relative_error"]
+    gas_rel = metrics["conservation"]["gas_budget_relative_error"]
+    total_rel = metrics["conservation"]["total_budget_relative_error"]
+    completed = reached_end >= {
+        "static": 0.50,
+        "smoke": 0.05,
+        "full": 13.0,
+    }[args.mode] - 1e-6
+    if args.mode == "static":
+        pt1_drift = float(np.nanmax(np.abs(pt1_head - pt1_head[0])))
+        metrics["static_hold"] = {
+            "PT1_max_drift_m_water": pt1_drift,
+            "pass": bool(
+                completed
+                and exact_phase_mass_flux
+                and pt1_drift <= 0.01
+                and water_rel is not None
+                and abs(water_rel) <= 1e-3
+                and gas_rel is not None
+                and abs(gas_rel) <= 1e-3
+                and total_rel is not None
+                and abs(total_rel) <= 1e-3
+                and thermal_pass
+            ),
+        }
+    elif args.mode == "smoke":
+        metrics["smoke"] = {
+            "pass": bool(
+                completed
+                and exact_phase_mass_flux
+                and water_rel is not None
+                and abs(water_rel) <= 1e-2
+                and gas_rel is not None
+                and abs(gas_rel) <= 1e-2
+                and total_rel is not None
+                and abs(total_rel) <= 1e-2
+                and thermal_pass
+            )
+        }
+    elif args.mode == "full":
+        metrics["full_event"] = {
+            "minimum_end_time_s": 13.0,
+            "maximum_mass_budget_relative_error": 1e-2,
+            "pass": bool(
+                completed
+                and exact_phase_mass_flux
+                and water_rel is not None
+                and abs(water_rel) <= 1e-2
+                and gas_rel is not None
+                and abs(gas_rel) <= 1e-2
+                and total_rel is not None
+                and abs(total_rel) <= 1e-2
+                and thermal_pass
+            ),
+        }
+
+    metrics_path = args.output_dir / f"{run_name}-metrics.json"
+    metrics_path.write_text(
+        json.dumps(metrics, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+
+    exp_levels = read_csv_columns(args.experimental_levels)
+    exp_pressure = read_csv_columns(args.experimental_pressure)
+    one_d = read_csv_columns(args.one_d)
+    one_d_yfs = (
+        np.maximum(one_d["Yfs_m"] - PIPE_DIAMETER, 0.0)
+        if "Yfs_m" in one_d
+        else np.array([])
+    )
+    one_d_yint = (
+        np.maximum(one_d["Yint_m"] - PIPE_DIAMETER, 0.0)
+        if "Yint_m" in one_d
+        else np.array([])
+    )
+    figure, axes = plt.subplots(3, 1, figsize=(8.0, 9.0), constrained_layout=True)
+
+    axes[0].plot(time, yfs, label="3-D Yfs", color="#d62728")
+    axes[0].plot(time, yint, label="3-D Yint", color="#1f77b4")
+    if one_d_yfs.size and one_d_yint.size:
+        axes[0].plot(
+            one_d["t_s"],
+            one_d_yfs,
+            "--",
+            color="#d62728",
+            alpha=0.5,
+            label="legacy 1-D Yfs (shifted -D)",
+        )
+        axes[0].plot(
+            one_d["t_s"],
+            one_d_yint,
+            "--",
+            color="#1f77b4",
+            alpha=0.5,
+            label="legacy 1-D Yint (shifted -D)",
+        )
+    if exp_levels:
+        fs = exp_levels["kind"] == "fs"
+        interface = exp_levels["kind"] == "int"
+        axes[0].scatter(exp_levels["t_s"][fs], exp_levels["Y_m"][fs], s=16, color="#d62728", marker="s", label="Fig.9(a) Yfs")
+        axes[0].scatter(exp_levels["t_s"][interface], exp_levels["Y_m"][interface], s=16, facecolors="none", edgecolors="#1f77b4", label="Fig.9(a) Yint")
+    axes[0].axhline(RIM_HEIGHT, color="0.4", linestyle=":", label="physical rim")
+    axes[0].set_ylabel("height above crown [m]")
+    axes[0].legend(ncol=3, fontsize=8)
+
+    axes[1].plot(time, pt1_head / H0, label="3-D PT1_proxy", color="#9467bd")
+    axes[1].plot(time, pocket_head / H0, label="3-D pocket average", color="#ff7f0e")
+    if one_d:
+        axes[1].plot(one_d["t_s"], one_d["pocket_head_m"] / H0, "--", color="0.35", label="1-D pocket")
+        if "tr_head_m" in one_d:
+            axes[1].plot(
+                one_d["t_s"],
+                one_d["tr_head_m"] / H0,
+                ":",
+                color="#9467bd",
+                alpha=0.65,
+                label="1-D PT1 (different operator)",
+            )
+    if exp_pressure:
+        axes[1].fill_between(
+            exp_pressure["t_s"],
+            exp_pressure["HoverH0_min"],
+            exp_pressure["HoverH0_max"],
+            color="#2ca02c",
+            alpha=0.18,
+        )
+        axes[1].plot(
+            exp_pressure["t_s"],
+            exp_pressure["HoverH0_med"],
+            color="#2ca02c",
+            linewidth=1.0,
+            label="Fig.10(a) Run B-1 (cross-run morphology)",
+        )
+    axes[1].set_ylabel("pressure head / H0")
+    axes[1].legend(ncol=2, fontsize=8)
+
+    axes[2].plot(time, series["tunnel_gas_volume"] * 1e3, label="tunnel gas [L]")
+    axes[2].plot(time, series["ejected_water"] * 1e3, label="water above rim [L]")
+    axes[2].set_xlabel("time from valve release [s]")
+    axes[2].set_ylabel("volume [L]")
+    axes[2].legend(fontsize=8)
+    for axis in axes:
+        axis.grid(True, alpha=0.25)
+        axis.set_xlim(0, max(0.05, reached_end))
+    figure.savefig(args.output_dir / f"{run_name}-comparison.png", dpi=150)
+    plt.close(figure)
+
+    if args.mode == "static" and not metrics["static_hold"]["pass"]:
+        raise SystemExit("Closed-valve static-hold acceptance criteria failed")
+    if args.mode == "smoke" and not metrics["smoke"]["pass"]:
+        raise SystemExit("Open-valve smoke acceptance criteria failed")
+    if not thermal_pass:
+        raise SystemExit("Temperature validity acceptance failed")
+    if args.mode == "full" and not metrics["full_event"]["pass"]:
+        raise SystemExit("Full-event completion or conservation acceptance failed")
+
+
+if __name__ == "__main__":
+    main()

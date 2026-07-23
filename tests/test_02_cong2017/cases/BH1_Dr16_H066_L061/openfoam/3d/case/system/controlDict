@@ -1,0 +1,238 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+
+application     bh1CompressibleInterFoam;
+
+startFrom       latestTime;
+startTime       0;
+stopAt          endTime;
+endTime         13;
+deltaT          1e-6;
+
+writeControl    adjustableRunTime;
+writeInterval   0.10;
+purgeWrite      0;
+writeFormat     binary;
+writePrecision  8;
+writeCompression off;
+
+timeFormat      general;
+timePrecision   10;
+runTimeModifiable yes;
+
+adjustTimeStep  yes;
+// Match the v2512 depthCharge water-air reference time-step limits.
+maxCo           0.50;
+maxAlphaCo      0.50;
+maxDeltaT       0.0005;
+
+functions
+{
+    pt1Pt2
+    {
+        type            probes;
+        libs            (sampling);
+        fields          (p p_rgh alpha.water U T);
+        probeLocations
+        (
+            // PT1 proxy: one pipe radius upstream of cap, 1 mm below crown.
+            (6.575 0.024 0)
+            // PT2: invert directly below the tee, 1 mm inside the fluid.
+            (3.470 -0.024 0)
+        );
+        writeControl    adjustableRunTime;
+        writeInterval   0.002;
+    }
+
+    riserCentreline
+    {
+        type            probes;
+        libs            (sampling);
+        fields          (alpha.water p U T);
+        probeLocations
+        (
+            #include "riserProbeLocations.runtime"
+        );
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }
+
+    waterVolume
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      all;
+        fields          (alpha.water);
+        operation       volIntegrate;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }
+
+    gasVolume
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      all;
+        fields          (alpha.air);
+        operation       volIntegrate;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }
+
+    waterMass
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      all;
+        fields          (alpha.water);
+        operation       weightedVolIntegrate;
+        weightField     "thermo:rho.water";
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }
+
+    gasMass
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      all;
+        fields          (alpha.air);
+        operation       weightedVolIntegrate;
+        weightField     "thermo:rho.air";
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }
+
+    tunnelGasVolume
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      cellZone;
+        name            tunnelZone;
+        fields          (alpha.air);
+        operation       volIntegrate;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }
+
+    endPocketGasAverage
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      cellZone;
+        name            initialPocketZone;
+        fields          (p T);
+        operation       weightedVolAverage;
+        weightField     alpha.air;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.002;
+    }
+
+    riserWaterVolume
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      cellZone;
+        name            physicalRiserZone;
+        fields          (alpha.water);
+        operation       volIntegrate;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }
+
+    ejectedWaterInExterior
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      cellZone;
+        name            exteriorZone;
+        fields          (alpha.water);
+        operation       volIntegrate;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }
+
+    airVolumeFluxField
+    {
+        type            subtract;
+        libs            (fieldFunctionObjects);
+        fields          (phi alphaPhi0.water);
+        result          airPhi;
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    none;
+    }
+
+    atmosphereFluxes
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            atmosphere;
+        fields          (phi alphaPhi0.water airPhi waterRhoPhi airRhoPhi rhoPhi);
+        operation       sum;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }
+
+    inletFluxes
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            inlet;
+        fields          (phi alphaPhi0.water airPhi waterRhoPhi airRhoPhi rhoPhi);
+        operation       sum;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }
+
+    riserMouthFluxes
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      faceZone;
+        name            riserMouth;
+        fields          (phi alphaPhi0.water airPhi waterRhoPhi airRhoPhi rhoPhi);
+        // Face-zone flipMap supplies a common upward orientation for oriented
+        // surface fields; "sum" is the valid v2512 scalar-flux operation.
+        operation       sum;
+        writeFields     false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }
+
+    extrema
+    {
+        type            fieldMinMax;
+        libs            (fieldFunctionObjects);
+        fields          (p p_rgh T alpha.water U);
+        mode            magnitude;
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }
+
+    continuity
+    {
+        type            continuityError;
+        libs            (utilityFunctionObjects);
+        phi             phi;
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }
+}

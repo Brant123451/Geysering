@@ -1,0 +1,14 @@
+case/0/
+case/[1-9]*/
+case/processor*/
+case/postProcessing/
+case/constant/polyMesh/
+case/*.msh
+case/log.*
+case/decomposeParDict.runtime
+case/system/*.runtime
+case/dynamicCode/
+runs/
+solver/Make/linux*/
+solver/lnInclude/
+__pycache__/

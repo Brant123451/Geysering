@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Mesh sensitivity at the companion-CFD instantaneous-opening baseline.
+BH1_MESH_LEVEL=base \
+BH1_VALVE_DURATION=0 \
+BH1_RUN_NAME=base-open-full-tau0 \
+    "$SCRIPT_DIR/Allrun.full"
+
+BH1_MESH_LEVEL=refined \
+BH1_VALVE_DURATION=0 \
+BH1_RUN_NAME=refined-open-full-tau0 \
+    "$SCRIPT_DIR/Allrun.full"
+
+# Opening-duration uncertainty on the base mesh. The area history is declared
+# in model_config.json and is not calibrated to the known outcome.
+for duration in 0.2 0.5; do
+    tag="${duration//./p}"
+    BH1_MESH_LEVEL=base \
+    BH1_VALVE_DURATION="$duration" \
+    BH1_RUN_NAME="base-open-full-tau${tag}" \
+        "$SCRIPT_DIR/Allrun.full"
+done
+
+python3 "$SCRIPT_DIR/../summarize_sensitivity.py" \
+    --output-dir "$SCRIPT_DIR/../../../outputs/openfoam3d"

@@ -1,0 +1,31 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      alpha.water;
+}
+
+dimensions      [0 0 0 0 0 0 0];
+internalField   uniform 1;
+
+boundaryField
+{
+    inlet
+    {
+        type            fixedValue;
+        value           uniform 1;
+    }
+    atmosphere
+    {
+        type            inletOutlet;
+        inletValue      uniform 0;
+        value           uniform 0;
+    }
+    walls
+    {
+        // Cong et al. do not report a static/dynamic acrylic contact angle.
+        // Do not fit one to the known GEYSER classification.
+        type            zeroGradient;
+    }
+}

@@ -1,0 +1,46 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setFieldsDict;
+}
+
+// y=0 is the main-pipe axis. H0=0.66 m from the y=-0.025 m invert,
+// hence the initial free surface is y=0.635 m (Y=0.610 m above crown).
+defaultFieldValues
+(
+    volScalarFieldValue alpha.water 1
+    volScalarFieldValue p_rgh 107543.13717
+    volScalarFieldValue p 107543.13717
+    volScalarFieldValue T 296.15
+);
+
+regions
+(
+    // Full circular atmospheric pocket downstream of the selected valve.
+    boxToCell
+    {
+        box (5.989 -0.030 -0.030) (6.601 0.030 0.030);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 0
+            volScalarFieldValue p_rgh 101325
+            volScalarFieldValue p 101325
+        );
+    }
+
+    // Riser headspace and exterior atmosphere are hydrostatic, referenced to
+    // 101325 Pa absolute at the y=0.635 m free surface.  For rho_air =
+    // 1.191912 kg/m3 this corresponds to constant p_rgh=101332.42484 Pa.
+    boxToCell
+    {
+        box (3.319 0.635 -0.151) (3.621 3.026 0.151);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 0
+            volScalarFieldValue p_rgh 101332.42484
+            volScalarFieldValue p 101325
+        );
+    }
+);

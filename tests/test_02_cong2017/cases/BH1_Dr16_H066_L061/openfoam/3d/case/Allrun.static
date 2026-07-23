@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export BH1_MESH_LEVEL="${BH1_MESH_LEVEL:-base}"
+export BH1_VALVE_STATE=closed
+export BH1_RUN_NAME="${BH1_RUN_NAME:-${BH1_MESH_LEVEL}-closed-static}"
+export BH1_MODE=static
+export BH1_VALVE_DURATION=0
+
+"$SCRIPT_DIR/Allrun.mesh"
+"$SCRIPT_DIR/Allrun.solve"

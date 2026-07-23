@@ -1,0 +1,95 @@
+{
+  "PT1_peak_over_H0": 1.7174351264704728,
+  "Ta_gas_enters_riser_s": 8.045,
+  "Yfs_max_m": 2.245,
+  "Yint_max_m": 1.865,
+  "atmosphere_water_outflow_peak_m3_s": 0.000942938859,
+  "comparison_to_experiment": {
+    "Ta_error_s": -0.025000000000000355,
+    "Ta_relative_error": -0.003097893432465967,
+    "classification_match": true,
+    "vfs_error_m_per_s": 0.2875384615384632,
+    "vfs_relative_error": 0.311188811188813,
+    "vint_error_m_per_s": 0.10985763525158143,
+    "vint_relative_error": 0.08924259565522455
+  },
+  "comparison_warning": "Fig.10(a) is Run B-1, not the B-H1 high-speed realization. It has the same nominal Dr/H0/L0 and is used only for pressure morphology. The exact PT1 axial offset was not reported, so the 3-D curve is labelled PT1_proxy; no pointwise pressure error is claimed.",
+  "conservation": {
+    "budget_definition": "final inventory + integrated outward boundary flux - initial inventory",
+    "exact_phase_mass_fluxes_recorded": true,
+    "gas_budget_error_kg": -3.866596132329203e-06,
+    "gas_budget_relative_error": -2.965127010436269e-05,
+    "gas_flux_definition": "registered solver waterRhoPhi and airRhoPhi; waterRhoPhi+airRhoPhi=rhoPhi by construction",
+    "maximum_phase_flux_closure_kg_per_s": 6.559999210509204e-10,
+    "phase_mass_flux_method": "registered solver waterRhoPhi and airRhoPhi; waterRhoPhi+airRhoPhi=rhoPhi by construction",
+    "total_budget_error_kg": -0.0001763973797199725,
+    "total_budget_relative_error": -1.4855150451205438e-05,
+    "total_flux_definition": "solver rhoPhi summed directly over atmosphere and inlet",
+    "water_budget_error_kg": -0.00017253076271650514,
+    "water_budget_relative_error": -1.4690857605995064e-05,
+    "water_flux_definition": "registered solver waterRhoPhi and airRhoPhi; waterRhoPhi+airRhoPhi=rhoPhi by construction"
+  },
+  "ejected_water_cumulative_positive_m3": 5.713719023939682e-05,
+  "ejected_water_max_m3": 5.722316e-05,
+  "experimental_targets": {
+    "Ta_s": 8.07,
+    "classification": "GEYSER",
+    "vfs_m_per_s": 0.924,
+    "vint_m_per_s": 1.231
+  },
+  "exterior_water_max_m3": 5.722316e-05,
+  "full_event": {
+    "maximum_mass_budget_relative_error": 0.01,
+    "minimum_end_time_s": 13.0,
+    "pass": true
+  },
+  "geyser_ejection_threshold_m3": 1e-09,
+  "initial_inventory": {
+    "analytic_pocket_air_mass_kg": 0.0014276016764529437,
+    "analytic_pocket_volume_m3": 0.0011977321991811086,
+    "mesh_pocket_air_mass_at_initial_state_kg": 0.0014195300984271148,
+    "pocket_air_mass_relative_error": -0.005653942664093656,
+    "pocket_volume_relative_error": -0.00565394266409357,
+    "total_domain_gas_mass_kg": 0.130402378,
+    "total_gas_volume_m3": 0.109428866,
+    "tunnel_pocket_volume_m3": 0.00119096029,
+    "water_volume_m3": 0.0117652361
+  },
+  "mode": "full",
+  "observed_3d_geyser": true,
+  "one_d_comparison_warning": "The frozen 1-D model uses a 6.0 m effective pipe and x_tee=2.88 m, not the audited 3-D geometry. Its riser coordinates are shifted down by D=0.05 m in the plot to share the above-crown datum; the comparison is qualitative. The tracked legacy CSV is consumed without runtime regeneration.",
+  "pocket_peak_over_H0": 1.7174609660809594,
+  "reached_time_s": 13.0,
+  "rim_water_flow_peak_m3_s": 0.00060995022,
+  "rim_water_net_transfer_m3": 5.6820318962937003e-05,
+  "run": "base-open-full-tau0p5",
+  "solver": "bh1CompressibleInterFoam",
+  "t_free_surface_at_rim_s": 9.2745,
+  "temperature_validity": {
+    "acceptance_bounds_K": [
+      200.0,
+      600.0
+    ],
+    "clipping_applied": false,
+    "maximum_K": 305.074716,
+    "minimum_K": 291.664234,
+    "pass": true
+  },
+  "valve_duration_s": 0.5,
+  "valve_model": "25 mm semi-implicit passive Forchheimer resistance zone",
+  "velocity_metric": {
+    "Yfs_height_window_m": [
+      0.65,
+      1.7
+    ],
+    "Yint_height_window_m": [
+      0.05,
+      1.65
+    ],
+    "method": "height interval divided by interpolated first-passage time after gas first enters the riser"
+  },
+  "vfs_first_passage_m_per_s": 1.2115384615384632,
+  "vfs_fit_m_per_s": 1.2115384615384632,
+  "vint_first_passage_m_per_s": 1.3408576352515815,
+  "vint_fit_m_per_s": 1.3408576352515815
+}

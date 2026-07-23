@@ -1,0 +1,31 @@
+{
+  "analytic_pocket_volume_m3": 0.0011977321991811086,
+  "atmosphere_height_m": 1.2,
+  "atmosphere_top_y_m": 3.025,
+  "atmosphere_width_m": 0.3,
+  "case": "Cong2017_B-H1",
+  "fluid_cad_volume_m3": 0.12132103416240549,
+  "geometry": "true circular main and riser, Boolean T-junction",
+  "pipe_diameter_m": 0.05,
+  "pipe_length_m": 6.6,
+  "riser_diameter_m": 0.016,
+  "riser_rim_y_m": 1.825,
+  "surface_counts": {
+    "atmosphere": 5,
+    "inlet": 1,
+    "riserWall": 1,
+    "walls": 3
+  },
+  "surface_sizes_m": {
+    "atmosphere": 0.015,
+    "pipe": 0.004,
+    "riser": 0.001
+  },
+  "tee_x_m": 3.47,
+  "triangle_counts": {
+    "atmosphere": 15832,
+    "inlet": 304,
+    "riserWall": 210626,
+    "walls": 153286
+  }
+}

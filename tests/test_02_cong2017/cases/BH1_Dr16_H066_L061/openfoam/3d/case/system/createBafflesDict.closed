@@ -1,0 +1,85 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      createBafflesDict;
+}
+
+// Static-hold representation of the selected, fully closed ball valve.
+// The zero-thickness impermeable disk is a numerical check only; event runs
+// use the unobstructed mesh or the separately declared porous sensitivity.
+internalFacesOnly true;
+
+baffles
+{
+    closedValve
+    {
+        type        faceZone;
+        zoneName    valvePlane;
+
+        patches
+        {
+            master
+            {
+                name            valve_upstream_wall;
+                type            wall;
+                patchFields
+                {
+                    U
+                    {
+                        type            noSlip;
+                    }
+                    p
+                    {
+                        type            calculated;
+                        value           uniform 101325;
+                    }
+                    p_rgh
+                    {
+                        type            fixedFluxPressure;
+                        value           uniform 101325;
+                    }
+                    T
+                    {
+                        type            zeroGradient;
+                    }
+                    alpha.water
+                    {
+                        type            zeroGradient;
+                    }
+                }
+            }
+            slave
+            {
+                name            valve_downstream_wall;
+                type            wall;
+                patchFields
+                {
+                    U
+                    {
+                        type            noSlip;
+                    }
+                    p
+                    {
+                        type            calculated;
+                        value           uniform 101325;
+                    }
+                    p_rgh
+                    {
+                        type            fixedFluxPressure;
+                        value           uniform 101325;
+                    }
+                    T
+                    {
+                        type            zeroGradient;
+                    }
+                    alpha.water
+                    {
+                        type            zeroGradient;
+                    }
+                }
+            }
+        }
+    }
+}

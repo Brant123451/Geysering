@@ -1,0 +1,36 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p_rgh;
+}
+
+dimensions      [1 -1 -2 0 0 0 0];
+
+// Hydrostatic p_rgh for a free surface at y=0.635 m.
+internalField   uniform 107543.13717;
+
+boundaryField
+{
+    inlet
+    {
+        // Constant upstream reservoir head H0=0.66 m above the pipe invert.
+        // This fixed p_rgh gives the hydrostatic pressure variation over the
+        // circular inlet while U remains pressure-driven.
+        type            fixedValue;
+        value           uniform 107543.13717;
+    }
+    atmosphere
+    {
+        // Hydrostatic air referenced to 101325 Pa absolute at y=0.635 m.
+        // A constant p_rgh avoids an artificial vertical-boundary circulation.
+        type            fixedValue;
+        value           uniform 101332.42484;
+    }
+    walls
+    {
+        type            fixedFluxPressure;
+        value           uniform 107543.13717;
+    }
+}

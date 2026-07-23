@@ -6,5 +6,26 @@
   "H0_m": 0.66,
   "Vair_star": 9.0258,
   "observed_geyser": true,
-  "modeled_geyser": true
+  "modeled_geyser": true,
+  "physical_geometry": {
+    "D_m": 0.05,
+    "horizontal_length_m": 6.6,
+    "tee_x_m": 3.47,
+    "valve_x_m": 5.99,
+    "cap_x_m": 6.6,
+    "riser_height_above_crown_m": 1.8
+  },
+  "legacy_1d_effective_geometry": {
+    "horizontal_length_m": 6.0,
+    "tee_x_m": 2.88,
+    "provenance": "kinematic back-calculation retained only for frozen 1-D comparison"
+  },
+  "openfoam_3d": {
+    "directory": "openfoam/3d",
+    "solver": "bh1CompressibleInterFoam",
+    "base_solver": "compressibleInterFoam",
+    "minimum_event_window_s": 13.0,
+    "initial_pocket_pressure_absolute_Pa": 101325.0,
+    "status": "runtime_validation_in_progress"
+  }
 }

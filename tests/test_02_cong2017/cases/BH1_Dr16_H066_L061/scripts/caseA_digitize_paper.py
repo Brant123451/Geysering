@@ -3,11 +3,13 @@
 
   * Fig. 9(a)  -- Yfs (red filled squares) and Yint (blue open squares) vs t,
                   axes t = 8..10 s, Y = 0..2.0 m;
-  * Fig. 10(a) -- PT1 pressure trace H/H0 vs t (Run B-1, same condition as
-                  B-H1 on the video-camera series), axes t = 0..13 s(x ticks
-                  0,2,...,12; box spans 0..13), H/H0 = 0..4 (red line = PT1).
+  * Fig. 10(a) -- PT1 pressure trace H/H0 vs t (Run B-1, same nominal
+                  Dr/H0/L0 as B-H1 but a different realization), axes
+                  t = 0..13 s (x ticks 0,2,...,12; box spans 0..13),
+                  H/H0 = 0..4 (red line = PT1). It is morphology-only evidence.
 
-Outputs digitized/fig9a_levels.csv, digitized/fig10a_pt1.csv + debug overlays.
+Outputs data/digitized/fig9a_levels.csv, data/digitized/fig10a_pt1.csv and
+debug overlays from reference/paper_scans/.
 Plot-box pixel anchors were measured with _probe_fig_boxes.py.
 """
 import csv
@@ -19,9 +21,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
-HERE = Path(__file__).resolve().parent
-DIG = HERE / "digitized"
-DIG.mkdir(exist_ok=True)
+SCRIPT_DIR = Path(__file__).resolve().parent
+CASE_ROOT = SCRIPT_DIR.parent
+DIG = CASE_ROOT / "data" / "digitized"
+SCANS = CASE_ROOT / "reference" / "paper_scans"
+DIG.mkdir(parents=True, exist_ok=True)
 
 # ---------------------------------------------------------------- Fig. 9(a)
 # box: x 297..822 px = t 8..10 s ; y 17..416 px = Y 2.0..0.0 m
@@ -47,7 +51,7 @@ def cluster_points(mask, min_px=4):
 
 
 def digitize_fig9a():
-    img = mpimg.imread(HERE / "paper_scans" / "fig9_bh1_riser.png")
+    img = mpimg.imread(SCANS / "fig9_bh1_riser.png")
     rgb = img[..., :3]
     H, W = rgb.shape[:2]
     r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
@@ -105,7 +109,7 @@ F10 = dict(x0=180.0, x1=747.0, t0=0.0, t1=13.0, y0=440.0, y1=19.0, v0=0.0, v1=4.
 
 
 def digitize_fig10a():
-    img = mpimg.imread(HERE / "paper_scans" / "fig10_pressure.png")
+    img = mpimg.imread(SCANS / "fig10_pressure.png")
     rgb = img[..., :3]
     H, W = rgb.shape[:2]
     r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
