@@ -22,8 +22,8 @@ solvers
         nAlphaSubCycles 2;
         cAlpha          1;
 
-        MULESCorr       no;
-        nLimiterIter    5;
+        MULESCorr       yes;
+        nLimiterIter    8;
 
         solver          smoothSolver;
         smoother        symGaussSeidel;

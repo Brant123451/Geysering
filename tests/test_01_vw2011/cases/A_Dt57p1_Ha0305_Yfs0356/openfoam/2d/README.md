@@ -27,7 +27,8 @@ than one second.
 - laminar, isothermal-start air-water VOF
 - physical air ideal-gas compressibility
 - water `rho0 = 998.2 kg/m3`, `c = sqrt(2.2e6) = 1483 m/s`
-- nominal in-plane cell size about `4 mm` (26,208 cells)
+- fine in-plane cell size about `2 mm` (~106,381 cells; was ~4 mm / 26k)
+- VOF: `interfaceCompression` + `MULESCorr`; Co budget `maxCo=0.20`, `maxAlphaCo=0.15`
 - automatic Scotch decomposition, capped at six local MPI ranks
 
 Run in Ubuntu WSL:

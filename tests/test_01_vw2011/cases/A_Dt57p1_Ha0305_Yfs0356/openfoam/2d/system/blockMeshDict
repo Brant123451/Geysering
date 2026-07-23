@@ -1,6 +1,6 @@
-/* 2-D vertical-plane representation of Vasconcelos & Wright (2011), Case A.
-   Exact axial dimensions: 0.546 + 2.970 + 0.490 m; pipe D=0.094 m;
-   tower Dt=0.0571 m, L=0.610 m, centred at x=3.516 m. */
+/* 2-D vertical-plane Case A (Vasconcelos & Wright 2011).
+   Paper lengths/diameters kept: D=0.094, Dt=0.0571, Ha0/Yfs0 via setFields.
+   Fine mesh: nominal ~2 mm in-plane (~1.06e5 cells). */
 FoamFile
 {
     version     2.0;
@@ -9,6 +9,10 @@ FoamFile
     object      blockMeshDict;
 }
 scale   1;
+
+// Axial stations (m)
+// chamber 0 -> 0.546; tower span [3.48745, 3.54455]; end 4.006
+// Vertical: pipe [-0.047, 0.047]; tower rim y=0.657
 
 vertices
 (
@@ -43,13 +47,14 @@ vertices
     (3.54455  0.657  0.002) // 23
 );
 
+// ~2 mm: ny=48 across D; nx from length/0.002; tower ny=305 over 0.610 m
 blocks
 (
-    hex (0 4 5 1 2 6 7 3)       (136 24 1) simpleGrading (1 1 1)
-    hex (4 8 9 5 6 10 11 7)     (735 24 1) simpleGrading (1 1 1)
-    hex (8 12 13 9 10 14 15 11) (14  24 1) simpleGrading (1 1 1)
-    hex (12 16 17 13 14 18 19 15) (115 24 1) simpleGrading (1 1 1)
-    hex (9 13 22 20 11 15 23 21)  (14 152 1) simpleGrading (1 1 1)
+    hex (0 4 5 1 2 6 7 3)         (273 48 1) simpleGrading (1 1 1)
+    hex (4 8 9 5 6 10 11 7)       (1485 48 1) simpleGrading (1 1 1)
+    hex (8 12 13 9 10 14 15 11)   (29  48 1) simpleGrading (1 1 1)
+    hex (12 16 17 13 14 18 19 15) (245 48 1) simpleGrading (1 1 1)
+    hex (9 13 22 20 11 15 23 21)  (29 305 1) simpleGrading (1 1 1)
 );
 
 edges ();
