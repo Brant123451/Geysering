@@ -1,0 +1,79 @@
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      topoSetDict;
+}
+
+actions
+(
+    {
+        name    valveFacesSet;
+        type    faceSet;
+        action  new;
+        source  boxToFace;
+        box     (5.979999 -0.026 -0.026) (5.980001 0.026 0.026);
+    }
+    {
+        name    valveMasterCells;
+        type    cellSet;
+        action  new;
+        source  boxToCell;
+        box     (-0.001 -1 -1) (5.9799999 1 1);
+    }
+    {
+        name    valveFaces;
+        type    faceZoneSet;
+        action  new;
+        source  setsToFaceZone;
+        faceSet valveFacesSet;
+        cellSet valveMasterCells;
+    }
+
+    {
+        name    pocketCellsSet;
+        type    cellSet;
+        action  new;
+        source  boxToCell;
+        box     (5.98 -0.026 -0.026) (6.591 0.026 0.026);
+    }
+    {
+        name    pocketCells;
+        type    cellZoneSet;
+        action  new;
+        source  setToCellZone;
+        set     pocketCellsSet;
+    }
+
+    {
+        name    riserCellsSet;
+        type    cellSet;
+        action  new;
+        source  cylinderToCell;
+        p1      (3.47 0 0.025);
+        p2      (3.47 0 1.825);
+        radius  0.0106;
+    }
+    {
+        name    riserCells;
+        type    cellZoneSet;
+        action  new;
+        source  setToCellZone;
+        set     riserCellsSet;
+    }
+
+    {
+        name    externalCellsSet;
+        type    cellSet;
+        action  new;
+        source  boxToCell;
+        box     (3.3199 -0.1501 1.8249) (3.6201 0.1501 3.0251);
+    }
+    {
+        name    externalCells;
+        type    cellZoneSet;
+        action  new;
+        source  setToCellZone;
+        set     externalCellsSet;
+    }
+);

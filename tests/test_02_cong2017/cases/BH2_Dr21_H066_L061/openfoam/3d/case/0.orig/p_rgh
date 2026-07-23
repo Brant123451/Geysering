@@ -1,0 +1,33 @@
+FoamFile
+{
+    format      ascii;
+    class       volScalarField;
+    object      p_rgh;
+}
+dimensions      [1 -1 -2 0 0 0 0];
+internalField   uniform 107534.4665;
+
+boundaryField
+{
+    inlet
+    {
+        type            totalPressure;
+        p0              uniform 107534.4665;
+        value           uniform 107534.4665;
+    }
+    atmosphere
+    {
+        type            exprFixedValue;
+        valueExpr       "101325 + (rho - 1.191912085)*9.81*pos().z()";
+        value           uniform 101325;
+    }
+    "(walls|downstreamCap|valveWall.*)"
+    {
+        type            fixedFluxPressure;
+        value           uniform 107534.4665;
+    }
+    "valveCouple.*"
+    {
+        type            cyclicACMI;
+    }
+}

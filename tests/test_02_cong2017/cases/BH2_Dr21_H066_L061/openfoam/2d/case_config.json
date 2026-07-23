@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "case_id": "BH2_Dr21_H066_L061",
+  "run": "B-H2",
+  "dim": "2D_planar_xz",
+  "solver": "compressibleInterIsoFoam",
+  "openfoam_version": "v2512",
+  "geometry_m": {
+    "pipe_diameter": 0.05,
+    "pipe_length": 6.59,
+    "tee_x": 3.47,
+    "riser_diameter": 0.021,
+    "riser_height_above_soffit": 1.8,
+    "pipe_invert_z": -0.025,
+    "pipe_soffit_z": 0.025,
+    "riser_rim_z": 1.825,
+    "valve_x": 5.98,
+    "closed_end_x": 6.59,
+    "external_width": 0.3,
+    "external_height_above_rim": 1.2
+  },
+  "initial": {
+    "H0_m_from_pipe_invert": 0.66,
+    "free_surface_z_m": 0.635,
+    "pocket_length_m": 0.61,
+    "pocket_pressure_Pa_abs": 101325.0,
+    "temperature_K": 296.15,
+    "water_density_kg_m3": 998.0,
+    "air_molar_mass_kg_kmol": 28.965,
+    "surface_tension_N_m": 0.072,
+    "contact_angle_deg": 90.0
+  },
+  "valve": {
+    "baseline_opening_s": 0.2,
+    "law": "linear effective-area ramp via cyclicACMI"
+  },
+  "experiment": {
+    "classification": "GEYSER",
+    "Ta_s": 7.84,
+    "vfs_m_s": 0.768,
+    "vint_m_s": 1.022,
+    "Vair_star": 5.2395
+  },
+  "mesh_fine_m": {
+    "extrusion_m": 0.001,
+    "pipe_dx": 0.0025,
+    "pipe_dz": 0.00167,
+    "riser_dx": 0.000875,
+    "riser_dz": 0.0015,
+    "far_dx": 0.004,
+    "far_dz": 0.004
+  },
+  "event_window_s": 13.0,
+  "notes": [
+    "Planar x-z centre-slice preserving paper lengths and diameters as channel height/width.",
+    "Circular area ratios are not preserved in pure 2D; used for rapid paper-matched mechanism capture.",
+    "Same inlet head, pocket L0, free-surface z, valve 0.2 s and material properties as PAPER_AUDIT."
+  ]
+}

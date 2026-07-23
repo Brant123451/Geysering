@@ -1,0 +1,29 @@
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      topoSetDict;
+}
+
+actions
+(
+    {
+        name    valveFaceSet;
+        type    faceSet;
+        action  clear;
+    }
+    {
+        name    valveFaceSet;
+        type    faceSet;
+        action  new;
+        source  boxToFace;
+        box     (5.9795 -1 -0.03) (5.9805 1 0.03);
+    }
+    {
+        name    valveFaces;
+        type    faceZoneSet;
+        action  new;
+        source  setToFaceZone;
+        faceSet valveFaceSet;
+    }
+);

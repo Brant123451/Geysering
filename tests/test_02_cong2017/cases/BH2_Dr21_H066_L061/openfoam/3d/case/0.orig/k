@@ -1,0 +1,27 @@
+FoamFile
+{
+    format      ascii;
+    class       volScalarField;
+    object      k;
+}
+dimensions      [0 2 -2 0 0 0 0];
+internalField   uniform 1e-4;
+
+boundaryField
+{
+    "(inlet|atmosphere)"
+    {
+        type            inletOutlet;
+        inletValue      uniform 1e-4;
+        value           uniform 1e-4;
+    }
+    "(walls|downstreamCap|valveWall.*)"
+    {
+        type            kqRWallFunction;
+        value           uniform 1e-4;
+    }
+    "valveCouple.*"
+    {
+        type            cyclicACMI;
+    }
+}

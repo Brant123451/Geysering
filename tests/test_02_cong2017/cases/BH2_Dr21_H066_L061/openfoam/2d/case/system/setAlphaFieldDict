@@ -1,0 +1,13 @@
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      setAlphaFieldDict;
+}
+
+// Geometric cut-cell initialization eliminates the stair-stepped horizontal
+// free surface produced by a cell-centre box selection.
+field       alpha.water;
+type        plane;
+origin      (0 0 0.635);
+normal      (0 0 -1);
