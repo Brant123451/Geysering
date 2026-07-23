@@ -1,0 +1,10 @@
+/runs/
+/results/raw/
+/**/log.*
+/**/processor*/
+/**/postProcessing/
+/**/constant/polyMesh/
+/**/[1-9]*/
+/**/0/
+__pycache__/
+*.pyc

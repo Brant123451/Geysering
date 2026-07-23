@@ -1,0 +1,37 @@
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      createBafflesDict;
+}
+internalFacesOnly true;
+
+baffles
+{
+    closedBallValve
+    {
+        type        faceZone;
+        zoneName    valveFaces;
+        patches
+        {
+            master
+            {
+                name            valveWall0;
+                type            wall;
+                patchFields
+                {
+                    #include "valvePatchFields.wall"
+                }
+            }
+            slave
+            {
+                name            valveWall1;
+                type            wall;
+                patchFields
+                {
+                    #include "valvePatchFields.wall"
+                }
+            }
+        }
+    }
+}

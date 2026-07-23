@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+
+ACTION="${1:-prepare}"
+VALVE="${2:-baseline}"
+
+case "$VALVE" in
+    baseline|instant|closed) ;;
+    *) echo "valve must be baseline, instant, or closed" >&2; exit 2 ;;
+esac
+
+OF_ROOT="/usr/lib/openfoam/openfoam2512"
+OF_PLATFORM="${OF_ROOT}/platforms/linux64GccDPInt32Opt"
+export WM_PROJECT_DIR="$OF_ROOT"
+export WM_PROJECT_VERSION=v2512
+export FOAM_API=2512
+export FOAM_APPBIN="${OF_PLATFORM}/bin"
+export FOAM_LIBBIN="${OF_PLATFORM}/lib"
+export PATH="${FOAM_APPBIN}:${OF_ROOT}/bin:/usr/bin:/bin"
+export LD_LIBRARY_PATH="${FOAM_LIBBIN}:${FOAM_LIBBIN}/sys-openmpi:${FOAM_LIBBIN}/dummy:/usr/lib/x86_64-linux-gnu/openmpi/lib"
+
+SOLVER=compressibleInterIsoFoam
+for command_name in blockMesh createBaffles setFields setExprFields topoSet checkMesh "$SOLVER"; do
+    command -v "$command_name" >/dev/null || {
+        echo "Missing OpenFOAM command: $command_name" >&2
+        exit 1
+    }
+done
+
+RUN_ID="fine_${VALVE}"
+RUN_DIR="$PWD/runs/$RUN_ID"
+
+prepare_case()
+{
+    rm -rf "$RUN_DIR"
+    mkdir -p "$RUN_DIR"
+    cp -a case/. "$RUN_DIR"/
+    python3 make_blockmesh.py \
+        --config case_config.json \
+        --output "$RUN_DIR/system/blockMeshDict" \
+        --stats "$RUN_DIR/mesh_stats.json" | tee "$RUN_DIR/log.make_blockmesh"
+
+    (
+        cd "$RUN_DIR"
+        blockMesh > log.blockMesh 2>&1
+        cp -a 0.orig 0
+        setFields > log.setFields 2>&1
+        setAlphaField > log.setAlphaField 2>&1 || true
+        setFields -dict system/setPocketFieldsDict > log.setPocketFields 2>&1
+        setExprFields > log.setExprFields 2>&1
+        topoSet > log.topoSet 2>&1
+        createBaffles -dict "system/createBafflesDict.${VALVE}" -overwrite \
+            > log.createBaffles 2>&1
+        topoSet -dict system/topoSetValvePatchesDict > log.topoSetValvePatches 2>&1 || true
+        checkMesh -allGeometry -allTopology > log.checkMesh 2>&1
+    )
+    echo "PREPARED $RUN_DIR"
+}
+
+run_parallel()
+{
+    local end_time="$1"
+    local log_name="$2"
+    local np="${BH2_NP:-4}"
+    if (( np > 4 )); then np=4; fi
+    if (( np < 1 )); then np=1; fi
+    (
+        cd "$RUN_DIR"
+        foamDictionary system/controlDict -entry endTime -set "$end_time" >/dev/null
+        cat > system/decomposeParDict <<EOF
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      decomposeParDict;
+}
+numberOfSubdomains $np;
+method          simple;
+simpleCoeffs
+{
+    n               ($np 1 1);
+    delta           0.001;
+}
+EOF
+        decomposePar -force > log.decomposePar 2>&1
+        mpirun --oversubscribe -np "$np" "$SOLVER" -parallel > "$log_name" 2>&1
+    )
+}
+
+case "$ACTION" in
+    prepare)
+        prepare_case
+        ;;
+    smoke)
+        prepare_case
+        (
+            cd "$RUN_DIR"
+            foamDictionary system/controlDict -entry endTime -set 1e-4 >/dev/null
+            "$SOLVER" > log.smoke 2>&1
+        )
+        echo "SMOKE_OK $RUN_DIR"
+        ;;
+    solve)
+        prepare_case
+        run_parallel 13 log.solve
+        echo "SOLVE_DONE $RUN_DIR"
+        ;;
+    resume)
+        [[ -d "$RUN_DIR" ]] || { echo "missing $RUN_DIR" >&2; exit 1; }
+        (
+            cd "$RUN_DIR"
+            foamDictionary system/controlDict -entry startFrom -set latestTime >/dev/null
+            np="${BH2_NP:-4}"
+            mpirun --oversubscribe -np "$np" "$SOLVER" -parallel >> log.solve 2>&1
+        )
+        ;;
+    *)
+        echo "usage: $0 prepare|smoke|solve|resume [baseline|instant|closed]" >&2
+        exit 2
+        ;;
+esac

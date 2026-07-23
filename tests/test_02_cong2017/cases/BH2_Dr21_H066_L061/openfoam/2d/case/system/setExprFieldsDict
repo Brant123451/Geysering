@@ -1,0 +1,38 @@
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      setExprFieldsDict;
+}
+
+readFields (alpha.water p_rgh);
+
+expressions
+(
+    initialReducedPressure
+    {
+        field       p_rgh;
+        action      modify;
+        dimensions  [1 -1 -2 0 0 0 0];
+        expression
+        #{
+            alpha.water*107534.4665
+          + (1-alpha.water)*101325
+        #};
+    }
+
+    hydrostaticAbsolutePressure
+    {
+        field       p;
+        action      modify;
+        dimensions  [1 -1 -2 0 0 0 0];
+        expression
+        #{
+            p_rgh
+          - (
+                alpha.water*998
+              + (1-alpha.water)*1.191912085
+            )*9.81*pos().z()
+        #};
+    }
+);

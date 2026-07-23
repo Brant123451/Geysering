@@ -1,0 +1,42 @@
+U
+{
+    type    noSlip;
+}
+p_rgh
+{
+    type    zeroGradient;
+}
+p
+{
+    type    calculated;
+    value   uniform 101325;
+}
+alpha.water
+{
+    type    constantAlphaContactAngle;
+    theta0  90;
+    limit   gradient;
+    value   uniform 0;
+}
+T
+{
+    type    zeroGradient;
+}
+k
+{
+    type    zeroGradient;
+}
+epsilon
+{
+    type    zeroGradient;
+}
+alphat
+{
+    type    calculated;
+    value   uniform 0;
+}
+nut
+{
+    type    calculated;
+    value   uniform 0;
+}

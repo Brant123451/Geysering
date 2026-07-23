@@ -1,0 +1,19 @@
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      decomposeParDict;
+}
+
+numberOfSubdomains 4;
+method              scotch;
+
+constraints
+{
+    valveOnOneProcessor
+    {
+        type        singleProcessorFaceSets;
+        sets        ((valvePatchFaces -1));
+        enabled     true;
+    }
+}
