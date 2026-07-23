@@ -25,9 +25,11 @@ venv/
 # OpenFOAM generated runtime state
 **/openfoam/**/processor*/
 **/openfoam/**/postProcessing/
+**/openfoam/**/dynamicCode/
 **/openfoam/**/constant/polyMesh/
 **/openfoam/**/caseA3d.msh
 **/openfoam/**/decomposeParDict.runtime
+**/openfoam/**/towerCrossSections.runtime
 **/openfoam/**/log.*
 **/openfoam/2d/[0-9]*/
 **/openfoam/3d/[0-9]*/

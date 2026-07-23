@@ -19,5 +19,12 @@ NP="${#processors[@]}"
 OMPI_ALLOW_RUN_AS_ROOT=1 \
 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
 mpirun -np "$NP" compressibleInterFoam -parallel >> log.compressibleInterFoam 2>&1
+python3 make_tower_cross_sections.py
+mpirun -np "$NP" postProcess \
+    -dict system/towerCrossSections.runtime \
+    -fields "(alpha.water)" \
+    -parallel \
+    -time "0:9" \
+    > log.towerCrossSections 2>&1
 python3 postprocess_compare.py > log.postprocess 2>&1
 echo "CASE_A_3D_DONE"

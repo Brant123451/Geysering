@@ -1,0 +1,246 @@
+{
+  "simulation_end_s": 9.0,
+  "simulation_end_Tstar": 11.042444680426986,
+  "pressure_plateau_Hstar_mean_T1to7": 0.5521680765837348,
+  "pressure_probe_plateau_Hstar_mean_T1to7": 0.6997090601902923,
+  "pressure_RMSE_Hstar_no_shift": 0.051254101180435246,
+  "pressure_datum": {
+    "comparison": "pipe crown / ventilation-tower base",
+    "probe_y_m": -0.043,
+    "comparison_y_m": 0.047,
+    "subtracted_Hstar": 0.14754098360655737,
+    "probe_pressure_retained_in_series": true
+  },
+  "free_surface_max_Ystar": 0.6230748557539674,
+  "free_surface_RMSE_Ystar_no_shift": 0.015003627858264274,
+  "interface_RMSE_Ystar_no_shift": 0.12599190195297907,
+  "interface_RMSE_best_repetition_no_shift": 0.10294813432317904,
+  "interface_repetition_comparison": [
+    {
+      "repetition": 1,
+      "RMSE_Ystar_no_shift": 0.10714188459097734,
+      "samples_used": 15,
+      "digitized_samples": 15,
+      "climb_velocity_Vstar": 0.4255345195061351,
+      "liftoff_Tstar_fit": 7.128671089489547,
+      "catch_Tstar_fit_at_Ystar_0p63": 8.609162027642256
+    },
+    {
+      "repetition": 2,
+      "RMSE_Ystar_no_shift": 0.10294813432317904,
+      "samples_used": 12,
+      "digitized_samples": 19,
+      "climb_velocity_Vstar": 0.42697001123116407,
+      "liftoff_Tstar_fit": 7.600237169989714,
+      "catch_Tstar_fit_at_Ystar_0p63": 9.075750633296893
+    },
+    {
+      "repetition": 3,
+      "RMSE_Ystar_no_shift": 0.16619809750596673,
+      "samples_used": 11,
+      "digitized_samples": 21,
+      "climb_velocity_Vstar": 0.4307872631296409,
+      "liftoff_Tstar_fit": 7.747388021754534,
+      "catch_Tstar_fit_at_Ystar_0p63": 9.209826802843585
+    }
+  ],
+  "interface_climb_velocity_Vstar_fit": 0.4647636667524073,
+  "interface_climb_fit_samples": 9,
+  "interface_climb_fit_R_squared": 0.9993188028727231,
+  "level_sampling": {
+    "method": "horizontal tower-section areaAverage(alpha.water)",
+    "vertical_spacing_m": 0.01,
+    "saved_field_interval_s": 0.09999999999999998,
+    "interface_alpha_water_area_threshold": 0.9,
+    "free_surface_alpha_water_area_threshold": 0.5,
+    "interface_definition": "bottom of the uppermost contiguous section interval with at least 90% area-averaged water; this detects the rounded air-pocket nose while excluding disconnected drops and wall film",
+    "free_surface_definition": "highest section crossing of 50% area-averaged water",
+    "post_catch_handling": "levels are omitted after the coherent air-pocket nose reaches the free surface; disconnected drops are not a free surface"
+  },
+  "rmse_sample_coverage": {
+    "pressure": {
+      "used": 593,
+      "digitized_finite": 594
+    },
+    "free_surface": {
+      "used": 22,
+      "digitized_finite": 26
+    },
+    "interface": {
+      "used": 38,
+      "digitized_finite": 55
+    }
+  },
+  "interface_liftoff_Tstar": 7.607017446516368,
+  "interface_liftoff_Tstar_fit": 7.429537416452919,
+  "interface_catch_Tstar": 8.711261914559065,
+  "interface_catch_Tstar_fit_at_Ystar_0p63": 8.785065064305003,
+  "geysering": false,
+  "comparison_targets": {
+    "pressure_plateau_Hstar": 0.54,
+    "free_surface_max_Ystar": 0.63,
+    "interface_liftoff_Tstar_repetitions": [
+      7.3,
+      7.8,
+      7.9
+    ],
+    "interface_catch_Tstar_earliest_repetition": 8.4,
+    "interface_catch_Tstar_repetition_fits": [
+      8.609162027642256,
+      9.075750633296893,
+      9.209826802843585
+    ],
+    "interface_climb_velocity_Vstar": 0.39,
+    "interface_climb_velocity_Vstar_source": "Table 2 average for all tested conditions at Dt/D=0.607",
+    "interface_climb_velocity_Vstar_Fig7_repetition_fits": [
+      0.4255345195061351,
+      0.42697001123116407,
+      0.4307872631296409
+    ],
+    "observed_geysering": false
+  },
+  "caveat": "Circular 3-D apparatus with an external atmosphere. Pressure is mapped from the near-invert probe to the paper's pipe-crown datum; the uncorrected probe value remains in the compact series. The Fig. 7 air-pocket nose is extracted from horizontal section-area phase fractions rather than one centreline, because the paper documents an initially asymmetric rounded front and a descending wall film. Threshold sensitivity from 0.80 to 0.95 is retained. Interface errors are reported for the marker cloud and each of the three repetitions. No event-time shift or fitted wall or turbulence parameters were applied.",
+  "geometry_model": "3-D circular pipe and circular tower",
+  "circular_tower_to_pipe_area_ratio": 0.36899162516976003,
+  "plume_domain_height_above_rim_m": 1.2,
+  "water_detected_above_rim": false,
+  "max_sampled_water_height_above_rim_m": 0.0,
+  "geyser_detection": "alpha.water >= 0.05 on the external-atmosphere centreline; 20 mm vertical sampling",
+  "water_mass_initial_sample_kg": 24.788073,
+  "water_mass_final_kg": 24.787798,
+  "water_mass_final_relative_drift": -1.1094045107984941e-05,
+  "water_mass_max_abs_relative_drift": 1.811355001252819e-05,
+  "water_mass_sampling": "Integral of alpha.water*thermo:rho.water over all cells; first sample at the first 0.005 s write",
+  "interface_threshold_sensitivity": [
+    {
+      "interface_alpha_water_area_threshold": 0.8,
+      "interface_liftoff_Tstar": 7.607017446516368,
+      "interface_catch_Tstar": 8.711261914559065,
+      "interface_climb_velocity_Vstar_fit": 0.4640688814923651,
+      "interface_climb_fit_R_squared": 0.9994673853023219,
+      "interface_catch_Tstar_fit_at_Ystar_0p63": 8.801834165562935,
+      "interface_RMSE_best_repetition_no_shift": 0.09530662928712125,
+      "repetition_RMSE_Ystar_no_shift": [
+        0.11362094262368298,
+        0.09530662928712125,
+        0.15844745511022088
+      ],
+      "repetition_samples_used": [
+        15,
+        12,
+        11
+      ]
+    },
+    {
+      "interface_alpha_water_area_threshold": 0.85,
+      "interface_liftoff_Tstar": 7.607017446516368,
+      "interface_catch_Tstar": 8.711261914559065,
+      "interface_climb_velocity_Vstar_fit": 0.46416333674372573,
+      "interface_climb_fit_R_squared": 0.9993161577021803,
+      "interface_catch_Tstar_fit_at_Ystar_0p63": 8.794581090234596,
+      "interface_RMSE_best_repetition_no_shift": 0.09877376397622312,
+      "repetition_RMSE_Ystar_no_shift": [
+        0.11061104937468015,
+        0.09877376397622312,
+        0.16199349811265082
+      ],
+      "repetition_samples_used": [
+        15,
+        12,
+        11
+      ]
+    },
+    {
+      "interface_alpha_water_area_threshold": 0.9,
+      "interface_liftoff_Tstar": 7.607017446516368,
+      "interface_catch_Tstar": 8.711261914559065,
+      "interface_climb_velocity_Vstar_fit": 0.4647636667524073,
+      "interface_climb_fit_R_squared": 0.9993188028727231,
+      "interface_catch_Tstar_fit_at_Ystar_0p63": 8.785065064305003,
+      "interface_RMSE_best_repetition_no_shift": 0.10294813432317904,
+      "repetition_RMSE_Ystar_no_shift": [
+        0.10714188459097734,
+        0.10294813432317904,
+        0.16619809750596673
+      ],
+      "repetition_samples_used": [
+        15,
+        12,
+        11
+      ]
+    },
+    {
+      "interface_alpha_water_area_threshold": 0.95,
+      "interface_liftoff_Tstar": 7.484323616733845,
+      "interface_catch_Tstar": 8.711261914559065,
+      "interface_climb_velocity_Vstar_fit": 0.462978829686101,
+      "interface_climb_fit_R_squared": 0.9994539025064187,
+      "interface_catch_Tstar_fit_at_Ystar_0p63": 8.775486343194776,
+      "interface_RMSE_best_repetition_no_shift": 0.10233655395679453,
+      "repetition_RMSE_Ystar_no_shift": [
+        0.10233655395679453,
+        0.10818043263994057,
+        0.17121825909902977
+      ],
+      "repetition_samples_used": [
+        15,
+        12,
+        11
+      ]
+    }
+  ],
+  "experimental_errors": {
+    "pressure_plateau_Hstar_signed": 0.012168076583734755,
+    "pressure_plateau_percent_signed": 2.253347515506436,
+    "pressure_RMSE_Hstar_no_shift": 0.051254101180435246,
+    "free_surface_max_Ystar_signed": -0.006925144246032633,
+    "free_surface_RMSE_Ystar_no_shift": 0.015003627858264274,
+    "interface_RMSE_Ystar_no_shift": 0.12599190195297907,
+    "interface_RMSE_best_repetition_no_shift": 0.10294813432317904,
+    "interface_liftoff_distance_outside_repetition_range_Tstar": 0.0,
+    "interface_catch_signed_from_earliest_repetition_Tstar": 0.31126191455906493,
+    "interface_catch_distance_outside_repetition_range_Tstar": 0.0,
+    "interface_climb_velocity_Vstar_signed": 0.07476366675240731,
+    "interface_climb_velocity_percent_signed": 19.17017096215572,
+    "interface_climb_velocity_nearest_Fig7_repetition_signed": 0.03397640362276644,
+    "interface_climb_velocity_nearest_Fig7_repetition_percent_signed": 7.887049253947324,
+    "interface_climb_velocity_distance_outside_Fig7_repetition_range": 0.03397640362276644
+  },
+  "mesh": {
+    "cells": 342135,
+    "cell_type": "tetrahedra",
+    "core_size_m": 0.008,
+    "plume_size_m": 0.02,
+    "gmsh_version": "4.12.1",
+    "standard_checkMesh_ok": true,
+    "strict_checkMesh_ok": false,
+    "strict_failed_checks": 1,
+    "max_non_orthogonality": 66.910971,
+    "mean_non_orthogonality": 22.184442,
+    "max_skewness": 1.0076224,
+    "strict_underdetermined_cells": 438,
+    "cad_fluid_volume_m3": 0.137456195,
+    "openfoam_mesh_volume_m3": 0.13734082,
+    "relative_mesh_volume_error": -0.0008393583133885009
+  },
+  "solver": {
+    "openfoam_version": "2512",
+    "mpi_ranks": 4,
+    "solver_execution_time_s": 97786.53,
+    "solver_clock_time_s": 105842.0,
+    "solver_segments": 1,
+    "completed_parallel_run": true,
+    "temperature_limiter": {
+      "bounds_K": [
+        250.0,
+        350.0
+      ],
+      "lower_corrections_with_limiting": 837,
+      "lower_total_cell_corrections": 1523,
+      "minimum_unlimited_temperature_K": 235.19617,
+      "upper_corrections_with_limiting": 114,
+      "upper_total_cell_corrections": 114,
+      "maximum_unlimited_temperature_K": 350.72918
+    }
+  }
+}

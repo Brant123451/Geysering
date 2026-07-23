@@ -1,7 +1,7 @@
 # OpenFOAM 3-D Case A fidelity model
 
 This is the geometry-faithful model for Vasconcelos and Wright (2011), Case A.
-It replaces the planar pilot in `../openfoam_2d_caseA`, which cannot preserve
+It replaces the planar pilot in `../2d`, which cannot preserve
 the circular pipe/tower area ratio and terminates at the tower rim.
 
 ## Experiment mapping
@@ -17,7 +17,7 @@ the circular pipe/tower area ratio and terminates at the tower rim.
 | Tower length above pipe crown | `0.610 m` |
 | Initial free surface above crown | `0.356 m` |
 | Initial air gauge-pressure head | `0.305 m` |
-| Pressure probe | `(1.616, -0.043, 0) m` |
+| Pressure probe | `(1.616, -0.043, 0) m` (near invert) |
 
 The Boolean CAD domain uses a circular main pipe and circular tower, giving
 the physical area ratio
@@ -31,6 +31,31 @@ The tower opens into a `0.30 m x 0.30 m` external atmosphere volume extending
 separately as above-rim ejection. It is not removed at the rim by a pressure
 boundary.
 
+The audited initial absolute pressures are `104311.7 Pa` in the upstream air
+chamber and `105271.3 Pa` reduced pressure in the initially water-filled
+apparatus. The latter represents a hydrostatic free surface at absolute
+`y = 0.403 m`. The atmosphere patch uses constant reduced pressure
+`p_rgh = 101333 Pa`, corresponding to `101325 Pa` absolute pressure at the
+physical rim. Both horizontal ends and the apparatus walls are closed,
+no-slip walls.
+
+The raw pressure probe is deliberately inside the fluid, `4 mm` above the
+pipe invert. The paper's calibrated `H*` curves use the ventilation-tower
+base/pipe-crown elevation, consistently with the repository's independently
+validated small-tower case. Post-processing therefore subtracts the fixed
+piezometric datum difference
+`(0.047 - (-0.043))/0.610 = 0.147541` from the probe `H*`. The uncorrected
+probe history is retained beside the crown-datum history in the compact CSV;
+this is an elevation-datum conversion, not a fitted pressure offset.
+
+## Local handoff
+
+If you are continuing this case on a local workstation after the cloud agent
+stopped, read **`HANDOFF_LOCAL.md` first**. It states which compact results are
+already committed (uniform 8 mm / 342k, full 9 s), which wall-refined run was
+lost mid-flight (~463k, ~72%), and the exact commands to regenerate the
+wall-refined validation locally.
+
 ## Run
 
 The cloud image needs OpenFOAM v2512, Gmsh, NumPy, and Matplotlib, all declared
@@ -41,16 +66,79 @@ chmod +x Allrun Allrun.resume
 ./Allrun
 ```
 
-The defaults use an `8 mm` nominal tetrahedron edge in the apparatus, a
-`20 mm` atmosphere far field, at most six local MPI ranks, and an end time of
-`9 s`. Override the mesh sizes for a grid study, or request the solver's
-single-step dry run for a smoke test:
+The defaults target a **tower-wall refined** mesh: core `8 mm`, tower `5 mm`,
+wall `2.5 mm` (~463k cells), plume `20 mm`, at most six local MPI ranks, and an
+end time of `9 s`. The committed `outputs/` below still come from the earlier
+completed uniform `8 mm` / 342k run until a new wall-refined post-process
+overwrites them. `Allrun` records both a standard `checkMesh` result and a
+stricter all-topology/all-geometry audit. Override the mesh sizes for a grid
+study, or request the solver's serial single-step setup check for a smoke test:
 
 ```bash
 CASEA_CORE_SIZE=0.012 CASEA_PLUME_SIZE=0.030 CASEA_DRY_RUN=1 ./Allrun
 ```
 
 Resume an interrupted decomposed run with `./Allrun.resume`.
+
+The full run logs an exact domain integral of
+`alpha.water*thermo:rho.water` every `0.005 s`. Post-processing converts those
+samples to `outputs/openfoam_3d_water_mass.csv` and reports final and maximum
+relative mass drift in `outputs/openfoam_3d_metrics.json`; raw logs and fields
+remain untracked.
+
+The paper measures the **top of the rounded air-water interface** from video and
+documents that its initial rise is asymmetric and leaves a descending wall
+film. A single centreline probe can therefore jump between the rounded nose,
+film, and detached drops. After the solver finishes, `Allrun` samples
+`areaAverage(alpha.water)` on horizontal tower sections at `10 mm` intervals.
+The reported air-pocket nose is the bottom of the uppermost contiguous water
+column at a section-averaged water fraction of `0.90`; the free surface uses
+the conventional `0.50` crossing. The complete section averages, original
+centreline estimate, and a `0.80–0.95` nose-threshold sensitivity sweep are
+retained as compact CSV files. Reported level trajectories stop when the
+coherent nose reaches the free surface; isolated liquid remnants after air
+breakthrough are not relabeled as a new free surface.
+
+Fig. 7 contains three separate interface trajectories from repeated manual
+valve openings. The metrics retain the conservative RMSE against the complete
+marker cloud and also separate the approximately parallel trajectories,
+reporting a no-shift RMSE, climb velocity, and fitted catch time for each
+repetition. This avoids treating simultaneous markers from different runs as
+one impossible interface shape.
+
+## Completed 8 mm validation
+
+The committed compact outputs come from a complete `9.0 s` run with `342,135`
+tetrahedra and four MPI ranks. OpenFOAM reports `97,786.53 s` execution time
+and `105,842 s` wall time. The standard mesh check passes; the strict audit
+retains one failure for `438` small-determinant cells.
+
+| Observable | Experiment | 3-D result |
+| --- | ---: | ---: |
+| Crown-datum pressure plateau `H*` | `0.54` | `0.55217` (`+2.25%`) |
+| Pressure no-shift RMSE | — | `0.05125` |
+| Maximum free surface `Yfs*` | `0.63` | `0.62307` |
+| Free-surface no-shift RMSE | — | `0.01500` |
+| Interface liftoff `T*` | `7.3–7.9` | `7.607` |
+| Interface catch `T*` | fitted repetitions `8.609–9.210` | `8.711` |
+| Interface climb `V*` | Fig. 7 fits `0.4255–0.4308` | `0.4648` (`+7.89%` nearest) |
+| Best repetition no-shift RMSE | — | `0.10295` |
+| Above-rim water / geyser | no | no |
+
+The `0.80–0.95` section-threshold sweep gives `V*=0.4630–0.4648` with
+`R²>0.999`, so the corrected slope is not a selected single-threshold
+artifact. Table 2's `V*=0.39` is the diameter-wide average across the tested
+conditions rather than a fit to this one Fig. 7 trajectory; the present result
+is `+19.17%` relative to that broader average. Maximum water-mass drift is
+`1.81e-5`.
+
+`constant/fvOptions` applies a coded correction equivalent to OpenFOAM's
+temperature limiter directly to the solver's shared mixture-temperature field
+at `250–350 K`. The experiment starts at `293.15 K`, and its pressure ratio
+cannot physically approach either bound. This prevents an isolated interface
+cell from passing an invalid temperature to the phase equations of state
+during tower entry. The metrics record every actual limiter activation and the
+unlimited extrema so this stabilization remains auditable.
 
 ## What “matched” means
 
