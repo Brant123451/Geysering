@@ -1,0 +1,5 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+rm -rf 0 processor* postProcessing VTK logs *.foam
+rm -f log.*
+rm -rf constant/polyMesh

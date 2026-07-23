@@ -1,0 +1,44 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      alpha.water;
+}
+
+dimensions      [0 0 0 0 0 0 0];
+internalField   uniform 1;
+boundaryField
+{
+    inlet
+    {
+        type            fixedValue;
+        value           uniform 1;
+    }
+    closedEnd
+    {
+        type            constantAlphaContactAngle;
+        theta0          90;
+        limit           gradient;
+        value           uniform 0;
+    }
+    walls
+    {
+        type            constantAlphaContactAngle;
+        theta0          90;
+        limit           gradient;
+        value           uniform 1;
+    }
+    atmosphere
+    {
+        type            inletOutlet;
+        inletValue      uniform 0;
+        value           uniform 0;
+    }
+
+    frontAndBack
+    {
+        type            empty;
+    }
+
+}

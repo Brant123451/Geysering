@@ -1,0 +1,10 @@
+0/
+[1-9]*/
+processor*/
+postProcessing/
+constant/polyMesh/
+log.*
+*.foam
+_work/
+!outputs/
+!outputs/**

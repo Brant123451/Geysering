@@ -1,0 +1,54 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+set -eo pipefail
+
+# Isolate OpenFOAM env from nounset / profile side effects
+OF_ENV=$(bash --noprofile --norc -c 'source /usr/lib/openfoam/openfoam2512/etc/bashrc >/dev/null 2>&1; echo "export PATH=\"$PATH\"; export LD_LIBRARY_PATH=\"${FOAM_LIBBIN}:${FOAM_LIBBIN}/sys-openmpi:${LD_LIBRARY_PATH:-}\"; export WM_PROJECT_DIR=\"$WM_PROJECT_DIR\"; export FOAM_LIBBIN=\"$FOAM_LIBBIN\"; export FOAM_APPBIN=\"$FOAM_APPBIN\"; export FOAM_ETC=\"$FOAM_ETC\""')
+eval "$OF_ENV"
+
+CASE_SRC="$(pwd)"
+WORK_ROOT="${WORK_ROOT:-/tmp/bh3-2d-study}"
+RUN_ID="${RUN_ID:-base_nominal_2d}"
+WORK="${WORK_ROOT}/${RUN_ID}"
+NP="${OPENFOAM_NP:-4}"
+
+echo "CASE_SRC=$CASE_SRC"
+echo "WORK=$WORK NP=$NP"
+
+python3 "$CASE_SRC/setup_case.py"
+
+rm -rf "$WORK"
+mkdir -p "$WORK"
+cp -a "$CASE_SRC/0.orig" "$WORK/"
+cp -a "$CASE_SRC/constant" "$WORK/"
+cp -a "$CASE_SRC/system" "$WORK/"
+cp -f "$CASE_SRC/setup_case.py" "$CASE_SRC/postprocess_2d.py" "$WORK/"
+cp -f "$CASE_SRC/mesh_meta.json" "$WORK/" 2>/dev/null || true
+
+cd "$WORK"
+rm -rf 0 processor* postProcessing
+cp -a 0.orig 0
+
+foamDictionary system/decomposeParDict -entry numberOfSubdomains -set "$NP" >/dev/null
+blockMesh > log.blockMesh 2>&1
+checkMesh > log.checkMesh 2>&1
+setFields > log.setFields 2>&1
+decomposePar -force > log.decomposePar 2>&1
+
+NCELLS=$(grep -E '^\s+cells:' log.checkMesh | head -1 | awk '{print $2}')
+echo "BH3_2D_START $(date -Is) endTime=13s cells=${NCELLS}" | tee log.run_meta.txt
+
+OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
+  mpirun -np "$NP" compressibleInterFoam -parallel > log.compressibleInterFoam 2>&1
+
+echo "BH3_2D_DONE id=${RUN_ID} $(date -Is)" | tee -a log.compressibleInterFoam log.run_meta.txt
+
+mkdir -p "${CASE_SRC}/outputs"
+python3 postprocess_2d.py --case "$WORK" --output "${CASE_SRC}/outputs" \
+  > log.postprocess 2>&1 || true
+mkdir -p "${CASE_SRC}/outputs/base_nominal_2d_live"
+rm -rf "${CASE_SRC}/outputs/base_nominal_2d_live/functionObjects"
+cp -a postProcessing "${CASE_SRC}/outputs/base_nominal_2d_live/functionObjects" 2>/dev/null || true
+cp -f log.run_meta.txt "${CASE_SRC}/outputs/base_nominal_2d_live/" 2>/dev/null || true
+tail -c 2000000 log.compressibleInterFoam > "${CASE_SRC}/outputs/base_nominal_2d_live/log.tail.txt" || true
+echo "POSTPROCESS_DONE"
