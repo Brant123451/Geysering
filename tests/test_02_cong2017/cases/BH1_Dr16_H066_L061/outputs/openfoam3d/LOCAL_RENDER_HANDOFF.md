@@ -18,7 +18,11 @@ Under `outputs/openfoam3d/`:
 | `refined-open-full-tau0-comparison.png` | Fig.9(a) / Fig.10(a) / 1-D overlay |
 | `refined-open-full-tau0-postProcessing.tar.xz` | Full function-object archive (~7.5 MB) |
 | `refined-open-full-tau0-VTK/` | Key-time ParaView packages (`alpha.water` only; see `MANIFEST.csv`) |
+| `base-open-full-tau0{,p2,p5}-VTK/` | Base-mesh key-time `alpha.water` VTK |
+| `postProcessing-archives/` | Function-object tarballs for all completed runs |
+| `solver-logs/` | Compressed solver logs for full-event runs |
 | `sensitivity-summary.{csv,json,png}` | base / refined / τ=0.2 / τ=0.5 |
+| `DATA_INVENTORY.md` | Full list of what is (and is not) in git |
 | `LOCAL_RENDER_HANDOFF.md` | This note |
 
 Key metrics (refined, τ=0 instant open):
@@ -68,7 +72,10 @@ tar -xJf t9p5_refined-open-full-tau0_88922.tar.xz
 ```
 
 Times packaged (field = `alpha.water` only, GitHub-size safe):
-`0`, `8.2` (Ta), `9.5` (rim), `10`, `11`, `13`. See `MANIFEST.csv`.
+`0, 8, 8.2, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13`. See `MANIFEST.csv`.
+
+Base-mesh key frames are under `base-open-full-tau0{,p2,p5}-VTK/`.
+Full inventory: `DATA_INVENTORY.md`.
 
 For velocity/pressure rendering, either re-export locally from the full run
 directory or reconstruct selected times as below.
