@@ -8,3 +8,5 @@ log.*
 _work/
 !outputs/
 !outputs/**
+!outputs/base_nominal_2d_handoff/
+!outputs/base_nominal_2d_handoff/**

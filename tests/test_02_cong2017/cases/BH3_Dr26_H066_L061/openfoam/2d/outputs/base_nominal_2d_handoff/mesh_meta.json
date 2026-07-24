@@ -1,0 +1,27 @@
+{
+  "n_cells_approx": 111435,
+  "nx": [
+    1728,
+    13,
+    1249,
+    305
+  ],
+  "ny_pipe": 28,
+  "ny_riser": 1475,
+  "dx": 0.002,
+  "dy_pipe": 0.0017857142857142859,
+  "dy_riser": 0.002,
+  "paper": {
+    "run": "B-H3",
+    "D": 0.05,
+    "Dr": 0.026,
+    "H0": 0.66,
+    "L0": 0.6099999999999994,
+    "Ta_exp": 8.18,
+    "x_tee": 3.47,
+    "x_valve": 5.98,
+    "y_rim": 1.85,
+    "y_top": 3.0
+  },
+  "area_ratio_note": "Planar Dr/D=0.5200 vs circular (Dr/D)^2=0.2704; 2-D cannot preserve both diameters and area ratio."
+}

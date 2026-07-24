@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "run_id": "base_nominal_2d",
+  "status": "COMPLETED",
+  "simulated_time_s": 13.0,
+  "cells": 111435,
+  "paper_Ta_s": 8.18,
+  "Ta_2d_s": null,
+  "geysering": false,
+  "Yfs_max_m": 0.725,
+  "execution_time_s": 12377.62,
+  "clock_time_s": 46656,
+  "note": "Completed 13s window; no rim-reaching geyser in 2D planar model."
+}
