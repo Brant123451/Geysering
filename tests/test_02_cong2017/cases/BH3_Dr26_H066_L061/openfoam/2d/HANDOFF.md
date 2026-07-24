@@ -1,6 +1,6 @@
 # BH3 2-D fine-mesh 交接（base_nominal_2d）
 
-> 状态：**RUNNING**（约 84.1%；t≈10.929/13 s；更新 2026-07-24T06:13:46Z；看门狗 20 min 自愈已启用）  
+> 状态：**RUNNING**（约 91.2%；t≈11.862/13 s；更新 2026-07-24T07:15:10Z；看门狗 20 min 自愈已启用）  
 > 论文：Cong, Chan & Lee (2017) Series B **Run B-H3**  
 > 路径：`tests/test_02_cong2017/cases/BH3_Dr26_H066_L061/openfoam/2d/`  
 > 分支：`cursor/test2-bh3-3d-e294`  
