@@ -1,0 +1,64 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      topoSetDict;
+}
+
+actions
+(
+    {
+        name    initialPocketCells;
+        type    cellSet;
+        action  new;
+        source  boxToCell;
+        box     (5.98 -0.026 -0.001) (6.591 0.026 0.051);
+    }
+    {
+        name    initialPocket;
+        type    cellZoneSet;
+        action  new;
+        source  setToCellZone;
+        set     initialPocketCells;
+    }
+    {
+        name    initialRiserWaterCells;
+        type    cellSet;
+        action  new;
+        source  cylinderToCell;
+        point1  (3.47 0 0.050);
+        point2  (3.47 0 0.660);
+        radius  0.0135;
+    }
+    {
+        name    initialRiserWater;
+        type    cellZoneSet;
+        action  new;
+        source  setToCellZone;
+        set     initialRiserWaterCells;
+    }
+    {
+        name    internalSystemCells;
+        type    cellSet;
+        action  new;
+        source  boxToCell;
+        box     (-0.001 -0.026 -0.001) (6.591 0.026 0.051);
+    }
+    {
+        name    internalSystemCells;
+        type    cellSet;
+        action  add;
+        source  cylinderToCell;
+        point1  (3.47 0 0.045);
+        point2  (3.47 0 1.851);
+        radius  0.0135;
+    }
+    {
+        name    internalSystem;
+        type    cellZoneSet;
+        action  new;
+        source  setToCellZone;
+        set     internalSystemCells;
+    }
+);

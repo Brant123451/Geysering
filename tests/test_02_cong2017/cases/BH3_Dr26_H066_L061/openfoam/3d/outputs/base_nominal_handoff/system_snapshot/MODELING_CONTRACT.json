@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "contract_id": "cong2017-series-b-bh3-bh4-3d-v1",
+  "case": {
+    "run": "B-H3",
+    "riser_diameter_m": 0.026,
+    "paired_run": "B-H4",
+    "paired_riser_diameter_m": 0.031
+  },
+  "sole_permitted_case_variable": "riser_diameter_m",
+  "invariants": {
+    "geometry": {
+      "horizontal_pipe_inner_diameter_m": 0.05,
+      "horizontal_pipe_length_m": 6.59,
+      "tee_axis_from_upstream_m": 3.47,
+      "release_plane_from_upstream_m": 5.98,
+      "closed_end_from_upstream_m": 6.59,
+      "initial_air_length_m": 0.61,
+      "physical_riser_height_above_soffit_m": 1.8,
+      "physical_rim_elevation_from_invert_m": 1.85,
+      "computational_top_elevation_from_invert_m": 3.0,
+      "external_atmosphere_width_m": 0.3,
+      "external_atmosphere_base_elevation_m": 1.85
+    },
+    "initial_and_boundary_conditions": {
+      "upstream_head_from_invert_m": 0.66,
+      "initial_riser_free_surface_from_invert_m": 0.66,
+      "ambient_absolute_pressure_pa": 101325.0,
+      "ambient_pressure_reference_elevation_m": 0.66,
+      "open_air_vertical_pressure_profile": "isothermal perfect-gas hydrostatic",
+      "atmosphere_p_rgh_boundary_baseline": "waveTransmissive without far-field relaxation",
+      "atmosphere_p_rgh_boundary_diagnostic": "hydrostatic exprFixedValue",
+      "atmosphere_wave_transmissive_gamma": 1.4,
+      "initial_vof_transition_thickness_m": 0.015,
+      "initial_vof_transition_sensitivity_m": [0.015, 0.0],
+      "initial_vof_transition_profile": "linear",
+      "initial_vof_transition_profile_sensitivity": ["linear", "cosine", "sharp"],
+      "initial_temperature_k": 296.15,
+      "initial_velocity_m_per_s": [0.0, 0.0, 0.0],
+      "initial_air_pocket_gauge_pressure_pa": 0.0,
+      "closed_hold_pressure_initialisation": "EOS-consistent rAU-weighted discrete gravity-and-CSF projection on the closed-valve mesh",
+      "upstream_alpha_water": 1.0,
+      "atmosphere_inflow_alpha_water": 0.0,
+      "downstream_end": "closed_no_slip_wall",
+      "physical_rim": "open_to_expanded_external_air_domain"
+    },
+    "materials": {
+      "water_density_reference_kg_per_m3": 998.0,
+      "water_dynamic_viscosity_pa_s": 0.000933,
+      "water_bulk_modulus_pa": 2200000000.0,
+      "air_equation_of_state": "perfectGas",
+      "air_molecular_weight_kg_per_kmol": 28.966,
+      "air_dynamic_viscosity_pa_s": 0.00001846,
+      "surface_tension_n_per_m": 0.072,
+      "static_contact_angle_deg": 90.0,
+      "wall_roughness_m": 0.000001
+    },
+    "solver": {
+      "openfoam_version": "v2512",
+      "application": "compressibleInterFoam",
+      "turbulence_model": "standard_kEpsilon",
+      "interface_scheme": "MULES_vanLeer",
+      "n_hat_gradient_scheme": "leastSquares",
+      "n_hat_gradient_scheme_sensitivity": [
+        "Gauss linear",
+        "leastSquares",
+        "pointCellsLeastSquares"
+      ],
+      "baseline_c_alpha": 1.0,
+      "alpha_curvature_smoothing_iterations": 0,
+      "event_end_time_s": 13.0,
+      "baseline_max_courant": 0.25,
+      "baseline_max_alpha_courant": 0.15,
+      "baseline_max_delta_t_s": 0.0005,
+      "closed_hold_baseline_mesh_profile": "prism_atmosphere",
+      "parallel_decomposition": "deterministic simple decomposition with n=(nProcs 1 1) along the horizontal-pipe axis",
+      "closed_hold_parallel_process_sensitivity": [1, 4],
+      "surface_tension_sensitivity_n_per_m": [0.072, 0.0],
+      "atmosphere_acoustic_courant_audit": "(Un + sqrt(gamma/thermo:psi))*maxDeltaT*patchDeltaCoeffs",
+      "stability_extrema_fields": ["T", "p", "p_rgh", "U", "k", "epsilon", "alpha.water"]
+    },
+    "valve_sensitivity": {
+      "published_cfd_baseline_s": 0.0,
+      "experiment_nominal_s": 0.2,
+      "paired_cfd_reported_experiment_s": 0.5,
+      "finite_opening_model": "balanced closed-valve projection, then porousBafflePressure with smoothstep open-area fraction",
+      "event_initialisation": "create closed wall baffle, balanceInitialPressure, mergeOrSplitBaffles, createPatch remove empty walls, recreate valve face zone as opening cyclic",
+      "minimum_resolved_open_area": "max(1/Nface, 0.05); 0.05 floor keeps early I within the tutorial-scale regime after one-face Amin repeatedly blew up near 0.003 s",
+      "opening_table_samples": 101,
+      "loss_coefficient": "K=(1/A-1)^2",
+      "inertial_coefficient": "I=K/L with L=0.050 m",
+      "darcy_coefficient": "D=2*I matching the OpenFOAM damBreakPorousBaffle tutorial D/I ratio",
+      "full_open_jump": "D=I=0 exactly when A=1",
+      "rejected_uniform_jump": "U-independent hydrostatic jump cyclic retained only as diagnostic; acoustic coupling across the nearly sealed valve remained unstable",
+      "rejected_large_darcy": "D scaled to the closed-hold water-speed gate retained only as diagnostic; oversized D stiffens the baffle at finite U"
+    },
+    "mesh_profiles": {
+      "base": {
+        "pipe_tetrahedron_target_m": 0.012,
+        "riser_tetrahedron_target_m": 0.005,
+        "atmosphere_tetrahedron_target_m": 0.03,
+        "curvature_elements_per_2pi": 40
+      },
+      "refined": {
+        "pipe_tetrahedron_target_m": 0.009,
+        "riser_tetrahedron_target_m": 0.004,
+        "atmosphere_tetrahedron_target_m": 0.025,
+        "curvature_elements_per_2pi": 64
+      },
+      "interface_diagnostic": {
+        "inherits": "refined",
+        "conformal_transition_edges_z_m": [0.6525, 0.6675],
+        "interface_band_target_m": 0.0025,
+        "interface_refinement_z_m": [0.63, 0.69],
+        "minimum_size_outside_interface_m": 0.004
+      },
+      "prism_diagnostic": {
+        "inherits": "refined",
+        "prism_band_z_m": [0.63, 0.69],
+        "axial_layer_height_m": 0.0025,
+        "axial_layer_count": 24,
+        "exact_layer_planes_z_m": [0.6525, 0.66, 0.6675],
+        "element_type": "Prism6",
+        "tetrahedral_outside_prism_band": true
+      },
+      "prism_atmosphere_diagnostic": {
+        "inherits": "prism_diagnostic",
+        "external_atmosphere_vertical_layer_height_m": 0.0125,
+        "external_atmosphere_vertical_layer_count": 92,
+        "purpose": "remove thin top-boundary tetrahedra from acoustic-outflow sensitivity"
+      }
+    },
+    "classification": {
+      "geyser_if_water_crosses_physical_rim": true,
+      "physical_rim_elevation_m": 1.85,
+      "alpha_water_detection_threshold": 0.05,
+      "classification_is_validation_target_not_tuning_input": true
+    }
+  }
+}

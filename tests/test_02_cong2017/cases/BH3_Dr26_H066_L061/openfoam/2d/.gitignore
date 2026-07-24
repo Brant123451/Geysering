@@ -1,0 +1,12 @@
+0/
+[1-9]*/
+processor*/
+postProcessing/
+constant/polyMesh/
+log.*
+*.foam
+_work/
+!outputs/
+!outputs/**
+!outputs/base_nominal_2d_handoff/
+!outputs/base_nominal_2d_handoff/**

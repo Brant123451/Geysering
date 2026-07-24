@@ -1,0 +1,24 @@
+0/
+[1-9]*/
+processor*/
+postProcessing/
+constant/polyMesh/
+constant/triSurface/
+system/blockMeshDict.runtime
+system/createBafflesDict.runtime
+system/decomposeParDict.runtime
+system/runControl.runtime
+system/riserProbeLocations.runtime
+system/plumeProbeLocations.runtime
+constant/surfaceTension.runtime
+applications/**/Make/linux*/
+log.*
+*.foam
+*.msh
+_work/
+
+# Allow packaged run artifacts for local handoff / rendering
+!outputs/base_nominal_live/
+!outputs/base_nominal_live/**
+!outputs/base_nominal_handoff/
+!outputs/base_nominal_handoff/**

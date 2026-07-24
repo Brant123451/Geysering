@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "case": "B-H3",
+  "required_full_variants": [
+    "base_nominal",
+    "dt_fine",
+    "initial_sharp",
+    "interface_diffuse",
+    "interface_sharp",
+    "refined_nominal",
+    "sigma_zero",
+    "valve_0p2",
+    "valve_0p5"
+  ],
+  "completed_full_variants": [],
+  "missing_full_variants": [
+    "base_nominal",
+    "dt_fine",
+    "initial_sharp",
+    "interface_diffuse",
+    "interface_sharp",
+    "refined_nominal",
+    "sigma_zero",
+    "valve_0p2",
+    "valve_0p5"
+  ],
+  "all_required_full_variants_complete": false,
+  "classification_values_across_completed_full_variants": [],
+  "classification_changed_by_numerics": false,
+  "closed_hold_passed": true,
+  "experimental_classification": "GEYSER",
+  "note": "No result is tuned to the experimental label."
+}

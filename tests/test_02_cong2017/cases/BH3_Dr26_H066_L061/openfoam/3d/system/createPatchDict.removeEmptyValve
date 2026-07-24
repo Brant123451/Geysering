@@ -1,0 +1,16 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      createPatchDict;
+}
+
+pointSync false;
+
+// Empty patch list: only remove zero-sized patches left after merging the
+// closed valve walls back to internal faces before recreating the opening
+// cyclic baffle.
+patches
+(
+);

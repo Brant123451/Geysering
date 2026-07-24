@@ -1,0 +1,292 @@
+{
+  "schema_version": 1,
+  "case": "B-H3",
+  "run_id": "open_smoke_valve_0p2_balanced_porous",
+  "run_mode": "event",
+  "valve_opening": "0.2",
+  "simulated_end_time_s": 0.003,
+  "full_13s_window_completed": false,
+  "geometry_model": "3-D circular pipe, circular riser, Boolean tee, external air",
+  "solver": "compressibleInterFoam",
+  "geysering": false,
+  "geyser_detection": "alpha.water >= 0.05 at centreline probes above z=1.85 m",
+  "Ta_3d_s": null,
+  "t_rim_3d_s": null,
+  "Yfs_max_3d_m": 0.6599999999999997,
+  "Yint_max_3d_m": null,
+  "vfs_3d_m_per_s": null,
+  "vint_3d_m_per_s": null,
+  "maximum_sampled_speed_m_per_s": 0.014836593384819054,
+  "maximum_all_domain_speed_m_per_s": 4.3497061398,
+  "maximum_water_weighted_speed_m_per_s": 0.14976373938,
+  "maximum_gas_weighted_speed_m_per_s": 4.3497061398,
+  "field_extrema": {
+    "T": {
+      "minimum": {
+        "value": 277.92590948,
+        "time_s": 0.003098121086,
+        "position_m": [
+          5.9807556252,
+          -0.0076498043728,
+          0.0035382878466
+        ],
+        "processor": 3
+      },
+      "maximum": {
+        "value": 296.28542827,
+        "time_s": 0.0003250351347,
+        "position_m": [
+          5.9804511358,
+          0.012007194721,
+          0.045295718969
+        ],
+        "processor": 3
+      }
+    },
+    "mag(U)": {
+      "minimum": {
+        "value": 0.0,
+        "time_s": 1.1999904e-06,
+        "position_m": [
+          1.2868729253,
+          -0.013065888732,
+          0.046251227191
+        ],
+        "processor": 0
+      },
+      "maximum": {
+        "value": 6.2664290733,
+        "time_s": 0.003098121086,
+        "position_m": [
+          5.9811682919,
+          0.012553054347,
+          0.044065715378
+        ],
+        "processor": 3
+      }
+    },
+    "alpha.water": {
+      "minimum": {
+        "value": -3.4651330293e-09,
+        "time_s": 0.003098121086,
+        "position_m": [
+          5.9810093681,
+          0.0074007037468,
+          0.043234460496
+        ],
+        "processor": 3
+      },
+      "maximum": {
+        "value": 1.0,
+        "time_s": 1.1999904e-06,
+        "position_m": [
+          1.2877098229,
+          -0.013208802554,
+          0.044921579217
+        ],
+        "processor": 0
+      }
+    },
+    "epsilon": {
+      "minimum": {
+        "value": 4.5105234848e-10,
+        "time_s": 0.002780448965,
+        "position_m": [
+          5.9905183632,
+          0.0080987430457,
+          0.045203058457
+        ],
+        "processor": 3
+      },
+      "maximum": {
+        "value": 312.42032505,
+        "time_s": 0.002586129825,
+        "position_m": [
+          5.98043099,
+          -0.0051556952592,
+          0.048073336611
+        ],
+        "processor": 3
+      }
+    },
+    "k": {
+      "minimum": {
+        "value": 1e-15,
+        "time_s": 0.001180150718,
+        "position_m": [
+          5.9790457981,
+          -0.0022490849346,
+          0.049843594946
+        ],
+        "processor": 3
+      },
+      "maximum": {
+        "value": 0.89535759311,
+        "time_s": 0.00165750151,
+        "position_m": [
+          5.9808104407,
+          -0.015477105007,
+          0.041377565872
+        ],
+        "processor": 3
+      }
+    },
+    "p": {
+      "minimum": {
+        "value": 100986.10632,
+        "time_s": 1.191552707e-05,
+        "position_m": [
+          5.9791590851,
+          -0.014355678623,
+          0.013392043654
+        ],
+        "processor": 3
+      },
+      "maximum": {
+        "value": 114444.15336,
+        "time_s": 1.1999904e-06,
+        "position_m": [
+          5.9795703738,
+          0.00028143675618,
+          0.048051497869
+        ],
+        "processor": 3
+      }
+    },
+    "p_rgh": {
+      "minimum": {
+        "value": 85486.659931,
+        "time_s": 0.003098121086,
+        "position_m": [
+          5.98,
+          -0.018261553957,
+          0.011278125539
+        ],
+        "processor": 3
+      },
+      "maximum": {
+        "value": 123932.68888,
+        "time_s": 0.003098121086,
+        "position_m": [
+          5.98,
+          -0.0092363311729,
+          0.0026845443919
+        ],
+        "processor": 3
+      }
+    }
+  },
+  "initial_pressure_balance": {
+    "fixed_point_converged": true,
+    "force_balance_accepted": false,
+    "maximum_face_residual_pa_per_m": 853.6549638,
+    "maximum_reconstructed_residual_pa_per_m": 749.4220871,
+    "maximum_predicted_water_weighted_velocity_increment_m_per_s": 7.496703057e-07,
+    "maximum_residual_cell": 425248,
+    "maximum_residual_cell_centre_m": [
+      3.477087364,
+      0.008346487182,
+      0.66125
+    ],
+    "alpha_water_at_maximum_residual": 0.4166666667,
+    "predicted_water_weighted_velocity_increment_at_maximum_m_per_s": 7.496703057e-07,
+    "atmosphere_acoustic_courant_at_max_delta_t": 31.64032528,
+    "atmosphere_maximum_delta_coefficient_per_m": 183.4332349,
+    "atmosphere_minimum_normal_cell_distance_m": 0.005451574794,
+    "atmosphere_acoustic_courant_maximum_face": 4745,
+    "atmosphere_acoustic_courant_maximum_face_centre_m": [
+      3.32,
+      0.0375,
+      1.85625
+    ],
+    "atmosphere_wave_speed_at_maximum_face_m_per_s": 344.9791996,
+    "atmosphere_delta_coefficient_at_maximum_face_per_m": 183.4332349
+  },
+  "initial_volume_audit": {
+    "pocket_target_m3": 0.0011977321991811086,
+    "pocket_mesh_m3": 0.0011939587248,
+    "pocket_relative_error": -0.0031505159364411117,
+    "paper_riser_water_target_m3": 0.0003504132445814056,
+    "paper_vair_over_vw_target": 3.418056302671687,
+    "mesh_pocket_over_paper_vw": 3.407287661818467,
+    "riser_nonoverlap_water_target_m3": 0.0003238667866585718,
+    "riser_nonoverlap_water_mesh_m3": 0.00031899987714,
+    "riser_nonoverlap_relative_error": -0.015027504267372205,
+    "pocket_ideal_gas_mass_target_kg": 0.0014276407696572862,
+    "pocket_ideal_gas_mass_from_mesh_volume_kg": 0.001423142964660968
+  },
+  "conservation": {
+    "max_abs_water_volume_residual_m3": 1.1293638433315952e-08,
+    "max_abs_water_volume_residual_fraction": 9.391932601009915e-07,
+    "max_abs_global_gas_mass_residual_kg": 3.0761997193863057e-10,
+    "max_abs_global_gas_mass_residual_fraction": 2.450970787968341e-09,
+    "max_abs_total_mass_residual_kg": 1.230733965319055e-07,
+    "max_abs_total_mass_residual_fraction": 1.0149283010899163e-08,
+    "internal_air_mass_initial_kg": 0.002167405682036528,
+    "internal_air_mass_final_kg": 0.0021674054015899005,
+    "maximum_atmosphere_absolute_mass_flux_kg_per_s": 1.531953846e-06,
+    "maximum_atmosphere_outflow_mass_flux_kg_per_s": 7.173152585855e-07,
+    "maximum_atmosphere_inflow_mass_flux_kg_per_s": 8.146385874145e-07,
+    "total_mass_boundary_flux": "direct sum(rhoPhi) on inlet and atmosphere",
+    "residual_reference": "first common runtime sample; t=0 volumes are audited separately"
+  },
+  "ejection": {
+    "cumulative_positive_rim_water_volume_m3": 0.0,
+    "cumulative_positive_rim_water_volume_l": 0.0,
+    "cumulative_atmosphere_escape_water_volume_m3": 0.0
+  },
+  "closed_hold": {
+    "applicable": false,
+    "minimum_duration_s": 1.0,
+    "duration_complete": null,
+    "thresholds_pass": null,
+    "free_surface_max_drift_m": 0.0,
+    "initial_pocket_zone_max_relative_volume_drift": 7.680380749341964e-05,
+    "pass": null,
+    "criteria": {
+      "free_surface_drift_m": 0.01,
+      "pocket_relative_volume_drift": 0.01,
+      "water_weighted_speed_m_per_s": 0.02
+    },
+    "all_domain_and_gas_speed_are_reported_but_not_gates": "Low-density gas-side CSF velocity is monitored separately; the hold gate uses phase-weighted water speed plus interface and pocket-volume drift."
+  },
+  "experiment": {
+    "geyser": true,
+    "Ta_s": 8.18,
+    "vfs_m_per_s": 0.657,
+    "vint_m_per_s": 0.916
+  },
+  "existing_1d": {
+    "geyser": false,
+    "Ta_s": 9.56,
+    "vfs_m_per_s": 0.4268,
+    "vint_m_per_s": 1.2369,
+    "Yfs_max_m": 0.82
+  },
+  "classification_changed_by_numerics": null,
+  "honesty_note": "Diagnostic: closed-balance then mild tutorial-ratio porous (Amin=1/Nface, D=2*I). Pressures stayed ~110 kPa through ~0.003 s then PIMPLE alpha/thermo diverged. Not an event result.",
+  "source_fingerprint": "d91be7805eac1b4f2e3daf61e177fc8db470f4c9044b189a10abbca6cc8c3718",
+  "solver_completed": false,
+  "solver_failure_reason": "Maximum number of iterations exceeded: 100 when starting from T0:296.15 old T:1.647246009e+35 new T:1.647246009e+35 f:6.888782812e+38 p:50000 tol:0.029615",
+  "numerical_controls": {
+    "mesh_profile": "prism_atmosphere",
+    "c_alpha": 1.0,
+    "initial_interface_thickness_m": 0.015,
+    "initial_interface_profile": "linear",
+    "n_hat_gradient_scheme": "least-squares",
+    "alpha_smooth_curvature": 0,
+    "max_co": 0.25,
+    "max_alpha_co": 0.15,
+    "max_delta_t_s": 0.0005,
+    "sample_interval_s": 0.001,
+    "surface_tension_n_per_m": 0.072,
+    "atmosphere_pressure_boundary": "wave-transmissive",
+    "parallel_processes": 4,
+    "parallel_decomposition": "simple-x",
+    "parallel_partition_shape": [
+      4,
+      1,
+      1
+    ]
+  }
+}

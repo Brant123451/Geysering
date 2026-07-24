@@ -1,0 +1,28 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      changeDictionaryDict;
+}
+
+boundary
+{
+    closedEnd
+    {
+        type            wall;
+        physicalType    wall;
+    }
+
+    walls
+    {
+        type            wall;
+        physicalType    wall;
+    }
+
+    riserWall
+    {
+        type            wall;
+        physicalType    wall;
+    }
+}

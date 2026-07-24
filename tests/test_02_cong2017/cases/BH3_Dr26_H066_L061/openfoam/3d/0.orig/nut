@@ -1,0 +1,26 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      nut;
+}
+
+dimensions      [0 2 -1 0 0 0 0];
+internalField   uniform 0;
+
+boundaryField
+{
+    "(inlet|atmosphere)"
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    "(closedEnd|walls|riserWall)"
+    {
+        type            nutkRoughWallFunction;
+        Ks              uniform 1e-6;
+        Cs              uniform 0.5;
+        value           uniform 0;
+    }
+}

@@ -1,0 +1,128 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+
+application     compressibleInterFoam;
+startFrom       latestTime;
+startTime       0;
+stopAt          endTime;
+endTime         13.0;
+deltaT          1e-6;
+writeControl    adjustableRunTime;
+writeInterval   0.05;
+purgeWrite      8;
+writeFormat     binary;
+writePrecision  8;
+writeCompression off;
+timeFormat      general;
+timePrecision   10;
+runTimeModifiable yes;
+adjustTimeStep  yes;
+maxCo           0.25;
+maxAlphaCo      0.15;
+maxDeltaT       5e-4;
+
+functions
+{
+    pressureProbes
+    {
+        type            probes;
+        libs            (sampling);
+        writeControl    adjustableRunTime;
+        writeInterval   0.005;
+        fields          (p p_rgh alpha.water U);
+        probeLocations
+        (
+            (1.0 0.005 0)          // PT-like near invert upstream
+            (5.5 0.005 0)          // near valve, invert
+            (3.47000 0.025 0)  // tee centreline
+        );
+    }
+
+    riserCentreline
+    {
+        type            probes;
+        libs            (sampling);
+        writeControl    adjustableRunTime;
+        writeInterval   0.005;
+        fields          (alpha.water U p);
+        probeLocations
+        (
+            (3.47000 0.05000 0)
+            (3.47000 0.10000 0)
+            (3.47000 0.15000 0)
+            (3.47000 0.20000 0)
+            (3.47000 0.25000 0)
+            (3.47000 0.30000 0)
+            (3.47000 0.35000 0)
+            (3.47000 0.40000 0)
+            (3.47000 0.45000 0)
+            (3.47000 0.50000 0)
+            (3.47000 0.55000 0)
+            (3.47000 0.60000 0)
+            (3.47000 0.65000 0)
+            (3.47000 0.70000 0)
+            (3.47000 0.75000 0)
+            (3.47000 0.80000 0)
+            (3.47000 0.85000 0)
+            (3.47000 0.90000 0)
+            (3.47000 0.95000 0)
+            (3.47000 1.00000 0)
+            (3.47000 1.05000 0)
+            (3.47000 1.10000 0)
+            (3.47000 1.15000 0)
+            (3.47000 1.20000 0)
+            (3.47000 1.25000 0)
+            (3.47000 1.30000 0)
+            (3.47000 1.35000 0)
+            (3.47000 1.40000 0)
+            (3.47000 1.45000 0)
+            (3.47000 1.50000 0)
+            (3.47000 1.55000 0)
+            (3.47000 1.60000 0)
+            (3.47000 1.65000 0)
+            (3.47000 1.70000 0)
+            (3.47000 1.75000 0)
+            (3.47000 1.80000 0)
+            (3.47000 1.85000 0)
+            (3.47000 1.90000 0)
+            (3.47000 1.95000 0)
+            (3.47000 2.00000 0)
+            (3.47000 2.05000 0)
+            (3.47000 2.10000 0)
+            (3.47000 2.15000 0)
+            (3.47000 2.20000 0)
+            (3.47000 2.25000 0)
+            (3.47000 2.30000 0)
+            (3.47000 2.35000 0)
+            (3.47000 2.40000 0)
+            (3.47000 2.45000 0)
+            (3.47000 2.50000 0)
+            (3.47000 2.55000 0)
+            (3.47000 2.60000 0)
+            (3.47000 2.65000 0)
+            (3.47000 2.70000 0)
+            (3.47000 2.75000 0)
+            (3.47000 2.80000 0)
+            (3.47000 2.85000 0)
+            (3.47000 2.90000 0)
+            (3.47000 2.95000 0)
+        );
+    }
+
+    waterVolume
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        writeControl    adjustableRunTime;
+        writeInterval   0.005;
+        writeFields     false;
+        log             false;
+        operation       volIntegrate;
+        fields          (alpha.water);
+    }
+}

@@ -1,0 +1,41 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p_rgh;
+}
+
+dimensions      [1 -1 -2 0 0 0 0];
+internalField   uniform 107786.651;
+
+boundaryField
+{
+    inlet
+    {
+        type            fixedValue;
+        value           uniform 107786.651;
+    }
+    closedEnd
+    {
+        type            fixedFluxPressure;
+        value           uniform 101325;
+    }
+    walls
+    {
+        type            fixedFluxPressure;
+        value           uniform 107786.651;
+    }
+    riserWall
+    {
+        type            fixedFluxPressure;
+        value           uniform 107786.651;
+    }
+    atmosphere
+    {
+        // Generated as either the hydrostatic fixed baseline or the declared
+        // acoustic-transmissive diagnostic. Initial face values are set from
+        // the same isothermal hydrostatic profile in both cases.
+        #include "../system/atmospherePressure.runtime"
+    }
+}

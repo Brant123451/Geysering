@@ -1,0 +1,81 @@
+#!/bin/bash
+cd "$(dirname "$0")" || exit 1
+
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
+
+PROFILE="${MESH_PROFILE:-base}"
+GEOMETRY_ARGS=()
+case "$PROFILE" in
+    base)
+        PIPE_SIZE=0.012
+        RISER_SIZE=0.005
+        ATMOSPHERE_SIZE=0.030
+        CURVATURE_ELEMENTS=40
+        ;;
+    refined)
+        PIPE_SIZE=0.009
+        RISER_SIZE=0.004
+        ATMOSPHERE_SIZE=0.025
+        CURVATURE_ELEMENTS=64
+        ;;
+    interface)
+        PIPE_SIZE=0.009
+        RISER_SIZE=0.004
+        ATMOSPHERE_SIZE=0.025
+        CURVATURE_ELEMENTS=64
+        GEOMETRY_ARGS=(--align-interface-band --interface-size 0.0025)
+        ;;
+    prism)
+        PIPE_SIZE=0.009
+        RISER_SIZE=0.004
+        ATMOSPHERE_SIZE=0.025
+        CURVATURE_ELEMENTS=64
+        GEOMETRY_ARGS=(--prism-interface-band)
+        ;;
+    prism_atmosphere)
+        PIPE_SIZE=0.009
+        RISER_SIZE=0.004
+        ATMOSPHERE_SIZE=0.025
+        CURVATURE_ELEMENTS=64
+        GEOMETRY_ARGS=(
+            --prism-interface-band
+            --prism-atmosphere-layers 92
+        )
+        ;;
+    *)
+        echo "MESH_PROFILE must be base, refined, interface, prism, or prism_atmosphere" >&2
+        exit 2
+        ;;
+esac
+
+if [[ -d constant/polyMesh ]]; then
+    echo "constant/polyMesh already exists; run ./Allclean first." >&2
+    exit 1
+fi
+
+python3 make_runtime_config.py > log.runtimeConfig.mesh 2>&1
+
+python3 make_geometry.py \
+    --riser-diameter 0.026 \
+    --atmosphere-width "${ATMOSPHERE_WIDTH:-0.300}" \
+    --mesh-output bh3.msh \
+    --pipe-size "$PIPE_SIZE" \
+    --riser-size "$RISER_SIZE" \
+    --atmosphere-size "$ATMOSPHERE_SIZE" \
+    --curvature-elements "$CURVATURE_ELEMENTS" \
+    "${GEOMETRY_ARGS[@]}" \
+    > log.geometry 2>&1
+
+gmshToFoam bh3.msh > log.gmshToFoam 2>&1
+changeDictionary -constant -noZero > log.changeDictionary 2>&1
+topoSet -dict system/topoSetDict.regions > log.topoSet.regions 2>&1
+checkMesh -allGeometry -allTopology > log.checkMesh 2>&1
+
+python3 mesh_audit.py \
+    --profile "$PROFILE" \
+    --check-mesh-log log.checkMesh \
+    --geometry-log log.geometry \
+    --output "outputs/mesh_${PROFILE}.json"
+
+echo "BH3_MESH_DONE profile=$PROFILE"

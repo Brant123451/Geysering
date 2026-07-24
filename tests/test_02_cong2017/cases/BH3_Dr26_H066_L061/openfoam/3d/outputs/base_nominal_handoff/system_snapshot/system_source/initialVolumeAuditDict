@@ -1,0 +1,47 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      initialVolumeAuditDict;
+}
+
+functions
+{
+    alphaAirAtT0
+    {
+        type            exprField;
+        libs            (fieldFunctionObjects);
+        field           alphaAirAtT0;
+        action          new;
+        useNamePrefix   false;
+        expression      "1-alpha.water";
+        dimensions      [0 0 0 0 0 0 0];
+        executeControl  timeStep;
+        writeControl    none;
+    }
+
+    initialPocketVolumeAtT0
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        fields          (alphaAirAtT0);
+        operation       volIntegrate;
+        regionType      cellZone;
+        name            initialPocket;
+        writeFields     false;
+        writeControl    timeStep;
+    }
+
+    initialRiserWaterVolumeAtT0
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        fields          (alpha.water);
+        operation       volIntegrate;
+        regionType      cellZone;
+        name            initialRiserWater;
+        writeFields     false;
+        writeControl    timeStep;
+    }
+}
