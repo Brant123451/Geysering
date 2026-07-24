@@ -1,18 +1,14 @@
 {
   "schema_version": 1,
   "run_id": "base_nominal_2d",
-  "updated_at_iso": "2026-07-24T05:12:13Z",
+  "updated_at_iso": "2026-07-24T05:12:36Z",
   "workdir": "/tmp/bh3-2d-study/base_nominal_2d",
-  "simulated_time_s": 10.09085528,
-  "deltaT_last": 0.0001428863,
+  "simulated_time_s": 10.10544331,
+  "deltaT_last": 0.00015634689,
   "event_end_time_s": 13.0,
-  "progress_fraction": 0.7762196369230769,
+  "progress_fraction": 0.7773417930769231,
   "n_workers": 4,
-  "foam_fatal": false,
-  "advanced": "yes",
-  "stall_count": 0,
   "status_level": "OK",
-  "eta_note": "bench ~2.8 sim-s/wall-h => ~5-8 wall-h for 13s (sleep stretches calendar)",
   "monitor_interval_s": 1200,
   "auto_recover": true
 }
