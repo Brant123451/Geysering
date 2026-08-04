@@ -1,0 +1,19 @@
+{
+  "root": "E:\\Geysering",
+  "file_count": 16273,
+  "total_bytes": 1029901824,
+  "unhashed_large_file_count": 3,
+  "hash_limit_bytes": 26214400,
+  "files_by_top_level": {
+    "(root)": 36,
+    ".cursor": 3,
+    "Cong_Chan_Lee_2017_Geyser_Horizontal_Pipe_Vertical_Shaft": 690,
+    "Liu_Shao_Zhu_2020_Junction_Chamber_Geyser": 254,
+    "Vasconcelos_Wright_2011_Geysering": 14998,
+    "docs": 2,
+    "paper": 60,
+    "papers": 9,
+    "reproduction": 213,
+    "tools": 8
+  }
+}

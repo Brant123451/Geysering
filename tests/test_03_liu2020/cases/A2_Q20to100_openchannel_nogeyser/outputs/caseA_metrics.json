@@ -1,0 +1,27 @@
+{
+  "case": "Liu2020 A2: Q 20->100 L/s, downstream open channel",
+  "model": {
+    "geyser": false,
+    "hr_max": 0.473090283738013,
+    "PT3_initial_kPa": 1.2878461121561207,
+    "PT3_window_7_14_kPa": 5.127620463502403,
+    "PT2_window_7_14_kPa": 0.27847872582158756,
+    "PT3_steady_kPa": 5.257161477735355,
+    "PT2_steady_kPa": 1.797916040017686,
+    "mass_error_L": 2.8976820942716586e-11
+  },
+  "paper": {
+    "PT3_initial_kPa": 0.99,
+    "PT2_final_kPa": 2.15,
+    "PT3_final_kPa": 4.99,
+    "PT2_PT3_osc_period_s": 0.3,
+    "bore_reach_chamber_s": 1.2,
+    "PT1_fluct_window": [
+      2.0,
+      6.0
+    ],
+    "h_first_column_m": 0.13,
+    "h_bernoulli_est_m": 0.33,
+    "geyser": false
+  }
+}

@@ -1,0 +1,102 @@
+\documentclass[preprint,review,12pt]{elsarticle}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{placeins}
+\usepackage{lineno}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,positioning,patterns}
+\usepackage[colorlinks]{hyperref}
+
+\hypersetup{hypertexnames=false}
+\renewcommand{\linenumberfont}{\normalfont\tiny\color{gray}}
+\graphicspath{{figures/}}
+
+% Placeholder marker for content still to be decided/completed.
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+% Jump bracket for Rankine--Hugoniot conditions.
+\newcommand{\jump}[1]{\left[\!\left[#1\right]\!\right]}
+
+\journal{Engineering Applications of Computational Fluid Mechanics}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{Experimental assessment of a gas-conserving one-dimensional model for
+entrapped-air-driven geysering}
+
+\ifdefined\anonymoussubmission
+\author{Anonymous manuscript}
+\else
+\author{Zijian Xue, Ling Zhou, and David Z. Zhu\corref{cor1}}
+\cortext[cor1]{Corresponding author}
+\fi
+
+\begin{abstract}
+Entrapped-air release through water-filled shafts can cause destructive
+geysering in stormwater and combined-sewer systems. Network-scale assessment
+requires a reduced model, but many one-dimensional formulations prescribe
+gas release and cannot predict the transition from benign
+venting to eruption. This study evaluates a gas-conserving mixed-flow
+framework, developed in a companion methods paper, against three published
+experimental campaigns. The vertical shaft uses the same decoupled two-fluid
+equations as the horizontal conduit and connects through a regime-conditioned
+junction closure. Simulations use reported initial conditions and a frozen
+numerical configuration, with neither prescribed release histories nor fitted
+geyser heights. In the ventilation-shaft experiments, the model selects the
+correct branch for both a wide,
+non-geysering tower and a narrow, geysering tower. It reproduces the principal
+pressure levels and water-column motions. In the narrow tower, however, the
+computed interface velocity is approximately one half of the measured value,
+and interface breakthrough occurs after the experimental event despite an
+early arrival at the shaft. In the horizontal-pipe/vertical-riser campaign,
+the model classifies 5 of 7 filmed cases and 39 of 63 configurations in the
+published parameter sweep. All 24 sweep errors are missed geysers near the
+transition band; no false geyser is predicted. In the junction-chamber
+campaign, the model reproduces the A2/B3 outcome reversal caused by the
+downstream boundary and captures the timing and scale of the first C9
+transient, while under-resolving the short B3 pressure peak. The comparisons
+show that resolved gas transport recovers the principal branch physics across
+distinct apparatuses. Quantitative errors concentrate
+in shaft-mouth exchange, coherent-film topology, and acoustic/chamber
+reduction. The framework is therefore useful for mechanism-based system
+assessment, but its missed-eruption bias must be reduced before stand-alone
+hazard screening near the regime boundary.
+\end{abstract}
+
+\begin{keyword}
+geysering \sep entrapped air pocket \sep stormwater system \sep vertical shaft
+\sep two-fluid model \sep transient mixed flow
+\end{keyword}
+
+\end{frontmatter}
+\linenumbers
+
+\input{sections/introduction}
+\input{sections/model}
+\input{sections/tests}
+\input{sections/discussion}
+
+\section*{Data Availability Statement}
+
+The data and materials supporting the findings of this study are available
+from the corresponding author upon reasonable request. A persistent archive
+identifier will be added if the project repository is deposited before
+submission.
+
+\section*{Declaration of Generative AI Use}
+
+Generative AI tools were used to assist language revision and manuscript
+organization. The authors critically reviewed and edited all generated
+material and take full responsibility for the content of the manuscript.
+
+\bibliographystyle{elsarticle-num}
+\bibliography{references}
+
+\end{document}

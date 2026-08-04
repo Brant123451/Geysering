@@ -1,0 +1,31 @@
+{
+  "local_module": "E:\\Geysering\\tests\\test_01_vw2011\\cases\\A_Dt57p1_Ha0305_Yfs0356\\model\\casea_decoupled_ikh_model.py",
+  "scope": "Case-A local stratified-branch IKH audit",
+  "source_files": [
+    {
+      "path": "E:\\Research\\\u8bba\u6587\\my sci\\appendix_b_current_model_en.tex",
+      "sha256": "e7dd3b12d3d7bc261b3858d39a69c70dfcf15e40a60b3ed523bc9ed86ecad602"
+    },
+    {
+      "path": "E:\\Research\\\u8bba\u6587\\my sci\\main_text_current_algorithm.tex",
+      "sha256": "11f873fa0f0b444f440061366e63aae1d585626adeb4d67e303492d1b069d80d"
+    },
+    {
+      "path": "E:\\Research\\\u8bba\u6587\\my sci\\decoupled_model_dispersion_5p1.py",
+      "sha256": "40ed1b7bb4f653694572a8ecece1426b9495540853fd84e81d31b54490b1f8d3"
+    },
+    {
+      "path": "E:\\Research\\The lase case\\paper_solver_copy\\run_own_model_slug_5_3.py",
+      "sha256": "ce840113b9fd9857ca56c84c318ff8296df4467ad00a830e3d49990e235ae935"
+    }
+  ],
+  "equations": [
+    "A16",
+    "A17",
+    "A30",
+    "A31",
+    "31",
+    "32"
+  ],
+  "known_boundary": "The full pressurised cut-cell/T-junction solver is not present at the path referenced by the companion manuscript generator; this module therefore does not claim a coupled-network replacement."
+}

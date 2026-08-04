@@ -1,0 +1,33 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      createBafflesDict;
+}
+
+internalFacesOnly true;
+noFields          true;
+
+baffles
+{
+    closedValve
+    {
+        type        faceZone;
+        zoneName    valvePlane;
+
+        patches
+        {
+            master
+            {
+                name    valveWallUpstream;
+                type    wall;
+            }
+            slave
+            {
+                name    valveWallDownstream;
+                type    wall;
+            }
+        }
+    }
+}

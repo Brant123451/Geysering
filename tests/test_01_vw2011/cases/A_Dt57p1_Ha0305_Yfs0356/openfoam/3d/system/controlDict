@@ -1,0 +1,79 @@
+/* Three-dimensional circular VOF run for V&W2011 Case A. */
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+
+application     compressibleInterFoam;
+
+startFrom       latestTime;
+startTime       0;
+stopAt          endTime;
+endTime         9.0;
+
+deltaT          1e-6;
+
+writeControl    adjustableRunTime;
+writeInterval   0.10;
+purgeWrite      0;
+writeFormat     binary;
+writePrecision  8;
+writeCompression off;
+
+timeFormat      general;
+timePrecision   10;
+runTimeModifiable yes;
+
+adjustTimeStep  yes;
+maxCo           0.20;
+maxAlphaCo      0.15;
+maxDeltaT       0.00025;
+
+functions
+{
+    transducer
+    {
+        type            probes;
+        libs            (sampling);
+        fields          (p p_rgh alpha.water U);
+        probeLocations
+        (
+            (1.616 -0.043 0)
+        );
+        writeControl    adjustableRunTime;
+        writeInterval   0.005;
+    }
+
+    towerCentreline
+    {
+        type            probes;
+        libs            (sampling);
+        fields          (alpha.water U p);
+        probeLocations
+        (
+            #include "towerProbeLocations"
+        );
+        writeControl    adjustableRunTime;
+        writeInterval   0.005;
+    }
+
+    // Samples above the physical rim.  Any alpha.water signal here is an
+    // actual ejection into the external atmosphere, not merely a full tower.
+    plumeCentreline
+    {
+        type            probes;
+        libs            (sampling);
+        fields          (alpha.water U p);
+        probeLocations
+        (
+            #include "plumeProbeLocations"
+        );
+        writeControl    adjustableRunTime;
+        writeInterval   0.005;
+    }
+}
+
+// ************************************************************************* //

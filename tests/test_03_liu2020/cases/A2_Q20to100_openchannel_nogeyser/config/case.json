@@ -1,0 +1,7 @@
+{
+  "case": "A2",
+  "flow_lps_initial": 20,
+  "flow_lps_final": 100,
+  "downstream": "open_channel",
+  "observed_branch": "no_geyser"
+}

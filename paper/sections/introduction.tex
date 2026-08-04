@@ -1,0 +1,82 @@
+\section{Introduction}
+\label{sec:intro}
+
+Geysering is the rapid expulsion of an air--water mixture through a manhole,
+dropshaft, or ventilation shaft during transient filling of a drainage
+system. The resulting jet can displace covers, damage nearby infrastructure,
+and endanger the public. Field pressure records rule out a purely inertial
+water-column explanation because the piezometric head near an erupting shaft
+need not reach ground level \cite{wright2011note}. Controlled experiments
+instead identify the release and expansion of a large entrapped air pocket
+through a partly or fully water-filled shaft as the principal driving
+mechanism \cite{vasconcelos2011,wright2011note}.
+
+Laboratory evidence now spans several manifestations of this mechanism.
+Vasconcelos and Wright \cite{vasconcelos2011} isolated air-pocket release in
+a single ventilation shaft and documented both benign venting and geysering.
+Cong et al.\ \cite{cong2017} varied riser diameter and initial pocket volume
+systematically and proposed a two-parameter regime criterion. Later studies
+examined larger shafts \cite{muller2017}, prototype-motivated junction
+chambers \cite{liu2020}, covered manholes \cite{zhang2022}, and mitigation
+measures \cite{qian2020}. Related multiphase-flow work has also isolated the
+rapid expansion of a Taylor bubble in a vertical liquid column
+\cite{zhouprosperetti2019}. Together, these studies show that geysering is not
+set by a pressure threshold alone. It emerges from competition among pocket
+compression, gas delivery to the shaft, counter-current exchange, and the
+time available for the water column to reach the rim.
+
+Available numerical approaches resolve different parts of this competition.
+Three-dimensional volume-of-fluid simulations can reproduce the local
+interface and jet structure of an individual event \cite{chan2018}. Their
+cost, however, limits their use for network-scale studies involving many
+shafts and rainfall scenarios. One-dimensional mixed-flow solvers are more
+suited to that scale, but their gas representation is often prescribed.
+Preissmann-slot and two-component-pressure models primarily follow liquid
+pressurization \cite{vasconcelos2006}. Entrapped gas is then introduced
+through a lumped pocket law, a specified release rate, or a boundary
+condition. Rigid-column two-phase models likewise require the gas-pocket and
+water-column topology to be known in advance \cite{vasconcelos2011}. Such
+models can interpret a selected apparatus, but they cannot independently test
+whether the computed gas--liquid dynamics select venting or eruption.
+
+A companion methods paper \cite{xue2026model} addressed this modelling gap
+for transient mixed flow in closed conduits. Its stratified branch conserves
+gas mass and gas momentum within a decoupled two-fluid system. Its liquid-full
+branch uses an elastic-pipe closure, while moving pressurized--stratified
+interfaces are solved as Regime-Transition Riemann Problems. A conservative
+cut-cell update tracks these fronts without prescribing their motion. The
+methods paper established the numerical formulation through canonical
+mixed-flow tests and included a schematic geyser-onset example. It did not
+quantitatively assess the framework against geysering experiments.
+
+The present study provides that application-level assessment. The companion
+framework is extended to each experimental layout by representing the shaft
+as the same one-dimensional two-fluid system rotated into the vertical. A
+local junction closure connects the shaft to the horizontal conduit. The
+closure is conditioned on the resolved flow regime and geometry, but its
+parameters and the numerical configuration are frozen before comparison.
+Consequently, gas release, water-column displacement, and regime selection
+are computed outcomes. No measured release history or geyser trajectory is
+imposed.
+
+The assessment is organized around three complementary evidence sets. The
+first campaign compares time-resolved pressure, interface, and free-surface
+histories for the non-geysering and geysering ventilation-shaft tests of
+Vasconcelos and Wright \cite{vasconcelos2011}. The second treats the model as
+a regime classifier against the seven filmed riser tests and the
+63-configuration parameter sweep of Cong et al.\ \cite{cong2017}. The third
+examines the junction-chamber experiments of Liu et al.\ \cite{liu2020},
+including a downstream-boundary branch reversal and a transient mass-
+oscillation event. These campaigns test increasingly complex questions:
+whether the model selects the correct branch, whether that selection
+generalizes across a regime map, and whether the reduced representation
+retains the first-order dynamics of a prototype-motivated chamber.
+
+This paper therefore asks a narrower question than the companion methods
+study: how far can a gas-conserving one-dimensional framework reproduce
+observed geysering before unresolved junction, film, and acoustic physics
+become controlling? Section~\ref{sec:model} summarizes the formulation and
+defines the application-specific closures. Section~\ref{sec:tests} reports
+the three experimental comparisons. Section~\ref{sec:discussion} interprets
+the common successes and failure modes, and Section~\ref{sec:conclusions}
+states the resulting scope of use.

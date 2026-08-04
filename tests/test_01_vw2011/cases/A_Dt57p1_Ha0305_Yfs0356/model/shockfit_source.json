@@ -1,0 +1,8 @@
+{
+  "role": "frozen self-contained horizontal shock-fitting core for Case A",
+  "source_case": "B_Dt12p7_Ha0610_Yfs0356",
+  "source_file": "tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356/model/tosan2021_horizontal_shockfit.py",
+  "local_file": "tosan2021_horizontal_shockfit.py",
+  "sha256": "5FC8BBBF273A5D85C771E7E49EB3692F8284C55EF2F8A34887A3C3CD00574212",
+  "copy_policy": "local frozen copy; no runtime import from another case"
+}

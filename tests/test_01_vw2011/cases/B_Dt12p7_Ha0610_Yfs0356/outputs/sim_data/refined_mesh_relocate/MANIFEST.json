@@ -1,0 +1,30 @@
+{
+  "archive_id": "refined_mesh_relocate",
+  "case": "VW2011 Test 1 Case B",
+  "path": "tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356/outputs/sim_data/refined_mesh_relocate",
+  "created_utc": "2026-07-17",
+  "purpose": "Hand off incomplete refined mesh (Relocate3D) for local continuation; solver never started",
+  "mesh": {
+    "preset": "refined",
+    "optimizer": "relocate",
+    "cells": 5522016,
+    "nominal_cells_across_tower": 18.14,
+    "standard_checkMesh": "Mesh OK",
+    "strict_checkMesh": "Failed 3",
+    "strict_failures": [
+      "866 underdetermined cells (small determinant)",
+      "2 low-weight faces",
+      "2 low volume-ratio faces"
+    ],
+    "mesh_gate": "rejected",
+    "solver_started": false
+  },
+  "artifacts": {
+    "caseB3d.msh.tar.xz": "mesh/caseB3d.msh.tar.xz",
+    "polyMesh.tar.xz": "mesh/polyMesh.tar.xz",
+    "logs": "logs/",
+    "runtime": "runtime/",
+    "handoff": "MESH_HANDOFF.md"
+  },
+  "parent_handoff": "../../LOCAL_HANDOFF.md"
+}

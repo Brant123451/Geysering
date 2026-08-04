@@ -1,0 +1,28 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      thermophysicalProperties;
+}
+
+phases          (water air);
+pMin            50000;
+
+water
+{
+    type        pureMovingPhaseModel;
+}
+
+air
+{
+    type        pureMovingPhaseModel;
+}
+
+sigma
+{
+    type        constant;
+    sigma       0.072;
+}
+
+#include "surfaceForces"

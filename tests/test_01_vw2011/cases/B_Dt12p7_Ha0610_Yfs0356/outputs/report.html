@@ -1,0 +1,167 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<title>Case B: V&amp;W(2011) Dt=12.7mm 小塔（喷发）对比</title>
+<style>
+body{font-family:-apple-system,Segoe UI,Arial,'Microsoft YaHei',sans-serif;margin:0;background:#f6f8fb;color:#1f2937}
+.wrap{max-width:1180px;margin:24px auto;padding:0 18px}
+.panel{background:#fff;border:1px solid #ddd;border-radius:12px;padding:16px;margin-bottom:16px}
+img{width:100%;border:1px solid #ddd;border-radius:10px;background:#fff}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #eee}
+th{background:#f3f4f6}
+p{line-height:1.55;color:#374151}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.muted{font-size:13px;color:#6b7280}
+</style></head><body><div class="wrap">
+<h1>Case B — V&amp;W(2011) 小塔工况（喷发分支）</h1>
+<p>工况：<code>Dt=12.7 mm</code>（Dt/D=0.135）、<code>Ha0=0.610 m</code>、<code>WL=0.356 m</code>。
+无量纲化：T*=t·√(gDt)/L，H*=H/L，Y*=Y/L（L=0.610&nbsp;m；本工况 T*=1 对应 1.73&nbsp;s）。</p>
+<div class="panel">
+  <h2 style="margin-top:0">论文中与 Case B 相关的图</h2>
+  <table>
+    <tr><th>论文图</th><th>内容</th><th>与本工况的关系</th><th>本报告中的对照</th></tr>
+    <tr><td><b>Fig.6</b>（p6）</td><td>压头 H*(T*)，Dt*=0.135 的 3×3 面板阵</td>
+        <td><b>正是本工况</b>：中心面板 = Ha0=0.610、WL=0.356，3 次重复</td>
+        <td>数字化后与模型叠加（下方"压头"图）</td></tr>
+    <tr><td><b>Fig.8</b>（p8）</td><td>水面 Y*fs / 界面 Y*int，Dt*=0.135 的 3×3 面板阵，窗口 T*=3–5</td>
+        <td><b>正是本工况</b>：中心面板，3 次重复</td>
+        <td>数字化后与模型叠加（下方"水位/界面"图）</td></tr>
+    <tr><td><b>Table 2</b>（p8）</td><td>各塔径的无量纲爬升速度平均值</td>
+        <td>Dt*=0.135 行：V*int=1.43、V*fs=0.44</td>
+        <td>对照表"爬升速度"两行</td></tr>
+    <tr><td><b>Fig.3</b>（p3）</td><td>喷发实验流动演化示意（阀开→气囊推进→抵塔）</td>
+        <td>通用机理图；中间小图注明"开阀后塔水位振荡、幅值随时间衰减"——与模型的释放振荡同源</td>
+        <td>下方原图收录</td></tr>
+    <tr><td><b>Fig.11</b>（p11）</td><td>论文自家 TPA 模型 vs 实验的五联图，Dt*=0.135</td>
+        <td>同塔径但<b>不同初值</b>（Ha0=0.305、WL=0.254）；我们用同一冻结求解器改初值复跑对照</td>
+        <td>"Fig.11 对照"栏（红线直接叠画原图）</td></tr>
+    <tr><td class="muted">Fig.1/2/9</td><td class="muted">现场喷发照片 / 实验装置图 / 模型变量示意</td>
+        <td class="muted">通用背景，与具体工况无关</td><td class="muted">—</td></tr>
+    <tr><td class="muted">Fig.4/5/7/10</td><td class="muted">气囊爬升照片、压头、水位、模型对照</td>
+        <td class="muted">均为大塔 Dt*=0.607（= caseA 的对标图）</td>
+        <td class="muted">见 caseA 报告</td></tr>
+    <tr><td class="muted">Fig.12</td><td class="muted">模型预测的水面抬升-初始水位参数图（全部塔径）</td>
+        <td class="muted">参数化汇总，非时间序列</td><td class="muted">—</td></tr>
+  </table>
+</div>
+<div class="panel">
+  <h2 style="margin-top:0">论文原图（扫描面板）</h2>
+  <div class="grid2">
+    <div><h3 style="margin:4px 0">Fig.6 本工况面板（压头）</h3><img src="digitized/fig6_caseB_panel.png"></div>
+    <div><h3 style="margin:4px 0">Fig.8 本工况面板（水面/界面）</h3><img src="digitized/fig8_caseB_panel.png"></div>
+  </div>
+  <h3 style="margin:12px 0 4px 0">Fig.3 流动演化示意（论文机理图）</h3>
+  <img src="paper_scans/fig3_schematic.png">
+  <p class="muted">注意中间小图的标注："Water level oscillates after valve is opened, but amplitude
+  reduces with time"——实验本身就有开阀释放振荡（论文正文第 4 条亦有描述），模型解析出的
+  水柱-气囊弹簧振荡与之同源，差异只在衰减速率。</p>
+</div>
+
+<div class="panel">
+  <h2 style="margin-top:0">出版级重绘图（论文实际收录版本）</h2>
+  <p class="muted">以下为论文（E:\Geysering\paper）收录的自绘矢量图的 PNG 预览，
+  由 caseB_plot_pub.py 生成；数据与下方叠加对比图同源（同一冻结求解器输出 +
+  同一数字化 CSV）。</p>
+  <h3>压头 H*：三次重复数字化包络+中位（灰/黑）+ 模型管顶基准 0.4 s 周期平均（红粗）+ 管底基准原始记录（红浅）</h3><img src="outputs/caseB_pressure_pub.png">
+  <h3>水位/界面 Y*（发表窗口 T*=3–5）：实验散点（三角=水面，圆=界面）+ 模型曲线+ 刚体平移 +0.54 的浅色对照线（模型画至实验覆盖终点）</h3><img src="outputs/caseB_levels_pub.png">
+</div>
+<div class="panel">
+  <h2 style="margin-top:0">叠加对比（工作版全量图）</h2>
+  <h3>压头 H*(T*)</h3><img src="outputs/caseB_comparison_pressure.png">
+  <h3>塔内水面与气水界面 Y*(T*)</h3><img src="outputs/caseB_comparison_levels.png">
+  <h3>事件时刻与量值对照</h3>
+  <table>
+    <tr><th>指标</th><th>论文实验（数字化）</th><th>模型</th><th>备注</th></tr>
+    <tr><td>是否喷发（水面到塔顶）</td><td>是（每次重复都喷发）</td><td>是（水面最高 1.00L）</td><td></td></tr><tr><td>塔水位平台（气体进塔前）</td><td>0.82</td><td>0.84</td><td>静水位=气囊准静态平衡</td></tr><tr><td>压头平台 H*（T*≈1–3 中位）</td><td>0.76</td><td>0.75（管顶基准）/ 0.91（管底）</td><td>论文读数与管顶基准一致</td></tr><tr><td>气水界面进入塔（Y*int 离底）</td><td>T*=3.65（6.3 s）</td><td>T*=3.52（6.1 s）</td><td>模型偏早 ~0.6 T*</td></tr><tr><td>气水界面到达塔顶</td><td>T*=3.85（6.6 s）</td><td>T*=4.44（7.7 s）</td><td></td></tr><tr><td>自由水面到顶（喷发）</td><td>T*=3.90（6.7 s）</td><td>T*=3.70（6.4 s）</td><td></td></tr><tr><td>压头骤降（气囊排空）</td><td>T*=4.05（7.0 s）</td><td>T*=4.49（7.8 s）</td><td>气体贯通塔顶触发</td></tr><tr><td>界面爬升速度 V*int（√(gDt) 归一）</td><td>1.43（Table 2 平均）</td><td>0.71</td><td>取 Y*int 0.1–0.8 段斜率</td></tr><tr><td>水面爬升速度 V*fs（√(gDt) 归一）</td><td>0.44（Table 2 平均）</td><td>0.39</td><td>取喷发前最后爬升段斜率</td></tr>
+  </table>
+  <p class="muted"><b>基准面说明</b>：模型隧道压力记录在管底（invert）基准；通风塔物理上接在管顶（crown），
+  论文压头面板与"等温气囊 EOS + 实测塔水位 + 管顶基准"的静力学自洽（差 ~0.02 L），故叠加图以
+  管顶基准（-D/L=0.154）为主对比曲线，管底原始记录淡色保留。<br>
+  <b>吻合点</b>：喷发分支（水面到顶）、气体进塔前塔水位平台（模型 ~0.85 vs 实验 ~0.82，
+  即气囊准静态平衡位）、压头平台（管顶基准 ~0.78 vs 实验 0.76）、界面爬升-水面爬升-压头骤降的
+  相对时序（进塔→喷发→贯通→骤降）。<br>
+  <b>差异点</b>：整段气体时序偏早 ~0.5–0.6 T*（水平管 crown current 抵塔偏早，与 caseA 同向）；
+  释放振荡衰减偏慢（水柱-气囊弹簧模态，实验 ~1 T* 内衰减）；喷发后模型塔柱随排气回落（实验窗口内
+  无 fs 数据可对比）。数字化中间产物见 <code>digitized/</code>；模型无量纲序列见
+  <code>outputs/caseB_model_series.csv</code>。</p>
+</div>
+
+<div class="panel">
+  <h2 style="margin-top:0">两流体模拟逐帧查看器 — 水平管 + 通风塔全场演化</h2>
+  <p class="muted">同一冻结求解器的 Case B 全场演化（水=蓝，气=白/浅灰）：
+  阀开释放振荡 → 塔水位抬升到准静态平衡（~0.5L） → 气囊沿管顶推进 →
+  抵塔、驱动气核爬升（水面被顶托到塔顶=喷发） → 贯通排气 → 压头塌落、塔柱回落。
+  <b>左图为真实比例 1:1</b>（管径 D=94 mm、塔径 Dt=12.7 mm 均按真实尺寸），
+  本工况的塔在全局图上只是一根发丝——塔内细节请看右侧放大同步视图
+  （按当地两流体气含率 α_g 画气核宽度）。左右方向键 / 滑块 / 播放均可调帧。</p>
+  <p class="muted"><b>时间跨度说明</b>：t=0 为开阀时刻，模拟到 9 s 结束——本工况
+  1 T* = 1.73 s，论文曲线窗口 T*=5 对应 8.6 s，9 s 已完整覆盖（平衡段→气囊抵塔→
+  气核爬升/喷发→贯通排气→压头归零→塔柱回落）。</p>
+  <div class="meta" style="display:flex;gap:18px;margin:10px 0;font-weight:700;flex-wrap:wrap">
+    <span id="vIdx"></span><span id="vTime"></span><span id="vTstar"></span><span id="vWtop"></span>
+    <span id="vItop"></span><span id="vMass"></span><span id="vHead"></span></div>
+  <div style="display:grid;grid-template-columns:minmax(0,2.9fr) minmax(220px,1fr);gap:14px;align-items:start">
+    <div><h3 style="margin:0 0 8px 0;font-size:15px">全局 1:1 视图</h3>
+      <img id="vFrame" style="width:100%">
+      <p class="muted" style="margin:6px 0 0 0">水平管按截面含水率显示分层气团推进。</p></div>
+    <div><h3 style="margin:0 0 8px 0;font-size:15px">竖管放大同步视图</h3>
+      <img id="vRiser" style="width:100%">
+      <p class="muted" style="margin:6px 0 0 0">气核宽度 = 当地 α_g（无阈值化）；
+      蓝线=可见水面（含气核顶托），红虚线=气相前沿。</p></div>
+  </div>
+  <div style="margin-top:8px">
+    <button id="vPrev" style="padding:8px 14px;margin:6px;border:1px solid #bbb;border-radius:8px;background:#fff;cursor:pointer">上一帧</button>
+    <button id="vPlay" style="padding:8px 14px;margin:6px;border:1px solid #bbb;border-radius:8px;background:#fff;cursor:pointer">播放</button>
+    <input id="vSlider" type="range" style="width:60%;vertical-align:middle">
+    <button id="vNext" style="padding:8px 14px;margin:6px;border:1px solid #bbb;border-radius:8px;background:#fff;cursor:pointer">下一帧</button>
+  </div>
+  <p class="muted">整段 GIF 备份：<a href="outputs/caseB_animation.gif">caseB_animation.gif</a></p>
+</div>
+<script>
+const vFrames=[{"file": "outputs/frames/frame_0000.png", "riserFile": "outputs/riser_frames/riser_0000.png", "time": 0.0, "wtop": 0.36, "itop": 0.0, "coreMassMg": 0.0, "head": 0.61}, {"file": "outputs/frames/frame_0001.png", "riserFile": "outputs/riser_frames/riser_0001.png", "time": 0.1, "wtop": 0.39, "itop": 0.0, "coreMassMg": 0.0, "head": 0.461}, {"file": "outputs/frames/frame_0002.png", "riserFile": "outputs/riser_frames/riser_0002.png", "time": 0.2, "wtop": 0.4, "itop": 0.0, "coreMassMg": 0.0, "head": 0.382}, {"file": "outputs/frames/frame_0003.png", "riserFile": "outputs/riser_frames/riser_0003.png", "time": 0.3, "wtop": 0.41, "itop": 0.0, "coreMassMg": 0.0, "head": 0.509}, {"file": "outputs/frames/frame_0004.png", "riserFile": "outputs/riser_frames/riser_0004.png", "time": 0.4, "wtop": 0.43, "itop": 0.0, "coreMassMg": 0.0, "head": 0.569}, {"file": "outputs/frames/frame_0005.png", "riserFile": "outputs/riser_frames/riser_0005.png", "time": 0.5, "wtop": 0.46, "itop": 0.0, "coreMassMg": 0.0, "head": 0.462}, {"file": "outputs/frames/frame_0006.png", "riserFile": "outputs/riser_frames/riser_0006.png", "time": 0.6, "wtop": 0.47, "itop": 0.0, "coreMassMg": 0.0, "head": 0.408}, {"file": "outputs/frames/frame_0007.png", "riserFile": "outputs/riser_frames/riser_0007.png", "time": 0.7, "wtop": 0.46, "itop": 0.0, "coreMassMg": 0.0, "head": 0.545}, {"file": "outputs/frames/frame_0008.png", "riserFile": "outputs/riser_frames/riser_0008.png", "time": 0.8, "wtop": 0.48, "itop": 0.0, "coreMassMg": 0.0, "head": 0.56}, {"file": "outputs/frames/frame_0009.png", "riserFile": "outputs/riser_frames/riser_0009.png", "time": 0.9, "wtop": 0.49, "itop": 0.0, "coreMassMg": 0.0, "head": 0.418}, {"file": "outputs/frames/frame_0010.png", "riserFile": "outputs/riser_frames/riser_0010.png", "time": 1.0, "wtop": 0.48, "itop": 0.0, "coreMassMg": 0.0, "head": 0.482}, {"file": "outputs/frames/frame_0011.png", "riserFile": "outputs/riser_frames/riser_0011.png", "time": 1.1, "wtop": 0.48, "itop": 0.0, "coreMassMg": 0.0, "head": 0.616}, {"file": "outputs/frames/frame_0012.png", "riserFile": "outputs/riser_frames/riser_0012.png", "time": 1.2, "wtop": 0.49, "itop": 0.0, "coreMassMg": 0.0, "head": 0.478}, {"file": "outputs/frames/frame_0013.png", "riserFile": "outputs/riser_frames/riser_0013.png", "time": 1.3, "wtop": 0.48, "itop": 0.0, "coreMassMg": 0.0, "head": 0.444}, {"file": "outputs/frames/frame_0014.png", "riserFile": "outputs/riser_frames/riser_0014.png", "time": 1.4, "wtop": 0.48, "itop": 0.0, "coreMassMg": 0.0, "head": 0.591}, {"file": "outputs/frames/frame_0015.png", "riserFile": "outputs/riser_frames/riser_0015.png", "time": 1.5, "wtop": 0.49, "itop": 0.0, "coreMassMg": 0.0, "head": 0.516}, {"file": "outputs/frames/frame_0016.png", "riserFile": "outputs/riser_frames/riser_0016.png", "time": 1.6, "wtop": 0.48, "itop": 0.0, "coreMassMg": 0.0, "head": 0.425}, {"file": "outputs/frames/frame_0017.png", "riserFile": "outputs/riser_frames/riser_0017.png", "time": 1.7, "wtop": 0.47, "itop": 0.0, "coreMassMg": 0.0, "head": 0.578}, {"file": "outputs/frames/frame_0018.png", "riserFile": "outputs/riser_frames/riser_0018.png", "time": 1.82, "wtop": 0.49, "itop": 0.0, "coreMassMg": 0.0, "head": 0.487}, {"file": "outputs/frames/frame_0019.png", "riserFile": "outputs/riser_frames/riser_0019.png", "time": 1.92, "wtop": 0.48, "itop": 0.0, "coreMassMg": 0.0, "head": 0.462}, {"file": "outputs/frames/frame_0020.png", "riserFile": "outputs/riser_frames/riser_0020.png", "time": 2.02, "wtop": 0.48, "itop": 0.0, "coreMassMg": 0.0, "head": 0.593}, {"file": "outputs/frames/frame_0021.png", "riserFile": "outputs/riser_frames/riser_0021.png", "time": 2.12, "wtop": 0.5, "itop": 0.0, "coreMassMg": 0.0, "head": 0.464}, {"file": "outputs/frames/frame_0022.png", "riserFile": "outputs/riser_frames/riser_0022.png", "time": 2.22, "wtop": 0.49, "itop": 0.0, "coreMassMg": 0.0, "head": 0.505}, {"file": "outputs/frames/frame_0023.png", "riserFile": "outputs/riser_frames/riser_0023.png", "time": 2.32, "wtop": 0.49, "itop": 0.0, "coreMassMg": 0.0, "head": 0.567}, {"file": "outputs/frames/frame_0024.png", "riserFile": "outputs/riser_frames/riser_0024.png", "time": 2.42, "wtop": 0.5, "itop": 0.0, "coreMassMg": 0.0, "head": 0.445}, {"file": "outputs/frames/frame_0025.png", "riserFile": "outputs/riser_frames/riser_0025.png", "time": 2.52, "wtop": 0.49, "itop": 0.0, "coreMassMg": 0.0, "head": 0.568}, {"file": "outputs/frames/frame_0026.png", "riserFile": "outputs/riser_frames/riser_0026.png", "time": 2.62, "wtop": 0.5, "itop": 0.0, "coreMassMg": 0.0, "head": 0.51}, {"file": "outputs/frames/frame_0027.png", "riserFile": "outputs/riser_frames/riser_0027.png", "time": 2.72, "wtop": 0.5, "itop": 0.0, "coreMassMg": 0.0, "head": 0.51}, {"file": "outputs/frames/frame_0028.png", "riserFile": "outputs/riser_frames/riser_0028.png", "time": 2.82, "wtop": 0.5, "itop": 0.0, "coreMassMg": 0.0, "head": 0.545}, {"file": "outputs/frames/frame_0029.png", "riserFile": "outputs/riser_frames/riser_0029.png", "time": 2.92, "wtop": 0.5, "itop": 0.0, "coreMassMg": 0.0, "head": 0.48}, {"file": "outputs/frames/frame_0030.png", "riserFile": "outputs/riser_frames/riser_0030.png", "time": 3.02, "wtop": 0.5, "itop": 0.0, "coreMassMg": 0.0, "head": 0.564}, {"file": "outputs/frames/frame_0031.png", "riserFile": "outputs/riser_frames/riser_0031.png", "time": 3.12, "wtop": 0.5, "itop": 0.0, "coreMassMg": 0.0, "head": 0.48}, {"file": "outputs/frames/frame_0032.png", "riserFile": "outputs/riser_frames/riser_0032.png", "time": 3.22, "wtop": 0.5, "itop": 0.0, "coreMassMg": 0.0, "head": 0.562}, {"file": "outputs/frames/frame_0033.png", "riserFile": "outputs/riser_frames/riser_0033.png", "time": 3.32, "wtop": 0.51, "itop": 0.0, "coreMassMg": 0.0, "head": 0.488}, {"file": "outputs/frames/frame_0034.png", "riserFile": "outputs/riser_frames/riser_0034.png", "time": 3.42, "wtop": 0.51, "itop": 0.0, "coreMassMg": 0.0, "head": 0.568}, {"file": "outputs/frames/frame_0035.png", "riserFile": "outputs/riser_frames/riser_0035.png", "time": 3.52, "wtop": 0.51, "itop": 0.0, "coreMassMg": 0.0, "head": 0.521}, {"file": "outputs/frames/frame_0036.png", "riserFile": "outputs/riser_frames/riser_0036.png", "time": 3.64, "wtop": 0.51, "itop": 0.0, "coreMassMg": 0.0, "head": 0.524}, {"file": "outputs/frames/frame_0037.png", "riserFile": "outputs/riser_frames/riser_0037.png", "time": 3.74, "wtop": 0.51, "itop": 0.0, "coreMassMg": 0.0, "head": 0.54}, {"file": "outputs/frames/frame_0038.png", "riserFile": "outputs/riser_frames/riser_0038.png", "time": 3.84, "wtop": 0.51, "itop": 0.0, "coreMassMg": 0.0, "head": 0.511}, {"file": "outputs/frames/frame_0039.png", "riserFile": "outputs/riser_frames/riser_0039.png", "time": 3.94, "wtop": 0.51, "itop": 0.0, "coreMassMg": 0.0, "head": 0.563}, {"file": "outputs/frames/frame_0040.png", "riserFile": "outputs/riser_frames/riser_0040.png", "time": 4.04, "wtop": 0.52, "itop": 0.0, "coreMassMg": 0.0, "head": 0.542}, {"file": "outputs/frames/frame_0041.png", "riserFile": "outputs/riser_frames/riser_0041.png", "time": 4.14, "wtop": 0.52, "itop": 0.0, "coreMassMg": 0.0, "head": 0.532}, {"file": "outputs/frames/frame_0042.png", "riserFile": "outputs/riser_frames/riser_0042.png", "time": 4.24, "wtop": 0.55, "itop": 0.0, "coreMassMg": 0.0, "head": 0.532}, {"file": "outputs/frames/frame_0043.png", "riserFile": "outputs/riser_frames/riser_0043.png", "time": 4.34, "wtop": 0.58, "itop": 0.0, "coreMassMg": 0.0, "head": 0.525}, {"file": "outputs/frames/frame_0044.png", "riserFile": "outputs/riser_frames/riser_0044.png", "time": 4.44, "wtop": 0.59, "itop": 0.0, "coreMassMg": 0.0, "head": 0.518}, {"file": "outputs/frames/frame_0045.png", "riserFile": "outputs/riser_frames/riser_0045.png", "time": 4.54, "wtop": 0.59, "itop": 0.0, "coreMassMg": 0.0, "head": 0.521}, {"file": "outputs/frames/frame_0046.png", "riserFile": "outputs/riser_frames/riser_0046.png", "time": 4.64, "wtop": 0.58, "itop": 0.0, "coreMassMg": 0.0, "head": 0.548}, {"file": "outputs/frames/frame_0047.png", "riserFile": "outputs/riser_frames/riser_0047.png", "time": 4.74, "wtop": 0.56, "itop": 0.0, "coreMassMg": 0.0, "head": 0.539}, {"file": "outputs/frames/frame_0048.png", "riserFile": "outputs/riser_frames/riser_0048.png", "time": 4.84, "wtop": 0.55, "itop": 0.0, "coreMassMg": 0.0, "head": 0.537}, {"file": "outputs/frames/frame_0049.png", "riserFile": "outputs/riser_frames/riser_0049.png", "time": 4.94, "wtop": 0.54, "itop": 0.0, "coreMassMg": 0.0, "head": 0.54}, {"file": "outputs/frames/frame_0050.png", "riserFile": "outputs/riser_frames/riser_0050.png", "time": 5.04, "wtop": 0.53, "itop": 0.0, "coreMassMg": 0.0, "head": 0.542}, {"file": "outputs/frames/frame_0051.png", "riserFile": "outputs/riser_frames/riser_0051.png", "time": 5.14, "wtop": 0.52, "itop": 0.0, "coreMassMg": 0.0, "head": 0.545}, {"file": "outputs/frames/frame_0052.png", "riserFile": "outputs/riser_frames/riser_0052.png", "time": 5.24, "wtop": 0.56, "itop": 0.06, "coreMassMg": 3.21, "head": 0.541}, {"file": "outputs/frames/frame_0053.png", "riserFile": "outputs/riser_frames/riser_0053.png", "time": 5.34, "wtop": 0.577, "itop": 0.1, "coreMassMg": 5.88, "head": 0.541}, {"file": "outputs/frames/frame_0054.png", "riserFile": "outputs/riser_frames/riser_0054.png", "time": 5.46, "wtop": 0.596, "itop": 0.15, "coreMassMg": 8.95, "head": 0.54}, {"file": "outputs/frames/frame_0055.png", "riserFile": "outputs/riser_frames/riser_0055.png", "time": 5.56, "wtop": 0.609, "itop": 0.18, "coreMassMg": 10.95, "head": 0.54}, {"file": "outputs/frames/frame_0056.png", "riserFile": "outputs/riser_frames/riser_0056.png", "time": 5.66, "wtop": 0.61, "itop": 0.22, "coreMassMg": 12.97, "head": 0.539}, {"file": "outputs/frames/frame_0057.png", "riserFile": "outputs/riser_frames/riser_0057.png", "time": 5.76, "wtop": 0.61, "itop": 0.27, "coreMassMg": 14.93, "head": 0.54}, {"file": "outputs/frames/frame_0058.png", "riserFile": "outputs/riser_frames/riser_0058.png", "time": 5.86, "wtop": 0.61, "itop": 0.52, "coreMassMg": 16.92, "head": 0.54}, {"file": "outputs/frames/frame_0059.png", "riserFile": "outputs/riser_frames/riser_0059.png", "time": 5.96, "wtop": 0.61, "itop": 0.52, "coreMassMg": 18.49, "head": 0.539}, {"file": "outputs/frames/frame_0060.png", "riserFile": "outputs/riser_frames/riser_0060.png", "time": 6.06, "wtop": 0.61, "itop": 0.54, "coreMassMg": 19.91, "head": 0.391}, {"file": "outputs/frames/frame_0061.png", "riserFile": "outputs/riser_frames/riser_0061.png", "time": 6.16, "wtop": 0.61, "itop": 0.51, "coreMassMg": 20.51, "head": 0.016}, {"file": "outputs/frames/frame_0062.png", "riserFile": "outputs/riser_frames/riser_0062.png", "time": 6.26, "wtop": 0.61, "itop": 0.49, "coreMassMg": 19.09, "head": 0.036}, {"file": "outputs/frames/frame_0063.png", "riserFile": "outputs/riser_frames/riser_0063.png", "time": 6.36, "wtop": 0.571, "itop": 0.46, "coreMassMg": 17.3, "head": 0.042}, {"file": "outputs/frames/frame_0064.png", "riserFile": "outputs/riser_frames/riser_0064.png", "time": 6.46, "wtop": 0.529, "itop": 0.43, "coreMassMg": 15.44, "head": 0.093}, {"file": "outputs/frames/frame_0065.png", "riserFile": "outputs/riser_frames/riser_0065.png", "time": 6.56, "wtop": 0.488, "itop": 0.4, "coreMassMg": 13.62, "head": 0.023}, {"file": "outputs/frames/frame_0066.png", "riserFile": "outputs/riser_frames/riser_0066.png", "time": 6.66, "wtop": 0.447, "itop": 0.37, "coreMassMg": 11.94, "head": 0.155}, {"file": "outputs/frames/frame_0067.png", "riserFile": "outputs/riser_frames/riser_0067.png", "time": 6.76, "wtop": 0.407, "itop": 0.34, "coreMassMg": 10.44, "head": 0.146}, {"file": "outputs/frames/frame_0068.png", "riserFile": "outputs/riser_frames/riser_0068.png", "time": 6.86, "wtop": 0.38, "itop": 0.32, "coreMassMg": 9.31, "head": 0.173}, {"file": "outputs/frames/frame_0069.png", "riserFile": "outputs/riser_frames/riser_0069.png", "time": 6.96, "wtop": 0.342, "itop": 0.29, "coreMassMg": 8.12, "head": 0.093}, {"file": "outputs/frames/frame_0070.png", "riserFile": "outputs/riser_frames/riser_0070.png", "time": 7.06, "wtop": 0.317, "itop": 0.27, "coreMassMg": 7.21, "head": 0.091}, {"file": "outputs/frames/frame_0071.png", "riserFile": "outputs/riser_frames/riser_0071.png", "time": 7.16, "wtop": 0.291, "itop": 0.25, "coreMassMg": 6.38, "head": 0.084}, {"file": "outputs/frames/frame_0072.png", "riserFile": "outputs/riser_frames/riser_0072.png", "time": 7.28, "wtop": 0.255, "itop": 0.22, "coreMassMg": 5.4, "head": 0.062}, {"file": "outputs/frames/frame_0073.png", "riserFile": "outputs/riser_frames/riser_0073.png", "time": 7.38, "wtop": 0.231, "itop": 0.2, "coreMassMg": 4.7, "head": 0.059}, {"file": "outputs/frames/frame_0074.png", "riserFile": "outputs/riser_frames/riser_0074.png", "time": 7.48, "wtop": 0.207, "itop": 0.18, "coreMassMg": 4.08, "head": 0.057}, {"file": "outputs/frames/frame_0075.png", "riserFile": "outputs/riser_frames/riser_0075.png", "time": 7.58, "wtop": 0.172, "itop": 0.15, "coreMassMg": 3.43, "head": 0.045}, {"file": "outputs/frames/frame_0076.png", "riserFile": "outputs/riser_frames/riser_0076.png", "time": 7.68, "wtop": 0.149, "itop": 0.13, "coreMassMg": 2.9, "head": 0.062}, {"file": "outputs/frames/frame_0077.png", "riserFile": "outputs/riser_frames/riser_0077.png", "time": 7.78, "wtop": 0.126, "itop": 0.11, "coreMassMg": 2.41, "head": 0.05}, {"file": "outputs/frames/frame_0078.png", "riserFile": "outputs/riser_frames/riser_0078.png", "time": 7.88, "wtop": 0.103, "itop": 0.09, "coreMassMg": 1.99, "head": 0.053}, {"file": "outputs/frames/frame_0079.png", "riserFile": "outputs/riser_frames/riser_0079.png", "time": 7.98, "wtop": 0.083, "itop": 0.07, "coreMassMg": 1.97, "head": 0.012}, {"file": "outputs/frames/frame_0080.png", "riserFile": "outputs/riser_frames/riser_0080.png", "time": 8.08, "wtop": 0.065, "itop": 0.05, "coreMassMg": 2.28, "head": 0.0}, {"file": "outputs/frames/frame_0081.png", "riserFile": "outputs/riser_frames/riser_0081.png", "time": 8.18, "wtop": 0.026, "itop": 0.02, "coreMassMg": 0.99, "head": 0.0}, {"file": "outputs/frames/frame_0082.png", "riserFile": "outputs/riser_frames/riser_0082.png", "time": 8.28, "wtop": 0.0, "itop": 0.0, "coreMassMg": 0.0, "head": 0.0}, {"file": "outputs/frames/frame_0083.png", "riserFile": "outputs/riser_frames/riser_0083.png", "time": 8.38, "wtop": 0.0, "itop": 0.0, "coreMassMg": 0.0, "head": 0.0}, {"file": "outputs/frames/frame_0084.png", "riserFile": "outputs/riser_frames/riser_0084.png", "time": 8.48, "wtop": 0.0, "itop": 0.0, "coreMassMg": 0.0, "head": 0.0}, {"file": "outputs/frames/frame_0085.png", "riserFile": "outputs/riser_frames/riser_0085.png", "time": 8.58, "wtop": 0.0, "itop": 0.0, "coreMassMg": 0.0, "head": 0.0}, {"file": "outputs/frames/frame_0086.png", "riserFile": "outputs/riser_frames/riser_0086.png", "time": 8.68, "wtop": 0.0, "itop": 0.0, "coreMassMg": 0.0, "head": 0.0}, {"file": "outputs/frames/frame_0087.png", "riserFile": "outputs/riser_frames/riser_0087.png", "time": 8.78, "wtop": 0.0, "itop": 0.0, "coreMassMg": 0.0, "head": 0.0}, {"file": "outputs/frames/frame_0088.png", "riserFile": "outputs/riser_frames/riser_0088.png", "time": 8.88, "wtop": 0.0, "itop": 0.0, "coreMassMg": 0.0, "head": 0.0}, {"file": "outputs/frames/frame_0089.png", "riserFile": "outputs/riser_frames/riser_0089.png", "time": 9.0, "wtop": 0.0, "itop": 0.0, "coreMassMg": 0.0, "head": 0.0}];
+const TSC=1.7282;   // seconds per T* for Dt=12.7 mm
+let vI=0,vTimer=null;
+const vImg=document.getElementById('vFrame'),vRImg=document.getElementById('vRiser'),
+      vSld=document.getElementById('vSlider'),vBtn=document.getElementById('vPlay');
+vSld.min=0;vSld.max=Math.max(0,vFrames.length-1);vSld.value=0;
+function vShow(k){
+  vI=Math.max(0,Math.min(vFrames.length-1,k));
+  const f=vFrames[vI];
+  vImg.src=f.file; vRImg.src=f.riserFile; vSld.value=vI;
+  vIdx.textContent=`帧 ${vI+1}/${vFrames.length}`;
+  vTime.textContent=`t=${f.time.toFixed(2)} s`;
+  vTstar.textContent=`T*=${(f.time/TSC).toFixed(2)}`;
+  vWtop.textContent=`塔内可见水位=${f.wtop.toFixed(3)} m`;
+  vItop.textContent=`竖管气相前沿=${f.itop.toFixed(3)} m`;
+  vMass.textContent=`竖管解析气体质量=${f.coreMassMg.toFixed(2)} mg`;
+  vHead.textContent=`气囊压力头=${f.head.toFixed(3)} m`;
+}
+function vStop(){if(vTimer)clearInterval(vTimer);vTimer=null;vBtn.textContent='播放';}
+vPrev.onclick=()=>{vStop();vShow(vI-1)};
+vNext.onclick=()=>{vStop();vShow(vI+1)};
+vSld.oninput=e=>{vStop();vShow(Number(e.target.value))};
+vBtn.onclick=()=>{if(vTimer){vStop();return};vBtn.textContent='暂停';
+  vTimer=setInterval(()=>vShow(vI>=vFrames.length-1?0:vI+1),260)};
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'){vStop();vShow(vI-1)}
+  if(e.key==='ArrowRight'){vStop();vShow(vI+1)}});
+vShow(0);
+</script>
+<div class="panel">
+  <h2 style="margin-top:0">Fig.11 对照 — 模型曲线直接叠画在论文原图上</h2>
+  <p class="muted">论文 Fig.11 是他们自家 TPA 模型对小塔（Dt*=0.135）的对照，但工况为
+  <b>Ha0=0.305 m、WL=0.254 m</b>（非本文件夹的 0.610/0.356）。我们用同一冻结求解器改初值复跑，
+  把结果（<b style="color:#e11d48">红线</b>）按论文坐标系直接画进五个面板：黑粗线=论文 TPA 模型，
+  散点/细线=实验三次重复。时间轴做了刚体平移对齐 Y*<sub>int</sub> 爬升中点（开阀时刻在实验中为
+  手动，论文 T* 原点取法不同；平移量见图内标注）。</p>
+  <img src="outputs/caseB_fig11_overlay.png">
+  <p class="muted">读图：Y*<sub>int</sub> 爬升段红线斜率与论文模型/实验一致（V*int 拟合 ~1.6 vs
+  实验散点 1–3 区间）；H* 平台（管顶基准 ~0.33 vs 论文 ~0.38–0.44）与骤降形态一致、模型骤降更陡；
+  该工况初始超压余量为负（Ha0=0.305 &lt; WL 静压），我们的模型水面只抬升到 ~0.61L 即被排气打断，
+  论文实验/模型在 T*≈4.1 冲顶——小超压喷发分支的判据差异是已知模型局限（与 caseB 主工况
+  Ha0=0.610 的强驱动喷发不同源）。</p>
+  <div class="grid2" style="margin-top:10px">
+    <div><h3 style="margin:4px 0">论文 Fig.11 原图</h3><img src="paper_scans/fig11_full.png"></div>
+    <div><h3 style="margin:4px 0">我们的模型（同轴五联图）</h3><img src="outputs/caseB_fig11_model_panels.png"></div>
+  </div>
+</div>
+</div></body></html>

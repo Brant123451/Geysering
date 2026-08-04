@@ -1,0 +1,118 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvOptions;
+}
+
+// Time-dependent butterfly-valve loss.  The source is purely dissipative:
+// it never prescribes velocity or adds pressure/mass.  A smooth opening
+// fraction reduces K from an impermeability cap to K=2 when fully open.
+// Environment:
+//   CASEB_VALVE_MODE=opening (default), closed, or instant
+//   CASEB_VALVE_OPEN_TIME=<seconds> (default 0.25)
+//   CASEB_VALVE_SEAL_SPEED=<m/s> (default 1.0)
+valveResistance
+{
+    type            vectorCodedSource;
+    name            caseBValveResistance;
+
+    vectorCodedSourceCoeffs
+    {
+        selectionMode   cellZone;
+        cellZone        valveZone;
+        fields          (U);
+        codeInclude
+        #{
+            #include <cstdlib>
+            #include <string>
+        #};
+
+        codeCorrect
+        #{
+        #};
+
+        codeAddSup
+        #{
+        #};
+
+        codeAddSupRho
+        #{
+            const char* modeText = std::getenv("CASEB_VALVE_MODE");
+            const std::string mode = modeText ? modeText : "opening";
+            // Closed-mode meshes contain an exact two-sided wall baffle at
+            // the valve plane.  Do not retain the connected-domain penalty:
+            // its sharp rAU jump generated a growing upstream-edge hotspot.
+            if (mode != "closed")
+            {
+            const char* durationText = std::getenv("CASEB_VALVE_OPEN_TIME");
+            const scalar openingTime =
+                durationText ? std::atof(durationText) : 0.25;
+            const char* sealSpeedText =
+                std::getenv("CASEB_VALVE_SEAL_SPEED");
+            const scalar sealSpeed = max
+            (
+                sealSpeedText ? scalar(std::atof(sealSpeedText)) : scalar(1.0),
+                SMALL
+            );
+
+            scalar fraction = 0.0;
+            if (mode == "instant" || (mode == "opening" && openingTime <= SMALL))
+            {
+                fraction = 1.0;
+            }
+            else if (mode == "opening")
+            {
+                const scalar r = min
+                (
+                    scalar(1),
+                    max(scalar(0), mesh_.time().value()/openingTime)
+                );
+                fraction = r*r*(3.0 - 2.0*r);
+            }
+
+            const scalar fullyOpenK = 2.0;
+            const scalar lossK = min
+            (
+                scalar(1e8),
+                fullyOpenK/max(sqr(fraction), scalar(2e-8))
+            );
+            const scalar valveThickness = 0.012;
+            const scalar minLinearisationSpeed = 1e-4;
+            // A quadratic loss alone cannot support the finite pressure jump
+            // across a stationary closed valve: its Jacobian vanishes at
+            // U=0.  Retain the same capped, purely dissipative K law but
+            // linearise it with a seal-speed floor that smoothly disappears
+            // as the valve opens.  This is a Brinkman-style impermeability
+            // penalty; it never prescribes pressure, velocity, or mass.
+            const scalar sealLinearisationSpeed =
+                (1.0 - fraction)*sealSpeed;
+            const scalarField& volumes = mesh_.V();
+            const vectorField& velocity = eqn.psi().primitiveField();
+            scalarField& diagonal = eqn.diag();
+
+            forAll(cells_, selectedI)
+            {
+                const label cellI = cells_[selectedI];
+                const scalar speed = max
+                (
+                    mag(velocity[cellI]),
+                    max(minLinearisationSpeed, sealLinearisationSpeed)
+                );
+                // Equivalent to grad(p)=-K*rho*|U|U/(2*thickness).
+                // fvOptions appears on the right-hand side of UEqn.  A
+                // negative source diagonal therefore adds positive damping
+                // to the assembled left-hand-side momentum matrix.
+                diagonal[cellI] -=
+                    rho[cellI]*lossK*speed*volumes[cellI]
+                   /(2.0*valveThickness);
+            }
+            }
+        #};
+
+        codeConstrain
+        #{
+        #};
+    }
+}

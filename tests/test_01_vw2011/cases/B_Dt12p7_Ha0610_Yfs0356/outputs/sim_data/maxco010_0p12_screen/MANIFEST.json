@@ -1,0 +1,326 @@
+{
+  "screen_id": "maxco010_0p12_screen",
+  "diagnostics_key": "tight_pressure_maxco_0p10_screen_0p12_s",
+  "status": "rejected_earlier_rim_exterior_gas_hotspot",
+  "created_utc": "2026-07-16T21:12:00Z",
+  "rim_U_m_per_s": {
+    "0.07": 1.0988,
+    "0.08": 1.2419,
+    "0.09": 1.3954,
+    "0.10": 1.5475,
+    "0.11": 1.6982,
+    "0.12": 1.8494
+  },
+  "primary_archives": [
+    "fields/processor0_all_times.tar.xz",
+    "fields/processor1_all_times.tar.xz",
+    "fields/processor2_all_times.tar.xz",
+    "fields/processor3_all_times.tar.xz",
+    "fields/vtk_key_times.tar.xz"
+  ],
+  "render_doc": "RENDER_HANDOFF.md",
+  "files": [
+    {
+      "path": "MANIFEST.json",
+      "bytes": 6668
+    },
+    {
+      "path": "RENDER_HANDOFF.md",
+      "bytes": 5707
+    },
+    {
+      "path": "diagnostics/caseb_accounting_history.csv",
+      "bytes": 1137
+    },
+    {
+      "path": "diagnostics/caseb_bounds_history.csv",
+      "bytes": 1623
+    },
+    {
+      "path": "diagnostics/metrics_base-ac9add4d0f65.json",
+      "bytes": 8574
+    },
+    {
+      "path": "diagnostics/run_manifest.json",
+      "bytes": 1410
+    },
+    {
+      "path": "fields/case_deck/constant/g",
+      "bytes": 187
+    },
+    {
+      "path": "fields/case_deck/constant/thermophysicalProperties.air",
+      "bytes": 149
+    },
+    {
+      "path": "fields/case_deck/constant/thermophysicalProperties.water",
+      "bytes": 871
+    },
+    {
+      "path": "fields/case_deck/constant/turbulenceProperties",
+      "bytes": 149
+    },
+    {
+      "path": "fields/case_deck/system/alphaCorrectors",
+      "bytes": 38
+    },
+    {
+      "path": "fields/case_deck/system/alphaCorrectors.default",
+      "bytes": 38
+    },
+    {
+      "path": "fields/case_deck/system/controlDict",
+      "bytes": 16311
+    },
+    {
+      "path": "fields/case_deck/system/createBafflesDict.hold",
+      "bytes": 550
+    },
+    {
+      "path": "fields/case_deck/system/createPatchDict",
+      "bytes": 467
+    },
+    {
+      "path": "fields/case_deck/system/decomposeParDict",
+      "bytes": 166
+    },
+    {
+      "path": "fields/case_deck/system/decomposeParDict.runtime",
+      "bytes": 903
+    },
+    {
+      "path": "fields/case_deck/system/fvSchemes",
+      "bytes": 772
+    },
+    {
+      "path": "fields/case_deck/system/fvSolution",
+      "bytes": 2012
+    },
+    {
+      "path": "fields/case_deck/system/pimpleCorrectors",
+      "bytes": 84
+    },
+    {
+      "path": "fields/case_deck/system/pimpleCorrectors.default",
+      "bytes": 84
+    },
+    {
+      "path": "fields/case_deck/system/plumeProbeLocations",
+      "bytes": 17520
+    },
+    {
+      "path": "fields/case_deck/system/pressureFinalTolerance",
+      "bytes": 23
+    },
+    {
+      "path": "fields/case_deck/system/runControl",
+      "bytes": 246
+    },
+    {
+      "path": "fields/case_deck/system/runControl.default",
+      "bytes": 159
+    },
+    {
+      "path": "fields/case_deck/system/runSettings",
+      "bytes": 272
+    },
+    {
+      "path": "fields/case_deck/system/runSettings.default",
+      "bytes": 273
+    },
+    {
+      "path": "fields/case_deck/system/setAlphaFieldDict",
+      "bytes": 1610
+    },
+    {
+      "path": "fields/case_deck/system/setExprFieldsDict",
+      "bytes": 795
+    },
+    {
+      "path": "fields/case_deck/system/setExprFieldsDict.runtime",
+      "bytes": 798
+    },
+    {
+      "path": "fields/case_deck/system/setExprFieldsReducedPressureDict",
+      "bytes": 1070
+    },
+    {
+      "path": "fields/case_deck/system/setExprFieldsReducedPressureDict.runtime",
+      "bytes": 1070
+    },
+    {
+      "path": "fields/case_deck/system/setFieldsDict",
+      "bytes": 1711
+    },
+    {
+      "path": "fields/case_deck/system/setFieldsDict.runtime",
+      "bytes": 1717
+    },
+    {
+      "path": "fields/case_deck/system/topoSetDict",
+      "bytes": 1340
+    },
+    {
+      "path": "fields/case_deck/system/towerProbeLocations",
+      "bytes": 17666
+    },
+    {
+      "path": "fields/processor0_all_times.tar.xz",
+      "bytes": 626795188
+    },
+    {
+      "path": "fields/processor1_all_times.tar.xz",
+      "bytes": 708622236
+    },
+    {
+      "path": "fields/processor2_all_times.tar.xz",
+      "bytes": 608395112
+    },
+    {
+      "path": "fields/processor3_all_times.tar.xz",
+      "bytes": 607544204
+    },
+    {
+      "path": "fields/vtk_key_times.tar.xz",
+      "bytes": 398505912
+    },
+    {
+      "path": "logs/log.caseBHydrostaticInit",
+      "bytes": 5483
+    },
+    {
+      "path": "logs/log.checkMesh",
+      "bytes": 4870
+    },
+    {
+      "path": "logs/log.compressibleInterFlow",
+      "bytes": 19941749
+    },
+    {
+      "path": "logs/log.decomposePar",
+      "bytes": 3111
+    },
+    {
+      "path": "logs/log.foamToVTK",
+      "bytes": 4604
+    },
+    {
+      "path": "logs/log.postprocess",
+      "bytes": 8940
+    },
+    {
+      "path": "logs/log.preflight",
+      "bytes": 1475
+    },
+    {
+      "path": "logs/log.prepare",
+      "bytes": 1410
+    },
+    {
+      "path": "logs/log.reconstructPar",
+      "bytes": 5580
+    },
+    {
+      "path": "logs/log.watchdog_maxco010",
+      "bytes": 5363
+    },
+    {
+      "path": "postProcessing/plumeProfiles/0/U",
+      "bytes": 321912
+    },
+    {
+      "path": "postProcessing/plumeProfiles/0/alpha.water",
+      "bytes": 142658
+    },
+    {
+      "path": "postProcessing/plumeProfiles/0/p",
+      "bytes": 142658
+    },
+    {
+      "path": "postProcessing/towerProfiles/0/U",
+      "bytes": 681645
+    },
+    {
+      "path": "postProcessing/towerProfiles/0/alpha.water",
+      "bytes": 260319
+    },
+    {
+      "path": "postProcessing/towerProfiles/0/p",
+      "bytes": 260319
+    },
+    {
+      "path": "postProcessing/transducer/0/U",
+      "bytes": 1526
+    },
+    {
+      "path": "postProcessing/transducer/0/alpha.water",
+      "bytes": 827
+    },
+    {
+      "path": "postProcessing/transducer/0/p",
+      "bytes": 827
+    },
+    {
+      "path": "postProcessing/transducer/0/p_rgh",
+      "bytes": 827
+    },
+    {
+      "path": "run_maxco010_screen.sh",
+      "bytes": 1112
+    },
+    {
+      "path": "runtime/mesh_base.json",
+      "bytes": 1165
+    },
+    {
+      "path": "runtime/metrics_base-ac9add4d0f65.json",
+      "bytes": 8574
+    },
+    {
+      "path": "runtime/openfoam_3d_gas_interface_series.csv",
+      "bytes": 728
+    },
+    {
+      "path": "runtime/openfoam_3d_geyser_height.png",
+      "bytes": 48616
+    },
+    {
+      "path": "runtime/openfoam_3d_levels_comparison.png",
+      "bytes": 112668
+    },
+    {
+      "path": "runtime/openfoam_3d_levels_series.csv",
+      "bytes": 961
+    },
+    {
+      "path": "runtime/openfoam_3d_pressure_comparison.png",
+      "bytes": 134820
+    },
+    {
+      "path": "runtime/openfoam_3d_pressure_series.csv",
+      "bytes": 1785
+    },
+    {
+      "path": "runtime/preflight.json",
+      "bytes": 1475
+    },
+    {
+      "path": "runtime/run_manifest.json",
+      "bytes": 1410
+    },
+    {
+      "path": "vtk_index/3d.vtm.series",
+      "bytes": 469
+    },
+    {
+      "path": "vtk_index/time_map.tsv",
+      "bytes": 193
+    },
+    {
+      "path": "watchdog_maxco010.sh",
+      "bytes": 3350
+    }
+  ],
+  "total_bytes": 2972070251,
+  "note": "processor archives are split per MPI rank because GitHub LFS rejects single objects > 2 GiB"
+}

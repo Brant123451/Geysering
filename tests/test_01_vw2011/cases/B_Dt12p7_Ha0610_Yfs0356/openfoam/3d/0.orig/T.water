@@ -1,0 +1,31 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      T.water;
+}
+
+dimensions      [0 0 0 1 0 0 0];
+internalField   uniform 293.15;
+
+boundaryField
+{
+    walls
+    {
+        // Short laboratory transient; adiabatic smooth walls.
+        type            zeroGradient;
+    }
+
+    "valveWall.*"
+    {
+        type            zeroGradient;
+    }
+
+    atmosphere
+    {
+        type            inletOutlet;
+        inletValue      uniform 293.15;
+        value           uniform 293.15;
+    }
+}

@@ -1,0 +1,312 @@
+\section{Numerical model and application closures}
+\label{sec:model}
+
+The governing method was developed and verified in the companion paper
+\cite{xue2026model}. The present section defines the subset needed for the
+experimental assessment and makes the application-specific assumptions
+explicit. It first states the mixed-flow balance and moving-front treatment.
+It then describes the vertical-shaft representation, the shaft-mouth
+closures, and the numerical configuration used in all three campaigns.
+Detailed derivations and canonical verification remain in
+\cite{xue2026model}; they are not repeated as contributions of this paper.
+
+\subsection{Decoupled two-fluid mixed-flow formulation}
+\label{sec:model:framework}
+
+The model partitions a closed conduit into liquid-full and stratified
+gas--liquid reaches separated by moving regime fronts. Stratified reaches
+obey the decoupled two-fluid balance law of \cite{xue2026model},
+\begin{equation}
+\frac{\partial \mathbf{U}}{\partial t}
++\frac{\partial \mathbf{F}}{\partial x}
+=\mathbf{S},
+\label{eq:system}
+\end{equation}
+with conservative state, flux, and regular source vectors
+\begin{equation}
+\mathbf{U}=
+\begin{bmatrix}
+A_g\rho_g \\ \rho_g Q_g \\ A_l \\ Q_l
+\end{bmatrix},
+\qquad
+\mathbf{F}=
+\begin{bmatrix}
+\rho_g Q_g \\[2pt]
+\rho_g Q_g^2/A_g+P_g A_g \\[2pt]
+Q_l \\[2pt]
+Q_l^2/A_l+\tfrac{1}{2}\Lambda_d A_l^2
+\end{bmatrix},
+\qquad
+\mathbf{S}=
+\begin{bmatrix}
+0 \\[2pt]
+P_g\dfrac{\partial A_g}{\partial x}
+-A_g\rho_g g\cos\theta\dfrac{\partial h_l}{\partial x}+\mathcal{S}_g \\[2pt]
+0 \\[2pt]
+\mathcal{S}_d
+\end{bmatrix},
+\label{eq:vectors}
+\end{equation}
+where $A_g$ and $A_l$ are the gas and liquid cross-sectional areas, $\rho_g$
+the gas density, $Q_g$ and $Q_l$ the gas and liquid volumetric flow rates,
+$P_g$ the gas pressure, $h_l$ the liquid depth, $\theta$ the pipe
+inclination, and $\mathcal{S}_g$, $\mathcal{S}_d$ the regular gas- and
+liquid-momentum sources containing axial gravity, wall friction, and
+interfacial shear; the shear closures follow standard stratified-flow
+correlations \cite{issa2003,taitel1976}. Gas mass and gas momentum are
+conserved variables, so gas transport, gas inertia, gas compressibility, and
+shear-driven interfacial growth are part of the computed state. The
+restoring coefficient in the liquid momentum flux is
+\begin{equation}
+\Lambda_d
+=\underbrace{\frac{2gH_g}{A_l}}_{\text{gas pressure}}
++\underbrace{\frac{\rho_l-\rho_g}{\rho_l}\,g\zeta}_{\text{hydrostatic--buoyancy}}
+-\underbrace{\frac{\rho_g(u_g-u_l)^2}{\rho_l A_g}}_{\text{IKH slip}},
+\label{eq:lambda}
+\end{equation}
+which combines the gas-pressure, hydrostatic--buoyancy, and inviscid
+Kelvin--Helmholtz (IKH) slip contributions; here $H_g$ is the gas pressure
+head, $u_g$ and $u_l$ the phase velocities, and
+$\zeta=\cos\theta/[D\sin(\gamma/2)]$ a circular-section geometric factor
+with $D$ the pipe diameter and $\gamma$ the liquid central angle. The
+eigenvalues of the decoupled liquid flux Jacobian,
+\begin{equation}
+\lambda^{\pm}=u_l\pm\sqrt{\Lambda_d A_l},
+\label{eq:eigen}
+\end{equation}
+show that the liquid subsystem is strictly hyperbolic for $\Lambda_d>0$ and
+reaches the neutral interfacial-instability (IKH) threshold at
+$\Lambda_d=0$; beyond it, interfacial waves grow and liquid bridging can
+occur.
+
+In liquid-full reaches the gas phase is absent and the pressurized branch is
+governed by the two-variable system
+\begin{equation}
+\frac{\partial A_l}{\partial t}+\frac{\partial Q_l}{\partial x}=0,
+\qquad
+\frac{\partial Q_l}{\partial t}
++\frac{\partial}{\partial x}\!\left(\frac{Q_l^2}{A_l}+gA_f h_s\right)
+=\mathcal{S}_p,
+\label{eq:pressurized}
+\end{equation}
+closed by the elastic-pipe relation
+\begin{equation}
+P-P_{\mathrm{ref}}=\rho_l a^2\,\frac{A_l-A_f}{A_f},
+\qquad
+h_s=\frac{P-P_{\mathrm{ref}}}{\rho_l g},
+\label{eq:elastic}
+\end{equation}
+with $a$ the (numerical) pressure-wave speed, $A_f$ the undeformed pipe
+area, $h_s$ the piezometric head, and $\mathcal{S}_p$ the regular
+pressurized-branch source; this branch recovers the water-hammer limit. In
+limiting cases the same area-variable form of
+Eqs.~(\ref{eq:system})--(\ref{eq:elastic}) recovers water hammer,
+open-channel gravity flow (with $\Lambda_d\to g\cos\theta/B_l$, where $B_l$
+is the free-surface top width), interfacial-instability dynamics, and the
+near-full mixed-flow balance \cite{xue2026model}.
+
+Moving pressurized--stratified fronts are internal boundaries between the
+two-variable system~(\ref{eq:pressurized}) and the four-variable
+system~(\ref{eq:system}). Their local closure and the conservative
+front-tracking update are summarized in
+Sections~\ref{sec:model:rtrp}--\ref{sec:model:fv}, so that the computations
+reported here can be interpreted and reproduced from the present paper
+alone; the derivations, the construction of the active-set solver, and the
+verification of the scheme on canonical benchmarks are given in
+\cite{xue2026model}.
+
+Two features distinguish the present application from a prescribed-release
+geyser model. First, an entrapped pocket is identified as a connected gas
+region bounded by liquid seals. Its pressure is evaluated from the current
+mass and volume through the isothermal relation
+$P_g=m_gRT/V_g$. The calculation therefore does not impose a pocket-volume
+history. Second, gas momentum is retained in every stratified reach. Gas
+arrival at the shaft and its exchange with the water column are outputs of
+the coupled computation, subject to the junction closures below.
+
+\subsection{Regime-Transition Riemann closure at moving fronts}
+\label{sec:model:rtrp}
+
+At a moving pressurized--stratified front $x=x_\Gamma(t)$ with speed
+$w_\Gamma=\dot{x}_\Gamma$, the local coordinate is oriented so that the
+pressurized branch lies on the left and the stratified branch on the right;
+the opposite case follows by reflection. Only liquid mass and liquid
+momentum are common to both branches, and the ideal front has zero thickness
+and stores neither. Integrating the mixed-regime liquid balance over a
+control volume shrinking onto the front therefore gives the moving
+Rankine--Hugoniot conditions
+\begin{equation}
+\begin{gathered}
+Q_{p,\Gamma}-Q_{f,\Gamma}
+=w_{\Gamma}\left(A_{p,\Gamma}-A_{l,\Gamma}\right),\\[2pt]
+\left(\frac{Q_{p,\Gamma}^2}{A_{p,\Gamma}}+gA_f h_{s,\Gamma}\right)
+-\left(\frac{Q_{f,\Gamma}^2}{A_{l,\Gamma}}
++\frac{1}{2}\Lambda_{d,\Gamma}A_{l,\Gamma}^2\right)
+=w_{\Gamma}\left(Q_{p,\Gamma}-Q_{f,\Gamma}\right),
+\end{gathered}
+\label{eq:rh}
+\end{equation}
+where the subscripts $p$ and $f$ denote the pressurized trace and the liquid
+projection of the stratified trace at the front, and $h_{s,\Gamma}$ follows
+from the elastic closure~(\ref{eq:elastic}). The pressurized side is
+liquid-full, so gas does not cross the front; the moving-frame gas condition
+gives
+\begin{equation}
+u_{g,\Gamma}=w_\Gamma .
+\label{eq:gaskin}
+\end{equation}
+Because the water-hammer speed $a$ is much larger than mixed-flow front
+speeds, one pressurized acoustic characteristic always reaches the front,
+supplying the compatibility relation
+\begin{equation}
+u_{p,\Gamma}-u_{p,L}+\frac{g}{a}\left(h_{s,\Gamma}-h_{s,L}\right)=0,
+\label{eq:compat}
+\end{equation}
+with $L$ the adjacent pressurized state. Equations
+(\ref{eq:rh})--(\ref{eq:compat}) do not determine all interface unknowns;
+the remaining information depends on the position of $w_\Gamma$ relative to
+the stratified liquid signal speeds
+$s_\pm=u_{l,R}\pm c_{l,R}$, $c_{l,R}=\sqrt{\Lambda_{d,R}A_R}$, which
+partition the admissible front speeds into the slow ($w<s_-$), middle
+($s_-\le w\le s_+$), and fast ($w>s_+$) active sets.
+
+Because the correct active set is not known before $w_\Gamma$ is computed,
+and branch-dependent nonlinear iteration at every front is fragile in
+transient computations, the closure of \cite{xue2026model} is a fixed-cost
+one-step construction. Substituting the compatibility
+relation~(\ref{eq:compat}) and the mass jump into the momentum jump reduces
+the closure, for any candidate speed $w$, to a scalar quadratic for
+$A_{p,\Gamma}(w)$ and a scalar momentum residual $R(w)$. A finite-area
+predictor built from the adjacent states,
+\begin{equation}
+w_0=\frac{A_{p,L}u_{p,L}-A_R u_{l,R}}{A_{p,L}-A_R},
+\label{eq:predictor}
+\end{equation}
+is projected onto each (slightly shrunken) active-set interval, one
+closed-form Newton-type residual correction is applied per interval, and the
+accepted candidate is the one minimizing a penalized criterion combining the
+Rankine--Hugoniot residual, the distance to its active set, and positivity
+penalties. No Bernoulli-type energy relation is imposed at the front. The
+selected trace defines the moving-frame flux pair
+$\mathbf{G}_{p,\Gamma}=\mathbf{F}_{p,\Gamma}-w_\Gamma\mathbf{U}_{p,\Gamma}$
+and
+$\mathbf{G}_{f,\Gamma}=\mathbf{F}_{f,\Gamma}-w_\Gamma\mathbf{U}_{f,\Gamma}$
+passed to the cut-cell update below.
+
+\subsection{Finite-volume update and cut-cell front tracking}
+\label{sec:model:fv}
+
+Away from fronts, both branches are advanced by the same explicit
+finite-volume machinery: MUSCL--TVD primitive reconstruction with the minmod
+limiter, branch-dependent Rusanov fluxes (scalar dissipation
+$\max(|u_p|+a)$ on the pressurized branch; block-diagonal dissipation with
+gas speed $|u_g|+c_g$ and stratified liquid speed $|u_l|+c_\Lambda$,
+$c_\Lambda=\sqrt{\max(\Lambda_d A_l,0)+c_{\mathrm{num}}^2}$, on the
+stratified branch), unsplit cell-centered sources, and SSP--RK2 time
+integration. The time step is the minimum of the branch CFL limits and a
+front-motion restriction
+$\Delta t_\Gamma=\tfrac{1}{2}\min(\Delta x_p,\Delta x_f)/|w_\Gamma^n|$,
+which prevents the front from sweeping more than half a cell per step.
+
+The cell hosting a front is divided into pressurized and stratified
+sub-cells of lengths $\ell_p$ and $\ell_f$ with
+$\ell_p+\ell_f=\Delta x$. At the beginning of each step the adjacent branch
+states are passed to the closure of Section~\ref{sec:model:rtrp}; the front
+is then advanced as $x_\Gamma^{n+1}=x_\Gamma^{n}+w_\Gamma\Delta t$, and each
+sub-cell is updated by its own branch flux at the outer face and the
+moving-frame interface flux at the front. Because both sub-cell balances use
+the same $w_\Gamma$ and the same interface trace, the interface fluxes and
+swept-volume contributions cancel exactly for the conserved liquid
+components and gas mass: the front neither creates nor destroys liquid or
+gas. When the front crosses a cell face, the affected cells are remapped
+conservatively (event-based remap), and a bounded, localized residual
+relaxation corrects the remaining interface mismatch after an accepted
+step. Trapped gas regions are identified after each step as connected gas
+volumes bounded by liquid seals, and their pressures are evaluated from the
+isothermal equation of state on the current pocket mass and volume.
+
+\subsection{Vertical-shaft branch}
+\label{sec:model:riser}
+
+A vertical shaft (ventilation tower, riser, or dropshaft barrel) is
+discretized as a separate one-dimensional finite-volume branch using the same
+area--momentum variables as the horizontal conduit, with the pipe inclination
+set to $\theta=90^{\circ}$ so that gravity acts axially. The shaft top is
+open to the atmosphere; the free surface inside the shaft and any gas core
+penetrating below it are represented by the axial profile of the gas volume
+fraction $\alpha_g(z)$, not by a prescribed bubble shape. The shaft state
+therefore distinguishes the free-surface elevation $Y_{fs}$ (top of the
+continuous liquid column) from the air--water interface elevation $Y_{int}$
+(nose of the gas core rising through the column), which are exactly the two
+trajectories reported in shaft experiments. Geysering is diagnosed, following
+the experimental definition of \cite{vasconcelos2011}, when $Y_{fs}$ reaches
+the shaft top before $Y_{int}$ catches the free surface.
+
+\subsection{Junction and local-loss closures}
+\label{sec:model:junction}
+
+The shaft base is coupled to the horizontal conduit through a junction
+closure driven by the local pipe state and the trapped-pocket pressure. The
+junction exchange uses the pocket equation-of-state static head as the
+driving head, with the following local-loss elements retained from the
+frozen configuration used for all runs in Section~\ref{sec:tests}:
+
+\begin{itemize}
+\item a junction entry/exit loss coefficient $K_j=0.75$ on the through-flow
+between pipe and shaft base;
+\item an additional churn loss $K_{g}=8.0$ applied while the junction carries
+gas, representing the strongly dissipative counter-current air-up/water-down
+exchange (``glugging'') at the shaft mouth;
+\item a butterfly-valve loss $K_v=2.0$ at the release valve, whose disc
+remains in the flow after opening, with a finite hand-opening time
+$t_v=0.25$~s represented by throttling the loss coefficient during opening;
+\item a counter-current flooding (CCFL) limit of Wallis type on reverse
+liquid drainage at the shaft top while gas is venting, with limiting velocity
+scale $0.5\sqrt{gD_t}$, where $D_t$ is the shaft diameter.
+\end{itemize}
+
+Three further elements govern the shaft base in the driven regime, i.e.\
+when the trapped pocket holds an overpressure margin over the shaft column
+($H_{a0}>Y_{fs,0}$) and gas has reached the junction; they are stated here
+and motivated with the narrow-tower test in
+Section~\ref{sec:tests:vw2011:caseB}: (i) the shaft base is driven by the
+pipe \emph{crown} pressure (the elevation at which the shaft physically
+taps the pipe), one bore below the invert piezometric line while the
+junction is water-sealed; (ii) the shaft gas core connected to the pocket
+is pocket-fed---mouth influx raises the core nose, by the same
+fill-to-body-level closure used for the crown cavity in the horizontal
+pipe---rather than accumulating at the base cell under dispersed-bubble
+drag; and (iii) the entry gas flux is bounded by the Wallis counter-current
+flooding scale $j_g\le C_w^{2}\sqrt{gD_t\,\Delta\rho/\rho_l}$ with
+$C_w=0.9$. These closures use geometric facts and literature-scale
+constants; in the undriven regime (Test~A of Campaign~1) they are inactive
+and the base retains the invert-datum coupling, a dual treatment whose
+consolidation is discussed in Section~\ref{sec:discussion}.
+
+Once a trapped pocket becomes connected to the shaft and gas breaks through
+the liquid seal, venting latches on: the pocket continues to discharge
+through the shaft and is not re-sealed by intermittent slugs. This latch
+reflects the experimental observation that after breakthrough the release
+proceeds as a sustained, if oscillatory, discharge rather than a sequence of
+independent seal events.
+
+\subsection{Numerical configuration}
+\label{sec:model:numerics}
+
+All computations in Section~\ref{sec:tests} use the same numerical settings:
+$\Delta s=0.02$~m in horizontal reaches, $\Delta z=0.01$~m in shafts, and a
+CFL number of 0.35. The liquid-full branch uses a reduced elastic wave speed
+$a=28$~m/s. This value separates the acoustic scale from the approximately
+$1$~m/s gravity scale while limiting grid-scale ringing. It is adequate for
+pocket-compression and water-column motion, but it is not intended to predict
+the shortest water-hammer peaks. Gas thermodynamics is isothermal with
+$R=287~\mathrm{J\,kg^{-1}\,K^{-1}}$ and $T=293~\mathrm{K}$, and the
+liquid density is $\rho_l=998~\mathrm{kg\,m^{-3}}$.
+
+No loss coefficient or numerical parameter is fitted to an individual test.
+The shaft-base treatment is conditioned on the computed state: the
+crown-datum, pocket-fed, flooding-limited path is active in the driven
+regime, and the invert-datum path is active otherwise. This distinction is
+part of the frozen closure logic. It is reported explicitly because the
+experiments later show that a unified cross-sectional junction closure is
+still needed.

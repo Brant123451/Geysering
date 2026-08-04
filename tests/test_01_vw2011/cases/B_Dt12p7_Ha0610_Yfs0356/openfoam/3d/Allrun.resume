@@ -1,0 +1,56 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+source /usr/share/modules/init/bash 2>/dev/null || true
+set +u
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
+
+if [[ ! -d processor0 ]]; then
+    echo "No decomposed solution exists; run ./Allrun first." >&2
+    exit 1
+fi
+if pgrep -f '[c]ompressibleInterFlow -parallel' >/dev/null; then
+    echo "compressibleInterFlow is already running." >&2
+    exit 1
+fi
+
+TWOPHASEFLOW_COMMIT="de9826f9ffb24f4b635ac97fd388ebd560cfc174"
+TWOPHASEFLOW_ROOT="${CASEB_TWOPHASEFLOW_ROOT:-$WM_PROJECT_USER_DIR/TwoPhaseFlow}"
+if [[ ! -d "$TWOPHASEFLOW_ROOT/.git" ]]; then
+    echo "TwoPhaseFlow checkout not found at $TWOPHASEFLOW_ROOT" >&2
+    exit 1
+fi
+installed_commit="$(git -C "$TWOPHASEFLOW_ROOT" rev-parse HEAD)"
+if [[ "$installed_commit" != "$TWOPHASEFLOW_COMMIT" ]]; then
+    echo "TwoPhaseFlow must be at $TWOPHASEFLOW_COMMIT, got $installed_commit" >&2
+    exit 1
+fi
+if ! command -v compressibleInterFlow >/dev/null; then
+    echo "compressibleInterFlow is not built in the sourced v2512 environment." >&2
+    exit 1
+fi
+
+MANIFEST="outputs/runtime/run_manifest.json"
+if [[ ! -f "$MANIFEST" ]]; then
+    echo "Run manifest is missing; refusing to guess resume controls." >&2
+    exit 1
+fi
+
+# A resume must continue the same numerical experiment.  Ignore ambient
+# CASEB_* values and restore every materialised control from the manifest.
+eval "$(python3 resume_manifest.py "$MANIFEST")"
+python3 prepare_run.py > log.prepare.resume 2>&1
+
+processors=(processor[0-9]*)
+NP="${#processors[@]}"
+OMPI_ALLOW_RUN_AS_ROOT=1 \
+OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
+mpirun -np "$NP" compressibleInterFlow -parallel \
+    >> log.compressibleInterFlow 2>&1
+
+if [[ "${CASEB_RECONSTRUCT:-0}" == "1" ]]; then
+    reconstructPar -latestTime > log.reconstructPar 2>&1
+fi
+python3 postprocess.py > log.postprocess 2>&1
+echo "CASE_B_3D_RESUME_DONE"

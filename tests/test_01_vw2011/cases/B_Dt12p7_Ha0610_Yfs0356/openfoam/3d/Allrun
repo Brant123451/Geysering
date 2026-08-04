@@ -1,0 +1,125 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+source /usr/share/modules/init/bash 2>/dev/null || true
+# WSL/bash can emit a non-fatal pop_var_context warning while sourcing
+# OpenFOAM bashrc; keep -e off until the environment variables exist.
+set +e
+set +u
+set +o pipefail
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+if [[ -z "${WM_PROJECT_VERSION:-}" ]]; then
+    echo "OpenFOAM environment failed to load" >&2
+    exit 1
+fi
+set -euo pipefail
+
+if [[ -d 0 || -d processor0 || -d constant/polyMesh ]]; then
+    echo "Existing runtime state detected; use ./Allrun.resume or ./Allclean." >&2
+    exit 1
+fi
+
+STAGE="${CASEB_STAGE:-full}"
+MESH="${CASEB_MESH:-base}"
+if [[ "$STAGE" != "mesh" && "$STAGE" != "hold" && "$STAGE" != "smoke" && "$STAGE" != "full" ]]; then
+    echo "CASEB_STAGE must be mesh, hold, smoke, or full" >&2
+    exit 2
+fi
+if [[ "$MESH" != "base" && "$MESH" != "refined" ]]; then
+    echo "CASEB_MESH must be base or refined" >&2
+    exit 2
+fi
+
+TWOPHASEFLOW_COMMIT="de9826f9ffb24f4b635ac97fd388ebd560cfc174"
+TWOPHASEFLOW_ROOT="${CASEB_TWOPHASEFLOW_ROOT:-$WM_PROJECT_USER_DIR/TwoPhaseFlow}"
+if [[ "$STAGE" != "mesh" ]]; then
+    if [[ ! -d "$TWOPHASEFLOW_ROOT/.git" ]]; then
+        echo "TwoPhaseFlow checkout not found at $TWOPHASEFLOW_ROOT" >&2
+        exit 1
+    fi
+    installed_commit="$(git -C "$TWOPHASEFLOW_ROOT" rev-parse HEAD)"
+    if [[ "$installed_commit" != "$TWOPHASEFLOW_COMMIT" ]]; then
+        echo "TwoPhaseFlow must be at $TWOPHASEFLOW_COMMIT, got $installed_commit" >&2
+        exit 1
+    fi
+    if ! command -v compressibleInterFlow >/dev/null; then
+        echo "compressibleInterFlow is not built in the sourced v2512 environment." >&2
+        exit 1
+    fi
+fi
+
+if [[ -z "${CASEB_VALVE_MODE:-}" ]]; then
+    if [[ "$STAGE" == "hold" ]]; then
+        export CASEB_VALVE_MODE=closed
+    else
+        export CASEB_VALVE_MODE=opening
+    fi
+fi
+export CASEB_VALVE_OPEN_TIME="${CASEB_VALVE_OPEN_TIME:-0.25}"
+export CASEB_VALVE_SEAL_SPEED="${CASEB_VALVE_SEAL_SPEED:-1.0}"
+export CASEB_GAS_EOS="${CASEB_GAS_EOS:-perfectGas}"
+
+python3 validate_case.py > log.preflight 2>&1
+python3 prepare_run.py > log.prepare 2>&1
+MESH_OPTIMIZER="${CASEB_MESH_OPTIMIZER:-gmsh}"
+python3 make_mesh.py \
+    --preset "$MESH" \
+    --optimizer "$MESH_OPTIMIZER" \
+    --output caseB3d.msh \
+    --metadata "outputs/runtime/mesh_${MESH}.json" \
+    > log.gmsh 2>&1
+gmshToFoam caseB3d.msh > log.gmshToFoam 2>&1
+if [[ "$CASEB_VALVE_MODE" == "closed" ]]; then
+    createBaffles -overwrite -dict system/createBafflesDict.hold \
+        > log.createBaffles 2>&1
+fi
+createPatch -overwrite > log.createPatch 2>&1
+topoSet > log.topoSet 2>&1
+checkMesh > log.checkMesh 2>&1
+checkMesh -allTopology -allGeometry > log.checkMesh.strict 2>&1
+python3 postprocess.py --mesh-only > log.meshEvidence 2>&1
+
+cp -a 0.orig 0
+setFields -dict system/setFieldsDict.runtime > log.setFields 2>&1
+setAlphaField -dict system/setAlphaFieldDict > log.setAlphaField 2>&1
+setExprFields -dict system/setExprFieldsDict.runtime \
+    > log.setExprFields.p 2>&1
+setExprFields -dict system/setExprFieldsReducedPressureDict.runtime \
+    > log.setExprFields.p_rgh 2>&1
+
+HYDROSTATIC_INITIALIZATION="${CASEB_HYDROSTATIC_INITIALIZATION:-analytic}"
+if [[ "$STAGE" != "mesh" && "$HYDROSTATIC_INITIALIZATION" == "discrete" ]]; then
+    wmake caseBHydrostaticInit > log.wmake.caseBHydrostaticInit 2>&1
+    caseBHydrostaticInit \
+        -nCorrectors "${CASEB_HYDROSTATIC_CORRECTORS:-5}" \
+        > log.caseBHydrostaticInit 2>&1
+fi
+
+if [[ "$STAGE" == "mesh" ]]; then
+    echo "CASE_B_3D_MESH_DONE"
+    exit 0
+fi
+
+NP="${OPENFOAM_NP:-$(nproc)}"
+# Local machines may expose more than the cloud default of 4 ranks.
+if (( NP > 12 )); then
+    NP=12
+elif (( NP < 1 )); then
+    NP=1
+fi
+cp system/decomposeParDict system/decomposeParDict.runtime
+foamDictionary system/decomposeParDict.runtime \
+    -entry numberOfSubdomains -set "$NP" >/dev/null
+decomposePar -decomposeParDict system/decomposeParDict.runtime \
+    > log.decomposePar 2>&1
+
+OMPI_ALLOW_RUN_AS_ROOT=1 \
+OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
+mpirun --use-hwthread-cpus --bind-to none -np "$NP" compressibleInterFlow -parallel \
+    > log.compressibleInterFlow 2>&1
+
+if [[ "${CASEB_RECONSTRUCT:-0}" == "1" ]]; then
+    reconstructPar -latestTime > log.reconstructPar 2>&1
+fi
+python3 postprocess.py > log.postprocess 2>&1
+echo "CASE_B_3D_${STAGE^^}_DONE"

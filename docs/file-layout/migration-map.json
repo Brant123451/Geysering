@@ -1,0 +1,71 @@
+{
+  "directories": [
+    "tests/test_01_vw2011/_shared/reference",
+    "tests/test_01_vw2011/_shared/metadata",
+    "tests/test_01_vw2011/_shared/tools",
+    "tests/test_01_vw2011/cases",
+    "tests/test_02_cong2017/_shared/reference",
+    "tests/test_02_cong2017/_shared/metadata",
+    "tests/test_02_cong2017/_shared/tools",
+    "tests/test_02_cong2017/cases",
+    "tests/test_02_cong2017/studies",
+    "tests/test_03_liu2020/_shared/reference",
+    "tests/test_03_liu2020/_shared/metadata",
+    "tests/test_03_liu2020/_shared/tools",
+    "tests/test_03_liu2020/cases"
+  ],
+  "moves": [
+    {
+      "source": "Vasconcelos_Wright_2011_Geysering/caseA_Dt57p1_Ha0305_Yfs0356",
+      "target": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356"
+    },
+    {
+      "source": "Vasconcelos_Wright_2011_Geysering/caseB_Dt12p7_Ha0610_Yfs0356",
+      "target": "tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356"
+    },
+    {
+      "source": "Vasconcelos_Wright_2011_Geysering",
+      "target": "tests/test_01_vw2011/_staging_legacy"
+    },
+    {
+      "source": "Cong_Chan_Lee_2017_Geyser_Horizontal_Pipe_Vertical_Shaft/caseA_BH1_Dr16_H066_L061_geyser",
+      "target": "tests/test_02_cong2017/cases/BH1_Dr16_H066_L061"
+    },
+    {
+      "source": "Cong_Chan_Lee_2017_Geyser_Horizontal_Pipe_Vertical_Shaft/caseB_BH6_Dr41_H066_L061_nogeyser",
+      "target": "tests/test_02_cong2017/cases/BH6_Dr41_H066_L061"
+    },
+    {
+      "source": "Cong_Chan_Lee_2017_Geyser_Horizontal_Pipe_Vertical_Shaft/scan_seriesB_criterion_map",
+      "target": "tests/test_02_cong2017/studies/criterion_map"
+    },
+    {
+      "source": "Cong_Chan_Lee_2017_Geyser_Horizontal_Pipe_Vertical_Shaft",
+      "target": "tests/test_02_cong2017/_staging_legacy"
+    },
+    {
+      "source": "Liu_Shao_Zhu_2020_Junction_Chamber_Geyser/caseA_A2_Q20to100_openchannel_nogeyser",
+      "target": "tests/test_03_liu2020/cases/A2_Q20to100_openchannel_nogeyser"
+    },
+    {
+      "source": "Liu_Shao_Zhu_2020_Junction_Chamber_Geyser/caseB_B3_Q20to100_fullpipe_geyser",
+      "target": "tests/test_03_liu2020/cases/B3_Q20to100_fullpipe_geyser"
+    },
+    {
+      "source": "Liu_Shao_Zhu_2020_Junction_Chamber_Geyser/caseC_C9_Q25to40_hr03_airpocket",
+      "target": "tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket"
+    },
+    {
+      "source": "Liu_Shao_Zhu_2020_Junction_Chamber_Geyser",
+      "target": "tests/test_03_liu2020/_staging_legacy"
+    },
+    {
+      "source": "papers",
+      "target": "references"
+    },
+    {
+      "source": "reproduction",
+      "target": "tests/test_01_vw2011/_archive/legacy_reproduction"
+    }
+  ]
+}

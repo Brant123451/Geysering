@@ -1,0 +1,33 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p_rgh;
+}
+
+dimensions      [1 -1 -2 0 0 0 0];
+internalField   uniform 105271.314;
+
+boundaryField
+{
+    walls
+    {
+        type            fixedFluxPressure;
+    }
+
+    "valveWall.*"
+    {
+        type            fixedFluxPressure;
+    }
+
+    atmosphere
+    {
+        // Enforce 101325 Pa static pressure for either phase; a constant
+        // p_rgh would create artificial suction when water reaches this patch.
+        type            prghPressure;
+        rho             rho;
+        p               uniform 101325;
+        value           uniform 101325;
+    }
+}

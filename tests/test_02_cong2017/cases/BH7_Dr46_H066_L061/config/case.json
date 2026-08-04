@@ -1,0 +1,10 @@
+{
+  "run": "B-H7",
+  "Dr_mm": 46,
+  "Dr_over_D": 0.92,
+  "L0_m": 0.61,
+  "H0_m": 0.66,
+  "Vair_star": 1.092,
+  "observed_geyser": false,
+  "modeled_geyser": false
+}

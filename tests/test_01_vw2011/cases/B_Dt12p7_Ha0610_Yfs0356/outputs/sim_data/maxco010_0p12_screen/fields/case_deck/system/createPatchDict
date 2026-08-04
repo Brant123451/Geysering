@@ -1,0 +1,31 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      createPatchDict;
+}
+
+pointSync false;
+
+patches
+(
+    {
+        name walls;
+        patchInfo
+        {
+            type wall;
+        }
+        constructFrom patches;
+        patches (walls_raw);
+    }
+    {
+        name atmosphere;
+        patchInfo
+        {
+            type patch;
+        }
+        constructFrom patches;
+        patches (atmosphere_raw);
+    }
+);

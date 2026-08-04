@@ -1,0 +1,7 @@
+endTime         10.5;
+writeControl    runTime;
+writeInterval   0.10;
+maxCo           0.30;
+maxAlphaCo      0.20;
+maxCapillaryNum 1.0;
+maxDeltaT       0.00025;

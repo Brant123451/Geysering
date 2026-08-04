@@ -1,0 +1,3 @@
+WATCHDOG_START 2026-07-17T03:47:34Z interval=1200s stale=1800s
+==== 2026-07-17T03:47:34Z ====
+{"stamp": "2026-07-17T03:47:34Z", "action": "ok", "reason": "pre_solver_setup", "screen": "refined_0p12", "solver_procs": 1, "allrun_n": 2, "gmsh_n": 2}

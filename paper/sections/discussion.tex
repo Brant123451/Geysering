@@ -1,0 +1,175 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Evidence across the three campaigns}
+
+The three campaigns test the model at different levels. Campaign~1 asks
+whether the computed gas and liquid fields reproduce the sequence within an
+individual event. Campaign~2 asks whether those fields select the correct
+branch across changes in shaft diameter and pocket volume. Campaign~3 asks
+whether the same reduced description remains informative when a junction
+chamber and downstream boundary participate in the transient. Considered
+together, the results show that conserving and transporting the gas phase is
+enough to recover the principal mechanism across all three apparatuses. They
+also show that correct branch selection does not guarantee accurate event
+timing, interface speed, or pressure peaks.
+
+In Campaign~1, the wide and narrow towers occupy different experimental
+branches, and the model separates them correctly. For the wide tower, the
+computed maximum free-surface level is $0.66L$, compared with $0.63L$ in the
+experiment. The interface velocity is $0.41\sqrt{gD}$, compared with
+$0.39\sqrt{gD}$. The computed pressure plateau is also close to the measured
+level. These agreements indicate that the resolved pocket volume and
+hydrostatic resistance set the bulk response correctly. The remaining error
+is topological. The experiment contains a coherent gas pocket with a draining
+wall film, whereas the present grid-scale closure transports the shaft gas as
+a dispersed phase. It therefore misses the gradual free-surface creep and
+delays the pressure decay until breakthrough. After breakthrough, the local
+transducer state is repeatedly re-pressurized by the elastic horizontal
+water-column--pocket mode. The moving mean converts this oscillatory release
+into a gradual tail, but it does not cause the late onset.
+
+The narrow tower exposes a different error. The model reproduces the
+pre-eruption stand ($0.84L$ versus $0.82L$), the pressure plateau, the rise to
+the rim, and the free-surface speed ($0.39\sqrt{gD}$ versus
+$0.44\sqrt{gD}$). However, the interface speed is only
+ $0.71\sqrt{gD}$, compared with $1.43\sqrt{gD}$. The free surface reaches the
+ rim early ($t^{*}=3.70$ versus $3.90$--$3.98$), whereas the interface reaches
+ $0.85L$ late ($t^{*}=4.44$ versus the credible high-interface cluster at
+ $4.09$--$4.17$). The error is therefore a stretched
+gas-release sequence, not a uniform shift of all events. This distinction is
+important because it localizes the deficiency to the transfer of gas through
+the shaft mouth and the pocket-fed core rather than to the initial pocket
+arrival alone.
+
+Campaign~2 shows how this timing and exchange error affects regime
+classification. The model captures 5 of the 7 filmed Series-B cases and 39
+of the 63 configurations in the full parameter sweep. It reproduces the
+geysering end member, all wide-riser and small-pocket non-geysering end
+members, and the measured branch differentiation of pipe-end pressure. The
+24 sweep disagreements are all experimental geysers that remain below the
+rim in the computation. No computed case produces a false geyser. This
+one-sided pattern is mechanistically consistent with insufficient net water-
+column lift near the transition band. It should not be described as
+``conservative'' for hazard screening, because missed eruptions are
+non-conservative from a safety perspective.
+
+Campaign~3 provides a complementary boundary-condition test. Changing only
+the downstream condition reverses the outcome between A2 and B3, and the
+model reproduces that reversal. It also places the B3 jet height on the
+experimental pressure--height trend. The frozen wave speed under-resolves
+the short pressure peak, yielding $30.84$~kPa rather than $55.03$~kPa. For
+C9, the computed first pressure peak is $11.49$~kPa at $0.54$~s, compared
+with $10.69$~kPa at $0.50$~s. The predicted oscillation period is shorter
+than measured, and later pocket-driven geysers lie outside the composite
+one-dimensional representation. Thus, the chamber reduction retains the
+first transient response but not the full later-time gas-pocket dynamics.
+
+\subsection{Where the reduced model succeeds}
+
+The strongest result is the recovery of branch physics without prescribing
+a gas-release history. In each campaign, the pocket pressure evolves from
+the conserved gas mass and computed volume. Gas transport into the shaft and
+water displacement then follow from the coupled solution. This structure
+allows the model to distinguish benign venting from eruption and to respond
+to changes in riser diameter, pocket volume, and downstream boundary. A
+liquid-only model with a prescribed pressure or discharge could reproduce a
+selected trace, but it would not provide the same independent regime test.
+
+The results also identify which observables are robust at one-dimensional
+resolution. Slowly varying pressure plateaus, quasi-static water-column
+stands, maximum free-surface levels, and the first mass-oscillation peak are
+captured more reliably than interface breakthrough, annular-film motion, or
+short acoustic spikes. These robust quantities are governed mainly by gas
+inventory, liquid-column inertia, and hydrostatic balance. The less robust
+quantities depend on local three-dimensional exchange or unresolved time
+scales at the junction and shaft wall.
+
+\subsection{Closure limitations revealed by the experiments}
+
+The dominant limitation is the shaft-mouth closure. In the narrow-tower
+configuration, a crown-referenced pressure datum, a pocket-fed gas core, and
+a Wallis-type flooding limit are activated by the resolved driven regime.
+These elements use geometry and literature-scale constants rather than
+case-specific calibration. Nevertheless, they remain a regime-conditioned
+closure rather than a unified cross-sectional junction solution. The wide
+tower uses an invert-referenced datum, while the narrow tower requires the
+physical crown connection. A future junction model should transmit the
+vertical pressure distribution across the mouth instead of reducing it to a
+single scalar datum.
+
+The second limitation is the coupling between cavity propagation and vent
+feed. The frozen dissipative cavity speed places the initial arrivals within
+the observed scatter. The same reduced feed then slows the pocket-fed core
+and delays breakthrough. Separating the front speed from the pressure-driven
+gas flux through the mouth would allow the two constraints to be satisfied
+independently.
+
+The third limitation is the volume-neutral counter-current exchange used at
+the tee. This exchange preserves pocket pressure during balanced venting and
+is needed to produce the B-H1 geyser. In reservoir-fed, wider-riser cases,
+however, it cancels part of the water-column displacement produced by
+entering gas. Removing the exchange restores lift in those cases but also
+removes the B-H1 pressure rebuild. The two branches therefore require a
+flux-limited exchange law based on local counter-current capacity, not a
+fixed equality of gas and liquid volumes.
+
+Two additional limits follow from dimensional reduction. A dispersed two-
+fluid state does not preserve the coherent Taylor-pocket topology and its
+draining film in the wide tower. A reduced chamber and softened acoustic
+celerity do not resolve the shortest B3 pressure spike or the later arrival
+and venting of pockets in C9. These discrepancies should be addressed by
+targeted closure development or local multidimensional coupling. They should
+not be hidden by adjusting a global parameter to individual tests.
+
+\subsection{Implications and scope of use}
+
+The present evidence supports using the framework to study mechanisms and to
+screen system-scale scenarios away from the regime boundary. It can track
+gas inventory, pocket compression, branch selection, and the bulk pressure
+and water-column response within one computational description. The evidence
+does not support using the current formulation as a stand-alone safety
+classifier near the boundary. Its Campaign~2 errors are missed geysers, and
+the local pressure peak in B3 is sensitive to acoustic representation.
+
+The reported accuracy applies to the frozen numerical configuration and the
+documented, regime-conditioned junction closures. It does not establish
+universality across shaft shapes, manhole covers, network interactions, or
+prototype Reynolds and Weber numbers. The next validation step should
+therefore target an independent apparatus without modifying the closure
+parameters. Priority measurements are simultaneous gas flux, liquid return
+flow, pocket pressure, and interface topology at the shaft mouth. Such data
+would distinguish an exchange-law error from a shaft-entrainment error and
+would make the next closure revision falsifiable.
+
+\section{Conclusions}
+\label{sec:conclusions}
+
+This study assessed a gas-conserving one-dimensional mixed-flow framework
+against three published geysering campaigns. The model represented the shaft
+and horizontal conduit with coupled two-fluid states and computed the gas
+release rather than prescribing it. Across the ventilation-shaft tests, it
+selected both the non-geysering and geysering branches and reproduced the
+principal pressure and water-column scales. In the wide tower, the pressure
+plateau was reproduced, but blowdown was delayed until breakthrough and
+relaxed too gradually. The narrow-tower comparison revealed a stretched
+release sequence: shaft arrival was early, whereas interface breakthrough
+was late and the computed interface velocity was approximately one half of
+the measured value.
+
+Across the horizontal-pipe/vertical-riser campaign, the model classified 5
+of 7 filmed cases and 39 of 63 parameter-sweep configurations. All 24 sweep
+errors were missed experimental geysers near the transition band, with no
+false geysers. In the junction-chamber campaign, it reproduced the A2/B3
+branch reversal and the first C9 pressure transient, but under-resolved the
+short B3 pressure peak and did not represent later pocket-driven events.
+
+The combined evidence separates a useful system-scale capability from its
+current limits. Resolved gas conservation and transport recover the dominant
+regime mechanism, bulk pressure levels, and water-column response. Remaining
+errors concentrate in shaft-mouth exchange, coherent-film topology, and
+acoustic/chamber reduction. The framework is therefore suitable for
+mechanistic assessment and qualified screening away from the boundary. A
+unified, flux-limited junction and entrainment closure is required before the
+model can be relied upon for safety-critical classification of marginal
+geysering cases.

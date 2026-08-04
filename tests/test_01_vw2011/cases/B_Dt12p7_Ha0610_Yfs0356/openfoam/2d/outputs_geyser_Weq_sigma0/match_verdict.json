@@ -1,0 +1,15 @@
+{
+  "match_ok": true,
+  "checks": {
+    "ran_to_Tstar_ge_5.0": true,
+    "geysering_Yfs_ge_1": true,
+    "Hstar_plateau_in_0.35_0.95": true,
+    "Hstar_RMSE_lt_0.40": true
+  },
+  "yfs_max": 1.4672131147540985,
+  "Hstar_plateau": 0.9084639205936664,
+  "Hstar_RMSE": 0.34475253864475397,
+  "Tstar_end": 5.193271005628964,
+  "geysering": true,
+  "note": "Area-equivalent tower W=Dt^2/D, sigma=0; require Yfs*>=1 (geysering)."
+}

@@ -1,0 +1,670 @@
+Lewis, J. and S.J. Wright. 2012. "Air-Water Interactions that Generate Large Water Lift through Vertical Shafts in Stormwater Conduits." Journal of Water Management Modeling R245-02. doi: 10.14796/JWMM.R245-02. © CHI 2012 www.chijournal.org ISSN: 2292-6062 (Formerly in On Modeling Urban Water Systems. ISBN: 978-0-9808853-7-8)
+
+2
+
+## Air–Water Interactions that Generate Large Water Lift through Vertical Shafts in Stormwater Conduits
+
+James W. Lewis and Steven J. Wright Storm and combined sewer collection systems can fill rapidly during large precipitation events leading to a dynamic condition referred to as geysering in which an intense upward movement of a mixture of air and liquid rises through a vertical shaft well above the grade elevation. In some instances, the untreated liquid mixture jets tens of meters above the ground surface posing safety risks and flooding hazards. To date, most discussions of the rapid filling of storm water systems present analyses of inertia-induced surges in the system. Numer ical modeling such as that presented by Cardle and Song (1988) and Guo and Song (1991) have only considered single phase (water) flow phenomena to simulate the occurrence of geysers. Lewis et al. (2011) and Wright et al. (2011) present pressure data for a geyser event in a stormwater tunnel in Minneapolis, Minnesota that indicates the geyser could not have been produced by an inertial surge since the hydraulic grade line remained more than 20 m below grade during a series of geysers that jetted 15 m to 20 m into the air. Laboratory studies conducted by the authors and others (Wright et al., 2003; Vasconcelos and Wright, 2005a; Wright et al., 2007) pointed to the role of discrete pockets of entrapped air in geyser formation. During the course of the study by Vasconcelos and Wright (2005b), observations were made of the interaction of a large trapped pocket of pressurized air migrating along the 9.4 cm diameter pipe crown with a 2.5 cm diameter ventilation shaft approximately 50 cm high and surcharged to an initial water depth of about 25 cm. Two distinct jets of water were observed, first as the front of the air pocket arriving at the shaft forced water out the top of the shaft ahead of it and then as the trailing end of the air pocket left the pipe and water refilled the ventilation
+
+22 Air–Water Interactions that Generate Large Water Lift … shaft. The second jet of water reached over 1 m above the top of the ventilation shaft and was stronger than the initial jet. Since the small scale laboratory experiments do not dynamically reproduce all phenomena associated with water ejection at the scale of stormwater tunnels, it was unclear which of the two water jets was most closely associated with the geyser phenomenon seen in videos of actual sewer systems. This question led to the current investigation during which a number of different types of experiments were performed in order to develop a more comprehensive understanding of the processes that result in geyser formation. Several of these studies have been reported (Wright et al., 2007; Lewis et al., 2010; Lewis et al., 2011). This chapter aims to sum marize these studies in an attempt to clarify the physical processes that may occur in rapidly filling pipeline systems to generate geyser events. To gain more insight into the processes involved in the observed laboratory surges associated with air, it was decided to perform additional experiments that dealt separately with the issue of the air arrival at the vertical shaft and the displace ment of air from the system by pressurized water. More different types of experiments were performed, but only two sets of experiments are reported in this chapter. The dissertation by Lewis (2011) describes the entire experimental program and results. An interpretation of the results is provided to indicate the most likely processes involved in geysering and the critical variables that control the strength of the geyser. As mentioned above, the small scale labora tory experiments do not reproduce all dynamic effects so an interpretation is required, but the experiments suggest an explanation for the geyser formation.
+
+### 2.1 Air Displacement from Pipeline
+
+2.1.1 Experimental Setup 
+These experiments have been described previously by Wright, et al. 2007; the 
+experimental setup is indicated in Figure 2.1. A 7.79 m horizontal length of 
+9.5 cm diameter clear acrylic pipe was connected to a butterfly valve that 
+controlled flow from a constant head reservoir. At the downstream end of the 
+system, a weir controlled the initial water depth within the horizontal pipe. 
+When the valve was suddenly opened, a pipe filling hydraulic bore (similar to 
+the bore observed at the trailing end of a discrete air pocket) began to propagate 
+along the pipeline. When the bore reached the vertical riser, water surged up 
+into the riser located 3.47 m downstream from the valve. Experiments were 
+performed for three different cases: the riser was completely open at the top; the 
+riser was completely blocked at the top such that air was compressed within the 
+riser; and a small diameter nozzle restricted air release from the riser. Only 
+results for the first two cases are presented herein. 
+
+Figure 2.1 Experimental apparatus for the air displacement 
+experiments. 
+Video observations were made for each trial as well as three continuous 
+pressure recordings. The pertinent measurement reported herein involves the 
+transducer located in the riser near the bottom. During a portion of some exper 
+iments, this transducer was located above the water level in the riser and there 
+fore did not record pressure. 
+The reservoir elevation, initial depth, riser diameter, and ventilation were 
+adjusted through the ranges presented in Table 2.1. As indicated in the table, 
+the initial water depth in the horizontal pipeline downstream of the valve was 
+adjusted to various depths of 50%, 70%, 95% and 100% full with respect to 
+pipe diameter. The weir box at the downstream end of the system had base 
+dimensions 0.240 m by 0.240 m. The weir crest elevation was adjusted by 
+installing sharp-crested Plexiglas pieces of different heights into the end wall of 
+the weir box. The weir crest height produced the desired initial water depth in 
+the pipeline while the water flow over the crest was sufficient to maintain a full 
+pipe condition after the pipe filling bore arrived at the downstream end of the 
+system. Each vertical riser consisted of clear acrylic tubing with height >1.8 m, 
+sufficiently tall that all surges were contained within the riser. 
+Table 2.1 Experimental variables. 
+Initial Depth 50%, 70%, 95%, 100% of pipe diameter 
+Ventilation Open, closed, ~ 5% open 
+Riser Diameter 44.4 mm, 25.4 mm, 12.7 mm 
+Reservoir Elevation 0.627 m, 0.703 m, 0.822 m to pipe invert 
+
+2.1.2 Results Key observations were related to the effect of degree of ventilation and ventila tion riser diameter as indicated in Figures 2.2 and 2.3, respectively.
+
+Figure 2.2 Influence of ventilation on maximum surge pressure.
+
+Figure 2.3 Influence of riser diameter on maximum surge 
+pressure. 
+Figure 2.2 indicates that the open and closed ventilation experiments experi 
+enced approximately the same maximum pressure for otherwise similar flow 
+conditions. The peak riser pressures during the closed ventilation experiments 
+were consistently a little higher. In two of the cases shown in Figure 2.2 the 
+maximum pressure was 0.2 m higher for the closed ventilation conditions. 
+These pressure differences are presumably due to the local energy losses as the 
+water flowed into the riser for the open ventilation experiments. This observa 
+tion suggests that the fluid inertia in the vertical riser is negligible in both cases 
+and that the inertia in the main pipeline is responsible for the surge level in the 
+
+riser and does not depend on how the pressurization at the riser base occurs 
+(whether by water level rise in the riser or by the compression of the air above 
+the water). Figure 2.3 indicates that the riser diameter has essentially no effect 
+on the maximum pressure experienced in the riser. This would be the case 
+considering that the water level change in the riser is due to inertial surge, as 
+indicated in the equations presented below. Both these observations provide 
+support for the notion that the water level rise in the riser under the case of air 
+displacement is an inertial surge process. The following section provides addi 
+tional support for this conclusion. 
+2.1.3 Numerical Modeling 
+A simplified numerical model that considers the inertia of the liquid in the 
+system was implemented to compare with the experimental results. The three 
+control volumes used in the numerical model are shown in Figure 2.4; two 
+around the liquid in the main tunnel on each side of the riser and one in the 
+riser. The liquid in each control volume was assumed incompressible and 
+represented by a single velocity (except when a hydraulic bore is propagating 
+through the control volume in which case there is a different velocity on either 
+side of the bore). The upstream section of the tunnel was represented in the 
+numerical model by a straight control volume, but included the energy losses of 
+the 90° elbows in the friction representation discussed below; the rigid column 
+formulation can be shown to require the correct length and not the detailed 
+geometry. The cross sectional areas of the control volumes were known. The 
+system was initially at rest with an initial depth in the main tunnel of 50%, 70% 
+or 95% of the tunnel diameter. The numerical model began with the valve 
+opening (assumed instantaneous) at time t = 0. 
+
+Figure 2.4 Sketch of the control volumes used in the rigid column method. The rigid column approach uses the conservation of mass and momentum principles within each control volume to solve the system of equations. Since
+
+Control Volume 1 
+Control Volume 2 
+Control Volume 3 
+
+H
+
+L
+
+R
+
+1 3
+
+L 2
+
+Hw
+
+L
+
+Hbase
+
+26 Air–Water Interactions that Generate Large Water Lift … computing the propagation of the pipe filling bore was required, the first part of the simulation began by splitting the first control volume into two parts (i.e. ahead of and behind the bore). As the bore progressed forward, it moved in a shape similar to that sketched in Figure 2.5, depicted in a frame of reference moving with the bore that is assumed to have a quasi-steady speed of propagation. The conservation of mass and momentum equations across the bore front are given in Equations 2.1 and 2.2.
+
+(2.1)
+
+(2.2)
+
+where:
+
+P = gauge pressure behind the bore front, 
+Ap = area of the full pipe, 
+Vs = bore velocity, 
+V = fluid velocity behind the bore, 
+
+y fs = centroid depth in the downstream free-surface portion of the flow, Afs = area of the free surface section, g = gravity, and ρ = density of the fluid.
+
+Figure 2.5 Schematic of the propagating bore.
+
+The computation began in the control volume labeled above as 1 in Figure 2.4 by calculating the propagation of the bore. The system was at rest to the right of the pipe filling bore, so control volumes downstream of the bore front were ignored initially. Equation 2.3 gives the conservation of momentum in the control volume to the left of the pipe filling bore, where x represents distance from the upstream end to the bore location:
+
+Vs V Ap Vs Afs ( − )⋅ = ⋅ fs fs s fs p s p g y A V A
+
+P A V V A ⋅ ⋅ ⋅ + ⋅ ⋅ ⋅ + ⋅ − ⋅ = 2
+
+2 ( ) ρ ρ
+
+ρ
+
+P, Ap, (Vs–V)
+
+fs, Vs, Afs
+
+P, Vp, Ap
+
+(2.3)
+
+where:
+
+1 = conditions behind the bore, HR = pressure head at the supply reservoir, Hbore = pressure head just behind the bore, and f = Darcy–Weisbach friction factor. This model assumes that all of the local losses in control volumes 1 (and 3, as described further below) can be represented by wall shear through a single representative roughness value in the form of a material roughness variable. The friction in the main tunnel is calculated using the Swamee and Jain (1976) explicit expression of the friction factor as a function of material relative roughness ε/D and the Reynolds number. The computational procedure uses Equations 2.1, 2.2 and 2.3 to solve for the bore speed (Vs), Hbore, and dv1/dt at each time step. From this, the variables v1 and x can be updated for the next time step, using a forward difference. Once the bore reached the base of the riser, control volume 1 was then modeled as a rigid column of liquid moving with a single velocity. Computations then began in the other two control volumes (labeled 2 and 3 in Figure 2.4). Initially, calculations within control volume 3 were broken into two parts; ahead of and behind the pipe filling bore. Equation 2.4 was used for momentum conservation with a numerical procedure similar to the steps above until the bore reached the downstream end.
+
+(2.4)
+
+where:
+
+L1 = total length of control volume 1. Here, the bore location x still represents the distance from the upstream end. Once the bore reached the downstream end of the system, control volume 3 was also modeled as a single rigid column. The length of control volume 2, in the riser, changed with the water level. A conservation of mass equation (Equation 2.5) can be formulated discretely at the base of the vertical riser using the three control volumes shown in Figure 2.4 to obtain:
+
+(2.5)
+
+⎟⎟ ⎠
+
+⎞ ⎜⎜ ⎝
+
+⎛ = − −
+
+D g
+
+f xv gA H H
+
+dt
+
+dv A x R bore
+
+1 2 
+2 
+1 1 
+
+1 1 ρ 1 ρ
+
+( ) ( ) ⎟⎟ ⎠ ⎞ ⎜⎜ ⎝
+
+⎛ −
+− = − −
+
+D g
+
+f x L v gA H H
+
+dt
+
+dv A x L base w
+
+3 2 
+2 
+3 1 3 
+
+3 3 ρ 3 1 ρ
+
+#### 1 1 2 2 3A3 ρv A = ρv A + ρv
+
+28 Air–Water Interactions that Generate Large Water Lift … where the various subscripts refer to the different control volumes. Equations 2.6 through 2.8 indicate the momentum equations for each of the three control volumes:
+
+(2.6)
+
+(2.7)
+
+(2.8)
+
+where:
+
+L2 = height of the water in the riser, Hbase = pressure head at the base of the riser, Hw = pressure head at the riser expansion, K = local loss coefficient for flow from the horizontal pipe into the riser, and f = representative friction factor (Darcy–Weisbaach). A conservation of mass equation (Eq. 2.9) within the riser is used to cancel the middle two terms of Eq. 2.7:
+
+(2.9)
+
+Equations 2.5 through 2.9 were then used to solve for the five unknowns, 
+namely v1, v2, v3, L2 and Hbase for each time step. 
+The energy loss parameters in each of the three control volumes were 
+adjusted such that the numerical model results aligned with the experimental 
+results for the selected trial shown in Figure 2.6. The representative 
+roughnesses used in the first and third control volumes were ε1/D1 = 0.06 and 
+ε3/D3 = 0.0001. Control volume 1 was expected to have a much larger 
+representative roughness than control volume 3 due to the presence of the 
+entrance, the elbows, and the valve at the upstream end. More recent 
+
+⎟⎟ ⎠
+
+⎞ ⎜⎜ ⎝
+
+⎛ = − −
+
+D g
+
+f L v gA H H
+
+dt
+
+dv A L R base
+
+1 2 
+2 
+1 1 1 
+
+1 1 ρ 1 1 ρ
+
+⎟⎟ ⎠
+
+⎞ ⎜⎜ ⎝
+
+⎛
+
+− −
+
++ − =
+
+g
+
+v gA H L K
+
+A v dt
+
+dL A v
+
+dt
+
+dv A L base 2
+
+2 2 2 2
+
+2 2 2 2 2 2 2 2 2
+
+ρ
+
+ρ ρ ρ
+
+⎟⎟ ⎠
+
+⎞ ⎜⎜ ⎝
+
+⎛ = − −
+
+D g
+
+f L v gA H H
+
+dt
+
+dv A L base w
+
+3 2 
+2 
+3 3 3 
+
+3 3 ρ 3 3 ρ
+
+2 
+2 v 
+
+dt
+
+dL =
+
+Air–Water Interactions that Generate Large Water Lift … 29 experiments performed by others at the University of Michigan suggests that the loss coefficient for the fully open valve is on the order of about 6, implying that this is the major loss in the system. The local loss coefficient used in the T shaped junction as flow entered the base of the riser was 2.1·∙(D1/D3). Using the adjusted parameter values, the numerical model was then compared with other selected experimental conditions shown in Figures 2.7 and 2.8. Although this representation of the energy losses is somewhat simplistic, it can be seen that the model that was calibrated for a single experiment can be used to predict pressure variations in other cases.
+
+Figure 2.6 Calibration of model parameters to experimental results.
+
+Figure 2.7 Comparison 1 of numerical model to experimental results.
+
+Figure 2.8 Comparison 2 of numerical model to experimental results.
+
+2.1.4 Discussion 
+The observations from these sets of experiments along with the numerical 
+modeling results make it very clear that the water rise is due to inertial surge. 
+The numerical model, when energy losses are accounted for, has the ability to 
+predict the timing of the oscillations as well as the peak surge magnitudes and 
+their rate of decay. Also one would expect the pressure surge to be fairly similar 
+whether an open ventilation riser or a capped riser with air compression is 
+considered (although the timing would be different in the two cases) so long as 
+energy losses in the riser itself are relatively minor. This was found to be the 
+case in the full set of experimental results presented in Lewis (2011). Note that 
+the surge equations are basically independent of the cross-sectional area, sug 
+gesting that the surge should not be strongly dependent on the riser diameter, as 
+was observed. 
+Implications of these findings are that single phase flow models such as 
+have been currently applied to tunnel filling simulations should be capable of 
+providing reasonable predictions of these processes. It should be noted howev 
+er, that this mechanism is not capable of producing the geysers reported in 
+Lewis, et al. (2011) and Wright, et al. (2011). In the field data analyzed in those 
+studies, the pressure head in the tunnel remained at least 20 m below ground 
+level during the series of geysers that developed and inertial surge is eliminated 
+as a mechanism for geyser formation. This leads to the conclusion that air must 
+have been involved in the geyser process and the results in the next section 
+provide a framework that allows an understanding of how trapped air pockets 
+can contribute to geyser development. 
+
+### 2.2 Air Capsule Experiments
+
+2.2.1 Experimental Setup 
+The experimental setup sketched in Figure 2.9 was constructed to observe the 
+behaviour of a single large air pocket rising through a surcharged vertical shaft. 
+Here, the horizontal 0.095 m diameter clear acrylic pipe was connected to a 
+constant pressure head reservoir. Two different vertical riser diameters near the 
+upstream reservoir were used, namely 0.095 m and 0.044 m. In addition, the 
+reservoir level was adjusted to two different values of 0.203 m and 0.457 m 
+above the invert of the main tunnel. Also, three different volumes of the air 
+capsule were used, namely 1.59 L, 3.14 L and 5.97 L. These air volumes were 
+obtained by partially filling the section of pipe to the right of the valve in Figure 
+2.9 so that the air volume in that section was equal to one of the above values. 
+The experiment was performed by rapidly opening the valve allowing the air 
+pocket to propagate towards the reservoir. The values of the variables are 
+presented in Table 2.2 and each combination of the values was tested with four 
+repetitions. Frames from the video camera were used to measure the vertical 
+positions of the nose of the rising air pocket and the liquid free surface at each 
+time step (30 frames/s, or Δt = 0.033 s). The average experimental error for the 
+water rise, estimated from the standard deviation of the repetitions, was 0.04 m. 
+Two experimental scenarios, namely the two larger air volumes with the small 
+shaft diameter and higher reservoir level, had significantly greater errors than 
+the other measurements, an estimated 0.15 m, due to the higher rise and neces 
+sary zooming out of the camera, to capture the entire experiment in the field of 
+camera view. 
+Figure 2.9 Apparatus used for the air capsule experiments. 
+Table 2.2 Variables tested in the air capsule experiments. 
+Variable Range of values tested Normalized values 
+Vertical riser diameter 0.044 m and 0.095 m 0.47 and 1.0 [Driser/Dtunnel] 
+Reservoir level .203 m and .457 m above 
+invert 
+
+| | | Variable | Range of values tested | Normalized values | |
+| --- | --- | --- | --- | --- | --- |
+| | Vertical riser | diameter | 0.044 m and 0.095 m | 0.47 and 1.0 [Driser/Dtunnel] | |
+| | Reservoir level | | .203 m and .457 m above | 2.13 and 4.80 [Hres/Dtunnel] | |
+
+2.13 and 4.80 [Hres/Dtunnel] Air capsule volume 1.59 L, 3.14 L and 5.97 L 1.84, 3.64, and 6.91 [Volair/D 3 tunnel]
+
+2.2.2 Results
+
+The initial rise of the air pocket within the vertical riser was capable of lifting water significant distances. As expected, the free surface water level moved upward as the air pocket rose within the shaft. Generally, the free surface continued to rise as the nose of the air pocket, moving faster than the free surface, caught up to the free surface and broke through the interface. The geyser strength is defined as the elevation of the free surface level relative to the tunnel invert at the instant that the air pocket’s nose reached it. In many cases, this does not describe the total height of rise of the water since the up ward momentum of the air and water may continue to lift the water higher after the air pocket reaches the free surface; however, the focus of this experimental setup was primarily the initial rise of the nose of the air pocket. Table 2.3 reveals a fairly clear influence of each variable on the rise of the liquid due to the initial air arrival into the vertical shaft.
+
+Table 2.3 Geyser strengths for each set of variable conditions.
+
+Riser diameter (m)
+
+Reservoir level (m)
+
+Air capsule volume (L)
+
+Initial liquid surcharge volume (L)
+
+Geyser strength (m)
+
+Geyser strength (normalized by reservoir level) 0.044 .203 1.59 0.31 0.33 1.63 0.044 .203 3.14 0.31 0.37 1.82 0.044 .203 5.97 0.31 0.40 1.96 0.044 .457 1.59 0.69 0.78 1.72 0.044 .457 3.14 0.69 2.07 4.54 0.044 .457 5.97 0.69 2.23 4.88 0.095 .203 1.59 1.44 0.24 1.16 0.095 .203 3.14 1.44 0.26 1.30 0.095 .203 5.97 1.44 0.26 1.30 0.095 .457 1.59 3.24 0.51 1.11 0.095 .457 3.14 3.24 0.59 1.29 0.095 .457 5.97 3.24 0.61 1.34
+
+For all of the experiments, the geyser strength increased as the volume of the air pocket increased. One reason is that if there is less air than is necessary to completely fill the riser cross-section, the buoyant force is greater for larger air pockets since the volume of displaced liquid is greater. However, if there is more air than is necessary to fill the riser, this physical principle may not be important since any remainder of the buoyant force is exerted on the tunnel crown.
+
+A second important factor is related to the arrival of the air at the base of the vertical riser. Other experiments reported by Lewis et al. (2010) showed that the larger air pocket is able to migrate at a somewhat greater velocity and greater thickness through the tunnel. This allows the air to arrive at the base of
+
+the vertical riser at a greater rate than smaller air pockets. In particular, this 
+distinction in air flux would be especially noticeable with regards to whether or 
+not the rising air is capable of filling most of the riser cross section. If the air 
+flux is small enough, air just bubbles up in the riser, which will still lift water as 
+in an air lift pump. However, a rising bubble that fills most or all of the cross 
+section will lift the liquid much higher. 
+Another critical factor in the influence of the air pocket’s volume is the ratio 
+of the volume of air to the volume of liquid in the riser. If the air pocket is large 
+enough to rise through the entire column of liquid while still having a signifi 
+cant air volume remaining in the main tunnel, this will create a higher rise than 
+an air pocket that is contained solely within the riser prior to reaching the free 
+surface. This influence is clearly noticed in the case of the smaller diameter 
+riser (0.044 m) and the higher reservoir level of 0.457 m. The smallest air 
+volume of 1.59 L is initially 2.8 times the volume of the surcharged liquid, but 
+the migration process causes it to break into smaller pockets which spread 
+across the top of the tunnel. 
+The results of video observations presented in Figure 2.10 show that the ver 
+tical movement of the interface begins to decelerate starting at around 0.7 s, 
+back to the Davies and Taylor (1950) velocity, which is most likely caused by a 
+discontinuation of the air arrival into the base of the riser. The velocities of the 
+3.14 L and 5.97 L air pockets did not level off, meaning that the air arrival was 
+sufficient to continue accelerating the water upward as shown in Figures 2.11 
+and 2.12. 
+
+Figure 2.10 Experimental data of the free surface (Yfs) and the nose of the rising air pocket (Yint) for DRis = 0.044 m, Volair = 1.59 L, and HRes = 0.457 m (the letters a, b, etc. represent trials for the same conditions.
+
+Figure 2.11 Experimental data of the free surface (Yfs) and the nose of the rising air pocket (Yint) for DRis = 0.044 m, Volair = 3.14 L, and HRes = 0.457 m.
+
+Figure 2.12 Experimental data of the free surface (Yfs) and the nose of the rising air pocket (Yint) for DRis = 0.044 m, Volair = 5.97 L and HRes = 0.457 m.
+
+Table 2.3 also shows that increasing the reservoir level increased the height of water rise. The reservoir level determines the volume of liquid that is sur charged initially within the vertical riser and this volume of liquid must flow downward around the perimeter of the rising air pocket. When the reservoir level is higher, there is a greater volume of liquid which has to flow through this film region and this takes more time.
+
+If the air continues to arrive at the base of the riser and if the free surface level continues to rise, then the longer rise time associated with the higher reservoir level creates a higher level of liquid before the air reaches the free surface. The dimensionless rise of liquid, normalized by the reservoir level, was relatively the same for the experimental conditions involving the larger diame ter. For the 0.095 m diameter riser, the dimensionless rises of the 1.59 L air pocket through the 0.203 m and 0.457 m reservoir levels were 1.16 and 1.11; the 3.14 L air volume through the lower and higher reservoir levels were 1.30 and 1.29; and the 5.97 L air volume levels were 1.30 and 1.34. Figure 2.13 shows the video observations of the 1.59 L air volume rising through the 0.457 m initial water level for the larger diameter (0.095 m) riser, with multiple repetitions of the same conditions labeled a, b, c and d.
+
+Figure 2.13 Video observations of the free surface (Yfs) and the air/water interface at the nose of the rising air pocket (Yint); shows a nearly constant velocity of rise for the larger diameter shaft. The rise velocity appears very close to the constant Davies and Taylor ve locity as there seems to be a lack of a strong driving force to accelerate the air upward. This provides an explanation for how the large diameter dimensionless geyser strengths in Table 2.3 are similar between the two reservoir levels for each experiment. This also implies that the vertical air flow is constrained by the horizontal air arrival rate from the tunnel. The dimensionless rise heights of the smaller diameter shaft are clearly not similar, because the velocity (or slope in Figures 2.10, 2.11, and 2.12) of the air rise through the higher initial water level is not constant. The larger air volumes give very large rises because the air pocket continues to accelerate until it reaches the free surface.
+
+It is unknown whether a reservoir level much greater than the relative condi tions of this experiment would continue to have an influence of increasing the rise height of the liquid. It is doubtful that the air would continuously accelerate for a very high column of liquid since the inertia of the long vertical column of liquid may preclude a strong acceleration. More investigation will be necessary to understand the relations between the various factors influencing water rise in a surcharge shaft. Finally, of significant importance, the smaller riser diameter resulted in a higher liquid rise than the larger diameter for these experiments. The greater film flow around the perimeter of the larger diameter partially contributes to this influence. Another factor, though, could be the relative arrival rate of the air depending on the air volume and migration velocity in the tunnel. Although it was not evident for these experiments, the air flow could be broken up if it rises faster through the riser than it migrates through the horizontal tunnel or it may not fill the entire riser cross-section. Overall, the vertical velocity of the air–water interface in some experiments achieved much greater speeds than was predicted from the Davies and Taylor (1950) expression. However, not all experiments exceeded the Davies and Taylor velocity, especially experiments with smaller air volumes or large riser diameters. An air volume much larger than the surcharge volume of liquid within the riser appears to be a key factor in creating strong vertical accelera tions. In particular, the releases of the 3.14 L and 5.97 L air volumes through the 0.044 m diameter riser with a reservoir level of 0.457 m (shown in Figures 2.11 and 2.12) created rise heights greater than 4.5 times the initial water level. The Davies and Taylor velocity is 0.23 m/s for this diameter riser, but for these two scenarios the air interfaces reached velocities greater than 3 m/s. Compar ing the air volume to the liquid surcharge volume in Table 2.3, the major accel erations all occur for air volumes noticeably larger than the initial surcharge volumes. 2.2.3 Numerical Modeling A rigid column formulation for predicting the vertical behaviour of the air and water was developed by Vasconcelos and Wright (2011). The model calculates the film flow downward around the perimeter of the vertical riser, similar to that proposed by Batchelor (1967), by solving Equations 2.10 and 2.11and assumes that this film thickness remains constant.
+
+(2.10) Qdisplaced = Qf
+
+(2.11)
+
+where:
+
+Qdisplaced= water flow displaced by the upward moving air pocket, 
+Qf = film flow around the air pocket, 
+UB = rising velocity of a bubble according to Davies and 
+Taylor, 
+δ = film flow thickness, 
+ρw =water density, 
+ρa = air density, and 
+µw = dynamic viscosity of water. 
+For each time step, the changes in mass and momentum of the liquid column 
+are calculated to determine the location of the free surface and the change in air 
+pressure. The location of the lower air interface is also calculated. 
+The experimental setup used to test this model in the Vasconcelos and 
+Wright study included a main tunnel capped at both ends with a single riser. As 
+the valve separating the air and water was opened, the water level in the shaft 
+quickly changed to a level required to satisfy hydrostatic pressure variation 
+requirements until the air pocket arrived at the riser and began to rise, at which 
+point the water level in the shaft started to rise at a somewhat lower rate to 
+satisfy the imbalance between the film flow and the air rise. 
+For that experimental setup, the pressure throughout the entire system, in 
+cluding the pressure within the air pocket, can be assumed to be directly related 
+to the liquid level within the riser assuming hydrostatic pressure variation. 
+Therefore, the pressure within the air pocket drops as the air begins to rise due 
+to the displacement of the water by the air and the resulting film flow. Although 
+this assumption is appropriate for the Vasconcelos and Wright (2011) experi 
+ments, the setup used in this investigation is somewhat different. The reservoir 
+at the upstream reservoir imposes a pressure which may keep the pressure 
+within a large air pocket approximately constant. 
+Figures 2.14 through 2.17 show the results of this experimental investigation 
+compared with the Vasconcelos and Wright (2011) numerical model for exper 
+imental conditions corresponding to those shown in previous Figures 2.10 
+through 2.13. 
+For most of the experimental conditions, the numerical model predicts near 
+ly constant vertical velocities of the air–water interface and the free surface, 
+with an air–water interface velocity near the Davies and Taylor relation. The 
+model shows little movement of the free surface as the air–water interface rises 
+to meet it. This behaviour is clearly observed with the 0.095 m diameter riser 
+
+( ) ( ) w
+
+ris w a
+
+B ris gD
+
+U D
+
+µ
+
+π ρ ρ δ
+δ π 3 2
+3
+
+2
+
+4 −
+
+− =
+
+38 Air–Water Interactions that Generate Large Water Lift … but not with the 0.044 m diameter riser. The experimental results with the smaller diameter riser typically show the air having a positive acceleration which causes them to be under-predicted by the numerical model. In particular, the predictions of a large air pocket through the smaller diameter riser at the higher initial water level deviated the most from the observed data.
+
+Figure 2.14 Numerical results and video observations (same conditions as Figure 2.10).
+
+Figure 2.15 Numerical results (same conditions as Figure 2.11).
+
+Figure 2.16 Numerical results (same conditions as Figure 2.12).
+
+Figure 2.17 Numerical results (same conditions as Figure 2.13). Care should be taken when implementing the model for air volumes which may be smaller than required to occupy the vertical riser, as is probably the case for Figure 2.14. Although the initial capsule volume is larger than would occu py the 0.8 m height, the slope levels off in this image implying that the air arrival rate is too small. This is plausible since the air spreads along the crown of the tunnel between the downstream end and the vertical riser, limiting the air arrival. Also, the implementation of the numerical model is consistent here since the simulation only reaches a height of approximately 0.5 m above the tunnel invert, an air volume in the shaft which is less than half of the original air capsule volume.
+
+In general, the numerical model under-predicts the rise heights and veloci ties when compared with the observed data. As mentioned above, the numerical model assumes that the pressure within the air pocket is directly related to the water level above it in the riser. In reality, the pressure of a large air pocket may also be influenced by the flow conditions within the main tunnel, specifically the surcharge pressure after the tunnel goes full. In the present study, the main tunnel pressure is held nearly constant by the upstream reservoir and this pres sure is greater than the water level above the air pocket due to the film flow downward. Therefore the air pressure is being under-predicted by the numerical model which leads to the under-prediction of the interface rises. A revision is suggested to the numerical model in which the pressure within the air pocket remains equal to the reservoir pressure throughout the rise pro cess. This is implemented by assuming dHa/dt = 0, which will not be exactly correct but serves as a reasonable first approximation. Again, implementation of the numerical model should consider the possibility that the finite air pocket volume could be smaller than exists within the riser; this would cause the vertical velocity to level off presumably to the Davies and Taylor velocity. Figure 2.18 shows the comparison between the experimental results and the two numerical alternatives for modeling the air pressure: first using the Vasconelos and Wright (2011) formulation (labeled 2011 V & W model in the figure) and the second using the reservoir pressure (labeled Revised).
+
+Figure 2.18 Comparison between experimental results and 
+revised numerical model. 
+The data is more closely aligned with the revised framework in which the 
+air pressure is determined by the reservoir, rather than the initial assumption 
+that it is equivalent to the liquid in riser. However, this revised simulation rises 
+
+too quickly, accelerating to speeds greater than the experimental measurements. 
+Most likely, the air pocket experiences drag as it accelerates and this has not 
+been included in this numerical model. Further investigation would be required 
+to include the drag acting on the air pocket as it rises. The assumption of con 
+stant reservoir pressure is not quite valid when the air is in motion, but it is 
+expected to overestimate the vertical acceleration. In a real system, one would 
+need to consider the conditions that would define the local pressure within the 
+tunnel adjacent to the riser in order to be able to predict the air rise. 
+2.2.4 Discussion 
+The simplified numerical model that accounts for the exchange flow in a verti 
+cal riser appears to be capable of describing the essential characteristics of the 
+rising air as observed in the various experiments. In particular, the model 
+results indicate an important difference between the experiments reported in 
+Vasconcelos and Wright (2011) and the present study. It is seen that when the 
+pressure within the rising air is maintained at a higher level, much higher 
+vertical velocities are developed within the riser. These conditions are consid 
+ered to enhance the likelihood of geyser formation. 
+As discussed in the following section which interprets the laboratory results 
+in light of field observations, a condition that seems to be requisite for the 
+creation of geysers in stormwater systems is that trapped air that is released 
+through vertical shafts be capable of attaining high vertical velocities. The 
+results presented above suggest that there are several requirements necessary 
+for large air rise velocities to develop. One is that the air pocket contains sub 
+stantial volume so that air is released through surcharged water in the shaft 
+while there is still sufficient air in the nearly horizontal conduit to exert the 
+surcharge pressure from the liquid to the air phases. Once the air penetrates 
+through the surcharged water, the tunnel pressure is then capable of accelerat 
+ing the air to relatively high velocities. 
+Although more experiments are required to provide specific criteria, it is 
+suggested that a simple way to consider the air volume requirement is that the 
+air pocket volume must be somewhat greater than the surcharged volume in the 
+vertical shaft in order to create conditions that would favor geyser formation. A 
+second important consideration is the rate that air can enter the shaft from the 
+horizontal conduit. If the air entry rate is constrained, then the air may not fill 
+the entire shaft cross-section and while significant air surges may still occur, the 
+conditions for geyser formation are not fulfilled. The two conditions that de 
+termine whether this situation occurs are related to the nature of the air pocket 
+entrapment and the geometry of the vertical shaft. If the air pocket volume is 
+small or if it must propagate a long distance so that it has an opportunity to 
+
+42 Air–Water Interactions that Generate Large Water Lift … spread out along the tunnel crown, conditions are less favorable for geyser development. In a similar fashion, if the vertical shaft cross-section is not somewhat smaller than the tunnel cross section, constraints on air propagation may prevent even large air pockets from forming geysers.
+
+### 2.3 Implications for Geyser Formation
+
+It is stressed that geysers of the sort reported in Lewis et al. (2011) and Wright 
+et al. (2011) were not observed in the small scale laboratory experiments dis 
+cussed above. This is almost certainly due to the scale effects associated with 
+the much smaller laboratory experiments not permitting the range of dynamic 
+behaviour observed in large scale systems. The above mentioned references 
+discuss the additional behaviour that is considered necessary to produce a 
+geyser, namely the occurrence of a phenomenon referred to as flooding instabil 
+ity that results in the down-flowing water around the air core being sheared off 
+in droplets and rising in a air–water mixture that is observed as a geyser. The 
+velocity differences required to produce the flooding instability do not develop 
+in the smaller scale laboratory experiments. 
+As reported in Wright et al. (2011) the visual occurrence of the successive 
+geysers observed at a location in Minneapolis, Minnesota were associated with 
+a sudden and temporary (for the duration of the geyser) drop in pressure within 
+the tunnel. This pressure drop is presumed to be associated with the break 
+through of the rising air through the surcharged water. The subsequent air flow 
+shears off the water and lifts it above grade due to the high air rise velocity, 
+which is the visual manifestation of the geyser. 
+Given this interpretation, the laboratory results presented above provide a 
+clear understanding of the conditions necessary for geyser formation. If an 
+entrapped air pocket migrates along the crown of a pipeline and encounters a 
+vertical shaft, the intrusion of the air front into the shaft can be strongly accel 
+erated under certain circumstances as mentioned above and can result in the 
+entrainment of water within the shaft, creating the geyser condition. It is not so 
+clear whether additional water can be entrained from the flow within the tunnel 
+itself and further investigations are necessary to determine this possibility. 
+However, the expulsion of the trailing end of the air pocket from the tunnel is 
+not responsible for the geyser process. That is basically an inertial surge process 
+and may result in liquid flowing to grade under certain circumstances but does 
+not seem to be able to produce the observed geysers jetting a few tens of meters 
+into the air in several tunnel systems. It should be possible to predict the inertial 
+surge process with a properly formulated single phase flow model, but not the 
+geyser formation itself, which is clearly a two-phase flow phenomenon. 
+
+Additional experiments performed by the authors have demonstrated other mechanisms for large vertical rises due to air/water interactions in vertical risers. For example, a number of closely spaced and smaller air pockets can interact to successively lift water large vertical distances; other phenomena are probably still to be elucidated. The key to developing further understanding is to systematically investigate air/water interactions in partially surcharged risers attached to horizontal conduits.
+
+### 2.4 Conclusions
+
+The experiments described in this chapter support the following conclusions. 
+Observations related to the migration of a single large entrapped air pocket 
+along a horizontal conduit and the subsequent interaction with a vertical shaft 
+attached to the crown have been interpreted in light of field observations in a 
+stormwater tunnel system in Minneapolis, Minnesota that has experienced 
+multiple geyser events. Based on a synthesis of available information, a plausi 
+ble explanation for the geyser occurrence has been developed. The following 
+conclusions are supported by this synthesis:The release of a single, large air 
+pocket from a surcharged pipeline through a vertical riser can result in consid 
+erable vertical lift of the water both on the initial intrusion of the air into the 
+riser and on the expulsion of the trailing end of the air pocket. 
+Air expulsion through the riser results in an inertial surge that is not the 
+source of the observed geysers in the Minneapolis system but which could be 
+simulated by appropriate single phase flow models that account for the surge 
+process. 
+The observed geysers are almost certainly associated with a complex dy 
+namic two phase flow process that involves intrusion of the leading edge of the 
+air pocket into the partially surcharged vertical riser; this subsequently results in 
+lifting of some of the water with the remainder flowing downwards around the 
+perimeter of the rising air. This counter-current flow may result in sufficiently 
+high velocities that shear off water droplets that are lifted upwards in reasona 
+bly high concentrations in the air flow creating the appearance of a geyser. 
+Necessary conditions for geyser formation include a fairly large air pocket 
+and sufficient air flow through the horizontal pipeline to create conditions 
+necessary for the upwards flowing air to basically fill the vertical riser shaft. A 
+smaller diameter riser will contribute to the likelihood of these conditions being 
+satisfied. 
+The described mechanisms are consistent with the limited field observations 
+at the Minneapolis geyser site and are considered to be the explanation of the 
+observed geysers at this and other un-monitored locations. This is not to ex 
+clude other possibilities in other stormwater systems. 
+
+Experiments in small scale laboratory systems do not adequately reproduce the dynamics of flow behaviour observed in large scale systems. Only by careful interpretation of all available information are the conclusions above possible.
+
+### References
+
+Batchelor,G. K. (1967). Introduction to Fluid Dynamics. Cambridge University Press. 
+Cardle, J.A. and Song, C.S.S. (1988). Mathematical Modeling of Unsteady Flow in Storm 
+Sewers. Int. J. Eng. Fluid Mechanics, 1(4): 495–518. 
+Davies,R. M. and Taylor,G. I. (1950). The Mechanics of Large Bubbles Rising Through 
+Extended Liquids and Through Liquids in Tubes. Proc. Royal Soc. A 200: 375–390. 
+Guo, Q., and Song, C. C. S. (1991). Dropshaft hydrodynamics under transient conditions. 
+J. of Hydr. Engrg., ASCE, 117(8): 1042–1055. 
+Lewis, J.W. (2011). A Physical Investigation of Air–Water Interactions Leading to 
+Geyser Events in Rapid Filling Pipelines. PhD dissertation presented to Civil and En 
+vironmental Engineering Department, University of Michigan, Ann Arbor, MI. 
+Lewis, J., S.J. Wright and J. Vasconcelos. 2010. "Physical Investigation of Discrete 
+Air Pocket Migration and Release in CSO Storage Tunnels." Journal of Water 
+Management Modeling R236-06. doi: 10.14796/JWMM.R236-06. 
+Lewis, J., S.J. Wright and J. Vasconcelos. 2011. "Mechanisms for Surges in Vertical 
+Shafts in Stormwater Tunnels." Journal of Water Management Modeling R241-03. 
+doi: 10.14796/JWMM.R241-03. 
+Swamee, P.K. and Jain, A.K. (1976) Explicit Equations for Pipe-flow Problems. J. Hyd. 
+Div., ASCE, 102(5): 657–66 
+Vasconcelos, J. and S.J. Wright. 2005a. "Applications and Limitations of Single-Phase 
+Models to the Description of the Rapid Filling Pipe Problem." Journal of Water 
+Management Modeling R223-19. doi: 10.14796/JWMM.R223-19. 
+Vasconcelos, J.G. and Wright, S.J. (2005b). Experimental investigation of large surges 
+generated in stormwater storage tunnels. J. Hydr. Engrg., 131(10): 853–861. 
+Vasconcelos, J. G. and Wright, S. J. (2011). Geysering generated by large air pockets 
+released through water-filled ventilation shafts. J. Hydr. Engrg., 137(5) 
+Wright, S.J., J. Vasconcelos and K. Ridgway. 2003. "Surges Associated with Filling 
+of Stormwater Storage Tunnels." Journal of Water Management Modeling R215-18. doi: 
+10.14796/JWMM.R215-18. 
+Wright, S.J., J. Lewis and J. Vasconcelos. 2007. "Mechanisms for Stormwater 
+Surges in Vertical Shafts." Journal of Water Management Modeling R227-05. 
+doi: 10.14796/JWMM.R227-05. 
+Wright, S. J., Lewis, J.W. and Vasconcelos, J. G. (2011). Geysering in rapidly filling 
+stormwater tunnels, J. Hydr. Engrg., 2011, 137, (1): 112–115. 
+

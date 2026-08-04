@@ -1,0 +1,2615 @@
+{
+  "conformal_initial_tower_interface": {
+    "status": "rejected",
+    "source_commits": [
+      "52eb3b4",
+      "c347641"
+    ],
+    "purpose": "Test whether a face-aligned planar tower interface suppresses the free-surface Courant hotspot without changing physical properties.",
+    "unchanged_physics": {
+      "solver": "compressibleInterFoam v2512",
+      "surface_tension_N_per_m": 0.072,
+      "contact_angle_deg": 90.0,
+      "valve_mode": "closed",
+      "valve_seal_speed_m_per_s": 1.0,
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "alpha_smooth_curvature_iterations": 0
+    },
+    "mesh": {
+      "cells": 1907679,
+      "connected_regions": 1,
+      "standard_mesh_ok": true,
+      "strict_audit_status": "accepted_boundary_tet_exception",
+      "max_non_orthogonality_deg": 69.285652,
+      "max_skewness": 0.94901183,
+      "minimum_cell_volume_m3": 6.3355577e-11
+    },
+    "startup_result": {
+      "requested_end_time_s": 0.006,
+      "interrupted_after_written_time_s": 0.001,
+      "execution_time_at_written_time_s": 529.19,
+      "clock_time_at_written_time_s": 541,
+      "delta_t_after_written_time_s": 1.4084507e-05,
+      "courant_max_after_written_time": 0.33607198,
+      "interface_courant_max_after_written_time": 0.13016065,
+      "alpha_water_min_at_written_time": -9.68414e-06,
+      "alpha_water_max_at_written_time": 1.0,
+      "max_velocity_m_per_s": 8.1915868,
+      "max_velocity_location_m": [
+        3.5144035,
+        0.40381585,
+        0.0023687626
+      ]
+    },
+    "comparison": {
+      "cut_cell_max_velocity_at_0p001_s_m_per_s": 3.207,
+      "conformal_to_cut_cell_max_velocity_ratio": 2.5549067664483958,
+      "interpretation": "The stock cell-centred-alpha CSF curvature did not benefit from the conformal disk. The disk increased the free-surface velocity maximum and alpha undershoot, so the source deck was restored to geometric cut-cell initialisation."
+    },
+    "completion_claim": "This is a rejected short numerical diagnostic, not a hold, smoke, or completed experiment."
+  },
+  "least_squares_interface_normal": {
+    "status": "rejected",
+    "source_commit": "a56d784",
+    "purpose": "Change only the interfaceProperties nHat gradient from Gauss linear to leastSquares on the original geometric cut-cell mesh.",
+    "unchanged_physics": {
+      "solver": "compressibleInterFoam v2512",
+      "surface_tension_N_per_m": 0.072,
+      "contact_angle_deg": 90.0,
+      "valve_mode": "closed",
+      "valve_seal_speed_m_per_s": 1.0,
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "alpha_smooth_curvature_iterations": 0
+    },
+    "startup_result_0p001_s": {
+      "cells": 1904269,
+      "execution_time_s": 230.05,
+      "clock_time_s": 240,
+      "delta_t_before_written_time_s": 5.7005381e-05,
+      "courant_max_before_written_time": 0.30007104,
+      "interface_courant_max_before_written_time": 0.18050291,
+      "alpha_water_min": -7.9743722e-11,
+      "alpha_water_max": 1.0,
+      "max_velocity_m_per_s": 2.0177641,
+      "max_velocity_location_m": [
+        3.5124458,
+        0.40377959,
+        -0.0025148316
+      ]
+    },
+    "sustained_result_0p006_s": {
+      "execution_time_s": 1448.53,
+      "clock_time_s": 1461,
+      "delta_t_before_written_time_s": 1.5486272e-05,
+      "courant_max_before_written_time": 0.30521116,
+      "interface_courant_max_before_written_time": 0.076241761,
+      "alpha_water_min": -1.5923675e-07,
+      "alpha_water_max": 1.0,
+      "max_velocity_by_time_m_per_s": {
+        "0.001": 2.0176343,
+        "0.002": 2.787534,
+        "0.003": 2.7154609,
+        "0.004": 3.7075096,
+        "0.005": 3.9567631,
+        "0.006": 4.5154002
+      },
+      "max_velocity_location_at_0p006_s_m": [
+        3.5172133,
+        0.40381909,
+        0.00053588181
+      ],
+      "liquid_mass_error_pct_max_abs": 0.0,
+      "gas_mass_error_pct_max_abs": 6.569088356170451e-06,
+      "water_above_rim_m3": 0.0
+    },
+    "comparison": {
+      "gauss_linear_max_velocity_at_0p001_s_m_per_s": 3.207,
+      "gauss_linear_max_velocity_at_0p006_s_m_per_s": 3.8390766,
+      "least_squares_to_gauss_max_velocity_ratio": 0.6291762082943559,
+      "least_squares_to_gauss_max_velocity_ratio_at_0p006_s": 1.1766902904829495,
+      "interpretation": "The 0.001 s screen reduced the free-surface maximum velocity by 37.1%, but the maximum then grew to 4.515 m/s at 0.006 s, 17.7% above the Gauss-linear diagnostic. Alpha undershoot also worsened by roughly fifty times. The source deck therefore retains Gauss linear."
+    },
+    "completion_claim": "This is a rejected short numerical diagnostic, not a hold, smoke, or completed experiment."
+  },
+  "rdf_geometric_vof_screen": {
+    "status": "screen_passed_hold_pending",
+    "source_commits": [
+      "0f5e816",
+      "9a59974",
+      "e506a7d"
+    ],
+    "purpose": "Screen the pinned compressibleInterFlow isoAdvection, plicRDF and RDF candidate against the sustained stock-solver free-surface parasitic current before attempting the canonical hold.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "openfoam_version": "v2512",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "RDF",
+      "surface_tension_N_per_m": 0.072,
+      "contact_angle_deg": 90.0,
+      "valve_mode": "closed",
+      "valve_seal_speed_m_per_s": 1.0,
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "n_alpha_bounds": 5,
+      "alpha_clip": false
+    },
+    "legacy_corrector_configuration": {
+      "n_alpha_corr": 2,
+      "n_alpha_subcycles": 2,
+      "n_outer_correctors": 2,
+      "n_pressure_correctors": 3,
+      "n_non_orthogonal_correctors": 2
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1904269,
+      "solver_exit_code": 0,
+      "execution_time_s": 1106.08,
+      "clock_time_s": 1118,
+      "final_delta_t_s": 0.00011111111,
+      "courant_max": 0.31504586,
+      "interface_courant_max": 0.2342725,
+      "capillary_number_max": 0.4105486,
+      "alpha_water_min": -2.6578337e-09,
+      "alpha_water_max": 1.0000000034019312,
+      "max_velocity_by_time_m_per_s": {
+        "0.001": 0.97390857,
+        "0.002": 1.3040777,
+        "0.003": 1.3712031,
+        "0.004": 0.96312727,
+        "0.005": 0.96987835,
+        "0.006": 1.0769195
+      },
+      "peak_velocity_location_m": [
+        3.51307,
+        0.40397566,
+        0.0037364212
+      ],
+      "liquid_mass_error_pct_max_abs": 0.0,
+      "gas_mass_error_pct_max_abs": 3.739734697360403e-06,
+      "total_mass_error_pct_max_abs": 1.527200778804715e-08,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "reference_corrector_configuration": {
+      "n_alpha_corr": 1,
+      "n_alpha_subcycles": 2,
+      "n_outer_correctors": 1,
+      "n_pressure_correctors": 2,
+      "n_non_orthogonal_correctors": 0
+    },
+    "reference_corrector_run_result_0p006_s": {
+      "cells": 1904269,
+      "solver_exit_code": 0,
+      "execution_time_s": 576.71,
+      "clock_time_s": 587,
+      "final_delta_t_s": 6.875e-05,
+      "courant_max": 0.44986716,
+      "interface_courant_max": 0.25081351,
+      "capillary_number_max": 0.40956045,
+      "alpha_water_min": -5.7692016e-09,
+      "alpha_water_max": 1.0000000000035136,
+      "max_velocity_by_time_m_per_s": {
+        "0.001": 1.6815591,
+        "0.002": 1.320912,
+        "0.003": 1.4373148,
+        "0.004": 1.635278,
+        "0.005": 1.3500066,
+        "0.006": 1.2850141
+      },
+      "peak_velocity_location_m": [
+        3.5163674,
+        0.4046661,
+        -0.0013608496
+      ],
+      "liquid_mass_error_pct_max_abs": 0.0,
+      "gas_mass_error_pct_max_abs": 3.1558798385199068e-06,
+      "total_mass_error_pct_max_abs": 1.799348407386692e-08,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "comparison": {
+      "stock_gauss_linear_velocity_at_0p001_s_m_per_s": 3.207,
+      "stock_gauss_linear_velocity_at_0p006_s_m_per_s": 3.8390766,
+      "rdf_to_stock_velocity_ratio_at_0p001_s": 0.30368212347988777,
+      "rdf_to_stock_velocity_ratio_at_0p006_s": 0.28051524160783875,
+      "reference_to_legacy_clock_time_ratio": 0.5250447227191414,
+      "reference_to_legacy_peak_velocity_ratio": 1.226338461457679,
+      "reference_to_legacy_velocity_ratio_at_0p006_s": 1.1932313418040994,
+      "reference_to_stock_velocity_ratio_at_0p006_s": 0.3347195781402226,
+      "interpretation": "The TwoPhaseFlow-reference correctors cut screening wall time by 47.5 percent. Their peak velocity was 22.6 percent above the legacy-corrector RDF screen, but the 0.006 s value remained 66.5 percent below stock Gauss-linear compressibleInterFoam. Alpha and phase/total balances remained tight. The hotspot remains at the initial tower free surface, so this is only a short numerical screen; the 1.0 s closed-valve hold remains mandatory."
+    },
+    "teardown_regression": {
+      "initial_exit_code": 134,
+      "cause": "fieldFunctionObjects loaded stock libgeometricVoF beside TwoPhaseFlow libVoF and corrupted the duplicate runtime-selection table during process teardown",
+      "fix_commit": "9a59974",
+      "fix": "Compute alpha and velocity extrema inside phaseAccounting and do not load fieldFunctionObjects.",
+      "clean_rerun_exit_code": 0
+    },
+    "completion_claim": "This passed the 0.006 s RDF screening only. It is not the canonical hold, smoke run, full experiment, or accepted baseline."
+  },
+  "penalty_valve_full_hold_attempt": {
+    "status": "rejected_at_0p06_s",
+    "source_commit": "f6336b0",
+    "purpose": "Test the TwoPhaseFlow-reference correctors in the requested 1.0 s closed-valve hold using the connected-domain K=1e8 penalty valve.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "RDF",
+      "valve_representation": "connected-domain purely dissipative coded resistance",
+      "valve_mode": "closed",
+      "valve_loss_coefficient_cap": 100000000.0,
+      "valve_seal_speed_m_per_s": 1.0,
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "n_alpha_corr": 1,
+      "n_alpha_subcycles": 2,
+      "n_outer_correctors": 1,
+      "n_pressure_correctors": 2,
+      "n_non_orthogonal_correctors": 0
+    },
+    "interrupted_result": {
+      "requested_end_time_s": 1.0,
+      "postprocessed_duration_s": 0.06,
+      "latest_solver_time_s": 0.068,
+      "execution_time_s": 8122.65,
+      "clock_time_s": 15031,
+      "pressure_probe_peak_to_peak_Pa": 340.54,
+      "Hstar_peak_to_peak": 0.0570100896273823,
+      "Hstar_acceptance_limit": 0.02,
+      "Yfs_star_max_drift": 0.0024590163934427034,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "minimum_alpha_water": -6.4270186e-09,
+      "maximum_alpha_water": 1.0000000000382312,
+      "liquid_mass_error_pct_max_abs": 4.187644326231716e-06,
+      "gas_mass_error_pct_max_abs": 1.6295326070222793e-05,
+      "total_mass_error_pct_max_abs": 4.154317412025904e-06,
+      "final_delta_t_s": 2.7902313e-05,
+      "maximum_courant_number": 0.3718721,
+      "valve_edge_velocity_history_m_per_s": {
+        "0.04": 1.4144322,
+        "0.05": 1.6744465,
+        "0.06": 1.8249512
+      },
+      "valve_edge_hotspot_location_m": [
+        0.53953637,
+        -0.014712151,
+        -0.026741719
+      ]
+    },
+    "rejection": {
+      "irreversible_acceptance_failure": "The raw pressure-probe peak-to-peak value already exceeded the full-window Hstar limit, so later samples could not make this run pass.",
+      "mechanism": "The velocity maximum moved from the tower free surface to one cell immediately upstream of the sharp valve resistance zone and grew monotonically at the recorded 0.04, 0.05 and 0.06 s samples. The connected porous penalty cannot support a finite pressure jump at exactly zero velocity and creates a severe rAU discontinuity at its cell-zone edge.",
+      "performance_consequence": "Global Courant control, rather than interface or capillary control, reduced deltaT below 3e-5 s. Continuing the rejected run would not produce admissible hold evidence.",
+      "next_action": "Use a conformal valve-plane face zone and a two-sided no-slip baffle for CASEB_VALVE_MODE=closed, retain the dissipative resistance for opening runs, and replace adjustableRunTime output controls with runTime before re-screening."
+    },
+    "completion_claim": "This is a failed partial hold diagnostic. It is not a passed hold, smoke run, full experiment, or accepted baseline."
+  },
+  "conformal_baffle_rdf_screen": {
+    "status": "rejected_at_0p04_s",
+    "source_commits": [
+      "cf5ea10",
+      "c2491a8"
+    ],
+    "purpose": "Separate the connected penalty-valve defect from the sustained free-surface pressure drift by using a conformal two-sided no-slip closed baffle and runTime output control.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "RDF",
+      "valve_representation": "conformalNoSlipBaffle",
+      "valve_mode": "closed",
+      "time_control": "runTime",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "n_alpha_corr": 1,
+      "n_alpha_subcycles": 2,
+      "n_outer_correctors": 1,
+      "n_pressure_correctors": 2,
+      "n_non_orthogonal_correctors": 0
+    },
+    "mesh_and_baffle": {
+      "cells": 1903549,
+      "faces_per_baffle_side": 1829,
+      "disconnected_fluid_regions": 2,
+      "upstream_region_cells": 43365,
+      "downstream_region_cells": 1860184,
+      "standard_mesh_ok": true,
+      "strict_audit_status": "accepted_boundary_tet_exception"
+    },
+    "interrupted_result": {
+      "requested_end_time_s": 0.08,
+      "postprocessed_duration_s": 0.039996564,
+      "latest_solver_time_s": 0.0412446536,
+      "execution_time_s": 3493.82,
+      "clock_time_s": 4116,
+      "pressure_probe_peak_to_peak_Pa": 337.96,
+      "Hstar_peak_to_peak": 0.056578169643713094,
+      "Hstar_acceptance_limit": 0.02,
+      "pressure_probe_history_Pa": {
+        "0.0050109279": 105861.26,
+        "0.0099767511": 105965.19,
+        "0.014990982": 105926.71,
+        "0.020022167": 105864.9,
+        "0.024972947": 105791.75,
+        "0.029998856": 105691.73,
+        "0.035013489": 105627.23,
+        "0.039996564": 105652.23
+      },
+      "Yfs_star_max_drift": 0.0024590163934427034,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "minimum_alpha_water": -1.7542456e-10,
+      "maximum_alpha_water": 1.0000000002439065,
+      "liquid_mass_error_pct_max_abs": 0.0,
+      "gas_mass_error_pct_max_abs": 6.447510418069882e-06,
+      "total_mass_error_pct_max_abs": 1.5452752968342904e-07,
+      "final_delta_t_s": 4.7317409e-05,
+      "maximum_courant_number": 0.3650845,
+      "free_surface_velocity_history_m_per_s": {
+        "0.0099767511": 1.7568205,
+        "0.020022167": 1.0678002,
+        "0.029998856": 0.94021793,
+        "0.039996564": 1.3622903
+      },
+      "last_hotspot_location_m": [
+        3.5160891,
+        0.40370703,
+        -0.0031976625
+      ]
+    },
+    "rejection": {
+      "irreversible_acceptance_failure": "The raw pressure-probe peak-to-peak value exceeded the full-window Hstar limit by 0.04 s, so continuing to 0.08 s could not make the candidate pass.",
+      "baffle_finding": "The baffle removed the delayed valve-edge hotspot: the velocity maximum remained at the initial tower free surface and no valve leakage, rim water, gas entry, alpha defect or material-balance defect was observed.",
+      "mechanism": "The near-identical pressure drift with a topologically disconnected baffle identifies the sustained tower free-surface parasitic current and its acoustic pressure response as the remaining defect, rather than closed-valve pressure support.",
+      "next_action": "Screen the library-supported plicRDF plus fitParaboloid curvature sensitivity, which has lower reported curvature error on unstructured triangular/tetrahedral meshes, before any new full hold."
+    },
+    "completion_claim": "This is a rejected partial hold diagnostic. It validates the baffle topology but is not a passed hold, smoke run, full experiment, or accepted baseline."
+  },
+  "fit_paraboloid_baffle_screen": {
+    "status": "velocity_improved_cfl_rescreen_required",
+    "source_commit": "c9c81aa",
+    "purpose": "Screen the library-supported fitParaboloid curvature model after the conformal-baffle RDF screen identified the tower free surface as the remaining hotspot.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "fitParaboloid",
+      "interpolate_normal": true,
+      "valve_representation": "conformalNoSlipBaffle",
+      "time_control": "runTime",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "execution_time_s": 562.6,
+      "clock_time_s": 573,
+      "final_delta_t_s": 7.379764e-05,
+      "maximum_courant_number": 1.957062,
+      "maximum_interface_courant_number": 0.67553249,
+      "maximum_capillary_number": 0.39970573,
+      "alpha_water_min": -2.1175824e-22,
+      "alpha_water_max": 1.0000000000419587,
+      "max_velocity_by_time_m_per_s": {
+        "0.0010341426": 1.1867446,
+        "0.0019752562": 1.0227726,
+        "0.0030320094": 1.0106506,
+        "0.0040139282": 0.89364252,
+        "0.0049912558": 0.85378794,
+        "0.0059900886": 0.79567944
+      },
+      "peak_written_velocity_location_m": [
+        3.5122401,
+        0.26270327,
+        -0.003968537
+      ],
+      "liquid_mass_error_pct_max_abs": 0.0,
+      "gas_mass_error_pct_max_abs": 3.848598598984234e-06,
+      "total_mass_error_pct_max_abs": 1.9541479469896424e-08,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "pressure_probe_samples": 1
+    },
+    "comparison": {
+      "reference_rdf_peak_velocity_m_per_s": 1.6815591,
+      "reference_rdf_final_velocity_m_per_s": 1.2850141,
+      "fit_to_rdf_peak_velocity_ratio": 0.7057300030536514,
+      "fit_to_rdf_final_velocity_ratio": 0.619199000527542,
+      "interpretation": "fitParaboloid reduced the written peak and final velocities by 29.4 and 38.1 percent while preserving alpha and mass bounds. It is promising, but a one-step startup Courant spike to 1.957 exceeded the declared 0.3 limit, so this run does not clear the model for an extended hold."
+    },
+    "next_action": "Align plicRDF interpolateNormal with the library static surface-tension benchmarks by setting it false, record that control in the manifest, and repeat the 0.006 s screen before extending the candidate.",
+    "completion_claim": "This is a short curvature sensitivity with a CFL regression. It is not a passed hold, smoke run, full experiment, or accepted baseline."
+  },
+  "fit_paraboloid_no_interpolation_baffle_screen": {
+    "status": "cfl_improved_peak_velocity_regressed",
+    "source_commit": "3ab8d7e",
+    "purpose": "Repeat the conformal-baffle fitParaboloid screen with plicRDF normal interpolation disabled, matching the library static curvature benchmarks.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "fitParaboloid",
+      "interpolate_normal": false,
+      "valve_representation": "conformalNoSlipBaffle",
+      "time_control": "runTime",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.0059645104,
+      "postprocessed_probe_duration_s": 0.0049865935,
+      "execution_time_s": 491.21,
+      "clock_time_s": 502,
+      "final_delta_t_s": 7.3692891e-05,
+      "maximum_courant_number": 0.3496016,
+      "maximum_interface_courant_number": 0.2889185,
+      "maximum_capillary_number": 0.43647525,
+      "alpha_water_min": -1.224047e-11,
+      "alpha_water_max": 1.0000000000059626,
+      "peak_velocity_m_per_s": 1.3019122,
+      "final_written_velocity_m_per_s": 0.78839686,
+      "peak_velocity_location_m": [
+        3.5124782,
+        0.17225741,
+        0.0046252983
+      ],
+      "liquid_mass_error_pct_max_abs": 0.0,
+      "gas_mass_error_pct_max_abs": 3.3415297096455985e-06,
+      "total_mass_error_pct_max_abs": 1.683918818265077e-08,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "pressure_probe_samples": 1,
+      "hstar_evaluable": false
+    },
+    "comparison_to_interpolated_normal_screen": {
+      "global_courant_change_pct": -82.13639395328578,
+      "interface_courant_change_pct": -57.23096731877436,
+      "capillary_number_change_pct": 9.199150323130192,
+      "peak_velocity_change_pct": 9.704470034958913,
+      "final_velocity_change_pct": -0.9152946697877216,
+      "clock_time_change_pct": -12.390924956369982,
+      "interpretation": "Disabling normal interpolation removed the severe startup Courant event and slightly reduced the final written velocity, but the written peak velocity increased by 9.7 percent and both global and interface Courant maxima remained above their declared targets."
+    },
+    "extension_decision": {
+      "eligible": false,
+      "reason": "The source handoff requires both Courant and velocity metrics to improve before extension. Peak velocity regressed from 1.1867 to 1.3019 m/s, so this candidate must not be extended past the short screen.",
+      "pressure_caveat": "The 0.005 s probe interval produced only one pressure sample; the reported zero pressure range has no hold-stability meaning.",
+      "next_action": "Isolate the reconstruction setting from timestep feedback with a tightly capped, paired startup timestep screen before selecting any candidate for a pressure-drift window beyond 0.04 s."
+    },
+    "completion_claim": "This is a rejected short numerical screen. It is not a passed hold, smoke run, full experiment, or accepted baseline."
+  },
+  "fit_paraboloid_interpolated_normal_capped_timestep_screen": {
+    "status": "rejected_deterministic_early_flux_spike",
+    "source_commit": "15b916d",
+    "purpose": "Test whether the interpolateNormal=true Courant excursion was caused by adaptive timestep growth by imposing maxCo=0.2 and maxDeltaT=1e-5 s.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "fitParaboloid",
+      "interpolate_normal": true,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.2,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 1e-05,
+      "requested_end_time_s": 0.0035
+    },
+    "interrupted_result": {
+      "solver_exit_code_after_sigint": 1,
+      "latest_completed_solver_time_s": 0.001385121015,
+      "execution_time_s": 684.0,
+      "clock_time_s": 696,
+      "maximum_courant_number": 1.9915299,
+      "spike_state_time_s": 1.979890176e-05,
+      "spike_report_time_s": 2.023071219e-05,
+      "timestep_before_spike_feedback_s": 4.299817e-06,
+      "timestep_after_spike_feedback_s": 4.3181043e-07,
+      "interface_courant_at_spike": 0.0074808715,
+      "capillary_number_at_spike": 0.014385182,
+      "written_velocity_m_per_s": {
+        "0.00049512101": 1.2385568,
+        "0.00099512101": 1.2074082
+      },
+      "alpha_at_written_samples": {
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "water_above_rim_m3": 0.0
+    },
+    "rejection": {
+      "finding": "The same approximately 2.0 global Courant excursion recurred while the actual timestep was only 4.30e-6 s, below the imposed 1e-5 s cap. Interface Courant remained 0.0075, identifying a highly local pressure-corrected flux excursion outside the near-interface mask rather than timestep growth.",
+      "velocity_finding": "The first written velocity was already 1.239 m/s, above the uncapped interpolateNormal=true peak of 1.187 m/s, so smaller timesteps did not preserve the earlier apparent velocity benefit.",
+      "decision": "The run was stopped after both the Courant and velocity screening limits had irreversibly failed. Further maxDeltaT reduction is not justified.",
+      "next_action": "Keep interpolateNormal=false and test whether the static-benchmark plicRDF convergence controls, iterations=10 and tol=1e-8, reduce its 0.003 s peak without reintroducing the early flux spike."
+    },
+    "completion_claim": "This is an intentionally stopped timestep diagnostic. It is not a passed hold, smoke run, full experiment, or accepted baseline."
+  },
+  "fit_paraboloid_strict_plic_convergence_screen": {
+    "status": "rejected_early_velocity_and_courant_regression",
+    "source_commit": "e98e9b0",
+    "purpose": "Test whether the static-curvature-benchmark plicRDF controls reduce the non-interpolated-normal velocity peak by increasing iterations from 5 to 10 and reducing tol from 1e-6 to 1e-8.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "reconstruction_iterations": 10,
+      "reconstruction_tolerance": 1e-08,
+      "curvature_model": "fitParaboloid",
+      "interpolate_normal": false,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "requested_end_time_s": 0.0035
+    },
+    "interrupted_result": {
+      "solver_exit_code_after_sigint": 1,
+      "latest_completed_solver_time_s": 0.001787248407,
+      "execution_time_s": 255.11,
+      "clock_time_s": 265,
+      "maximum_courant_number": 0.48705647,
+      "maximum_interface_courant_number": 0.48705647,
+      "maximum_capillary_number_observed": 0.38631301,
+      "written_velocity_m_per_s": {
+        "0.00046548758": 1.9047473,
+        "0.00095862514": 1.2554877,
+        "0.0014645568": 1.1656539
+      },
+      "peak_velocity_location_m": [
+        3.5122788,
+        0.38073292,
+        -0.0044391549
+      ],
+      "alpha_water_min_observed": -1.0587912e-22,
+      "alpha_water_max_observed": 1.0000000000006453,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "rejection": {
+      "velocity_change_vs_default_false_pct": 46.30381052261341,
+      "finding": "The stricter plicRDF convergence settings increased the first written velocity to 1.905 m/s and generated global/interface Co=0.487. Both values exceeded the screening limits before the previous 0.003 s hotspot window.",
+      "decision": "The run was stopped once the early peak made the candidate ineligible. More plicRDF iterations are not promoted to the baseline.",
+      "next_action": "Screen isoAlpha reconstruction with fitParaboloid so that the next test changes the reconstruction algorithm instead of further tightening the rejected plicRDF iteration."
+    },
+    "completion_claim": "This is an intentionally stopped reconstruction-convergence sensitivity. It is not a passed hold, smoke run, full experiment, or accepted baseline."
+  },
+  "fit_paraboloid_isoalpha_screen": {
+    "status": "rejected_early_flux_and_velocity_spikes",
+    "source_commit": "fcb7972",
+    "purpose": "Test fitParaboloid with isoAlpha reconstruction after both plicRDF normal-initialisation paths and stricter plicRDF convergence failed.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "isoAlpha",
+      "curvature_model": "fitParaboloid",
+      "interpolate_normal": false,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "requested_end_time_s": 0.0035
+    },
+    "interrupted_result": {
+      "solver_exit_code_after_sigint": 1,
+      "latest_completed_solver_time_s": 0.00100878764,
+      "execution_time_s": 115.07,
+      "clock_time_s": 124,
+      "maximum_courant_number": 1.2059915,
+      "maximum_interface_courant_number": 0.7053029,
+      "secondary_global_courant_spike": 0.7053029,
+      "written_velocity_m_per_s": {
+        "0.0004697661": 1.2327307,
+        "0.0010087876": 1.6668712
+      },
+      "latest_peak_velocity_location_m": [
+        3.5104889,
+        0.20725889,
+        -0.00098690542
+      ],
+      "alpha_water_min_observed": 0.0,
+      "alpha_water_max_observed": 1.0000000000000049,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "rejection": {
+      "finding": "isoAlpha did not remove the early pure-cell pressure-flux excursion and later produced a second interface Courant spike. Velocity increased to 1.667 m/s by the second written sample.",
+      "wall_model_caveat": "Unlike plicRDF, isoAlpha does not provide contact-angle ghost reconstruction to fitParaboloid; this is not a clean transport-only sensitivity at the tower wall.",
+      "decision": "The run was stopped after both Courant and velocity limits failed. fitParaboloid is rejected for the current tetrahedral hold screen.",
+      "next_action": "Run a zero-curvature constantCurvature mechanism diagnostic with real sigma retained, then screen the missing physical RDF plus plicRDF plus interpolateNormal=false combination."
+    },
+    "completion_claim": "This is an intentionally stopped reconstruction-model sensitivity. It is not a passed hold, smoke run, full experiment, or accepted baseline."
+  },
+  "constant_curvature_zero_baffle_screen": {
+    "status": "rejected_joint_courant_and_velocity_gate",
+    "source_commit": "0f04383",
+    "purpose": "Remove only the variable-curvature surface-tension force while retaining sigma=0.072 N/m, the conformal closed-valve baffle, plicRDF reconstruction and all other startup controls.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "reconstruction_iterations": 5,
+      "reconstruction_tolerance": 1e-06,
+      "curvature_model": "constantCurvature",
+      "curvature_value_per_m": 0.0,
+      "interpolate_normal": false,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "requested_end_time_s": 0.006
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.006020481162,
+      "postprocessed_probe_duration_s": 0.0049782482,
+      "execution_time_s": 286.4,
+      "clock_time_s": 298,
+      "final_delta_t_s": 0.00013072713,
+      "maximum_courant_number": 0.39301985,
+      "maximum_interface_courant_number": 0.21407603,
+      "maximum_capillary_number": 0.68272038,
+      "alpha_water_min": -2.5083868e-11,
+      "alpha_water_max": 1.0000000000518048,
+      "peak_velocity_m_per_s": 1.437296,
+      "final_written_velocity_m_per_s": 0.76953222,
+      "peak_velocity_location_m": [
+        3.5215963,
+        0.40414422,
+        -0.00081251441
+      ],
+      "liquid_mass_error_pct_max_abs": 0.0,
+      "gas_mass_error_pct_max_abs": 3.821064228269001e-06,
+      "total_mass_error_pct_max_abs": 1.841517436347643e-08,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "pressure_probe_samples": 1,
+      "hstar_evaluable": false
+    },
+    "interpretation": {
+      "finding": "Removing variable curvature reduced the reference-corrector RDF peak from 1.682 to 1.437 m/s and the final written velocity from 1.285 to 0.770 m/s, but it did not remove the free-surface startup hotspot. Global and interface Courant maxima still exceeded their declared 0.30 and 0.20 limits.",
+      "mechanism_limit": "The result shows that erroneous variable curvature is not the sole source of the startup imbalance. It does not identify the remaining pressure, gravity or phase-property coupling contribution.",
+      "decision": "This nonphysical mechanism diagnostic must not be extended beyond the short screen or promoted to a full-run model.",
+      "next_action": "Run the missing physical RDF plus plicRDF plus interpolateNormal=false screen with the same baffle and startup controls."
+    },
+    "completion_claim": "This is a rejected 0.006 s mechanism diagnostic. It is not a passed hold, smoke run, full experiment, or accepted baseline."
+  },
+  "rdf_no_interpolation_baffle_screen": {
+    "status": "rejected_courant_limits_with_initial_pressure_defect",
+    "source_commit": "96b451b",
+    "purpose": "Screen the missing physical RDF plus plicRDF plus interpolateNormal=false combination with the conformal closed-valve baffle.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "reconstruction_iterations": 5,
+      "reconstruction_tolerance": 1e-06,
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "requested_end_time_s": 0.006
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.00600914461,
+      "postprocessed_probe_duration_s": 0.0049835976,
+      "execution_time_s": 565.1,
+      "clock_time_s": 577,
+      "final_delta_t_s": 7.6605067e-05,
+      "maximum_courant_number": 0.3653912,
+      "maximum_courant_completed_time_s": 0.0008540833647,
+      "maximum_interface_courant_number": 0.30641434,
+      "maximum_interface_courant_completed_time_s": 0.003902995651,
+      "maximum_capillary_number": 0.38573412,
+      "alpha_water_min": -1.5777507e-10,
+      "alpha_water_max": 1.000000000000344,
+      "end_written_velocity_m_per_s": 1.2203693,
+      "end_written_velocity_location_m": [
+        3.5126135,
+        0.40387846,
+        0.0027261119
+      ],
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "pressure_probe_samples": 1,
+      "hstar_evaluable": false,
+      "mass_balance_evaluable": false
+    },
+    "courant_diagnosis": {
+      "finding": "Both excursions were followed by the exact next-step timestep reduction implied by maxCo/Co or maxAlphaCo/interfaceCo. The configured controller is one step lagged; alpha remained tightly bounded and pressure solves remained converged.",
+      "global_event": "A 96.805 microsecond step completed with Co=0.3653912; the next step was reduced to 79.480 microseconds.",
+      "interface_event": "An 80.742 microsecond step completed with interface Co=0.30641434; the next step was reduced to 52.701 microseconds.",
+      "decision": "The run exceeded both declared Courant limits and is not eligible for extension."
+    },
+    "initialisation_audit": {
+      "status": "confirmed_stale_pressure_read",
+      "finding": "setExprFields preloaded p, then each p expression wrote an unregistered temporary field to disk. The final p_rgh expression therefore read the original registered p instead of the newly written hydrostatic p.",
+      "direct_residual_expression": "p_rgh - (p + rho(alpha,p,T)*9.81*y)",
+      "direct_residual_min_pa": -453.53142,
+      "direct_residual_max_pa": 3946.4994,
+      "direct_residual_max_location_m": [
+        3.5099431,
+        0.40295589,
+        0.00051287631
+      ],
+      "interpretation": "The approximately 3.95 kPa mismatch is at the initial tower free surface and is sufficient to invalidate every startup screen prepared by the one-process pressure initialisation.",
+      "next_action": "Split absolute-pressure and reduced-pressure initialisation into separate setExprFields processes, verify the residual before decomposition, and repeat the zero-curvature mechanism screen before re-screening physical RDF."
+    },
+    "completion_claim": "This is a rejected 0.006 s physical screen with a confirmed initialization defect. It is not a passed hold, smoke run, full experiment, or accepted baseline."
+  },
+  "split_pressure_initialization_validation": {
+    "status": "pressure_residual_fixed_delayed_hotspot_remains",
+    "source_commit": "3a1777d",
+    "purpose": "Validate that a second setExprFields process reloads the final absolute pressure before constructing p_rgh, then repeat the zero-curvature mechanism screen.",
+    "field_validation": {
+      "residual_expression": "p_rgh - (p + rho(alpha,p,T)*9.81*y)",
+      "pre_fix_min_pa": -453.53142,
+      "pre_fix_max_pa": 3946.4994,
+      "post_fix_min_pa": 0.0,
+      "post_fix_max_pa": 0.0,
+      "cells_checked": 1903549,
+      "method": "OpenFOAM setExprFields residual field followed by fieldMinMax at time zero"
+    },
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "reconstruction_iterations": 5,
+      "reconstruction_tolerance": 1e-06,
+      "curvature_model": "constantCurvature",
+      "curvature_value_per_m": 0.0,
+      "interpolate_normal": false,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "write_interval_s": 0.0005,
+      "requested_end_time_s": 0.006
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.005963016232,
+      "postprocessed_probe_duration_s": 0.0050441966,
+      "execution_time_s": 263.01,
+      "clock_time_s": 274,
+      "final_delta_t_s": 0.00012967952,
+      "maximum_courant_number": 0.36343638,
+      "maximum_interface_courant_number": 0.18618996,
+      "maximum_capillary_number": 0.79167739,
+      "alpha_water_min": -2.646978e-22,
+      "alpha_water_max": 1.0000000000000624,
+      "written_peak_velocity_m_per_s": 1.4236098,
+      "written_peak_velocity_time_s": 0.0045358115,
+      "written_peak_velocity_location_m": [
+        3.5215963,
+        0.40414422,
+        -0.00081251441
+      ],
+      "first_written_velocity_m_per_s": 0.17041954,
+      "first_written_velocity_time_s": 0.00047098108,
+      "final_written_velocity_m_per_s": 0.75965456,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "gas_mass_error_pct_max_abs": 3.840865782467352e-06,
+      "total_mass_error_pct_max_abs": 1.8080075201188025e-08
+    },
+    "interpretation": {
+      "finding": "Reloading p eliminated the 3.95 kPa algebraic inconsistency and strongly reduced the first written startup velocity. A delayed free-surface hotspot nevertheless grew to 1.424 m/s by 0.00454 s, and global Co still exceeded 0.30.",
+      "decision": "The initialization repair is retained, but zero curvature remains a rejected nonphysical mechanism model and cannot be extended.",
+      "next_action": "Repeat the physical RDF plus plicRDF plus interpolateNormal=false 0.006 s screen with the corrected initialization before testing timestep or pressure-coupling controls."
+    },
+    "completion_claim": "This validates the pressure-field repair, not the closed-valve hold or experimental reproduction."
+  },
+  "corrected_initialization_rdf_screen": {
+    "status": "rejected_curvature_and_hydrostatic_imbalance",
+    "source_commit": "9bd641c",
+    "purpose": "Re-establish the physical RDF plus plicRDF plus interpolateNormal=false baseline after eliminating the stale-pressure initialization defect.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "reconstruction_iterations": 5,
+      "reconstruction_tolerance": 1e-06,
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "write_interval_s": 0.0005,
+      "requested_end_time_s": 0.006
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.006003194242,
+      "postprocessed_probe_duration_s": 0.0049850321,
+      "execution_time_s": 607.83,
+      "clock_time_s": 619,
+      "final_delta_t_s": 5.4901916e-05,
+      "maximum_courant_number": 0.36626271,
+      "maximum_interface_courant_number": 0.30324312,
+      "maximum_capillary_number": 0.38514612,
+      "alpha_water_min": -6.8177947e-10,
+      "alpha_water_max": 1.0000000000000808,
+      "first_written_velocity_m_per_s": 1.5159313,
+      "first_written_velocity_time_s": 0.00046752439,
+      "written_peak_velocity_m_per_s": 1.7751321,
+      "written_peak_velocity_time_s": 0.0034856377,
+      "written_peak_velocity_location_m": [
+        3.51307,
+        0.40397566,
+        0.0037364212
+      ],
+      "final_written_velocity_m_per_s": 1.3443924,
+      "gas_mass_error_pct_max_abs": 4.907265599589989e-06,
+      "total_mass_error_pct_max_abs": 2.358176887033977e-08,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "pressure_probe_samples": 1,
+      "hstar_evaluable": false
+    },
+    "curvature_field_diagnostic": {
+      "theoretical_planar_curvature_per_m": 0.0,
+      "global_min_per_m": {
+        "0.00046752439": -8205.86,
+        "0.0034856377": -6801.4491,
+        "0.0060031942": -5872.0259
+      },
+      "global_max_per_m": {
+        "0.00046752439": 2516.316,
+        "0.0034856377": 1608.6365,
+        "0.0060031942": 2301.6158
+      },
+      "free_surface_max_location_m_at_peak_time": [
+        3.5215963,
+        0.40414422,
+        -0.00081251441
+      ],
+      "caveat": "Global K extrema can occur in cells where the alphaCSF delta is zero. A collocated force diagnostic is required before interpreting all extrema as active surface-tension force."
+    },
+    "collocated_force_diagnostic_at_0p0064928625_s": {
+      "source_commit": "771714e",
+      "continuation_note": "This diagnostic continued the rejected RDF screen by 0.00049 s only to execute the newly compiled collocated logger.",
+      "maximum_velocity_cell": {
+        "velocity_m_per_s": 1.1778191,
+        "location_m": [
+          3.5134313,
+          0.40380227,
+          0.0005271708
+        ],
+        "alpha_water": 1.0344235e-05,
+        "mixture_density_kg_per_m3": 1.2146573,
+        "curvature_per_m": 337.46564,
+        "pressure_pa": 101332.92,
+        "reduced_pressure_pa": 101337.73,
+        "processor": 1,
+        "local_cell": 457940
+      },
+      "maximum_internal_face_forces_pa_per_m": {
+        "hydrostatic_residual": 462427.18,
+        "surface_tension": 472860.0,
+        "common_location_m": [
+          3.5109107,
+          0.18428966,
+          0.0031242152
+        ],
+        "total_residual": 77568.911,
+        "total_residual_location_m": [
+          3.5153577,
+          0.40276563,
+          0.0046954981
+        ]
+      },
+      "radial_alpha_probe": {
+        "force_location_alpha_water_at_time_zero": 1.0,
+        "force_location_alpha_water_at_0p0064928625_s": 0.43746227,
+        "finding": "A cell adjacent to the deep tower-wall force hotspot became interfacial far below the intended y=0.403 free surface. This cannot be physical advection over 0.0065 s and identifies an unintended wall-adjacent alpha/reconstruction layer."
+      },
+      "decision": "The next minimal fix expands the tower-water geometric initializer into the known 2 mm solid wall gap. This keeps all fluid cells inside the tower fully wet below the planar free surface without selecting any exterior-atmosphere cells."
+    },
+    "interpretation": {
+      "finding": "The corrected physical RDF run failed both Courant limits and reached 1.775 m/s at the initial free surface. RDF creates a much larger first-frame velocity than corrected zero curvature (1.516 versus 0.170 m/s), while zero curvature still retains a delayed 1.424 m/s hotspot.",
+      "mechanism": "Both variable-curvature force error and a separate pressure-gravity discrete imbalance are present. Timestep reductions after the two Courant excursions exactly follow the one-step-lag controller ratios and are consequences rather than the primary force source.",
+      "decision": "Do not extend this candidate or start the 1.0 s hold.",
+      "next_action": "Expand the tower-water initialization cylinder from the exact fluid radius into the solid wall gap, verify that no deep wall-adjacent alpha interface or force hotspot remains, and repeat the paired zero-curvature and RDF short screens."
+    },
+    "completion_claim": "This is a rejected corrected-initialization screen, not a passed hold, smoke run, full experiment, or accepted baseline."
+  },
+  "fully_wet_tower_zero_curvature_screen": {
+    "status": "mechanism_improved_but_global_courant_failed",
+    "source_commit": "ebf034a",
+    "purpose": "Verify that extending the tower-water selector into the solid wall gap removes the deep artificial alpha layer before restoring physical curvature.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "constantCurvature",
+      "curvature_value_per_m": 0.0,
+      "interpolate_normal": false,
+      "tower_water_selector_radius_m": 0.00735,
+      "tower_fluid_radius_m": 0.00635,
+      "exterior_fluid_inner_radius_m": 0.00835,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "write_interval_s": 0.0005,
+      "requested_end_time_s": 0.006
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.00595333007,
+      "postprocessed_probe_duration_s": 0.0050465784,
+      "execution_time_s": 147.32,
+      "clock_time_s": 160,
+      "final_delta_t_s": 0.00012749445,
+      "maximum_courant_number": 0.41904883,
+      "maximum_interface_courant_number": 0.12062942,
+      "maximum_capillary_number": 0.79113643,
+      "alpha_water_min": -6.1542238e-22,
+      "alpha_water_max": 1.0000000000000042,
+      "written_peak_velocity_m_per_s": 1.0307522,
+      "written_peak_velocity_time_s": 0.0035555025,
+      "written_peak_velocity_location_m": [
+        3.5165559,
+        0.40405094,
+        -0.0009536023
+      ],
+      "alpha_water_at_written_peak_velocity": 0.0,
+      "density_at_written_peak_velocity_kg_per_m3": 1.2048218,
+      "final_written_velocity_m_per_s": 0.68717142,
+      "maximum_hydrostatic_force_residual_pa_per_m": 10477.05,
+      "maximum_hydrostatic_force_residual_location_m": [
+        3.5183663,
+        0.4027457,
+        -0.00035159247
+      ],
+      "maximum_surface_tension_force_pa_per_m": 0.0,
+      "gas_mass_error_pct_max_abs": 1.5196860607553443e-06,
+      "total_mass_error_pct_max_abs": 8.038858055272918e-09,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "interpretation": {
+      "finding": "The artificial y=0.184 m interface and 462/473 kPa/m deep force pair disappeared. The remaining force and velocity hotspots are confined to the intended y=0.403 m free surface.",
+      "improvement": "Relative to the same corrected-initialization zero-curvature screen, written peak velocity fell from 1.424 to 1.031 m/s and the maximum hydrostatic residual fell from 462427 to 10477 Pa/m.",
+      "courant_limit": "A one-step global Co excursion reached 0.419 when deltaT grew to 0.179 ms; interface Co stayed below 0.20. This candidate remains diagnostic-only and is not cleared for extension.",
+      "next_action": "Repeat physical RDF with the fully wet tower initializer and collocated force logger. If the deep interface remains absent but surface force dominates, test RDF curvFromTr=false with a hard maxDeltaT cap."
+    },
+    "completion_claim": "This validates the tower alpha-initialization repair, not a physical hold model or completed reproduction."
+  },
+  "fully_wet_tower_rdf_screen": {
+    "status": "rejected_surface_force_and_courant_limits",
+    "source_commit": "a3ebcd6",
+    "purpose": "Restore physical RDF curvature after fully wetting the tower-wall fluid cells and use collocated force diagnostics to select the next single-parameter sensitivity.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "reconstruction_iterations": 5,
+      "reconstruction_tolerance": 1e-06,
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "tower_water_selector_radius_m": 0.00735,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "write_interval_s": 0.0005,
+      "requested_end_time_s": 0.006
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.005971624406,
+      "postprocessed_probe_duration_s": 0.0050050022,
+      "execution_time_s": 248.16,
+      "clock_time_s": 262,
+      "final_delta_t_s": 6.8023372e-05,
+      "maximum_courant_number": 0.3491739,
+      "maximum_interface_courant_number": 0.20601834,
+      "maximum_capillary_number": 0.34111378,
+      "alpha_water_min": -2.2227941e-11,
+      "alpha_water_max": 1.0000000000000042,
+      "first_written_velocity_m_per_s": 1.3381459,
+      "first_written_velocity_time_s": 0.0004662800617,
+      "written_peak_velocity_m_per_s": 1.8053624,
+      "written_peak_velocity_time_s": 0.001507856941,
+      "written_peak_velocity_location_m": [
+        3.5163674,
+        0.4046661,
+        -0.0013608496
+      ],
+      "alpha_water_at_written_peak_velocity": 0.0,
+      "density_at_written_peak_velocity_kg_per_m3": 1.2033176,
+      "curvature_at_written_peak_velocity_per_m": 247.01823,
+      "final_written_velocity_m_per_s": 1.055855,
+      "maximum_hydrostatic_force_residual_pa_per_m": 82217.793,
+      "maximum_hydrostatic_force_residual_location_m": [
+        3.5145467,
+        0.4026696,
+        -0.0040576548
+      ],
+      "maximum_surface_tension_force_pa_per_m": 118214.0,
+      "maximum_surface_tension_force_location_m": [
+        3.5145467,
+        0.4026696,
+        -0.0040576548
+      ],
+      "maximum_total_force_residual_pa_per_m": 80456.67,
+      "maximum_total_force_residual_location_m": [
+        3.5114694,
+        0.40282223,
+        0.0026162649
+      ],
+      "gas_mass_error_pct_max_abs": 1.2005396995862066e-06,
+      "total_mass_error_pct_max_abs": 6.277027504837502e-09,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "interpretation": {
+      "finding": "The deep y=0.184 m artificial interface did not recur; velocity and all force maxima are confined to the intended y=0.403 m free surface. Physical RDF nevertheless failed both declared Courant limits and reached 1.805 m/s.",
+      "mechanism": "The maximum surface-tension force was 118 kPa/m, above the 82 kPa/m pressure-gravity residual, and both maxima were collocated. Variable-curvature force is therefore the dominant remaining startup contribution, although a pressure-gravity residual remains.",
+      "decision": "Do not extend this candidate beyond the short screen or start the 1.0 s hold.",
+      "next_action": "Run a hard-maxDeltaT paired RDF comparison with curvFromTr=true and false so the curvature discretisation is the only changed model setting."
+    },
+    "completion_claim": "This is a rejected fully-wet physical-curvature screen, not a passed hold, smoke run, full experiment, or accepted baseline."
+  },
+  "hard_timestep_curvature_discretisation_pair": {
+    "status": "divergence_formula_rejected_trace_formula_short_extension_pending",
+    "source_commits": [
+      "82c2dfb",
+      "da428ec"
+    ],
+    "purpose": "Compare the RDF trace-of-gradient and divergence-of-face-normal curvature formulas under an identical hard timestep cap.",
+    "common_configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "reconstruction_iterations": 5,
+      "reconstruction_tolerance": 1e-06,
+      "curvature_model": "RDF",
+      "interpolate_normal": false,
+      "tower_water_selector_radius_m": 0.00735,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 1e-05,
+      "write_interval_s": 0.0005,
+      "requested_end_time_s": 0.0035
+    },
+    "curvature_from_trace_true": {
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.003497496603,
+      "execution_time_s": 850.64,
+      "clock_time_s": 865,
+      "final_delta_t_s": 1e-05,
+      "maximum_courant_number": 0.11471871,
+      "maximum_interface_courant_number": 0.021455945,
+      "maximum_capillary_number": 0.031645462,
+      "alpha_water_min": -6.6174449e-24,
+      "alpha_water_max": 1.0000000000000027,
+      "first_written_velocity_m_per_s": 1.3166458,
+      "first_written_velocity_time_s": 0.0004974966027,
+      "written_peak_velocity_m_per_s": 1.3166458,
+      "written_peak_velocity_time_s": 0.0004974966027,
+      "written_peak_velocity_location_m": [
+        3.5119352,
+        0.40352488,
+        0.0018865803
+      ],
+      "alpha_water_at_written_peak_velocity": 3.637988e-15,
+      "curvature_at_written_peak_velocity_per_m": 45.496866,
+      "final_written_velocity_m_per_s": 0.94898481,
+      "maximum_hydrostatic_force_residual_pa_per_m": 132494.91,
+      "maximum_hydrostatic_force_residual_location_m": [
+        3.5108768,
+        0.46300156,
+        -0.0077883644
+      ],
+      "maximum_surface_tension_force_pa_per_m": 118755.68,
+      "maximum_surface_tension_force_location_m": [
+        3.5145467,
+        0.4026696,
+        -0.0040576548
+      ],
+      "maximum_total_force_residual_pa_per_m": 132494.91,
+      "gas_mass_error_pct_max_abs": 6.594328230739191e-07,
+      "total_mass_error_pct_max_abs": 3.142237378925592e-09,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "curvature_from_trace_false": {
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.003497496603,
+      "execution_time_s": 821.51,
+      "clock_time_s": 835,
+      "final_delta_t_s": 1e-05,
+      "maximum_courant_number": 0.12504879,
+      "maximum_interface_courant_number": 0.024473929,
+      "maximum_capillary_number": 0.031645463,
+      "alpha_water_min": -2.3782627e-24,
+      "alpha_water_max": 1.000000000000003,
+      "first_written_velocity_m_per_s": 1.1209989,
+      "first_written_velocity_time_s": 0.0004974966027,
+      "written_peak_velocity_m_per_s": 1.548821,
+      "written_peak_velocity_time_s": 0.003497496603,
+      "written_peak_velocity_location_m": [
+        3.5110978,
+        0.46288289,
+        -0.0079204663
+      ],
+      "alpha_water_at_written_peak_velocity": 0.0,
+      "curvature_at_written_peak_velocity_per_m": 0.0,
+      "final_written_velocity_m_per_s": 1.548821,
+      "maximum_hydrostatic_force_residual_pa_per_m": 197549.93,
+      "maximum_hydrostatic_force_residual_location_m": [
+        3.5108768,
+        0.46300156,
+        -0.0077883644
+      ],
+      "maximum_surface_tension_force_pa_per_m": 113258.57,
+      "maximum_surface_tension_force_location_m": [
+        3.5156845,
+        0.40274995,
+        0.0036621505
+      ],
+      "maximum_total_force_residual_pa_per_m": 197549.93,
+      "gas_mass_error_pct_max_abs": 6.643806060014228e-07,
+      "total_mass_error_pct_max_abs": 3.169465009725114e-09,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "interpretation": {
+      "finding": "Both hard-timestep members passed the Courant gates, but curvFromTr=false ended with a growing 1.549 m/s exterior-gas hotspot versus 0.949 m/s for curvFromTr=true.",
+      "comparison": "The divergence formula reduced the first written velocity from 1.317 to 1.121 m/s and the maximum surface force from 119 to 113 kPa/m, but increased the full-window velocity peak by 17.6 percent and the maximum exterior-gas pressure residual from 132 to 198 kPa/m.",
+      "decision": "Reject curvFromTr=false and retain the source-default trace formula. Neither short member is yet a passed hold.",
+      "next_action": "Repeat curvFromTr=true through 0.006 s under the same hard cap to verify that its later exterior-gas hotspot remains bounded before any extension toward 0.04 s."
+    },
+    "completion_claim": "This completes only the paired curvature-formula short diagnostic; it is not a passed hold, smoke run, or completed reproduction."
+  },
+  "hard_timestep_trace_extension_0p006_s": {
+    "status": "rejected_growing_exterior_gas_pressure_residual",
+    "source_commit": "3fe35b7",
+    "purpose": "Check whether the later exterior-gas hotspot in the retained RDF trace formula remains bounded through the full 0.006 s startup window.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "tower_water_selector_radius_m": 0.00735,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 1e-05,
+      "write_interval_s": 0.0005,
+      "requested_end_time_s": 0.006
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.005997496603,
+      "postprocessed_probe_duration_s": 0.0049974966,
+      "execution_time_s": 1510.79,
+      "clock_time_s": 1527,
+      "final_delta_t_s": 1e-05,
+      "maximum_courant_number": 0.15151544,
+      "maximum_interface_courant_number": 0.024030942,
+      "maximum_capillary_number": 0.031645463,
+      "alpha_water_min": -6.6174449e-24,
+      "alpha_water_max": 1.000000000000003,
+      "first_written_velocity_m_per_s": 1.3166299,
+      "first_written_velocity_time_s": 0.0004974966027,
+      "written_peak_velocity_m_per_s": 1.4807003,
+      "written_peak_velocity_time_s": 0.005997496603,
+      "written_peak_velocity_location_m": [
+        3.5110978,
+        0.46288289,
+        -0.0079204663
+      ],
+      "alpha_water_at_written_peak_velocity": 0.0,
+      "curvature_at_written_peak_velocity_per_m": 0.0,
+      "final_written_velocity_m_per_s": 1.4807003,
+      "maximum_hydrostatic_force_residual_pa_per_m": 208133.76,
+      "maximum_hydrostatic_force_residual_location_m": [
+        3.5108768,
+        0.46300156,
+        -0.0077883644
+      ],
+      "maximum_surface_tension_force_pa_per_m": 118753.93,
+      "maximum_surface_tension_force_location_m": [
+        3.5145467,
+        0.4026696,
+        -0.0040576548
+      ],
+      "maximum_total_force_residual_pa_per_m": 208133.76,
+      "gas_mass_error_pct_max_abs": 1.3644859234233971e-06,
+      "total_mass_error_pct_max_abs": 6.435196498764253e-09,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "interpretation": {
+      "finding": "Courant metrics remained below their limits, but the pure-gas hotspot at y=0.463 m did not remain bounded: the final written velocity was the run maximum at 1.481 m/s and the collocated pressure-gravity residual reached 208 kPa/m.",
+      "mechanism": "Curvature is zero and surface-tension force is absent at the final velocity hotspot. The pressure-gravity term now exceeds the free-surface force, selecting hydrostatic pressure discretisation rather than another curvature model as the next mechanism test.",
+      "decision": "Do not extend this candidate to 0.04 s or the full hold.",
+      "next_action": "Construct a discrete hydrostatic p_rgh initialization using the same gravity-force operator, verify its pre-solver face residual, then repeat the retained RDF short screen."
+    },
+    "completion_claim": "This is a rejected capped startup extension, not a passed hold, smoke run, or completed reproduction."
+  },
+  "discrete_hydrostatic_rdf_screen_0p006_s": {
+    "status": "rejected_courant_limits_surface_tension_dominated",
+    "source_commits": [
+      "26b625c",
+      "ca23def",
+      "3b1a51a",
+      "a75683f",
+      "bc04f52"
+    ],
+    "purpose": "Project the initial reduced pressure with the solver gravity-force operator and repeat the source-default physical RDF screen.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "reconstruction_iterations": 5,
+      "reconstruction_tolerance": 1e-06,
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "tower_water_selector_radius_m": 0.00735,
+      "hydrostatic_initialization": "discrete",
+      "hydrostatic_correctors": 10,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "write_interval_s": 0.0005,
+      "requested_end_time_s": 0.006
+    },
+    "hydrostatic_projection": {
+      "connected_regions": 2,
+      "unvented_pressure_references": 1,
+      "correctors": 10,
+      "before_max_force_residual_pa_per_m": 1661428.0,
+      "after_max_force_residual_pa_per_m": 1017.9579,
+      "force_residual_ratio": 0.0006127005804645161,
+      "after_max_force_residual_location_m": [
+        3.5144812,
+        0.40242351,
+        0.0010191192
+      ],
+      "after_max_algebraic_residual_pa": 1.4551915e-11,
+      "assessment": "The projection reduced the maximum face residual by a factor of 1632, but the remaining 1.018 kPa/m is not roundoff."
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.006008831281,
+      "postprocessed_probe_duration_s": 0.0050388373,
+      "execution_time_s": 244.08,
+      "clock_time_s": 257,
+      "final_delta_t_s": 6.9204977e-05,
+      "maximum_courant_number": 0.36517433,
+      "maximum_interface_courant_number": 0.20352232,
+      "maximum_capillary_number": 0.36481116,
+      "alpha_water_min": -1.3113495e-11,
+      "alpha_water_max": 1.0000000000000049,
+      "first_written_velocity_m_per_s": 1.2790886,
+      "first_written_velocity_time_s": 0.00046771408,
+      "written_peak_velocity_m_per_s": 1.7976449,
+      "written_peak_velocity_time_s": 0.0015242498,
+      "written_peak_velocity_location_m": [
+        3.5163674,
+        0.4046661,
+        -0.0013608496
+      ],
+      "alpha_water_at_written_peak_velocity": 0.0,
+      "density_at_written_peak_velocity_kg_per_m3": 1.2025456,
+      "curvature_at_written_peak_velocity_per_m": 249.6971,
+      "final_written_velocity_m_per_s": 1.0564421,
+      "maximum_hydrostatic_force_residual_pa_per_m": 83012.297,
+      "maximum_hydrostatic_force_residual_location_m": [
+        3.5145467,
+        0.4026696,
+        -0.0040576548
+      ],
+      "maximum_surface_tension_force_pa_per_m": 118148.97,
+      "maximum_surface_tension_force_location_m": [
+        3.5145467,
+        0.4026696,
+        -0.0040576548
+      ],
+      "maximum_total_force_residual_pa_per_m": 78344.749,
+      "gas_mass_error_pct_max_abs": 9.077101920436604e-07,
+      "total_mass_error_pct_max_abs": 4.380791064027939e-09,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "interpretation": {
+      "finding": "The discrete projection removed the exterior-gas hotspot from this adaptive-timestep screen: every written velocity and force maximum remained at the intended free surface. The candidate nevertheless failed both Courant gates and retained a 1.798 m/s startup peak.",
+      "comparison": "Against the otherwise identical analytic fully-wet RDF screen, peak velocity changed from 1.805 to 1.798 m/s, final velocity from 1.056 to 1.056 m/s, and maximum surface force from 118.214 to 118.149 kPa/m. The physical startup response is therefore essentially unchanged.",
+      "mechanism": "After projection, the maximum dynamic pressure-gravity and surface-tension residuals were 83 and 118 kPa/m at the physical free surface. Surface tension remains the larger startup term.",
+      "decision": "Do not extend this adaptive candidate to 0.04 s or the full hold.",
+      "next_action": "Repeat the discrete initializer with maxDeltaT=1e-5 through 0.006 s, directly paired with the rejected analytic hard-cap trace run, to test whether projection removes its growing exterior-gas hotspot."
+    },
+    "completion_claim": "This is a rejected discrete-hydrostatic startup screen, not a passed hold, smoke run, or completed reproduction."
+  },
+  "discrete_hydrostatic_hard_timestep_screen_0p006_s": {
+    "status": "rejected_amplified_exterior_gas_pressure_residual",
+    "source_commit": "60a9100",
+    "purpose": "Directly pair the discrete hydrostatic initializer with the maxDeltaT=1e-5 analytic trace run and test whether the initial projection prevents its exterior-gas hotspot.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "reconstruction_iterations": 5,
+      "reconstruction_tolerance": 1e-06,
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "tower_water_selector_radius_m": 0.00735,
+      "hydrostatic_initialization": "discrete",
+      "hydrostatic_correctors": 10,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 1e-05,
+      "write_interval_s": 0.0005,
+      "requested_end_time_s": 0.006
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.005997496603,
+      "postprocessed_probe_duration_s": 0.0049974966,
+      "execution_time_s": 1495.67,
+      "clock_time_s": 1511,
+      "final_delta_t_s": 1e-05,
+      "maximum_courant_number": 0.21407703,
+      "maximum_interface_courant_number": 0.024110698,
+      "maximum_capillary_number": 0.031645468,
+      "alpha_water_min": -1.323489e-23,
+      "alpha_water_max": 1.0000000000000022,
+      "first_written_velocity_m_per_s": 1.3099524,
+      "first_written_velocity_time_s": 0.0004974966,
+      "written_peak_velocity_m_per_s": 2.172866,
+      "written_peak_velocity_time_s": 0.0044974966,
+      "written_peak_velocity_location_m": [
+        3.5112488,
+        0.46364102,
+        -0.0078400676
+      ],
+      "alpha_water_at_written_peak_velocity": 0.0,
+      "density_at_written_peak_velocity_kg_per_m3": 1.3179492,
+      "curvature_at_written_peak_velocity_per_m": 0.0,
+      "final_written_velocity_m_per_s": 1.9089862,
+      "maximum_hydrostatic_force_residual_pa_per_m": 266105.73,
+      "maximum_hydrostatic_force_residual_location_m": [
+        3.5108768,
+        0.46300156,
+        -0.0077883644
+      ],
+      "maximum_surface_tension_force_pa_per_m": 118677.28,
+      "maximum_surface_tension_force_location_m": [
+        3.5145467,
+        0.4026696,
+        -0.0040576548
+      ],
+      "maximum_total_force_residual_pa_per_m": 266105.73,
+      "gas_mass_error_pct_max_abs": 1.2473077411256371e-06,
+      "total_mass_error_pct_max_abs": 5.962096055823564e-09,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "comparison_to_analytic_hard_cap": {
+      "analytic_written_peak_velocity_m_per_s": 1.4807003,
+      "discrete_written_peak_velocity_m_per_s": 2.172866,
+      "analytic_maximum_hydrostatic_force_residual_pa_per_m": 208133.76,
+      "discrete_maximum_hydrostatic_force_residual_pa_per_m": 266105.73,
+      "analytic_maximum_surface_tension_force_pa_per_m": 118753.93,
+      "discrete_maximum_surface_tension_force_pa_per_m": 118677.28
+    },
+    "interpretation": {
+      "finding": "The initial projection did not suppress the hard-cap exterior-gas mode. The written velocity peaked at 2.173 m/s in pure gas at y=0.464 m and remained 1.909 m/s at the end; the collocated pressure-gravity residual reached 266 kPa/m with zero curvature.",
+      "comparison": "Relative to the analytic hard-cap run, the discrete initializer increased written peak velocity by 46.7 percent and the maximum exterior-gas pressure residual by 27.9 percent while leaving maximum surface force unchanged.",
+      "mechanism": "This is a dynamically regenerated pressure mode, not persistence of the initial hydrostatic residual. The final p_rgh correction frequently performs zero iterations when its initial residual is below the current 1e-7 absolute tolerance, making pressure-solver convergence the next isolated mechanism check.",
+      "decision": "Reject this candidate and do not extend it to 0.04 s or the full hold.",
+      "next_action": "Materialize a pressure-solver tolerance control and repeat the same discrete hard-cap screen with a tighter p_rghFinal absolute tolerance, changing no physical or curvature setting."
+    },
+    "completion_claim": "This is a rejected hard-timestep discrete-hydrostatic diagnostic, not a passed hold, smoke run, or completed reproduction."
+  },
+  "tight_final_pressure_hard_timestep_screen_0p006_s": {
+    "status": "passed_short_screen_hard_cap_required_at_default_courant_target",
+    "source_commit": "7318931",
+    "purpose": "Test whether forcing the final pressure correction below the previous 1e-7 zero-iteration threshold removes the dynamically regenerated exterior-gas mode.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "reconstruction_iterations": 5,
+      "reconstruction_tolerance": 1e-06,
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "tower_water_selector_radius_m": 0.00735,
+      "hydrostatic_initialization": "discrete",
+      "hydrostatic_correctors": 10,
+      "pressure_final_tolerance": 1e-10,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 1e-05,
+      "write_interval_s": 0.0005,
+      "requested_end_time_s": 0.006
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.005997496603,
+      "postprocessed_probe_duration_s": 0.0049974966,
+      "execution_time_s": 1594.91,
+      "clock_time_s": 1612,
+      "final_delta_t_s": 1e-05,
+      "maximum_courant_number": 0.041144088,
+      "maximum_interface_courant_number": 0.021004435,
+      "maximum_capillary_number": 0.031645462,
+      "alpha_water_min": -6.6174449e-24,
+      "alpha_water_max": 1.000000000000003,
+      "first_written_velocity_m_per_s": 1.5099633,
+      "first_written_velocity_time_s": 0.0004974966,
+      "written_peak_velocity_m_per_s": 1.5099633,
+      "written_peak_velocity_time_s": 0.0004974966,
+      "written_peak_velocity_location_m": [
+        3.5119352,
+        0.40352488,
+        0.0018865803
+      ],
+      "alpha_water_at_written_peak_velocity": -2.1776299e-31,
+      "density_at_written_peak_velocity_kg_per_m3": 1.2041378,
+      "curvature_at_written_peak_velocity_per_m": 43.91704,
+      "final_written_velocity_m_per_s": 1.1872963,
+      "maximum_hydrostatic_force_residual_pa_per_m": 93435.513,
+      "maximum_hydrostatic_force_residual_location_m": [
+        3.5152298,
+        0.40311036,
+        0.0047812302
+      ],
+      "maximum_surface_tension_force_pa_per_m": 118742.76,
+      "maximum_surface_tension_force_location_m": [
+        3.5145467,
+        0.4026696,
+        -0.0040576548
+      ],
+      "maximum_total_force_residual_pa_per_m": 91142.671,
+      "gas_mass_error_pct_max_abs": 1.1067347438112865e-06,
+      "total_mass_error_pct_max_abs": 5.323897564462282e-09,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "comparison_to_default_pressure_tolerance": {
+      "default_tolerance": 1e-07,
+      "tight_tolerance": 1e-10,
+      "default_written_peak_velocity_m_per_s": 2.172866,
+      "tight_written_peak_velocity_m_per_s": 1.5099633,
+      "default_maximum_courant_number": 0.21407703,
+      "tight_maximum_courant_number": 0.041144088,
+      "default_maximum_hydrostatic_force_residual_pa_per_m": 266105.73,
+      "tight_maximum_hydrostatic_force_residual_pa_per_m": 93435.513
+    },
+    "interpretation": {
+      "finding": "Tight final-pressure convergence eliminated the exterior-gas mode. Every written velocity and force hotspot remained at the physical free surface; velocity peaked in the first frame at 1.510 m/s and remained bounded through 0.006 s.",
+      "mechanism": "The final pressure correction now performs one or two iterations and reaches approximately 1e-11 residual instead of accepting an approximately 1e-8 residual with zero iterations. Peak velocity fell by 30.5 percent and maximum pressure-gravity residual by 64.9 percent relative to the otherwise identical default-tolerance run.",
+      "decision": "This is the first physical RDF candidate to pass the 0.006 s Courant and hotspot screen, but it is not yet a hold. The paired adaptive run subsequently showed that a tighter timestep control remains necessary.",
+      "next_action": "Use the required maxCo=0.15 timestep-sensitivity member to test whether adaptive control can satisfy the immutable 0.30/0.20 observed-Courant gates without the much more restrictive maxDeltaT=1e-5 cap."
+    },
+    "completion_claim": "This passes only the short pressure-convergence screen; it is not a passed 0.04 s drift check, 1.0 s hold, smoke run, or completed reproduction."
+  },
+  "tight_final_pressure_adaptive_timestep_screen_0p006_s": {
+    "status": "rejected_courant_limits_hard_cap_still_required",
+    "source_commit": "1664761",
+    "purpose": "Pair the passing tight-pressure hard-cap screen with the source-default adaptive maxDeltaT=2.5e-4 control while changing no physical, curvature, pressure, or initialization setting.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "reconstruction_iterations": 5,
+      "reconstruction_tolerance": 1e-06,
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "tower_water_selector_radius_m": 0.00735,
+      "hydrostatic_initialization": "discrete",
+      "hydrostatic_correctors": 10,
+      "pressure_final_tolerance": 1e-10,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.3,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "write_interval_s": 0.0005,
+      "requested_end_time_s": 0.006
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.00601349955,
+      "postprocessed_probe_duration_s": 0.0049774311,
+      "execution_time_s": 285.41,
+      "clock_time_s": 297,
+      "final_delta_t_s": 6.7027399e-05,
+      "maximum_courant_number": 0.34657711,
+      "maximum_interface_courant_number": 0.20656408,
+      "maximum_capillary_number": 0.34000512,
+      "alpha_water_min": -7.8527893e-16,
+      "alpha_water_max": 1.000000000000005,
+      "first_written_velocity_m_per_s": 1.3665772,
+      "first_written_velocity_time_s": 0.00046527252,
+      "written_peak_velocity_m_per_s": 1.8138409,
+      "written_peak_velocity_time_s": 0.0014998478,
+      "written_peak_velocity_location_m": [
+        3.5163674,
+        0.4046661,
+        -0.0013608496
+      ],
+      "alpha_water_at_written_peak_velocity": 0.0,
+      "density_at_written_peak_velocity_kg_per_m3": 1.2041595,
+      "curvature_at_written_peak_velocity_per_m": 246.19056,
+      "final_written_velocity_m_per_s": 1.0505799,
+      "maximum_hydrostatic_force_residual_pa_per_m": 82256.461,
+      "maximum_surface_tension_force_pa_per_m": 118197.15,
+      "maximum_total_force_residual_pa_per_m": 79987.301,
+      "gas_mass_error_pct_max_abs": 1.1896143985601068e-06,
+      "total_mass_error_pct_max_abs": 5.698569899977619e-09,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "comparison_to_tight_pressure_hard_cap": {
+      "hard_cap_written_peak_velocity_m_per_s": 1.5099633,
+      "adaptive_written_peak_velocity_m_per_s": 1.8138409,
+      "hard_cap_maximum_courant_number": 0.041144088,
+      "adaptive_maximum_courant_number": 0.34657711,
+      "hard_cap_maximum_interface_courant_number": 0.021004435,
+      "adaptive_maximum_interface_courant_number": 0.20656408,
+      "hard_cap_maximum_hydrostatic_force_residual_pa_per_m": 93435.513,
+      "adaptive_maximum_hydrostatic_force_residual_pa_per_m": 82256.461
+    },
+    "interpretation": {
+      "finding": "Tight pressure convergence continued to suppress the exterior-gas pressure mode, but restoring adaptive maxDeltaT raised the written velocity peak by 20.1 percent and exceeded both immutable observed-Courant gates.",
+      "mechanism": "The remaining hotspot stayed at the physical free surface and the pressure-gravity residual did not grow. The failures are the known one-step timestep-controller overshoots, not recurrence of the pure exterior-gas pressure mode.",
+      "decision": "Reject the maxCo=0.30 adaptive member and do not extend it to 0.04 s. A subsequently completed maxCo=0.15 member provides the passing adaptive alternative to the hard cap.",
+      "next_action": "Continue the passing maxCo=0.15 member to the 0.04 s pressure-drift window with all numerical and physical controls unchanged."
+    },
+    "completion_claim": "This is a rejected adaptive-timestep startup screen, not a passed drift check, hold, smoke run, or completed reproduction."
+  },
+  "tight_pressure_maxco_0p15_screen_0p006_s": {
+    "status": "passed_short_screen_and_selected_for_drift_window",
+    "source_commit": "ce3260c",
+    "purpose": "Use the required maxCo=0.15 timestep-sensitivity member to retain adaptive stepping while satisfying the immutable 0.30/0.20 observed-Courant gates.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "reconstruction_iterations": 5,
+      "reconstruction_tolerance": 1e-06,
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "tower_water_selector_radius_m": 0.00735,
+      "hydrostatic_initialization": "discrete",
+      "hydrostatic_correctors": 10,
+      "pressure_final_tolerance": 1e-10,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.15,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "write_interval_s": 0.0005,
+      "requested_end_time_s": 0.006
+    },
+    "clean_run_result_0p006_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.006010392219,
+      "postprocessed_probe_duration_s": 0.0049830701,
+      "execution_time_s": 406.91,
+      "clock_time_s": 419,
+      "final_delta_t_s": 4.0135355e-05,
+      "maximum_courant_number": 0.16484573,
+      "maximum_interface_courant_number": 0.13217248,
+      "maximum_capillary_number": 0.23623177,
+      "alpha_water_min": -2.1175824e-22,
+      "alpha_water_max": 1.0000000000000073,
+      "first_written_velocity_m_per_s": 1.3454312,
+      "first_written_velocity_time_s": 0.0005076159,
+      "written_peak_velocity_m_per_s": 1.3575114,
+      "written_peak_velocity_time_s": 0.0015034358,
+      "written_peak_velocity_location_m": [
+        3.5163674,
+        0.4046661,
+        -0.0013608496
+      ],
+      "alpha_water_at_written_peak_velocity": 4.1184063e-132,
+      "density_at_written_peak_velocity_kg_per_m3": 1.2041568,
+      "curvature_at_written_peak_velocity_per_m": 228.9809,
+      "final_written_velocity_m_per_s": 1.0147231,
+      "maximum_hydrostatic_force_residual_pa_per_m": 82665.568,
+      "maximum_surface_tension_force_pa_per_m": 118338.28,
+      "maximum_total_force_residual_pa_per_m": 80424.376,
+      "gas_mass_error_pct_max_abs": 1.1637294467382168e-06,
+      "total_mass_error_pct_max_abs": 5.643714885234699e-09,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "comparison_to_tight_pressure_timestep_pair": {
+      "hard_cap_written_peak_velocity_m_per_s": 1.5099633,
+      "maxco_0p30_written_peak_velocity_m_per_s": 1.8138409,
+      "maxco_0p15_written_peak_velocity_m_per_s": 1.3575114,
+      "hard_cap_maximum_courant_number": 0.041144088,
+      "maxco_0p30_maximum_courant_number": 0.34657711,
+      "maxco_0p15_maximum_courant_number": 0.16484573,
+      "maxco_0p15_maximum_interface_courant_number": 0.13217248
+    },
+    "interpretation": {
+      "finding": "The lower adaptive target passed both observed-Courant gates, retained all hotspots at the physical free surface, and produced the lowest written velocity peak of the three tight-pressure timestep members.",
+      "mechanism": "Reducing maxCo from 0.30 to 0.15 absorbs the one-step controller lag without imposing the 1e-5 hard cap. The peak velocity fell by 25.2 percent relative to the default-target adaptive member and by 10.1 percent relative to the hard-cap member.",
+      "decision": "Accept this as the timestep-screen winner. Its subsequently completed 0.04 s continuation also passed the pressure-drift gate.",
+      "next_action": "Continue the same decomposed state to the full 1.0 s closed-valve hold."
+    },
+    "completion_claim": "This passes only the 0.006 s timestep screen; it is not a passed 0.04 s drift check, 1.0 s hold, smoke run, or completed reproduction."
+  },
+  "tight_pressure_maxco_0p15_drift_screen_0p04_s": {
+    "status": "passed_drift_screen_full_hold_pending",
+    "source_commit": "9c8853d",
+    "purpose": "Extend the selected tight-pressure low-Courant state beyond the former 0.04 s pressure-drift onset before authorizing the full closed-valve hold.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "hydrostatic_initialization": "discrete",
+      "hydrostatic_correctors": 10,
+      "pressure_final_tolerance": 1e-10,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.15,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "continuation_field_write_interval_s": 0.005,
+      "requested_end_time_s": 0.04
+    },
+    "continued_run_result_0p04_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.0400045408,
+      "postprocessed_probe_duration_s": 0.036009269,
+      "continuation_execution_time_s": 2804.37,
+      "continuation_clock_time_s": 2811,
+      "final_delta_t_s": 2.4361612e-05,
+      "maximum_courant_number": 0.16484573,
+      "maximum_interface_courant_number": 0.13217248,
+      "maximum_capillary_number": 0.23623177,
+      "alpha_water_min": -9.3840651e-15,
+      "alpha_water_max": 1.0000000000000202,
+      "written_peak_velocity_m_per_s": 1.9449346,
+      "written_peak_velocity_time_s": 0.016019972,
+      "written_peak_velocity_location_m": [
+        3.5160891,
+        0.40370703,
+        -0.0031976625
+      ],
+      "alpha_water_at_written_peak_velocity": 8.6366562e-13,
+      "curvature_at_written_peak_velocity_per_m": 551.78947,
+      "final_written_velocity_m_per_s": 1.2883001,
+      "maximum_hydrostatic_force_residual_pa_per_m": 103598.57,
+      "maximum_surface_tension_force_pa_per_m": 165328.67,
+      "maximum_total_force_residual_pa_per_m": 115099.65,
+      "Hstar_peak_to_peak": 0.0009257819804996403,
+      "Yfs_star_max_drift": 0.0024590163934427034,
+      "gas_mass_error_pct_max_abs": 3.7547205226641856e-06,
+      "total_mass_error_pct_max_abs": 1.4279579091243324e-07,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "written_velocity_history_m_per_s": {
+      "0.011020513": 1.4566547,
+      "0.016019972": 1.9449346,
+      "0.020996035": 0.81147436,
+      "0.026025020": 1.4003322,
+      "0.031016323": 1.6209778,
+      "0.036009269": 1.2883001
+    },
+    "interpretation": {
+      "finding": "The transducer pressure remained essentially flat through the drift window: Hstar peak-to-peak was 0.000926, only 4.6 percent of the 0.02 admission limit.",
+      "stability": "Velocity remained an oscillatory free-surface parasitic mode rather than a monotonic instability. It peaked at 1.945 m/s at 0.0160 s and fell to 1.288 m/s at the final written sample; no exterior-gas or valve hotspot appeared.",
+      "decision": "Pass the 0.04 s drift screen. A later full-hold attempt then exposed a delayed rim exterior-gas mode, so this admission alone is not sufficient for a hold claim.",
+      "next_action": "Treat the subsequent partial full-hold evidence as the controlling rejection and isolate a pressure-coupling control before any new 1.0 s attempt."
+    },
+    "completion_claim": "This passes the 0.04 s drift admission screen only; it is not a passed 1.0 s hold, smoke run, or completed reproduction."
+  },
+  "tight_pressure_maxco_0p15_partial_hold_0p117_s": {
+    "status": "rejected_growing_rim_exterior_gas_hotspot",
+    "source_commit": "d3e7ab8",
+    "purpose": "Continue the admitted maxCo=0.15 tight-pressure state toward the full 1.0 s closed-valve hold.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "hydrostatic_initialization": "discrete",
+      "hydrostatic_correctors": 10,
+      "pressure_final_tolerance": 1e-10,
+      "n_pressure_correctors": 2,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.15,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "field_write_interval_s": 0.1,
+      "requested_end_time_s": 1.0
+    },
+    "intentionally_stopped_result": {
+      "cells": 1903549,
+      "stop_reason": "Monotonic pure-gas rim hotspot growth after the 0.04 s admission window; continuing would not produce admissible hold evidence.",
+      "achieved_solver_time_s": 0.1170440045,
+      "postprocessed_probe_duration_s": 0.11600609,
+      "continuation_execution_time_s": 15878.04,
+      "continuation_clock_time_s": 79411,
+      "final_delta_t_s": 8.6121992e-06,
+      "maximum_courant_number": 0.16484573,
+      "maximum_interface_courant_number": 0.13217248,
+      "maximum_capillary_number": 0.23623177,
+      "alpha_water_min": -9.3840651e-15,
+      "alpha_water_max": 1.0000000000000775,
+      "written_peak_velocity_over_full_history_m_per_s": 1.9449346,
+      "written_peak_velocity_time_s": 0.016019972,
+      "final_logged_velocity_m_per_s": 1.7807122,
+      "final_logged_velocity_location_m": [
+        3.5246578,
+        0.65725576,
+        -0.00011479415
+      ],
+      "final_logged_alpha_water": 0.0,
+      "final_logged_curvature_per_m": 0.0,
+      "Hstar_peak_to_peak": 0.0010044650782999875,
+      "Yfs_star_max_drift": 0.0024590163934427034,
+      "gas_mass_error_pct_max_abs": 9.004983638084669e-06,
+      "total_mass_error_pct_max_abs": 3.349999747881541e-07,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false
+    },
+    "rim_exterior_gas_velocity_history_m_per_s": {
+      "0.066008359": 1.0376508,
+      "0.086013636": 1.3290742,
+      "0.096012020": 1.4990719,
+      "0.106004980": 1.6304043,
+      "0.116006090": 1.7807122
+    },
+    "interpretation": {
+      "finding": "After the previously admitted 0.04 s window, a pure exterior-gas hotspot locked onto the tower rim at y=0.657 m and grew monotonically from 1.329 m/s at 0.086 s to 1.781 m/s at 0.116 s, with zero collocated curvature.",
+      "pressure_caveat": "Transducer Hstar peak-to-peak remained only 0.00100, far below the 0.02 hold limit, so pressure drift alone would have falsely cleared the candidate.",
+      "mechanism": "This is the same class of dynamically regenerated exterior-gas pressure mode seen in earlier hard-cap screens, now delayed to the rim exterior after the free-surface startup window. Free-surface force residuals were no longer growing when the rim mode dominated.",
+      "decision": "Reject this hold continuation and do not resume it to 1.0 s.",
+      "next_action": "Keep all admitted settings fixed and raise only CASEB_N_CORRECTORS from 2 to 3 through a 0.12 s screen that covers the rim-onset window."
+    },
+    "completion_claim": "This is a rejected partial full-hold diagnostic, not a passed hold, smoke run, or completed reproduction."
+  },
+  "tight_pressure_maxco_0p15_ncorrectors_3_screen_0p12_s": {
+    "status": "rejected_delayed_rim_exterior_gas_hotspot",
+    "source_commit": "26ee6e4",
+    "purpose": "Test whether raising only CASEB_N_CORRECTORS from 2 to 3 suppresses the delayed rim exterior-gas mode through the 0.12 s onset window.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "hydrostatic_initialization": "discrete",
+      "hydrostatic_correctors": 10,
+      "pressure_final_tolerance": 1e-10,
+      "n_outer_correctors": 1,
+      "n_pressure_correctors": 3,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.15,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "field_write_interval_s": 0.01,
+      "requested_end_time_s": 0.12
+    },
+    "clean_run_result_0p12_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.1199969307,
+      "postprocessed_probe_duration_s": 0.11999693,
+      "execution_time_s": 23816.87,
+      "clock_time_s": 31813,
+      "final_delta_t_s": 8.4991294e-06,
+      "maximum_courant_number": 0.16231862,
+      "maximum_interface_courant_number": 0.14607616,
+      "maximum_capillary_number": 0.23623177,
+      "alpha_water_min": -8.2718061e-25,
+      "alpha_water_max": 1.0,
+      "Hstar_peak_to_peak": 0.0008789069435124475,
+      "Yfs_star_max_drift": 0.0024590163934427034,
+      "gas_mass_error_pct_max_abs": 3.841498411729597e-06,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "final_logged_velocity_m_per_s": 1.841094,
+      "final_logged_velocity_location_m": [
+        3.5246578,
+        0.65725576,
+        -0.00011479415
+      ],
+      "final_logged_alpha_water": 0.0,
+      "final_logged_curvature_per_m": 0.0
+    },
+    "logged_velocity_history_m_per_s": {
+      "0.010009": {
+        "U": 1.964859,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.020009": {
+        "U": 0.927157,
+        "y_m": 0.404025,
+        "mode": "free_surface"
+      },
+      "0.029999": {
+        "U": 1.705266,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.039994": {
+        "U": 1.464017,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.050002": {
+        "U": 1.487263,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.059996": {
+        "U": 1.550182,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.069997": {
+        "U": 1.656744,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.079996": {
+        "U": 1.699941,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.090004": {
+        "U": 1.658045,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.099998": {
+        "U": 1.781167,
+        "y_m": 0.404025,
+        "mode": "free_surface"
+      },
+      "0.110004": {
+        "U": 1.829084,
+        "y_m": 0.404025,
+        "mode": "free_surface"
+      },
+      "0.119997": {
+        "U": 1.841094,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      }
+    },
+    "interpretation": {
+      "finding": "nCorrectors=3 delayed the rim exterior-gas onset from about 0.066 s to the final 0.12 s sample, but did not suppress it. Through 0.110 s every logged hotspot remained at the free surface; at 0.120 s the maximum jumped to the same pure-gas rim cell (3.5247, 0.6573, -0.00011) with U=1.841 m/s and zero curvature.",
+      "pressure_caveat": "Transducer Hstar peak-to-peak was only 0.000879, so pressure drift alone would again falsely clear the candidate.",
+      "comparison_to_ncorrectors_2": "Relative to the rejected nCorrectors=2 hold, the rim mode onset moved later by roughly 0.05 s, confirming that extra pressure corrections help but are insufficient.",
+      "decision": "Reject nCorrectors=3. Do not promote it to the baseline or start a 1.0 s hold with this setting alone.",
+      "next_action": "Revert to the admitted nCorrectors=2 baseline and raise only CASEB_N_OUTER_CORRECTORS from 1 to 2 through another fresh 0.12 s rim-onset screen."
+    },
+    "completion_claim": "This is a rejected 0.12 s pressure-coupling screen, not a passed hold, smoke run, or completed reproduction."
+  },
+  "tight_pressure_maxco_0p15_nouter_2_screen_0p12_s": {
+    "status": "rejected_returning_rim_exterior_gas_hotspot",
+    "source_commit": "6450c6b",
+    "purpose": "Test whether raising only CASEB_N_OUTER_CORRECTORS from 1 to 2 suppresses the delayed rim exterior-gas mode through the 0.12 s onset window.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "hydrostatic_initialization": "discrete",
+      "hydrostatic_correctors": 10,
+      "pressure_final_tolerance": 1e-10,
+      "n_outer_correctors": 2,
+      "n_pressure_correctors": 2,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.15,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "field_write_interval_s": 0.01,
+      "requested_end_time_s": 0.12
+    },
+    "clean_run_result_0p12_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.1199961936,
+      "postprocessed_probe_duration_s": 0.11999619,
+      "execution_time_s": 38235.43,
+      "clock_time_s": 53451,
+      "final_delta_t_s": 8.8827228e-06,
+      "maximum_courant_number": 0.15973815,
+      "maximum_interface_courant_number": 0.15255607,
+      "maximum_capillary_number": 0.25696595,
+      "Hstar_peak_to_peak": 0.0008437506657733573,
+      "Yfs_star_max_drift": 0.0024590163934427034,
+      "gas_mass_error_pct_max_abs": 5.26027528312896e-06,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "final_logged_velocity_m_per_s": 1.8410679,
+      "final_logged_velocity_location_m": [
+        3.5246578,
+        0.65725576,
+        -0.00011479415
+      ],
+      "final_logged_alpha_water": 0.0,
+      "final_logged_curvature_per_m": 0.0
+    },
+    "logged_velocity_history_m_per_s": {
+      "0.010010": {
+        "U": 1.1235,
+        "y_m": 0.404025,
+        "mode": "free_surface"
+      },
+      "0.020013": {
+        "U": 0.9407,
+        "y_m": 0.404025,
+        "mode": "free_surface"
+      },
+      "0.029998": {
+        "U": 1.1513,
+        "y_m": 0.403802,
+        "mode": "free_surface"
+      },
+      "0.039993": {
+        "U": 0.7932,
+        "y_m": 0.404011,
+        "mode": "free_surface"
+      },
+      "0.050002": {
+        "U": 0.795,
+        "y_m": 0.657367,
+        "mode": "rim_exterior_gas"
+      },
+      "0.059996": {
+        "U": 1.1241,
+        "y_m": 0.404025,
+        "mode": "free_surface"
+      },
+      "0.069997": {
+        "U": 1.224,
+        "y_m": 0.404025,
+        "mode": "free_surface"
+      },
+      "0.079995": {
+        "U": 1.5031,
+        "y_m": 0.404117,
+        "mode": "free_surface"
+      },
+      "0.090004": {
+        "U": 1.4111,
+        "y_m": 0.404117,
+        "mode": "free_surface"
+      },
+      "0.099997": {
+        "U": 1.5758,
+        "y_m": 0.404117,
+        "mode": "free_surface"
+      },
+      "0.110003": {
+        "U": 1.691,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      },
+      "0.119996": {
+        "U": 1.8411,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      }
+    },
+    "interpretation": {
+      "finding": "nOuterCorrectors=2 did not suppress the rim exterior-gas mode. A brief pure-gas rim sample appeared at 0.050 s (U=0.795 m/s), free-surface hotspots returned through 0.100 s, then the same rim cell locked on at 0.110 s with U=1.691 m/s and grew to 1.841 m/s by 0.120 s with zero curvature.",
+      "pressure_caveat": "Transducer Hstar peak-to-peak was only 0.000844, so pressure drift alone would again falsely clear the candidate.",
+      "comparison": "Relative to nCorrectors=3, this member returns the rim mode earlier (0.110 s versus the final 0.120 s sample) and ends at essentially the same rim velocity. Relative to the original nCorrectors=2 hold, the sustained rim growth still begins near 0.11 s rather than 0.066 s, but the mode is not removed.",
+      "decision": "Reject nOuterCorrectors=2 alone. Do not promote it or start a 1.0 s hold with this setting.",
+      "next_action": "Stack the two previously isolated delayers that each postponed rim onset: CASEB_N_CORRECTORS=3 with CASEB_N_OUTER_CORRECTORS=2, through another fresh 0.12 s rim-onset screen. If the stack still fails, leave the PIMPLE-coupling axis and isolate CASEB_N_NON_ORTHOGONAL_CORRECTORS next."
+    },
+    "completion_claim": "This is a rejected 0.12 s outer-corrector screen, not a passed hold, smoke run, or completed reproduction."
+  },
+  "tight_pressure_maxco_0p15_stack_nc3_no2_screen_0p12_s": {
+    "status": "rejected_growing_rim_exterior_gas_hotspot",
+    "source_commit": "ff27597",
+    "purpose": "Test whether stacking CASEB_N_CORRECTORS=3 with CASEB_N_OUTER_CORRECTORS=2 suppresses the delayed rim exterior-gas mode through the 0.12 s onset window.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "hydrostatic_initialization": "discrete",
+      "hydrostatic_correctors": 10,
+      "pressure_final_tolerance": 1e-10,
+      "n_outer_correctors": 2,
+      "n_pressure_correctors": 3,
+      "n_non_orthogonal_correctors": 0,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.15,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "field_write_interval_s": 0.01,
+      "requested_end_time_s": 0.12
+    },
+    "clean_run_result_0p12_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.1199990694,
+      "postprocessed_probe_duration_s": 0.11999907,
+      "execution_time_s": 43260.5,
+      "clock_time_s": 114883,
+      "final_delta_t_s": 8.4025589e-06,
+      "maximum_courant_number": 0.16281163,
+      "maximum_interface_courant_number": 0.15144523,
+      "maximum_capillary_number": 0.25932685,
+      "Hstar_peak_to_peak": 0.0008521212080905283,
+      "Yfs_star_max_drift": 0.0024590163934427034,
+      "gas_mass_error_pct_max_abs": 5.652774272767452e-06,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "final_logged_velocity_m_per_s": 1.8411015,
+      "final_logged_velocity_location_m": [
+        3.5246578,
+        0.65725576,
+        -0.00011479415
+      ],
+      "final_logged_alpha_water": 0.0,
+      "final_logged_curvature_per_m": 0.0,
+      "final_logged_cell": 41114,
+      "final_logged_proc": 2
+    },
+    "logged_velocity_history_m_per_s": {
+      "0.009984": {
+        "U": 2.0006,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.020015": {
+        "U": 1.0985,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.030008": {
+        "U": 1.605,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.040001": {
+        "U": 1.3652,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.050008": {
+        "U": 1.3679,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.060001": {
+        "U": 1.1585,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.070001": {
+        "U": 1.2059,
+        "y_m": 0.403802,
+        "mode": "free_surface"
+      },
+      "0.079999": {
+        "U": 1.4213,
+        "y_m": 0.404117,
+        "mode": "free_surface"
+      },
+      "0.089996": {
+        "U": 1.3887,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      },
+      "0.100000": {
+        "U": 1.5404,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      },
+      "0.109997": {
+        "U": 1.6909,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      },
+      "0.119999": {
+        "U": 1.8411,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      }
+    },
+    "interpretation": {
+      "finding": "Stacking nCorrectors=3 with nOuterCorrectors=2 did not suppress the rim exterior-gas mode. Free-surface hotspots persisted through 0.080 s; from 0.090 s the same pure-gas rim cell (proc=2, cell=41114, y=0.657256 m) locked on and grew monotonically 1.389 -> 1.540 -> 1.691 -> 1.841 m/s by 0.120 s with zero curvature.",
+      "pressure_caveat": "Transducer Hstar peak-to-peak was only 0.000852, so pressure drift alone would again falsely clear the candidate.",
+      "comparison": "Relative to the isolated nCorrectors=3 and nOuterCorrectors=2 screens, the stack ends at the same rim cell and essentially the same final velocity (1.841 m/s). Sustained rim growth begins at 0.090 s, earlier than nCorrectors=3 alone (final sample only) but similar to the original delayed-hold onset class. The PIMPLE-coupling axis is exhausted for this onset window.",
+      "decision": "Reject the nCorrectors=3 + nOuterCorrectors=2 stack. Do not promote it or start a 1.0 s hold with these settings.",
+      "next_action": "Leave the PIMPLE-coupling axis. Revert to the admitted baseline (nCorrectors=2, nOuterCorrectors=1) and raise only CASEB_N_NON_ORTHOGONAL_CORRECTORS from 0 to 1 through a fresh 0.12 s rim-onset screen."
+    },
+    "completion_claim": "This is a rejected 0.12 s PIMPLE-stack screen, not a passed hold, smoke run, or completed reproduction."
+  },
+  "tight_pressure_maxco_0p15_nonortho_1_screen_0p12_s": {
+    "status": "rejected_delayed_rim_exterior_gas_hotspot",
+    "source_commit": "31b0478",
+    "purpose": "Test whether raising only CASEB_N_NON_ORTHOGONAL_CORRECTORS from 0 to 1 on the admitted baseline suppresses the delayed rim exterior-gas mode through the 0.12 s onset window.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "hydrostatic_initialization": "discrete",
+      "hydrostatic_correctors": 10,
+      "pressure_final_tolerance": 1e-10,
+      "n_outer_correctors": 1,
+      "n_pressure_correctors": 2,
+      "n_non_orthogonal_correctors": 1,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.15,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "field_write_interval_s": 0.01,
+      "requested_end_time_s": 0.12
+    },
+    "clean_run_result_0p12_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.120002714,
+      "postprocessed_probe_duration_s": 0.11999431,
+      "execution_time_s_resume_segment": 5181.95,
+      "clock_time_s_resume_segment": 6933,
+      "note": "Run stalled mid-step near 0.1017 s and was resumed from the 0.09999768749 dump; ExecutionTime/ClockTime above are the resume segment only.",
+      "final_delta_t_s": 8.4050163e-06,
+      "maximum_courant_number": 0.16236774,
+      "maximum_interface_courant_number": 0.15156604,
+      "maximum_capillary_number": 0.25261938,
+      "Hstar_peak_to_peak": 0.0010161838375480903,
+      "Yfs_star_max_drift": 0.0024590163934427034,
+      "gas_mass_error_pct_max_abs": 4.189191442076812e-06,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "final_logged_velocity_m_per_s": 1.8405,
+      "final_logged_velocity_location_m": [
+        3.5246578,
+        0.65725576,
+        -0.00011479415
+      ],
+      "final_logged_alpha_water": 0.0,
+      "final_logged_curvature_per_m": 0.0,
+      "final_logged_cell": 40369,
+      "final_logged_proc": 2
+    },
+    "logged_velocity_history_m_per_s": {
+      "0.010005": {
+        "U": 1.9909,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.020004": {
+        "U": 1.1551,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.030006": {
+        "U": 1.7308,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.040000": {
+        "U": 1.5563,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.050007": {
+        "U": 1.7002,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.060000": {
+        "U": 1.6268,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.070002": {
+        "U": 1.795,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.080002": {
+        "U": 1.8761,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.090001": {
+        "U": 1.6883,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.099998": {
+        "U": 2.0065,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.109998": {
+        "U": 1.6904,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      },
+      "0.119994": {
+        "U": 1.8405,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      }
+    },
+    "interpretation": {
+      "finding": "nNonOrthogonalCorrectors=1 delayed but did not suppress the rim exterior-gas mode. Free-surface hotspots persisted through 0.100 s; at 0.110 s the pure-gas rim cell locked on (U=1.690 m/s, zero curvature) and grew to 1.841 m/s by 0.120 s.",
+      "pressure_caveat": "Transducer Hstar peak-to-peak was only 0.001016, so pressure drift alone would again falsely clear the candidate.",
+      "comparison": "Relative to the rejected PIMPLE stack (rim from 0.090 s) and the original nCorrectors=2 hold (rim from ~0.066 s), non-orthogonal correctors=1 pushed sustained rim onset to 0.110 s but ended at essentially the same final rim velocity (~1.84 m/s).",
+      "ops_note": "A mid-run stall near 0.1017 s required a manual Allrun.resume from the 0.099997 dump after the watchdog's OpenFOAM-env resume failed.",
+      "decision": "Reject nNonOrthogonalCorrectors=1. Do not promote it or start a 1.0 s hold with this setting alone.",
+      "next_action": "Keep the admitted baseline (nCorrectors=2, nOuterCorrectors=1) and raise only CASEB_N_NON_ORTHOGONAL_CORRECTORS from 1 to 2 through another fresh 0.12 s rim-onset screen."
+    },
+    "completion_claim": "This is a rejected 0.12 s non-orthogonal-corrector screen, not a passed hold, smoke run, or completed reproduction."
+  },
+  "tight_pressure_maxco_0p15_nonortho_2_screen_0p12_s": {
+    "status": "rejected_earlier_rim_exterior_gas_hotspot",
+    "source_commit": "075a263",
+    "purpose": "Test whether raising only CASEB_N_NON_ORTHOGONAL_CORRECTORS from 1 to 2 on the admitted baseline suppresses the delayed rim exterior-gas mode through the 0.12 s onset window.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "hydrostatic_initialization": "discrete",
+      "hydrostatic_correctors": 10,
+      "pressure_final_tolerance": 1e-10,
+      "n_outer_correctors": 1,
+      "n_pressure_correctors": 2,
+      "n_non_orthogonal_correctors": 2,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.15,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "field_write_interval_s": 0.01,
+      "requested_end_time_s": 0.12
+    },
+    "clean_run_result_0p12_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.1199968361,
+      "postprocessed_probe_duration_s": 0.11999684,
+      "execution_time_s": 20250.54,
+      "clock_time_s": 28271,
+      "final_delta_t_s": 8.4054303e-06,
+      "maximum_courant_number": 0.16254421,
+      "maximum_interface_courant_number": 0.15442217,
+      "maximum_capillary_number": 0.25539783,
+      "Hstar_peak_to_peak": 0.0009475453905302134,
+      "Yfs_star_max_drift": 0.0024590163934427034,
+      "gas_mass_error_pct_max_abs": 4.001495380443298e-06,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "final_logged_velocity_m_per_s": 1.8405563,
+      "final_logged_velocity_location_m": [
+        3.5246578,
+        0.65725576,
+        -0.00011479415
+      ],
+      "final_logged_alpha_water": 0.0,
+      "final_logged_curvature_per_m": 0.0,
+      "final_logged_cell": 37500,
+      "final_logged_proc": 2
+    },
+    "logged_velocity_history_m_per_s": {
+      "0.009985": {
+        "U": 1.9664,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.019985": {
+        "U": 1.0128,
+        "y_m": 0.404025,
+        "mode": "free_surface"
+      },
+      "0.029995": {
+        "U": 1.7599,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.040007": {
+        "U": 1.3075,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.049993": {
+        "U": 0.872,
+        "y_m": 0.404409,
+        "mode": "free_surface"
+      },
+      "0.060005": {
+        "U": 1.1735,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.070006": {
+        "U": 1.0978,
+        "y_m": 0.404025,
+        "mode": "free_surface"
+      },
+      "0.080006": {
+        "U": 1.2453,
+        "y_m": 0.657367,
+        "mode": "rim_exterior_gas"
+      },
+      "0.090005": {
+        "U": 1.3885,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      },
+      "0.100001": {
+        "U": 1.54,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      },
+      "0.110001": {
+        "U": 1.6904,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      },
+      "0.119997": {
+        "U": 1.8406,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      }
+    },
+    "interpretation": {
+      "finding": "nNonOrthogonalCorrectors=2 advanced, rather than delayed, rim onset. Free-surface hotspots persisted only through 0.070 s; from 0.080 s the same pure-gas rim cell (proc=2, cell=37500, y=0.657 m) locked on and grew monotonically 1.245 -> 1.389 -> 1.540 -> 1.690 -> 1.841 m/s by 0.120 s with zero curvature.",
+      "pressure_caveat": "Transducer Hstar peak-to-peak was only 0.000948, so pressure drift alone would again falsely clear the candidate.",
+      "comparison": "Relative to nNonOrthogonalCorrectors=1 (rim from 0.110 s) and the rejected PIMPLE stack (rim from 0.090 s), non-orthogonal correctors=2 moved sustained rim onset earlier to 0.080 s while ending at the same final rim velocity (~1.84 m/s). The non-orthogonal-corrector axis is exhausted for this onset window.",
+      "decision": "Reject nNonOrthogonalCorrectors=2. Do not promote it or start a 1.0 s hold with this setting. Leave the non-orthogonal-corrector axis and revert to the admitted baseline (nNonOrthogonalCorrectors=0).",
+      "next_action": "Keep the admitted baseline (nCorrectors=2, nOuterCorrectors=1, nNonOrthogonalCorrectors=0) and tighten only CASEB_MAX_CO from 0.15 to 0.10 through a fresh 0.12 s rim-onset screen."
+    },
+    "completion_claim": "This is a rejected 0.12 s non-orthogonal-corrector screen, not a passed hold, smoke run, or completed reproduction."
+  },
+  "tight_pressure_maxco_0p10_screen_0p12_s": {
+    "status": "rejected_earlier_rim_exterior_gas_hotspot",
+    "source_commit": "06179f3",
+    "purpose": "Test whether tightening only CASEB_MAX_CO from 0.15 to 0.10 on the admitted baseline (nCorrectors=2, nOuterCorrectors=1, nNonOrthogonalCorrectors=0) suppresses the delayed rim exterior-gas mode through the 0.12 s onset window.",
+    "configuration": {
+      "solver": "compressibleInterFlow",
+      "two_phase_flow_commit": "de9826f9ffb24f4b635ac97fd388ebd560cfc174",
+      "advection_scheme": "isoAdvection",
+      "reconstruction_scheme": "plicRDF",
+      "curvature_model": "RDF",
+      "curvature_from_trace": true,
+      "interpolate_normal": false,
+      "hydrostatic_initialization": "discrete",
+      "hydrostatic_correctors": 10,
+      "pressure_final_tolerance": 1e-10,
+      "n_outer_correctors": 1,
+      "n_pressure_correctors": 2,
+      "n_non_orthogonal_correctors": 0,
+      "valve_representation": "conformalNoSlipBaffle",
+      "max_co": 0.1,
+      "max_alpha_co": 0.2,
+      "max_capillary_number": 1.0,
+      "max_delta_t_s": 0.00025,
+      "field_write_interval_s": 0.01,
+      "requested_end_time_s": 0.12
+    },
+    "clean_run_result_0p12_s": {
+      "cells": 1903549,
+      "solver_exit_code": 0,
+      "achieved_solver_time_s": 0.1200015035,
+      "postprocessed_probe_duration_s": 0.1200015,
+      "execution_time_s": 27050.65,
+      "clock_time_s": 36234,
+      "final_delta_t_s": 5.6051795e-06,
+      "maximum_courant_number": 0.10899103,
+      "maximum_interface_courant_number": 0.085729623,
+      "maximum_capillary_number": 0.16581598,
+      "Hstar_peak_to_peak": 0.0014347109535063352,
+      "Yfs_star_max_drift": 0.0024590163934427034,
+      "gas_mass_error_pct_max_abs": 5.792563919592446e-06,
+      "water_above_rim_m3": 0.0,
+      "gas_entry_detected": false,
+      "final_logged_velocity_m_per_s": 1.8493748,
+      "final_logged_velocity_location_m": [
+        3.5224317,
+        0.65712313,
+        -0.0059459223
+      ],
+      "final_logged_alpha_water": 0.0,
+      "final_logged_curvature_per_m": 0.0,
+      "final_logged_cell": 336999,
+      "final_logged_proc": 2
+    },
+    "logged_velocity_history_m_per_s": {
+      "0.009991": {
+        "U": 2.0171,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.019994": {
+        "U": 1.57,
+        "y_m": 0.404025,
+        "mode": "free_surface"
+      },
+      "0.029999": {
+        "U": 1.5531,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.039994": {
+        "U": 1.1353,
+        "y_m": 0.404056,
+        "mode": "free_surface"
+      },
+      "0.049997": {
+        "U": 1.2513,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.059995": {
+        "U": 0.9797,
+        "y_m": 0.403707,
+        "mode": "free_surface"
+      },
+      "0.069996": {
+        "U": 1.0988,
+        "y_m": 0.657367,
+        "mode": "rim_exterior_gas"
+      },
+      "0.079999": {
+        "U": 1.2419,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      },
+      "0.089998": {
+        "U": 1.3954,
+        "y_m": 0.657123,
+        "mode": "rim_exterior_gas"
+      },
+      "0.100001": {
+        "U": 1.5475,
+        "y_m": 0.657123,
+        "mode": "rim_exterior_gas"
+      },
+      "0.110000": {
+        "U": 1.6982,
+        "y_m": 0.657256,
+        "mode": "rim_exterior_gas"
+      },
+      "0.120002": {
+        "U": 1.8494,
+        "y_m": 0.657123,
+        "mode": "rim_exterior_gas"
+      }
+    },
+    "interpretation": {
+      "finding": "maxCo=0.10 advanced rim exterior-gas onset to 0.070 s (earlier than the maxCo=0.15 baseline rejection near 0.117 s and earlier than nNonOrthogonalCorrectors=1 onset at 0.110 s). Rim U grew monotonically 1.099\u21921.242\u21921.395\u21921.547\u21921.698\u21921.849 m/s from 0.070 to 0.120 s at y\u22480.657 m with alpha=0, rho\u22481.204, K=0.",
+      "pressure_caveat": "Transducer Hstar peak-to-peak was only 0.00143471, so pressure drift alone would again falsely clear the candidate.",
+      "comparison": "Tightening maxCo from 0.15 to 0.10 did not suppress the rim mode; it advanced onset and ended at essentially the same final rim speed (~1.85 m/s) as previous rejected PIMPLE/non-orthogonal screens.",
+      "decision": "Reject maxCo=0.10. Do not promote it or start a 1.0 s hold with this setting. The Courant/non-orthogonal/PIMPLE corrector axes screened so far all reproduce the same rim exterior-gas hotspot.",
+      "next_action": "Do not continue shrinking maxCo alone. Leave the admitted baseline settings and choose a new numerical axis outside the exhausted PIMPLE/non-orthogonal/maxCo=0.10 screens (for example a different free-surface/pressure coupling treatment), after reviewing the uploaded maxCo=0.10 field archive under outputs/sim_data/maxco010_0p12_screen/."
+    },
+    "artifact_paths": {
+      "sim_data_root": "outputs/sim_data/maxco010_0p12_screen",
+      "processors_archives": [
+        "outputs/sim_data/maxco010_0p12_screen/fields/processor0_all_times.tar.xz",
+        "outputs/sim_data/maxco010_0p12_screen/fields/processor1_all_times.tar.xz",
+        "outputs/sim_data/maxco010_0p12_screen/fields/processor2_all_times.tar.xz",
+        "outputs/sim_data/maxco010_0p12_screen/fields/processor3_all_times.tar.xz"
+      ],
+      "vtk_archive": "outputs/sim_data/maxco010_0p12_screen/fields/vtk_key_times.tar.xz",
+      "render_handoff": "outputs/sim_data/maxco010_0p12_screen/RENDER_HANDOFF.md"
+    },
+    "completion_claim": "This is a rejected 0.12 s maxCo=0.10 rim-onset screen with uploaded field/VTK archives for local rendering, not a passed hold, smoke run, or completed reproduction."
+  }
+}

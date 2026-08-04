@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "test": "test_02_cong2017",
+  "id": "BH2_Dr21_H066_L061",
+  "source": "Cong, Chan & Lee (2017), Journal of Hydraulic Engineering",
+  "status": "series_scan_case",
+  "self_contained": true,
+  "entrypoints": [
+    "scripts/run_series_case.py"
+  ]
+}
