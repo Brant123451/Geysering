@@ -21,7 +21,7 @@ from pathlib import Path
 
 import numpy as np
 
-HERE = Path(__file__).resolve().parent
+HERE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(HERE / "model"))     # frozen per-case copies of the solver + digitizer
 
 from digitize_paper_curves import (load_gray, find_panels, draw_panel_debug,

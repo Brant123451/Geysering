@@ -24,11 +24,19 @@ zh/                         中文稿主文件与中文构建产物
 leon2018 竖管 violent geyser、zhou2019 Taylor 气泡判据）只作引用佐证，不做复现对象。
 
 - **Campaign 1 = Vasconcelos & Wright (2011, JHE)**，已完成：
-  - **Test A**：大塔 `Dt/D=0.607`（不喷发分支），图 = `caseA_pressure/levels/snapshots.png`；
-  - **Test B**：小塔 `Dt/D=0.135`（喷发分支），图 = `caseB_pressure/levels.png`。
+  - **Test A**：大塔 `Dt/D=0.607`（不喷发分支），图 =
+    `caseA_1d2d_snapshots` 与 `caseA_experiment_1d2d_curves`；
+  - **Test B**：小塔 `Dt/D=0.135`（喷发分支），图 =
+    `caseB_1d2d_snapshots` 与 `caseB_experiment_1d2d_curves`。
   - 图与指标来源：`tests/test_01_vw2011/cases/A_*/outputs/` 与
-    `tests/test_01_vw2011/cases/B_*/outputs/`
-    （2026-07-06 冻结版求解器输出；数值表引用各 `*_comparison_metrics.json`）。
+    `tests/test_01_vw2011/cases/B_*/outputs/`，二维辅助结果取自相应
+    `openfoam/2d/outputs/`；绘图脚本保存在 `paper/scripts/`（Test A）及
+    Test B 的 `scripts/` 子目录。
+    Case A 与 Case B 的水平管现统一采用 Case B 的 Tosan 界面拟合、守恒湿干扩展及
+    有压段 MOC；Case A 的 2026-07-31 重算场、时程与诊断分别见
+    `caseA_tosan2021_horizontal_fields.npz`、`caseA_model_series_tosan2021.csv` 与
+    `caseA_tosan2021_diagnostics.json`。Case A 竖管仍保留已审阅的连通气囊分支，并在
+    T 形结点贯通后作为单向压力适配器。
 - **Campaign 2 = Cong, Chan & Lee (2017, JHE)**，已完成（判据地图 + B-H 系列）：
   - 图 = `cong2017_bh_series.png`（B-H1..B-H7 分类/到达时间/速度对照）、
     `cong2017_signature.png`（B-H1/B-H6 签名工况）、`cong2017_criterion_map.png`（63 例判据地图）。

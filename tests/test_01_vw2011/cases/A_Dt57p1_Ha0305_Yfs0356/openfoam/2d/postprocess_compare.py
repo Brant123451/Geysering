@@ -14,7 +14,7 @@ import numpy as np
 
 
 HERE = Path(__file__).resolve().parent
-CASE_A = HERE.parent
+CASE_A = HERE.parents[1]
 OUT = HERE / "outputs"
 OUT.mkdir(exist_ok=True)
 
@@ -24,6 +24,7 @@ G = 9.81
 DT = 0.0571
 L_TOWER = 0.610
 CROWN_Y = 0.047
+TRANSDUCER_Y = -0.043
 TIME_SCALE = math.sqrt(G * DT) / L_TOWER
 PROBE_Y = np.arange(0.052, 0.653, 0.010)
 
@@ -71,18 +72,46 @@ def crossing(y0: float, y1: float, a0: float, a1: float, target: float = 0.5) ->
     return y0 + f * (y1 - y0)
 
 
+def _main_wet_segment(wet: np.ndarray, min_cells: int = 3) -> tuple[int, int] | None:
+    """Return the inclusive bounds of the principal contiguous water column.
+
+    A first-wet-probe rule is not robust after gas enters the tower: isolated
+    droplets or residual wet cells below the main column can cross
+    ``alpha.water = 0.5`` and make the inferred interface jump to the tower
+    base.  The physically relevant free-surface column is the longest
+    contiguous wet run.  Runs shorter than ``min_cells`` are treated as
+    unresolved droplets rather than a column.
+    """
+    padded = np.r_[False, wet, False].astype(np.int8)
+    changes = np.diff(padded)
+    starts = np.flatnonzero(changes == 1)
+    stops = np.flatnonzero(changes == -1) - 1
+    if starts.size == 0:
+        return None
+
+    lengths = stops - starts + 1
+    valid = lengths >= min_cells
+    if not np.any(valid):
+        return None
+
+    candidate_indices = np.flatnonzero(valid)
+    max_length = int(np.max(lengths[valid]))
+    longest = candidate_indices[lengths[candidate_indices] == max_length]
+    # In the unlikely event of a tie, retain the higher column segment.
+    selected = int(longest[np.argmax(stops[longest])])
+    return int(starts[selected]), int(stops[selected])
+
+
 def extract_levels(alpha: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    yint = np.zeros(alpha.shape[0])
-    yfs = np.zeros(alpha.shape[0])
+    yint = np.full(alpha.shape[0], np.nan)
+    yfs = np.full(alpha.shape[0], np.nan)
     for row, profile in enumerate(alpha):
         wet = profile >= 0.5
-        if not np.any(wet):
-            yint[row] = np.nan
-            yfs[row] = np.nan
+        main_segment = _main_wet_segment(wet)
+        if main_segment is None:
             continue
 
-        first = int(np.argmax(wet))
-        last = int(len(wet) - 1 - np.argmax(wet[::-1]))
+        first, last = main_segment
 
         if first == 0:
             lower = CROWN_Y
@@ -105,19 +134,46 @@ def extract_levels(alpha: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
         yint[row] = max(lower - CROWN_Y, 0.0) / L_TOWER
         yfs[row] = max(upper - CROWN_Y, 0.0) / L_TOWER
+
+    # Once the connected upper water column fragments, a centreline profile
+    # no longer has a unique gas-front/free-surface pair.  Do not let the
+    # tracker alternate between the upper column and bottom residual liquid;
+    # terminate the level history at the first topology-loss jump.
+    for row in range(1, len(yint)):
+        if not (
+            np.isfinite(yint[row - 1])
+            and np.isfinite(yint[row])
+            and np.isfinite(yfs[row - 1])
+            and np.isfinite(yfs[row])
+        ):
+            continue
+        interface_drop = yint[row - 1] - yint[row]
+        surface_drop = yfs[row - 1] - yfs[row]
+        if yint[row - 1] > 0.05 and (interface_drop > 0.10 or surface_drop > 0.20):
+            yint[row:] = np.nan
+            yfs[row:] = np.nan
+            break
     return yint, yfs
 
 
 def interp_rmse(x_model, y_model, x_obs, y_obs) -> float:
+    model_mask = np.isfinite(x_model) & np.isfinite(y_model)
+    if not np.any(model_mask):
+        return float("nan")
+    x_valid = np.asarray(x_model)[model_mask]
+    y_valid = np.asarray(y_model)[model_mask]
+    order = np.argsort(x_valid)
+    x_valid = x_valid[order]
+    y_valid = y_valid[order]
     mask = (
         np.isfinite(x_obs)
         & np.isfinite(y_obs)
-        & (x_obs >= np.nanmin(x_model))
-        & (x_obs <= np.nanmax(x_model))
+        & (x_obs >= x_valid[0])
+        & (x_obs <= x_valid[-1])
     )
     if not np.any(mask):
         return float("nan")
-    pred = np.interp(x_obs[mask], x_model, y_model)
+    pred = np.interp(x_obs[mask], x_valid, y_valid)
     return float(np.sqrt(np.mean((pred - y_obs[mask]) ** 2)))
 
 
@@ -137,19 +193,25 @@ def main() -> None:
     if alpha.shape[1] != len(PROBE_Y):
         raise RuntimeError(f"Expected {len(PROBE_Y)} tower probes, found {alpha.shape[1]}")
 
-    hstar_raw = (p - P_ATM) / (RHO_W * G * L_TOWER)
+    # The numerical probe is close to the pipe invert, while the published
+    # elevation and pressure comparison uses the pipe-crown datum.  Remove
+    # only that hydrostatic elevation difference; this is a datum conversion,
+    # not a fitted vertical shift.
+    head_at_probe = (p - P_ATM) / (RHO_W * G)
+    head_at_crown = head_at_probe - (CROWN_Y - TRANSDUCER_Y)
+    hstar_raw = head_at_crown / L_TOWER
     hstar = moving_average(time, hstar_raw, 0.10)
     tstar = time * TIME_SCALE
     tstar_tower = t_tower * TIME_SCALE
     yint, yfs = extract_levels(alpha)
 
     pressure_exp = np.genfromtxt(
-        CASE_A / "digitized" / "fig5_caseA_Hstar_band.csv",
+        CASE_A / "data" / "digitized" / "fig5_caseA_Hstar_band.csv",
         delimiter=",",
         names=True,
     )
     levels_exp = np.genfromtxt(
-        CASE_A / "digitized" / "fig7_caseA_levels.csv",
+        CASE_A / "data" / "digitized" / "fig7_caseA_levels.csv",
         delimiter=",",
         names=True,
         dtype=None,
@@ -192,6 +254,11 @@ def main() -> None:
         "interface_RMSE_Ystar_no_shift": int_rmse,
         "interface_liftoff_Tstar": liftoff,
         "interface_catch_Tstar": catch,
+        "connected_level_trace_end_Tstar": (
+            float(tstar_tower[np.flatnonzero(np.isfinite(yfs))[-1]])
+            if np.any(np.isfinite(yfs))
+            else float("nan")
+        ),
         "geysering": bool(np.nanmax(yfs) >= 0.98),
         "comparison_targets": {
             "pressure_plateau_Hstar": 0.54,
@@ -202,7 +269,9 @@ def main() -> None:
         },
         "caveat": (
             "Planar 2-D area ratio Dt/D=0.607; physical circular area ratio "
-            "(Dt/D)^2=0.369. No event-time shift was applied."
+            "(Dt/D)^2=0.369. Pressure was converted from the y=-0.043 m "
+            "probe to the pipe-crown datum; no fitted pressure or event-time "
+            "shift was applied."
         ),
     }
 

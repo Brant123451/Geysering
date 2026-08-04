@@ -1,13 +1,14 @@
 {
-  "simulation_end_s": 9.0,
-  "simulation_end_Tstar": 11.042444680426986,
-  "pressure_plateau_Hstar_mean_T1to7": 0.7099099073959965,
-  "pressure_RMSE_Hstar_no_shift": 0.20115404446704468,
-  "free_surface_max_Ystar": 0.6229442203888638,
-  "free_surface_RMSE_Ystar_no_shift": 0.0121925553100324,
-  "interface_RMSE_Ystar_no_shift": 0.319615886819979,
+  "simulation_end_s": 13.0,
+  "simulation_end_Tstar": 15.950197871727868,
+  "pressure_plateau_Hstar_mean_T1to7": 0.5623420208672404,
+  "pressure_RMSE_Hstar_no_shift": 0.07241141024114313,
+  "free_surface_max_Ystar": 0.6229507474583803,
+  "free_surface_RMSE_Ystar_no_shift": 0.012210084376337542,
+  "interface_RMSE_Ystar_no_shift": 0.18852000891644416,
   "interface_liftoff_Tstar": 8.030311159266068,
   "interface_catch_Tstar": NaN,
+  "connected_level_trace_end_Tstar": 9.244980074113037,
   "geysering": false,
   "comparison_targets": {
     "pressure_plateau_Hstar": 0.54,
@@ -20,5 +21,5 @@
     "interface_catch_Tstar": 8.4,
     "observed_geysering": false
   },
-  "caveat": "Planar 2-D area ratio Dt/D=0.607; physical circular area ratio (Dt/D)^2=0.369. No event-time shift was applied."
+  "caveat": "Planar 2-D area ratio Dt/D=0.607; physical circular area ratio (Dt/D)^2=0.369. Pressure was converted from the y=-0.043 m probe to the pipe-crown datum; no fitted pressure or event-time shift was applied."
 }

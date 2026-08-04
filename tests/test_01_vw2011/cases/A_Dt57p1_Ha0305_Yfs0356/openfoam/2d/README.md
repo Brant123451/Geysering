@@ -12,7 +12,9 @@ Compressible air-water VOF pilot for Vasconcelos and Wright (2011), Case A.
 - tower: `Dt = 0.0571 m`, `L = 0.610 m`, open top
 - initial water level: `Yfs,0 = 0.356 m` above the pipe crown
 - initial chamber gauge pressure: `rho*g*Ha0`, `Ha0 = 0.305 m`
-- transducer: `x = 1.616 m`, near the pipe invert
+- transducer: `x = 1.616 m`, `y = -0.043 m`, near the pipe invert;
+  reported pressure histories are hydrostatically converted to the common
+  pipe-crown datum used by the published nondimensional comparison
 
 The valve is represented by an initially open internal block interface at
 `x = 0.546 m`; the initial pressure and phase discontinuity therefore models

@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Case B：Present 1D model 与顶部自由喷流 2D 对比</title>
+  <style>
+    :root { color-scheme: light; font-family: "Times New Roman", "Microsoft YaHei", serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f4f6f8; color: #151515; }
+    main { max-width: 2200px; margin: 0 auto; padding: 22px; }
+    h1 { margin: 0 0 7px; font-size: 25px; font-weight: 600; }
+    .note { margin: 0 0 10px; color: #414141; font-family: "Microsoft YaHei", sans-serif; font-size: 14px; line-height: 1.55; }
+    .caution { padding-left: 11px; border-left: 3px solid #b45309; }
+    .controls { padding: 14px 16px; margin: 16px 0; background: #fff; border: 1px solid #c9cdd2; }
+    .button-row { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 9px; }
+    .button-row:last-child { margin-bottom: 0; }
+    button { min-width: 88px; padding: 7px 13px; border: 1px solid #60656b; background: #fff; font-family: "Microsoft YaHei", sans-serif; font-size: 14px; cursor: pointer; }
+    button:hover { background: #edf2f7; }
+    button.active { color: #fff; background: #1d4f91; border-color: #1d4f91; }
+    button:disabled { color: #8b9198; background: #f2f3f5; cursor: not-allowed; }
+    button:focus-visible, input:focus-visible { outline: 2px solid #1d4f91; outline-offset: 2px; }
+    #frame-info { margin-left: 8px; font-size: 16px; font-variant-numeric: tabular-nums; }
+    #state-info { margin-top: 10px; color: #30343a; font-size: 15px; font-variant-numeric: tabular-nums; line-height: 1.5; }
+    input[type="range"] { width: 100%; margin: 12px 0 1px; accent-color: #1d4f91; }
+    .panels { display: grid; grid-template-columns: 1fr 1fr 0.72fr; gap: 16px; align-items: start; }
+    .panel { padding: 11px; background: #fff; border: 1px solid #aeb4bc; }
+    h2 { margin: 0 0 8px; font-size: 18px; font-weight: 600; }
+    .single-image, .full-stack { display: block; width: 100%; border: 1px solid #d4d8dd; background: #fff; }
+    .single-image { min-height: 250px; object-fit: contain; }
+    .full-stack { position: relative; }
+    .full-stack img { display: block; width: 100%; height: auto; }
+    #top-overlay { position: absolute; inset: 0; pointer-events: none; }
+    .space-image { display: block; width: 100%; height: auto; border: 1px solid #b9c7d1; background: #f2f8fc; }
+    .panel-subnote { margin: 8px 0 0; color: #4a5560; font-family: "Microsoft YaHei", sans-serif; font-size: 13px; line-height: 1.45; }
+    .hint { margin: 12px 0 0; color: #565656; font-family: "Microsoft YaHei", sans-serif; font-size: 13px; }
+    kbd { padding: 1px 5px; border: 1px solid #aeb4bc; background: #fff; font-family: "Times New Roman", serif; }
+    @media (max-width: 1200px) { .panels { grid-template-columns: repeat(2, minmax(0, 1fr)); } .space-panel { grid-column: 1 / -1; max-width: 560px; justify-self: center; } }
+    @media (max-width: 760px) { main { padding: 12px; } .panels { grid-template-columns: 1fr; } .space-panel { grid-column: auto; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Case B：Present 1D model 与 2D OpenFOAM</h1>
+  <p class="note">
+    三栏画面按同一物理时刻同步：Present 1D model、完整 2D 管网，以及竖管出口上方的 2D 外部空气域。
+    完整 2D 视图保留旧 2D 的水平管和竖管结果，并在物理管口
+    <i>y</i> = 0.657 m 上方替换为 top-only 外部自由喷流。顶部局部模型入口位于管口下方
+    1.4375 mm；其局部时钟与原 2D 时钟满足
+    <i>t</i><sub>source</sub> = <i>t</i><sub>local</sub> + 6.5 s。
+  </p>
+  <p class="note">
+    第三栏明确显示管口以上 0.08 m 的空气空间，仅显示 α<sub>water</sub> ≥ 0.01 的水相；
+    实体管壁在真实开口处终止，开口上方没有假延伸管、顶盖或封闭边界。
+  </p>
+  <p class="note caution">
+    完整 2D 栏是证据可追溯的展示合成：下部来自旧全域 2D，出口上方来自独立的单向耦合
+    top-only 计算，并非同一个双向耦合 CFD 场。第三栏直接显示该 top-only 数值场，不放大液相高度。
+  </p>
+  <section class="controls" aria-label="帧与视图控制">
+    <div class="button-row">
+      <button id="previous" type="button">上一帧</button>
+      <button id="play" type="button">播放</button>
+      <button id="next" type="button">下一帧</button>
+      <span id="frame-info" aria-live="polite"></span>
+    </div>
+    <input id="scrubber" type="range" min="0" max="10" value="0" step="1" aria-label="帧序号">
+    <div id="state-info"></div>
+  </section>
+  <section class="panels">
+    <article class="panel">
+      <h2>Present 1D model</h2>
+      <img id="present-image" class="single-image" alt="Present 1D model frame">
+    </article>
+    <article class="panel">
+      <h2>2D OpenFOAM — whole system</h2>
+      <div id="full-wrap" class="full-stack">
+        <img id="old-2d-image" alt="Archived full-domain 2D OpenFOAM frame">
+        <img id="top-overlay" alt="One-way top-plume replacement overlay">
+      </div>
+    </article>
+    <article class="panel space-panel">
+      <h2>2D OpenFOAM — outlet air space</h2>
+      <img id="top-space" class="space-image" alt="Open air space above the 2D outlet">
+      <p class="panel-subnote">显示窗口：管口以上 0.08 m；水相几何尺寸未人为放大。</p>
+    </article>
+  </section>
+  <p class="hint">快捷键：<kbd>←</kbd>/<kbd>→</kbd> 逐帧，<kbd>Space</kbd> 播放或暂停。</p>
+</main>
+<script>
+"use strict";
+const frames = [{"time":6.5,"file1d":"openfoam/2d/outputs_1d2d_compare/frames_1d_caseB_tosan2021/frame_0043.png?v=1785446342205585000","wtop1d":0.5978334448492209,"itop1d":0.04,"jetHeight1d":0.0,"interfaceX1d":3.5393701208848034,"wettingFrontX1d":0.0,"airHead1d":0.5577216769781085,"vented1d":true,"mode1d":"tosan_shockfit","dt_match":9.681144774731365e-14,"file2dOld":"openfoam/2d/outputs_1d2d_compare/frames_2d_caseB_tosan2021_aligned/frame_0043.png?v=1785446342205585000","hasTopPlume":true,"fileTopOverlay":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_overlay/frame_0000.png?v=1785446342205585000","fileTopZoom":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_zoom/frame_0000.png?v=1785446342205585000","fileTopSpace":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_space/frame_0000.png?v=1785446342205585000","topLocalTime":0.0,"topSourceTime":6.5,"topSourceTimeOffset":0.0,"topVisibleWaterCellTopY":null},{"time":6.65,"file1d":"openfoam/2d/outputs_1d2d_compare/frames_1d_caseB_tosan2021/frame_0044.png?v=1785446342205585000","wtop1d":0.6022340674939992,"itop1d":0.09000000000000001,"jetHeight1d":0.6100003589659027,"interfaceX1d":3.6085103679193558,"wettingFrontX1d":0.0,"airHead1d":0.5121314359437397,"vented1d":true,"mode1d":"tosan_shockfit","dt_match":9.769962616701378e-14,"file2dOld":"openfoam/2d/outputs_1d2d_compare/frames_2d_caseB_tosan2021_aligned/frame_0044.png?v=1785446342205585000","hasTopPlume":true,"fileTopOverlay":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_overlay/frame_0003.png?v=1785446342205585000","fileTopZoom":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_zoom/frame_0003.png?v=1785446342205585000","fileTopSpace":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_space/frame_0003.png?v=1785446342205585000","topLocalTime":0.15,"topSourceTime":6.65,"topSourceTimeOffset":0.0,"topVisibleWaterCellTopY":null},{"time":6.8,"file1d":"openfoam/2d/outputs_1d2d_compare/frames_1d_caseB_tosan2021/frame_0045.png?v=1785446342205585000","wtop1d":0.5998425901851354,"itop1d":0.15,"jetHeight1d":0.6100048078173304,"interfaceX1d":3.677650614953912,"wettingFrontX1d":0.0,"airHead1d":0.44975245943178477,"vented1d":true,"mode1d":"tosan_shockfit","dt_match":1.021405182655144e-13,"file2dOld":"openfoam/2d/outputs_1d2d_compare/frames_2d_caseB_tosan2021_aligned/frame_0045.png?v=1785446342205585000","hasTopPlume":true,"fileTopOverlay":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_overlay/frame_0006.png?v=1785446342205585000","fileTopZoom":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_zoom/frame_0006.png?v=1785446342205585000","fileTopSpace":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_space/frame_0006.png?v=1785446342205585000","topLocalTime":0.3,"topSourceTime":6.8,"topSourceTimeOffset":0.0,"topVisibleWaterCellTopY":null},{"time":6.95,"file1d":"openfoam/2d/outputs_1d2d_compare/frames_1d_caseB_tosan2021/frame_0046.png?v=1785446342205585000","wtop1d":0.6026079307242921,"itop1d":0.19,"jetHeight1d":0.6100367363691112,"interfaceX1d":3.7467908619884756,"wettingFrontX1d":0.0,"airHead1d":0.4125252603314666,"vented1d":true,"mode1d":"tosan_shockfit","dt_match":1.056932319443149e-13,"file2dOld":"openfoam/2d/outputs_1d2d_compare/frames_2d_caseB_tosan2021_aligned/frame_0046.png?v=1785446342205585000","hasTopPlume":true,"fileTopOverlay":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_overlay/frame_0009.png?v=1785446342205585000","fileTopZoom":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_zoom/frame_0009.png?v=1785446342205585000","fileTopSpace":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_space/frame_0009.png?v=1785446342205585000","topLocalTime":0.45,"topSourceTime":6.95,"topSourceTimeOffset":0.0,"topVisibleWaterCellTopY":null},{"time":7.1,"file1d":"openfoam/2d/outputs_1d2d_compare/frames_1d_caseB_tosan2021/frame_0047.png?v=1785446342205585000","wtop1d":0.6030731006850764,"itop1d":0.23,"jetHeight1d":0.6100928694789249,"interfaceX1d":3.8159311090230332,"wettingFrontX1d":0.0,"airHead1d":0.37299835151646354,"vented1d":true,"mode1d":"tosan_shockfit","dt_match":1.0391687510491465e-13,"file2dOld":"openfoam/2d/outputs_1d2d_compare/frames_2d_caseB_tosan2021_aligned/frame_0047.png?v=1785446342205585000","hasTopPlume":true,"fileTopOverlay":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_overlay/frame_0012.png?v=1785446342205585000","fileTopZoom":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_zoom/frame_0012.png?v=1785446342205585000","fileTopSpace":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_space/frame_0012.png?v=1785446342205585000","topLocalTime":0.6,"topSourceTime":7.1,"topSourceTimeOffset":0.0,"topVisibleWaterCellTopY":null},{"time":7.25,"file1d":"openfoam/2d/outputs_1d2d_compare/frames_1d_caseB_tosan2021/frame_0048.png?v=1785446342205585000","wtop1d":0.6027376379106228,"itop1d":0.27,"jetHeight1d":0.6197509468327095,"interfaceX1d":3.88507135605759,"wettingFrontX1d":0.0,"airHead1d":0.33267097038151794,"vented1d":true,"mode1d":"tosan_shockfit","dt_match":1.1013412404281553e-13,"file2dOld":"openfoam/2d/outputs_1d2d_compare/frames_2d_caseB_tosan2021_aligned/frame_0048.png?v=1785446342205585000","hasTopPlume":true,"fileTopOverlay":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_overlay/frame_0015.png?v=1785446342205585000","fileTopZoom":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_zoom/frame_0015.png?v=1785446342205585000","fileTopSpace":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_space/frame_0015.png?v=1785446342205585000","topLocalTime":0.75,"topSourceTime":7.25,"topSourceTimeOffset":0.0,"topVisibleWaterCellTopY":0.6639494},{"time":7.4,"file1d":"openfoam/2d/outputs_1d2d_compare/frames_1d_caseB_tosan2021/frame_0049.png?v=1785446342205585000","wtop1d":0.6019884801691718,"itop1d":0.3,"jetHeight1d":0.6446325728669084,"interfaceX1d":3.954211603092151,"wettingFrontX1d":0.0,"airHead1d":0.3019279735612661,"vented1d":true,"mode1d":"tosan_shockfit","dt_match":1.092459456231154e-13,"file2dOld":"openfoam/2d/outputs_1d2d_compare/frames_2d_caseB_tosan2021_aligned/frame_0049.png?v=1785446342205585000","hasTopPlume":true,"fileTopOverlay":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_overlay/frame_0018.png?v=1785446342205585000","fileTopZoom":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_zoom/frame_0018.png?v=1785446342205585000","fileTopSpace":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_space/frame_0018.png?v=1785446342205585000","topLocalTime":0.9,"topSourceTime":7.4,"topSourceTimeOffset":0.0,"topVisibleWaterCellTopY":0.6639494},{"time":7.55,"file1d":"openfoam/2d/outputs_1d2d_compare/frames_1d_caseB_tosan2021/frame_0050.png?v=1785446342205585000","wtop1d":0.5883566573466341,"itop1d":0.37,"jetHeight1d":0.6751339902276398,"interfaceX1d":3.997178414104628,"wettingFrontX1d":0.0,"airHead1d":0.2183129072650873,"vented1d":true,"mode1d":"tosan_shockfit","dt_match":1.2434497875801753e-13,"file2dOld":"openfoam/2d/outputs_1d2d_compare/frames_2d_caseB_tosan2021_aligned/frame_0050.png?v=1785446342205585000","hasTopPlume":true,"fileTopOverlay":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_overlay/frame_0021.png?v=1785446342205585000","fileTopZoom":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_zoom/frame_0021.png?v=1785446342205585000","fileTopSpace":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_space/frame_0021.png?v=1785446342205585000","topLocalTime":1.05,"topSourceTime":7.55,"topSourceTimeOffset":0.0,"topVisibleWaterCellTopY":0.6674546},{"time":7.7,"file1d":"openfoam/2d/outputs_1d2d_compare/frames_1d_caseB_tosan2021/frame_0051.png?v=1785446342205585000","wtop1d":0.5939760805575055,"itop1d":0.5,"jetHeight1d":0.7158849687971,"interfaceX1d":4.002208266991753,"wettingFrontX1d":0.0,"airHead1d":0.09395725144910402,"vented1d":true,"mode1d":"tosan_shockfit","dt_match":1.2789769243681803e-13,"file2dOld":"openfoam/2d/outputs_1d2d_compare/frames_2d_caseB_tosan2021_aligned/frame_0051.png?v=1785446342205585000","hasTopPlume":true,"fileTopOverlay":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_overlay/frame_0024.png?v=1785446342205585000","fileTopZoom":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_zoom/frame_0024.png?v=1785446342205585000","fileTopSpace":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_space/frame_0024.png?v=1785446342205585000","topLocalTime":1.2,"topSourceTime":7.7,"topSourceTimeOffset":0.0,"topVisibleWaterCellTopY":0.6709802},{"time":7.85,"file1d":"openfoam/2d/outputs_1d2d_compare/frames_1d_caseB_tosan2021/frame_0052.png?v=1785446342205585000","wtop1d":0.5968761162883655,"itop1d":0.5800000000000001,"jetHeight1d":0.8613874166485718,"interfaceX1d":4.0031107789542215,"wettingFrontX1d":0.0,"airHead1d":0.01687273497881725,"vented1d":true,"mode1d":"tosan_shockfit","dt_match":1.305622276959184e-13,"file2dOld":"openfoam/2d/outputs_1d2d_compare/frames_2d_caseB_tosan2021_aligned/frame_0052.png?v=1785446342205585000","hasTopPlume":true,"fileTopOverlay":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_overlay/frame_0027.png?v=1785446342205585000","fileTopZoom":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_zoom/frame_0027.png?v=1785446342205585000","fileTopSpace":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_space/frame_0027.png?v=1785446342205585000","topLocalTime":1.35,"topSourceTime":7.85,"topSourceTimeOffset":0.0,"topVisibleWaterCellTopY":0.6639494},{"time":8.0,"file1d":"openfoam/2d/outputs_1d2d_compare/frames_1d_caseB_tosan2021/frame_0053.png?v=1785446342205585000","wtop1d":0.5968761162883655,"itop1d":0.5800000000000001,"jetHeight1d":0.8613874166485718,"interfaceX1d":4.003463648342199,"wettingFrontX1d":0.0,"airHead1d":0.016872734978750376,"vented1d":true,"mode1d":"tosan_shockfit","dt_match":1.341149413747189e-13,"file2dOld":"openfoam/2d/outputs_1d2d_compare/frames_2d_caseB_tosan2021_aligned/frame_0053.png?v=1785446342205585000","hasTopPlume":true,"fileTopOverlay":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_overlay/frame_0030.png?v=1785446342205585000","fileTopZoom":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_zoom/frame_0030.png?v=1785446342205585000","fileTopSpace":"openfoam/2d_top_plume/outputs_viewer/frames_top_plume_space/frame_0030.png?v=1785446342205585000","topLocalTime":1.5,"topSourceTime":8.0,"topSourceTimeOffset":0.0,"topVisibleWaterCellTopY":null}];
+let current = 0;
+let timer = null;
+const scrubber = document.getElementById("scrubber");
+const presentImage = document.getElementById("present-image");
+const old2dImage = document.getElementById("old-2d-image");
+const topOverlay = document.getElementById("top-overlay");
+const topSpace = document.getElementById("top-space");
+const frameInfo = document.getElementById("frame-info");
+const stateInfo = document.getElementById("state-info");
+const playButton = document.getElementById("play");
+
+function formatNumber(value, digits = 3) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number.toFixed(digits) : "—";
+}
+function preload(index) {
+  if (index < 0 || index >= frames.length) return;
+  const frame = frames[index];
+  for (const source of [frame.file1d, frame.file2dOld, frame.fileTopOverlay, frame.fileTopSpace]) {
+    if (source) { const image = new Image(); image.src = source; }
+  }
+}
+function showFrame(index) {
+  current = Math.max(0, Math.min(frames.length - 1, index));
+  const frame = frames[current];
+  scrubber.value = String(current);
+  presentImage.src = frame.file1d;
+  old2dImage.src = frame.file2dOld;
+  topOverlay.src = frame.fileTopOverlay;
+  topOverlay.style.display = "block";
+  topSpace.src = frame.fileTopSpace;
+
+  frameInfo.textContent = `Frame ${current + 1}/${frames.length}  |  Source time = ${formatNumber(frame.time, 2)} s`;
+  const topStatus = frame.hasTopPlume
+    ? `top local time = ${formatNumber(frame.topLocalTime, 2)} s  |  ` +
+      `top source time = ${formatNumber(frame.topSourceTime, 2)} s  |  ` +
+      `Δt = ${formatNumber(frame.topSourceTimeOffset, 3)} s  |  ` +
+      `visible-water cell top y = ${formatNumber(frame.topVisibleWaterCellTopY, 3)} m`
+    : "top-only result unavailable before source time 6.5 s";
+  stateInfo.textContent = `${topStatus}  |  display threshold: α_water ≥ 0.01`;
+  preload(current + 1);
+}
+function stop() {
+  if (timer !== null) { clearInterval(timer); timer = null; }
+  playButton.textContent = "播放";
+}
+function togglePlay() {
+  if (timer !== null) { stop(); return; }
+  timer = setInterval(() => showFrame((current + 1) % frames.length), 190);
+  playButton.textContent = "暂停";
+}
+document.getElementById("previous").addEventListener("click", () => { stop(); showFrame(current - 1); });
+document.getElementById("next").addEventListener("click", () => { stop(); showFrame(current + 1); });
+playButton.addEventListener("click", togglePlay);
+scrubber.addEventListener("input", event => { stop(); showFrame(Number(event.target.value)); });
+document.addEventListener("keydown", event => {
+  if (event.key === "ArrowLeft") { stop(); showFrame(current - 1); }
+  else if (event.key === "ArrowRight") { stop(); showFrame(current + 1); }
+  else if (event.key === " ") { event.preventDefault(); togglePlay(); }
+});
+showFrame(0);
+</script>
+</body>
+</html>

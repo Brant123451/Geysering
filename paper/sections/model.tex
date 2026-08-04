@@ -1,21 +1,21 @@
-\section{Model framework}
+\section{Numerical model and application closures}
 \label{sec:model}
 
-This section summarizes the one-dimensional framework of the companion
-methods paper \cite{xue2026model} to the extent needed to interpret the
-geysering computations, and then describes the vertical-shaft branch,
-junction closures, and trapped-pocket treatment used in the geysering
-configurations. The derivations, the Regime-Transition Riemann solver, and
-the conservative cut-cell front-tracking algorithm are given in
-\cite{xue2026model} and are not repeated here.
+The governing method was developed and verified in the companion paper
+\cite{xue2026model}. The present section defines the subset needed for the
+experimental assessment and makes the application-specific assumptions
+explicit. It first states the mixed-flow balance and moving-front treatment.
+It then describes the vertical-shaft representation, the shaft-mouth
+closures, and the numerical configuration used in all three campaigns.
+Detailed derivations and canonical verification remain in
+\cite{xue2026model}; they are not repeated as contributions of this paper.
 
 \subsection{Decoupled two-fluid mixed-flow formulation}
 \label{sec:model:framework}
 
-The framework describes a closed conduit as a union of liquid-full
-(pressurized) and stratified gas--liquid reaches separated by moving regime
-fronts. In stratified reaches the flow is governed by the decoupled
-two-fluid balance law of \cite{xue2026model},
+The model partitions a closed conduit into liquid-full and stratified
+gas--liquid reaches separated by moving regime fronts. Stratified reaches
+obey the decoupled two-fluid balance law of \cite{xue2026model},
 \begin{equation}
 \frac{\partial \mathbf{U}}{\partial t}
 +\frac{\partial \mathbf{F}}{\partial x}
@@ -115,14 +115,14 @@ alone; the derivations, the construction of the active-set solver, and the
 verification of the scheme on canonical benchmarks are given in
 \cite{xue2026model}.
 
-Two properties of this formulation matter for geysering. First, because gas
-mass is conserved per computational region, entrapped pockets are identified
-as connected gas regions bounded by liquid seals, and their pressure follows
-from an isothermal equation of state $P_g = m_g R T / V_g$ evaluated with the
-current pocket mass $m_g$ and volume $V_g$; no polytropic pocket law with a
-prescribed volume history is imposed. Second, because the stratified branch
-carries gas momentum, air intrusion into a shaft and counter-current
-air--water exchange at the shaft mouth are resolved rather than prescribed.
+Two features distinguish the present application from a prescribed-release
+geyser model. First, an entrapped pocket is identified as a connected gas
+region bounded by liquid seals. Its pressure is evaluated from the current
+mass and volume through the isothermal relation
+$P_g=m_gRT/V_g$. The calculation therefore does not impose a pocket-volume
+history. Second, gas momentum is retained in every stratified reach. Gas
+arrival at the shaft and its exchange with the water column are outputs of
+the coupled computation, subject to the junction closures below.
 
 \subsection{Regime-Transition Riemann closure at moving fronts}
 \label{sec:model:rtrp}
@@ -293,18 +293,20 @@ independent seal events.
 \subsection{Numerical configuration}
 \label{sec:model:numerics}
 
-All computations in Section~\ref{sec:tests} use one frozen solver
-configuration: horizontal grid spacing $\Delta s=0.02$~m, shaft grid spacing
-$\Delta z=0.01$~m, CFL number 0.35, and a reduced numerical elastic wave
-speed $a=28$~m/s in the liquid-full branch. The reduced wave speed keeps the
-liquid-full reaches effectively incompressible on the pocket and shaft
-timescales (the gravity-wave scale is $\sqrt{gD}\approx 1$~m/s) while
-avoiding stiff acoustic ringing at grid-scale micro-voids; the geysering
-dynamics studied here are pocket-compression and gravity-wave driven, not
-water-hammer driven. Gas thermodynamics is isothermal with $R=287$~J/(kg\,K)
-and $T=293$~K, and the liquid density is $\rho_l=998$~kg/m$^3$. No loss
-coefficient or numerical parameter is adjusted between test cases; the only
-case-dependent element is the regime-conditioned shaft-base treatment of
-Section~\ref{sec:model:junction} (crown-datum, pocket-fed, flooding-limited
-in the driven regime; invert-datum otherwise), which switches on the
-physical state, not on the test identity.
+All computations in Section~\ref{sec:tests} use the same numerical settings:
+$\Delta s=0.02$~m in horizontal reaches, $\Delta z=0.01$~m in shafts, and a
+CFL number of 0.35. The liquid-full branch uses a reduced elastic wave speed
+$a=28$~m/s. This value separates the acoustic scale from the approximately
+$1$~m/s gravity scale while limiting grid-scale ringing. It is adequate for
+pocket-compression and water-column motion, but it is not intended to predict
+the shortest water-hammer peaks. Gas thermodynamics is isothermal with
+$R=287~\mathrm{J\,kg^{-1}\,K^{-1}}$ and $T=293~\mathrm{K}$, and the
+liquid density is $\rho_l=998~\mathrm{kg\,m^{-3}}$.
+
+No loss coefficient or numerical parameter is fitted to an individual test.
+The shaft-base treatment is conditioned on the computed state: the
+crown-datum, pocket-fed, flooding-limited path is active in the driven
+regime, and the invert-datum path is active otherwise. This distinction is
+part of the frozen closure logic. It is reported explicitly because the
+experiments later show that a unified cross-sectional junction closure is
+still needed.

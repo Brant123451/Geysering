@@ -1,0 +1,41 @@
+/* Post-processing only: sample the ten tower cells immediately below the
+   physical rim for one-way coupling to an external-plume calculation. */
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      mouthForcingControlDict;
+}
+
+functions
+{
+    mouthForcingProbes
+    {
+        type                probes;
+        libs                (sampling);
+        fields              (alpha.water U);
+        interpolationScheme cell;
+
+        // Old extended-tower mesh: y=0.6555625 m is the centre of the last
+        // complete cell row below the physical rim y=0.657 m.
+        probeLocations
+        (
+            (3.51522781917 0.6555625 0)
+            (3.51539941491 0.6555625 0)
+            (3.51557101065 0.6555625 0)
+            (3.51574260639 0.6555625 0)
+            (3.51591420213 0.6555625 0)
+            (3.51608579787 0.6555625 0)
+            (3.51625739361 0.6555625 0)
+            (3.51642898935 0.6555625 0)
+            (3.51660058509 0.6555625 0)
+            (3.51677218083 0.6555625 0)
+        );
+
+        writeControl        timeStep;
+        writeInterval       1;
+    }
+}
+
+// ************************************************************************* //

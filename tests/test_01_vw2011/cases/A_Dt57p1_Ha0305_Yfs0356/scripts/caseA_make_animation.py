@@ -9,18 +9,24 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE / "model"))
+CASE = HERE.parent
+sys.path.insert(0, str(CASE / "model"))
 
 from vw2011_network_twofluid import NetworkCase, run_network, make_case_gif
 
-OUT = HERE / "outputs"
+OUT = CASE / "outputs"
 OUT.mkdir(exist_ok=True)
 
 
 def main():
-    case = NetworkCase(Dr=0.0571, air_head=0.305, init_water_level=0.356, t_end=9.0)
+    case = NetworkCase(
+        Dr=0.0571,
+        air_head=0.305,
+        init_water_level=0.356,
+        t_end=13.0,
+    )
     rec = run_network(case, verbose=False)
-    p = make_case_gif(case, rec, OUT, "A_tmp", fps=12, max_frames=110)
+    p = make_case_gif(case, rec, OUT, "A_tmp", fps=12, max_frames=150)
     target = OUT / "caseA_animation.gif"
     if p is not None:
         Path(p).replace(target)

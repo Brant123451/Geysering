@@ -2,8 +2,16 @@
 cd "$(dirname "$0")"
 
 source /usr/share/modules/init/bash 2>/dev/null || true
+# WSL/bash can emit a non-fatal pop_var_context warning while sourcing
+# OpenFOAM bashrc; keep -e off until the environment variables exist.
+set +e
 set +u
+set +o pipefail
 source /usr/lib/openfoam/openfoam2512/etc/bashrc
+if [[ -z "${WM_PROJECT_VERSION:-}" ]]; then
+    echo "OpenFOAM environment failed to load" >&2
+    exit 1
+fi
 set -euo pipefail
 
 if [[ -d 0 || -d processor0 || -d constant/polyMesh ]]; then
@@ -93,8 +101,9 @@ if [[ "$STAGE" == "mesh" ]]; then
 fi
 
 NP="${OPENFOAM_NP:-$(nproc)}"
-if (( NP > 4 )); then
-    NP=4
+# Local machines may expose more than the cloud default of 4 ranks.
+if (( NP > 12 )); then
+    NP=12
 elif (( NP < 1 )); then
     NP=1
 fi
@@ -106,7 +115,7 @@ decomposePar -decomposeParDict system/decomposeParDict.runtime \
 
 OMPI_ALLOW_RUN_AS_ROOT=1 \
 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
-mpirun -np "$NP" compressibleInterFlow -parallel \
+mpirun --use-hwthread-cpus --bind-to none -np "$NP" compressibleInterFlow -parallel \
     > log.compressibleInterFlow 2>&1
 
 if [[ "${CASEB_RECONSTRUCT:-0}" == "1" ]]; then
