@@ -43,3 +43,5 @@ The following regenerable or low-value categories remain local:
 - Loose VTK/VTU exports, solver logs, temporary renders, caches, operating-system/bootstrap images, and failed or sensitivity attempts.
 
 These excluded products are not required to edit or compile the paper. Copy them separately only if a complete forensic archive of every historical run is required.
+
+At the final audit, 37,007 untracked files (17.28 GiB) remained only on the source computer: 13.03 GiB under `tests/`, 3.63 GiB under `output/`, 0.48 GiB under `tmp/`, 0.08 GiB of paper build/render intermediates, and 0.06 GiB of bundled dependencies. The retained local volume is dominated by loose CFD fields and historical intermediates rather than manuscript sources or selected formal result bundles.
