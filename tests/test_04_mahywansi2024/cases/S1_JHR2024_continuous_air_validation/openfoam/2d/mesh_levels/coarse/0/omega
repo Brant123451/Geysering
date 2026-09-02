@@ -1,0 +1,23 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      omega;
+}
+
+dimensions      [0 0 -1 0 0 0 0];
+// Unreported Stage-1 initialization: strictly positive numerical floor only.
+internalField   uniform 1;
+
+boundaryField
+{
+    waterInlet   { type fixedValue; value uniform 1; }
+    waterOutlet  { type inletOutlet; inletValue uniform 1; value uniform 1; }
+    airInlet     { type zeroGradient; }
+    ambientFloor { type inletOutlet; inletValue uniform 1; value uniform 1; }
+    ambientSides { type inletOutlet; inletValue uniform 1; value uniform 1; }
+    ambientTop   { type inletOutlet; inletValue uniform 1; value uniform 1; }
+    walls        { type omegaWallFunction; value uniform 1; }
+    frontAndBack { type empty; }
+}

@@ -1,0 +1,75 @@
+{
+  "case": "VW2011 Test 1 Case B",
+  "figure": "paper/figures/caseB_experiment_1d2d_curves",
+  "paper_panels": {
+    "pressure": "Fig. 6 centre",
+    "levels": "Fig. 8 centre"
+  },
+  "time_shift_applied": false,
+  "curve_fit_applied": false,
+  "one_d_level_smoothing_applied": false,
+  "one_d_pressure_display_smoothing": "0.40-s centered moving mean",
+  "pressure_amplitude_alignment_applied": true,
+  "pressure_amplitude_alignment_scope": "2D display curve only",
+  "experiment_sentinels_plotted": false,
+  "one_d_level_observers": {
+    "Yfs_star": "conservative geometric mixture-volume height",
+    "Yint_star": "shock-fitted slug-train front"
+  },
+  "one_d_curve_stop_rules": {
+    "Yfs_star": "first native sample at the grid-derived completion threshold 1-dz/L",
+    "Yint_star": "first native sample at the computed front/free-surface catch and atmospheric-path latch"
+  },
+  "two_d_level_observer": "entrance-connected gas core and persistent liquid column; isolated bottom wet islands are excluded",
+  "input_hashes_sha256": {
+    "one_d_solver": "b0d0afab4715a6576d63e38232a5170c2d1f67ac83faffef3ce4fe0df9a24f62",
+    "one_d_series": "dd8f8c191857d5b197d4ca9646229f2d4ebfd2a084bae7448feae6657736cb44",
+    "one_d_metrics": "d7ad47f171372942ecfb969b67778cde03b1229e224354706a2bd1f58d349929",
+    "two_d_levels": "004764d6d3efc649d4fd4013815301ada0331ffc285a99763c62ef0d259c6dc3",
+    "experiment_levels": "e1d2d3c6a1dae6e152a8832736380518a2a51560c2f0e90e12a3c036b869f9fc",
+    "experiment_pressure": "9c9f8bde5bfbf1ce98512dbc9ab84ff6c41eac37ce074b4ec46b2c19838c8735",
+    "two_d_pressure_raw": "3ef873ad2d526498f95e6ba2904adacf430b030a8a435fac52c2e28ef7f99423",
+    "two_d_pressure_display": "49573a667fafc3923da047369e5b31649aae7626582bdb6f7aa5bfea4d221e71",
+    "two_d_pressure_display_audit": "1bf9e8045eef89b7822c60666f25fd8fc11b84ab27ccf956863e1fe59dded581"
+  },
+  "metrics": {
+    "one_d_rim_completion_threshold_star": 0.98360655738,
+    "one_d_rim_tolerance_star": 0.01639344262,
+    "one_d_rim_Tstar": 3.92323013,
+    "one_d_water_rim_latched_Tstar": 3.92323013,
+    "one_d_front_surface_catch_Tstar": 4.050502719,
+    "one_d_liftoff_Tstar_Yint_ge_0p05": 3.622317395,
+    "two_d_rim_Tstar": 4.114112183846456,
+    "two_d_liftoff_Tstar_Yint_ge_0p05": 3.847938962388035,
+    "two_d_catch_Tstar": null,
+    "two_d_pressure_pre_release_mean_crown_Tstar_1to3": 0.8384878773449878,
+    "two_d_free_surface_pre_release_mean_Tstar_1to3": 0.8685352229641186,
+    "two_d_pressure_Hstar_lt_0p3_Tstar": 4.822943045338989,
+    "one_d_pressure_Hstar_lt_0p3_Tstar": 4.096812927,
+    "one_d_pressure_display_median_crown_Tstar_0p8to3": 0.7370253595225956,
+    "one_d_pressure_plateau_median_crown_Tstar_1to3": 0.7541843733669601,
+    "two_d_pressure_display_offset_Hstar": -0.1040307324598222,
+    "rising_track_error": {
+      "one_d_Yfs": {
+        "n": 30,
+        "rmse": 0.04188159709582799,
+        "bias": 0.03425366351338544
+      },
+      "one_d_Yint": {
+        "n": 36,
+        "rmse": 0.20562088705172443,
+        "bias": 0.1722967157069057
+      },
+      "two_d_Yfs": {
+        "n": 30,
+        "rmse": 0.05203690521159315,
+        "bias": -0.003141226427084091
+      },
+      "two_d_Yint": {
+        "n": 36,
+        "rmse": 0.3031904893192552,
+        "bias": -0.25064146213359767
+      }
+    }
+  }
+}

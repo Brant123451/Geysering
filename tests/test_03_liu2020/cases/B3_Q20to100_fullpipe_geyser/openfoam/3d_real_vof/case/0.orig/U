@@ -1,0 +1,46 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    object      U;
+}
+
+dimensions      [0 1 -1 0 0 0 0];
+// Allrun.init replaces the liquid regions with their Q0/A velocity seeds.
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+    inlet
+    {
+        // Q0 settling: 0--2 s; reported t=0 is solver time 2 s.
+        type                flowRateInletVelocity;
+        volumetricFlowRate  table
+        (
+            (0.0       0.020)
+            (2.0       0.020)
+            (2.4       0.100)
+            (16.4      0.100)
+        );
+        value               uniform (0 0 0);
+    }
+
+    outlet
+    {
+        // Submerged full-bore tailwater boundary; pressure is set in p_rgh.
+        type            pressureInletOutletVelocity;
+        value           uniform (0 0 0);
+    }
+
+    atmosphere
+    {
+        type            pressureInletOutletVelocity;
+        value           uniform (0 0 0);
+    }
+
+    walls
+    {
+        type            noSlip;
+    }
+}

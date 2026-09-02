@@ -1,0 +1,32 @@
+{
+  "classification": {
+    "experiment": "no geyser",
+    "1D": "no geyser",
+    "2D": "no geyser"
+  },
+  "Ta_s": {
+    "experiment": 8.1,
+    "1D": 8.660012585359324,
+    "2D": 8.04
+  },
+  "Yfs_max_m": {
+    "experiment": 1.2008,
+    "1D": 0.7859,
+    "2D": 1.0212230407960985
+  },
+  "Yint_max_m": {
+    "experiment": 1.1784,
+    "1D": 0.7,
+    "2D": 0.9395939687693272
+  },
+  "Yfs_marker_RMSE_m": {
+    "experiment": 0.0,
+    "1D": 0.30959695480802674,
+    "2D": 0.09661007886099642
+  },
+  "Yint_marker_RMSE_m": {
+    "experiment": 0.0,
+    "1D": 0.3166826336968278,
+    "2D": 0.24482408631383548
+  }
+}

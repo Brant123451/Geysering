@@ -6,6 +6,7 @@
   "status": "validated_primary_case",
   "self_contained": true,
   "entrypoints": [
-    "scripts/caseB_digitize_and_compare.py"
+    "scripts/caseB_digitize_and_compare.py",
+    "scripts/caseB_build_real_vof_html.py"
   ]
 }

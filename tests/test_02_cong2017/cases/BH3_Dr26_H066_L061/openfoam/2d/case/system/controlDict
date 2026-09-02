@@ -1,0 +1,106 @@
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    object controlDict;
+}
+application bh3CompressibleInterFoam;
+startFrom startTime;
+startTime 0;
+stopAt endTime;
+endTime         13;
+deltaT 1e-5;
+writeControl adjustableRunTime;
+writeInterval 0.05;
+purgeWrite 0;
+writeFormat binary;
+writePrecision 8;
+writeCompression off;
+timeFormat general;
+timePrecision 10;
+runTimeModifiable yes;
+adjustTimeStep yes;
+maxCo           0.25;
+maxAlphaCo      0.20;
+maxDeltaT 0.001;
+
+functions
+{
+    fieldExtrema
+    {
+        type fieldMinMax;
+        libs (fieldFunctionObjects);
+        fields (U p T alpha.water);
+        mode magnitude;
+        location true;
+        writeControl adjustableRunTime;
+        writeInterval 0.01;
+    }
+
+    pressureProbes
+    {
+        type probes;
+        libs (sampling);
+        fields (p p_rgh alpha.water U);
+        probeLocations
+        (
+            (6.585 0 0.024)
+            (3.470 0 -0.024)
+        );
+        interpolationScheme cell;
+        writeControl adjustableRunTime;
+        writeInterval 0.005;
+    }
+
+    riserCentreline
+    {
+        type sets;
+        libs (sampling);
+        interpolationScheme cellPoint;
+        setFormat raw;
+        fixedLocations true;
+        fields (alpha.water U p);
+        writeControl adjustableRunTime;
+        writeInterval 0.01;
+        sets
+        {
+            centreline
+            {
+                type uniform;
+                axis distance;
+                start (3.470 0 0.026);
+                end (3.470 0 1.824);
+                nPoints 361;
+            }
+        }
+    }
+
+    plumeProbes
+    {
+        type probes;
+        libs (sampling);
+        fields (alpha.water U p);
+        probeLocations
+        (
+            (3.470 0 1.824)
+            (3.470 0 1.900)
+            (3.470 0 2.100)
+        );
+        interpolationScheme cell;
+        writeControl adjustableRunTime;
+        writeInterval 0.005;
+    }
+
+    waterVolume
+    {
+        type volFieldValue;
+        libs (fieldFunctionObjects);
+        regionType all;
+        operation volIntegrate;
+        fields (alpha.water);
+        writeFields false;
+        writeControl adjustableRunTime;
+        writeInterval 0.01;
+    }
+}

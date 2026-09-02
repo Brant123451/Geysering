@@ -32,6 +32,7 @@ DT = 0.0571
 L = 4.006
 TOWER_X = 3.516
 TOWER_H = 0.610
+INITIAL_INTERFACE_X = 0.546
 
 
 def circular_depth_fraction(area_fraction: np.ndarray) -> np.ndarray:
@@ -176,40 +177,97 @@ def draw_riser_phases(
     *,
     x_left: float,
     width: float,
-    water_top: float,
-    gas_nose: float,
     z: np.ndarray,
     dz: float,
-    gas_fraction: np.ndarray,
+    liquid_fraction: np.ndarray,
+    display_alpha_min: float,
     water_color: str,
     air_color: str,
 ) -> tuple[float, float]:
-    """Map the two axial 1-D fronts to a clipped riser section."""
+    """Draw the archived liquid area fraction in every riser cell.
 
-    top = float(np.clip(water_top, 0.0, TOWER_H))
-    nose = float(np.clip(gas_nose, 0.0, top))
-    if top > 0.0:
-        ax.add_patch(Rectangle(
-            (x_left, 0.0), width, top,
-            facecolor=water_color, edgecolor="none", zorder=3,
+    The solver state ``liquid_fraction`` is authoritative.  In particular,
+    neither the occupied-column diagnostic ``materialHeight`` nor the tracer
+    front ``itop`` is allowed to fill or clip the phase image.  A partial
+    internal cell is shown as a wall film around a centred air core whose
+    diameter ratio is ``sqrt(1-alpha_l)``.  The uppermost liquid-bearing
+    partial cell is an axial cut of the bulk free surface and is therefore
+    drawn as a full-width layer of height ``alpha_l*dz``.  Both constructions
+    use the cell's actual conserved ``alpha_l`` and add no interface outline.
+    Cells below ``display_alpha_min`` are omitted from the raster image only;
+    their conserved volume remains included in ``liquid_equivalent_height``.
+
+    Returns the liquid-equivalent height and the visible top used only as
+    display metadata; neither value feeds back into the drawing.
+    """
+
+    liquid = np.clip(np.asarray(liquid_fraction, dtype=float), 0.0, 1.0)
+    if liquid.shape != np.asarray(z).shape:
+        raise ValueError("riser z and alpha_l arrays must have identical shape")
+    if not 0.0 <= float(display_alpha_min) < 1.0:
+        raise ValueError("riser display alpha threshold must lie in [0, 1)")
+
+    cell_bounds: list[tuple[float, float]] = []
+    for zi in z:
+        cell_bounds.append((
+            max(float(zi - 0.5 * dz), 0.0),
+            min(float(zi + 0.5 * dz), TOWER_H),
         ))
-    for zi, fraction in zip(z, np.clip(gas_fraction, 0.0, 1.0)):
-        cell_bottom = max(float(zi - 0.5 * dz), 0.0)
-        cell_top = min(float(zi + 0.5 * dz), nose)
-        if fraction <= 0.01 or cell_top <= cell_bottom:
+    cell_heights = np.asarray(
+        [max(top - bottom, 0.0) for bottom, top in cell_bounds],
+        dtype=float,
+    )
+    liquid_equivalent_height = float(np.sum(liquid * cell_heights))
+    visible = np.flatnonzero(
+        (liquid > float(display_alpha_min)) & (cell_heights > 0.0)
+    )
+    top_index = int(visible[-1]) if visible.size else -1
+    visible_top = 0.0
+
+    for cell_index, (alpha_l, (cell_bottom, cell_top)) in enumerate(
+        zip(liquid, cell_bounds)
+    ):
+        if alpha_l <= float(display_alpha_min) or cell_top <= cell_bottom:
             continue
-        gas_width = math.sqrt(float(fraction)) * width
+
+        if cell_index == top_index and alpha_l < 1.0 - 1.0e-6:
+            # Axial sub-cell reconstruction: its blue area is exactly
+            # alpha_l*width*(cell_top-cell_bottom).
+            layer_top = cell_bottom + float(alpha_l) * (
+                cell_top - cell_bottom
+            )
+            ax.add_patch(Rectangle(
+                (x_left, cell_bottom),
+                width,
+                layer_top - cell_bottom,
+                facecolor=water_color,
+                edgecolor="none",
+                zorder=3,
+            ))
+            visible_top = max(visible_top, layer_top)
+            continue
+
         ax.add_patch(Rectangle(
-            (x_left + 0.5 * (width - gas_width), cell_bottom),
-            gas_width, cell_top - cell_bottom,
-            facecolor=air_color, edgecolor="none", zorder=4,
+            (x_left, cell_bottom),
+            width,
+            cell_top - cell_bottom,
+            facecolor=water_color,
+            edgecolor="none",
+            zorder=3,
         ))
-    if top - nose > 1.0e-9:
-        ax.plot(
-            [x_left, x_left + width], [top, top],
-            color="#1d4ed8", linewidth=0.7, zorder=5,
-        )
-    return top, nose
+        visible_top = max(visible_top, cell_top)
+        if alpha_l < 1.0 - 1.0e-6:
+            gas_core_width = math.sqrt(1.0 - float(alpha_l)) * width
+            ax.add_patch(Rectangle(
+                (x_left + 0.5 * (width - gas_core_width), cell_bottom),
+                gas_core_width,
+                cell_top - cell_bottom,
+                facecolor=air_color,
+                edgecolor="none",
+                zorder=4,
+            ))
+
+    return liquid_equivalent_height, visible_top
 
 
 def main() -> None:
@@ -221,6 +279,15 @@ def main() -> None:
         choices=("linear", "pchip", "bspline"),
         default="bspline",
         help="Continuous reconstruction used only to draw archived cell averages.",
+    )
+    parser.add_argument(
+        "--riser-display-alpha-min",
+        type=float,
+        default=1.0e-6,
+        help=(
+            "Hide riser cells below this liquid fraction in the raster only; "
+            "the conserved liquid-equivalent height is unchanged."
+        ),
     )
     args = parser.parse_args()
 
@@ -237,14 +304,18 @@ def main() -> None:
     riser_alpha_g = np.asarray(fields["alpha_g"], dtype=float)
     z = np.asarray(fields["z"], dtype=float)
     times = np.asarray(fields["time"], dtype=float)
+    diagnostics = (
+        json.loads(source_diagnostics.read_text(encoding="utf-8"))
+        if source_diagnostics.is_file()
+        else None
+    )
     if source_index.is_file():
         manifest = json.loads(source_index.read_text(encoding="utf-8"))
     else:
-        if not source_diagnostics.is_file():
+        if diagnostics is None:
             raise FileNotFoundError(
                 "source has neither a frame manifest nor solver diagnostics"
             )
-        diagnostics = json.loads(source_diagnostics.read_text(encoding="utf-8"))
         diagnostic_time = np.asarray(diagnostics["t"], dtype=float)
         if diagnostic_time.size < 2:
             raise ValueError("solver diagnostics require at least two time samples")
@@ -273,6 +344,14 @@ def main() -> None:
                 )),
                 "head": float(np.interp(
                     time_s, diagnostic_time, diagnostics["pocket_head"]
+                )),
+                "eastMaterialFront": float(np.interp(
+                    time_s,
+                    diagnostic_time,
+                    diagnostics.get(
+                        "side_t_east_material_front",
+                        np.full(diagnostic_time.shape, TOWER_X),
+                    ),
                 )),
             })
     if (
@@ -324,44 +403,89 @@ def main() -> None:
 
         fig, ax = plt.subplots(figsize=(14.0, 3.6))
         ax.add_patch(Rectangle((0, -D), L, D, facecolor=air, edgecolor="none"))
-        ax.fill_between(
-            dense_x,
-            -D,
-            surface_y,
-            color=water,
-            linewidth=0.0,
-            antialiased=True,
-            zorder=2,
-        )
+        initial_sharp_front = abs(float(time_s)) <= 1.0e-12
+        east_material_front = frame.get("eastMaterialFront")
+        if east_material_front is None and diagnostics is not None:
+            diagnostic_time = np.asarray(diagnostics["t"], dtype=float)
+            front_history = diagnostics.get("side_t_east_material_front")
+            if front_history is not None:
+                east_material_front = float(np.interp(
+                    time_s, diagnostic_time, front_history
+                ))
+        if initial_sharp_front:
+            # The Case-A initial condition is a fitted dry/full material front
+            # at the physical valve plane.  Interpolating its 0/1 cell averages
+            # creates a false sloping free surface, so draw the exact axial
+            # discontinuity instead.  This changes only the phase rendering;
+            # the archived finite-volume state remains untouched.
+            ax.add_patch(Rectangle(
+                (INITIAL_INTERFACE_X, -D),
+                L - INITIAL_INTERFACE_X,
+                D,
+                facecolor=water,
+                edgecolor="none",
+                zorder=2,
+            ))
+        elif east_material_front is not None:
+            # The downstream gas tongue has a shock-fitted material contact.
+            # Interpolate the resolved free surface only on its swept side and
+            # close the water-filled dead leg with an exact vertical segment at
+            # the computed front.  This uses the model state itself; it neither
+            # shifts nor fits the front to the 2-D result.
+            front_x = float(np.clip(east_material_front, TOWER_X, L))
+            # ``front_x`` is generally not one of the dense reconstruction
+            # coordinates.  Ending ``fill_between`` at the last sample west
+            # of the front and starting the full-pipe rectangle at ``front_x``
+            # left a narrow background-coloured slit between the two patches.
+            # Append the exact fitted-front coordinate and interpolate the
+            # already reconstructed surface there so the water polygons meet
+            # at one common vertical contact.
+            swept = dense_x < front_x
+            swept_x = np.r_[dense_x[swept], front_x]
+            swept_surface = np.interp(swept_x, dense_x, surface_y)
+            if swept_x.size:
+                ax.fill_between(
+                    swept_x,
+                    -D,
+                    swept_surface,
+                    color=water,
+                    linewidth=0.0,
+                    antialiased=True,
+                    zorder=2,
+                )
+            if front_x < L:
+                ax.add_patch(Rectangle(
+                    (front_x, -D), L - front_x, D,
+                    facecolor=water, edgecolor="none", zorder=2,
+                ))
+        else:
+            ax.fill_between(
+                dense_x,
+                -D,
+                surface_y,
+                color=water,
+                linewidth=0.0,
+                antialiased=True,
+                zorder=2,
+            )
         riser_left = TOWER_X - 0.5 * DT
         ax.add_patch(Rectangle(
             (riser_left, 0), DT, TOWER_H,
             facecolor=air, edgecolor="none", zorder=1,
         ))
         riser_right = TOWER_X + 0.5 * DT
-        # ``wtop`` and ``itop`` are axial material fronts.  Drawing an entire
-        # mixed finite-volume cell as a central gas core lets the core cross
-        # ``itop`` and creates a false notch in the bulk free surface.  Start
-        # from the continuous liquid column and overpaint the gas core only
-        # below its resolved nose.  The liquid slug between itop and wtop is
-        # therefore full-width and the 1-D bulk free surface is horizontal.
-        # Older archived manifests used ``wtop`` for liquid-equivalent height
-        # and stored the actual occupied-column top as ``materialHeight``.
-        # Current manifests use ``wtop`` for the latter.  Prefer the explicit
-        # legacy field when it is present so re-rendering remains faithful.
-        water_top = float(np.clip(
-            frame.get("materialHeight", frame["wtop"]), 0.0, TOWER_H
-        ))
-        gas_nose = float(np.clip(frame.get("itop", 0.0), 0.0, water_top))
-        draw_riser_phases(
+        # The archived finite-volume ``alpha_l`` field is the sole phase
+        # geometry source.  ``materialHeight`` and ``itop`` remain available
+        # as diagnostics in the manifest but must not paint a full water
+        # column or clip the resolved cells.
+        liquid_equivalent_height, visible_water_top = draw_riser_phases(
             ax,
             x_left=riser_left,
             width=DT,
-            water_top=water_top,
-            gas_nose=gas_nose,
             z=z,
             dz=dz,
-            gas_fraction=vertical_g,
+            liquid_fraction=vertical_l,
+            display_alpha_min=args.riser_display_alpha_min,
             water_color=water,
             air_color=air,
         )
@@ -369,8 +493,8 @@ def main() -> None:
         ax.text(
             0.01,
             0.95,
-            f"Time = {float(time_s):.2f} s    riser liquid-trace top = "
-            f"{water_top:.3f} m",
+            f"Time = {float(time_s):.2f} s    riser liquid-equivalent height = "
+            f"{liquid_equivalent_height:.3f} m",
             transform=ax.transAxes,
             ha="left",
             va="top",
@@ -397,18 +521,29 @@ def main() -> None:
             (0.0, 0.0), 1.0, TOWER_H,
             facecolor=air, edgecolor="none", zorder=1,
         ))
-        draw_riser_phases(
+        zoom_liquid_equivalent_height, zoom_visible_water_top = draw_riser_phases(
             zoom_ax,
             x_left=0.0,
             width=1.0,
-            water_top=water_top,
-            gas_nose=gas_nose,
             z=z,
             dz=dz,
-            gas_fraction=vertical_g,
+            liquid_fraction=vertical_l,
+            display_alpha_min=args.riser_display_alpha_min,
             water_color=water,
             air_color=air,
         )
+        if not np.isclose(
+            zoom_liquid_equivalent_height,
+            liquid_equivalent_height,
+            rtol=0.0,
+            atol=1.0e-12,
+        ) or not np.isclose(
+            zoom_visible_water_top,
+            visible_water_top,
+            rtol=0.0,
+            atol=1.0e-12,
+        ):
+            raise RuntimeError("full and zoom riser render metadata diverged")
         zoom_ax.plot([0.0, 0.0], [0.0, TOWER_H], color="0.35", lw=0.8)
         zoom_ax.plot([1.0, 1.0], [0.0, TOWER_H], color="0.35", lw=0.8)
         zoom_ax.set_xlim(0.0, 1.0)
@@ -426,16 +561,40 @@ def main() -> None:
         updated = dict(frame)
         updated["file"] = output_path.relative_to(CASE).as_posix()
         updated["riserFile"] = zoom_path.relative_to(CASE).as_posix()
-        updated["materialHeight"] = water_top
-        updated["horizontalDisplay"] = (
-            "circular-depth compact cubic B-spline reconstruction of cell averages"
-            if args.interpolation == "bspline"
-            else (
-                "circular-depth shape-preserving cubic reconstruction of cell averages"
-                if args.interpolation == "pchip"
-                else "circular-depth piecewise-linear reconstruction of cell averages"
-            )
+        updated["liquidEquivalentHeight"] = liquid_equivalent_height
+        updated["visibleWaterTop"] = visible_water_top
+        updated["riserDisplayAlphaMin"] = float(
+            args.riser_display_alpha_min
         )
+        updated["verticalDisplay"] = (
+            "per-cell conserved alpha_l; internal mixed cells shown as a "
+            "wall film around a centred air core; no materialHeight fill, "
+            "itop clipping, or interface outline; cells below alpha_l="
+            f"{args.riser_display_alpha_min:g} are omitted from the raster "
+            "only, while their volume remains in liquidEquivalentHeight"
+        )
+        if initial_sharp_front:
+            updated["horizontalDisplay"] = (
+                "exact initial dry/full material front at x=0.546 m; "
+                "no interpolation across the discontinuity"
+            )
+            updated["interfaceX"] = INITIAL_INTERFACE_X
+        elif east_material_front is not None:
+            updated["horizontalDisplay"] = (
+                "continuous circular-depth reconstruction west of the computed "
+                "east-branch material front; exact vertical contact at the front"
+            )
+            updated["eastMaterialFront"] = float(east_material_front)
+        else:
+            updated["horizontalDisplay"] = (
+                "circular-depth compact cubic B-spline reconstruction of cell averages"
+                if args.interpolation == "bspline"
+                else (
+                    "circular-depth shape-preserving cubic reconstruction of cell averages"
+                    if args.interpolation == "pchip"
+                    else "circular-depth piecewise-linear reconstruction of cell averages"
+                )
+            )
         new_manifest.append(updated)
 
     output_index.write_text(

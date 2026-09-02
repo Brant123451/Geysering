@@ -1,4 +1,7 @@
 {
+  "status": "formal_caseB_selected_closure",
+  "time_shift_applied": false,
+  "curve_fit_applied": false,
   "case": {
     "Dr": 0.0127,
     "air_head": 0.61,
@@ -7,31 +10,409 @@
     "Dt_over_D": 0.1351063829787234
   },
   "Tstar_scale_s": 1.7281978911310492,
-  "datum_note": "model heads are recorded on the pipe INVERT; the crown-datum value (invert - D/L = invert - 0.154) is what compares with the paper's H* panel (transducer tap / tower base elevation)",
+  "datum_note": "The paper does not report the tap elevation. Both the raw one-dimensional head and the legacy -D/L hypothesis are retained; agreement after that shift does not establish the datum.",
   "model": {
     "geyser": true,
-    "geyser_Tstar": 3.70332359168467,
-    "int_liftoff_Tstar": 3.5181344269257027,
-    "int_top_Tstar": 4.443978549747798,
-    "Hstar_collapse_Tstar": 4.490267339916116,
-    "Hstar_plateau_tr": 0.907886052251355,
-    "Hstar_plateau_tr_crown": 0.7537876915956173,
-    "Yfs_plateau_pre_arrival": 0.8360655737704918,
-    "Vint_star": 0.7144471046849419,
-    "Vfs_star": 0.39398317721079773,
-    "Hstar_max": 1.0106593677333604,
-    "Yfs_max": 1.0
+    "geyser_Tstar": 3.91162711059732,
+    "int_liftoff_Tstar": 3.6223173952014984,
+    "int_top_Tstar": 4.038897855492828,
+    "Hstar_collapse_Tstar": 4.096812927483109,
+    "Hstar_plateau_tr": 0.9082827340226978,
+    "Hstar_plateau_tr_crown": 0.7541843733669601,
+    "Yfs_plateau_pre_arrival": 0.8337389210101559,
+    "Vint_star": 1.8381587272406053,
+    "Vfs_star": 0.4265429119026951,
+    "Hstar_max": 1.0100134717509284,
+    "Yfs_max": 0.9985792288487716,
+    "Yint_primary_max": 1.0,
+    "Yint_dynamic_front_max": 0.9854544145710021,
+    "Yint_field_alpha050_max": 0.01632467659313793,
+    "water_numerical_rim_Tstar": 3.9232301303466306,
+    "interface_at_rim_Tstar": 4.0505027193334024,
+    "strict_geometric_Yfs_one_Tstar": null
   },
   "paper": {
     "geyser": true,
     "geyser_Tstar": 3.9,
-    "int_liftoff_Tstar": 3.6484375,
-    "int_top_Tstar": 3.846875,
-    "Hstar_plateau": 0.7575566750629722,
-    "Hstar_drop_Tstar": 4.048013245033112,
+    "int_liftoff_Tstar": 3.64844,
+    "int_top_Tstar": 4.09112,
+    "int_top_Tstar_legacy_misclassified": 3.84687,
+    "Hstar_plateau": 0.75756,
+    "Hstar_drop_Tstar": 4.04801,
     "Yfs_pre_arrival": 0.8225,
     "Vint_star_table2": 1.43,
     "Vfs_star_table2": 0.44,
     "Yfs0": 0.5836065573770491
+  },
+  "selected_closure": {
+    "tower_entry_alpha_min": 0.08,
+    "slug_train_core_factor": 0.5,
+    "slug_glug_resistance_scale": 1.5,
+    "mouth_coverage_alpha": 0.1,
+    "wall_Darcy_f": 0.02,
+    "Yfs_primary_observer": "conservative geometric mixture-volume height",
+    "Yint_primary_observer": "shock-fitted slug-train front",
+    "Yint_sensitivity_observers_alpha_g": [
+      0.1,
+      0.2,
+      0.5
+    ],
+    "numerical_rim_tolerance_m": 0.01,
+    "numerical_rim_tolerance_star": 0.01639344262295082,
+    "numerical_rim_tolerance_basis": "one vertical finite-volume cell",
+    "post_breakthrough_observer": "atmospheric-path latch at physical riser rim"
+  },
+  "observer_definitions": {
+    "Yfs_star": "conservative geometric mixture-volume height",
+    "Yint_star": "shock-fitted slug-train front; rim-latched after atmospheric-path opening",
+    "Yint_dynamic_star": "unlatched shock-fitted state sensitivity",
+    "Yint_field_star": "base-connected distributed alpha_g isocontour sensitivities"
+  },
+  "numerical_rim_event": {
+    "tolerance_m": 0.01,
+    "tolerance_star": 0.01639344262295082,
+    "basis": "one vertical finite-volume cell",
+    "water_rim_latched_Tstar": 3.9232301303466306,
+    "atmospheric_path_latched_Tstar": 4.0505027193334024,
+    "primary_Yint_post_latch_min": 1.0,
+    "primary_Yint_artificial_collapse": false
+  },
+  "level_curvature": {
+    "experiment_Yfs": {
+      "levels": [
+        0.88,
+        0.91,
+        0.94,
+        0.97,
+        0.99
+      ],
+      "runs": [
+        {
+          "run": "1",
+          "crossing_Tstar": [
+            3.7969999999999997,
+            3.8491999999999997,
+            3.891741935483871,
+            3.9278387096774194,
+            3.9587777777777777
+          ],
+          "band_slopes_dYdT": [
+            0.5747126436781612,
+            0.7051865332120052,
+            0.8310991957104537,
+            0.6464318813716438
+          ],
+          "late_to_early_slope_ratio": 1.1247914735866595,
+          "mean_second_difference_crossing_time": -0.007086977299880577
+        },
+        {
+          "run": "2",
+          "crossing_Tstar": [
+            3.795,
+            3.835,
+            3.868333333333333,
+            3.901666666666667,
+            3.926111111111111
+          ],
+          "band_slopes_dYdT": [
+            0.75,
+            0.9000000000000007,
+            0.899999999999992,
+            0.8181818181818248
+          ],
+          "late_to_early_slope_ratio": 1.0909090909090997,
+          "mean_second_difference_crossing_time": -0.005185185185185255
+        },
+        {
+          "run": "3",
+          "crossing_Tstar": [
+            3.7853617021276595,
+            3.8089787234042554,
+            3.849818181818182,
+            3.894103448275862,
+            3.9064
+          ],
+          "band_slopes_dYdT": [
+            1.2702702702702675,
+            0.7345836885478818,
+            0.6774262051390956,
+            1.6264722378014485
+          ],
+          "late_to_early_slope_ratio": 1.280414314864973,
+          "mean_second_difference_crossing_time": -0.003773489850819267
+        }
+      ],
+      "median_late_to_early_slope_ratio": 1.1247914735866595,
+      "median_mean_second_difference_crossing_time": -0.005185185185185255
+    },
+    "model_Yfs_geometric": {
+      "levels": [
+        0.88,
+        0.91,
+        0.94,
+        0.97,
+        0.99
+      ],
+      "crossing_Tstar": [
+        3.6941928279099,
+        3.762621212258454,
+        3.8377415898981107,
+        3.891042838935953,
+        3.9243109048748055
+      ],
+      "late_to_early_slope_ratio": 1.3712526295602696,
+      "mean_second_difference_crossing_time": -0.01172010613656719,
+      "convex_accelerating": true,
+      "band_slopes_dYdT": [
+        0.4384145597708221,
+        0.39935901472575575,
+        0.5628385927448153,
+        0.6011771179232478
+      ]
+    },
+    "experiment_Yint": {
+      "levels": [
+        0.1,
+        0.25,
+        0.4,
+        0.55,
+        0.7
+      ],
+      "runs": [
+        {
+          "run": "1",
+          "crossing_Tstar": [
+            3.790848484848485,
+            3.9264285714285716,
+            4.01896,
+            4.0899,
+            4.135282926829269
+          ],
+          "band_slopes_dYdT": [
+            1.1063571633832487,
+            1.6210708330760262,
+            2.114462926416684,
+            3.305207717525647
+          ],
+          "late_to_early_slope_ratio": 2.9874689900486535,
+          "mean_second_difference_crossing_time": -0.030065719916939404
+        },
+        {
+          "run": "2",
+          "crossing_Tstar": [
+            3.7106470588235294,
+            3.831666666666667,
+            3.9169459459459457,
+            3.9815,
+            4.0288571428571425
+          ],
+          "band_slopes_dYdT": [
+            1.239468567725207,
+            1.7589266849778276,
+            2.3236340799664963,
+            3.1674208144796645
+          ],
+          "late_to_early_slope_ratio": 2.55546683228347,
+          "mean_second_difference_crossing_time": -0.024554154995331718
+        },
+        {
+          "run": "3",
+          "crossing_Tstar": [
+            3.740666666666667,
+            3.8459655172413796,
+            3.9302876712328767,
+            4.001373626373626,
+            4.044539007092198
+          ],
+          "band_slopes_dYdT": [
+            1.42451697412946,
+            1.7788919388269628,
+            2.110121467778017,
+            3.4750069964160164
+          ],
+          "late_to_early_slope_ratio": 2.4394282830779437,
+          "mean_second_difference_crossing_time": -0.020711156618713478
+        }
+      ],
+      "median_late_to_early_slope_ratio": 2.55546683228347,
+      "median_mean_second_difference_crossing_time": -0.024554154995331718
+    },
+    "model_Yint_primary": {
+      "levels": [
+        0.1,
+        0.25,
+        0.4,
+        0.55,
+        0.7
+      ],
+      "crossing_Tstar": [
+        3.661430136957904,
+        3.772565738592507,
+        3.86274575302546,
+        3.937572798622597,
+        3.994398730938955
+      ],
+      "late_to_early_slope_ratio": 1.9557198114391658,
+      "mean_second_difference_crossing_time": -0.01810322310608159,
+      "convex_accelerating": true,
+      "band_slopes_dYdT": [
+        1.3497025057116911,
+        1.6633397204823206,
+        2.0046227778066896,
+        2.639639929969438
+      ]
+    },
+    "model_Yint_dynamic_front": {
+      "levels": [
+        0.1,
+        0.25,
+        0.4,
+        0.55,
+        0.7
+      ],
+      "crossing_Tstar": [
+        3.661430136957904,
+        3.772565738592507,
+        3.86274575302546,
+        3.937572798622597,
+        3.994398730938955
+      ],
+      "late_to_early_slope_ratio": 1.9557198114391658,
+      "mean_second_difference_crossing_time": -0.01810322310608159,
+      "convex_accelerating": true,
+      "band_slopes_dYdT": [
+        1.3497025057116911,
+        1.6633397204823206,
+        2.0046227778066896,
+        2.639639929969438
+      ]
+    },
+    "model_Yint_field_alpha010": {
+      "levels": [
+        0.1,
+        0.25,
+        0.4,
+        0.55,
+        0.7
+      ],
+      "crossing_Tstar": [
+        3.6564385515189652,
+        3.7586421998781856,
+        3.8450201579454872,
+        3.929805018269006,
+        3.990678932335109
+      ],
+      "late_to_early_slope_ratio": 1.6789399848387767,
+      "mean_second_difference_crossing_time": -0.013776578097705716,
+      "convex_accelerating": true,
+      "band_slopes_dYdT": [
+        1.4676579790262219,
+        1.7365541320521503,
+        1.7691837838457967,
+        2.4641096650547945
+      ]
+    },
+    "model_Yint_field_alpha020": {
+      "levels": [
+        0.1,
+        0.25,
+        0.4,
+        0.55,
+        0.7
+      ],
+      "crossing_Tstar": [
+        3.662483359903395,
+        3.76544375644359,
+        3.848825969858934,
+        3.9362895073592505,
+        3.9926297610975325
+      ],
+      "late_to_early_slope_ratio": 1.8274748462880175,
+      "mean_second_difference_crossing_time": -0.015540047600637616,
+      "convex_accelerating": true,
+      "band_slopes_dYdT": [
+        1.4568708458833615,
+        1.7989448091623383,
+        1.7150003794376316,
+        2.66239482514219
+      ]
+    },
+    "model_Yint_field_alpha050": {
+      "levels": [
+        0.1,
+        0.25,
+        0.4,
+        0.55,
+        0.7
+      ],
+      "crossing_Tstar": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "late_to_early_slope_ratio": null,
+      "mean_second_difference_crossing_time": null,
+      "convex_accelerating": false
+    }
+  },
+  "native_rising_track_error": {
+    "Yfs": {
+      "n": 30,
+      "rmse": 0.04188159707323654,
+      "bias": 0.03425366350406906
+    },
+    "Yint_primary": {
+      "n": 36,
+      "rmse": 0.20562088690230113,
+      "bias": 0.172296715567211
+    },
+    "Yint_dynamic_front": {
+      "n": 36,
+      "rmse": 0.1997247023348809,
+      "bias": 0.16777992551334872
+    },
+    "Yint_field_alpha010": {
+      "n": 36,
+      "rmse": 0.34539712384764537,
+      "bias": 0.04254902317000656
+    },
+    "Yint_field_alpha020": {
+      "n": 36,
+      "rmse": 0.33022799359780647,
+      "bias": -0.005654841571996311
+    },
+    "Yint_field_alpha050": {
+      "n": 36,
+      "rmse": 0.44713207708760627,
+      "bias": -0.3653193969205017
+    }
+  },
+  "fig6_pressure_audit": {
+    "native_raw_rmse_bias": {
+      "n": 1827,
+      "rmse": 0.1722817973702386,
+      "bias": 0.13873279733298896
+    },
+    "raw_Hstar_max": 1.020007757087577,
+    "raw_plateau_median_Hstar_Tstar_0p8_to_3p0": 0.9017488643259041,
+    "raw_collapse_below_0p30_Tstar_after_3": 4.096812927483109
+  },
+  "conservation_audit": {
+    "liquid_initial_output_m3": 0.02415701854641484,
+    "liquid_final_output_m3": 0.024157060290451518,
+    "liquid_relative_change": 1.7280293343534771e-06,
+    "T_mouth_exchange_identity_max_abs_m3": 4.1359030627651384e-25,
+    "gas_initial_tracked_kg": 0.004695127396962602,
+    "gas_inventory_final_kg": 0.004388340798902513,
+    "gas_vented_final_kg": 0.0003067628370765713,
+    "gas_budget_final_relative_error": -5.060775035183991e-06,
+    "gas_budget_max_abs_relative_error": 5.060775036661884e-06,
+    "pocket_to_riser_transfer_final_kg": 3.977842542835159e-05,
+    "pocket_to_riser_transfer_mismatch_final_kg": 6.5277189527005175e-18,
+    "pocket_to_riser_transfer_mismatch_max_abs_kg": 1.2977608493884772e-17,
+    "slug_U_max_mps": 3.069036293214265,
+    "slug_U_min_mps": 0.0
   }
 }

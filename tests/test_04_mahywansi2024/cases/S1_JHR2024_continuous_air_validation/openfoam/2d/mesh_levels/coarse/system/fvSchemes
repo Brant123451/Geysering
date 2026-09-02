@@ -1,0 +1,57 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvSchemes;
+}
+
+ddtSchemes
+{
+    // Paper: implicit bounded second order.  OpenFOAM v2512 cannot use the
+    // attempted backward form here; 0.9-off-centred CN retains second-order
+    // intent while adding mild damping.
+    default         CrankNicolson 0.9;
+}
+
+gradSchemes
+{
+    default         Gauss linear;
+}
+
+divSchemes
+{
+    div(phi,alpha)                          Gauss vanLeer;
+    div(phirb,alpha)                        Gauss linear;
+    div(phi,thermo:rho.water)               Gauss limitedLinear 1;
+    div(phi,thermo:rho.air)                 Gauss limitedLinear 1;
+    // OpenFOAM translation of Fluent's bounded-central momentum scheme.
+    div(rhoPhi,U)                           Gauss limitedLinearV 1;
+    div(rhoPhi,T)                           Gauss limitedLinear 1;
+    div(rhoPhi,K)                           Gauss limitedLinear 1;
+    div(phi,p)                              Gauss limitedLinear 1;
+    div(rhoPhi,k)                           Gauss limitedLinear 1;
+    div(rhoPhi,omega)                       Gauss limitedLinear 1;
+    div(((rho*nuEff)*dev2(T(grad(U)))))     Gauss linear;
+}
+
+laplacianSchemes
+{
+    default         Gauss linear corrected;
+}
+
+interpolationSchemes
+{
+    default         linear;
+}
+
+snGradSchemes
+{
+    default         corrected;
+}
+
+wallDist
+{
+    method          meshWave;
+}
+

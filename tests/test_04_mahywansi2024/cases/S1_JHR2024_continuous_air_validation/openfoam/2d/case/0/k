@@ -1,0 +1,23 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      k;
+}
+
+dimensions      [0 2 -2 0 0 0 0];
+// Unreported continuous-air initial condition: declared positive SST floor.
+internalField   uniform 1e-06;
+
+boundaryField
+{
+    waterInlet   { type fixedValue; value uniform 1e-06; }
+    waterOutlet  { type inletOutlet; inletValue uniform 1e-06; value uniform 1e-06; }
+    airInlet     { type zeroGradient; }
+    ambientFloor { type inletOutlet; inletValue uniform 1e-06; value uniform 1e-06; }
+    ambientSides { type inletOutlet; inletValue uniform 1e-06; value uniform 1e-06; }
+    ambientTop   { type inletOutlet; inletValue uniform 1e-06; value uniform 1e-06; }
+    walls        { type kqRWallFunction; value uniform 1e-06; }
+    frontAndBack { type empty; }
+}

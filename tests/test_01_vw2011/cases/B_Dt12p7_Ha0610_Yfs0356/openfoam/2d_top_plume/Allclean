@@ -1,0 +1,10 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+source /usr/share/modules/init/bash 2>/dev/null || true
+set +e
+set +u
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -eo pipefail
+. "$WM_PROJECT_DIR/bin/tools/CleanFunctions"
+cleanCase0

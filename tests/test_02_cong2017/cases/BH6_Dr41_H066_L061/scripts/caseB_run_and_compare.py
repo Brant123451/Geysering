@@ -27,12 +27,13 @@ from pathlib import Path
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE / "model"))
+CASE_ROOT = HERE.parent
+sys.path.insert(0, str(CASE_ROOT / "model"))
 
 from cong2017_network_twofluid import G, NetworkCase, run_network
 
-DIG = HERE / "digitized"
-OUT = HERE / "outputs"
+DIG = CASE_ROOT / "data" / "digitized"
+OUT = CASE_ROOT / "outputs"
 OUT.mkdir(exist_ok=True)
 
 C_MODEL = "#d62728"

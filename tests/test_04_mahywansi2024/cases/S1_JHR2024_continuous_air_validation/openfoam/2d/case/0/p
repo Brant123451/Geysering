@@ -1,0 +1,22 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p;
+}
+
+dimensions      [1 -1 -2 0 0 0 0];
+internalField   uniform 101325;
+
+boundaryField
+{
+    waterInlet   { type calculated; value uniform 107064.462144; }
+    waterOutlet  { type calculated; value uniform 107044.873536; }
+    airInlet     { type calculated; value uniform 105582.835493; }
+    ambientFloor { type calculated; value uniform 101325; }
+    ambientSides { type calculated; value uniform 101325; }
+    ambientTop   { type calculated; value uniform 101325; }
+    walls        { type calculated; value uniform 101325; }
+    frontAndBack { type empty; }
+}

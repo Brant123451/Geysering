@@ -1,0 +1,172 @@
+schema_version: 1
+definition_status: frozen_before_formal_results
+case_id: S1_JHR2024_continuous_air_validation
+
+authoritative_inputs:
+  result_acceptance: ../openfoam/2d/mesh_levels/RESULT_ACCEPTANCE.yaml
+  common_observables: ../one_d/config/COMMON_OBSERVABLES.yaml
+  source_pdf: ../../../../../tmp/pdfs/mahywansi_2024_small_scale.pdf
+  source_pdf_sha256: A47F144D2339D8760D2DD650B97027E2C64F0A26C6D7791D7998FA509BAAF84B
+
+source_semantics:
+  fig8_velocity:
+    quantity: water_velocity_magnitude_in_unmixed_middle_part_of_horizontal_slug
+    target_m_s: [0.8, 0.9]
+    evidence: published_text_Figure_8_and_Figures_4d_7d
+    evidence_status: published
+    forbidden_aliases:
+      - gas_nose_velocity
+      - gas_front_propagation_velocity
+      - slug_interface_velocity
+    note: >-
+      The paper states that air was not seeded, so PIV measured only water.
+      The 2-D analogue is therefore an alpha.water-weighted |U| proxy in
+      unmixed water inside the published x=-0.85 to -0.75 m window while the
+      detected full-bore slug intersects that window. Gas-nose and slug-edge
+      speeds are reported separately.
+  probes:
+    evidence: published_Figure_2_caption
+    evidence_status: published
+    paper_coordinates_use_y_vertical: true
+    mapping_to_model_xz:
+      P1: {paper: [0.0, 0.0], model: [0.0, 0.0], output: P1_gauge_Pa}
+      P2: {paper: [0.0, 0.30], model: [0.0, 0.30], output: P2_gauge_Pa}
+      P3: {paper: [0.0, 0.45], model: [0.0, 0.45], output: P3_gauge_Pa}
+      P4: {paper: [-0.80, 0.0], model: [-0.80, 0.0], output: H_upstream_gauge_Pa}
+      P5: {paper: [-0.10, 0.0], model: [-0.10, 0.0], output: riser_left_gauge_Pa}
+      P6: {paper: [0.10, 0.0], model: [0.10, 0.0], output: riser_right_gauge_Pa}
+    naming_note: >-
+      P4/P5/P6 are the published names. H_upstream/riser_left/riser_right are
+      declared project aliases and are not names used in the source paper.
+
+geometry:
+  pipe_diameter_m: 0.0254
+  horizontal_x_min_m: -1.83
+  horizontal_x_max_m: 1.27
+  air_inlet_x_m: -1.52
+  air_stub_top_z_m: 0.15
+  riser_x_m: 0.0
+  riser_rim_z_m: 1.02
+  external_half_width_m: 0.10
+  extrusion_thickness_m: 0.0199491133502952
+  evidence_status:
+    pipe_diameter_m: published_Figure_1_and_Figure_2
+    horizontal_x_min_m: published_Figure_1_dimension_chain
+    horizontal_x_max_m: published_Figure_1_dimension_chain
+    air_inlet_x_m: published_Figure_1_dimension_chain
+    riser_x_m: declared_coordinate_origin_matching_published_Figure_2
+    riser_rim_z_m: published_Figure_1_and_Figure_2
+    air_stub_top_z_m: figure_inferred_not_dimensioned
+    external_half_width_m: figure_inferred_not_dimensioned
+    extrusion_thickness_m: declared_2d_area_preserving_numerical_analogue
+
+field_extraction:
+  water_wet_threshold: 0.5
+  gas_cell_max_water_fraction: 0.5
+  unmixed_water_min_fraction: 0.95
+  full_bore_column_min_water_holdup: 0.95
+  surrounding_gas_min_column_fraction: 0.05
+  slug_min_axial_length_m: 0.00635
+  slug_search_x_m: [-1.45, -0.05]
+  published_slug_PIV_window_x_m: [-0.85, -0.75]
+  published_slug_PIV_window_evidence_status: published_Figures_4_to_7_captions
+  slug_search_x_evidence_status: declared_tracking_domain_not_published
+  riser_flux_section_z_m: 0.30
+  frame_to_common_time_tolerance_fraction: 0.51
+  probe_interpolation_max_gap_s: 0.10
+  pressure_absolute_reference_Pa: 101325.0
+  weighted_top_quantile: 0.99
+
+observable_status:
+  strict_from_cell_fields:
+    - horizontal_gas_nose_x_m
+    - horizontal_gas_tail_x_m
+    - horizontal_gas_centroid_x_m
+    - horizontal_gas_volume_m3
+    - gas_arrival_at_riser
+    - supply_branch_gas_front_z_m
+    - riser_connected_water_top_z_m
+    - bulk_top_q99_z_m
+    - internal_mouth_event_active
+  declared_cell_center_proxies:
+    horizontal_slug_nose_x_m: full_bore_column_threshold_edge
+    horizontal_slug_tail_x_m: full_bore_column_threshold_edge
+    horizontal_slug_velocity_m_s: >-
+      alpha.water-weighted cell-centred |U| in unmixed water in the published
+      Fig.8 window, only while a full-bore slug intersects that window
+    horizontal_slug_nose_speed_m_s_proxy: finite_difference_of_threshold_edge
+    horizontal_gas_nose_speed_m_s_proxy: finite_difference_of_threshold_edge
+    riser_upward_liquid_flow_m3_s: positive_cell_centred_flux_at_z_0p30
+    riser_downward_liquid_flow_m3_s: negative_cell_centred_flux_at_z_0p30
+    mouth_liquid_outflow_m3_s: positive_cell_centred_flux_below_rim
+    cumulative_mouth_liquid_outflow_m3: trapezoidal_integral_of_mouth_liquid_outflow_proxy
+    mouth_gas_volume_outflow_m3_s_proxy: positive_cell_centred_flux_below_rim
+    supply_branch_liquid_outflow_m3_s: downward_cell_centred_flux_above_tee
+  categorical_mapping:
+    internal_mouth_event_active: >-
+      Required canonical branch flag. In the 2-D CSV it is accepted only when
+      recomputation from launch_component_count, connected water volume, q99
+      top, and consecutive 0.10-s raw samples exactly reproduces the flag. In
+      the 1-D CSV it is the independently frozen mouth-outflow event. Only
+      categorical yes/no branch agreement is a hard comparison; the labels do
+      not imply identical spatial event geometry.
+  profile_comparability:
+    one_d_native_profiles: persistent_Aup_Qup_Adown_Qdown_gas_state
+    two_d_limitation: >-
+      VOF alpha.water and shared cell-centred U do not carry persistent labelled
+      Aup/Qup/Adown/Qdown streams. The 1-D profiles are validated natively, and
+      their Qup/Qdown values at z=0.30 m are checked against the 1-D canonical
+      scalars; cross-dimensional comparison uses only separately labelled 2-D
+      positive/negative cell-flux proxies. No 2-D two-stream profile is invented.
+  unavailable_from_alpha_water_and_U_only:
+    mouth_gas_outflow_kg_s: density_or_phase_mass_flux_not_in_export
+    supply_branch_gas_inflow_kg_s: density_or_phase_mass_flux_not_in_export
+    air_supply_node_liquid_volume_residual_m3_s: requires_1d_conservation_ledger
+    air_supply_node_gas_mass_residual_kg_s: requires_1d_conservation_ledger
+    riser_node_liquid_volume_residual_m3_s: requires_1d_conservation_ledger
+    riser_node_gas_mass_residual_kg_s: requires_1d_conservation_ledger
+    liquid_volume_residual_m3: requires_global_phase_inventory_and_boundary_flux
+    gas_mass_residual_kg: requires_density_and_boundary_mass_flux
+    horizontal_momentum_residual_Ns: requires_force_and_momentum_ledger
+    vertical_momentum_residual_Ns: requires_force_and_momentum_ledger
+    node_reaction_impulse_Ns: one_dimensional_node_ledger_only
+
+comparison:
+  common_grid_s: 0.10
+  time_origin: stage_2_air_opening
+  time_shift_allowed: false
+  required_mesh_levels: [coarse, medium_refine, refined]
+  decisive_mesh_level: refined
+  no_event_final_decision_time_s: 25.0
+  early_no_event_status: inconclusive
+  minimum_points_for_waveform_metric: 3
+  post_eruption_period_proxy:
+    pressure_series: P2_gauge_Pa
+    window_after_first_event_end_s: 6.0
+    search_period_s: [1.0, 3.0]
+    method: detrended_zero_lag_autocorrelation_first_local_maximum
+    evidence_status: declared_signal_extraction_proxy
+  scalar_series:
+    - P1_gauge_Pa
+    - P2_gauge_Pa
+    - P3_gauge_Pa
+    - H_upstream_gauge_Pa
+    - riser_left_gauge_Pa
+    - riser_right_gauge_Pa
+    - horizontal_gas_nose_x_m
+    - horizontal_gas_tail_x_m
+    - horizontal_gas_centroid_x_m
+    - horizontal_gas_volume_m3
+    - horizontal_slug_nose_x_m
+    - horizontal_slug_tail_x_m
+    - horizontal_slug_velocity_m_s
+    - riser_connected_water_top_z_m
+    - riser_upward_liquid_flow_m3_s
+    - riser_downward_liquid_flow_m3_s
+    - mouth_liquid_outflow_m3_s
+  event_series: internal_mouth_event_active
+  categorical_gate: >-
+    Published expected eruption, all three 2-D mesh branches, and the 1-D
+    branch must agree. A complete stable wrong branch is a physics-alignment
+    failure. An unfinished no-event trajectory is inconclusive.
+  no_result_marker_written: true

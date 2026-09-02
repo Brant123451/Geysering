@@ -1,0 +1,436 @@
+\section{控制模型}
+\label{sec:model}
+
+以下控制方程以及第~\ref{sec:model:numerics}~节的数值离散格式直接取自同期提交的配套方法学
+论文~\cite{xue2026model}。这里保留相同的状态变量、闭合关系、
+多流态极限、运动前沿条件和守恒更新；完整推导、非线性求解细节、边界条件目录和标准验证算例
+不再重复。
+
+\subsection{解耦双流体形式}
+\label{sec:model:framework}
+
+对于分层气液管段，截面平均模型写为
+\begin{equation}
+\begin{gathered}
+\frac{\partial\mathbf U}{\partial t}
++\frac{\partial\mathbf F}{\partial x}=\mathbf S,\\[2pt]
+\mathbf U=
+\begin{bmatrix}
+A_g\rho_g\\ \rho_gQ_g\\ A_l\\ Q_l
+\end{bmatrix},
+\qquad
+\mathbf F=
+\begin{bmatrix}
+\rho_gQ_g\\
+\rho_gQ_g^2/A_g+P_gA_g\\
+Q_l\\
+Q_l^2/A_l+\tfrac12\Lambda_dA_l^2
+\end{bmatrix},\\[3pt]
+\mathbf S=
+\begin{bmatrix}
+0\\
+P_g\,\partial_xA_g-A_g\rho_g g\cos\theta\,\partial_xh_l+\mathbf S_g\\
+0\\
+\mathbf S_d
+\end{bmatrix}.
+\end{gathered}
+\label{eq:system}
+\end{equation}
+其中，$A_k$、$Q_k$、$u_k=Q_k/A_k$ 和 $\rho_k$ 分别为各相截面面积、流量、速度和密度，
+$A_g+A_l=A_f$；下标 $g$ 与 $l$ 分别表示气相和液相，$A_f$ 为未变形的满管面积。解析气相
+采用等温闭合 $P_g=\rho_gRT=c_g^2\rho_g$，其中 $c_g=\sqrt{RT}$。常规源项
+$\mathbf S$ 将上式显式写出的几何气压和静水耦合，与 $\mathbf S_g$、$\mathbf S_d$ 中汇集的
+轴向重力、壁面摩阻和界面剪切分开处理；完整本构关系见配套方法学论文。
+
+对于直径为 $D$ 的圆管，液相圆心角 $\gamma$ 给出液相面积
+$A_l=D^2(\gamma-\sin\gamma)/8$ 和液深 $h_l=D[1-\cos(\gamma/2)]/2$；
+局部自由液面宽度为 $\partial A_l/\partial h_l=D\sin(\gamma/2)$，剩余气相面积为
+$A_g=A_f-A_l$。因此
+$\partial h_l/\partial A_l=(\partial A_l/\partial h_l)^{-1}$，即局部静水几何闭合。
+
+式~\eqref{eq:system} 中液相通量的恢复系数为
+\begin{equation}
+\Lambda_d
+=\frac{2gH_g}{A_l}
++\frac{\rho_l-\rho_g}{\rho_l}g\zeta
+-\frac{\rho_g(u_g-u_l)^2}{\rho_lA_g},
+\qquad
+\zeta=\frac{\cos\theta}{D\sin(\gamma/2)}.
+\label{eq:restoring_coefficient}
+\end{equation}
+$H_g$ 为气压水头，$\theta$ 为管道倾角，$D$ 为管径，$\gamma$ 为液相圆心角。三项依次表示
+气压、静水--浮力恢复作用和无黏 Kelvin--Helmholtz 滑移作用。
+
+\subsection{解耦系统的多流态退化}
+
+同一面积--流量变量在不改变相存量定义的前提下，可退化为三类水力极限。第一，当
+$A_g=0$ 且 $A_p\simeq A_f$ 时，液满分支推进
+$\mathbf U_p=[A_p,Q_p]^{T}$：
+\begin{equation}
+\begin{gathered}
+\partial_tA_p+\partial_xQ_p=0,\\[3pt]
+\partial_tQ_p+
+\partial_x\!\left(\frac{Q_p^2}{A_p}+gA_fh_s\right)=\mathbf S_p,
+\end{gathered}
+\label{eq:liquid_full_branch}
+\end{equation}
+其中 $\mathbf S_p$ 为有压分支的常规动量源项，
+$\mathbf R_p=[0,\mathbf S_p]^{T}$ 为相应的二分量源向量；压力由弹性管闭合给出：
+\begin{equation}
+P_p-P_{\mathrm{ref}}
+=\rho_la^2\frac{A_p-A_f}{A_f},
+\qquad
+h_s=\frac{P_p-P_{\mathrm{ref}}}{\rho_lg},
+\label{eq:elastic}
+\end{equation}
+其中 $P_{\mathrm{ref}}$ 为参考压力，$a$ 为水锤波速，$h_s$ 为测压水头；下文
+$u_p=Q_p/A_p$ 表示液满分支速度。
+
+第二，当管段通风时，$P_g\simeq P_{\mathrm{atm}}$，因而 $H_g=\mathrm{const.}$。在该极限下，
+气相惯性可忽略，并满足 \mbox{$\rho_g/\rho_l\rightarrow0$} 与
+\mbox{$\Lambda_d\rightarrow g\cos\theta/(\partial A_l/\partial h_l)$}。
+\par
+\begin{samepage}
+\indent\mbox{液相退化为圆管 Saint--Venant 型方程：}
+\begin{equation}
+\begin{gathered}
+\partial_tA_l+\partial_xQ_l=0,\\[3pt]
+\partial_tQ_l+
+\partial_x\!\left(\frac{Q_l^2}{A_l}
++\frac{g\cos\theta}{2(\partial A_l/\partial h_l)}A_l^2\right)=\mathbf S_d,
+\end{gathered}
+\label{eq:free_surface_branch}
+\end{equation}
+\end{samepage}
+对该退化通量求导时，几何导数 $\partial A_l/\partial h_l$ 冻结于局部状态。因此，
+式~\eqref{eq:free_surface_branch} 是配套算法采用的局部冻结
+系数 Saint--Venant 型极限。第三，在近满
+（$A_l\rightarrow A_f$）运动前沿的分层侧，滑移项可以忽略，但分布式气体质量和动量仍由
+式~\eqref{eq:system} 的前两式推进。此时液相采用近前沿混合流极限：
+\begin{equation}
+\begin{gathered}
+\partial_tA_l+\partial_xQ_l=0,\\[3pt]
+\partial_tQ_l+
+\partial_x\!\left[
+\frac{Q_l^2}{A_l}+gA_fH_g
++\frac12\frac{\rho_l-\rho_g}{\rho_l}g\zeta A_l^2
+\right]=\mathbf S_d.
+\end{gathered}
+\label{eq:near_front_branch}
+\end{equation}
+最后一式是四变量分层分支在局部近满条件下的退化，并不是用两方程替代气相动力学。
+
+分层液相子系统只有在 $\Lambda_d>0$ 时保持双曲性；未修改的 $\Lambda_d$ 符号仍用于失稳诊断。
+当 $\rho_g\ll\rho_l$ 且气压变化可忽略时，超过下列局部无黏临界滑移条件后，短波问题失去
+双曲性：
+\begin{equation}
+(u_g-u_l)^2>
+\frac{\rho_l-\rho_g}{\rho_g}\,g\zeta A_g.
+\label{eq:critical_slip}
+\end{equation}
+超过该阈值后，无黏短波问题局部不适定~\cite{stuhmiller1977}。该符号变化只是失稳指标，
+不是波破碎、卷气或液桥形成模型；下文的单元面正则化也不改变这一诊断。因此，气相声波、
+自由表面重力波、弹性水锤波和运动明满流前沿可由同一母体结构组织，但各分支并不共用同一
+状态维数或压力定律。欠分辨密闭气囊及装置特定的管道--竖井闭合另行声明，不作为新的母体
+偏微分方程流态；各项报告计算实际采用的数值子集和降阶闭合均在相应试验组中说明。
+
+\subsection{流态转换 Riemann 问题}
+\label{sec:model:front}
+
+令 $x=x_\Gamma(t)$ 表示运动的有压--分层前沿，$w_\Gamma=\dot x_\Gamma$。以下把有压流置于
+左侧、分层流置于右侧，反向排列可由镜像得到。跳跃条件只涉及液体质量和动量；相邻气相通过
+运动学条件和恢复系数 $\Lambda_{d,\Gamma}$ 进入计算。
+
+对于既不储存液体、也不承受集中液相力的零厚度前沿，将控制体收缩到前沿可得
+\begin{equation}
+\mathbf F_{p,\Gamma}-w_\Gamma\mathbf U_{p,\Gamma}
+-\left(\mathbf F_{f,\Gamma}-w_\Gamma\mathbf U_{f,\Gamma}\right)
+=\mathbf 0,
+\label{eq:front_relative_balance}
+\end{equation}
+其中 $\mathbf U_{p,\Gamma}=[A_{p,\Gamma},Q_{p,\Gamma}]^{\mathrm T}$，
+$\mathbf U_{f,\Gamma}=[A_{l,\Gamma},Q_{f,\Gamma}]^{\mathrm T}$。展开
+式~\eqref{eq:front_relative_balance}，得到液相质量和动量的 Rankine--Hugoniot 条件：
+\begin{equation}
+\begin{gathered}
+Q_{p,\Gamma}-Q_{f,\Gamma}
+=w_\Gamma\left(A_{p,\Gamma}-A_{l,\Gamma}\right),\\[4pt]
+\left(\frac{Q_{p,\Gamma}^2}{A_{p,\Gamma}}+gA_fh_{s,\Gamma}\right)
+-\left(\frac{Q_{f,\Gamma}^2}{A_{l,\Gamma}}
++\frac12\Lambda_{d,\Gamma}A_{l,\Gamma}^2\right)
+=w_\Gamma\left(Q_{p,\Gamma}-Q_{f,\Gamma}\right).
+\end{gathered}
+\label{eq:front_jump}
+\end{equation}
+
+液满分支不允许气体穿入，因此运动坐标系下的气相条件为
+\begin{equation}
+\left(Q_g-w_\Gamma A_g\right)_\Gamma=0
+\qquad\Longleftrightarrow\qquad
+u_{g,\Gamma}=w_\Gamma.
+\label{eq:front_gas_condition}
+\end{equation}
+其中 $A_{g,\Gamma}=A_f-A_{l,\Gamma}$。由最近的有效分层气相单元作有界外推，并结合等温气相
+特征关系与状态方程得到 $\rho_{g,\Gamma}$ 和 $P_{g,\Gamma}$；若外推不可容许，则采用最近的
+可容许状态。
+
+由于水锤波速远大于前沿速度，一个有压声学特征可到达前沿，其相容关系为
+\begin{equation}
+u_{p,\Gamma}-u_{p,L}
++\frac{g}{a}\left(h_{s,\Gamma}-h_{s,L}\right)=0.
+\label{eq:front_pressurized_compatibility}
+\end{equation}
+降阶闭合取相邻状态作为分层侧液体迹线：
+\begin{equation}
+\left(A_{l,\Gamma},Q_{f,\Gamma}\right)=\left(A_R,Q_R\right),
+\label{eq:front_stratified_trace}
+\end{equation}
+并将 $\Lambda_{d,\Gamma}$ 冻结于该状态。
+
+令 $s_-=u_{l,R}-c_{l,R}$、$s_+=u_{l,R}+c_{l,R}$，其中
+$c_{l,R}=[\max(\Lambda_{d,R}A_R,0)+c_{\mathrm{num}}^2]^{1/2}$。前沿速度的可容许区间为
+\begin{equation}
+\begin{aligned}
+\text{慢速区：}\quad & w_\Gamma\le s_-,\\
+\text{中速区：}\quad & s_-\le w_\Gamma\le s_+,\\
+\text{快速区：}\quad & w_\Gamma\ge s_+.
+\end{aligned}
+\label{eq:front_speed_ranges}
+\end{equation}
+式~\eqref{eq:front_stratified_trace} 固定分层侧迹线后，待求量为 $w_\Gamma$、
+$A_{p,\Gamma}$ 和 $Q_{p,\Gamma}$。式~\eqref{eq:front_jump} 与
+式~\eqref{eq:front_pressurized_compatibility} 在各速度区间内共同确定这些量。正性、速度排序和
+动量残差容差决定是否接受；带区间迭代作为备用求解。完整残差构造和非线性求解过程见配套
+方法学论文。
+
+\section{数值方法}
+\label{sec:model:numerics}
+
+\subsection{有限体积与前沿追踪算法}
+\label{sec:model:fv}
+
+\begin{figure}[!htbp]
+\centering
+\definecolor{UnifiedWater}{HTML}{1676B7}
+\begin{tikzpicture}[>=Stealth,thick,font=\small,x=1cm,y=1cm]
+  \fill[UnifiedWater] (-4,-1) rectangle (0,1);
+  \fill[yellow!25] (0,0.25) rectangle (4,1);
+  \fill[UnifiedWater] (0,-1) rectangle (4,0.25);
+  \draw[thick] (0,0.25) -- (4,0.25);
+  \draw[thick] (-4,1) -- (4,1);
+  \draw[thick] (-4,-1) -- (4,-1);
+  \draw[thick] (-4,-1) -- (-4,1);
+  \draw[thick] (4,-1) -- (4,1);
+  \draw[thick,dashed,red] (0,-1.15) -- (0,1.55);
+  \node[below] at (-4,-1.05) {$x_{j_\Gamma-1/2}$};
+  \node[below] at (4,-1.05) {$x_{j_\Gamma+1/2}$};
+  \node[below,red] at (0,-1.05) {$x_\Gamma^n$};
+  \node at (-2.0,0.0) {液满区};
+  \node at (2.0,0.6) {气相};
+  \node at (2.0,-0.4) {液相};
+  \draw[decorate,decoration={brace,amplitude=5pt,mirror}] (-4,-1.65) -- (0,-1.65);
+  \node at (-2.0,-2.05) {$\ell_p^n$};
+  \draw[decorate,decoration={brace,amplitude=5pt,mirror}] (0,-1.65) -- (4,-1.65);
+  \node at (2.0,-2.05) {$\ell_f^n$};
+  \draw[->,thick] (-5.6,0) -- (-4.1,0);
+  \node[above] at (-5.1,-0.05) {$\widehat{\mathbf F}^{\,\mathrm p}_{j_\Gamma-1/2}$};
+  \draw[->,thick] (4.1,0) -- (5.6,0);
+  \node[above] at (5.1,-0.05) {$\widehat{\mathbf F}^{\,\mathrm f}_{j_\Gamma+1/2}$};
+  \node[red] at (-2.0,1.35) {$\mathbf F_{p,\Gamma}-w_\Gamma\mathbf U_{p,\Gamma}$};
+  \node[red] at (2.0,1.35) {$\mathbf F_{f,\Gamma}-w_\Gamma\mathbf U_{f,\Gamma}$};
+  \draw[->,thick,red] (0,1.80) -- (0.9,1.80);
+  \node[red,right] at (0.9,1.80) {$w_\Gamma$};
+\end{tikzpicture}
+\caption{运动有压--分层前沿切割宿主单元时的控制体和通量。}
+\label{fig:cut_cell_geometry}
+\end{figure}
+
+图~\ref{fig:cut_cell_geometry} 给出前沿追踪更新采用的运动控制体几何。常规单元采用守恒
+有限体积格式更新：
+\begin{equation}
+\mathbf U_j^{n+1}=\mathbf U_j^n
+-\frac{\Delta t}{\Delta x_j}
+\left(\widehat{\mathbf F}_{j+1/2}
+-\widehat{\mathbf F}_{j-1/2}\right)
++\Delta t\,\mathbf S_j.
+\label{eq:fv_update}
+\end{equation}
+光滑区采用五阶 WENO-Z 重构~\cite{borges2008}；运动前沿、边界或新生成流态附近采用二阶
+minmod MUSCL--TVD 重构~\cite{vanleer1979}。液相面积和气相密度迹值向单元平均值限制，
+以保持 $0<A_l<A_f$ 和 $\rho_g>0$。
+
+两相采用各自分支相容的单元面问题，而不是统一使用 HLL 或 Rusanov 通量。气相通量由面积
+感知的准一维等温 Euler 熵守恒核心与特征熵耗散构成~\cite{winters2020,chan2024}；液相通量
+从两波浅水 Riemann 解采样~\cite{toro2001}，并采用正的单元面恢复系数：
+\begin{equation}
+\begin{gathered}
+\widehat{\mathbf F}_g
+=\mathbf F_g^{\mathrm{EC}}
+-\tfrac12\mathbf K_g(\mathbf v_{g,R}-\mathbf v_{g,L}),\\[3pt]
+\Lambda_{d}^{h}
+=\max\!\left[
+\tfrac12(\Lambda_{d,L}+\Lambda_{d,R}),
+\frac{c_{\mathrm{num}}^2}{A_{l,\mathrm{ref}}}
+\right]>0.
+\end{gathered}
+\label{eq:regular_fluxes}
+\end{equation}
+其中，$\mathbf F_g^{\mathrm{EC}}$ 为熵守恒核心，$\mathbf v_g$ 为气相熵变量向量，
+$\mathbf K_g$ 为\mbox{半正定耗散矩阵}。正则化采用
+$A_{l,\mathrm{ref}}=\max[(A_{l,L}+A_{l,R})/2,A_\varepsilon]$，其中
+$A_\varepsilon>0$ 为面积下限；$c_{\mathrm{num}}$ 为正的局部波速。
+\mbox{面积感知}气相格式使单纯的面积跳跃不会扩散气体质量。正值 $\Lambda_d^h$ 只正则化局部单元
+面 Riemann 问题，未修改的 $\Lambda_d$ 仍用于失稳诊断。液满分支采用波速 $u_p\pm a$ 的
+相应弹性管波解；$P_g\partial_xA_g$ 的路径贡献使用同阶重构和求积进行平衡。
+
+时间推进采用二阶 SSP--RK~\cite{gottlieb2001}。每一级均重新计算重构、分支通量、前沿迹值和
+源项；时间步同时受液满波、分层波、两个切割子单元以及前沿到达下一网格面的时间限制，分别
+记为 $\Delta t_p$、$\Delta t_f$、$\Delta t_{\mathrm{cut}}$ 和 $\Delta t_\Gamma$：
+\begin{equation}
+\begin{gathered}
+\mathbf U^{(1)}=\mathbf U^n+\Delta t\,\mathbf L(\mathbf U^n),\\[3pt]
+\mathbf U^{n+1}=\tfrac12\mathbf U^n
++\tfrac12\left[\mathbf U^{(1)}
++\Delta t\,\mathbf L(\mathbf U^{(1)})\right],\\[3pt]
+\Delta t=\min(\Delta t_p,\Delta t_f,
+\Delta t_{\mathrm{cut}},\Delta t_\Gamma).
+\end{gathered}
+\label{eq:ssprk_cfl}
+\end{equation}
+其中，$\mathbf L$ 为由重构通量与源项组成的半离散空间算子。
+
+前沿位于宿主单元 $j_\Gamma$ 内时，算法保留液满和分层子单元的真实长度
+$\ell_p$ 与 $\ell_f$。未发生跨面时，它们满足
+$\ell_p^{n+1}=\ell_p^n+w_\Gamma\Delta t$ 与
+$\ell_f^{n+1}=\ell_f^n-w_\Gamma\Delta t$。取
+$\mathbf U_{p,\Gamma}=[A_{p,\Gamma},Q_{p,\Gamma}]^{T}$、
+$\mathbf U_{f,\Gamma}=[A_{l,\Gamma},Q_{f,\Gamma}]^{T}$，并对以
+$w_\Gamma$ 运动的控制面定义液相相对通量
+$\mathbf G_{k,\Gamma}=\mathbf F_{k,\Gamma}-w_\Gamma\mathbf U_{k,\Gamma}$，
+$k\in\{p,f\}$，并采用共享液相通量
+$\widehat{\mathbf G}_\Gamma=\tfrac12(\mathbf G_{p,\Gamma}+\mathbf G_{f,\Gamma})$。
+两个子单元满足
+\begin{equation}
+\begin{gathered}
+\ell_p^{n+1}\mathbf U_p^{n+1}
+=\ell_p^n\mathbf U_p^n
++\Delta t(\widehat{\mathbf F}_{L}^{p}
+-\widehat{\mathbf G}_\Gamma)
++\Delta t\,\ell_p^n\mathbf R_p,\\[3pt]
+\ell_f^{n+1}\mathbf U^{n+1}
+=\ell_f^n\mathbf U^n
++\Delta t(\widehat{\mathbf G}_\Gamma^{s}
+-\widehat{\mathbf F}_{R}^{f})
++\Delta t\,\ell_f^n\mathbf S.
+\end{gathered}
+\label{eq:cutcell_update}
+\end{equation}
+第二行的 $\mathbf U$ 和 $\mathbf S$ 是完整的四分量分层状态和源项。
+$\widehat{\mathbf G}_\Gamma^s$ 的液相分量等于 $\widehat{\mathbf G}_\Gamma$，气相质量分量为零，
+气相动量分量 $P_{g,\Gamma}A_{g,\Gamma}$ 表示内部活塞作用。两式液相相加时共享相对通量抵消，
+满足运动前沿的几何守恒。分层更新守恒气相质量和动量；气体仅经已记录的物理边界通量离域。
+
+当前沿到达网格面时，时间级精确截断至到达时刻，余下液体和\mbox{气体存量}守恒重映射到新的
+宿主单元。若重映射产生非正气体体积或密度，或者残差过大，则拒绝该次重映射并缩小时间步；
+前沿反向运动时交换左右角色。只有正性和守恒检查均通过的时间步，才允许发生拓扑变化。
+一个连通近满区域只有
+满足
+\begin{equation}
+\min_{j_1\le j\le j_2}\frac{A_{l,j}}{A_f}\ge\alpha_b,
+\qquad
+\sum_{j=j_1}^{j_2}\Delta x_j\ge L_{b,\min}.
+\label{eq:topology_criterion}
+\end{equation}
+时，才转化为独立液满段。其中，$\alpha_b=0.98$，且
+$L_{b,\min}=\max(D,2\Delta x)$。该判据只识别候选近满区域，并不规定其运动速度。公开给出的阈值
+是数值拓扑判据，并非无参数的波破碎或液桥形成模型。候选段两侧的流态转换 Riemann 问题均须
+可容许；只有中间气体存在连通逸出路径时，才允许液满段合并。液满段形成、合并、分裂和释放
+均继承已接受的液相存量，气体只在
+其连通区域内重新分配；违反液相质量、液相动量、气体存量或正性的事务被拒绝。欠分辨密闭
+气囊可采用集总多方闭合 $P_gV_g^m=\mathrm{const.}$；已解析分层气相继续采用
+式~\eqref{eq:system} 的分布方程，其中 $m$ 为多方指数。
+
+\subsection{守恒管道--竖井结点}
+\label{sec:model:junction}
+\label{sec:model:riser}
+
+管道--竖井连接处采用无存储的三支路有限体积结点，而不是把竖管交换量作为横管某个网格的
+指定源项。左支、右支和向上支路的坐标均取离开结点为正，相邻液相迹值记为
+$(p_b^*,u_b^*,c_b,A_{l,b})$，其中 $b\in\mathrm{J}=\{L,R,\mathrm{UP}\}$。这里，$p_b^*$ 和
+$u_b^*=Q_{l,b}^*/A_{l,b}$ 分别为支路解给出的压力迹值和向外速度迹值。对于弹性液满支路，
+入射液相波速取 $c_b=a$；对于分层或自由表面支路，取
+$c_b=\sqrt{\Lambda_{d,b}^{h}A_{l,b}}$，其中单元面正则化系数由
+式~\eqref{eq:regular_fluxes} 给出。图~\ref{fig:pipe_shaft_junction} 给出支路正方向及两相交换。
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.88\linewidth]{pipe_shaft_junction_schematic.pdf}
+\caption{管道--竖管结点离散。灰色虚线为支路单元面，$p_J$ 为无存储结点，蓝色双向箭头
+表示有符号液相流量。}
+\label{fig:pipe_shaft_junction}
+\end{figure}
+
+给定共同结点基准面上的试算绝对压力 $p_J$ 后，每条入射
+特征分别给出该支路的有符号速度及局部损失：
+\begin{equation}
+\begin{gathered}
+\frac{p_{l,J,b}-p_b^*}{\rho_l}
+=c_b\bigl(u_{J,b}^{\mathrm{out}}-u_b^*\bigr)
++\frac{K_b}{2}u_{J,b}^{\mathrm{out}}
+ \left|u_{J,b}^{\mathrm{out}}\right|,\\[3pt]
+p_{l,J,b}=p_J+\delta p_{h,b},
+\qquad
+Q_{l,J,b}^{\mathrm{out}}=A_{l,b}u_{J,b}^{\mathrm{out}},\\[3pt]
+\sum_{b\in\mathrm{J}}Q_{l,J,b}^{\mathrm{out}}=0.
+\end{gathered}
+\label{eq:junction_balance}
+\end{equation}
+其中，$\delta p_{h,b}$ 为共同结点基准面与支路 $b$ 之间的静水压力偏移，$K_b$ 为该支路的
+局部损失系数。各支路特征关系关于 $p_J$ 单调，因此在每个 Runge--Kutta 子步内，对
+式~\eqref{eq:junction_balance} 最后一行的标量残差进行括区求根。所得流量不施加方向限制，
+水体既可进入竖管，也可自然回流到任一水平支路。三个结点通量直接替换相应支路端面的常规
+数值通量。液相求解采用守恒压力势基准，此时写入端面的通量为
+\begin{equation}
+\widehat{\mathbf F}_{l,J,b}=
+\begin{bmatrix}
+Q_{l,J,b}^{\mathrm{out}}\\[2pt]
+\bigl(Q_{l,J,b}^{\mathrm{out}}\bigr)^2/A_{l,b}
++\Psi_b^*+(p_{l,J,b}-p_b^*)A_{l,b}/\rho_l
+\end{bmatrix}.
+\label{eq:junction_liquid_flux}
+\end{equation}
+其中，$\Psi_b^*$ 是相邻支路在常规液相动量通量
+$F_{Q_l}=Q_l^2/A_l+\Psi_l$ 中采用的液相压力势。结点压力势写为
+$\Psi_{J,b}=\Psi_b^*+(p_{l,J,b}-p_b^*)A_{l,b}/\rho_l$，因而与支路内部液相算子采用同一
+压力基准。这种压力差形式保留完整的平流通量与压力功，同时不会在均匀静水平衡状态中产生
+虚假冲量。
+
+只有解析得到的横管冠部气层暴露出有限竖管口部时，气相交换才被激活。开放面积 $A_{g,J}$
+由横管气层与竖管孔口的几何交叠确定。为避免与式~\eqref{eq:system} 中包含流通面积的母体
+守恒状态混淆，定义单位口部面积上的内禀气相状态
+$\mathbf q_{g,b}^*=[\rho_{g,b}^*,\rho_{g,b}^*u_{g,n,b}^*]^{\mathsf T}$，其中
+$u_{g,n,b}^*$ 为口部法向速度。单位面积等温气体 Riemann 通量
+$\widehat{\mathbf f}_g$ 给出法向质量和动量交换：
+\begin{equation}
+\begin{gathered}
+\begin{bmatrix}\dot m_{g,J}\\ \dot I_{g,\mathrm{UP},J}\end{bmatrix}
+=A_{g,J}\widehat{\mathbf f}_g
+ \left(\mathbf q_{g,h}^*,\mathbf q_{g,\mathrm{UP}}^*\right),\\[3pt]
+\Delta M_{g,h,J}=-\Delta t\,\dot m_{g,J},\\[3pt]
+\Delta M_{g,\mathrm{UP},1}=+\Delta t\,\dot m_{g,J},\\[3pt]
+\Delta J_{g,\mathrm{UP},1}=+\Delta t\,\dot I_{g,\mathrm{UP},J}.
+\end{gathered}
+\label{eq:junction_gas_flux}
+\end{equation}
+其中，$M_{g,h,J}$ 为横管结点单元中的气体质量存量，$M_{g,\mathrm{UP},1}$ 为首个竖管单元中的
+气体质量存量，$J_{g,\mathrm{UP},1}$ 为竖向气相动量存量。因此，$\dot m_{g,J}$ 表示由横管进入竖管的气体质量流率，
+$\dot I_{g,\mathrm{UP},J}$ 表示相应的竖向气相动量通量率。
+横管轴向速度与该口部相切，故横管侧法向气相迹速度取零；竖管侧迹值来自首个竖管单元。气体
+质量在一次残差计算中从横管存量扣除并加入竖管存量。$90^{\circ}$ 转弯处的动量仍保持方向性：
+$\dot I_{g,\mathrm{UP},J}$ 更新竖向动量，横管轴向动量保留自身的平流通量，二者的矢量差由连接件反力
+承担。因此，不能把同一个标量动量通量原样从横向搬到竖向。供体正性通过缩分时间步保证，
+不预设气体转移比例。两相交换均为内部守恒通量，而不是时间步结束后的附加源项。
+
+式~\eqref{eq:junction_balance}--\eqref{eq:junction_gas_flux} 给出该模型体系的通用守恒结点
+闭合。有限几何结点、拟合竖管气核和有限口部液塞等扩展仍在相应试验中单独声明；若某项归档
+采用降阶实现，正文不会把上述结点求解器或前述数值格式的全部组成追溯地归入该归档。

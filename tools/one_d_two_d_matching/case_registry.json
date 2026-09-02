@@ -1,0 +1,278 @@
+{
+  "schema_version": 1,
+  "study_id": "geysering_1d_2d_global_match",
+  "scope": {
+    "case_count": 8,
+    "cases": [
+      "VW_A",
+      "VW_B",
+      "CONG_BH1",
+      "CONG_BH3",
+      "CONG_BH6",
+      "LIU_A2",
+      "LIU_B3",
+      "LIU_C9"
+    ]
+  },
+  "comparison_policy": {
+    "clock": "native ramp-start physical time; no fitted time shift or event alignment",
+    "pressure": "raw pressure at a declared common datum; no display offset in metrics",
+    "levels": "compare the same free-surface and leading-gas-interface observation operators",
+    "parameters": "apparatus geometry and documented initial/boundary conditions may vary; closure coefficients may not vary by case",
+    "two_d_role": "exploratory spatial reference, not experimental truth",
+    "long_run_gate": "do not launch the eight-case long rerun until each campaign has one declared 1D entry point and the observation operators pass their audit"
+  },
+  "common_observables": [
+    "geyser_branch",
+    "gas_arrival_time_s",
+    "free_surface_height_m",
+    "leading_gas_interface_height_m",
+    "riser_rim_arrival_time_s",
+    "pressure_head_at_common_probe_m",
+    "peak_pressure_and_time",
+    "event_order",
+    "mass_or_volume_balance_when_available"
+  ],
+  "cases": [
+    {
+      "id": "VW_A",
+      "campaign": "Vasconcelos_Wright_2011",
+      "paper_case": "Test A",
+      "one_d": {
+        "baseline_status": "production_semantics_selected_unified_rerun_required",
+        "entry_points": [
+          "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/scripts/caseA_digitize_and_compare.py"
+        ],
+        "model_sources": [
+          "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/model/vw2011_network_twofluid.py"
+        ],
+        "existing_series": [
+          "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/outputs/caseA_model_series.csv",
+          "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/outputs/caseA_nohll_connected_pocket_model_series.csv"
+        ],
+        "blocker": "the legacy production CSV is the regression reference, but it has no source/config hash and must be regenerated from one Campaign-1 source; sensitivity and spatial archives stay outside the baseline path"
+      },
+      "two_d": {
+        "completion_status": "complete_exploratory",
+        "match_time": "t_match=t_solver",
+        "pressure_series": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/openfoam/2d/outputs/openfoam_2d_series.csv",
+        "level_series": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/openfoam/2d/outputs/openfoam_2d_levels.csv",
+        "metrics": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/openfoam/2d/outputs/openfoam_2d_metrics.json",
+        "limitations": "planar geometry does not preserve the experimental circular area ratio"
+      }
+    },
+    {
+      "id": "VW_B",
+      "campaign": "Vasconcelos_Wright_2011",
+      "paper_case": "Test B",
+      "one_d": {
+        "baseline_status": "declared_case_local_baseline",
+        "entry_points": [
+          "tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356/scripts/caseB_digitize_and_compare.py"
+        ],
+        "model_sources": [
+          "tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356/model/vw2011_network_twofluid.py"
+        ],
+        "existing_series": [
+          "tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356/outputs/caseB_model_series.csv"
+        ],
+        "metrics": "tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356/outputs/caseB_comparison_metrics.json"
+      },
+      "two_d": {
+        "completion_status": "complete_exploratory",
+        "match_time": "t_match=t_solver",
+        "pressure_series": "tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356/openfoam/2d/outputs/openfoam_2d_series.csv",
+        "level_series": "tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356/openfoam/2d/formal/connected_core_observer/outputs/openfoam_2d_levels_connected_core.csv",
+        "metrics": "tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356/openfoam/2d/formal/connected_core_observer/outputs/metrics_connected_core.json",
+        "limitations": "area-equivalent planar slot; sigma=0; raw pressure must be used instead of the display-offset curve"
+      }
+    },
+    {
+      "id": "CONG_BH1",
+      "campaign": "Cong_Chan_Lee_2017",
+      "paper_case": "B-H1",
+      "one_d": {
+        "baseline_status": "unified_complete_event_baseline_missing",
+        "entry_points": [
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/run_campaign2_persistent_candidate.py"
+        ],
+        "model_sources": [
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/run_campaign2_persistent_candidate.py",
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_global_budget.py",
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_shared_contract.py",
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_tee_riemann.py",
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_vertical_twofluid_kernel.py",
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/case1_mirrored_horizontal.py",
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/case1_constant_head_boundary.py",
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/case1_persistent_coupling.py",
+          "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/model/tosan2021_horizontal_shockfit.py"
+        ],
+        "contract": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_shared_contract.py",
+        "blocker": "the persistent owner still applies a global hydraulic-time valve surrogate; the implemented local valve is not wired in, and no checkpointed 20 s three-case runner or common observer export exists"
+      },
+      "two_d": {
+        "completion_status": "complete_exploratory",
+        "match_time": "t_match=t_solver; valve opening starts at t=0",
+        "pressure_series": "tests/test_02_cong2017/cases/BH1_Dr16_H066_L061/openfoam/2d/qualification/h1_refined_co015/results/openfoam_2d_pt1_series.csv",
+        "level_series": "tests/test_02_cong2017/cases/BH1_Dr16_H066_L061/openfoam/2d/qualification/h1_refined_co015/results/openfoam_2d_riser_series.csv",
+        "metrics": "tests/test_02_cong2017/cases/BH1_Dr16_H066_L061/openfoam/2d/qualification/h1_refined_co015/results/openfoam_2d_metrics.json",
+        "limitations": "the stored Yint observer is not yet the unified leading-gas-interface definition"
+      }
+    },
+    {
+      "id": "CONG_BH3",
+      "campaign": "Cong_Chan_Lee_2017",
+      "paper_case": "B-H3",
+      "one_d": {
+        "baseline_status": "unified_complete_event_baseline_missing",
+        "entry_points": [
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/run_campaign2_persistent_candidate.py"
+        ],
+        "model_sources": [
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/run_campaign2_persistent_candidate.py",
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_global_budget.py",
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_shared_contract.py",
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_tee_riemann.py",
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_vertical_twofluid_kernel.py",
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/case1_mirrored_horizontal.py",
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/case1_constant_head_boundary.py",
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/case1_persistent_coupling.py",
+          "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/model/tosan2021_horizontal_shockfit.py"
+        ],
+        "contract": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_shared_contract.py",
+        "blocker": "same as B-H1; no completed frozen three-case baseline"
+      },
+      "two_d": {
+        "completion_status": "complete_exploratory",
+        "match_time": "t_match=t_solver; valve opening starts at t=0",
+        "pressure_series": "tests/test_02_cong2017/cases/BH3_Dr26_H066_L061/openfoam/2d/qualification/h3_refined_iso_riser20/results/openfoam_2d_pt1_series.csv",
+        "level_series": "tests/test_02_cong2017/cases/BH3_Dr26_H066_L061/openfoam/2d/qualification/h3_refined_iso_riser20/results/openfoam_2d_riser_series.csv",
+        "metrics": "tests/test_02_cong2017/cases/BH3_Dr26_H066_L061/openfoam/2d/qualification/h3_refined_iso_riser20/results/openfoam_2d_metrics.json",
+        "limitations": "fragmentation makes the stored lower-interface Yint jump to the base; re-extract the uppermost leading gas crossing"
+      }
+    },
+    {
+      "id": "CONG_BH6",
+      "campaign": "Cong_Chan_Lee_2017",
+      "paper_case": "B-H6",
+      "one_d": {
+        "baseline_status": "unified_complete_event_baseline_missing",
+        "entry_points": [
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/run_campaign2_persistent_candidate.py"
+        ],
+        "model_sources": [
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/run_campaign2_persistent_candidate.py",
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_global_budget.py",
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_shared_contract.py",
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_tee_riemann.py",
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_vertical_twofluid_kernel.py",
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/case1_mirrored_horizontal.py",
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/case1_constant_head_boundary.py",
+          "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/case1_persistent_coupling.py",
+          "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/model/tosan2021_horizontal_shockfit.py"
+        ],
+        "contract": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_shared_contract.py",
+        "blocker": "same as B-H1; no completed frozen three-case baseline"
+      },
+      "two_d": {
+        "completion_status": "complete_exploratory",
+        "match_time": "t_match=t_solver; valve opening starts at t=0",
+        "pressure_series": "tests/test_02_cong2017/cases/BH6_Dr41_H066_L061/openfoam/2d/complete_event/end20/results/openfoam_2d_pt1_series.csv",
+        "level_series": "tests/test_02_cong2017/cases/BH6_Dr41_H066_L061/openfoam/2d/complete_event/end20/results/openfoam_2d_riser_series.csv",
+        "metrics": "tests/test_02_cong2017/cases/BH6_Dr41_H066_L061/openfoam/2d/complete_event/end20/results/openfoam_2d_metrics.json",
+        "limitations": "use the same leading-gas observer as B-H1/B-H3 and compare PT1 with the co-located 1D transducer, not pocket pressure"
+      }
+    },
+    {
+      "id": "LIU_A2",
+      "campaign": "Liu_Shao_Zhu_2020",
+      "paper_case": "A2",
+      "one_d": {
+        "baseline_status": "declared_case_local_baseline_not_campaign_unified",
+        "entry_points": [
+          "tests/test_03_liu2020/cases/A2_Q20to100_openchannel_nogeyser/scripts/caseA_digitize_and_compare.py"
+        ],
+        "model_sources": [
+          "tests/test_03_liu2020/cases/A2_Q20to100_openchannel_nogeyser/model/liu2020_network_twofluid.py"
+        ],
+        "metrics": "tests/test_03_liu2020/cases/A2_Q20to100_openchannel_nogeyser/outputs/caseA_metrics.json",
+        "standardized_baseline_series": "output/one_d_two_d_matching/campaign3_case_local_baseline_v1/LIU_A2.csv",
+        "baseline_manifest": "output/one_d_two_d_matching/campaign3_case_local_baseline_v1/manifest.json"
+      },
+      "two_d": {
+        "completion_status": "complete_exploratory",
+        "match_time": "t_match=t_model; paper plot time is t_model-0.4 s for both 1D and 2D",
+        "audit": "output/liu2020_fast_runs/A2_Q20to100_openchannel_nogeyser/a2_fine_openoutfall_v5_diagnostic_5physical_continue4to25p4_20260815T1830Z/audit_v1/A2_COMPLETION_AUDIT.json",
+        "pressure_root": "output/liu2020_fast_runs/A2_Q20to100_openchannel_nogeyser/a2_fine_openoutfall_v5_diagnostic_5physical_continue4to25p4_20260815T1830Z/openfoam/2d/case/postProcessing/probesPT",
+        "level_root": "output/liu2020_fast_runs/A2_Q20to100_openchannel_nogeyser/a2_fine_openoutfall_v5_diagnostic_5physical_continue4to25p4_20260815T1830Z/openfoam/2d/case/postProcessing/riserAlpha",
+        "standardized_pressure_series": "output/one_d_two_d_matching/campaign3_2d_observations_v1/LIU_A2_pressure.csv",
+        "standardized_level_series": "output/one_d_two_d_matching/campaign3_2d_observations_v1/LIU_A2_connected_riser.csv",
+        "comparison_metrics": [
+          "output/one_d_two_d_matching/campaign3_comparison_v1/LIU_A2_pressure.json",
+          "output/one_d_two_d_matching/campaign3_comparison_v1/LIU_A2_riser.json"
+        ],
+        "limitations": "highest probe is 0.01 m below the rim; no rim flux or cumulative overflow"
+      }
+    },
+    {
+      "id": "LIU_B3",
+      "campaign": "Liu_Shao_Zhu_2020",
+      "paper_case": "B3",
+      "one_d": {
+        "baseline_status": "declared_case_local_baseline_not_campaign_unified",
+        "entry_points": [
+          "tests/test_03_liu2020/cases/B3_Q20to100_fullpipe_geyser/scripts/caseB_digitize_and_compare.py"
+        ],
+        "model_sources": [
+          "tests/test_03_liu2020/cases/B3_Q20to100_fullpipe_geyser/model/liu2020_network_twofluid.py"
+        ],
+        "metrics": "tests/test_03_liu2020/cases/B3_Q20to100_fullpipe_geyser/outputs/caseB_metrics.json",
+        "standardized_baseline_series": "output/one_d_two_d_matching/campaign3_case_local_baseline_v1/LIU_B3.csv",
+        "baseline_manifest": "output/one_d_two_d_matching/campaign3_case_local_baseline_v1/manifest.json"
+      },
+      "two_d": {
+        "completion_status": "complete_exploratory",
+        "match_time": "t_match=t_solver-2.0 s",
+        "verification": "output/liu2020_fast_runs/B3_Q20to100_fullpipe_geyser/server_completed_transfer_20260816T0902Z/b3_2d_72k_full_attempt5_20260816T0710Z/LOCAL_IMPORT_VERIFICATION.json",
+        "pressure_root": "output/liu2020_fast_runs/B3_Q20to100_fullpipe_geyser/server_completed_transfer_20260816T0902Z/b3_2d_72k_full_attempt5_20260816T0710Z/case/postProcessing/probesPT",
+        "level_root": "output/liu2020_fast_runs/B3_Q20to100_fullpipe_geyser/server_completed_transfer_20260816T0902Z/b3_2d_72k_full_attempt5_20260816T0710Z/case/postProcessing/frontCentrePlane",
+        "standardized_pressure_series": "output/one_d_two_d_matching/campaign3_2d_observations_v1/LIU_B3_pressure.csv",
+        "standardized_level_series": "output/one_d_two_d_matching/campaign3_2d_observations_v1/LIU_B3_connected_riser.csv",
+        "comparison_metrics": [
+          "output/one_d_two_d_matching/campaign3_comparison_v1/LIU_B3_pressure.json",
+          "output/one_d_two_d_matching/campaign3_comparison_v1/LIU_B3_riser.json"
+        ],
+        "limitations": "legacy riserCentreline probes are absent; extract alpha height from VTP or resample retained fields; no recorded rim-flux series"
+      }
+    },
+    {
+      "id": "LIU_C9",
+      "campaign": "Liu_Shao_Zhu_2020",
+      "paper_case": "C9",
+      "one_d": {
+        "baseline_status": "case_local_20s_variants_exported_campaign_unified_missing",
+        "entry_points": [
+          "tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket/scripts/caseC_digitize_and_compare.py"
+        ],
+        "model_sources": [
+          "tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket/model/liu2020_network_twofluid.py"
+        ],
+        "metrics": "tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket/outputs/caseC_metrics.json",
+        "standardized_baseline_series": [
+          "output/one_d_two_d_matching/campaign3_case_local_baseline_v1/LIU_C9_ALL_WATER.csv",
+          "output/one_d_two_d_matching/campaign3_case_local_baseline_v1/LIU_C9_SEALED_POCKET.csv"
+        ],
+        "baseline_manifest": "output/one_d_two_d_matching/campaign3_case_local_baseline_v1/manifest.json",
+        "blocker": "the sealed-pocket path now reaches 20 s but develops a nonphysical long-horizon pressure runaway; a campaign-unified gas-pocket/riser closure is still missing"
+      },
+      "two_d": {
+        "completion_status": "complete_exploratory_summary_only_locally",
+        "match_time": "t_match=t_solver-0.25 s",
+        "audit": "output/liu2020_fast_runs/C9_Q25to40_hr03_airpocket/c9_medium_80k_combined_audit_attempt4_attempt7_recovery_v3_20260816T1110Z/FINAL_EVENT_AUDIT.json",
+        "verification": "output/liu2020_fast_runs/C9_Q25to40_hr03_airpocket/c9_medium_80k_combined_audit_attempt4_attempt7_recovery_v3_independent_verification_v2_20260816T1120Z/VERIFICATION_REPORT.json",
+        "comparison_metrics": "output/one_d_two_d_matching/campaign3_comparison_v1/LIU_C9_summary.json",
+        "limitations": "raw attempt4/attempt7 probe and field archives are not present in the current workspace; only audited summaries can be compared"
+      }
+    }
+  ]
+}

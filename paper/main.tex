@@ -5,12 +5,13 @@
 \usepackage{bm}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{array}
 \usepackage{multirow}
 \usepackage{placeins}
 \usepackage{lineno}
 \usepackage{xcolor}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta,calc,positioning,patterns}
+\usetikzlibrary{arrows.meta,calc,positioning,patterns,decorations.pathreplacing}
 \usepackage[colorlinks]{hyperref}
 
 \hypersetup{hypertexnames=false}
@@ -23,51 +24,36 @@
 \newcommand{\jump}[1]{\left[\!\left[#1\right]\!\right]}
 
 \journal{Engineering Applications of Computational Fluid Mechanics}
+\biboptions{sort&compress}
 
 \begin{document}
 
 \begin{frontmatter}
 
-\title{Experimental assessment of a gas-conserving one-dimensional model for
+\title{Experimental assessment of a gas-conserving one-dimensional framework for
 entrapped-air-driven geysering}
 
 \ifdefined\anonymoussubmission
 \author{Anonymous manuscript}
 \else
-\author{Zijian Xue, Ling Zhou, and David Z. Zhu\corref{cor1}}
+\author{Zijian Xue and David Z. Zhu\corref{cor1}}
 \cortext[cor1]{Corresponding author}
 \fi
 
 \begin{abstract}
 Entrapped-air release through water-filled shafts can cause destructive
-geysering in stormwater and combined-sewer systems. Network-scale assessment
-requires a reduced model, but many one-dimensional formulations prescribe
-gas release and cannot predict the transition from benign
-venting to eruption. This study evaluates a gas-conserving mixed-flow
-framework, developed in a companion methods paper, against three published
-experimental campaigns. The vertical shaft uses the same decoupled two-fluid
-equations as the horizontal conduit and connects through a regime-conditioned
-junction closure. Simulations use reported initial conditions and a frozen
-numerical configuration, with neither prescribed release histories nor fitted
-geyser heights. In the ventilation-shaft experiments, the model selects the
-correct branch for both a wide,
-non-geysering tower and a narrow, geysering tower. It reproduces the principal
-pressure levels and water-column motions. In the narrow tower, however, the
-computed interface velocity is approximately one half of the measured value,
-and interface breakthrough occurs after the experimental event despite an
-early arrival at the shaft. In the horizontal-pipe/vertical-riser campaign,
-the model classifies 5 of 7 filmed cases and 39 of 63 configurations in the
-published parameter sweep. All 24 sweep errors are missed geysers near the
-transition band; no false geyser is predicted. In the junction-chamber
-campaign, the model reproduces the A2/B3 outcome reversal caused by the
-downstream boundary and captures the timing and scale of the first C9
-transient, while under-resolving the short B3 pressure peak. The comparisons
-show that resolved gas transport recovers the principal branch physics across
-distinct apparatuses. Quantitative errors concentrate
-in shaft-mouth exchange, coherent-film topology, and acoustic/chamber
-reduction. The framework is therefore useful for mechanism-based system
-assessment, but its missed-eruption bias must be reduced before stand-alone
-hazard screening near the regime boundary.
+geysering, but network-scale models often prescribe gas-release histories and
+cannot predict venting-to-geysering transitions. We evaluate gas-conserving
+one-dimensional mixed-flow realizations against three published campaigns.
+Phase inventories are conserved, release histories and geyser heights are not
+imposed, and settings are fixed within each series apart from one disclosed
+in-sample screen. Ventilation-shaft outcomes are reproduced despite an early,
+high narrow-shaft interface. The horizontal-pipe/vertical-riser realization
+reproduces 5 of 7 filmed outcomes and 39 of 63 criterion classifications; all
+24 disagreements are missed geysers. Junction-chamber results capture the
+A2/B3 outcome reversal and first C9 pressure peak but underpredict the B3 peak.
+The framework supports system-scale analysis, but its one-sided bias precludes
+stand-alone hazard screening near the regime boundary.
 \end{abstract}
 
 \begin{keyword}

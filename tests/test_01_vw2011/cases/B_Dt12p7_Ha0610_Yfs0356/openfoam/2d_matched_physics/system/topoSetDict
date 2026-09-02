@@ -1,0 +1,54 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      topoSetDict;
+}
+
+actions
+(
+    {
+        name    horizontalCells;
+        type    cellSet;
+        action  new;
+        source  boxToCell;
+        box     (-0.001 -0.0471 -0.0021) (4.007 0.0471 0.0021);
+    }
+    {
+        name    horizontalPipe;
+        type    cellZoneSet;
+        action  new;
+        source  setToCellZone;
+        set     horizontalCells;
+    }
+    {
+        name    towerCells;
+        type    cellSet;
+        action  new;
+        source  boxToCell;
+        box     (3.51514 0.0471 -0.0021) (3.51686 0.6571 0.0021);
+    }
+    {
+        name    towerPipe;
+        type    cellZoneSet;
+        action  new;
+        source  setToCellZone;
+        set     towerCells;
+    }
+    {
+        // One axial cell immediately downstream of the x=0.546 m valve plane.
+        name    valveCells;
+        type    cellSet;
+        action  new;
+        source  boxToCell;
+        box     (0.5460001 -0.0471 -0.0021) (0.5494534 0.0471 0.0021);
+    }
+    {
+        name    valveZone;
+        type    cellZoneSet;
+        action  new;
+        source  setToCellZone;
+        set     valveCells;
+    }
+);

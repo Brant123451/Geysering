@@ -25,6 +25,7 @@ CASE = HERE.parent
 sys.path.insert(0, str(CASE / "model"))
 
 from vw2011_network_twofluid import NetworkCase, _depth_frac, run_network
+from casea_coupled_gas_network import CoupledGasParameters
 from casea_shockfit_network import build_case_a_shockfit_solver
 
 OUT = CASE / "outputs"
@@ -56,8 +57,8 @@ def main():
         type=float,
         default=0.0,
         help=(
-            "Horizontal stratified interfacial-friction coefficient C_h in "
-            "lambda_i=lambda_g*(1+C_h*alpha_l)."
+            "Optional horizontal holdup multiplier used only for a declared "
+            "sensitivity run; the production companion-model closure is 0."
         ),
     )
     parser.add_argument(
@@ -76,10 +77,75 @@ def main():
         ),
     )
     parser.add_argument(
+        "--vertical-taylor-core-fraction",
+        type=float,
+        default=0.80,
+        help=(
+            "Cross-section-averaged gas-core area fraction used by the "
+            "side-fed Taylor shock fit.  Values below the production default "
+            "retain more counter-current liquid holdup in the riser; the "
+            "solver still advances one conservative net T-junction flux."
+        ),
+    )
+    parser.add_argument(
+        "--vertical-taylor-return-efficiency",
+        type=float,
+        default=1.0,
+        help=(
+            "Fraction of Taylor-core swept liquid returned through the "
+            "counter-current film.  The complement remains in the resolved "
+            "upper liquid slug; the T-junction update remains conservative."
+        ),
+    )
+    parser.add_argument(
+        "--vertical-ccfl-constant",
+        type=float,
+        default=0.50,
+        help=(
+            "Wallis counter-current-flow limitation constant used after "
+            "riser material breakthrough."
+        ),
+    )
+    parser.add_argument(
+        "--tower-entry-alpha-min",
+        type=float,
+        default=None,
+        help=(
+            "Horizontal gas-area fraction required at the T mouth.  The "
+            "default uses the capillary crown-opening fraction derived by "
+            "CoupledGasParameters instead of an independently fitted cutoff."
+        ),
+    )
+    parser.add_argument(
+        "--disable-vertical-twostream",
+        action="store_true",
+        help=(
+            "Keep the established conservative one-stream riser while "
+            "auditing horizontal material-front changes."
+        ),
+    )
+    parser.add_argument(
+        "--disable-horizontal-front-retreat",
+        action="store_true",
+        help=(
+            "Diagnostic sensitivity: reproduce the historical one-way east "
+            "material front while leaving all other closures unchanged."
+        ),
+    )
+    parser.add_argument(
         "--output-interval",
         type=float,
         default=0.05,
         help="Physical time between saved frames [s].",
+    )
+    parser.add_argument(
+        "--external-horizontal-checkpoint",
+        type=Path,
+        default=None,
+        help=(
+            "Resume the unchanged pre-T shock-fit branch from an exact "
+            "checkpoint; intended for fast post-arrival closure tests."
+        ),
     )
     parser.add_argument(
         "--no-render",
@@ -87,6 +153,15 @@ def main():
         help=(
             "Save conservative solver fields and diagnostics without creating "
             "PNG frames; this changes only post-processing runtime."
+        ),
+    )
+    parser.add_argument(
+        "--reuse-saved-fields",
+        action="store_true",
+        help=(
+            "Re-render the selected variant from its existing conservative "
+            "NPZ fields without rerunning the 1D solver.  If the frame index "
+            "is absent after --no-render, it is rebuilt from diagnostics."
         ),
     )
     args = parser.parse_args()
@@ -118,6 +193,10 @@ def main():
     frames_dir.mkdir(parents=True, exist_ok=True)
     riser_frames_dir.mkdir(parents=True, exist_ok=True)
 
+    coupled_gas_parameters = CoupledGasParameters(
+        horizontal_diameter=0.094,
+        vertical_diameter=0.0571,
+    )
     case = NetworkCase(
         Dr=0.0571,
         air_head=0.305,
@@ -132,6 +211,22 @@ def main():
         horizontal_holdup_drag_enhancement=args.interfacial_enhancement,
         junction_loss_coeff=args.junction_loss,
         glug_loss_coeff=args.glug_loss,
+        vertical_taylor_core_area_fraction=(
+            args.vertical_taylor_core_fraction
+        ),
+        vertical_taylor_return_efficiency=(
+            args.vertical_taylor_return_efficiency
+        ),
+        vertical_ccfl_constant=args.vertical_ccfl_constant,
+        enable_vertical_twostream=not args.disable_vertical_twostream,
+        allow_horizontal_front_retreat=(
+            not args.disable_horizontal_front_retreat
+        ),
+        tower_entry_alpha_min=(
+            coupled_gas_parameters.horizontal_capillary_void_fraction
+            if args.tower_entry_alpha_min is None
+            else args.tower_entry_alpha_min
+        ),
     )
     external_horizontal_solver = build_case_a_shockfit_solver(
         dx=(
@@ -140,12 +235,109 @@ def main():
         ),
         wave_speed=case.a_wh,
     )
-    rec = run_network(
-        case,
-        verbose=True,
-        external_horizontal_solver=external_horizontal_solver,
-        output_interval=args.output_interval,
-    )
+    if args.reuse_saved_fields:
+        if not fields_path.exists():
+            raise FileNotFoundError(
+                "--reuse-saved-fields requires the selected variant's existing "
+                f"field file: {fields_path}"
+            )
+        saved = np.load(fields_path)
+        saved_time = np.asarray(saved["time"], dtype=float)
+        saved_diagnostics = (
+            json.loads(diagnostics_path.read_text(encoding="utf-8"))
+            if diagnostics_path.exists()
+            else {}
+        )
+
+        def diagnostic_series(key, default=0.0):
+            values = saved_diagnostics.get(key, [])
+            if len(values) != saved_time.size:
+                return [float(default)] * saved_time.size
+            return [float(value) for value in values]
+
+        if index_path.exists():
+            saved_index = json.loads(index_path.read_text(encoding="utf-8"))
+        else:
+            saved_wtop = diagnostic_series("wtop")
+            saved_itop = diagnostic_series("itop")
+            saved_core_mass = diagnostic_series("core_mass")
+            saved_head = diagnostic_series("pocket_head")
+            saved_index = [
+                {
+                    "time": float(time),
+                    "materialHeight": saved_wtop[index],
+                    "itop": saved_itop[index],
+                    "coreMassMg": 1.0e6 * saved_core_mass[index],
+                    "head": saved_head[index],
+                }
+                for index, time in enumerate(saved_time)
+            ]
+            print(
+                "frame index absent; rebuilding render metadata from "
+                f"{diagnostics_path}"
+            )
+        if len(saved_index) != saved_time.size:
+            raise ValueError(
+                "Saved frame index and conservative field archive have "
+                "different frame counts."
+            )
+        saved_z = np.asarray(saved["z"], dtype=float)
+        saved_horizontal = np.asarray(saved["horizontal_alpha_l"], dtype=float)
+        n_tunnel = int(saved_horizontal.shape[1])
+        saved_dx = case.L_tunnel / n_tunnel
+        saved_dz = (
+            float(np.median(np.diff(saved_z)))
+            if saved_z.size > 1
+            else float(args.dz)
+        )
+
+        def rows(key):
+            return [np.asarray(row, dtype=float) for row in saved[key]]
+
+        rec = dict(
+            frames_t=saved_time.tolist(),
+            xt=(np.arange(n_tunnel, dtype=float) + 0.5) * saved_dx,
+            zr=saved_z,
+            dx=saved_dx,
+            dz=saved_dz,
+            frames_alr=rows("alpha_l"),
+            frames_agr=rows("alpha_g"),
+            frames_mgr=rows("vertical_gas_mass"),
+            frames_mgrs=rows("vertical_tracer_mass"),
+            frames_jgrs=rows("vertical_gas_momentum"),
+            frames_ulr=rows("vertical_liquid_velocity"),
+            frames_riser_upward_area=rows("riser_upward_area"),
+            frames_riser_downward_area=rows("riser_downward_area"),
+            frames_riser_upward_discharge=rows("riser_upward_discharge"),
+            frames_riser_downward_discharge=rows("riser_downward_discharge"),
+            frames_alt=rows("horizontal_alpha_l"),
+            frames_alt_raw=rows("horizontal_alpha_l_raw"),
+            frames_ult=rows("horizontal_liquid_velocity"),
+            frames_qlt=rows("horizontal_liquid_discharge"),
+            frames_mgt=rows("horizontal_gas_mass"),
+            frames_jgt=rows("horizontal_gas_momentum"),
+            wtop=[float(item.get("materialHeight", 0.0)) for item in saved_index],
+            itop=[float(item.get("itop", 0.0)) for item in saved_index],
+            core_mass=[
+                float(item.get("coreMassMg", 0.0)) * 1.0e-6
+                for item in saved_index
+            ],
+            pocket_head=[float(item.get("head", 0.0)) for item in saved_index],
+            riser_breakthrough=diagnostic_series("riser_breakthrough"),
+            external_horizontal_used=True,
+        )
+        saved.close()
+        print(f"reusing conservative solver fields -> {fields_path}")
+    else:
+        rec = run_network(
+            case,
+            verbose=True,
+            external_horizontal_solver=external_horizontal_solver,
+            external_horizontal_checkpoint=(
+                args.external_horizontal_checkpoint
+            ),
+            output_interval=args.output_interval,
+        )
 
     diagnostic_keys = (
         "t", "wtop", "itop", "core_mass", "pocket_head", "base_q",
@@ -170,7 +362,64 @@ def main():
         "junction_west_liquid_flux",
         "junction_east_node_liquid_flux",
         "junction_vertical_liquid_flux",
+        "junction_vertical_characteristic_liquid_flux",
+        "junction_taylor_return_liquid_flux",
         "junction_gas_mouth_fraction",
+        "junction_gross_upward_liquid_flux",
+        "junction_gross_downward_liquid_flux",
+        "junction_countercurrent_circulation_flux",
+        "twostream_upward_volume_residual",
+        "twostream_downward_volume_residual",
+        "twostream_provenance_volume_residual",
+        "twostream_horizontal_source_volume",
+        "twostream_initial_source_volume",
+        "twostream_drag_momentum_residual",
+        "twostream_bottom_0p1m_inventory",
+        "twostream_active",
+        "tnode_pressure_balance_residual",
+        "tnode_pressure_raw_residual",
+        "tnode_downward_pressure_balance_residual",
+        "tnode_downward_pressure_raw_residual",
+        "tnode_capacity_pressure_impulse",
+        "tnode_capacity_pressure",
+        "tnode_capacity_upward_rate_correction",
+        "tnode_capacity_downward_rate_correction",
+        "tnode_capacity_kkt_residual",
+        "tnode_capacity_packing_residual",
+        "tnode_capacity_donor_residual",
+        "tnode_capacity_donor_multiplier",
+        "tnode_capacity_active_cells",
+        "tnode_capacity_topology_iterations",
+        "tnode_momentum_balance_residual",
+        "tnode_physical_reaction_pressure",
+        "tnode_vertical_mouth_pressure",
+        "twostream_bottom_pressure",
+        "tnode_fv_mouth_pressure_residual",
+        "tnode_gas_reaction_requested",
+        "tnode_gas_reaction_applied",
+        "tnode_gas_reaction_application_residual",
+        "tnode_liquid_gas_action_residual",
+        "combined_interphase_momentum_residual",
+        "tnode_cell0_drag_length_fraction",
+        "tnode_horizontal_liquid_pressure",
+        "tnode_horizontal_liquid_pressure_raw",
+        "tnode_vertical_liquid_pressure",
+        "tnode_upward_old_speed",
+        "tnode_upward_unconstrained_speed",
+        "tnode_upward_characteristic_speed",
+        "tnode_upward_characteristic_rate",
+        "tnode_first_cell_downward_rate",
+        "tnode_first_cell_downward_speed",
+        "tnode_outgoing_mouth_downward_rate",
+        "tnode_positive_net_receiving_capacity",
+        "tnode_node_liquid_volume",
+        "tnode_downward_donor_volume",
+        "tnode_mouth_upward_area",
+        "tnode_mouth_downward_area",
+        "tnode_mouth_gas_area",
+        "tnode_mouth_liquid_area",
+        "tnode_wallis_downward_reference",
+        "tnode_downward_constraint_reaction_flux",
         "junction_west_head",
         "junction_east_head",
         "junction_vertical_head",
@@ -188,6 +437,9 @@ def main():
         "side_t_east_cut_volume",
         "side_t_east_cut_gas_mass",
         "side_t_east_material_front",
+        "side_t_east_topology_front",
+        "side_t_east_material_front_velocity",
+        "side_t_east_retired_cell_count",
         "dbg_hgas_u_max_current",
         "dbg_hgas_u_max_x",
         "dbg_hgas_u_max_rho_ratio",
@@ -209,6 +461,11 @@ def main():
             if rec.get("external_horizontal_handoff_time") is None
             else float(rec["external_horizontal_handoff_time"])
         ),
+        twostream_activated_time=(
+            None
+            if rec.get("twostream_activated_time") is None
+            else float(rec["twostream_activated_time"])
+        ),
         initial_bore_impact_time=(
             None
             if rec.get("initial_bore_impact_time") is None
@@ -228,9 +485,10 @@ def main():
             for key, value in rec.get("riser_film_closure", {}).items()
         },
     )
-    diagnostics_path.write_text(
-        json.dumps(diagnostics, indent=2), encoding="utf-8"
-    )
+    if not args.reuse_saved_fields:
+        diagnostics_path.write_text(
+            json.dumps(diagnostics, indent=2), encoding="utf-8"
+        )
 
     xt = rec["xt"]; zr = rec["zr"]; dx = rec["dx"]; dz = rec["dz"]
     x_r = case.x_riser
@@ -248,11 +506,57 @@ def main():
             alpha_l=np.vstack(
                 [np.asarray(rec["frames_alr"][k]) for k in sel]
             ),
+            alpha_l_raw=np.vstack(
+                [np.asarray(rec["frames_alr_raw"][k]) for k in sel]
+            ),
             alpha_g=np.vstack(
                 [np.asarray(rec["frames_agr"][k]) for k in sel]
             ),
+            vertical_gas_mass=np.vstack(
+                [np.asarray(rec["frames_mgr"][k]) for k in sel]
+            ),
+            vertical_tracer_mass=np.vstack(
+                [np.asarray(rec["frames_mgrs"][k]) for k in sel]
+            ),
+            vertical_gas_momentum=np.vstack(
+                [np.asarray(rec["frames_jgrs"][k]) for k in sel]
+            ),
             vertical_liquid_velocity=np.vstack(
                 [np.asarray(rec["frames_ulr"][k]) for k in sel]
+            ),
+            riser_upward_area=np.vstack(
+                [np.asarray(rec["frames_riser_upward_area"][k]) for k in sel]
+            ),
+            riser_downward_area=np.vstack(
+                [np.asarray(rec["frames_riser_downward_area"][k]) for k in sel]
+            ),
+            riser_upward_discharge=np.vstack(
+                [np.asarray(rec["frames_riser_upward_discharge"][k]) for k in sel]
+            ),
+            riser_downward_discharge=np.vstack(
+                [np.asarray(rec["frames_riser_downward_discharge"][k]) for k in sel]
+            ),
+            riser_horizontal_source_upward_area=np.vstack(
+                [
+                    np.asarray(
+                        rec["frames_riser_horizontal_source_upward_area"][k]
+                    )
+                    for k in sel
+                ]
+            ),
+            riser_horizontal_source_downward_area=np.vstack(
+                [
+                    np.asarray(
+                        rec["frames_riser_horizontal_source_downward_area"][k]
+                    )
+                    for k in sel
+                ]
+            ),
+            riser_initial_source_area=np.vstack(
+                [
+                    np.asarray(rec["frames_riser_initial_source_area"][k])
+                    for k in sel
+                ]
             ),
             horizontal_alpha_l=np.vstack(
                 [np.asarray(rec["frames_alt"][k]) for k in sel]
@@ -263,8 +567,14 @@ def main():
             horizontal_liquid_velocity=np.vstack(
                 [np.asarray(rec["frames_ult"][k]) for k in sel]
             ),
+            horizontal_liquid_discharge=np.vstack(
+                [np.asarray(rec["frames_qlt"][k]) for k in sel]
+            ),
             horizontal_gas_mass=np.vstack(
                 [np.asarray(rec["frames_mgt"][k]) for k in sel]
+            ),
+            horizontal_gas_momentum=np.vstack(
+                [np.asarray(rec["frames_jgt"][k]) for k in sel]
             ),
         )
         print(f"solver fields only -> {fields_path}")
@@ -286,38 +596,62 @@ def main():
     handles = [Patch(facecolor=C_W, label="water"),
                Patch(facecolor=C_A, edgecolor="0.5", label="air")]
 
-    def draw_riser_phases(ax, x0, width, water_top, gas_nose, gas_fraction):
-        """Draw axial 1-D riser fronts without extending a mixed cell.
+    def draw_riser_phases(
+        ax,
+        x0,
+        width,
+        liquid_fraction,
+        gas_fraction,
+    ):
+        """Render conserved riser phase areas with a planar upper free surface.
 
-        ``water_top`` and ``gas_nose`` are sub-cell material positions.  The
-        cross-section is liquid-filled up to the bulk free surface; a centred
-        gas core is then overpainted only below its own nose.  Consequently
-        the liquid slug between the two fronts is full width and the top free
-        surface cannot acquire a cell-rendering notch.
+        ``liquid_fraction`` is the conserved liquid cross-sectional area in
+        every axial cell.  Internal partial cells are drawn as an annular
+        liquid film around a centred gas/air core whose diameter ratio is
+        ``sqrt(1-alpha_l)``.  The uppermost liquid-bearing cell is different:
+        it is the axial cut made by the bulk free surface, so its conserved
+        volume is reconstructed as a full-width horizontal layer of height
+        ``alpha_l*dz``.  This removes the nonphysical centre notch that the
+        annular-core reconstruction otherwise creates at the top surface.
+
+        ``gas_fraction`` is retained in the signature because it is the
+        independently conserved tunnel-gas tracer used by the diagnostics.
+        Air and tracer gas have the same colour in this phase-only viewer, so
+        it does not alter the liquid geometry drawn here.
         """
 
-        top = float(np.clip(water_top, 0.0, L))
-        nose = float(np.clip(gas_nose, 0.0, top))
-        if top > 0.0:
-            ax.add_patch(Rectangle(
-                (x0, 0.0), width, top, facecolor=C_W, edgecolor="none",
-            ))
-        for zi, g in zip(zr, np.clip(gas_fraction, 0.0, 1.0)):
-            z0 = max(float(zi - 0.5 * dz), 0.0)
-            z1 = min(float(zi + 0.5 * dz), nose)
-            if g <= 0.01 or z1 <= z0:
+        liquid = np.clip(np.asarray(liquid_fraction, dtype=float), 0.0, 1.0)
+        np.asarray(gas_fraction, dtype=float)  # validate array-like input
+        visible = np.flatnonzero(liquid > 1.0e-6)
+        top_index = int(visible[-1]) if visible.size else -1
+        for cell_index, (zi, alpha_l) in enumerate(zip(zr, liquid)):
+            if alpha_l <= 1.0e-6:
                 continue
-            gas_width = math.sqrt(float(g)) * width
+            z0 = max(float(zi - 0.5 * dz), 0.0)
+            z1 = min(float(zi + 0.5 * dz), L)
+            if z1 <= z0:
+                continue
+            if cell_index == top_index and alpha_l < 1.0 - 1.0e-6:
+                # A planar sub-cell cut preserves alpha_l*width*(z1-z0), hence
+                # it changes only the visualization, not the computed volume.
+                water_top = z0 + float(alpha_l) * (z1 - z0)
+                ax.add_patch(Rectangle(
+                    (x0, z0), width, water_top - z0,
+                    facecolor=C_W, edgecolor="none",
+                ))
+                continue
+
             ax.add_patch(Rectangle(
-                (x0 + 0.5 * (width - gas_width), z0),
-                gas_width, z1 - z0,
-                facecolor=C_A, edgecolor="none",
+                (x0, z0), width, z1 - z0,
+                facecolor=C_W, edgecolor="none",
             ))
-        if top - nose > 1.0e-9:
-            ax.plot(
-                [x0, x0 + width], [top, top],
-                color="#1d4ed8", linewidth=0.7, zorder=5,
-            )
+            if alpha_l < 1.0 - 1.0e-6:
+                core_width = math.sqrt(1.0 - float(alpha_l)) * width
+                ax.add_patch(Rectangle(
+                    (x0 + 0.5 * (width - core_width), z0),
+                    core_width, z1 - z0,
+                    facecolor=C_A, edgecolor="none",
+                ))
 
     index = []
     for n, k in enumerate(sel):
@@ -334,7 +668,7 @@ def main():
             float(np.sum(Ar_frac) * dz) - liquid_height_grid_offset,
             0.0,
         )
-        visible_liquid = np.flatnonzero(Ar_frac > 0.08)
+        visible_liquid = np.flatnonzero(Ar_frac > 1.0e-3)
         visible_water_top = (
             float(zr[visible_liquid[-1]] + 0.5 * dz)
             if visible_liquid.size
@@ -369,9 +703,9 @@ def main():
             facecolor=C_W,
             edgecolor="none",
         )
-        # Tower: map the two sub-cell axial material fronts.  Mixed-cell gas
-        # is clipped at ``itop`` instead of being painted through the upper
-        # liquid slug and bulk free surface.
+        # Tower: draw the conservative per-cell liquid areas.  The material
+        # envelope and tracer front remain diagnostics; neither is substituted
+        # for the actual liquid field in the phase image.
         # ``x_riser`` is the physical centreline used by the OpenFOAM mesh.
         # Use the same convention here so the two animations overlay exactly.
         riser_left = x_r - 0.5 * riser_w
@@ -379,7 +713,11 @@ def main():
         ax.add_patch(Rectangle((riser_left, 0), riser_w, L, facecolor=C_A,
                                edgecolor="none"))
         draw_riser_phases(
-            ax, riser_left, riser_w, material_height, itop, agr
+            ax,
+            riser_left,
+            riser_w,
+            Ar_frac,
+            agr,
         )
         # One connected pipe--tower outline: interrupt the pipe crown across
         # the tower bore and never draw a separating bottom wall in the tower.
@@ -392,8 +730,8 @@ def main():
         ax.plot([riser_left, riser_left], [0, L], **wall)
         ax.plot([riser_right, riser_right], [0, L], **wall)
         ax.text(0.01, 0.95,
-                f"Time = {t_k:.2f} s    riser liquid-trace top = "
-                f"{material_height:.3f} m",
+                f"Time = {t_k:.2f} s    riser liquid-equivalent height = "
+                f"{liquid_equivalent_height:.3f} m",
                 transform=ax.transAxes, ha="left", va="top", fontsize=11)
         ax.set_xlim(-0.05, case.L_tunnel + 0.05)
         ax.set_ylim(-pipe_h - 0.04, L + 0.10)
@@ -412,7 +750,13 @@ def main():
         # ---------- tower zoom (area-preserving centred circular gas core) ----------
         fig, ax = plt.subplots(figsize=(2.6, 6.2))
         ax.add_patch(Rectangle((0, 0), 1, L, facecolor=C_A, edgecolor="none"))
-        draw_riser_phases(ax, 0.0, 1.0, material_height, itop, agr)
+        draw_riser_phases(
+            ax,
+            0.0,
+            1.0,
+            Ar_frac,
+            agr,
+        )
         ax.set_xlim(0, 1)
         ax.set_ylim(0, L)
         ax.set_xticks([])
@@ -443,8 +787,29 @@ def main():
         z=np.asarray(zr, dtype=float),
         alpha_l=np.vstack([np.asarray(rec["frames_alr"][k]) for k in sel]),
         alpha_g=np.vstack([np.asarray(rec["frames_agr"][k]) for k in sel]),
+        vertical_gas_mass=np.vstack(
+            [np.asarray(rec["frames_mgr"][k]) for k in sel]
+        ),
+        vertical_tracer_mass=np.vstack(
+            [np.asarray(rec["frames_mgrs"][k]) for k in sel]
+        ),
+        vertical_gas_momentum=np.vstack(
+            [np.asarray(rec["frames_jgrs"][k]) for k in sel]
+        ),
         vertical_liquid_velocity=np.vstack(
             [np.asarray(rec["frames_ulr"][k]) for k in sel]
+        ),
+        riser_upward_area=np.vstack(
+            [np.asarray(rec["frames_riser_upward_area"][k]) for k in sel]
+        ),
+        riser_downward_area=np.vstack(
+            [np.asarray(rec["frames_riser_downward_area"][k]) for k in sel]
+        ),
+        riser_upward_discharge=np.vstack(
+            [np.asarray(rec["frames_riser_upward_discharge"][k]) for k in sel]
+        ),
+        riser_downward_discharge=np.vstack(
+            [np.asarray(rec["frames_riser_downward_discharge"][k]) for k in sel]
         ),
         horizontal_alpha_l=np.vstack(
             [np.asarray(rec["frames_alt"][k]) for k in sel]
@@ -455,8 +820,14 @@ def main():
         horizontal_liquid_velocity=np.vstack(
             [np.asarray(rec["frames_ult"][k]) for k in sel]
         ),
+        horizontal_liquid_discharge=np.vstack(
+            [np.asarray(rec["frames_qlt"][k]) for k in sel]
+        ),
         horizontal_gas_mass=np.vstack(
             [np.asarray(rec["frames_mgt"][k]) for k in sel]
+        ),
+        horizontal_gas_momentum=np.vstack(
+            [np.asarray(rec["frames_jgt"][k]) for k in sel]
         ),
     )
     print(f"{len(index)} frames -> {frames_dir} / {riser_frames_dir}")

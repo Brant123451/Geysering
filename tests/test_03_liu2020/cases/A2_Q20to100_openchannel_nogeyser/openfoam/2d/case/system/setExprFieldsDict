@@ -1,0 +1,25 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setExprFieldsDict;
+}
+
+readFields (alpha.water);
+expressions
+(
+    initialWater
+    {
+        field alpha.water;
+        dimensions [0 0 0 0 0 0 0];
+        keepPatches true;
+        fieldMask
+        #{
+            ((pos().x() < 0) && (pos().z() < (0.26 - 0.01*pos().x())))
+         || ((pos().x() >= 0) && (pos().x() < 0.30) && (pos().z() < 0.12))
+         || ((pos().x() >= 0.30) && (pos().z() < 0.07))
+        #};
+        expression #{ 1 #};
+    }
+);

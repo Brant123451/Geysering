@@ -5,13 +5,20 @@ import math
 import numpy as np
 
 from vw2011_network_twofluid import (
+    _advance_horizontal_liquid_hyperbolic_ssprk2,
+    _branch_consistent_external_pressure_gradient,
+    _bulk_material_reaches_riser_outlet,
     _advance_riser_taylor_front,
     _apply_finite_width_side_t_exchange,
+    _apply_finite_width_side_t_gross_exchange,
     _connected_pocket_inventory,
+    _connected_shallow_water_potential_offsets,
+    _collapse_upper_slug_at_taylor_breakthrough,
+    _remap_vertical_gas_for_liquid_relocation,
+    _countercurrent_flooding_liquid_flow,
     _decoupled_liquid_rusanov_flux,
     _decoupled_restoring_coefficient,
     _displace_newly_swept_taylor_slice,
-    _sweep_vertical_material_slice_to_junction,
     _fit_riser_taylor_core,
     _implicit_smagorinsky_momentum_diffusion,
     _limit_gas_void_closure_flux,
@@ -24,16 +31,689 @@ from vw2011_network_twofluid import (
     _project_riser_taylor_topology,
     _project_single_liquid_column,
     _regularize_near_dry_momentum,
+    _relax_elastic_riser_storage_for_twostream_handoff,
+    _return_refilled_taylor_core_to_side_t,
+    _restore_refilled_taylor_core_to_unswept_slug,
+    _riser_acoustic_momentum_dissipation_flux,
+    _return_new_taylor_sweep_to_side_t,
+    _return_isolated_top_bulk_liquid,
     _riser_liquid_friction_rate,
+    _riser_material_gas_mask,
+    _top_connected_atmospheric_gas_mask,
+    _equilibrate_open_riser_headspace,
     _replace_horizontal_face_with_tjunction_fluxes,
     _restore_riser_annular_film,
     _section_hydrostatic,
+    _sharpen_unswept_riser_liquid_slug,
     _two_phase_mixing_activation,
     _side_t_opening_weights,
+    _side_t_return_exchange_weights,
     _limit_side_t_downward_liquid_flow,
     _limit_side_t_upward_liquid_flow,
+    _limit_riser_bottom_inflow_by_receiving_capacity,
+    _limit_taylor_return_exchange_flow,
     _vw_laminar_film_closure,
+    _vertical_liquid_holdup_head,
+    _vertical_two_phase_mouth_pressure,
 )
+from casea_horizontal_liquid_operator import (
+    HorizontalLiquidParameters,
+    pressure_potential_state,
+)
+from casea_vertical_twostream_fv import (
+    VerticalTwoStreamParameters,
+    VerticalTwoStreamState,
+    advance_vertical_two_stream_fv,
+)
+
+
+def test_connected_potential_offsets_equal_endpoint_traction_matches() -> None:
+    params = HorizontalLiquidParameters(
+        area_full=math.pi * 0.094**2 / 4.0,
+        diameter=0.094,
+        wave_speed=28.0,
+        cell_width=0.08,
+    )
+    area = params.area_full * np.array([1.0, 0.55, 0.60, 1.0, 0.48, 1.0])
+    discharge = np.array([0.0, 1.0e-4, 1.5e-4, 0.0, -0.5e-4, 0.0])
+    mass = np.full(6, 1.0e-5)
+    momentum = np.zeros(6)
+    support = np.array([False, True, True, False, True, False])
+
+    offsets = _connected_shallow_water_potential_offsets(
+        area,
+        support,
+        params,
+    )
+    natural = pressure_potential_state(
+        area,
+        discharge,
+        mass,
+        momentum,
+        support,
+        params,
+    ).potential
+    elastic = pressure_potential_state(
+        area,
+        discharge,
+        np.zeros(6),
+        np.zeros(6),
+        np.zeros(6, dtype=bool),
+        params,
+    ).potential
+    expected_first = math.fsum(
+        (elastic[0] - natural[1], elastic[3] - natural[2])
+    ) / 2.0
+    expected_second = math.fsum(
+        (elastic[3] - natural[4], elastic[5] - natural[4])
+    ) / 2.0
+    np.testing.assert_allclose(offsets, [0.0, expected_first, expected_first, 0.0, expected_second, 0.0])
+
+
+def test_riser_acoustic_momentum_flux_damps_odd_even_mode_conservatively() -> None:
+    discharge = np.array([1.0, -1.0, 1.0, -1.0])
+    celerity = np.full(4, 2.0)
+    flux = _riser_acoustic_momentum_dissipation_flux(
+        discharge,
+        celerity,
+        np.ones(4),
+        full_area=1.0,
+    )
+    np.testing.assert_allclose(flux, [0.0, 2.0, -2.0, 2.0, 0.0])
+
+    updated = discharge - 0.10 * (flux[1:] - flux[:-1])
+    assert float(np.dot(updated, updated)) < float(
+        np.dot(discharge, discharge)
+    )
+    assert math.isclose(float(np.sum(updated)), float(np.sum(discharge)))
+    np.testing.assert_array_equal(
+        _riser_acoustic_momentum_dissipation_flux(
+            np.full(4, 0.25),
+            celerity,
+            np.ones(4),
+            full_area=1.0,
+        ),
+        np.zeros(5),
+    )
+    np.testing.assert_array_equal(
+        _riser_acoustic_momentum_dissipation_flux(
+            discharge,
+            celerity,
+            np.array([1.0, 0.01, 1.0, 1.0]),
+            full_area=1.0,
+        ),
+        np.array([0.0, 0.0, 0.0, 2.0, 0.0]),
+    )
+
+
+def test_external_pressure_source_does_not_cross_tpa_material_face() -> None:
+    """The mixed-face traction belongs to the conservative Riemann flux."""
+
+    pressure = np.array([101400.0, 101500.0, 95000.0, 94920.0])
+    stratified = np.array([True, True, False, False])
+    gradient = _branch_consistent_external_pressure_gradient(
+        pressure,
+        stratified,
+        cell_width=0.10,
+    )
+
+    # The 6.5-kPa branch datum jump is absent.  The physical residual
+    # gradients within the gas-supported and elastic branches remain.
+    np.testing.assert_allclose(
+        gradient,
+        np.array([500.0, 500.0, -400.0, -400.0]),
+    )
+
+
+def test_uniform_residual_pressure_has_zero_branch_consistent_gradient() -> None:
+    pressure = np.full(6, 101325.0)
+    stratified = np.array([True, True, True, False, False, False])
+    np.testing.assert_array_equal(
+        _branch_consistent_external_pressure_gradient(
+            pressure,
+            stratified,
+            cell_width=0.02,
+        ),
+        np.zeros(6),
+    )
+
+
+def test_gross_side_t_exchange_does_not_cancel_countercurrent_parcels() -> None:
+    area = np.array([0.6, 0.8, 0.4])
+    discharge = np.array([0.12, -0.08, 0.02])
+    weights = np.array([0.25, 0.50, 0.25])
+    dt = 0.01
+    dx = 0.10
+    q_up = 0.20
+    q_down = 0.15
+    before = float(np.sum(area) * dx)
+    updated_area, updated_q = _apply_finite_width_side_t_gross_exchange(
+        area,
+        discharge,
+        upward_flow=q_up,
+        downward_flow=q_down,
+        opening_weights=weights,
+        dt=dt,
+        cell_width=dx,
+        full_area=1.0,
+    )
+
+    assert math.isclose(
+        float(np.sum(updated_area) * dx) - before,
+        (q_down - q_up) * dt,
+        rel_tol=0.0,
+        abs_tol=1.0e-15,
+    )
+    # Upward withdrawal carries away donor momentum; the orthogonal return
+    # adds volume but no prescribed horizontal impulse.
+    assert np.linalg.norm(updated_q) < np.linalg.norm(discharge)
+
+
+def test_side_t_return_uses_liquid_continuous_part_of_finite_mouth() -> None:
+    area = np.array([0.60, 1.00, 0.20])
+    opening = np.array([0.65, 0.35, 0.00])
+    gas_supported = np.array([True, False, False])
+    return_weights = _side_t_return_exchange_weights(
+        area,
+        opening,
+        full_area=1.0,
+        gas_supported=gas_supported,
+    )
+    np.testing.assert_array_equal(return_weights, [0.0, 1.0, 0.0])
+
+    updated_area, _ = _apply_finite_width_side_t_gross_exchange(
+        area,
+        np.zeros_like(area),
+        upward_flow=0.0,
+        downward_flow=0.10,
+        opening_weights=opening,
+        downward_weights=return_weights,
+        dt=0.01,
+        cell_width=0.10,
+        full_area=1.0,
+    )
+    # The lower liquid path accepts the orthogonal return as elastic storage;
+    # the gas-crown control volume is not numerically crushed.
+    assert updated_area[0] == area[0]
+    assert updated_area[1] > area[1]
+
+
+def test_riser_bottom_inflow_uses_void_plus_simultaneous_throughflow() -> None:
+    area = np.array([0.90, 0.70])
+    face_flux = np.array([0.0, 0.03, 0.0])
+    accepted = _limit_riser_bottom_inflow_by_receiving_capacity(
+        area,
+        face_flux,
+        requested_flow=0.20,
+        dt=0.10,
+        cell_width=0.10,
+        full_area=1.0,
+    )
+    # 0.10*0.10/0.10 = 0.10 storage plus 0.03 through-flow.
+    assert math.isclose(accepted, 0.13)
+    updated_bottom = area[0] - 0.10 / 0.10 * (face_flux[1] - accepted)
+    assert math.isclose(updated_bottom, 1.0)
+
+
+def test_riser_bottom_inflow_closes_when_full_cell_has_downward_face_flux() -> None:
+    accepted = _limit_riser_bottom_inflow_by_receiving_capacity(
+        np.array([1.0, 0.8]),
+        np.array([0.0, -0.02, 0.0]),
+        requested_flow=0.10,
+        dt=0.05,
+        cell_width=0.10,
+        full_area=1.0,
+    )
+    assert accepted == 0.0
+
+
+def test_open_riser_headspace_stops_at_liquid_seal_or_material_gas() -> None:
+    gas_area = np.array([0.8, 0.0, 0.2, 0.8, 1.0])
+    tracer = np.array([0.0, 0.0, 0.03, 0.0, 0.0])
+    mask = _top_connected_atmospheric_gas_mask(
+        gas_area,
+        tracer,
+        cell_length=0.1,
+        reference_density=1.0,
+        dry_area_tolerance=1.0e-12,
+    )
+    np.testing.assert_array_equal(mask, [False, False, False, True, True])
+
+
+def test_riser_eos_rejects_total_mass_in_untraced_microvoid() -> None:
+    full_area = 1.0
+    gas_area = np.array([1.0e-5, 0.8, 0.8])
+    tracer = np.array([0.0, 0.08, 0.0])
+    mask = _riser_material_gas_mask(
+        gas_area,
+        tracer,
+        full_area=full_area,
+        cell_length=0.1,
+        reference_density=1.0,
+        void_floor_fraction=1.0e-4,
+        active_void_fraction=5.0e-4,
+        topology_density_fraction=0.02,
+        resolved_density_fraction=0.5,
+    )
+    np.testing.assert_array_equal(mask, [False, True, False])
+
+
+def test_open_riser_headspace_projects_only_ambient_mass_and_books_exchange() -> None:
+    mass = np.array([0.08, 0.02, 0.20, 0.30])
+    momentum = np.array([0.04, -0.01, 0.10, -0.15])
+    tracer = np.array([0.04, 0.0, 0.0, 0.0])
+    gas_area = np.array([0.8, 0.0, 0.5, 1.0])
+    projected_mass, projected_momentum, exchange, mask = (
+        _equilibrate_open_riser_headspace(
+            mass,
+            momentum,
+            tracer,
+            gas_area,
+            cell_length=0.1,
+            reference_density=1.0,
+            dry_area_tolerance=1.0e-12,
+        )
+    )
+
+    np.testing.assert_array_equal(mask, [False, False, True, True])
+    np.testing.assert_allclose(projected_mass, [0.08, 0.02, 0.05, 0.10])
+    # Removing ambient mass carries its local momentum at unchanged velocity.
+    np.testing.assert_allclose(
+        projected_momentum,
+        [0.04, -0.01, 0.025, -0.05],
+    )
+    assert math.isclose(exchange, 0.35)
+    assert math.isclose(
+        float(np.sum(projected_mass)) + exchange,
+        float(np.sum(mass)),
+    )
+
+
+def test_new_top_connected_taylor_void_receives_atmospheric_mass() -> None:
+    mass = np.zeros(3)
+    momentum = np.zeros(3)
+    tracer = np.zeros(3)
+    gas_area = np.array([0.25, 0.50, 1.00])
+
+    projected_mass, projected_momentum, exchange, mask = (
+        _equilibrate_open_riser_headspace(
+            mass,
+            momentum,
+            tracer,
+            gas_area,
+            cell_length=0.10,
+            reference_density=1.20,
+            dry_area_tolerance=1.0e-12,
+        )
+    )
+
+    np.testing.assert_array_equal(mask, [True, True, True])
+    np.testing.assert_allclose(projected_mass, [0.03, 0.06, 0.12])
+    np.testing.assert_allclose(projected_momentum, 0.0)
+    assert math.isclose(exchange, -0.21)
+
+
+def test_riser_liquid_outlet_requires_bulk_material_to_reach_lip() -> None:
+    full = 2.0
+    liquid = np.array([full, full, full, 0.5 * full, 0.0, 0.0])
+    material_gas = np.zeros_like(liquid)
+
+    assert not _bulk_material_reaches_riser_outlet(
+        liquid,
+        material_gas,
+        full_area=full,
+        cell_width=0.10,
+        riser_height=0.60,
+    )
+
+    material_gas[3:] = np.array([0.5, 1.0, 1.0])
+    assert _bulk_material_reaches_riser_outlet(
+        liquid,
+        material_gas,
+        full_area=full,
+        cell_width=0.10,
+        riser_height=0.60,
+    )
+
+
+def test_isolated_top_liquid_remnant_does_not_open_riser_outlet() -> None:
+    liquid = np.array([1.0, 1.0, 1.0, 0.4, 0.0, 1.0e-3])
+    material_gas = np.zeros_like(liquid)
+
+    assert not _bulk_material_reaches_riser_outlet(
+        liquid,
+        material_gas,
+        full_area=1.0,
+        cell_width=0.10,
+        riser_height=0.60,
+    )
+
+
+def test_unswept_slug_sharpening_is_local_and_conservative() -> None:
+    area = np.array([0.25, 0.35, 1.0, 0.45, 0.05, 0.10])
+    discharge = np.array([0.01, -0.02, 0.30, 0.18, -0.01, 0.02])
+    sharpened_area, sharpened_q = _sharpen_unswept_riser_liquid_slug(
+        area,
+        discharge,
+        material_front_height=0.20,
+        full_area=1.0,
+        dz=0.10,
+    )
+
+    # Cells swept by the nose are not part of the topology closure.
+    np.testing.assert_array_equal(sharpened_area[:2], area[:2])
+    np.testing.assert_array_equal(sharpened_q[:2], discharge[:2])
+    np.testing.assert_allclose(sharpened_area[2:], [1.0, 0.60, 0.0, 0.0])
+    np.testing.assert_allclose(
+        np.sum(sharpened_area[2:]),
+        np.sum(area[2:]),
+        rtol=0.0,
+        atol=1.0e-14,
+    )
+    np.testing.assert_allclose(
+        np.sum(sharpened_q[2:]),
+        np.sum(discharge[2:]),
+        rtol=0.0,
+        atol=1.0e-14,
+    )
+
+    second_area, second_q = _sharpen_unswept_riser_liquid_slug(
+        sharpened_area,
+        sharpened_q,
+        material_front_height=0.20,
+        full_area=1.0,
+        dz=0.10,
+    )
+    np.testing.assert_allclose(second_area, sharpened_area)
+    np.testing.assert_allclose(second_q, sharpened_q)
+
+    resting_area, resting_q = _sharpen_unswept_riser_liquid_slug(
+        area,
+        discharge,
+        material_front_height=0.20,
+        full_area=1.0,
+        dz=0.10,
+        slug_velocity=0.0,
+    )
+    np.testing.assert_allclose(resting_area, sharpened_area)
+    np.testing.assert_array_equal(resting_q[:2], discharge[:2])
+    np.testing.assert_array_equal(resting_q[2:], 0.0)
+
+
+def test_breakthrough_collapse_returns_upper_slug_to_geometric_mixing_zone() -> None:
+    area = np.array([0.20, 0.30, 0.20, 0.90, 0.80, 0.40])
+    discharge = np.array([0.01, -0.02, 0.03, -0.04, 0.50, 0.60])
+    collapsed_area, collapsed_q, returned = (
+        _collapse_upper_slug_at_taylor_breakthrough(
+            area,
+            discharge,
+            material_front_height=0.40,
+            full_area=1.0,
+            dz=0.10,
+            mixing_zone_height=0.20,
+        )
+    )
+
+    np.testing.assert_allclose(returned, 0.12)
+    np.testing.assert_allclose(collapsed_area, [1.0, 0.70, 0.20, 0.90, 0.0, 0.0])
+    np.testing.assert_allclose(np.sum(collapsed_area), np.sum(area))
+    np.testing.assert_array_equal(collapsed_q[:4], discharge[:4])
+    np.testing.assert_array_equal(collapsed_q[4:], 0.0)
+
+
+def test_liquid_relocation_remaps_gas_parcels_without_changing_state() -> None:
+    full_area = 1.0
+    dz = 0.25
+    old_liquid = np.array([0.20, 0.40, 0.80, 0.60])
+    new_liquid = np.array([0.80, 0.60, 0.40, 0.20])
+
+    old_void = (full_area - old_liquid) * dz
+    new_void = (full_area - new_liquid) * dz
+    density = np.array([1.20, 0.90, 1.10, 1.00])
+    tracer_fraction = np.array([0.25, 0.60, 0.40, 0.10])
+    velocity = np.array([-2.00, 3.00, 0.50, -0.25])
+    gas_mass = density * old_void
+    tracer_mass = tracer_fraction * gas_mass
+    gas_momentum = velocity * gas_mass
+
+    opened_void = np.maximum(old_liquid - new_liquid, 0.0) * dz
+    closed_void = np.maximum(new_liquid - old_liquid, 0.0) * dz
+    np.testing.assert_allclose(
+        np.sum(old_liquid) * dz,
+        np.sum(new_liquid) * dz,
+        rtol=0.0,
+        atol=1.0e-15,
+    )
+    np.testing.assert_allclose(
+        np.sum(opened_void),
+        np.sum(closed_void),
+        rtol=0.0,
+        atol=1.0e-15,
+    )
+
+    remapped_mass, remapped_tracer, remapped_momentum = (
+        _remap_vertical_gas_for_liquid_relocation(
+            old_liquid,
+            new_liquid,
+            gas_mass,
+            tracer_mass,
+            gas_momentum,
+            full_area=full_area,
+            dz=dz,
+        )
+    )
+
+    np.testing.assert_allclose(
+        remapped_mass,
+        np.array([0.060, 0.090, 0.175, 0.205]),
+        rtol=0.0,
+        atol=1.0e-14,
+    )
+    np.testing.assert_allclose(
+        remapped_tracer,
+        np.array([0.015, 0.054, 0.052, 0.052]),
+        rtol=0.0,
+        atol=1.0e-14,
+    )
+    np.testing.assert_allclose(
+        remapped_momentum,
+        np.array([-0.120, 0.270, -0.2125, -0.010]),
+        rtol=0.0,
+        atol=1.0e-14,
+    )
+    np.testing.assert_allclose(
+        np.sum(remapped_mass),
+        np.sum(gas_mass),
+        rtol=0.0,
+        atol=1.0e-14,
+    )
+    np.testing.assert_allclose(
+        np.sum(remapped_tracer),
+        np.sum(tracer_mass),
+        rtol=0.0,
+        atol=1.0e-14,
+    )
+    np.testing.assert_allclose(
+        np.sum(remapped_momentum),
+        np.sum(gas_momentum),
+        rtol=0.0,
+        atol=1.0e-14,
+    )
+
+    closing_cells = new_liquid > old_liquid
+    np.testing.assert_allclose(
+        remapped_mass[closing_cells] / new_void[closing_cells],
+        gas_mass[closing_cells] / old_void[closing_cells],
+        rtol=1.0e-14,
+        atol=1.0e-14,
+    )
+    np.testing.assert_allclose(
+        remapped_tracer[closing_cells] / remapped_mass[closing_cells],
+        tracer_mass[closing_cells] / gas_mass[closing_cells],
+        rtol=1.0e-14,
+        atol=1.0e-14,
+    )
+    np.testing.assert_allclose(
+        remapped_momentum[closing_cells] / remapped_mass[closing_cells],
+        gas_momentum[closing_cells] / gas_mass[closing_cells],
+        rtol=1.0e-14,
+        atol=1.0e-14,
+    )
+
+
+def test_liquid_relocation_rejects_mismatched_volume() -> None:
+    with np.testing.assert_raises_regex(
+        FloatingPointError,
+        "liquid relocation does not conserve volume",
+    ):
+        _remap_vertical_gas_for_liquid_relocation(
+            np.array([0.20, 0.40]),
+            np.array([0.30, 0.40]),
+            np.array([0.08, 0.06]),
+            np.array([0.02, 0.03]),
+            np.array([-0.04, 0.12]),
+            full_area=1.0,
+            dz=0.10,
+        )
+
+
+def test_postbreakthrough_top_island_returns_only_when_disconnected() -> None:
+    area = np.array([0.20, 0.30, 0.20, 0.05, 0.02, 0.90])
+    discharge = np.array([0.01, -0.02, 0.03, 0.04, 0.05, 2.0])
+    returned_area, returned_q, returned = _return_isolated_top_bulk_liquid(
+        area,
+        discharge,
+        material_front_height=0.30,
+        full_area=1.0,
+        dz=0.10,
+        mixing_zone_height=0.20,
+    )
+    np.testing.assert_allclose(returned, 0.09)
+    np.testing.assert_allclose(returned_area, [1.0, 0.40, 0.20, 0.05, 0.02, 0.0])
+    np.testing.assert_allclose(np.sum(returned_area), np.sum(area))
+    np.testing.assert_array_equal(returned_q[:5], discharge[:5])
+    assert returned_q[5] == 0.0
+
+    connected = np.array([0.20, 0.30, 0.20, 0.60, 0.70, 0.90])
+    unchanged_area, unchanged_q, unchanged = _return_isolated_top_bulk_liquid(
+        connected,
+        discharge,
+        material_front_height=0.30,
+        full_area=1.0,
+        dz=0.10,
+        mixing_zone_height=0.20,
+    )
+    assert unchanged == 0.0
+    np.testing.assert_array_equal(unchanged_area, connected)
+    np.testing.assert_array_equal(unchanged_q, discharge)
+
+
+def test_vertical_two_phase_mouth_uses_connected_interface_pressure() -> None:
+    liquid_trace = 104_494.31
+    connected_gas = 108_972.17
+    full_area = math.pi * 0.0571**2 / 4.0
+
+    assert _vertical_two_phase_mouth_pressure(
+        liquid_trace_pressure=liquid_trace,
+        connected_gas_pressure=connected_gas,
+        gas_mouth_area=0.0,
+        full_area=full_area,
+    ) == liquid_trace
+    assert _vertical_two_phase_mouth_pressure(
+        liquid_trace_pressure=liquid_trace,
+        connected_gas_pressure=connected_gas,
+        gas_mouth_area=0.2 * full_area,
+        full_area=full_area,
+    ) == connected_gas
+
+
+def test_shared_two_phase_mouth_pressure_has_no_false_fv_acceleration() -> None:
+    """The node endpoint and FV start face form one hydrostatic pressure line."""
+
+    parameters = VerticalTwoStreamParameters(
+        cell_count=1,
+        cell_length=0.16,
+        diameter=0.0571,
+        liquid_density=998.0,
+        gravity=9.81,
+        wall_friction_up=0.0,
+        wall_friction_down=0.0,
+        interstream_drag=0.0,
+    )
+    mouth_pressure = _vertical_two_phase_mouth_pressure(
+        liquid_trace_pressure=104_494.31,
+        connected_gas_pressure=108_972.17,
+        gas_mouth_area=0.2 * parameters.full_area,
+        full_area=parameters.full_area,
+    )
+    state = VerticalTwoStreamState.from_iterables(
+        upward_area=[0.6 * parameters.full_area],
+        upward_discharge=[0.0],
+        downward_area=[0.2 * parameters.full_area],
+        downward_discharge=[0.0],
+    )
+    step = advance_vertical_two_stream_fv(
+        state,
+        parameters,
+        dt=1.0e-3,
+        pressure_faces=(
+            mouth_pressure,
+            mouth_pressure
+            - parameters.liquid_density
+            * parameters.gravity
+            * parameters.cell_length,
+        ),
+    )
+
+    np.testing.assert_allclose(step.state.upward_discharge, (0.0,), atol=1.0e-15)
+    np.testing.assert_allclose(step.state.downward_discharge, (0.0,), atol=1.0e-15)
+    assert abs(step.ledger.pressure_gravity_impulse) < 1.0e-15
+
+
+def test_ccfl_leaves_upward_flow_and_limits_only_excess_downward_flow() -> None:
+    kwargs = dict(
+        upward_gas_superficial_velocity=0.02,
+        full_area=2.5e-3,
+        diameter=0.0571,
+        rho_l=998.0,
+        rho_g=1.2,
+        gravity=9.81,
+        wallis_constant=0.40,
+    )
+    upward = _countercurrent_flooding_liquid_flow(2.0e-4, **kwargs)
+    modest_downward = _countercurrent_flooding_liquid_flow(-1.0e-4, **kwargs)
+    excessive_downward = _countercurrent_flooding_liquid_flow(-1.0e-3, **kwargs)
+
+    assert upward == 2.0e-4
+    assert modest_downward == -1.0e-4
+    assert -1.0e-3 < excessive_downward < -1.0e-4
+
+
+def test_ccfl_upward_gas_reduces_downward_liquid_capacity() -> None:
+    kwargs = dict(
+        requested_flow=-1.0e-3,
+        full_area=2.5e-3,
+        diameter=0.0571,
+        rho_l=998.0,
+        rho_g=1.2,
+        gravity=9.81,
+        wallis_constant=0.40,
+    )
+    stagnant_gas = _countercurrent_flooding_liquid_flow(
+        upward_gas_superficial_velocity=0.0,
+        **kwargs,
+    )
+    weakly_rising_gas = _countercurrent_flooding_liquid_flow(
+        upward_gas_superficial_velocity=0.02,
+        **kwargs,
+    )
+    rising_gas = _countercurrent_flooding_liquid_flow(
+        upward_gas_superficial_velocity=0.5,
+        **kwargs,
+    )
+    assert stagnant_gas == kwargs["requested_flow"]
+    assert weakly_rising_gas > stagnant_gas
+    assert rising_gas > weakly_rising_gas
 
 
 def test_open_annular_film_recovers_vw_terminal_flux_and_thins_smoothly() -> None:
@@ -185,7 +865,7 @@ def test_finite_width_side_t_exchange_conserves_liquid_and_momentum_rule() -> No
     )
 
 
-def test_side_t_return_redirects_computed_normal_momentum_without_net_axial_impulse() -> None:
+def test_side_t_return_adds_no_prescribed_axial_impulse() -> None:
     area = np.full(12, 4.0e-3)
     discharge = np.zeros_like(area)
     weights = _side_t_opening_weights(
@@ -201,23 +881,39 @@ def test_side_t_return_redirects_computed_normal_momentum_without_net_axial_impu
         opening_weights=weights,
         dt=0.01,
         cell_width=0.02,
-        incoming_normal_velocity=-0.8,
     )
-    active = weights > 0.0
-    assert np.any(discharge_after[active] < 0.0)
-    assert np.any(discharge_after[active] > 0.0)
-    np.testing.assert_allclose(
-        np.sum(discharge_after - discharge) * 0.02,
-        0.0,
-        rtol=0.0,
-        atol=1.0e-16,
-    )
+    np.testing.assert_array_equal(discharge_after, discharge)
     np.testing.assert_allclose(
         np.sum(area_after - area) * 0.02,
         6.0e-6,
         rtol=0.0,
         atol=1.0e-16,
     )
+
+
+def test_side_t_return_uses_open_compliance_before_compressing_full_cell() -> None:
+    full = 6.0e-3
+    area = np.array([full, 0.25 * full, full, full])
+    weights = np.array([0.0, 0.5, 0.5, 0.0])
+    returned = 3.0e-6
+    updated, discharge = _apply_finite_width_side_t_exchange(
+        area,
+        np.zeros_like(area),
+        upward_flow=-returned / 0.01,
+        opening_weights=weights,
+        dt=0.01,
+        cell_width=0.02,
+        full_area=full,
+    )
+    assert updated[2] == full
+    assert updated[1] > area[1]
+    np.testing.assert_allclose(
+        np.sum(updated - area) * 0.02,
+        returned,
+        rtol=0.0,
+        atol=1.0e-16,
+    )
+    np.testing.assert_array_equal(discharge, 0.0)
 
 
 def test_finite_width_side_t_outflow_limit_preserves_all_donors() -> None:
@@ -308,6 +1004,119 @@ def test_side_t_return_ignores_liquid_full_massless_footprint_cell() -> None:
     )
     assert limited < 0.0
     assert limited >= requested
+
+
+def test_taylor_return_override_reapplies_bottom_cell_donor_limit() -> None:
+    dt = 0.01
+    dz = 0.02
+    dx = 0.02
+    riser_area = np.array([4.0e-3, 3.0e-3, 2.0e-3])
+    # The Taylor closure replaces face 0.  Face 1 already carries a distinct
+    # upward outflow that must keep its share of the bottom-cell donor budget.
+    riser_flux = np.array([4.0e-4, 2.0e-4, 0.0, 0.0])
+    horizontal_full = 6.0e-3
+    horizontal_area = np.full(4, horizontal_full)
+    weights = np.array([0.0, 0.25, 0.75, 0.0])
+
+    limited = _limit_taylor_return_exchange_flow(
+        riser_area,
+        riser_flux,
+        horizontal_area,
+        np.zeros_like(horizontal_area),
+        requested_return_flow=1.0e-2,
+        opening_weights=weights,
+        dt=dt,
+        riser_cell_width=dz,
+        horizontal_cell_width=dx,
+        horizontal_full_area=horizontal_full,
+        rho_reference=1.2,
+        density_ceiling=2.0,
+        void_floor_fraction=1.0e-4,
+        active_void_fraction=5.0e-4,
+        topology_density_fraction=0.02,
+        retained_fraction=0.10,
+    )
+
+    expected = (
+        0.90 * riser_area[0] * dz / dt - riser_flux[1]
+    )
+    np.testing.assert_allclose(limited, expected, rtol=0.0, atol=1.0e-15)
+    overridden = riser_flux.copy()
+    overridden[0] = -limited
+    riser_after = riser_area - dt / dz * (
+        overridden[1:] - overridden[:-1]
+    )
+    assert riser_after[0] >= 0.10 * riser_area[0] - 1.0e-15
+
+
+def test_taylor_return_override_conserves_both_branches_and_is_local() -> None:
+    dt = 0.01
+    dz = 0.02
+    dx = 0.02
+    rho = 1.2
+    riser_area = np.array([4.0e-3, 3.0e-3, 2.0e-3])
+    old_flux = np.array([4.0e-4, 2.0e-4, 0.0, 0.0])
+    horizontal_full = 6.0e-3
+    horizontal_area = np.array(
+        [horizontal_full, 3.0e-3, 4.0e-3, horizontal_full]
+    )
+    horizontal_discharge = np.array([0.1, -0.2, 0.3, -0.4]) * horizontal_area
+    weights = np.array([0.0, 0.25, 0.75, 0.0])
+    raw_void = np.maximum(horizontal_full - horizontal_area, 0.0)
+    horizontal_gas_mass = rho * raw_void * dx
+
+    limited = _limit_taylor_return_exchange_flow(
+        riser_area,
+        old_flux,
+        horizontal_area,
+        horizontal_gas_mass,
+        requested_return_flow=1.0e-2,
+        opening_weights=weights,
+        dt=dt,
+        riser_cell_width=dz,
+        horizontal_cell_width=dx,
+        horizontal_full_area=horizontal_full,
+        rho_reference=rho,
+        density_ceiling=2.0,
+        void_floor_fraction=1.0e-4,
+        active_void_fraction=5.0e-4,
+        topology_density_fraction=0.02,
+        retained_fraction=0.10,
+    )
+    # The second footprint cell reaches its gas-density receiver limit first.
+    np.testing.assert_allclose(limited, 3.0e-3, rtol=0.0, atol=1.0e-15)
+
+    riser_after_old_face = riser_area - dt / dz * (
+        old_flux[1:] - old_flux[:-1]
+    )
+    riser_after = riser_after_old_face.copy()
+    riser_after[0] += dt / dz * (-limited - old_flux[0])
+    assert riser_after[0] >= 0.0
+    np.testing.assert_array_equal(riser_after[1:], riser_after_old_face[1:])
+
+    horizontal_after, discharge_after = _apply_finite_width_side_t_exchange(
+        horizontal_area,
+        horizontal_discharge,
+        upward_flow=-limited,
+        opening_weights=weights,
+        dt=dt,
+        cell_width=dx,
+        full_area=horizontal_full,
+    )
+    riser_loss = float(np.sum(riser_area - riser_after) * dz)
+    horizontal_gain = float(
+        np.sum(horizontal_after - horizontal_area) * dx
+    )
+    np.testing.assert_allclose(horizontal_gain, riser_loss, rtol=0.0, atol=1.0e-16)
+    np.testing.assert_array_equal(horizontal_after[weights == 0.0], horizontal_area[weights == 0.0])
+    np.testing.assert_array_equal(discharge_after, horizontal_discharge)
+
+    minimum_void = horizontal_gas_mass / (2.0 * rho * dx)
+    active = weights > 0.0
+    assert np.all(
+        horizontal_full - horizontal_after[active]
+        >= minimum_void[active] - 1.0e-15
+    )
 
 
 def test_smagorinsky_stress_vanishes_for_uniform_translation() -> None:
@@ -414,40 +1223,6 @@ def test_side_t_east_cutcell_opens_partially_when_donor_mass_is_limited() -> Non
     np.testing.assert_allclose(np.sum(mass_after), gas_before, atol=1.0e-16)
 
 
-def test_vertical_material_sweep_returns_liquid_volume_and_momentum() -> None:
-    full = 2.5e-3
-    dz = 0.02
-    area = np.full(8, full)
-    discharge = np.full(8, -0.15 * full)
-    volume_before = float(np.sum(area) * dz)
-    momentum_before = float(np.sum(discharge) * dz)
-
-    swept_area, swept_q, returned, returned_velocity = (
-        _sweep_vertical_material_slice_to_junction(
-            area,
-            discharge,
-            old_front_height=0.0,
-            new_front_height=0.03,
-            gas_core_area_fraction=0.80,
-            full_area=full,
-            dz=dz,
-        )
-    )
-
-    assert returned > 0.0
-    np.testing.assert_allclose(
-        np.sum(swept_area) * dz + returned,
-        volume_before,
-        atol=1.0e-16,
-    )
-    np.testing.assert_allclose(
-        np.sum(swept_q) * dz + returned * returned_velocity,
-        momentum_before,
-        atol=1.0e-16,
-    )
-    assert math.isclose(returned_velocity, -0.15, abs_tol=1.0e-14)
-
-
 def test_uniform_stratified_state_has_constant_internal_flux() -> None:
     diameter = 0.094
     area_full = math.pi * diameter**2 / 4.0
@@ -473,7 +1248,47 @@ def test_uniform_stratified_state_has_constant_internal_flux() -> None:
     np.testing.assert_allclose(f2, f2[0], rtol=1.0e-12, atol=1.0e-15)
 
 
-def test_uniform_compressed_gas_uses_unified_liquid_restoring_flux() -> None:
+def test_horizontal_ssprk2_preserves_uniform_stratified_rest_state() -> None:
+    from casea_coupled_gas_network import CoupledGasParameters
+
+    params = CoupledGasParameters(
+        horizontal_diameter=0.094,
+        vertical_diameter=0.0571,
+    )
+    n = 40
+    dx = 0.02
+    area = np.full(n, 0.72 * params.horizontal_area)
+    discharge = np.zeros(n)
+    void = params.horizontal_area - area
+    gas_mass = np.full(n, params.rho_atmospheric * void[0] * dx)
+    gas_momentum = np.zeros(n)
+
+    area_after, q_after, _, _ = (
+        _advance_horizontal_liquid_hyperbolic_ssprk2(
+            area,
+            discharge,
+            gas_mass,
+            gas_momentum,
+            area_full=params.horizontal_area,
+            diameter=params.horizontal_diameter,
+            wave_speed=45.0,
+            cell_width=dx,
+            dt=1.0e-4,
+            valve_face=10,
+            valve_transmissivity=1.0,
+            junction_wave_active=True,
+            rho_reference=params.rho_atmospheric,
+            coupled_gas_parameters=params,
+            phase_volume_cfl=1.0,
+        )
+    )
+
+    np.testing.assert_allclose(area_after, area, atol=1.0e-15)
+    np.testing.assert_allclose(q_after, 0.0, atol=1.0e-14)
+    np.testing.assert_allclose(np.sum(area_after), np.sum(area), atol=1.0e-15)
+
+
+def test_uniform_gas_layer_uses_circular_shallow_water_flux() -> None:
     diameter = 0.094
     area_full = math.pi * diameter**2 / 4.0
     n = 24
@@ -498,12 +1313,11 @@ def test_uniform_compressed_gas_uses_unified_liquid_restoring_flux() -> None:
     )
 
     # A component with no adjacent elastic-liquid front uses the natural
-    # companion-model gauge.  Lambda is frozen in the published liquid
-    # Riemann Jacobian, while the uniform momentum potential remains
-    # 0.5*Lambda*A**2.
+    # circular-section Saint--Venant gauge g*I1.  Gas pressure is a separate
+    # network source and therefore does not alter this uniform flux.
     from casea_horizontal_liquid_operator import (
         HorizontalLiquidParameters,
-        decoupled_lambda_and_derivative,
+        pressure_potential_state,
     )
 
     local_params = HorizontalLiquidParameters(
@@ -518,16 +1332,16 @@ def test_uniform_compressed_gas_uses_unified_liquid_restoring_flux() -> None:
         atmospheric_pressure=101325.0,
         tension_head=0.05,
     )
-    coefficient, _ = decoupled_lambda_and_derivative(
+    expected = pressure_potential_state(
         area[0],
         discharge[0],
         gas_mass[0],
         gas_momentum[0],
+        True,
         local_params,
-    )
-    expected = 0.5 * float(coefficient) * area[0] ** 2
+    ).potential
     np.testing.assert_allclose(
-        momentum_flux, expected, rtol=1.0e-12, atol=1.0e-15
+        momentum_flux, float(expected), rtol=1.0e-12, atol=1.0e-15
     )
 
 
@@ -718,6 +1532,158 @@ def test_new_taylor_slice_is_conservative_and_stationary_front_is_idempotent() -
     np.testing.assert_array_equal(same_q, opened_q)
 
 
+def test_side_fed_taylor_sweep_returns_liquid_conservatively_to_tee() -> None:
+    full = 2.5e-3
+    dz = 0.01
+    area = np.array([full, full, full, 0.5 * full, 0.0, 0.0])
+    discharge = area * 0.12
+    volume_before = float(np.sum(area) * dz)
+    momentum_before = float(np.sum(discharge) * dz)
+
+    swept_area, swept_q, returned, returned_velocity = (
+        _return_new_taylor_sweep_to_side_t(
+            area,
+            discharge,
+            old_front_height=0.01,
+            new_front_height=0.025,
+            gas_core_area_fraction=0.80,
+            full_area=full,
+            dz=dz,
+        )
+    )
+    expected_return = 0.80 * full * 0.015
+    assert math.isclose(returned, expected_return, rel_tol=0.0, abs_tol=1.0e-16)
+    assert math.isclose(
+        float(np.sum(swept_area) * dz + returned),
+        volume_before,
+        rel_tol=0.0,
+        abs_tol=1.0e-16,
+    )
+    assert math.isclose(
+        float(np.sum(swept_q) * dz + returned * returned_velocity),
+        momentum_before,
+        rel_tol=0.0,
+        abs_tol=1.0e-16,
+    )
+
+    horizontal_area = np.full(5, 0.25 * full)
+    horizontal_q = np.zeros(5)
+    weights = np.array([0.0, 0.25, 0.50, 0.25, 0.0])
+    horizontal_volume_before = float(np.sum(horizontal_area) * dz)
+    deposited_area, deposited_q = _apply_finite_width_side_t_exchange(
+        horizontal_area,
+        horizontal_q,
+        upward_flow=-returned / 1.0e-3,
+        opening_weights=weights,
+        dt=1.0e-3,
+        cell_width=dz,
+    )
+    assert math.isclose(
+        float(np.sum(deposited_area) * dz),
+        horizontal_volume_before + returned,
+        rel_tol=0.0,
+        abs_tol=1.0e-16,
+    )
+    np.testing.assert_array_equal(deposited_q, horizontal_q)
+
+
+def test_twostream_handoff_releases_elastic_storage_locally_and_conservatively() -> None:
+    full = 2.0
+    dz = 0.1
+    area = np.array([2.2, 1.6, 0.0, 1.4, 0.0])
+    discharge = np.array([0.44, -0.16, 0.0, 0.07, 0.0])
+
+    mapped_area, mapped_discharge, released = (
+        _relax_elastic_riser_storage_for_twostream_handoff(
+            area,
+            discharge,
+            full_area=full,
+            dz=dz,
+        )
+    )
+
+    assert math.isclose(released, 0.02, rel_tol=0.0, abs_tol=1.0e-15)
+    np.testing.assert_allclose(mapped_area, [2.0, 1.8, 0.0, 1.4, 0.0])
+    np.testing.assert_allclose(mapped_discharge, [0.4, -0.12, 0.0, 0.07, 0.0])
+    assert math.isclose(float(np.sum(mapped_area)), float(np.sum(area)))
+    assert math.isclose(
+        float(np.sum(mapped_discharge)), float(np.sum(discharge))
+    )
+    # The dry separation at cell 2 prevents the lower compressed parcel from
+    # being teleported into the detached upper liquid island.
+    assert mapped_area[3] == area[3]
+
+
+def test_refilled_taylor_core_returns_only_excess_and_respects_receiver_limit() -> None:
+    full = 2.0
+    dz = 0.1
+    area = np.array([1.0, 0.6, 1.8, 0.0])
+    discharge = np.array([-0.2, -0.06, 0.18, 0.0])
+    # The first cell is fully swept (capacity 0.4); the second is half swept
+    # (capacity 1.2); cells above the front are untouched.
+    returned_area, returned_q, returned, velocity = (
+        _return_refilled_taylor_core_to_side_t(
+            area,
+            discharge,
+            front_height=0.15,
+            gas_core_area_fraction=0.8,
+            full_area=full,
+            dz=dz,
+            maximum_return_volume=0.03,
+        )
+    )
+
+    assert math.isclose(returned, 0.03, rel_tol=0.0, abs_tol=1.0e-15)
+    # Requested excess is 0.6*dz, so the receiver cap removes exactly one half.
+    np.testing.assert_allclose(returned_area, [0.7, 0.6, 1.8, 0.0])
+    np.testing.assert_allclose(returned_q, [-0.14, -0.06, 0.18, 0.0])
+    assert math.isclose(velocity, -0.2, rel_tol=0.0, abs_tol=1.0e-15)
+    assert math.isclose(
+        float(np.sum(returned_area) * dz + returned),
+        float(np.sum(area) * dz),
+        rel_tol=0.0,
+        abs_tol=1.0e-15,
+    )
+
+
+def test_confined_taylor_refill_is_restored_to_upper_slug_idempotently() -> None:
+    full = 2.0
+    dz = 0.1
+    area = np.array([1.0, 0.6, 1.0, 0.0])
+    discharge = np.array([-0.2, -0.06, 0.1, 0.0])
+    volume_before = float(np.sum(area) * dz)
+    momentum_before = float(np.sum(discharge) * dz)
+
+    restored_area, restored_q, moved = (
+        _restore_refilled_taylor_core_to_unswept_slug(
+            area,
+            discharge,
+            front_height=0.15,
+            gas_core_area_fraction=0.8,
+            full_area=full,
+            dz=dz,
+        )
+    )
+
+    assert math.isclose(moved, 0.06, rel_tol=0.0, abs_tol=1.0e-15)
+    np.testing.assert_allclose(restored_area, [0.4, 0.6, 1.6, 0.0])
+    assert math.isclose(float(np.sum(restored_area) * dz), volume_before)
+    assert math.isclose(float(np.sum(restored_q) * dz), momentum_before)
+    repeated_area, repeated_q, repeated_moved = (
+        _restore_refilled_taylor_core_to_unswept_slug(
+            restored_area,
+            restored_q,
+            front_height=0.15,
+            gas_core_area_fraction=0.8,
+            full_area=full,
+            dz=dz,
+        )
+    )
+    assert repeated_moved == 0.0
+    np.testing.assert_array_equal(repeated_area, restored_area)
+    np.testing.assert_array_equal(repeated_q, restored_q)
+
+
 def test_taylor_topology_projection_reconnects_slug_without_losing_momentum() -> None:
     full = 2.5e-3
     dz = 0.01
@@ -757,6 +1723,42 @@ def test_taylor_topology_projection_reconnects_slug_without_losing_momentum() ->
     np.testing.assert_array_equal(repeated_q, projected_q)
 
 
+def test_taylor_topology_uses_drift_film_and_slow_slug_kinematics() -> None:
+    full = 2.5e-3
+    dz = 0.02
+    area = np.array([0.2, 0.4, 1.0, 1.0, 0.0]) * full
+    discharge = area * 6.0
+    projected_area, projected_q, returned = _project_riser_taylor_topology(
+        area,
+        discharge,
+        front_height=0.04,
+        gas_core_area_fraction=0.80,
+        full_area=full,
+        dz=dz,
+        film_velocity=-1.0,
+        slug_velocity=0.04,
+    )
+    assert returned == 0.0
+    np.testing.assert_allclose(projected_area[:2], 0.20 * full)
+    np.testing.assert_allclose(projected_q[:2] / projected_area[:2], -1.0)
+    wet_slug = projected_area[2:] > 0.0
+    np.testing.assert_allclose(
+        projected_q[2:][wet_slug] / projected_area[2:][wet_slug],
+        0.04,
+    )
+
+
+def test_vertical_holdup_head_matches_full_column_and_partial_pool() -> None:
+    np.testing.assert_allclose(
+        _vertical_liquid_holdup_head(np.ones(3), 0.02),
+        np.array([0.05, 0.03, 0.01]),
+    )
+    np.testing.assert_allclose(
+        _vertical_liquid_holdup_head(np.array([0.85, 0.50, 0.07]), 0.02),
+        np.array([0.0199, 0.0064, 0.0007]),
+    )
+
+
 def test_annular_film_return_is_volume_and_momentum_conservative() -> None:
     full = 2.5e-3
     dz = 0.01
@@ -781,7 +1783,7 @@ def test_annular_film_return_is_volume_and_momentum_conservative() -> None:
     np.testing.assert_allclose(np.sum(film_q) * dz, momentum_before)
 
 
-def test_taylor_front_stops_at_bulk_surface_and_latches_breakthrough() -> None:
+def test_taylor_front_records_swept_height_after_breakthrough() -> None:
     front, velocity, vented = _advance_riser_taylor_front(
         0.34,
         free_surface_height=0.356,
@@ -804,8 +1806,23 @@ def test_taylor_front_stops_at_bulk_surface_and_latches_breakthrough() -> None:
         already_vented=vented,
     )
     assert still_vented
-    assert math.isclose(followed, 0.31)
-    assert followed_velocity < 0.0
+    assert math.isclose(followed, front)
+    assert math.isclose(followed_velocity, 0.0)
+
+
+def test_falling_or_vanishing_surface_cannot_unsweep_taylor_material() -> None:
+    for surface in (0.20, 0.0):
+        front, velocity, vented = _advance_riser_taylor_front(
+            0.28,
+            free_surface_height=surface,
+            liquid_superficial_velocity=0.0,
+            diameter=0.0571,
+            riser_height=0.610,
+            dt=0.01,
+        )
+        assert vented
+        assert math.isclose(front, 0.28)
+        assert math.isclose(velocity, 0.0)
 
 
 def test_annular_film_is_not_created_above_taylor_front() -> None:

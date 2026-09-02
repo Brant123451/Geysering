@@ -1,0 +1,75 @@
+{
+  "schema_version": 2,
+  "case": "VW2011 Test A",
+  "purpose": "Claim-evidence manifest for the active Case-A manuscript curve figure.",
+  "evidence_scope": "Explicit connected-pocket closure sensitivity; not the Campaign 1 production baseline and not the one-dimensional realization used in the three-frame spatial figure.",
+  "sources": {
+    "one_dimensional_series": "outputs/caseA_nohll_connected_pocket_model_series.csv",
+    "experimental_pressure": "data/digitized/fig5_caseA_Hstar_band.csv",
+    "experimental_levels": "data/digitized/fig7_caseA_markers_vector.csv",
+    "two_dimensional_pressure": "openfoam/2d/outputs/openfoam_2d_series.csv",
+    "two_dimensional_levels": "openfoam/2d/outputs/openfoam_2d_levels.csv",
+    "two_dimensional_metrics": "openfoam/2d/outputs/openfoam_2d_metrics.json",
+    "figure_generator": "paper/scripts/generate_case_a_figures.py"
+  },
+  "configuration": {
+    "use_mixed_flow_hll": false,
+    "pocket_bleed": true,
+    "pocket_bleed_tau_s": 0.1,
+    "Dr_m": 0.0571,
+    "air_head_m": 0.305,
+    "initial_water_level_m": 0.356,
+    "simulation_end_s": 7.6,
+    "time_shift_applied": false,
+    "pressure_shift_applied": false,
+    "one_dimensional_pressure_display_filter": "symmetric five-point second-order Savitzky-Golay",
+    "one_dimensional_level_smoothing": "none",
+    "two_dimensional_pressure_display_filter": "0.10 s moving mean"
+  },
+  "reported_metrics": {
+    "Tstar_scale_s": 0.8150369107986323,
+    "one_dimensional_pressure_plateau_Hstar_mean_Tstar_4_to_7p5": 0.539070409299546,
+    "one_dimensional_pressure_plateau_Hstar_median_Tstar_4_to_7p5": 0.5389236065094897,
+    "experimental_extracted_central_trace_Hstar_median_Tstar_4_to_7p5": 0.53706,
+    "two_dimensional_pressure_plateau_Hstar_mean_Tstar_1_to_7": 0.5623420208672404,
+    "pressure_Hstar_below_0p30_Tstar": {
+      "experiment": 8.28099,
+      "one_dimensional": 9.2021293,
+      "two_dimensional": 8.6253762337113
+    },
+    "free_surface_max_Ystar": {
+      "experiment_largest_marker": 0.64851,
+      "one_dimensional": 0.6131457,
+      "two_dimensional": 0.6229507474583803
+    },
+    "experimental_interface_first_marker_above_Ystar_0p05_Tstar_by_run": {
+      "run_1": 7.94045,
+      "run_2": 7.77017,
+      "run_3": 7.35703
+    },
+    "one_dimensional_interface_Ystar_above_0p05_Tstar": 7.85246307,
+    "two_dimensional_interface_Ystar_above_0p05_Tstar": 8.085523382668203,
+    "experimental_piecewise_linear_interface_free_surface_crossing_Tstar_by_run": {
+      "run_1": 8.952823856075948,
+      "run_2": 9.190923096051776,
+      "run_3": 8.854221279440084
+    },
+    "experimental_piecewise_linear_crossing_span_Tstar": [
+      8.854221279440084,
+      9.190923096051776
+    ],
+    "one_dimensional_interface_free_surface_catch_Tstar": 9.1775833,
+    "two_dimensional_interface_free_surface_catch_Tstar": null,
+    "one_dimensional_first_one_cell_coalescence_Tstar": 9.1284961
+  },
+  "caveats": [
+    "The planar two-dimensional area ratio is Dt/D=0.607, whereas the circular experimental area ratio is (Dt/D)^2=0.369.",
+    "The short one-dimensional pressure spike near Tstar=9.18 coincides with the archived level-coalescence event, is retained for provenance, and is not interpreted as a resolved pressure rebound.",
+    "The optional tau_b=0.10 s closure is disclosed as a sensitivity and has not been independently calibrated or validated.",
+    "outputs/caseA_comparison_metrics.json describes a different baseline archive and is not the source of the active manuscript curve claims."
+  ],
+  "manuscript_outputs": [
+    "paper/figures/caseA_experiment_1d2d_curves.png",
+    "paper/figures/caseA_experiment_1d2d_curves.pdf"
+  ]
+}

@@ -32,11 +32,14 @@ leon2018 竖管 violent geyser、zhou2019 Taylor 气泡判据）只作引用佐�
     `tests/test_01_vw2011/cases/B_*/outputs/`，二维辅助结果取自相应
     `openfoam/2d/outputs/`；绘图脚本保存在 `paper/scripts/`（Test A）及
     Test B 的 `scripts/` 子目录。
-    Case A 与 Case B 的水平管现统一采用 Case B 的 Tosan 界面拟合、守恒湿干扩展及
-    有压段 MOC；Case A 的 2026-07-31 重算场、时程与诊断分别见
-    `caseA_tosan2021_horizontal_fields.npz`、`caseA_model_series_tosan2021.csv` 与
-    `caseA_tosan2021_diagnostics.json`。Case A 竖管仍保留已审阅的连通气囊分支，并在
-    T 形结点贯通后作为单向压力适配器。
+    证据链必须按图件归档分别解释，不能笼统写成“同一次冻结计算”：Case A 当前抽帧图来自
+    `vertical_fields_shockvisc_fct_v130_13s_fullzero_display.npz`、
+    `vertical_fields_shockvisc_fct_v130_13s.npz` 与配套的
+    `frames_index_shockvisc_fct_v130_13s_fullzero.json`，曲线图来自明确标注的
+    connected-pocket 敏感性 `caseA_nohll_connected_pocket_model_series.csv`；Case B 抽帧图的竖管为保存标量
+    驱动的显示重构，曲线与表格使用 `caseB_model_series.csv`。Case B 图中蓝色 2D 压力线
+    另取完整开口归档并作 `Delta H*=-0.104` 的形状显示平移，正文和表格的 2D 数值仍取
+    未平移的标准归档。各图的证据角色和限制以中英文图注为准。
 - **Campaign 2 = Cong, Chan & Lee (2017, JHE)**，已完成（判据地图 + B-H 系列）：
   - 图 = `cong2017_bh_series.png`（B-H1..B-H7 分类/到达时间/速度对照）、
     `cong2017_signature.png`（B-H1/B-H6 签名工况）、`cong2017_criterion_map.png`（63 例判据地图）。

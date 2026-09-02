@@ -1,0 +1,114 @@
+{
+  "schema_version": "s1_1d_campaign_protocol_v1",
+  "case_id": "S1_JHR2024_continuous_air_validation",
+  "physical_condition_count": 1,
+  "registration": {
+    "status": "FROZEN_BEFORE_ANY_FORMAL_1D_TRAJECTORY",
+    "registration_date_local": "2026-08-10",
+    "result_independence": "Timing and stability thresholds are fixed before the formal 1-D response is known and may not be adjusted to force eruption or agreement.",
+    "paper_disclosure": "Mahyawansi et al. require steady water flow before opening the isolation valve but do not publish a fixed settling duration; 16 s and the final 4 s are declared audit gates, not published settling times.",
+    "forbidden_response": "A failed alignment is reported as a model-form or numerical failure; no threshold or unpublished boundary parameter is fitted after seeing the result."
+  },
+  "source_contract": "../config/S1_source_aligned.yaml",
+  "stage1": {
+    "frozen_2d_gate_reference": {
+      "path": "../../openfoam/2d/mesh_levels/recovery_total_pressure_v1/STAGE1_STABILITY_GATE.json",
+      "sha256": "33800c9549ceaa262adc7809524ae17f18ac3b23b0d979861d3ebaec44724a47",
+      "translation_scope": "Timing, source scales, pressure, velocity, boundary-flow, and balance thresholds are copied exactly; 1-D observes native gauge pressure rather than fabricating OpenFOAM p_rgh."
+    },
+    "boundary": {
+      "air_port_mode": "closed_wall",
+      "air_gauge_pressure_pa": null,
+      "evidence_status": "published_closed_isolation_valve"
+    },
+    "initial_state": "source_aligned_initial_state_once_only",
+    "sample_interval_s": 0.1,
+    "minimum_physical_time_s": 16.0,
+    "terminal_window_s": 4.0,
+    "candidate_recheck_interval_s": 4.0,
+    "maximum_declared_guard_time_s": 120.0,
+    "fixed_published_settling_time_claimed": false,
+    "manual_acceptance_required": true,
+    "required_pressure_channels": ["P1", "P2", "P3", "P4", "P5", "P6"],
+    "required_velocity_channels": ["P1", "P2", "P3", "P4", "P5", "P6"],
+    "source_and_declared_scales": {
+      "pipe_diameter_m": 0.0254,
+      "horizontal_extent_m": 3.1,
+      "water_inlet_head_m": 0.586,
+      "water_outlet_head_m": 0.584,
+      "head_difference_m": 0.002,
+      "gravity_m_s2": 9.81,
+      "reference_water_density_kg_m3": 998.4,
+      "ideal_head_velocity_m_s": 0.19809088823063,
+      "pipe_area_m2": 0.000506707479097498,
+      "reference_volume_flow_m3_s": 0.000100374134607527,
+      "reference_mass_flow_kg_s": 0.100213535992155,
+      "driving_pressure_difference_pa": 19.588608,
+      "ideal_advective_time_s": 15.6493820977307
+    },
+    "thresholds": {
+      "pressure": {
+        "maximum_absolute_slope_pa_s": 0.5,
+        "maximum_half_window_mean_shift_pa": 2.0,
+        "maximum_detrended_peak_to_peak_pa": 10.0,
+        "basis": "Declared before the formal 1-D response and identical to the frozen 2-D gate: at most 2 Pa terminal half-window drift and 10 Pa detrended range."
+      },
+      "velocity": {
+        "maximum_slope_norm_m_s2": 0.0005,
+        "maximum_half_window_mean_vector_change_m_s": 0.002,
+        "maximum_detrended_residual_vector_magnitude_m_s": 0.004,
+        "basis": "Declared before the formal 1-D response and identical to the frozen 2-D gate: terminal drift and residual magnitude are bounded against the published-head-derived velocity scale."
+      },
+      "boundary_flow": {
+        "minimum_mean_forward_flow_fraction_of_reference": 0.05,
+        "maximum_half_window_relative_mean_change": 0.01,
+        "maximum_detrended_peak_to_peak_fraction": 0.02,
+        "volume_flow_denominator_floor_m3_s": 0.00000501870673037635,
+        "mass_flow_denominator_floor_kg_s": 0.00501067679960775,
+        "basis": "Declared before the formal 1-D response and identical to the frozen 2-D relative-flow gate; denominator floors are 5 percent of the published-head-derived reference rates."
+      },
+      "balance": {
+        "maximum_mean_relative_imbalance": 0.01,
+        "maximum_p95_instantaneous_relative_imbalance": 0.02,
+        "basis": "Declared before the formal 1-D response and identical to the frozen 2-D inlet-outlet balance gate."
+      }
+    },
+    "decision_policy": {
+      "insufficient_coverage": "INCONCLUSIVE",
+      "complete_but_any_gate_fails": "UNSTABLE",
+      "all_automatic_gates_pass": "STABLE_CANDIDATE_REQUIRES_MANUAL_ACCEPTANCE",
+      "automatic_acceptance": false
+    }
+  },
+  "stage2": {
+    "boundary": {
+      "air_port_mode": "isothermal_pressure_reservoir",
+      "air_gauge_pressure_pa": 5700.0,
+      "evidence_status": "published_Table_1"
+    },
+    "time_origin": "air_valve_opening_is_stage2_t0",
+    "reuse_same_stage1_accepted_state_without_reinitialization": true,
+    "planned_duration_s": 25.0,
+    "common_event_ceiling_interval_s": 0.1,
+    "state_interpolation_allowed": false,
+    "result_dependent_threshold_adjustment_allowed": false
+  },
+  "preproduction_smoke": {
+    "boundary": "stage1_closed",
+    "duration_s": 0.02,
+    "operator_production_ready_required": false,
+    "authorization_required": "PREPRODUCTION_SMOKE_AUTHORIZED",
+    "may_create_campaign_completion_marker": false
+  },
+  "markers": {
+    "authorization_schema": "s1_campaign_authorization_v1",
+    "preproduction_smoke_authorization": "PREPRODUCTION_SMOKE_AUTHORIZED",
+    "model_implementation_acceptance": "MODEL_IMPLEMENTATION_ACCEPTED",
+    "formal_campaign_authorization": "FORMAL_CAMPAIGN_AUTHORIZED",
+    "stage1_steady_accepted": "STAGE1_STEADY_ACCEPTED",
+    "stage1_checkpoint_accepted": "STAGE1_CHECKPOINT_ACCEPTED",
+    "stage2_started": "STAGE2_STARTED",
+    "only_terminal_campaign_marker": "RUN_COMPLETE_UNVALIDATED",
+    "forbidden_markers": ["RUN_COMPLETE", "RESULT_ACCEPTED", "ERUPTION_ACCEPTED"]
+  }
+}

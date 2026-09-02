@@ -1,0 +1,126 @@
+schema_version: 1
+case_id: S1_JHR2024_continuous_air_validation
+status: source_alignment_v2_2d_smoke_pending_1d_implementation_in_progress
+accepted_for_manuscript_evidence: false
+
+source:
+  citation: "Mahyawansi et al. (2024), Journal of Hydraulic Research 62(1), 25-38"
+  doi: "10.1080/00221686.2024.2305353"
+  local_pdf: "E:/Geysering/tmp/pdfs/mahywansi_2024_small_scale.pdf"
+  target_material:
+    - "Figure 2: CFD domain and probe locations"
+    - "Table 1: pressure and phase boundary conditions"
+    - "Figures 9-11: pressure, eruption sequence, and geyser-height validation"
+
+selection:
+  branch: continuous_air_supply_with_physical_experiment
+  reason: >-
+    This is the only branch in the paper that combines a physical experiment,
+    published CFD boundary conditions, PIV slug velocity, pressure histories,
+    eruption images, and a geyser-height history. The finite trapped-air branch
+    in Section 5.1 is numerical-only and is excluded from experimental validation.
+
+geometry:
+  pipe_diameter_m: 0.0254
+  horizontal_x_m: [-1.83, 1.27]
+  air_inlet_x_m: -1.52
+  riser_x_m: 0.0
+  riser_rim_z_m: 1.02
+  initial_riser_water_level_z_m: 0.5842
+  external_domain_top_z_m: 2.0
+  air_stub_top_z_m: 0.15
+  air_stub_bottom_z_m: 0.0127
+  air_stub_length_m: 0.1373
+  external_domain_half_width_m: 0.10
+  equivalent_2d_thickness_m: 0.0199491133502952
+  evidence_status:
+    published: [pipe_diameter_m, horizontal_x_m, air_inlet_x_m, riser_x_m,
+      riser_rim_z_m]
+    figure_inferred: [initial_riser_water_level_z_m, external_domain_top_z_m,
+      air_stub_top_z_m, external_domain_half_width_m]
+    declared_geometry_derivation: [air_stub_bottom_z_m, air_stub_length_m]
+    declared_model_reduction: [equivalent_2d_thickness_m]
+
+boundary_conditions:
+  atmospheric_absolute_pressure_Pa: 101325.0
+  water_inlet_head_m: 0.586
+  water_outlet_head_m: 0.584
+  air_inlet_gauge_pressure_Pa: 5700.0
+  open_pressure_translation:
+    OpenFOAM_type: prghTotalPressure
+    p0_representation: facewise_absolute_total_pressure_from_actual_face_centres
+    zero_velocity_reduced_targets_Pa:
+      water_inlet: 107064.462144
+      water_outlet: 107044.873536
+      ambient: 101337.050643
+  water_volume_fraction:
+    water_inlet: 1.0
+    water_outlet_on_inflow: 1.0
+    air_inlet_on_inflow: 0.0
+    ambient_on_inflow: 0.0
+  evidence_status:
+    published: [water_inlet_head_m, water_outlet_head_m, air_inlet_gauge_pressure_Pa,
+      water_volume_fraction]
+    method_inferred: [air_inlet_gauge_pressure_Pa]
+    declared_OpenFOAM_reference: [atmospheric_absolute_pressure_Pa]
+
+initialization:
+  stage_1: "closed air port; pressure-driven water flow; k-omega SST"
+  stage_2: "open 5700 Pa-gauge air pressure inlet; Smagorinsky LES translation"
+  initial_horizontal_water_velocity_m_s: 0.0
+  initial_air_supply_branch_phase: water
+  initial_air_supply_branch_phase_status: method_inferred_from_simple_water_flow_and_closed_isolation_valve
+  initial_turbulence_floor:
+    k_m2_s2: 1.0e-6
+    omega_s_inv: 1.0
+  stage_1_minimum_audit_coverage_s: 16.0
+  stage_1_terminal_stability_window_s: 4.0
+  stage_2_duration_after_acceptance_s: 25.0
+  air_open_condition: manual_stage_1_physical_acceptance
+  evidence_status:
+    published: [stage_1, stage_2]
+    declared_numerical_choice: [initial_horizontal_water_velocity_m_s,
+      initial_turbulence_floor, stage_1_minimum_audit_coverage_s,
+      stage_1_terminal_stability_window_s, air_open_condition]
+    method_inferred: [initial_air_supply_branch_phase]
+    published_minimum: [stage_2_duration_after_acceptance_s]
+
+numerics:
+  software: OpenFOAM-v2512
+  solver: compressibleInterFoam
+  dimension: quasi_2d_longitudinal_one_cell_thick
+  stage_1_turbulence: kOmegaSST
+  stage_2_turbulence: Smagorinsky
+  mesh_level_cells_across_pipe: {coarse: 8, medium_refine: 16, refined: 32}
+  cpu_threads: 1
+  cpu_quota_fraction_default: 0.20
+  nice_level: 19
+  time_discretization: CrankNicolson_0.9_OpenFOAM_translation
+  alpha_subcycles: 1
+  evidence_status: declared_OpenFOAM_translation
+
+validation_targets:
+  - "P1/P2 pressure magnitude, cycle, and post-eruption oscillation (Figure 9)"
+  - "horizontal slug formation and 0.8-0.9 m/s PIV velocity (Figures 4, 7, 8)"
+  - "eruption morphology at relative times 0-0.5 s (Figure 10)"
+  - "maximum external geyser height about 0.19 m and duration about 2.1-2.2 s (Figure 11)"
+
+limitations:
+  - "The source CFD is three-dimensional Fluent VOF plus LES; this is not an exact reproduction."
+  - "The experimental partially open ball-valve position and loss coefficient are not published."
+  - "The 5700 Pa CFD air-pressure inlet is used instead of reconstructing the physical valve."
+  - "The continuous-air case does not publish a Stage-1 velocity seed or a fixed air-opening time."
+  - "The continuous-air case does not publish Stage-1 k/omega seeds; small positive numerical floors are declared and the pressure-driven SST field develops during Stage 1."
+  - "The paper does not explicitly report the short air-supply branch initial phase; the primary baseline uses water, inferred from Stage-1 simple water flow and the closed isolation valve."
+  - "Circular liquid films, three-dimensional slugs, and round-jet entrainment are altered in planar 2D."
+  - "Raw experimental CSV data are unavailable; published curves require digitization."
+
+one_d:
+  directory: one_d
+  status: implementation_in_progress_no_accepted_trajectory
+  parameter_sets: 1
+  comparison_targets: [coarse, medium_refine, refined]
+  horizontal_lineage: Case1_conservative_circular_pipe_algorithm_with_new_continuous_gas_extension
+  vertical_formulation: persistent_directional_two_fluid
+  acceptance: one_d/ACCEPTANCE.yaml
+  provenance: one_d/MODEL_PROVENANCE.md

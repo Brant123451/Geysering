@@ -1,0 +1,32 @@
+{
+  "purpose": "Pair the active Case-1 comparison figures with the exact published experimental panels used for digitisation.",
+  "source_reference": "Vasconcelos and Wright (2011)",
+  "scientific_data_changed": false,
+  "manuscript_references_changed": false,
+  "artifacts": [
+    {
+      "case": "Test A",
+      "status": "review candidate; manuscript includegraphics not changed",
+      "active_comparison_pdf": "paper/figures/caseA_experiment_1d2d_curves.pdf",
+      "published_panels": [
+        "Vasconcelos and Wright (2011), Fig. 5",
+        "Vasconcelos and Wright (2011), Fig. 7"
+      ],
+      "output_pdf": "paper/figures/caseA_experiment_1d2d_curves_with_source.pdf",
+      "output_png": "paper/figures/caseA_experiment_1d2d_curves_with_source.png",
+      "layout": "active comparison above; attributed published source panels below"
+    },
+    {
+      "case": "Test B",
+      "status": "review candidate; manuscript includegraphics not changed",
+      "active_comparison_pdf": "paper/figures/caseB_experiment_1d2d_curves.pdf",
+      "published_panels": [
+        "Vasconcelos and Wright (2011), Fig. 6",
+        "Vasconcelos and Wright (2011), Fig. 8"
+      ],
+      "output_pdf": "paper/figures/caseB_experiment_1d2d_curves_with_source.pdf",
+      "output_png": "paper/figures/caseB_experiment_1d2d_curves_with_source.png",
+      "layout": "active comparison above; attributed published source panels below"
+    }
+  ]
+}

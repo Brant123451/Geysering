@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "registry": "E:\\Geysering\\tools\\one_d_two_d_matching\\case_registry.json",
+  "root": "E:\\Geysering",
+  "case_count": 8,
+  "expected_case_count": 8,
+  "case_ids_exact": true,
+  "duplicate_ids": [],
+  "missing_ids": [],
+  "extra_ids": [],
+  "all_declared_paths_exist": true,
+  "missing_paths": [],
+  "one_d_baseline_status": {
+    "VW_A": "production_semantics_selected_unified_rerun_required",
+    "VW_B": "declared_case_local_baseline",
+    "CONG_BH1": "unified_complete_event_baseline_missing",
+    "CONG_BH3": "unified_complete_event_baseline_missing",
+    "CONG_BH6": "unified_complete_event_baseline_missing",
+    "LIU_A2": "declared_case_local_baseline_not_campaign_unified",
+    "LIU_B3": "declared_case_local_baseline_not_campaign_unified",
+    "LIU_C9": "case_local_20s_variants_exported_campaign_unified_missing"
+  },
+  "cases_ready_for_long_global_rerun": [
+    "VW_B"
+  ],
+  "long_global_rerun_ready": false,
+  "model_source_hashes": {
+    "VW_A": [
+      {
+        "path": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/model/vw2011_network_twofluid.py",
+        "sha256": "d1539fe4cdcd7a1d0f2be2d084ab1f3a48a45639202ac53c96b4b4ad6ce07635"
+      }
+    ],
+    "VW_B": [
+      {
+        "path": "tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356/model/vw2011_network_twofluid.py",
+        "sha256": "b0d0afab4715a6576d63e38232a5170c2d1f67ac83faffef3ce4fe0df9a24f62"
+      }
+    ],
+    "CONG_BH1": [
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/run_campaign2_persistent_candidate.py",
+        "sha256": "5b57ea31af273be5b3c26f101b6976a5bc7d991fecd9012b70dcaad717fc01aa"
+      },
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_global_budget.py",
+        "sha256": "d75cbc5afe086cdeaabbb324f3b0e827c3408510074b0d5e0cee9e9f84423e36"
+      },
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_shared_contract.py",
+        "sha256": "95fcb91f85cafa349e7bb4b598a6c2f50a4d184dd44a5b3bb53fa04715ea86e2"
+      },
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_tee_riemann.py",
+        "sha256": "000b19ae80e74959ebef6733a669cea67a4bd4d7399040bc0b152084f7b4c50b"
+      },
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_vertical_twofluid_kernel.py",
+        "sha256": "0f7c7c10e7d74c432529a53cf4d72edb08c6c777b786421f081d51c4983e954d"
+      },
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/case1_mirrored_horizontal.py",
+        "sha256": "84132ab59d3db7026622b3b9238738630fc11d7bf685cdc48096f8a94d327182"
+      },
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/case1_constant_head_boundary.py",
+        "sha256": "d34fef36c5d3f4e2c40c2e0d04ec83e272aeb1dd42ac6f25d0fa4b74fe9f929d"
+      },
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/case1_persistent_coupling.py",
+        "sha256": "450b3737b7d1ce419719b2b722de14d46548f9aa9a115b710768a0906000683e"
+      },
+      {
+        "path": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/model/tosan2021_horizontal_shockfit.py",
+        "sha256": "90e84da9afa0ec8465d80f87fc701dfb8f0fad6f97350ea708074a50192b6119"
+      }
+    ],
+    "CONG_BH3": [
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/run_campaign2_persistent_candidate.py",
+        "sha256": "5b57ea31af273be5b3c26f101b6976a5bc7d991fecd9012b70dcaad717fc01aa"
+      },
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_global_budget.py",
+        "sha256": "d75cbc5afe086cdeaabbb324f3b0e827c3408510074b0d5e0cee9e9f84423e36"
+      },
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_shared_contract.py",
+        "sha256": "95fcb91f85cafa349e7bb4b598a6c2f50a4d184dd44a5b3bb53fa04715ea86e2"
+      },
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_tee_riemann.py",
+        "sha256": "000b19ae80e74959ebef6733a669cea67a4bd4d7399040bc0b152084f7b4c50b"
+      },
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_vertical_twofluid_kernel.py",
+        "sha256": "0f7c7c10e7d74c432529a53cf4d72edb08c6c777b786421f081d51c4983e954d"
+      },
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/case1_mirrored_horizontal.py",
+        "sha256": "84132ab59d3db7026622b3b9238738630fc11d7bf685cdc48096f8a94d327182"
+      },
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/case1_constant_head_boundary.py",
+        "sha256": "d34fef36c5d3f4e2c40c2e0d04ec83e272aeb1dd42ac6f25d0fa4b74fe9f929d"
+      },
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/case1_persistent_coupling.py",
+        "sha256": "450b3737b7d1ce419719b2b722de14d46548f9aa9a115b710768a0906000683e"
+      },
+      {
+        "path": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/model/tosan2021_horizontal_shockfit.py",
+        "sha256": "90e84da9afa0ec8465d80f87fc701dfb8f0fad6f97350ea708074a50192b6119"
+      }
+    ],
+    "CONG_BH6": [
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/run_campaign2_persistent_candidate.py",
+        "sha256": "5b57ea31af273be5b3c26f101b6976a5bc7d991fecd9012b70dcaad717fc01aa"
+      },
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_global_budget.py",
+        "sha256": "d75cbc5afe086cdeaabbb324f3b0e827c3408510074b0d5e0cee9e9f84423e36"
+      },
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_shared_contract.py",
+        "sha256": "95fcb91f85cafa349e7bb4b598a6c2f50a4d184dd44a5b3bb53fa04715ea86e2"
+      },
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_tee_riemann.py",
+        "sha256": "000b19ae80e74959ebef6733a669cea67a4bd4d7399040bc0b152084f7b4c50b"
+      },
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/campaign2_vertical_twofluid_kernel.py",
+        "sha256": "0f7c7c10e7d74c432529a53cf4d72edb08c6c777b786421f081d51c4983e954d"
+      },
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/case1_mirrored_horizontal.py",
+        "sha256": "84132ab59d3db7026622b3b9238738630fc11d7bf685cdc48096f8a94d327182"
+      },
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/case1_constant_head_boundary.py",
+        "sha256": "d34fef36c5d3f4e2c40c2e0d04ec83e272aeb1dd42ac6f25d0fa4b74fe9f929d"
+      },
+      {
+        "path": "tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/case1_persistent_coupling.py",
+        "sha256": "450b3737b7d1ce419719b2b722de14d46548f9aa9a115b710768a0906000683e"
+      },
+      {
+        "path": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/model/tosan2021_horizontal_shockfit.py",
+        "sha256": "90e84da9afa0ec8465d80f87fc701dfb8f0fad6f97350ea708074a50192b6119"
+      }
+    ],
+    "LIU_A2": [
+      {
+        "path": "tests/test_03_liu2020/cases/A2_Q20to100_openchannel_nogeyser/model/liu2020_network_twofluid.py",
+        "sha256": "d5d94c9dba40c0ac00f9063292ce64c3e01dad3e9635a637adef147ac18ac5d2"
+      }
+    ],
+    "LIU_B3": [
+      {
+        "path": "tests/test_03_liu2020/cases/B3_Q20to100_fullpipe_geyser/model/liu2020_network_twofluid.py",
+        "sha256": "d9e33998276df693629b6bbf5892908e42aa190c15e20d87428ded2fd60d4930"
+      }
+    ],
+    "LIU_C9": [
+      {
+        "path": "tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket/model/liu2020_network_twofluid.py",
+        "sha256": "34a720ad3bfaf86cba9de12312b8ef968f686b44c0bf65b7ed670ed862b9f8e0"
+      }
+    ]
+  },
+  "decision": "REGISTRY_VALID_BASELINE_CONSOLIDATION_REQUIRED"
+}

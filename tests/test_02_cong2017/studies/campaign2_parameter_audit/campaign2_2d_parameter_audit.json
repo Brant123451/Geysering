@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "audit_date": "2026-08-10",
+  "mode": "independent_read_only",
+  "primary_source": "tests/test_02_cong2017/_shared/reference/paper_source/cong2017_JHE2017_offprint.pdf",
+  "overall_status": "SUPPORTED_WITH_DECLARED_MODEL_CHOICES",
+  "exact_paper_identity": false,
+  "actual_cases": {
+    "B-H1": "/tmp/bh1-2d-study/h1_refined_co015",
+    "B-H3": "/tmp/bh3-2d-qualification/h3_refined_iso_riser20",
+    "B-H6": "/tmp/bh6-2d-study/paper_tau0p2_areaeq"
+  },
+  "published_and_actual_scalars": {
+    "B-H1": {
+      "D_m": 0.05,
+      "Dr_m": 0.016,
+      "Dr_over_D": 0.32,
+      "H0_m_from_invert": 0.66,
+      "L0_m": 0.61,
+      "Vair_over_Vw": 9.03,
+      "area_equivalent_width_m": 0.00512,
+      "experimental_geyser": true
+    },
+    "B-H3": {
+      "D_m": 0.05,
+      "Dr_m": 0.026,
+      "Dr_over_D": 0.52,
+      "H0_m_from_invert": 0.66,
+      "L0_m": 0.61,
+      "Vair_over_Vw": 3.42,
+      "area_equivalent_width_m": 0.01352,
+      "experimental_geyser": true
+    },
+    "B-H6": {
+      "D_m": 0.05,
+      "Dr_m": 0.041,
+      "Dr_over_D": 0.82,
+      "H0_m_from_invert": 0.66,
+      "L0_m": 0.61,
+      "Vair_over_Vw": 1.37,
+      "area_equivalent_width_m": 0.03362,
+      "experimental_geyser": false
+    }
+  },
+  "common_geometry_m": {
+    "pipe_invert_z": -0.025,
+    "pipe_crown_z": 0.025,
+    "pipe_height_2d": 0.05,
+    "tee_axis_x": 3.47,
+    "release_valve_x": 5.98,
+    "closed_cap_x": 6.59,
+    "riser_rim_z": 1.825,
+    "riser_height_above_crown": 1.8,
+    "pocket_interval_x": [5.98, 6.59],
+    "external_air_box_x": [3.32, 3.62],
+    "external_air_box_z": [1.825, 3.025]
+  },
+  "common_initial_and_boundary_state": {
+    "free_surface_z_m": 0.635,
+    "temperature_K": 296.15,
+    "velocity_m_s": [0.0, 0.0, 0.0],
+    "atmosphere_pressure_Pa_abs": 101325.0,
+    "water_side_p_rgh_Pa": 107541.8913,
+    "atmosphere_p_rgh_Pa": 101332.42484,
+    "gravity_m_s2": [0.0, 0.0, -9.81],
+    "upstream": "constant_head_pressure_surrogate_with_water",
+    "downstream": "sealed_no_slip_cap",
+    "riser_outlet": "open_atmosphere_via_external_air_box"
+  },
+  "supported_by_paper": [
+    "case D, Dr, Dr/D, H0 and L0 values",
+    "tee/valve/cap axial layout",
+    "1.8 m riser measured from pipe crown",
+    "atmospheric downstream pocket and closed cap",
+    "constant-head Series B inlet",
+    "quiescent start",
+    "23 degC, water density 998 kg/m3 and surface tension 0.072 N/m",
+    "approximately 0.2 s manual valve opening"
+  ],
+  "model_choices_not_fully_supported_by_paper": [
+    "planar area-equivalent rather than circular geometry",
+    "sine-squared effective valve area trajectory",
+    "Forchheimer valve loss, resistance length and minimum aperture",
+    "laminar closure",
+    "water viscosity and bulk modulus",
+    "air molar mass, viscosity, Cp and Pr",
+    "finite external atmosphere box and pressure floor"
+  ],
+  "valve_regularization": {
+    "common_to_all_cases": true,
+    "opening_duration_s": 0.2,
+    "area_law": "max(0.001, sin^2(pi*t/(2*0.2)))",
+    "minimum_area_fraction": 0.001,
+    "loss_coefficient_at_t0": 999999.0,
+    "minimum_area_plateau_end_s": 0.0040270083,
+    "strictly_closed_at_t0": false,
+    "interpretation": "effectively near-closed numerical regularization, not mathematical closure",
+    "archived_valve_face_flux_before_0p05": false,
+    "early_observables": {
+      "B-H1": {
+        "last_time_before_plateau_end_s": 0.003865010513,
+        "global_alpha_volume_proxy_change_m3": 3.49358e-10,
+        "cap_side_gas_Ux_at_0p005_m_s": 3.8973708e-05
+      },
+      "B-H3": {
+        "last_time_before_plateau_end_s": 0.003692601344,
+        "global_alpha_volume_proxy_change_m3": 3.7119472e-10,
+        "cap_side_gas_Ux_at_0p005_m_s": 3.9729114e-05
+      },
+      "B-H6": {
+        "last_time_before_plateau_end_s": 0.003831187451,
+        "global_alpha_volume_proxy_change_m3": 2.1000448e-10,
+        "cap_side_gas_Ux_at_0p005_m_s": 4.5912614e-05
+      }
+    },
+    "proxy_limitation": "global alpha-volume change includes inlet motion and interface-transport conservation error; it is not a valve-face flux integral"
+  },
+  "common_sha256": {
+    "constant/g": "20062b7027fb1ebf12f829030e42c2248648cc7a0982c8657628829811b56c29",
+    "constant/thermophysicalProperties": "d9c5d7be02670bec91d3bf62242d17902888be4680a9ab8da5e79a7c7ee8f7c7",
+    "constant/thermophysicalProperties.water": "f8b457ab2367dba5ca83243723ab31ca0025949b884613b8b620eccb5424fcc6",
+    "constant/thermophysicalProperties.air": "a555af6f9dd52341195acbcfe3b43d438a66ee035bcca1e9df74236e953c6c3f",
+    "constant/turbulenceProperties": "178a6a812f439a52a2874885f8c19278526d63dc408b1fff186cc4c2c03b216f",
+    "constant/valveProperties": "eda9ea641b1640a9b2a15ab7d9de80e18f845918a97a9d9494efd3693e6913f5",
+    "0.orig/U": "fef2027d77b425a2b61d1ff465ab711a5ec3a6abec713864976cad44d4a93442",
+    "0.orig/alpha.water": "8751919582b0b293a1277383514c8810aecf0d5fb63110b79ebf8be95afa3e0e",
+    "0.orig/p": "dfd62fa634397558c70287a788ba104c2ccc4863ce4a70e6018c25560f8cc4bf",
+    "0.orig/p_rgh": "0dc5df9e193368bf7aa760ee8b14e9e4216a27a8453981bf53aece8f6e94f509",
+    "system/setFieldsDict": "a438d4ac88238c2b5155fb8c70eb7660232cc29a61dee2a87706e05df441605b",
+    "system/topoSetDict": "b5b839ff4730679ed68b139433bdadd953627ec41dc57f0cce6eef42d231ebcf",
+    "valve_UEqn.H": "74de751b6febc90a500b642187f7aece3f5bf1c85e64273b4895bc8c4fbce83b"
+  },
+  "numerical_differences": {
+    "B-H1": "MULES, 2400 riser-z cells, maxCo 0.15, maxAlphaCo 0.10",
+    "B-H3": "isoAdvector, linear-upwind momentum, 2400 riser-z cells, maxCo 0.15, maxAlphaCo 0.10",
+    "B-H6": "MULES, 1200 riser-z cells, maxCo 0.25, maxAlphaCo 0.20"
+  },
+  "stale_metadata": [
+    "B-H3 paper_audit.json checks old endTime=13/maxCo=0.25 instead of actual 20/0.15",
+    "B-H6 paper_audit.json retains old 13 s check although actual continuation ends at 20 s",
+    "B-H1 registered endTime=16 but actual normal effective end is 14.8529 s"
+  ]
+}

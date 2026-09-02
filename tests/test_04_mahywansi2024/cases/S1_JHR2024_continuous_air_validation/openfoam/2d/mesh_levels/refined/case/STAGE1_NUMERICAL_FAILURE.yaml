@@ -1,0 +1,35 @@
+schema: case3_stage1_numerical_failure_v1
+level: refined
+detected_local: '2026-08-10T08:12:28+08:00'
+stage: stage1_closed_air_port_SST
+requested_end_time_s: 0.5
+last_solver_time_before_stop_s: 0.107860352599
+stop_action:
+  quota_wrapper_pid: 77968
+  solver_pid: 77969
+  signal_to_wrapper: SIGINT
+  scope_verified_cwd: /mnt/e/Geysering/tests/test_04_mahywansi2024/cases/S1_JHR2024_continuous_air_validation/openfoam/2d/mesh_levels/refined/case
+  other_case3_or_external_processes_touched: false
+observed_runaway:
+  location: external_air_immediately_above_riser_mouth
+  max_velocity_progression_m_s: [0.027989557, 4.0899301, 12.336439]
+  last_delta_t_s: 3.7124304e-5
+  max_courant_near_stop: 0.5
+  interface_courant_near_stop: 1.0e-4
+  alpha_water_bounds_near_stop: [-5.1e-21, 1.0]
+  pressure_solver_initial_residual_near_stop: 0.019079706
+decision:
+  classification: numerical_instability_external_air_riser_mouth
+  accepted_smoke_checkpoint_s: 0.02
+  checkpoint_0.1_status: rejected_not_for_restart
+  stage1_complete: false
+  stage1_steady: false
+  source_alignment_issue_under_review:
+    - paper_states_inlet_and_outlet_boundaries_are_total_pressure
+    - current_p_rgh_open_boundaries_use_fixedValue_static_pressure
+  required_before_retry:
+    - verify_OpenFOAM_v2512_prghTotalPressure_syntax_and_direction_semantics_from_local_official_sources
+    - correct_all_common_and_level_pressure_boundaries_identically_if_verified
+    - invalidate_and_rerun_preflight_and_guarded_smoke_after_any_boundary_change
+    - restart_only_from_a_clean_source_aligned_initial_state
+    - do_not_tune_physics_or_unpublished_parameters_to_force_agreement

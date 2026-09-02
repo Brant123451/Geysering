@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "source_image": "E:\\Geysering\\tmp\\pdfs\\campaign2_audit\\cong2017_page-07.png",
+  "source_image_sha256": "1a574ffa22c06ef3ee68055b94594184429524536772d0eaa683fc14a1dca504",
+  "render_contract": "Cong et al. (2017) offprint, PDF page 7, 150 dpi PNG",
+  "axes_pixels": {
+    "left": 712,
+    "right": 1123,
+    "top": 1102,
+    "bottom": 1437
+  },
+  "axes_values": {
+    "x_min": 8.0,
+    "x_max": 11.0,
+    "y_min": -1.0,
+    "y_max": 3.0
+  },
+  "colour_rule": "R>150, R>1.5G, R>1.5B, G<150",
+  "marker_rule": {
+    "minimum_red_pixels_per_column": 7,
+    "minimum_marker_width_px": 3
+  },
+  "point_count": 29,
+  "y_statistics": {
+    "minimum": 0.8746268656716416,
+    "median": 0.964179104477612,
+    "maximum": 1.155223880597015
+  },
+  "output_csv": "E:\\Geysering\\tests\\test_02_cong2017\\studies\\campaign2_result_audit\\paper_fig7d_h6_Ha_over_Lw_digitized.csv",
+  "qualification": "figure-digitized approximation, not a tabulated measurement"
+}

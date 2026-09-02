@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "role": "shared-closure diagnostic only",
+  "case": "BH3",
+  "geometry": {
+    "D_m": 0.05,
+    "Dr_m": 0.026,
+    "riser_height_m": 1.8,
+    "riser_x_m": 3.47,
+    "valve_x_m": 5.98,
+    "cap_x_m": 6.59,
+    "H0_from_invert_m": 0.66,
+    "H0_from_crown_m": 0.61,
+    "valve_open_time_s": 0.2,
+    "gas_temperature_K": 296.15
+  },
+  "shared_closure": {
+    "gas_drive_eff": 1.0,
+    "entry_drive_eff": 1.0,
+    "gas_escape_eff": 1.0,
+    "wave_speed_m_s": 28.0,
+    "ds_m": 0.04,
+    "dz_m": 0.02
+  },
+  "result": {
+    "end_time_s": 13.0,
+    "maximum_riser_level_m": 1.1728531002539422,
+    "physical_rim_cell_level_m": 1.79,
+    "geyser": false,
+    "rim_time_s": null,
+    "experiment_geyser": true,
+    "classification_match": false,
+    "runtime_s": 111.13614660000894,
+    "liquid_floor_created_m3": 0.0
+  },
+  "model_provenance": {
+    "case1_horizontal_used": true,
+    "case1_handoff_time_s": 9.294338159015245,
+    "case1_handoff_event": "riser_arrival",
+    "case1_horizontal": {
+      "model": "Case-1 Tosan shock-fit + circular Saint-Venant wet/dry core",
+      "coordinate_map": "x_mirror = L - x_physical",
+      "core_source": "E:\\Geysering\\tests\\test_01_vw2011\\cases\\A_Dt57p1_Ha0305_Yfs0356\\model\\tosan2021_horizontal_shockfit.py",
+      "core_sha256": "90e84da9afa0ec8465d80f87fc701dfb8f0fad6f97350ea708074a50192b6119",
+      "conservative_map_source": "E:\\Geysering\\tests\\test_02_cong2017\\studies\\BH1_BH3_BH6_1d_animation\\case1_mirrored_horizontal.py",
+      "adapter_sha256": "f9b619e0e28074817c16d8a3971c446a9a185471448e2704b003fb59c9029b93",
+      "conservative_map": "Case-1 same-grid void-volume map, frozen locally",
+      "valve_open_time_s": 0.2,
+      "gas_temperature_K": 296.15,
+      "network_coupling_interval_s": 0.005,
+      "valve_area_law": "phi=sin(pi/2*min(max(t/t_open,0),1))^2",
+      "pre_handoff_reservoir_boundary": "fixed initial state (transmissive Case-1 MOC end)",
+      "handoff_condition": "Case-1 wetting front reaches the closed downstream cap"
+    },
+    "vertical": "resolved 1D two-fluid area/mass/momentum model",
+    "per_case_parameter_fitting": false
+  }
+}

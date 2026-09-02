@@ -1,0 +1,81 @@
+{
+  "schema_version": 2,
+  "generated_utc": "2026-08-10T01:17:13.5460994Z",
+  "purpose": "Case-independent physical-rim outlet classification for Campaign 2",
+  "decision_inputs_excluded": [
+    "experimental geyser/no-geyser labels",
+    "98-percent-of-rim liquid-level threshold",
+    "rendered images",
+    "case-specific tuned thresholds"
+  ],
+  "uniform_gate": {
+    "physical_plane_z_m": 1.8250001,
+    "physical_rim_z_m": 1.825,
+    "alpha_interface": 0.5,
+    "minimum_contiguous_upward_area": "95% of one local rim face",
+    "minimum_cumulative_positive_liquid_volume": "one adjacent normal-direction finite-volume cell",
+    "positive_flow": "integral_opening(alpha.water*max(Uz,0) dA)",
+    "positive_classification_after_normal_end_is_irreversible": true,
+    "negative_classification_requires_declared_observation_end": true,
+    "same_formula_for_all_cases": true
+  },
+  "completed_runs": [
+    {
+      "run": "B-H1 h1_refined_co015",
+      "classification": "GEYSER",
+      "first_full_gate_time_s": 14.0,
+      "maximum_rim_plane_alpha": 1.0,
+      "maximum_model_extrusion_flow_m3_s": 1.0387762197632865e-05,
+      "cumulative_model_extrusion_volume_m3": 2.587066877255487e-06,
+      "physical_circular_equivalent_peak_flow_m3_s": 0.0004079264675915146,
+      "physical_circular_equivalent_cumulative_volume_m3": 0.00010159387869914154,
+      "sampled_source_times": 298,
+      "source_interval_s": [0.0, 14.85],
+      "declared_observation_end_reached": false,
+      "normal_end": true,
+      "fatal_error": false,
+      "report": "h1_refined_co015.json",
+      "qualification_scope": "physical outlet classification only; quantitative H1 timing/velocity qualification remains failed"
+    },
+    {
+      "run": "B-H3 paper_bh3_tau0p2_areaeq baseline",
+      "classification": "NO_GEYSER",
+      "first_full_gate_time_s": null,
+      "maximum_rim_plane_alpha": 7.886415005486924e-06,
+      "maximum_model_extrusion_flow_m3_s": 1.9226086884811518e-12,
+      "cumulative_model_extrusion_volume_m3": 9.04580897419151e-13,
+      "physical_circular_equivalent_peak_flow_m3_s": 7.550066664325368e-11,
+      "physical_circular_equivalent_cumulative_volume_m3": 3.5522808773870835e-11,
+      "one_cell_volume_gate_m3": 5.408e-09,
+      "sampled_source_times": 401,
+      "source_interval_s": [0.0, 20.0],
+      "declared_observation_end_reached": true,
+      "normal_end": true,
+      "fatal_error": false,
+      "report": "h3_baseline_end20.json",
+      "qualification_scope": "diagnostic classification miss only; not the final B-H3 result"
+    },
+    {
+      "run": "B-H6 paper_tau0p2_areaeq end20",
+      "classification": "NO_GEYSER",
+      "first_full_gate_time_s": null,
+      "maximum_rim_plane_alpha": 0.0,
+      "maximum_model_extrusion_flow_m3_s": 0.0,
+      "cumulative_model_extrusion_volume_m3": 0.0,
+      "physical_circular_equivalent_peak_flow_m3_s": 0.0,
+      "physical_circular_equivalent_cumulative_volume_m3": 0.0,
+      "sampled_source_times": 401,
+      "source_interval_s": [0.0, 20.0],
+      "declared_observation_end_reached": true,
+      "normal_end": true,
+      "fatal_error": false,
+      "report": "h6_end20.json",
+      "qualification_scope": "complete-event physical outlet classification"
+    }
+  ],
+  "running_run": {
+    "run": "B-H3 h3_refined_iso_riser20",
+    "status_report": "h3_refined_checkpoint_status.json",
+    "final_classification": null
+  }
+}

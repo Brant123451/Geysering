@@ -1,0 +1,119 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setFieldsDict;
+}
+
+// Same upstream free-surface initialisation as A2.  The B3 differences are
+// the full downstream pipe and the chamber stage just above its crown.
+defaultFieldValues
+(
+    volScalarFieldValue alpha.water 0
+    volVectorFieldValue U (0 0 0)
+);
+
+regions
+(
+    // Fully water-filled numerical inlet plenum representing the pressurised
+    // feed tank. Its top is a wall, so none of the imposed flow can bypass the
+    // upstream pipe through an artificial open headbox surface.
+    boxToCell
+    {
+        box (-6.20 -1 -1) (-5.80 1 0.46);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+            // q0/(0.35*thickness), directed through the bottom inlet.
+            volVectorFieldValue U (0 0 0.363783)
+        );
+    }
+
+    // Upstream pipe: six steps follow invert z = 0.18 - 0.01*x with the
+    // approximately 0.08 m initial depth reported for A2.  The paper says
+    // B3 differs from A2 only in its downstream condition.  The quasi-2-D
+    // discharge mapping is fixed once for the entire connected domain:
+    // q2D = Q3D*(Du*thickness)/(pi*Du^2/4).  Each seed below is q2D divided
+    // by that region's 2-D wetted area, so the initial flux is continuous.
+    boxToCell
+    {
+        box (-5.82 -1 -1) (-4.83 1 0.318);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+            volVectorFieldValue U (1.59155 0 -0.0159155)
+        );
+    }
+    boxToCell
+    {
+        box (-4.83 -1 -1) (-3.87 1 0.308);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+            volVectorFieldValue U (1.59155 0 -0.0159155)
+        );
+    }
+    boxToCell
+    {
+        box (-3.87 -1 -1) (-2.90 1 0.299);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+            volVectorFieldValue U (1.59155 0 -0.0159155)
+        );
+    }
+    boxToCell
+    {
+        box (-2.90 -1 -1) (-1.93 1 0.289);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+            volVectorFieldValue U (1.59155 0 -0.0159155)
+        );
+    }
+    boxToCell
+    {
+        box (-1.93 -1 -1) (-0.97 1 0.279);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+            volVectorFieldValue U (1.59155 0 -0.0159155)
+        );
+    }
+    boxToCell
+    {
+        box (-0.97 -1 -1) (0.00 1 0.270);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+            volVectorFieldValue U (1.59155 0 -0.0159155)
+        );
+    }
+
+    // Declared B3 initial chamber stage: 0.30 m.  The seed carries the same
+    // q2D through the 0.30 m by thickness wetted front-view section.
+    boxToCell
+    {
+        box (-0.01 -1 -1) (0.31 1 0.30);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+            volVectorFieldValue U (0.424413 0 0)
+        );
+    }
+
+    // Series-B defining initial condition: downstream pipe is full.  The
+    // seed carries the same q2D through Dd by thickness.
+    boxToCell
+    {
+        // Start at the chamber wall so this region cannot overwrite the
+        // chamber air space above its declared 0.30 m water level.
+        box (0.30 -1 -1) (6.26 1 1);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+            volVectorFieldValue U (0.454728 0 0)
+        );
+    }
+);

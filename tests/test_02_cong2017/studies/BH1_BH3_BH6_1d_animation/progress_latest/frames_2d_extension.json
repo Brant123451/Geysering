@@ -1,0 +1,123 @@
+{
+  "BH1": [
+    {
+      "time": 13.5,
+      "file": "frames_2d_extension/BH1/full_13p50.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    },
+    {
+      "time": 14.0,
+      "file": "frames_2d_extension/BH1/full_14p00.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    },
+    {
+      "time": 14.5,
+      "file": "frames_2d_extension/BH1/full_14p50.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    },
+    {
+      "time": 14.8,
+      "file": "frames_2d_extension/BH1/full_14p80.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    }
+  ],
+  "BH3": [
+    {
+      "time": 13.5,
+      "file": "frames_2d_extension/BH3/full_13p50.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    },
+    {
+      "time": 14.0,
+      "file": "frames_2d_extension/BH3/full_14p00.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    },
+    {
+      "time": 14.5,
+      "file": "frames_2d_extension/BH3/full_14p50.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    },
+    {
+      "time": 15.0,
+      "file": "frames_2d_extension/BH3/full_15p00.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    },
+    {
+      "time": 15.5,
+      "file": "frames_2d_extension/BH3/full_15p50.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    },
+    {
+      "time": 16.0,
+      "file": "frames_2d_extension/BH3/full_16p00.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    },
+    {
+      "time": 16.5,
+      "file": "frames_2d_extension/BH3/full_16p50.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    },
+    {
+      "time": 16.65,
+      "file": "frames_2d_extension/BH3/full_16p65.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    },
+    {
+      "time": 16.8,
+      "file": "frames_2d_extension/BH3/full_16p80.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    }
+  ],
+  "BH6": [
+    {
+      "time": 13.5,
+      "file": "frames_2d_extension/BH6/full_13p50.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    },
+    {
+      "time": 14.0,
+      "file": "frames_2d_extension/BH6/full_14p00.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    },
+    {
+      "time": 14.5,
+      "file": "frames_2d_extension/BH6/full_14p50.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    },
+    {
+      "time": 15.0,
+      "file": "frames_2d_extension/BH6/full_15p00.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    },
+    {
+      "time": 15.5,
+      "file": "frames_2d_extension/BH6/full_15p50.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    },
+    {
+      "time": 16.0,
+      "file": "frames_2d_extension/BH6/full_16p00.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    },
+    {
+      "time": 16.5,
+      "file": "frames_2d_extension/BH6/full_16p50.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    },
+    {
+      "time": 17.0,
+      "file": "frames_2d_extension/BH6/full_17p00.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    },
+    {
+      "time": 17.2,
+      "file": "frames_2d_extension/BH6/full_17p20.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    },
+    {
+      "time": 17.4,
+      "file": "frames_2d_extension/BH6/full_17p40.png",
+      "source": "immutable written OpenFOAM checkpoint"
+    }
+  ]
+}

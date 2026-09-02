@@ -1,0 +1,16 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      thermophysicalProperties;
+}
+
+phases          (water air);
+pMin            80000;
+
+sigma
+{
+    type        constant;
+    sigma       0.072;
+}

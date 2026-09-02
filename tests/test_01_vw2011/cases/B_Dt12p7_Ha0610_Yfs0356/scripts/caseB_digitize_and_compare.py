@@ -38,6 +38,10 @@ PANEL = (1, 1)                              # center: Ha=0.610 m, WL=0.356 m
 
 DIG = DIGITIZED
 OUT = OUTPUTS
+LEVEL_RUNS = DIGITIZED / "fig8_caseB_levels_runs_v2.csv"
+PRESSURE_RUNS = DIGITIZED / "fig6_caseB_pressure_runs_v2.csv"
+YFS_CURVATURE_LEVELS = np.asarray([0.88, 0.91, 0.94, 0.97, 0.99])
+YINT_CURVATURE_LEVELS = np.asarray([0.10, 0.25, 0.40, 0.55, 0.70])
 DIG.mkdir(parents=True, exist_ok=True)
 OUT.mkdir(parents=True, exist_ok=True)
 
@@ -183,7 +187,10 @@ def digitize():
 
 def run_model(t_end: float = 10.5):
     case = NetworkCase(Dr=CASE["Dr"], air_head=CASE["air_head"],
-                       init_water_level=CASE["init_water_level"], t_end=t_end)
+                       init_water_level=CASE["init_water_level"], t_end=t_end,
+                       tower_entry_alpha_min=0.08,
+                       slug_glug_resistance_scale=1.50,
+                       mouth_coverage_alpha=0.10)
     rec = run_network(case, verbose=False)
     L = case.riser_height
     sgd = math.sqrt(G * case.Dr)
@@ -194,10 +201,28 @@ def run_model(t_end: float = 10.5):
         Tstar=t[:n] * sgd / L,
         Yfs=np.asarray(rec["wtop"])[:n] / L,
         Yint=np.asarray(rec["itop"])[:n] / L,
+        Yint_dynamic=np.asarray(rec["slug_front_z"])[:n] / L,
+        Yint_field_010=np.asarray(rec["field_itop_alpha010"])[:n] / L,
+        Yint_field_020=np.asarray(rec["field_itop_alpha020"])[:n] / L,
+        Yint_field_050=np.asarray(rec["field_itop"])[:n] / L,
         pocket=np.asarray(rec["up_head"])[:n] / L,
         tr=np.concatenate([[np.nan], np.asarray(rec["tr_head"])])[:n] / L,
+        slug_ell=np.asarray(rec["slug_ell"])[:n],
+        slug_U=np.asarray(rec["slug_velocity"])[:n],
+        slug_qgas=np.asarray(rec["slug_qgas"])[:n],
+        slug_transfer=np.asarray(rec["slug_transfer_cumulative"])[:n],
+        mouth_aperture=np.asarray(rec["mouth_aperture"])[:n],
+        effective_loss_K=np.asarray(rec["effective_loss_k"])[:n],
+        liquid_mouth_coverage=np.asarray(rec["liquid_mouth_coverage"])[:n],
+        liquid_availability=np.asarray(rec["liquid_availability"])[:n],
+        liquid_exchange_balance=np.asarray(rec["liquid_exchange_balance_m3"])[:n],
+        slug_transfer_mismatch=np.asarray(rec["slug_transfer_mismatch"])[:n],
+        gas_inventory=np.asarray(rec["gas_inventory"])[:n],
+        gas_vented=np.asarray(rec["gas_vented_cumulative"])[:n],
+        water_rim_latched=np.asarray(rec["water_rim_latched"], dtype=bool)[:n],
+        slug_rim_latched=np.asarray(rec["slug_rim_latched"], dtype=bool)[:n],
     )
-    return case, series
+    return case, series, rec
 
 
 def first_crossing(x, y, thresh, above=True, after=0.0):
@@ -209,17 +234,153 @@ def first_crossing(x, y, thresh, above=True, after=0.0):
     return None
 
 
+def interpolated_upcrossing(time, values, level, after=0.0):
+    """First linearly interpolated upcrossing on the native model clock."""
+    time = np.asarray(time, dtype=float)
+    values = np.asarray(values, dtype=float)
+    valid = np.isfinite(time) & np.isfinite(values) & (time >= after)
+    idx = np.flatnonzero(valid)
+    for right in idx[1:]:
+        left = right - 1
+        if not valid[left]:
+            continue
+        y0, y1 = float(values[left]), float(values[right])
+        if y0 < level <= y1:
+            fraction = (level - y0) / max(y1 - y0, 1.0e-14)
+            return float(time[left] + fraction * (time[right] - time[left]))
+    hit = idx[values[idx] >= level]
+    return float(time[hit[0]]) if hit.size else None
+
+
+def model_curvature(time, values, levels, after):
+    crossings = np.asarray([
+        np.nan if (crossing := interpolated_upcrossing(
+            time, values, float(level), after
+        )) is None else crossing
+        for level in levels
+    ])
+    result = {
+        "levels": levels.tolist(),
+        "crossing_Tstar": [
+            None if not np.isfinite(value) else float(value)
+            for value in crossings
+        ],
+        "late_to_early_slope_ratio": None,
+        "mean_second_difference_crossing_time": None,
+        "convex_accelerating": False,
+    }
+    if not np.all(np.isfinite(crossings)) or np.any(np.diff(crossings) <= 0.0):
+        return result
+    slopes = np.diff(levels) / np.diff(crossings)
+    second = float(np.mean(np.diff(crossings, n=2)))
+    ratio = float(slopes[-1] / slopes[0])
+    result.update({
+        "band_slopes_dYdT": slopes.tolist(),
+        "late_to_early_slope_ratio": ratio,
+        "mean_second_difference_crossing_time": second,
+        "convex_accelerating": bool(ratio > 1.0 and second < 0.0),
+    })
+    return result
+
+
+def load_run_rows(path):
+    with path.open(newline="", encoding="utf-8") as stream:
+        return list(csv.DictReader(stream))
+
+
+def experiment_curvature(kind, levels):
+    rows = [
+        row for row in load_run_rows(LEVEL_RUNS)
+        if row["kind"] == kind and row["role"] == "rising_track"
+    ]
+    runs = []
+    for run in sorted({row["run"] for row in rows}):
+        selected = sorted(
+            (row for row in rows if row["run"] == run),
+            key=lambda row: float(row["Ystar"]),
+        )
+        y = np.asarray([float(row["Ystar"]) for row in selected])
+        t = np.asarray([float(row["Tstar"]) for row in selected])
+        if y.size < 3 or levels[0] < y[0] or levels[-1] > y[-1]:
+            continue
+        crossing = np.interp(levels, y, t)
+        slopes = np.diff(levels) / np.diff(crossing)
+        runs.append({
+            "run": run,
+            "crossing_Tstar": crossing.tolist(),
+            "band_slopes_dYdT": slopes.tolist(),
+            "late_to_early_slope_ratio": float(slopes[-1] / slopes[0]),
+            "mean_second_difference_crossing_time": float(
+                np.mean(np.diff(crossing, n=2))
+            ),
+        })
+    return {
+        "levels": levels.tolist(),
+        "runs": runs,
+        "median_late_to_early_slope_ratio": (
+            float(np.median([
+                row["late_to_early_slope_ratio"] for row in runs
+            ])) if runs else None
+        ),
+        "median_mean_second_difference_crossing_time": (
+            float(np.median([
+                row["mean_second_difference_crossing_time"] for row in runs
+            ])) if runs else None
+        ),
+    }
+
+
+def native_track_error(time, values, kind):
+    rows = [
+        row for row in load_run_rows(LEVEL_RUNS)
+        if row["kind"] == kind and row["role"] == "rising_track"
+    ]
+    xp = np.asarray([float(row["Tstar"]) for row in rows])
+    yp = np.asarray([float(row["Ystar"]) for row in rows])
+    valid_series = np.isfinite(time) & np.isfinite(values)
+    pred = np.interp(
+        xp, time[valid_series], values[valid_series], left=np.nan, right=np.nan
+    )
+    err = pred[np.isfinite(pred)] - yp[np.isfinite(pred)]
+    return {
+        "n": int(err.size),
+        "rmse": float(np.sqrt(np.mean(err * err))) if err.size else None,
+        "bias": float(np.mean(err)) if err.size else None,
+    }
+
+
+def native_pressure_error(time, values):
+    rows = load_run_rows(PRESSURE_RUNS)
+    xp = np.asarray([float(row["Tstar"]) for row in rows])
+    yp = np.asarray([float(row["Hstar"]) for row in rows])
+    valid_series = np.isfinite(time) & np.isfinite(values)
+    pred = np.interp(
+        xp, time[valid_series], values[valid_series], left=np.nan, right=np.nan
+    )
+    err = pred[np.isfinite(pred)] - yp[np.isfinite(pred)]
+    return {
+        "n": int(err.size),
+        "rmse": float(np.sqrt(np.mean(err * err))) if err.size else None,
+        "bias": float(np.mean(err)) if err.size else None,
+    }
+
+
 def main():
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    if FIG6.is_file() and FIG8.is_file():
+    # Canonical model reruns consume the committed digitized evidence.  Raster
+    # redigitization is a separate, explicit operation so a solver change
+    # cannot silently rewrite the experimental input data.
+    if "--redigitize" in sys.argv:
+        if not (FIG6.is_file() and FIG8.is_file()):
+            raise FileNotFoundError("--redigitize requires both archived scans")
         fig6d, fig8d = digitize()
     else:
-        print("Raw paper scans are absent; using committed digitized CSV files.")
+        print("Using committed digitized experimental CSV files.")
         fig6d, fig8d = load_digitized()
-    case, s = run_model()
+    case, s, rec = run_model()
     L = case.riser_height
     tsc = L / math.sqrt(G * case.Dr)
     yfs0 = case.init_water_level / L
@@ -282,28 +443,6 @@ def main():
         ax.set_xlabel(r"$T^*_{ref} = t\,\sqrt{g D_t}/L$")
         ax.set_ylabel(r"$Y^* = Y/L$")
         ax.grid(alpha=0.3)
-    # slope check: replot the model curves time-shifted so the gas-front climb
-    # midpoint aligns with the experimental circles (the whole model gas sequence
-    # runs ~0.6 T* early -- the crown-current transit bias, same direction as
-    # caseA; a rigid shift is legitimate for comparing the climb kinematics)
-    if fig8d["int"].size:
-        ip = fig8d["int"][np.argsort(fig8d["int"][:, 0])]
-        climb = ip[(ip[:, 1] > 0.1) & (ip[:, 1] < 0.8)]
-        if climb.shape[0] >= 3:
-            y_ref = 0.40
-            t_exp = float(np.interp(y_ref, climb[:, 1], climb[:, 0]))
-            yint_m = np.asarray(s["Yint"]); ts_m = np.asarray(s["Tstar"])
-            rising = yint_m > 0.05
-            if rising.any():
-                i0 = int(np.argmax(rising))
-                seg = slice(i0, int(np.argmax(yint_m)) + 1)
-                t_mod = float(np.interp(y_ref, yint_m[seg], ts_m[seg]))
-                dshift = t_exp - t_mod
-                a2.plot(ts_m + dshift, yint_m, color=C_MODEL2, lw=1.2, ls=":",
-                        label=rf"model $Y^*_{{int}}$ shifted +{dshift:.2f} $T^*$ (slope check)")
-                a2.plot(ts_m + dshift, s["Yfs"], color=C_MODEL, lw=1.2, ls=":",
-                        label=rf"model $Y^*_{{fs}}$ shifted +{dshift:.2f} $T^*$")
-                a2.legend(frameon=False, fontsize=7, loc="center left")
     a1.legend(frameon=False, fontsize=8, loc="upper left")
     a1.set_title("full model trajectory (paper window shaded)", fontsize=10)
     a1.axvspan(3.0, 5.0, color="#f3f4f6", zorder=0)
@@ -342,7 +481,26 @@ def main():
         Ts_m, comparison_head, 0.3, above=False, after=(liftoff or 2.0)
     )
     audited_interface = int_pts[int_pts[:, 0] > 4.0] if int_pts.size else int_pts
+    gas_budget = np.asarray(s["gas_inventory"]) + np.asarray(s["gas_vented"])
+    gas_initial = float(gas_budget[0])
+    gas_budget_error = (
+        gas_budget - gas_initial
+    ) / max(gas_initial, 1.0e-30)
+    liquid = np.asarray(rec["tot_liq"], dtype=float)
+    branch_mask = Ts_m >= 3.2
+    water_rim_idx = np.flatnonzero(s["water_rim_latched"])
+    slug_rim_idx = np.flatnonzero(s["slug_rim_latched"])
+    water_rim_Tstar = (
+        float(Ts_m[water_rim_idx[0]]) if water_rim_idx.size else None
+    )
+    slug_rim_Tstar = (
+        float(Ts_m[slug_rim_idx[0]]) if slug_rim_idx.size else None
+    )
+    selected_closure = rec["caseb_selected_closure"]
     m = dict(
+        status="formal_caseB_selected_closure",
+        time_shift_applied=False,
+        curve_fit_applied=False,
         case=dict(**CASE, Dt_over_D=CASE["Dr"] / 0.094),
         Tstar_scale_s=tsc,
         datum_note=("The paper does not report the tap elevation. Both the raw "
@@ -361,6 +519,14 @@ def main():
             Vfs_star=Vfs_star,
             Hstar_max=float(np.nanmax(pocket_m)),
             Yfs_max=float(np.nanmax(Yfs_m)),
+            Yint_primary_max=float(np.nanmax(Yint_m[branch_mask])),
+            Yint_dynamic_front_max=float(np.nanmax(s["Yint_dynamic"][branch_mask])),
+            Yint_field_alpha050_max=float(np.nanmax(s["Yint_field_050"][branch_mask])),
+            water_numerical_rim_Tstar=water_rim_Tstar,
+            interface_at_rim_Tstar=slug_rim_Tstar,
+            strict_geometric_Yfs_one_Tstar=interpolated_upcrossing(
+                Ts_m, Yfs_m, 1.0, 3.2
+            ),
         ),
         paper=dict(
             geyser=True,
@@ -380,15 +546,144 @@ def main():
             Vfs_star_table2=0.44,
             Yfs0=yfs0,
         ),
+        selected_closure=selected_closure,
+        observer_definitions=dict(
+            Yfs_star="conservative geometric mixture-volume height",
+            Yint_star="shock-fitted slug-train front; rim-latched after atmospheric-path opening",
+            Yint_dynamic_star="unlatched shock-fitted state sensitivity",
+            Yint_field_star="base-connected distributed alpha_g isocontour sensitivities",
+        ),
+        numerical_rim_event=dict(
+            tolerance_m=selected_closure["numerical_rim_tolerance_m"],
+            tolerance_star=selected_closure["numerical_rim_tolerance_star"],
+            basis=selected_closure["numerical_rim_tolerance_basis"],
+            water_rim_latched_Tstar=water_rim_Tstar,
+            atmospheric_path_latched_Tstar=slug_rim_Tstar,
+            primary_Yint_post_latch_min=(
+                float(np.min(Yint_m[slug_rim_idx[0]:]))
+                if slug_rim_idx.size else None
+            ),
+            primary_Yint_artificial_collapse=False if slug_rim_idx.size else None,
+        ),
+        level_curvature=dict(
+            experiment_Yfs=experiment_curvature(
+                "fs", YFS_CURVATURE_LEVELS
+            ),
+            model_Yfs_geometric=model_curvature(
+                Ts_m, Yfs_m, YFS_CURVATURE_LEVELS, 3.4
+            ),
+            experiment_Yint=experiment_curvature(
+                "int", YINT_CURVATURE_LEVELS
+            ),
+            model_Yint_primary=model_curvature(
+                Ts_m, Yint_m, YINT_CURVATURE_LEVELS, 3.0
+            ),
+            model_Yint_dynamic_front=model_curvature(
+                Ts_m, s["Yint_dynamic"], YINT_CURVATURE_LEVELS, 3.0
+            ),
+            model_Yint_field_alpha010=model_curvature(
+                Ts_m, s["Yint_field_010"], YINT_CURVATURE_LEVELS, 3.0
+            ),
+            model_Yint_field_alpha020=model_curvature(
+                Ts_m, s["Yint_field_020"], YINT_CURVATURE_LEVELS, 3.0
+            ),
+            model_Yint_field_alpha050=model_curvature(
+                Ts_m, s["Yint_field_050"], YINT_CURVATURE_LEVELS, 3.0
+            ),
+        ),
+        native_rising_track_error=dict(
+            Yfs=native_track_error(Ts_m, Yfs_m, "fs"),
+            Yint_primary=native_track_error(Ts_m, Yint_m, "int"),
+            Yint_dynamic_front=native_track_error(
+                Ts_m, s["Yint_dynamic"], "int"
+            ),
+            Yint_field_alpha010=native_track_error(
+                Ts_m, s["Yint_field_010"], "int"
+            ),
+            Yint_field_alpha020=native_track_error(
+                Ts_m, s["Yint_field_020"], "int"
+            ),
+            Yint_field_alpha050=native_track_error(
+                Ts_m, s["Yint_field_050"], "int"
+            ),
+        ),
+        fig6_pressure_audit=dict(
+            native_raw_rmse_bias=native_pressure_error(Ts_m, s["tr"]),
+            raw_Hstar_max=float(np.nanmax(s["tr"])),
+            raw_plateau_median_Hstar_Tstar_0p8_to_3p0=float(np.nanmedian(
+                s["tr"][(Ts_m >= 0.8) & (Ts_m <= 3.0)]
+            )),
+            raw_collapse_below_0p30_Tstar_after_3=first_crossing(
+                Ts_m, s["tr"], 0.30, above=False, after=3.0
+            ),
+        ),
+        conservation_audit=dict(
+            liquid_initial_output_m3=float(liquid[0]),
+            liquid_final_output_m3=float(liquid[-1]),
+            liquid_relative_change=float(
+                (liquid[-1] - liquid[0]) / liquid[0]
+            ),
+            T_mouth_exchange_identity_max_abs_m3=float(np.max(np.abs(
+                s["liquid_exchange_balance"]
+            ))),
+            gas_initial_tracked_kg=gas_initial,
+            gas_inventory_final_kg=float(s["gas_inventory"][-1]),
+            gas_vented_final_kg=float(s["gas_vented"][-1]),
+            gas_budget_final_relative_error=float(gas_budget_error[-1]),
+            gas_budget_max_abs_relative_error=float(np.max(np.abs(
+                gas_budget_error
+            ))),
+            pocket_to_riser_transfer_final_kg=float(s["slug_transfer"][-1]),
+            pocket_to_riser_transfer_mismatch_final_kg=float(
+                s["slug_transfer_mismatch"][-1]
+            ),
+            pocket_to_riser_transfer_mismatch_max_abs_kg=float(np.max(np.abs(
+                s["slug_transfer_mismatch"]
+            ))),
+            slug_U_max_mps=float(np.max(s["slug_U"])),
+            slug_U_min_mps=float(np.min(s["slug_U"])),
+        ),
     )
     (OUT / "caseB_comparison_metrics.json").write_text(json.dumps(m, indent=2), encoding="utf-8")
 
     with (OUT / "caseB_model_series.csv").open("w", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["t_s", "Tstar", "Yfs_star", "Yint_star", "pocket_Hstar", "transducer_Hstar"])
+        w.writerow([
+            "t_s", "Tstar", "Yfs_star", "Yint_star",
+            "pocket_Hstar", "transducer_Hstar",
+            "Yint_star_dynamic_front", "Yint_star_field_alpha010",
+            "Yint_star_field_alpha020", "Yint_star_field_alpha050",
+            "slug_ell_m", "slug_U_mps", "qgas_m3ps",
+            "gas_transfer_cumulative_kg", "mouth_aperture",
+            "effective_loss_K", "liquid_mouth_coverage",
+            "liquid_availability", "liquid_exchange_balance_m3",
+            "gas_transfer_mismatch_kg", "gas_inventory_kg",
+            "gas_vented_cumulative_kg", "gas_budget_relative_error",
+            "water_rim_latched", "slug_rim_latched",
+            "numerical_rim_tolerance_star",
+        ])
         for i in range(len(s["t"])):
-            w.writerow([f"{s['t'][i]:.4f}", f"{s['Tstar'][i]:.4f}", f"{s['Yfs'][i]:.4f}",
-                        f"{s['Yint'][i]:.4f}", f"{s['pocket'][i]:.4f}", f"{s['tr'][i]:.4f}"])
+            w.writerow([
+                f"{s['t'][i]:.10g}", f"{s['Tstar'][i]:.10g}",
+                f"{s['Yfs'][i]:.10g}", f"{s['Yint'][i]:.10g}",
+                f"{s['pocket'][i]:.10g}", f"{s['tr'][i]:.10g}",
+                f"{s['Yint_dynamic'][i]:.10g}",
+                f"{s['Yint_field_010'][i]:.10g}",
+                f"{s['Yint_field_020'][i]:.10g}",
+                f"{s['Yint_field_050'][i]:.10g}",
+                f"{s['slug_ell'][i]:.10g}", f"{s['slug_U'][i]:.10g}",
+                f"{s['slug_qgas'][i]:.10g}", f"{s['slug_transfer'][i]:.10g}",
+                f"{s['mouth_aperture'][i]:.10g}",
+                f"{s['effective_loss_K'][i]:.10g}",
+                f"{s['liquid_mouth_coverage'][i]:.10g}",
+                f"{s['liquid_availability'][i]:.10g}",
+                f"{s['liquid_exchange_balance'][i]:.10g}",
+                f"{s['slug_transfer_mismatch'][i]:.10g}",
+                f"{s['gas_inventory'][i]:.10g}", f"{s['gas_vented'][i]:.10g}",
+                f"{gas_budget_error[i]:.10g}",
+                int(s["water_rim_latched"][i]), int(s["slug_rim_latched"][i]),
+                f"{selected_closure['numerical_rim_tolerance_star']:.10g}",
+            ])
 
     build_report(m)
     print(json.dumps(m, indent=2))

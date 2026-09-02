@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+source /usr/lib/openfoam/openfoam2512/etc/bashrc >/dev/null 2>&1
+set -euo pipefail
+cd "$(dirname "$0")"
+foamListTimes -rm >/dev/null 2>&1 || true
+rm -rf constant/polyMesh postProcessing
+rm -f log.blockMesh log.checkMesh log.setExprFields log.interFoam.init log.interFoam.transient
+cp system/controlDict.init system/controlDict

@@ -1,0 +1,49 @@
+{
+  "schema_version": 3,
+  "case": "BH6",
+  "paper_run": "B-H6",
+  "status": "COMPLETE",
+  "runtime_s": 225.05,
+  "source_model": "cases/BH6_Dr41_H066_L061/model/cong2017_network_twofluid.py",
+  "source_model_sha256": "b3cc2ca9affd7c64b542b2ecb5db88367b9b08c1a212c124272d68c871a967dd",
+  "geometry_m": {
+    "D": 0.05,
+    "Dr": 0.041,
+    "riser_height": 1.8,
+    "tank_to_riser": 3.47,
+    "riser_to_valve": 2.51,
+    "valve_to_cap_L0": 0.61,
+    "total_pipe": 6.590000000000001
+  },
+  "initial_and_boundary_conditions": {
+    "paper_H0_above_pipe_invert_m": 0.66,
+    "model_head_above_pipe_crown_m": 0.61,
+    "initial_riser_level_above_pipe_crown_m": 0.61,
+    "initial_release_reach_liquid_fraction_min": 0.0,
+    "initial_release_reach_liquid_fraction_max": 0.0,
+    "initial_pocket_gauge_head_m": 0.0,
+    "valve_opening_duration_s": 0.2
+  },
+  "dimensionless_air_volume": 1.3745425702594054,
+  "wet_dry_checks": {
+    "finite_wetting_front": true,
+    "wetting_front_reaches_cap_s": 0.4801060940471343,
+    "model_release_cap_wetted_s": 0.47660211957404824,
+    "reflected_front_moves_left": true,
+    "minimum_reflected_front_x_m": 3.470971509851784,
+    "tunnel_gas_mass_relative_drift_through_wetting": -3.222698384930389e-06,
+    "tunnel_gas_mass_relative_change_full_run_including_riser_venting": -0.9984408860803036,
+    "liquid_floor_created_m3_full_run": 2.206526424405992e-06
+  },
+  "model_outcome": {
+    "geyser": false,
+    "experiment_geyser": false,
+    "gas_arrival_at_riser_s": 11.340059333859893,
+    "free_surface_at_rim_s": null,
+    "maximum_riser_level_m": 0.7100920626953862,
+    "maximum_pocket_head_m": 1.11219048196137
+  },
+  "artifacts": {
+    "frames_npz": "repaired_1d_frames.npz"
+  }
+}

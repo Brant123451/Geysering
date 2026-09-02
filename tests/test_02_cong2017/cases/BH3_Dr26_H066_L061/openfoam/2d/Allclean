@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+scratch_root="${BH3_2D_SCRATCH:-/tmp/bh3-2d-study}"
+target="$scratch_root/paper_bh3_tau0p2_areaeq"
+case "$target" in
+    "$scratch_root"/paper_bh3_tau0p2_areaeq) ;;
+    *) echo "Refusing unsafe target: $target" >&2; exit 2 ;;
+esac
+rm -rf -- "$target"
+echo "REMOVED $target"

@@ -1,0 +1,10 @@
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    object turbulenceProperties;
+}
+// The experiment does not report inlet turbulence quantities. No closure is fitted.
+simulationType laminar;
+

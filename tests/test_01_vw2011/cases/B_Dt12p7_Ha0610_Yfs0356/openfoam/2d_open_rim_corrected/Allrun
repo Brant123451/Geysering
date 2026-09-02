@@ -1,0 +1,39 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+source /usr/share/modules/init/bash 2>/dev/null || true
+set +e
+set +u
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
+
+if [[ -d 0 || -d processor0 ]]; then
+    echo "Existing solution detected; use ./Allrun.resume instead." >&2
+    exit 1
+fi
+
+NP="${OPENFOAM_NP:-$(nproc)}"
+if (( NP > 6 )); then
+    NP=6
+elif (( NP < 1 )); then
+    NP=1
+fi
+foamDictionary system/decomposeParDict \
+    -entry numberOfSubdomains \
+    -set "$NP" >/dev/null
+
+cp -a 0.orig 0
+blockMesh > log.blockMesh 2>&1
+checkMesh > log.checkMesh 2>&1
+setFields > log.setFields 2>&1
+
+# p_rgh is hydrostatically consistent in the connected water. The solve
+# reconstructs p from p_rgh, phase density and gh on its first correction.
+
+decomposePar > log.decomposePar 2>&1
+OMPI_ALLOW_RUN_AS_ROOT=1 \
+OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
+mpirun -np "$NP" compressibleInterFoam -parallel \
+    > log.compressibleInterFoam 2>&1
+python3 postprocess_compare.py > log.postprocess 2>&1
+echo "CASE_B_2D_DONE"

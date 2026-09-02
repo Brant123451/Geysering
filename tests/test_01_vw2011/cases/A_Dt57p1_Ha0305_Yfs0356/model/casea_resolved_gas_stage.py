@@ -621,16 +621,10 @@ def evaluate_resolved_gas_stage_rhs(
         h_ag,
         h_depth,
         h_pg,
-        h_pi,
         h_dh,
         v_ag,
         v_pg,
-        v_pi,
         v_dh,
-        h_effective_liquid,
-        h_ql,
-        v_effective_liquid,
-        v_ql,
         h_faces,
         v_faces,
         horizontal_active,
@@ -728,7 +722,7 @@ def evaluate_resolved_gas_stage_rhs(
             params.resolved_density_ceiling,
         )
         t_momentum_flux = t_momentum_per_area * mouth_area
-    t_mass_rate = float(raw_rhs[9])
+    t_mass_rate = float(raw_rhs[7])
     if t_mass_rate >= 0.0:
         t_tracer_rate = t_mass_rate
     else:
@@ -744,8 +738,8 @@ def evaluate_resolved_gas_stage_rhs(
         internal_mass_residual=(-t_mass_rate + t_mass_rate),
     )
 
-    top_mass_rate = float(raw_rhs[7])
-    top_tracer_rate = float(raw_rhs[8])
+    top_mass_rate = float(raw_rhs[5])
+    top_tracer_rate = float(raw_rhs[6])
     top_momentum_flux = 0.0
     if v_faces[-1] > 0.0:
         v_rho_top = max(v_mass_per_length[-1] / v_ag[-1], 1.0e-10)

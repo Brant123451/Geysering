@@ -1,0 +1,39 @@
+schema: case3_source_alignment_invalidation_v1
+detected_local: '2026-08-10T08:14:00+08:00'
+paper_evidence:
+  source: Mahyawansi_et_al_JHR_2024
+  statement: inlet_and_outlet_boundaries_are_treated_as_total_pressure_boundaries
+  table_1:
+    boundary_1_water_inlet_total_gauge_pressure: rho_water*g*(0.586-y)
+    boundary_2_water_outlet_pressure: rho_water*g*(0.584-y)
+    boundary_3_air_inlet_total_gauge_pressure_Pa: 5700
+    boundary_4_ambient_gauge_pressure_Pa: 0
+    boundaries_5_6_ambient_pressure: rho_air*g*(1.02-y)
+current_translation_issue:
+  affected_field: 0/p_rgh
+  affected_open_boundaries:
+    - waterInlet
+    - waterOutlet
+    - ambientFloor
+    - ambientSides
+    - ambientTop
+  current_type: fixedValue
+  required_semantics: total_pressure_with_hydrostatic_profile_and_inflow_dynamic_head
+  verified_OpenFOAM_v2512_candidate: prghTotalPressure
+  candidate_source_file: /usr/lib/openfoam/openfoam2512/src/finiteVolume/fields/fvPatchFields/derived/prghTotalPressure/prghTotalPressureFvPatchScalarField.C
+  implementation_note: water_and_vertical_ambient_p0_must_be_facewise_Table1_profiles_not_uniform_constants
+affected_outputs:
+  coarse_stage1_to_s: 0.5
+  medium_refine_stage1_to_s: 0.123873702649
+  refined_stage1_to_s: 0.107860352599
+decision:
+  all_existing_preflight_and_smoke_acceptance: invalidated_for_formal_source_aligned_campaign
+  all_existing_stage1_outputs: exploratory_rejected_not_for_restart
+  stage2_authorized: false
+  result_accepted: false
+  rerun_required:
+    - implement_and_unit_test_facewise_total_pressure_profiles
+    - rebuild_each_level_from_clean_time_zero
+    - rerun_preflight_and_0.02s_smoke
+    - repeat_guarded_Stage1_and_physical_stability_gate
+    - do_not_change_published_parameters_or_tune_for_eruption

@@ -1,0 +1,100 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvOptions;
+}
+
+// Match the frozen 1-D model's isothermal gas EOS.  The same temperature is
+// imposed on both phases, consistent with the initial and atmospheric values.
+isothermalConstraint
+{
+    type            scalarFixedValueConstraint;
+    selectionMode   all;
+    fieldValues
+    {
+        T           293.15;
+    }
+}
+
+// Wall shear remains resolved by the 2-D no-slip boundaries.  Do not add the
+// 1-D bulk Darcy term here: doing both would double count wall resistance, and
+// replacing the walls with slip removes essential standpipe damping from this
+// area-equivalent planar surrogate.
+
+// Piecewise-midpoint representation of the frozen 1-D valve law:
+// theta=t/0.25, K=2/theta^2 during opening, then K=2 fully open.
+// The selected valve zone is one axial cell long, Lv=2.97/860 m.
+valve_000_050ms
+{
+    type            explicitPorositySource;
+    timeStart       0;
+    duration        0.05;
+    explicitPorositySourceCoeffs
+    {
+        selectionMode cellZone; cellZone valveZone; type DarcyForchheimer;
+        d (0 0 0); f (57912.46 0 0);
+        coordinateSystem { origin (0 0 0); e1 (1 0 0); e2 (0 1 0); }
+    }
+}
+valve_050_100ms
+{
+    type            explicitPorositySource;
+    timeStart       0.05;
+    duration        0.05;
+    explicitPorositySourceCoeffs
+    {
+        selectionMode cellZone; cellZone valveZone; type DarcyForchheimer;
+        d (0 0 0); f (6434.72 0 0);
+        coordinateSystem { origin (0 0 0); e1 (1 0 0); e2 (0 1 0); }
+    }
+}
+valve_100_150ms
+{
+    type            explicitPorositySource;
+    timeStart       0.10;
+    duration        0.05;
+    explicitPorositySourceCoeffs
+    {
+        selectionMode cellZone; cellZone valveZone; type DarcyForchheimer;
+        d (0 0 0); f (2316.50 0 0);
+        coordinateSystem { origin (0 0 0); e1 (1 0 0); e2 (0 1 0); }
+    }
+}
+valve_150_200ms
+{
+    type            explicitPorositySource;
+    timeStart       0.15;
+    duration        0.05;
+    explicitPorositySourceCoeffs
+    {
+        selectionMode cellZone; cellZone valveZone; type DarcyForchheimer;
+        d (0 0 0); f (1181.89 0 0);
+        coordinateSystem { origin (0 0 0); e1 (1 0 0); e2 (0 1 0); }
+    }
+}
+valve_200_250ms
+{
+    type            explicitPorositySource;
+    timeStart       0.20;
+    duration        0.05;
+    explicitPorositySourceCoeffs
+    {
+        selectionMode cellZone; cellZone valveZone; type DarcyForchheimer;
+        d (0 0 0); f (714.97 0 0);
+        coordinateSystem { origin (0 0 0); e1 (1 0 0); e2 (0 1 0); }
+    }
+}
+valve_fully_open
+{
+    type            explicitPorositySource;
+    timeStart       0.25;
+    duration        20;
+    explicitPorositySourceCoeffs
+    {
+        selectionMode cellZone; cellZone valveZone; type DarcyForchheimer;
+        d (0 0 0); f (579.12 0 0);
+        coordinateSystem { origin (0 0 0); e1 (1 0 0); e2 (0 1 0); }
+    }
+}

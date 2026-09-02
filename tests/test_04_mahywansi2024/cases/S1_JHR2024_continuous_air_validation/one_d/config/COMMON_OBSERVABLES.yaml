@@ -1,0 +1,207 @@
+schema_version: 2
+case_id: S1_JHR2024_continuous_air_validation
+physical_condition_count: 1
+comparison_time_grid_s: 0.10
+time_origin: stage_2_air_opening
+time_shift_allowed: false
+pressure_reference: gauge_Pa
+
+source_semantics:
+  fig8_horizontal_slug_velocity:
+    quantity: water_velocity_magnitude_in_unmixed_middle_part_of_horizontal_slug
+    published_target_m_s: [0.8, 0.9]
+    evidence: published_text_Figure_8_and_Figures_4d_7d
+    evidence_status: published
+    one_d_mapping: >-
+      Water-volume-weighted abs(Ql/Al) in unmixed water within the published
+      x=-0.85...-0.75 m window, and only while a detected full-bore liquid
+      slug intersects that window.
+    forbidden_substitutions:
+      - gas_nose_speed
+      - gas_front_speed
+      - gas_edge_speed
+      - slug_nose_speed
+      - slug_tail_speed
+    note: >-
+      The paper states that air was not seeded, so the PIV quantity is water
+      velocity magnitude. horizontal_slug_velocity_m_s must never carry a gas
+      nose/front/edge speed or a moving slug-edge speed.
+  published_pressure_probes:
+    coordinate_mapping: paper_y_is_model_z
+    evidence: published_Figure_2_caption
+    evidence_status: published
+    probes:
+      P1:
+        published_x_y_m: [0.0, 0.0]
+        model_x_z_m: [0.0, 0.0]
+        canonical_output: P1_gauge_Pa
+        engineering_alias: P1
+      P2:
+        published_x_y_m: [0.0, 0.30]
+        model_x_z_m: [0.0, 0.30]
+        canonical_output: P2_gauge_Pa
+        engineering_alias: P2
+      P3:
+        published_x_y_m: [0.0, 0.45]
+        model_x_z_m: [0.0, 0.45]
+        canonical_output: P3_gauge_Pa
+        engineering_alias: P3
+      P4:
+        published_x_y_m: [-0.80, 0.0]
+        model_x_z_m: [-0.80, 0.0]
+        canonical_output: H_upstream_gauge_Pa
+        engineering_alias: H_upstream
+      P5:
+        published_x_y_m: [-0.10, 0.0]
+        model_x_z_m: [-0.10, 0.0]
+        canonical_output: riser_left_gauge_Pa
+        engineering_alias: riser_left
+      P6:
+        published_x_y_m: [0.10, 0.0]
+        model_x_z_m: [0.10, 0.0]
+        canonical_output: riser_right_gauge_Pa
+        engineering_alias: riser_right
+    naming_rule: >-
+      P1...P6 are the published probe names. H_upstream, riser_left and
+      riser_right are declared project engineering aliases for P4, P5 and P6;
+      those aliases are not names used in the source paper.
+  external_plume_height:
+    native_one_d_status: unavailable_as_resolved_external_free_surface
+    allowed_extra_output: derived_plume_height_proxy_m
+    allowed_extra_output_status: declared_reduced_order_derived_proxy
+    forbidden_substitution: riser_connected_water_top_z_m
+    note: >-
+      The persistent exterior liquid inventory may expose a derived centroid
+      height proxy. It is not a resolved external free-surface or measured
+      geyser peak and cannot replace the paper's external height target.
+
+fixed_probe_locations_xz_m:
+  P1: [0.0, 0.0]
+  P2: [0.0, 0.30]
+  P3: [0.0, 0.45]
+  H_upstream: [-0.80, 0.0]
+  riser_left: [-0.10, 0.0]
+  riser_right: [0.10, 0.0]
+
+one_d_observer_contract:
+  horizontal_x_min_m: -1.83
+  air_supply_tee_x_m: -1.52
+  riser_tee_x_m: 0.0
+  horizontal_x_max_m: 1.27
+  supply_branch_bottom_z_m: 0.0127
+  supply_branch_top_z_m: 0.15
+  riser_bottom_z_m: 0.0
+  riser_rim_z_m: 1.02
+  gas_cell_min_area_fraction: 0.50
+  unmixed_water_min_area_fraction: 0.95
+  surrounding_gas_min_area_fraction: 0.05
+  slug_min_axial_length_m: 0.00635
+  slug_search_x_m: [-1.45, -0.05]
+  published_slug_PIV_window_x_m: [-0.85, -0.75]
+  riser_wet_min_area_fraction: 0.50
+  riser_flux_section_z_m: 0.30
+  gas_arrival_location_x_m: 0.0
+  scalar_sampling:
+    rule: accepted_state_exactly_on_common_grid
+    interpolation_allowed: false
+    first_time_s: 0.0
+    time_coordinate: elapsed_from_stage_2_air_opening
+  profile_sampling:
+    rule: native_riser_cells_at_same_exact_common_times
+    interpolate_in_time: false
+    preserve_native_states: [Aup, Qup, Adown, Qdown, Mg, Jg]
+    gas_velocity_rule: Jg_divided_by_Mg_where_Mg_positive_else_NaN
+    missing_cell_rule: NaN_plus_explicit_validity_mask
+  accepted_diagnostic_inputs_required:
+    - all_P1_through_P6_gauge_pressures
+    - accepted_supply_branch_gross_liquid_outflow_and_gas_inflow
+    - accepted_riser_mouth_gross_liquid_and_gas_inflow_outflow
+    - both_zero_storage_node_phase_residuals
+    - node_reaction_impulse_since_stage2_origin
+    - native_internal_mouth_event_state
+    - every_conservation_ledger_entry_since_previous_common_sample
+  fail_closed_rule: >-
+    A production artifact is forbidden if any canonical diagnostic input or
+    accepted-state interval is missing. Synthetic/diagnostic artifacts may
+    carry NaN only when metadata explicitly lists the field and reason.
+
+production_trajectory_gate:
+  formal_entry_requires_operator_production_ready: true
+  observer_may_not_set_production_ready: true
+  result_marker_written: false
+  forbidden_outputs:
+    - RESULT_ACCEPTED
+    - RUN_COMPLETE_UNVALIDATED
+    - ERUPTION_ACCEPTED
+  note: >-
+    The observer/exporter records an already accepted trajectory. It cannot
+    authorize a long run, promote an operator, or create any acceptance marker.
+
+riser_level_probes_z_m: [0.58, 0.60, 0.65, 1.00]
+
+canonical_series:
+  - time_s
+  - P1_gauge_Pa
+  - P2_gauge_Pa
+  - P3_gauge_Pa
+  - H_upstream_gauge_Pa
+  - riser_left_gauge_Pa
+  - riser_right_gauge_Pa
+  - horizontal_gas_nose_x_m
+  - horizontal_gas_tail_x_m
+  - horizontal_gas_centroid_x_m
+  - horizontal_gas_volume_m3
+  - horizontal_slug_nose_x_m
+  - horizontal_slug_tail_x_m
+  - horizontal_slug_velocity_m_s
+  - gas_arrival_at_riser
+  - supply_branch_gas_front_z_m
+  - supply_branch_liquid_outflow_m3_s
+  - supply_branch_gas_inflow_kg_s
+  - air_supply_node_liquid_volume_residual_m3_s
+  - air_supply_node_gas_mass_residual_kg_s
+  - riser_node_liquid_volume_residual_m3_s
+  - riser_node_gas_mass_residual_kg_s
+  - riser_connected_water_top_z_m
+  - riser_upward_liquid_flow_m3_s
+  - riser_downward_liquid_flow_m3_s
+  - mouth_liquid_outflow_m3_s
+  - mouth_gas_outflow_kg_s
+  - cumulative_mouth_liquid_outflow_m3
+  - internal_mouth_event_active
+  - liquid_volume_residual_m3
+  - gas_mass_residual_kg
+  - horizontal_momentum_residual_Ns
+  - vertical_momentum_residual_Ns
+  - node_reaction_impulse_Ns
+
+comparison_outputs_per_mesh:
+  - alignment_metrics.json
+  - eruption_timeseries.csv
+  - eruption_acceptance.json
+  - mass_balance.csv
+  - horizontal_phase_motion.csv
+  - riser_twofluid_profiles.npz
+
+required_profile_fields:
+  - time_s
+  - riser_z_cell_center_m
+  - riser_Aup_m2
+  - riser_Qup_m3_s
+  - riser_Adown_m2
+  - riser_Qdown_m3_s
+  - riser_gas_area_m2
+  - riser_gas_mass_kg_m
+  - riser_gas_velocity_m_s
+
+profile_rules:
+  - Preserve Aup/Qup/Adown/Qdown independently; never reconstruct from net flow.
+  - Export profiles at the same unshifted common physical times as scalar series.
+  - Mark missing or inadmissible cells explicitly; do not interpolate across failed intervals.
+
+rules:
+  - Resample native outputs to this common grid without shifting physical time.
+  - Record interpolation gaps; do not bridge a failed or missing solver interval.
+  - Compare one common 1-D parameter set to all three 2-D meshes.
+  - Report mesh spread separately from one-dimensional model error.
+  - Do not infer a missing observable from a rendered animation.

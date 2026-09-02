@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "role": "shared-closure diagnostic only",
+  "case": "BH3",
+  "geometry": {
+    "D_m": 0.05,
+    "Dr_m": 0.026,
+    "riser_height_m": 1.8,
+    "riser_x_m": 3.47,
+    "valve_x_m": 5.98,
+    "cap_x_m": 6.59,
+    "H0_from_invert_m": 0.66,
+    "H0_from_crown_m": 0.61,
+    "valve_open_time_s": 0.2,
+    "gas_temperature_K": 296.15
+  },
+  "shared_closure": {
+    "gas_drive_eff": 2.2,
+    "entry_drive_eff": 2.0,
+    "gas_escape_eff": 0.5,
+    "wave_speed_m_s": 28.0,
+    "ds_m": 0.08,
+    "dz_m": 0.04
+  },
+  "result": {
+    "end_time_s": 13.0,
+    "maximum_riser_level_m": 1.3013871618490578,
+    "riser_top_cell_centre_m": 1.78,
+    "cumulative_top_liquid_outflow_m3": 0.0,
+    "outflow_classification_tolerance_m3": 1e-09,
+    "geyser": false,
+    "first_liquid_ejection_time_s": null,
+    "experiment_geyser": true,
+    "classification_match": false,
+    "runtime_s": 66.67775400006212,
+    "liquid_floor_created_m3": 0.0
+  },
+  "model_provenance": {
+    "case1_horizontal_used": true,
+    "case1_handoff_time_s": 9.224123507547244,
+    "case1_handoff_event": "riser_arrival",
+    "case1_horizontal": {
+      "model": "Case-1 Tosan shock-fit + circular Saint-Venant wet/dry core",
+      "coordinate_map": "x_mirror = L - x_physical",
+      "core_source": "E:\\Geysering\\tests\\test_01_vw2011\\cases\\A_Dt57p1_Ha0305_Yfs0356\\model\\tosan2021_horizontal_shockfit.py",
+      "core_sha256": "90e84da9afa0ec8465d80f87fc701dfb8f0fad6f97350ea708074a50192b6119",
+      "conservative_map_source": "E:\\Geysering\\tests\\test_02_cong2017\\studies\\BH1_BH3_BH6_1d_animation\\case1_mirrored_horizontal.py",
+      "adapter_sha256": "e89f7db70b14d9b14657945b9fbfee00d0aa92fb100f883701f689631443c793",
+      "conservative_map": "Case-1 same-grid void-volume map, frozen locally",
+      "valve_open_time_s": 0.2,
+      "gas_temperature_K": 296.15,
+      "network_coupling_interval_s": 0.005,
+      "valve_area_law": "phi=sin(pi/2*min(max(t/t_open,0),1))^2",
+      "pre_handoff_reservoir_boundary": "fixed initial state (transmissive Case-1 MOC end)",
+      "adapter_handoff_condition": "selected by the coupled network; the adapter does not change ownership itself"
+    },
+    "vertical": "resolved 1D two-fluid area/mass/momentum model",
+    "per_case_parameter_fitting": false
+  }
+}

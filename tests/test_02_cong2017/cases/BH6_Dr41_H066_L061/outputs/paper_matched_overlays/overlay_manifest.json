@@ -1,0 +1,72 @@
+{
+  "source": "Cong, Chan and Lee (2017), J. Hydraul. Eng. 143(9), 04017039",
+  "source_pdf": "references/cong2017.pdf",
+  "principle": "published raster pixels retained; simulations appended or overlaid",
+  "fig6": {
+    "source_scan": "reference/paper_scans/fig6_bh6_photos.png",
+    "times_s": [
+      8.7,
+      9.3,
+      9.9,
+      10.5,
+      10.9
+    ],
+    "simulation_frames": "outputs/1d2d_viewer/frames_{1d,2d}/zoom_*.png"
+  },
+  "fig6_full_domain_3frame": {
+    "source_scan": "reference/paper_scans/fig6_bh6_photos.png",
+    "times_s": [
+      8.7,
+      9.9,
+      10.9
+    ],
+    "layout": "complete 1D | published riser photograph | complete OpenFOAM 2D",
+    "simulation_frames": "outputs/1d2d_viewer/frames_{1d,2d}/full_*.png",
+    "time_alignment": "common physical clock; no shift or event alignment"
+  },
+  "fig7a": {
+    "source_scan": "reference/paper_scans/fig7_bh6_riser.png",
+    "source_axis_px": {
+      "x": [
+        202,
+        813
+      ],
+      "t_s": [
+        8,
+        11
+      ],
+      "y": [
+        1378,
+        926
+      ],
+      "Y_m": [
+        0,
+        2
+      ]
+    },
+    "smoothing": "2D curves: centered 0.05-s running median; no time shift"
+  },
+  "fig10b": {
+    "source_run": "B-32 (same Dr/H0/L0 condition, not the B-H6 high-speed record)",
+    "source_axis_px": {
+      "x": [
+        180,
+        747
+      ],
+      "t_s": [
+        0,
+        13
+      ],
+      "y": [
+        970,
+        550
+      ],
+      "H_over_H0": [
+        0,
+        4
+      ]
+    },
+    "smoothing": "1D 0.5-s and 2D 0.1-s running medians; no time shift"
+  },
+  "copyright_note": "Publisher permission may be required to reproduce the photographic/source rasters in a submitted manuscript."
+}

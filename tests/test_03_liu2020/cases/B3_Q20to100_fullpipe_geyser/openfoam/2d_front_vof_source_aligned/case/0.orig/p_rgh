@@ -1,0 +1,48 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p_rgh;
+}
+
+dimensions      [1 -1 -2 0 0 0 0];
+internalField   uniform 101325;
+
+boundaryField
+{
+    inlet
+    {
+        type            fixedFluxPressure;
+        value           uniform 101325;
+    }
+
+    outlet
+    {
+        // p_rgh = p_atm + rho_water*g*H_tail, H_tail = Dd = 0.28 m.
+        // This is the hydrostatic equivalent of the Series-B overflow weir
+        // setting hd/Dd=1; the paper does not report its detailed rating.
+        type            fixedValue;
+        value           uniform 104066.86;
+    }
+
+    atmosphere
+    {
+        // Constant absolute atmospheric pressure on every external plume
+        // face; the water-filled inlet plenum has wall boundaries.
+        type            prghPressure;
+        p               uniform 101325;
+        value           uniform 101325;
+    }
+
+    walls
+    {
+        type            fixedFluxPressure;
+        value           uniform 101325;
+    }
+
+    frontBack
+    {
+        type            symmetry;
+    }
+}

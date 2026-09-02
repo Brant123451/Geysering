@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0",
+  "verified_utc": "2026-08-16T09:39:03Z",
+  "case_id": "B3_Q20to100_fullpipe_geyser",
+  "run_id": "b3_2d_72k_full_attempt5_20260816T0710Z",
+  "local_root": "E:\\Geysering\\output\\liu2020_fast_runs\\B3_Q20to100_fullpipe_geyser\\server_completed_transfer_20260816T0902Z\\b3_2d_72k_full_attempt5_20260816T0710Z",
+  "package_sha256": "69685c4664510fd192b32af03659df769e79fe9f89333f0d2009f1615e516c11",
+  "solver_exit_code": 0,
+  "solver_end_marker": true,
+  "solver_end_time_s": 5.3,
+  "root_time_directories": 107,
+  "required_field_files": 749,
+  "missing_required_field_files": 0,
+  "fatal_or_nan_markers": 0,
+  "corrected_manifest_entries": 2262,
+  "local_manifest_failures": 0,
+  "local_manifest": {
+    "name": "ROOT_RECONSTRUCTED_SHA256SUMS.corrected_on_laptop.txt",
+    "bytes": 291255,
+    "sha256": "18c760ca6b8e1f8c46652e0dde6c3a2e42b4a19a515b1a5b2b5900647b29c18d"
+  },
+  "local_verification_log": {
+    "name": "LOCAL_MANIFEST_VERIFY.log",
+    "bytes": 151011,
+    "sha256": "b6ab6e5bd1aef5d7c114a649cc7d420dace9a3ba0b782d93ddbb75895ce653a4"
+  },
+  "laptop_attempt_archive": {
+    "path": "E:\\Geysering\\output\\remote_transfer\\B3_2d_completed_server_20260816\\b3_laptop_resume5p15_attempt1_exact_20260816.tar.zst",
+    "bytes": 37155413,
+    "sha256": "c0696c789dee59e7bbcbe474ee44df2d84893bc248635cb98c483b559197a66f",
+    "preserves_four_openfoam_uniform_symlinks": true
+  },
+  "working_attempt_copy": {
+    "path": "E:\\Geysering\\output\\liu2020_fast_runs\\B3_Q20to100_fullpipe_geyser\\laptop_attempt_records_20260816\\b3_2d_72k_laptop_resume5p15_attempt1_20260816T0900Z",
+    "status": "NONCANONICAL_WORKING_COPY",
+    "reason": "Windows scp -r dereferenced four uniform directory symlinks; use the exact tar.zst archive for provenance."
+  },
+  "scientific_status": "2D_EXPLORATORY_NOT_ACCEPTED",
+  "scientific_boundary": "complete_source_aligned_2D_event_window_not_a_3D_validation_replacement"
+}

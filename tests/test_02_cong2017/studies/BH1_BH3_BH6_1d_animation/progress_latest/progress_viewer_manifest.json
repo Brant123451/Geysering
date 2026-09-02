@@ -1,0 +1,35 @@
+{
+  "artifact": "bh1_bh3_bh6_1d2d_progress_20260810.html",
+  "status": "interim_progress_not_for_manuscript",
+  "created_local_date": "2026-08-10",
+  "scientific_change": "1D replaced by accepted full-event archives; sparse 2D extension checkpoints appended without modifying solvers",
+  "display_only_change": "1D horizontal pipe drawing thickness is enlarged 4x",
+  "cases": [
+    {
+      "id": "BH1",
+      "end_1d_s": 20.0,
+      "end_2d_checkpoint_s": 14.8,
+      "frames_1d": 201,
+      "frames_2d": 135,
+      "status": "2D 喷发已确认；有效计算至 14.85 s"
+    },
+    {
+      "id": "BH3",
+      "end_1d_s": 23.0,
+      "end_2d_checkpoint_s": 16.8,
+      "frames_1d": 231,
+      "frames_2d": 270,
+      "status": "2D 正在续算；本页安全检查点至 16.80 s"
+    },
+    {
+      "id": "BH6",
+      "end_1d_s": 20.0,
+      "end_2d_checkpoint_s": 17.4,
+      "frames_1d": 201,
+      "frames_2d": 141,
+      "status": "2D 正在续算；本页安全检查点至 17.40 s"
+    }
+  ],
+  "provenance_note": "BH1 baseline frames use the formal 13 s run and extension frames use the refined Co=0.15 run; BH3/BH6 extensions continue their original 13 s runs.",
+  "not_final_reason": "BH3 and BH6 OpenFOAM extensions have not reached their event-completion gates."
+}

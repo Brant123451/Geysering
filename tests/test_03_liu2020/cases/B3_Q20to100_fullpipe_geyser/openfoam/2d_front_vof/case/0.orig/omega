@@ -1,0 +1,45 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      omega;
+}
+
+dimensions      [0 0 -1 0 0 0 0];
+internalField   uniform 5;
+
+boundaryField
+{
+    inlet
+    {
+        type            turbulentMixingLengthFrequencyInlet;
+        mixingLength    0.02;
+        value           uniform 5;
+    }
+
+    outlet
+    {
+        type            inletOutlet;
+        inletValue      uniform 5;
+        value           uniform 5;
+    }
+
+    atmosphere
+    {
+        type            inletOutlet;
+        inletValue      uniform 5;
+        value           uniform 5;
+    }
+
+    walls
+    {
+        type            omegaWallFunction;
+        value           uniform 5;
+    }
+
+    frontBack
+    {
+        type            symmetry;
+    }
+}

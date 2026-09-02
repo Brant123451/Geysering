@@ -28,12 +28,14 @@ from pathlib import Path
 
 import numpy as np
 
-HERE = Path(__file__).resolve().parent
+# The repository migration moved this driver under ``scripts/`` while the
+# frozen model, digitized data, outputs and report remain at the Case root.
+HERE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(HERE / "model"))
 
 from cong2017_network_twofluid import G, NetworkCase, run_network
 
-DIG = HERE / "digitized"
+DIG = HERE / "data" / "digitized"
 OUT = HERE / "outputs"
 OUT.mkdir(exist_ok=True)
 
@@ -356,11 +358,11 @@ Ta×Uf 运动学定出：8.07 s × 0.444√(gD) = 2.51 m 阀-三通距离）。�
 <div class="panel">
   <h2 style="margin-top:0">论文原图（扫描）</h2>
   <div class="grid2">
-    <div><h3 style="margin:4px 0">Fig.9 B-H1 竖管数据（(a) 已数字化）</h3><img src="paper_scans/fig9_bh1_riser.png"></div>
-    <div><h3 style="margin:4px 0">Fig.10 压力时程（上=B-1 喷发）</h3><img src="paper_scans/fig10_pressure.png"></div>
+    <div><h3 style="margin:4px 0">Fig.9 B-H1 竖管数据（(a) 已数字化）</h3><img src="reference/paper_scans/fig9_bh1_riser.png"></div>
+    <div><h3 style="margin:4px 0">Fig.10 压力时程（上=B-1 喷发）</h3><img src="reference/paper_scans/fig10_pressure.png"></div>
   </div>
   <h3 style="margin:12px 0 4px 0">Fig.8 B-H1 高速摄像瞬时帧</h3>
-  <img src="paper_scans/fig8_bh1_photos.png">
+  <img src="reference/paper_scans/fig8_bh1_photos.png">
 </div>
 <div class="panel">
   <h2 style="margin-top:0">叠加对比</h2>
@@ -380,7 +382,7 @@ Ta×Uf 运动学定出：8.07 s × 0.444√(gD) = 2.51 m 阀-三通距离）。�
   全程平均速度因此低于实测的单段爬升；② 喷发后压力振荡幅度偏大（±2H0）——刚性水柱回落再压缩
   缺少三维破碎/掺气耗散；③ PT1 数字化平台 ~1.3H0 高于静水库头（传感器基准/标定存疑 ±0.3H0），
   压力对比以形态锚点（释放振荡、平台、喷发前回落、激增）为主。
-  模型序列见 <code>outputs/caseA_model_series.csv</code>；数字化中间产物见 <code>digitized/</code>。</p>
+  模型序列见 <code>outputs/caseA_model_series.csv</code>；数字化中间产物见 <code>data/digitized/</code>。</p>
 </div>
 __EXTRA_SECTIONS__
 </div></body></html>"""

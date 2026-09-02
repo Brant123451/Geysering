@@ -1,0 +1,18 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      thermophysicalProperties;
+}
+
+phases          (water air);
+pMin            80000;
+
+// Source says surface tension is included but does not list its value.
+sigma
+{
+    type        constant;
+    sigma       0.072;
+}
+

@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "role": "qualification candidate; not manuscript evidence",
+  "all_cases_completed": true,
+  "all_classifications_match": false,
+  "only_riser_diameter_varies": true,
+  "apparatus": {
+    "pipe_diameter_m": 0.05,
+    "tunnel_length_m": 6.59,
+    "riser_x_m": 3.47,
+    "valve_x_m": 5.98,
+    "riser_height_m": 1.8,
+    "initial_head_from_invert_m": 0.66,
+    "initial_head_from_crown_m": 0.61,
+    "gas_temperature_K": 296.15,
+    "valve_open_time_s": 0.2,
+    "valve_effective_area_law": "sin(pi*t/(2*t_open))^2"
+  },
+  "shared_closure": {
+    "wave_speed_m_s": 28.0,
+    "gas_drive_efficiency": 1.0,
+    "entry_drive_efficiency": 1.0,
+    "gas_escape_efficiency": 1.0,
+    "case1_handoff_event": "riser_arrival",
+    "top_liquid_outflow_tolerance_m3": 1e-09
+  },
+  "numerics": {
+    "ds_m": 0.08,
+    "dz_m": 0.04,
+    "t_end_s": 0.3,
+    "coupling_interval_s": 0.005
+  },
+  "source_sha256": {
+    "E:\\Geysering\\tests\\test_02_cong2017\\studies\\BH1_BH3_BH6_1d_animation\\campaign2_shared_contract.py": "037a8a7980c220eb86e0f98e2a030bb223157d69fb93e8732835eac2904bdb3b",
+    "E:\\Geysering\\tests\\test_02_cong2017\\studies\\BH1_BH3_BH6_1d_animation\\case1_mirrored_horizontal.py": "1dfe74b41d92bb430e8524de3910307b0884fd0c4763ae16d5669517df52b8f0",
+    "E:\\Geysering\\tests\\test_02_cong2017\\studies\\BH1_BH3_BH6_1d_animation\\screen_case1_twofluid_shared.py": "e8475f4bf8c2d1f454e99eda1019d51587f498e4c436eb8dc61c4f30b11a2a61",
+    "E:\\Geysering\\tests\\test_02_cong2017\\cases\\BH1_Dr16_H066_L061\\model\\cong2017_network_twofluid.py": "82eed96e5c0ed8e58cea7dbe251e033ff9e40ed61bd2ecde2b93d8f9a723dee8"
+  },
+  "cases": [
+    {
+      "solver_contract": {
+        "apparatus": {
+          "pipe_diameter_m": 0.05,
+          "tunnel_length_m": 6.59,
+          "riser_x_m": 3.47,
+          "valve_x_m": 5.98,
+          "riser_height_m": 1.8,
+          "initial_head_from_invert_m": 0.66,
+          "initial_head_from_crown_m": 0.61,
+          "gas_temperature_K": 296.15,
+          "valve_open_time_s": 0.2,
+          "valve_effective_area_law": "sin(pi*t/(2*t_open))^2"
+        },
+        "shared_closure": {
+          "wave_speed_m_s": 28.0,
+          "gas_drive_efficiency": 1.0,
+          "entry_drive_efficiency": 1.0,
+          "gas_escape_efficiency": 1.0,
+          "case1_handoff_event": "riser_arrival",
+          "top_liquid_outflow_tolerance_m3": 1e-09
+        },
+        "case": {
+          "case_id": "BH1",
+          "paper_run": "B-H1",
+          "riser_diameter_m": 0.016
+        }
+      },
+      "experiment_geyser": true,
+      "result_file": "bh1_result.json"
+    },
+    {
+      "solver_contract": {
+        "apparatus": {
+          "pipe_diameter_m": 0.05,
+          "tunnel_length_m": 6.59,
+          "riser_x_m": 3.47,
+          "valve_x_m": 5.98,
+          "riser_height_m": 1.8,
+          "initial_head_from_invert_m": 0.66,
+          "initial_head_from_crown_m": 0.61,
+          "gas_temperature_K": 296.15,
+          "valve_open_time_s": 0.2,
+          "valve_effective_area_law": "sin(pi*t/(2*t_open))^2"
+        },
+        "shared_closure": {
+          "wave_speed_m_s": 28.0,
+          "gas_drive_efficiency": 1.0,
+          "entry_drive_efficiency": 1.0,
+          "gas_escape_efficiency": 1.0,
+          "case1_handoff_event": "riser_arrival",
+          "top_liquid_outflow_tolerance_m3": 1e-09
+        },
+        "case": {
+          "case_id": "BH3",
+          "paper_run": "B-H3",
+          "riser_diameter_m": 0.026
+        }
+      },
+      "experiment_geyser": true,
+      "result_file": "bh3_result.json"
+    },
+    {
+      "solver_contract": {
+        "apparatus": {
+          "pipe_diameter_m": 0.05,
+          "tunnel_length_m": 6.59,
+          "riser_x_m": 3.47,
+          "valve_x_m": 5.98,
+          "riser_height_m": 1.8,
+          "initial_head_from_invert_m": 0.66,
+          "initial_head_from_crown_m": 0.61,
+          "gas_temperature_K": 296.15,
+          "valve_open_time_s": 0.2,
+          "valve_effective_area_law": "sin(pi*t/(2*t_open))^2"
+        },
+        "shared_closure": {
+          "wave_speed_m_s": 28.0,
+          "gas_drive_efficiency": 1.0,
+          "entry_drive_efficiency": 1.0,
+          "gas_escape_efficiency": 1.0,
+          "case1_handoff_event": "riser_arrival",
+          "top_liquid_outflow_tolerance_m3": 1e-09
+        },
+        "case": {
+          "case_id": "BH6",
+          "paper_run": "B-H6",
+          "riser_diameter_m": 0.041
+        }
+      },
+      "experiment_geyser": false,
+      "result_file": "bh6_result.json"
+    }
+  ]
+}

@@ -41,7 +41,7 @@ G = 9.81
 RHO_L = 998.0
 P_ATM = 101325.0
 R_GAS = 287.05
-T_GAS = 293.0
+T_GAS = 296.15
 MU_L = 1.003e-3
 EPS = 1.0e-12
 U_FLUX_MAX = 25.0   # safety clamp on advective face velocity [m/s] (prevents empty-cell blow-up)
@@ -54,6 +54,19 @@ TENSION_HEAD = 0.05  # max elastic tension of a rarefying full cell [m of head].
                      # as the pocket over-compressing far past equilibrium).  The
                      # ringing itself is removed by the acoustic bulk viscosity in
                      # run_network; this band only needs to recluse micro-voids.
+
+# Cong et al. (2017), Series B: the downstream reach is initially dry.  Its
+# first liquid signal is therefore the circular Saint-Venant reservoir-to-dry-
+# bed simple wave, not a uniform artificial film.  The complete similarity
+# profile is constructed below from the section geometry; no front trajectory
+# or case outcome is prescribed.
+_DRY_BED_SIMILARITY = None
+
+# Cong et al. report k_a ~= 0.41 for the stratified air pocket after the water
+# wave has reflected from the closed cap.  It is used only as the shared
+# post-impact cross-sectional closure.  The two axial front positions still
+# follow the evolved, conserved gas volume and the Benjamin crown-current nose.
+REFLECTED_POCKET_AIR_FRACTION = 0.41
 
 
 @dataclass
@@ -128,6 +141,17 @@ class NetworkCase:
     x_riser_at: float | None = None       # riser (tee) position override [m]
     x_transducer_at: float | None = None  # transducer position override [m]
     Hop_cap: float | None = None          # cap on the driving overpressure head [m]
+    # Optional Campaign-1 production horizontal core.  It is injected by a
+    # study-local adapter so the frozen Campaign-2 case remains the default.
+    # The object must expose initial_state(), step_physical(),
+    # map_to_physical(), physical_fronts(), and provenance().
+    case1_horizontal_solver: object | None = None
+    # The Case-1 shock-fit must remain the horizontal owner through the
+    # reflected wetting wave.  ``riser_arrival`` mirrors the validated Case-1
+    # topology switch: ownership changes only when the material gas nose first
+    # reaches the physical side T.  ``cap_wetting`` is retained solely for
+    # reproducing superseded Campaign-2 diagnostics.
+    case1_handoff_event: str = "cap_wetting"
 
     @property
     def L_tunnel(self) -> float:
@@ -374,6 +398,271 @@ def _depth_frac(alpha_l):
     return np.interp(alpha_l, _SEG_TABLE[0], _SEG_TABLE[1])
 
 
+def _circular_area_fraction(depth_fraction):
+    """Exact liquid area fraction of a circular segment, 0 <= h/D <= 1."""
+    h = np.clip(np.asarray(depth_fraction, dtype=float), 0.0, 1.0)
+    theta = 2.0 * np.arccos(np.clip(1.0 - 2.0 * h, -1.0, 1.0))
+    return (theta - np.sin(theta)) / (2.0 * math.pi)
+
+
+def _dry_bed_similarity():
+    """Circular Saint-Venant simple wave from a full reservoir into dry pipe.
+
+    Returns normalized distance from the stationary valve trace to the dry toe,
+    liquid-area fraction, velocity/sqrt(gD), and the profile mean area fraction.
+    The construction is the same geometry-based dry-bed closure used by the
+    Campaign-1 shock-fitting core: u=Phi(D)-Phi(h), xi=u-c(h), and u_*=c(h_*)
+    at the valve.  Zero liquid area is retained exactly at and ahead of the toe.
+    """
+    global _DRY_BED_SIMILARITY
+    if _DRY_BED_SIMILARITY is not None:
+        return _DRY_BED_SIMILARITY
+
+    root = np.linspace(0.0, 1.0, 8193)
+    h = root * root
+    alpha = _circular_area_fraction(h)
+    width_over_d = 2.0 * np.sqrt(np.maximum(h * (1.0 - h), 0.0))
+    c = np.sqrt(np.divide(
+        0.25 * math.pi * alpha,
+        width_over_d,
+        out=np.zeros_like(alpha),
+        where=width_over_d > 0.0,
+    ))
+
+    # Phi/sqrt(gD) = integral_0^(h/D) d eta / c_norm(eta).  h=s^2
+    # removes the integrable dry-end singularity.
+    transformed = np.divide(
+        2.0 * root,
+        c,
+        out=np.zeros_like(root),
+        where=c > 0.0,
+    )
+    transformed[0] = transformed[1]
+    phi = np.zeros_like(root)
+    dr = root[1] - root[0]
+    phi[1:] = np.cumsum(0.5 * (transformed[:-1] + transformed[1:]) * dr)
+    phi0 = float(phi[-1])
+
+    # Stationary gate trace: u_*=Phi(D)-Phi(h_*)=c(h_*).
+    residual = phi0 - phi - c
+    crossing = np.flatnonzero(residual <= 0.0)
+    if crossing.size == 0:
+        raise FloatingPointError("failed to bracket circular dry-bed gate state")
+    upper = int(crossing[0])
+    lower = max(0, upper - 1)
+    weight = residual[lower] / max(
+        residual[lower] - residual[upper], np.finfo(float).tiny
+    )
+    h_star = float(h[lower] + weight * (h[upper] - h[lower]))
+
+    # Use the resolved h-grid up to the exact gate state, reverse it so xi grows
+    # from valve to toe, and normalize by the dry-toe celerity Phi(D).
+    h_branch = np.concatenate((h[:upper], np.asarray([h_star])))
+    alpha_branch = _circular_area_fraction(h_branch)
+    c_branch = np.interp(h_branch, h, c)
+    phi_branch = np.interp(h_branch, h, phi)
+    u_branch = phi0 - phi_branch
+    xi_branch = u_branch - c_branch
+    s = np.clip(xi_branch[::-1] / phi0, 0.0, 1.0)
+    a = alpha_branch[::-1]
+    u = u_branch[::-1]
+
+    # Roundoff near the gate can make the first two xi values reverse by ~1e-12.
+    s = np.maximum.accumulate(s)
+    keep = np.concatenate(([True], np.diff(s) > 1.0e-12))
+    s = s[keep]
+    a = a[keep]
+    u = u[keep]
+    if s[0] > 1.0e-12:
+        s = np.concatenate(([0.0], s))
+        a = np.concatenate(([a[0]], a))
+        u = np.concatenate(([u[0]], u))
+    if s[-1] < 1.0 - 1.0e-12:
+        s = np.concatenate((s, [1.0]))
+        a = np.concatenate((a, [0.0]))
+        u = np.concatenate((u, [phi0]))
+    mean_alpha = float(np.trapz(a, s))
+    _DRY_BED_SIMILARITY = (s, a, u, mean_alpha)
+    return _DRY_BED_SIMILARITY
+
+
+def _project_release_simple_wave(
+    area,
+    discharge,
+    centres,
+    release_cells,
+    *,
+    valve_x,
+    cap_x,
+    dx,
+    full_area,
+    diameter,
+):
+    """Conservatively project the pre-impact release onto one dry-bed wave.
+
+    The wet length follows the evolved liquid volume; it is never prescribed.
+    Cell-average liquid area has the circular simple-wave shape and is exactly
+    zero ahead of the finite toe.  Integrated discharge is retained as well.
+    Returns ``(area, discharge, wet_length, reached_cap)``.
+    """
+    cells = np.asarray(release_cells, dtype=int)
+    if cells.size == 0:
+        return area, discharge, 0.0, False
+    volume = float(np.sum(np.maximum(area[cells], 0.0)) * dx)
+    momentum = float(np.sum(discharge[cells]) * dx)
+    s_tab, alpha_tab, u_tab, mean_alpha = _dry_bed_similarity()
+    reach_length = max(float(cap_x - valve_x), 0.0)
+    capacity = full_area * mean_alpha * reach_length
+    if volume >= capacity - 1.0e-12:
+        return area, discharge, reach_length, True
+    if volume <= 1.0e-16:
+        area[cells] = 0.0
+        discharge[cells] = 0.0
+        return area, discharge, 0.0, False
+
+    wet_length = min(volume / max(full_area * mean_alpha, 1.0e-16), reach_length)
+    # Midpoint quadrature gives finite-volume cell averages, including the one
+    # cut cell containing the fitted dry toe.
+    nq = 24
+    qx = (np.arange(nq, dtype=float) + 0.5) / nq
+    local_x = centres[cells, None] - 0.5 * dx + qx[None, :] * dx - valve_x
+    sigma = local_x / max(wet_length, 1.0e-16)
+    inside = (local_x >= 0.0) & (sigma < 1.0)
+    alpha_q = np.where(
+        inside,
+        np.interp(np.clip(sigma, 0.0, 1.0), s_tab, alpha_tab),
+        0.0,
+    )
+    u_q = np.where(
+        inside,
+        np.interp(np.clip(sigma, 0.0, 1.0), s_tab, u_tab),
+        0.0,
+    ) * math.sqrt(G * diameter)
+    packed = full_area * np.mean(alpha_q, axis=1)
+    raw_volume = float(np.sum(packed) * dx)
+    if raw_volume > 0.0:
+        packed *= volume / raw_volume
+
+    # Preserve the PDE's integrated discharge while retaining the similarity
+    # velocity gradient.  A uniform shift is the least intrusive correction.
+    q_shape = full_area * np.mean(alpha_q * u_q, axis=1)
+    target_mean_u = momentum / max(volume, 1.0e-16)
+    shape_mean_u = float(np.sum(q_shape) * dx) / max(volume, 1.0e-16)
+    velocity = np.divide(q_shape, packed, out=np.zeros_like(packed), where=packed > 0.0)
+    velocity += target_mean_u - shape_mean_u
+    speed_cap = 2.0 * math.sqrt(G * diameter)
+    velocity = np.clip(velocity, -speed_cap, speed_cap)
+    # One bounded uniform correction removes quadrature/clipping residue.
+    for _ in range(2):
+        q_now = packed * velocity
+        du = (momentum - float(np.sum(q_now) * dx)) / max(volume, 1.0e-16)
+        velocity = np.clip(velocity + du, -speed_cap, speed_cap)
+
+    area[cells] = packed
+    discharge[cells] = packed * velocity
+    return area, discharge, wet_length, False
+
+
+def _project_reflected_pocket(
+    area,
+    discharge,
+    gas_mass,
+    centres,
+    *,
+    dx,
+    full_area,
+    cap_x,
+    body_threshold,
+):
+    """Conservative two-front closure after the water wave reaches the cap.
+
+    The Benjamin crown-current update owns the left gas nose.  This projection
+    preserves that subcell nose and the evolved pocket volume, then obtains the
+    right/reflected-water front from V_g = k_a*A*(x_r-x_g).  Before the mean gas
+    fraction has compressed to k_a, the right front remains at the cap and the
+    body fraction is simply V_g/[A*(cap-x_g)].  Gas mass, gas volume, liquid
+    volume, and integrated liquid discharge are unchanged by the projection.
+    """
+    void_fraction = np.clip(1.0 - area / full_area, 0.0, 1.0)
+    rho_ref = P_ATM / (R_GAS * T_GAS)
+    supported = (
+        (void_fraction > 1.0e-4)
+        & (gas_mass > 0.3 * rho_ref * void_fraction * full_area * dx)
+    )
+    regions = _regions(supported)
+    if not regions:
+        return area, discharge, gas_mass, float("nan"), float("nan")
+    masses = [float(np.sum(gas_mass[i0:i1])) for i0, i1 in regions]
+    i0, i1 = regions[int(np.argmax(masses))]
+    old_void = np.maximum(full_area - area[i0:i1], 0.0)
+    gas_volume = float(np.sum(old_void) * dx)
+    pocket_mass = float(np.sum(gas_mass[i0:i1]))
+    if gas_volume <= 1.0e-14 or pocket_mass <= 1.0e-20:
+        return area, discharge, gas_mass, float("nan"), float("nan")
+
+    # The first and last cells are cut cells.  Dividing the first-cell void by
+    # the *region mean* (which includes both cuts) overestimates its occupied
+    # length and numerically advances the nose almost twice as fast as Benjamin.
+    # The resolved body level is the maximum/interior layer fraction left by the
+    # crown-current step; it is the correct subcell denominator.
+    body_level = float(np.max(void_fraction[i0:i1]))
+    first_fraction = void_fraction[i0]
+    occupied = min(first_fraction / max(body_level, body_threshold), 1.0)
+    nose_x = float(centres[i0] + 0.5 * dx - occupied * dx)
+    nose_x = min(max(nose_x, 0.0), cap_x - 1.0e-12)
+    available = max(cap_x - nose_x, 1.0e-12)
+    required_mean = gas_volume / (full_area * available)
+    if required_mean > 1.0:
+        nose_x = max(cap_x - gas_volume / full_area, 0.0)
+        available = max(cap_x - nose_x, 1.0e-12)
+        required_mean = gas_volume / (full_area * available)
+    body_fraction = float(np.clip(
+        max(REFLECTED_POCKET_AIR_FRACTION, required_mean),
+        body_threshold,
+        1.0,
+    ))
+    pocket_length = min(gas_volume / (full_area * body_fraction), available)
+    tail_x = min(nose_x + pocket_length, cap_x)
+
+    # Target cell-average void is the overlap with [nose_x, tail_x].
+    left = centres - 0.5 * dx
+    right = centres + 0.5 * dx
+    overlap = np.clip(np.minimum(right, tail_x) - np.maximum(left, nose_x), 0.0, dx)
+    target_void = full_area * body_fraction * overlap / dx
+    target_volume = float(np.sum(target_void) * dx)
+    if target_volume > 0.0:
+        target_void *= gas_volume / target_volume
+
+    old_supported = supported | (void_fraction > body_threshold)
+    target_supported = target_void > 1.0e-14 * full_area
+    affected = old_supported | target_supported
+    # ``affected`` may include the one-cell mass halo maintained by the crown
+    # transport or a fragment just consolidated into the main void.  Include
+    # every such supported mass before zeroing the old layout.
+    pocket_mass = float(np.sum(gas_mass[affected]))
+    old_liquid_volume = float(np.sum(np.maximum(area[affected], 0.0)) * dx)
+    old_discharge = float(np.sum(discharge[affected]) * dx)
+
+    area[affected] = full_area - target_void[affected]
+    new_liquid_volume = float(np.sum(area[affected]) * dx)
+    # The target has the same void volume; this is normally roundoff only.
+    if abs(new_liquid_volume - old_liquid_volume) > 1.0e-13:
+        correction = (old_liquid_volume - new_liquid_volume) / max(
+            float(np.count_nonzero(affected)) * dx, dx
+        )
+        area[affected] += correction
+    mean_velocity = old_discharge / max(old_liquid_volume, 1.0e-16)
+    discharge[affected] = area[affected] * mean_velocity
+
+    gas_mass[affected] = 0.0
+    target_volume = float(np.sum(target_void) * dx)
+    if target_volume > 0.0:
+        gas_mass[target_supported] = (
+            pocket_mass * target_void[target_supported] * dx / target_volume
+        )
+    return area, discharge, gas_mass, nose_x, tail_x
+
+
 def _liquid_surface_height(z, dz, Al, A, threshold=0.08):
     """Top of any resolved liquid in the riser, including thin side films."""
     idx = np.where(Al / A > threshold)[0]
@@ -457,7 +746,27 @@ def _cap_momentum(momentum, mass, velocity_cap):
     return out
 
 
+def _book_top_liquid_outflow(
+    liquid_volume: float,
+    resolved_capacity: float,
+) -> tuple[float, float]:
+    """Return retained liquid and real outflow through the open riser top."""
+
+    volume = float(liquid_volume)
+    capacity = float(resolved_capacity)
+    if not (math.isfinite(volume) and math.isfinite(capacity)):
+        raise ValueError("liquid volume and riser capacity must be finite")
+    if volume < 0.0 or capacity < 0.0:
+        raise ValueError("liquid volume and riser capacity must be non-negative")
+    outflow = max(volume - capacity, 0.0)
+    return volume - outflow, outflow
+
+
 def run_network(case: NetworkCase, verbose: bool = True) -> dict:
+    if case.case1_handoff_event not in {"cap_wetting", "riser_arrival"}:
+        raise ValueError(
+            "case1_handoff_event must be 'cap_wetting' or 'riser_arrival'"
+        )
     A = case.A; Ar = case.Ar
     a2 = case.a_wh * case.a_wh
     rho_atm = P_ATM / (R_GAS * T_GAS)
@@ -486,12 +795,45 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
         capsule = xt > case.x_valve               # pocket behind the release valve
     else:
         capsule = xt < case.L_up                  # air pocket occupies the upstream pipe
-    Alt[capsule] = 0.02 * A
+    # Cong et al. define V_air=A*L0: the isolated section behind the ball
+    # valve is therefore a true gas-filled reach, not a pipe-wide numerical
+    # liquid film.  A 2% film makes the complete 0.61 m reach look wetted at
+    # release and lets a pressure disturbance act everywhere before a finite
+    # wetting front can arrive (the same defect fixed in Campaign 1A/1B).
+    Alt[capsule] = 0.0
     Qlt = np.zeros(Nt)
     Mgt = (P_ATM / (R_GAS * T_GAS)) * np.maximum(A - Alt, 1e-4 * A) * dx
     Pa0 = P_ATM + RHO_L * G * case.air_head       # initial absolute air-pocket pressure
     Mgt[capsule] = (Pa0 / (R_GAS * T_GAS)) * (A - Alt[capsule]) * dx
     Jgt = np.zeros(Nt)                            # horizontal gas momentum
+    case1_horizontal_solver = case.case1_horizontal_solver
+    case1_horizontal_state = None
+    case1_horizontal_active = False
+    case1_horizontal_handoff_time = None
+    case1_horizontal_accumulated_dt = 0.0
+    if case1_horizontal_solver is not None:
+        if not math.isclose(
+            float(case1_horizontal_solver.config.length),
+            case.L_tunnel,
+            rel_tol=0.0,
+            abs_tol=1.0e-12,
+        ):
+            raise ValueError("Case-1 horizontal length does not match Campaign 2")
+        if not math.isclose(
+            float(case1_horizontal_solver.dx),
+            dx,
+            rel_tol=0.0,
+            abs_tol=1.0e-12,
+        ):
+            raise ValueError("Case-1 horizontal and Campaign-2 grids must match")
+        case1_horizontal_state = case1_horizontal_solver.initial_state()
+        Alt, Qlt, Mgt, Jgt = case1_horizontal_solver.map_to_physical(
+            case1_horizontal_state,
+            x_target=xt,
+            full_area=A,
+            dx=dx,
+        )
+        case1_horizontal_active = True
     gas0 = float(np.sum(Mgt[capsule]))
 
     Yfs0 = case.init_water_level
@@ -506,13 +848,30 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
 
     v_gc = 0.542 * math.sqrt(G * case.D)          # Benjamin (1968) air-cavity intrusion speed along the crown
     geyser_strength = 0.0
+    top_liquid_outflow_volume = 0.0
+    top_liquid_boundary_outflow_volume = 0.0
+    top_liquid_capacity_outflow_volume = 0.0
     t = 0.0
     step = 0
+    release_cap_wetted = False
+    release_cap_wetted_time = None
+    release_wetting_front_x = case.x_valve
+    release_reflected_front_x = float("nan")
+    release_gas_nose_x = case.x_valve
+    if case1_horizontal_state is not None:
+        case1_fronts = case1_horizontal_solver.physical_fronts(
+            case1_horizontal_state
+        )
+        release_wetting_front_x = float(case1_fronts["wetting_front_x"])
+        release_gas_nose_x = float(case1_fronts["gas_nose_x"])
     dbg_created = dict(t_floor=0.0, r_floor=0.0, r_repack=0.0, consol=0.0, crown=0.0)
     rec = dict(t=[], wtop=[], itop=[], core_mass=[], pocket_head=[], up_head=[], pj_head=[], tr_head=[],
+               top_liquid_outflow=[], top_liquid_boundary_outflow=[],
+               top_liquid_capacity_outflow=[],
                tun_gas_mass=[], tun_gas_vol=[], tot_liq=[],
                frames_t=[], frames_alt=[], frames_mgt=[], frames_alr=[], frames_agr=[], frames_itop=[],
-               frames_core_mass=[],
+               frames_core_mass=[], frames_release_wetting_front_x=[],
+               frames_reflected_front_x=[], frames_gas_nose_x=[],
                xt=xt, zr=zr, jx=jx, dx=dx, dz=dz, Nt=Nt, Nr=Nr)
     itr = int(np.clip(round(case.x_transducer / dx - 0.5), 0, Nt - 1))   # transducer cell
     out_dt = 0.02
@@ -553,6 +912,15 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
         rec["t"].append(float(sample_t))
         rec["up_head"].append(float(ph_up))
         rec["wtop"].append(float(wtop_now))
+        rec["top_liquid_outflow"].append(
+            float(top_liquid_outflow_volume)
+        )
+        rec["top_liquid_boundary_outflow"].append(
+            float(top_liquid_boundary_outflow_volume)
+        )
+        rec["top_liquid_capacity_outflow"].append(
+            float(top_liquid_capacity_outflow_volume)
+        )
         rec["itop"].append(float(itop_now))
         rec["core_mass"].append(float(gas_mass))
         rec["pocket_head"].append(float(ph))
@@ -563,6 +931,9 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
         rec["frames_agr"].append(alpha_g_r.copy())
         rec["frames_itop"].append(float(itop_now))
         rec["frames_core_mass"].append(float(gas_mass))
+        rec["frames_release_wetting_front_x"].append(float(release_wetting_front_x))
+        rec["frames_reflected_front_x"].append(float(release_reflected_front_x))
+        rec["frames_gas_nose_x"].append(float(release_gas_nose_x))
 
     append_record(0.0, Alt, Alr, Mgt, Mgrs, np.full(Nr, rho_atm))
     next_out = out_dt
@@ -845,6 +1216,28 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
         )
         dt = min(case.cfl * min(dx, dz) / max(smax, EPS), out_dt, case.t_end - t)
 
+        case1_horizontal_next = None
+        if case1_horizontal_active:
+            case1_horizontal_accumulated_dt += dt
+            synchronize = bool(
+                case1_horizontal_accumulated_dt
+                >= case1_horizontal_solver.coupling_interval - 1.0e-15
+                or t + dt >= case.t_end - 1.0e-12
+            )
+            if synchronize:
+                case1_horizontal_next = (
+                    case1_horizontal_solver.step_physical(
+                        case1_horizontal_state,
+                        case1_horizontal_accumulated_dt,
+                    )
+                )
+                case1_horizontal_accumulated_dt = 0.0
+            else:
+                # Keep the last conservative field between synchronization
+                # instants; do not let the provisional Campaign-2 tunnel
+                # operator become a second owner of the same phase volume.
+                case1_horizontal_next = case1_horizontal_state
+
         # ================= TUNNEL update (Rusanov) =================
         Alg = np.empty(Nt + 2); Qlg = np.empty(Nt + 2); cg = np.empty(Nt + 2)
         Alg[1:-1] = Alt; Qlg[1:-1] = Qlt; cg[1:-1] = ct
@@ -923,7 +1316,9 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
         # the whole slug on the pocket spring at +-0.4 m of head for the rest of
         # the run (the experiment's release is quasi-static: H* walks smoothly
         # from 0.50 to its 0.537 plateau with no overshoot, V&W2011 Fig.5).
-        theta_v = min(max(t / max(case.valve_open_time, 1.0e-9), 0.02), 1.0)
+        # The valve is exactly closed at t=0.  A positive numerical minimum
+        # leaks liquid into the dry reach before the prescribed opening starts.
+        theta_v = min(max(t / max(case.valve_open_time, 1.0e-9), 0.0), 1.0)
         phi_v = theta_v * theta_v
         if phi_v < 1.0:
             F1[iv] *= phi_v
@@ -1007,6 +1402,18 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
         # donor-availability limit (see tunnel F1): no negative-area overdraw
         G1 = np.clip(G1, -0.45 * Arg[1:] * dz / max(dt, EPS),
                      0.45 * Arg[:-1] * dz / max(dt, EPS))
+        # The atmosphere above the apparatus contains no liquid donor.  Keep
+        # outward liquid flux but forbid a Rusanov ghost from importing water
+        # through the open top.  Integrate this physical control-surface flux
+        # separately from the later gas-capacity overflow bookkeeping.
+        if G1[-1] < 0.0:
+            G1[-1] = 0.0
+            G2[-1] = 0.0
+        top_liquid_boundary_outflow_step = dt * float(G1[-1])
+        top_liquid_boundary_outflow_volume += (
+            top_liquid_boundary_outflow_step
+        )
+        top_liquid_outflow_volume += top_liquid_boundary_outflow_step
         Alr_new = Alr - dt / dz * (G1[1:] - G1[:-1])
         Qlr_new = Qlr - dt / dz * (G2[1:] - G2[:-1])
         Prh = np.empty(Nr + 2); Prh[1:-1] = Pr
@@ -1290,7 +1697,7 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
             if M_reg > 1.0e-30:
                 Mgt_new[seg] -= dm * (Mgt_new[seg] / M_reg)
             Alt_new[tgt] -= dV / dx                       # nose displaces water
-            Mgt_new[tgt] += dm                            # mass rides its volume
+            Mgt_new[tgt] += dm                            # gas mass rides its volume
         # ---------- pocket consolidation: one connected pocket, no orphan voids ----------
         # Free gas in this horizontal pipe lives at the crown as ONE connected pocket
         # (attached to the upstream closed end until it reaches the T).  Transient
@@ -1313,20 +1720,145 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
             void_main = np.maximum(A - Alt_new[m0:m1], 0.0)          # [m^2] per cell
             Vm = float(np.sum(void_main))
             if Vm > 1.0e-12:
-                w_main = void_main / Vm
                 for r, (i0, i1) in enumerate(regs):
                     if r == mi:
                         continue
                     frag_void = np.maximum(A - Alt_new[i0:i1], 0.0)  # [m^2] per cell
                     Vf = float(np.sum(frag_void))                    # [m^2] (x dx = volume)
                     mf = float(np.sum(Mgt_new[i0:i1]))
-                    Alt_new[i0:i1] += frag_void                      # water recloses the fragment
-                    Mgt_new[i0:i1] = 0.0
-                    Alt_new[m0:m1] -= Vf * w_main                    # pocket deepens uniformly
-                    Mgt_new[m0:m1] += mf * w_main
+                    # A fragment can be moved only into liquid volume that
+                    # actually exists in the retained pocket cells.  The old
+                    # void-weighted subtraction removed the most liquid from
+                    # the driest cells and could drive them negative after the
+                    # Case-1 handoff; the subsequent positivity clip then
+                    # created liquid and a false geyser.  Deposit against the
+                    # receiving cells' available liquid area instead.
+                    receiving = np.maximum(Alt_new[m0:m1] - 1.0e-8 * A, 0.0)
+                    capacity = float(np.sum(receiving))
+                    moved = min(Vf, capacity)
+                    if moved <= 1.0e-16:
+                        continue
+                    accept_weight = receiving / capacity
+                    move_fraction = moved / max(Vf, 1.0e-30)
+                    Alt_new[i0:i1] += move_fraction * frag_void
+                    Mgt_new[i0:i1] *= 1.0 - move_fraction
+                    Alt_new[m0:m1] -= moved * accept_weight
+                    Mgt_new[m0:m1] += mf * move_fraction * accept_weight
+        # ---------- Campaign-2 double-front release / reflection closure ----------
+        # Stage I is the complete circular Saint-Venant dry-bed simple wave.  Unlike
+        # the old 47.1%-deep rectangular packing, it contains the smooth rarefaction
+        # from the valve trace to one exact dry toe.  Its length is obtained from the
+        # evolved release volume, so the valve opening and horizontal PDE determine
+        # when it reaches the closed cap.
+        #
+        # Stage II starts once and is latched: the Benjamin crown-current update above
+        # continues to own the left-moving gas nose, while the conserved pocket volume
+        # and the measured shared k_a closure determine the right/closed-end reflected
+        # water front.  It can never fall back to Stage I if later venting changes the
+        # release-reach liquid inventory (the old unlatched capacity test did exactly
+        # that and recreated a dry reach near t=13 s).
+        if case.pocket_downstream and case1_horizontal_solver is None:
+            release_cells = np.flatnonzero(capsule)
+            if release_cells.size and not release_cap_wetted:
+                Alt_new, Qlt_new, wet_length, reached_cap = _project_release_simple_wave(
+                    Alt_new,
+                    Qlt_new,
+                    xt,
+                    release_cells,
+                    valve_x=case.x_valve,
+                    cap_x=case.L_tunnel,
+                    dx=dx,
+                    full_area=A,
+                    diameter=case.D,
+                )
+                release_wetting_front_x = min(case.x_valve + wet_length, case.L_tunnel)
+                if reached_cap:
+                    release_cap_wetted = True
+                    release_cap_wetted_time = float(t + dt)
+                    release_wetting_front_x = case.L_tunnel
+
+                # The simple-wave projection relocates void but changes neither its
+                # total volume nor gas inventory.  Restore one uniform EOS density
+                # over the connected, mass-supported pocket so pressure remains
+                # conservative and no gas mass is stranded in newly wet cells.
+                alpha_fit = np.clip(1.0 - Alt_new / A, 0.0, 1.0)
+                fit_mask = _pocket_mask(Alt_new, A, Mgt_new, dx, 1.0e-4)
+                fit_regions = _regions(fit_mask | (alpha_fit > body_thr))
+                if fit_regions:
+                    fit_masses = [float(np.sum(Mgt_new[f0:f1])) for f0, f1 in fit_regions]
+                    f0, f1 = fit_regions[int(np.argmax(fit_masses))]
+                    fit_mass = float(np.sum(Mgt_new[f0:f1]))
+                    fit_void = np.maximum(A - Alt_new[f0:f1], 0.0) * dx
+                    fit_volume = float(np.sum(fit_void))
+                    if fit_volume > 1.0e-14:
+                        Mgt_new[f0:f1] = fit_mass * fit_void / fit_volume
+
+            if release_cap_wetted:
+                Alt_new, Qlt_new, Mgt_new, gas_nose, reflected_front = (
+                    _project_reflected_pocket(
+                        Alt_new,
+                        Qlt_new,
+                        Mgt_new,
+                        xt,
+                        dx=dx,
+                        full_area=A,
+                        cap_x=case.L_tunnel,
+                        body_threshold=body_thr,
+                    )
+                )
+                if math.isfinite(gas_nose):
+                    release_gas_nose_x = gas_nose
+                if math.isfinite(reflected_front):
+                    release_reflected_front_x = reflected_front
+
+        if case1_horizontal_next is not None:
+            # The Case-1 shock-fitting core owns the horizontal conservative
+            # state through the valve-release and closed-cap reflection.  The
+            # qualification path changes topology only when the *material gas
+            # nose* reaches the side T, matching the Case-1 network handoff.
+            # The older cap-wetting switch remains available only to reproduce
+            # superseded diagnostics.
+            Alt_new, Qlt_new, Mgt_new, Jgt_new = (
+                case1_horizontal_solver.map_to_physical(
+                    case1_horizontal_next,
+                    x_target=xt,
+                    full_area=A,
+                    dx=dx,
+                )
+            )
+            case1_fronts = case1_horizontal_solver.physical_fronts(
+                case1_horizontal_next
+            )
+            release_wetting_front_x = float(
+                case1_fronts["wetting_front_x"]
+            )
+            release_gas_nose_x = float(case1_fronts["gas_nose_x"])
+            release_reflected_front_x = release_wetting_front_x
+            if (
+                not release_cap_wetted
+                and release_wetting_front_x >= case.L_tunnel - 0.5 * dx
+            ):
+                release_cap_wetted = True
+                release_cap_wetted_time = float(t + dt)
+            case1_horizontal_state = case1_horizontal_next
+            handoff_ready = (
+                release_cap_wetted
+                if case.case1_handoff_event == "cap_wetting"
+                else release_gas_nose_x <= case.x_riser + 0.5 * dx
+            )
+            if handoff_ready:
+                case1_horizontal_active = False
+                case1_horizontal_handoff_time = float(t + dt)
+            ult = Qlt_new / np.maximum(Alt_new, 1.0e-3 * A)
+            alpha_gt = np.clip(1.0 - Alt_new / A, 0.0, 1.0)
+
         # diagnostic gas momentum (drives only the CFL bound): nose speed where gassy
-        dir_cell = np.sign(case.x_riser - xt)
-        Jgt_new = Mgt_new * (ult + np.where(alpha_gt > 2.0e-3, dir_cell * v_gc, 0.0))
+        if case1_horizontal_next is None:
+            dir_cell = np.sign(case.x_riser - xt)
+            Jgt_new = Mgt_new * (
+                ult
+                + np.where(alpha_gt > 2.0e-3, dir_cell * v_gc, 0.0)
+            )
         # ---- Riser resolved gas: 1D two-fluid mass + momentum (no velocity cap) ----
         # Conserved variables are the cell gas mass [kg] and gas momentum [kg m/s].
         # The rise speed is left to emerge from the momentum balance: buoyancy
@@ -1617,6 +2149,19 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
         liq_vol = float(np.sum(np.maximum(Alr_new, 0.0) * dz))       # conserved liquid volume
         cap = Ar * np.clip(1.0 - alpha_g_r, 0.0, 1.0) * dz           # liquid capacity per cell around gas
         cum = np.cumsum(cap)
+        # The riser top is an open physical control surface.  Liquid volume
+        # exceeding the resolved gas-reduced column capacity has crossed that
+        # surface and must be booked as outflow before repacking.  The former
+        # implementation silently discarded this excess, so a script could
+        # only infer "geysering" from a near-rim water level.  This cumulative
+        # conservative flux is now the sole qualification observable.
+        liquid_capacity = float(cum[-1]) if cum.size else 0.0
+        liq_vol, top_liquid_outflow_step = _book_top_liquid_outflow(
+            liq_vol,
+            liquid_capacity,
+        )
+        top_liquid_outflow_volume += top_liquid_outflow_step
+        top_liquid_capacity_outflow_volume += top_liquid_outflow_step
         filled = cum <= liq_vol
         Alr_new = np.where(filled, cap / dz, 0.0)
         k = int(np.searchsorted(cum, liq_vol))                      # partially filled surface cell
@@ -1652,6 +2197,12 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
         dbg_created["t_floor"] += -float(np.sum(np.minimum(Alt_new, 0.0)) * dx)
         Alt_new = np.maximum(Alt_new, 0.0)
         Alr_new = np.maximum(Alr_new, 0.0)
+        if case1_horizontal_solver is not None:
+            Qlt_new = case1_horizontal_solver.regularize_physical_momentum(
+                Alt_new,
+                Qlt_new,
+                full_area=A,
+            )
 
         if not (np.all(np.isfinite(Alt_new)) and np.all(np.isfinite(Alr_new))):
             print(f"  [DIVERGED] t={t:.4f} step={step}", flush=True)
@@ -1712,7 +2263,22 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
             print("  [MAX_STEPS]", flush=True); break
 
     rec["geyser_strength"] = geyser_strength
+    rec["top_liquid_outflow_volume"] = float(top_liquid_outflow_volume)
+    rec["top_liquid_boundary_outflow_volume"] = float(
+        top_liquid_boundary_outflow_volume
+    )
+    rec["top_liquid_capacity_outflow_volume"] = float(
+        top_liquid_capacity_outflow_volume
+    )
     rec["dbg_created"] = dbg_created
+    rec["release_cap_wetted_time"] = release_cap_wetted_time
+    rec["case1_horizontal_used"] = bool(case1_horizontal_solver is not None)
+    rec["case1_horizontal_handoff_time"] = case1_horizontal_handoff_time
+    rec["case1_horizontal_provenance"] = (
+        None
+        if case1_horizontal_solver is None
+        else case1_horizontal_solver.provenance()
+    )
     return rec
 
 

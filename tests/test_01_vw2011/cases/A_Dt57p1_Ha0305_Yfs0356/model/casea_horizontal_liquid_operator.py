@@ -1,4 +1,4 @@
-"""Consistent barotropic liquid operator for the Case-A horizontal pipe.
+"""Circular-pipe shallow-water liquid operator for the Case-A tunnel.
 
 This module contains only local, side-effect-free numerical building blocks.
 It deliberately does not know about the Case-A time loop, T-junction schedule,
@@ -6,22 +6,20 @@ or plotting.  The pressure potential and its Jacobian are evaluated together,
 so a Riemann solver cannot use a wave speed from a different equation than the
 one used in its momentum flux.
 
-For a mass-supported stratified cell the liquid momentum flux is
+For a mass-supported free-surface cell the liquid momentum flux is
 
     F_Q = Q**2 / A + Psi(A),
-    Psi(A) = C + 0.5 * Lambda(A) * A**2.
+    Psi(A) = C + g*I1(A),
 
-The companion model treats ``Lambda`` as a frozen face coefficient when the
-liquid Riemann problem is linearised.  Its squared liquid celerity is therefore
+where ``I1`` is the exact hydrostatic pressure moment of the wetted circular
+segment.  Its squared gravity-wave celerity is
 
-    c_l**2 = Lambda*A,
+    c_l**2 = g*A/T,
 
-as stated by the methods-paper eigenvalues
-``u_l +/- sqrt(Lambda*A_l)``.  Derivatives of ``Lambda`` are still exposed for
-diagnostics, but they are not silently substituted into that published
-frozen-coefficient Jacobian.  A negative ``Lambda*A`` is a loss of
-hyperbolicity of the reduced closure and is reported explicitly rather than
-hidden with ``max(value, 0)``.
+with ``T`` the free-surface top width.  The gas EOS and gas momentum remain in
+the coupled gas graph; gas pressure acts through the regular liquid pressure
+source in the network solver.  No Kelvin--Helmholtz slip term is present in
+this Case-A horizontal operator.
 """
 
 from __future__ import annotations
@@ -31,9 +29,7 @@ from typing import Callable
 
 import numpy as np
 
-
-class LossOfHyperbolicity(RuntimeError):
-    """Raised when the reduced pressure law has a negative tangent modulus."""
+from casea_acceleration import njit
 
 
 @dataclass(frozen=True)
@@ -52,9 +48,7 @@ class HorizontalLiquidParameters:
     void_floor_fraction: float = 1.0e-4
     gas_density_floor_fraction: float = 0.2
     gas_density_ceiling_fraction: float = 12.0
-    # Eq. (40) of the companion numerical method: a small numerical celerity
-    # keeps the Rusanov dissipation and CFL finite when Lambda_d*A_l reaches or
-    # crosses the IKH neutral point.  It is not added to the physical flux.
+    # Small wet/dry numerical celerity used only at vanishing liquid area.
     numerical_celerity_floor: float = 1.0e-3
 
     def __post_init__(self) -> None:
@@ -111,6 +105,14 @@ class PressurePotentialState:
     stratified: np.ndarray
 
 
+@dataclass(frozen=True)
+class PressurePotentialWaveState:
+    """Only the pressure potential and celerity needed by a Riemann flux."""
+
+    potential: np.ndarray
+    celerity: np.ndarray
+
+
 def _broadcast_float_arrays(*values: object) -> tuple[np.ndarray, ...]:
     return tuple(
         np.asarray(value, dtype=float)
@@ -118,31 +120,141 @@ def _broadcast_float_arrays(*values: object) -> tuple[np.ndarray, ...]:
     )
 
 
+@njit(cache=True)
+def _circular_depth_and_width_kernel(
+    target: np.ndarray,
+    area_full: float,
+    diameter: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Compiled algebra for the exact safeguarded circular-segment solve."""
+
+    fraction = target / area_full
+    mirrored = fraction > 0.5
+    reduced = np.where(mirrored, 1.0 - fraction, fraction)
+    rhs = 2.0 * np.pi * reduced
+
+    lo = np.zeros_like(reduced)
+    hi = np.full_like(reduced, np.pi)
+    phi = np.clip(
+        np.cbrt(12.0 * np.pi * reduced),
+        0.0,
+        np.pi,
+    )
+    phi = np.where(reduced == 0.5, np.pi, phi)
+    for _ in range(12):
+        residual = phi - np.sin(phi) - rhs
+        converged = np.abs(residual) <= (
+            16.0
+            * np.finfo(np.float64).eps
+            * np.maximum(np.abs(rhs), 1.0)
+        )
+        if np.all(converged):
+            break
+        lo = np.where(residual < 0.0, phi, lo)
+        hi = np.where(residual < 0.0, hi, phi)
+        derivative = 1.0 - np.cos(phi)
+        derivative_active = derivative > 1.0e-15
+        safe_derivative = np.where(derivative_active, derivative, 1.0)
+        newton = np.where(
+            derivative_active,
+            residual / safe_derivative,
+            0.0,
+        )
+        candidate = phi - newton
+        midpoint = 0.5 * (lo + hi)
+        proposed = np.where(
+            (candidate > lo) & (candidate < hi), candidate, midpoint
+        )
+        phi = np.where(converged, phi, proposed)
+
+    radius = 0.5 * diameter
+    reduced_depth = radius * (1.0 - np.cos(0.5 * phi))
+    depth = np.where(
+        mirrored,
+        diameter - reduced_depth,
+        reduced_depth,
+    )
+    depth = np.where(fraction == 0.5, radius, depth)
+    depth = np.where(target <= 0.0, 0.0, depth)
+    depth = np.where(target >= area_full, diameter, depth)
+    width = 2.0 * np.sqrt(
+        np.maximum(depth * (diameter - depth), 0.0)
+    )
+    width = np.where(fraction == 0.5, diameter, width)
+    return depth, width
+
+
 def _circular_depth_and_width(
     area: np.ndarray,
     params: HorizontalLiquidParameters,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Invert circular-segment area without a table or fitted interpolation."""
+    """Invert circular-segment area with a safeguarded angle solve.
+
+    For central angle ``phi`` the normalized segment area is
+
+    ``A/Af = (phi - sin(phi))/(2*pi)``.
+
+    The former implementation repeated a full-array bisection 55 times on
+    every Riemann evaluation.  A symmetry-reduced Newton iteration with a
+    maintained bracket reaches the same double-precision root in twelve
+    iterations and contains no interpolation table or fitted geometry.
+    """
 
     target = np.clip(np.asarray(area, dtype=float), 0.0, params.area_full)
-    lo = np.zeros_like(target)
-    hi = np.full_like(target, params.diameter)
-    radius = 0.5 * params.diameter
-    for _ in range(55):
-        depth = 0.5 * (lo + hi)
-        y = radius - depth
-        root = np.sqrt(np.maximum(radius**2 - y**2, 0.0))
-        segment_area = (
-            radius**2 * np.arccos(np.clip(y / radius, -1.0, 1.0))
-            - y * root
-        )
-        lo = np.where(segment_area < target, depth, lo)
-        hi = np.where(segment_area < target, hi, depth)
-    depth = 0.5 * (lo + hi)
-    width = 2.0 * np.sqrt(
-        np.maximum(depth * (params.diameter - depth), 0.0)
+    original_shape = target.shape
+    depth, width = _circular_depth_and_width_kernel(
+        np.atleast_1d(target).reshape(-1),
+        float(params.area_full),
+        float(params.diameter),
     )
-    return depth, width
+    return depth.reshape(original_shape), width.reshape(original_shape)
+
+
+def _circular_hydrostatic_state(
+    area: object,
+    params: HorizontalLiquidParameters,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Return ``g I1``, its tangent, ``g/T``, and ``d(g/T)/dA``.
+
+    ``I1 = integral_0^h (h-y)b(y)dy`` is evaluated analytically for the
+    circular segment.  Consequently ``d(gI1)/dA = gA/T`` and the Riemann
+    celerity is exactly the Saint--Venant value ``sqrt(gA/T)``.
+    """
+
+    area_raw = np.asarray(area, dtype=float)
+    if np.any(area_raw <= 0.0):
+        raise ValueError("positive liquid area required for shallow water")
+    area_eval = np.minimum(
+        area_raw,
+        params.geometry_cap_fraction * params.area_full,
+    )
+    depth, width = _circular_depth_and_width(area_eval, params)
+    if np.any(width <= 0.0):
+        raise ValueError("finite circular top width required for shallow water")
+
+    radius = 0.5 * params.diameter
+    cosine = np.clip((radius - depth) / radius, -1.0, 1.0)
+    half_angle = np.arccos(cosine)
+    angle = 2.0 * half_angle
+    sine_half = np.sin(half_angle)
+    segment_factor = angle - np.sin(angle)
+    i1 = radius**3 * (
+        -(0.5 * segment_factor * np.cos(half_angle))
+        + (2.0 / 3.0) * sine_half**3
+    )
+    potential = params.gravity * i1
+    tangent = params.gravity * area_eval / width
+    coefficient = params.gravity / width
+
+    # T=2*sqrt(h(D-h)); dT/dA=2(D-2h)/T**2.
+    dwidth_darea = 2.0 * (params.diameter - 2.0 * depth) / width**2
+    derivative = -params.gravity * dwidth_darea / width**2
+    derivative = np.where(
+        area_raw < params.geometry_cap_fraction * params.area_full,
+        derivative,
+        0.0,
+    )
+    return potential, tangent, coefficient, derivative
 
 
 def _decoupled_lambda_derivatives(
@@ -152,101 +264,24 @@ def _decoupled_lambda_derivatives(
     gas_momentum: object,
     params: HorizontalLiquidParameters,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Return Eq. (A31) ``Lambda`` and its full partial derivative in ``A``.
+    """Return the shallow-water coefficient ``g/T`` and its area derivative.
 
-    The derivative holds the other conserved variables ``Q, M_g, J_g`` fixed,
-    exactly as required by the liquid-flux Jacobian.  Derivatives of gas
-    density, liquid velocity, circular geometry, and slip are all retained.
-    Existing density and crown-geometry bounds are treated as piecewise model
-    definitions: their derivatives are zero only on an active bound.
+    ``discharge``, ``gas_mass``, and ``gas_momentum`` remain in the signature
+    for API compatibility with the coupled network.  The shallow-water
+    restoring law is independent of gas--liquid slip.
     """
 
-    area_raw, q, mass, momentum = _broadcast_float_arrays(
+    area_raw, _, mass, _ = _broadcast_float_arrays(
         area, discharge, gas_mass, gas_momentum
     )
-    if np.any(area_raw <= 0.0):
-        raise ValueError("positive liquid area required for the stratified law")
     if np.any(mass <= 0.0):
-        raise ValueError("positive resolved gas mass required for stratified cells")
-
-    area_cap = params.geometry_cap_fraction * params.area_full
-    area_eval = np.minimum(area_raw, area_cap)
-    darea_eval = (area_raw < area_cap).astype(float)
-
-    void_unbounded = params.area_full - area_raw
-    void_floor = params.void_floor_fraction * params.area_full
-    gas_area = np.maximum(void_unbounded, void_floor)
-    dgas_area = np.where(void_unbounded > void_floor, -1.0, 0.0)
-
-    rho_raw = mass / (gas_area * params.cell_width)
-    rho_floor = (
-        params.gas_density_floor_fraction * params.atmospheric_gas_density
+        raise ValueError("positive resolved gas mass required for free-surface cells")
+    _, _, coefficient, derivative = _circular_hydrostatic_state(
+        area_raw, params
     )
-    rho_ceiling = (
-        params.gas_density_ceiling_fraction * params.atmospheric_gas_density
-    )
-    rho_g = np.clip(rho_raw, rho_floor, rho_ceiling)
-    rho_is_free = (rho_raw > rho_floor) & (rho_raw < rho_ceiling)
-    drho_raw = -rho_raw * dgas_area / gas_area
-    drho = np.where(rho_is_free, drho_raw, 0.0)
-
-    u_l = q / area_eval
-    du_l = -q * darea_eval / area_eval**2
-    u_g = momentum / mass
-    delta_u = u_g - u_l
-    ddelta_u = -du_l
-
-    _, width = _circular_depth_and_width(area_eval, params)
-    if np.any(width <= 0.0):
-        raise ValueError("finite circular top width required for stratified cells")
-    zeta = 1.0 / width
-    # b=2*sqrt(h*(D-h)); db/dA=2*(D-2h)/b**2.
-    depth, _ = _circular_depth_and_width(area_eval, params)
-    dzeta_darea_eval = -2.0 * (params.diameter - 2.0 * depth) / width**4
-    dzeta = dzeta_darea_eval * darea_eval
-
-    gas_head = (
-        rho_g * params.gas_constant * params.gas_temperature
-        - params.atmospheric_pressure
-    ) / (params.rho_liquid * params.gravity)
-    dgas_head = (
-        drho * params.gas_constant * params.gas_temperature
-        / (params.rho_liquid * params.gravity)
-    )
-
-    term_pressure = 2.0 * params.gravity * gas_head / area_eval
-    dterm_pressure = 2.0 * params.gravity * (
-        dgas_head / area_eval
-        - gas_head * darea_eval / area_eval**2
-    )
-
-    density_ratio = rho_g / params.rho_liquid
-    ddensity_ratio = drho / params.rho_liquid
-    term_buoyancy = params.gravity * (1.0 - density_ratio) * zeta
-    dterm_buoyancy = params.gravity * (
-        -ddensity_ratio * zeta + (1.0 - density_ratio) * dzeta
-    )
-
-    slip_over_void = rho_g * delta_u**2 / gas_area
-    dslip_over_void = (
-        drho * delta_u**2 / gas_area
-        + 2.0 * rho_g * delta_u * ddelta_u / gas_area
-        - rho_g * delta_u**2 * dgas_area / gas_area**2
-    )
-    term_slip = -slip_over_void / params.rho_liquid
-    dterm_slip = -dslip_over_void / params.rho_liquid
-    # Q is the second conserved liquid variable.  Retaining this derivative is
-    # required because Lambda contains the liquid/gas slip velocity.
-    ddelta_dq = -1.0 / area_eval
-    dterm_slip_dq = -(
-        2.0 * rho_g * delta_u * ddelta_dq / gas_area
-    ) / params.rho_liquid
-
-    coefficient = term_pressure + term_buoyancy + term_slip
-    derivative = dterm_pressure + dterm_buoyancy + dterm_slip
     if not np.all(np.isfinite(coefficient)) or not np.all(np.isfinite(derivative)):
-        raise FloatingPointError("non-finite Lambda or dLambda/dA")
-    return coefficient, derivative, dterm_slip_dq
+        raise FloatingPointError("non-finite shallow-water restoring coefficient")
+    return coefficient, derivative, np.zeros_like(coefficient)
 
 
 def decoupled_lambda_and_derivative(
@@ -283,6 +318,59 @@ def _elastic_potential_and_derivative(
     return potential, derivative
 
 
+def pressure_potential_wave_state(
+    area: object,
+    mass_supported: object,
+    params: HorizontalLiquidParameters,
+    *,
+    stratified_potential_offset: object | None = None,
+) -> PressurePotentialWaveState:
+    """Evaluate only the two hybrid-pressure fields used by liquid fluxes.
+
+    This is the same potential and tangent as :func:`pressure_potential_state`,
+    without constructing discharge derivatives, eigenvalues or Lambda
+    diagnostics that the Riemann caller immediately discarded.
+    """
+
+    area_a, support_f = np.broadcast_arrays(
+        np.asarray(area, dtype=float),
+        np.asarray(mass_supported, dtype=bool),
+    )
+    if np.any(area_a <= 0.0):
+        raise ValueError("positive liquid area required")
+    original_shape = area_a.shape
+    area_f = np.asarray(area_a, dtype=float).reshape(-1)
+    support = np.asarray(support_f, dtype=bool).reshape(-1)
+    offset_f = None
+    if stratified_potential_offset is not None:
+        offset_f = np.broadcast_to(
+            np.asarray(stratified_potential_offset, dtype=float),
+            original_shape,
+        ).reshape(-1)
+        if not np.all(np.isfinite(offset_f)):
+            raise ValueError("stratified pressure-potential offsets must be finite")
+
+    potential, tangent = _elastic_potential_and_derivative(area_f, params)
+    potential = np.asarray(potential).copy()
+    tangent = np.asarray(tangent).copy()
+    stratified = support & (area_f < params.elastic_separation_area)
+    if np.any(stratified):
+        hydro, hydro_tangent, _, _ = _circular_hydrostatic_state(
+            area_f[stratified], params
+        )
+        potential[stratified] = hydro
+        if offset_f is not None:
+            potential[stratified] += offset_f[stratified]
+        tangent[stratified] = hydro_tangent
+    celerity = np.sqrt(
+        np.maximum(tangent, 0.0) + params.numerical_celerity_floor**2
+    )
+    return PressurePotentialWaveState(
+        potential=potential.reshape(original_shape),
+        celerity=celerity.reshape(original_shape),
+    )
+
+
 def pressure_potential_state(
     area: object,
     discharge: object,
@@ -293,16 +381,14 @@ def pressure_potential_state(
     *,
     stratified_potential_offset: object | None = None,
 ) -> PressurePotentialState:
-    """Evaluate the hybrid potential and published frozen-coefficient speed.
+    """Evaluate the shallow-water/elastic hybrid pressure potential.
 
-    A mass-supported layer uses the stratified two-fluid potential below the
-    finite-tension separation area.  By default its additive constant is
-    chosen from the elastic potential at that same area.  A graph solver may
-    instead supply ``stratified_potential_offset``: one spatially constant
-    gauge per connected gas component, fixed by the resolved liquid-side
-    traction at that component's fitted material front.  The offset changes
-    no Jacobian eigenvalue and avoids inventing a different pressure zero in
-    every cell of one acoustically connected pocket.
+    A mass-supported layer uses the exact circular Saint--Venant pressure
+    moment below the finite-tension separation area.  Its natural gauge is
+    ``g*I1``.  The network may supply one spatially constant offset for a
+    connected free-surface component so its material-front traction matches
+    the neighbouring elastic branch.  Gas pressure is deliberately absent
+    here and is applied once as a regular pressure source by the network.
     """
 
     area_a, q_a, mass_a, momentum_a, support_f = np.broadcast_arrays(
@@ -319,8 +405,6 @@ def pressure_potential_state(
     original_shape = area_a.shape
     area_f = np.asarray(area_a, dtype=float).reshape(-1)
     q_f = np.asarray(q_a, dtype=float).reshape(-1)
-    mass_f = np.asarray(mass_a, dtype=float).reshape(-1)
-    momentum_f = np.asarray(momentum_a, dtype=float).reshape(-1)
     support_f = np.asarray(support, dtype=bool).reshape(-1)
     offset_f = None
     if stratified_potential_offset is not None:
@@ -337,8 +421,6 @@ def pressure_potential_state(
     transition = params.elastic_separation_area
     stratified = support_f & (area_f < transition)
 
-    lambda_value = np.zeros_like(area_a)
-    lambda_derivative = np.zeros_like(area_a)
     lambda_value = np.zeros_like(area_f)
     lambda_derivative = np.zeros_like(area_f)
     lambda_discharge_derivative = np.zeros_like(area_f)
@@ -346,51 +428,20 @@ def pressure_potential_state(
     tangent = np.asarray(elastic_derivative).copy()
     pressure_q_derivative = np.zeros_like(area_f)
     if np.any(stratified):
-        lam, dlam, dlam_dq = _decoupled_lambda_derivatives(
-            area_f[stratified],
-            q_f[stratified],
-            mass_f[stratified],
-            momentum_f[stratified],
-            params,
+        hydro, hydro_tangent, lam, dlam = _circular_hydrostatic_state(
+            area_f[stratified], params
         )
-        a = area_f[stratified]
         if offset_f is None:
-            transition_area = np.full(
-                np.count_nonzero(stratified), transition
-            )
-            lam_transition, _, _ = _decoupled_lambda_derivatives(
-                transition_area,
-                q_f[stratified],
-                mass_f[stratified],
-                momentum_f[stratified],
-                params,
-            )
-            elastic_transition, _ = _elastic_potential_and_derivative(
-                transition_area, params
-            )
-            potential[stratified] = (
-                elastic_transition
-                + 0.5 * lam * a**2
-                - 0.5 * lam_transition * transition**2
-            )
+            potential[stratified] = hydro
         else:
-            potential[stratified] = (
-                0.5 * lam * a**2 + offset_f[stratified]
-            )
-        # The companion liquid block is quasi-linear: Lambda_d is evaluated
-        # from the complete reconstructed stage state and then frozen over the
-        # local liquid Riemann solve.  Its published eigenvalues are
-        # u_l +/- sqrt(Lambda_d*A_l); dLambda/dA and dLambda/dQ therefore remain
-        # diagnostics and do not alter this Riemann celerity.
-        tangent[stratified] = lam * a
+            potential[stratified] = hydro + offset_f[stratified]
+        tangent[stratified] = hydro_tangent
         lambda_value[stratified] = lam
         lambda_derivative[stratified] = dlam
-        lambda_discharge_derivative[stratified] = dlam_dq
 
     velocity = q_f / area_f
-    # The published scheme deliberately continues through the neutral/IKH
-    # point with Eq. (40).  The sign of Lambda remains available in
-    # ``lambda_value``; only the numerical spectral radius is regularised.
+    # The physical shallow-water/elastic tangent is non-negative.  The small
+    # floor is active only in the dry limit and is not part of the flux.
     numerical_tangent = (
         np.maximum(tangent, 0.0) + params.numerical_celerity_floor**2
     )

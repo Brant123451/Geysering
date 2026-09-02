@@ -27,14 +27,7 @@ import math
 
 import numpy as np
 
-try:
-    from numba import njit
-except ImportError:  # pragma: no cover - the pure-Python fallback is portable
-    def njit(*_args, **_kwargs):
-        def decorate(function):
-            return function
-
-        return decorate
+from casea_acceleration import njit
 
 
 @dataclass(frozen=True)

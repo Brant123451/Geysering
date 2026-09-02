@@ -1,0 +1,26 @@
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class volScalarField;
+    object p_rgh;
+}
+
+dimensions [1 -1 -2 0 0 0 0];
+internalField uniform 101325;
+
+boundaryField
+{
+    towerInlet { type fixedFluxPressure; }
+    walls { type fixedFluxPressure; }
+    atmosphere
+    {
+        // Hold p_rgh, rather than absolute p, uniform on the far-field
+        // boundary.  This gives a hydrostatic absolute-pressure profile in
+        // the initially quiescent air column and avoids gravity-driven
+        // through-flow across the open top/sides.
+        type fixedValue;
+        value uniform 101325;
+    }
+    frontAndBack { type empty; }
+}

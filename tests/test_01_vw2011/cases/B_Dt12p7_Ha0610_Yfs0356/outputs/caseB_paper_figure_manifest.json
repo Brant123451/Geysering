@@ -1,0 +1,145 @@
+{
+  "case": "VW2011 Test 1 Case B",
+  "paper_panels": {
+    "pressure": "Fig. 6 centre",
+    "levels": "Fig. 8 centre"
+  },
+  "source_evidence": {
+    "target_conditions": "Dt=12.7 mm, Ha0=0.610 m, Yfs0=0.356 m",
+    "fig6": "centre panel; three pressure repetitions",
+    "fig8": "centre panel; three free-surface/interface repetitions",
+    "table2": "diameter-level averages across nine conditions; contextual only, not Case-B-only validation values",
+    "fig11": "excluded because it uses Ha0=0.305 m and Yfs0=0.254 m"
+  },
+  "initial_conditions": {
+    "Dt_m": 0.0127,
+    "Ha0_m": 0.61,
+    "Yfs0_m": 0.356
+  },
+  "time_shift_applied": false,
+  "curve_fit_applied": false,
+  "one_d_level_smoothing_applied": false,
+  "one_d_pressure_display_smoothing": "0.40-s centered moving mean",
+  "pressure_amplitude_alignment_applied": true,
+  "pressure_amplitude_alignment_scope": "2D display curve only",
+  "pressure_display_offset_Hstar": -0.1040307324598222,
+  "pressure_display_offset_scope": "left pressure panel only; raw 2D metrics unchanged",
+  "pressure_datum": "crown; D/L subtracted from 1D and 2D invert records",
+  "two_d_role": "supporting planar diagnostic",
+  "two_d_geometry": "area-equivalent W=Dt^2/D; sigma=0",
+  "two_d_level_observer": "entrance-connected gas core and persistent liquid column; isolated bottom wet islands are excluded",
+  "two_d_level_source": "openfoam\\2d\\formal\\connected_core_observer\\outputs\\openfoam_2d_levels_connected_core.csv",
+  "one_d_level_observers": {
+    "Yfs_star": "conservative geometric mixture-volume height",
+    "Yint_star": "shock-fitted slug-train front"
+  },
+  "one_d_curve_stop_rules": {
+    "Yfs_star": "first native sample at 1-dz/L",
+    "Yint_star": "computed front/free-surface catch and atmospheric-path latch"
+  },
+  "input_hashes_sha256": {
+    "one_d_solver": "b0d0afab4715a6576d63e38232a5170c2d1f67ac83faffef3ce4fe0df9a24f62",
+    "one_d_series": "dd8f8c191857d5b197d4ca9646229f2d4ebfd2a084bae7448feae6657736cb44",
+    "one_d_metrics": "d7ad47f171372942ecfb969b67778cde03b1229e224354706a2bd1f58d349929",
+    "two_d_levels": "004764d6d3efc649d4fd4013815301ada0331ffc285a99763c62ef0d259c6dc3",
+    "experiment_levels": "e1d2d3c6a1dae6e152a8832736380518a2a51560c2f0e90e12a3c036b869f9fc",
+    "experiment_pressure": "9c9f8bde5bfbf1ce98512dbc9ab84ff6c41eac37ce074b4ec46b2c19838c8735",
+    "two_d_pressure_raw": "3ef873ad2d526498f95e6ba2904adacf430b030a8a435fac52c2e28ef7f99423",
+    "two_d_pressure_display": "49573a667fafc3923da047369e5b31649aae7626582bdb6f7aa5bfea4d221e71",
+    "two_d_pressure_display_audit": "1bf9e8045eef89b7822c60666f25fd8fc11b84ab27ccf956863e1fe59dded581"
+  },
+  "curve_metrics": {
+    "one_d_rim_completion_threshold_star": 0.98360655738,
+    "one_d_rim_tolerance_star": 0.01639344262,
+    "one_d_rim_Tstar": 3.92323013,
+    "one_d_water_rim_latched_Tstar": 3.92323013,
+    "one_d_front_surface_catch_Tstar": 4.050502719,
+    "one_d_liftoff_Tstar_Yint_ge_0p05": 3.622317395,
+    "two_d_rim_Tstar": 4.114112183846456,
+    "two_d_liftoff_Tstar_Yint_ge_0p05": 3.847938962388035,
+    "two_d_catch_Tstar": null,
+    "two_d_pressure_pre_release_mean_crown_Tstar_1to3": 0.8384878773449878,
+    "two_d_free_surface_pre_release_mean_Tstar_1to3": 0.8685352229641186,
+    "two_d_pressure_Hstar_lt_0p3_Tstar": 4.822943045338989,
+    "one_d_pressure_Hstar_lt_0p3_Tstar": 4.096812927,
+    "one_d_pressure_display_median_crown_Tstar_0p8to3": 0.7370253595225956,
+    "one_d_pressure_plateau_median_crown_Tstar_1to3": 0.7541843733669601,
+    "two_d_pressure_display_offset_Hstar": -0.1040307324598222,
+    "rising_track_error": {
+      "one_d_Yfs": {
+        "n": 30,
+        "rmse": 0.04188159709582799,
+        "bias": 0.03425366351338544
+      },
+      "one_d_Yint": {
+        "n": 36,
+        "rmse": 0.20562088705172443,
+        "bias": 0.1722967157069057
+      },
+      "two_d_Yfs": {
+        "n": 30,
+        "rmse": 0.05203690521159315,
+        "bias": -0.003141226427084091
+      },
+      "two_d_Yint": {
+        "n": 36,
+        "rmse": 0.3031904893192552,
+        "bias": -0.25064146213359767
+      }
+    }
+  },
+  "selected_frames": [
+    {
+      "stage": "pre-entry stand",
+      "one_d": {
+        "time_s": 5.9400022602317275,
+        "Tstar": 3.4371076892960386,
+        "file": "frames_1d/frame_0039.png"
+      },
+      "two_d": {
+        "time_s": 6.35,
+        "Tstar": 3.674347731002108,
+        "file": "frames_2d/frame_0042.png"
+      }
+    },
+    {
+      "stage": "interface entry",
+      "one_d": {
+        "time_s": 6.240050714548967,
+        "Tstar": 3.61072695816395,
+        "file": "frames_1d/frame_0041.png"
+      },
+      "two_d": {
+        "time_s": 6.65,
+        "Tstar": 3.847938962388035,
+        "file": "frames_2d/frame_0044.png"
+      }
+    },
+    {
+      "stage": "rim arrival",
+      "one_d": {
+        "time_s": 6.860003737390996,
+        "Tstar": 3.969454986952534,
+        "file": "frames_1d/frame_0045.png"
+      },
+      "two_d": {
+        "time_s": 7.1,
+        "Tstar": 4.108325809466924,
+        "file": "frames_2d/frame_0047.png"
+      }
+    },
+    {
+      "stage": "late venting window",
+      "one_d": {
+        "time_s": 7.000048499045259,
+        "Tstar": 4.050490129034908,
+        "file": "frames_1d/frame_0046.png"
+      },
+      "two_d": {
+        "time_s": 7.85,
+        "Tstar": 4.54230388793174,
+        "file": "frames_2d/frame_0052.png"
+      }
+    }
+  ]
+}

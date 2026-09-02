@@ -1,0 +1,33 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+source /usr/share/modules/init/bash 2>/dev/null || true
+set +e
+set +u
+source /usr/lib/openfoam/openfoam2512/etc/bashrc
+set -euo pipefail
+
+if [[ -d 0 || -d processor0 ]]; then
+    echo "Existing solution detected; run ./Allclean before a fresh solve." >&2
+    exit 1
+fi
+DRIVER_CSV="${MOUTH_DRIVER_CSV:-../../outputs/caseB_2d_mouth_forcing_sanitized.csv}"
+if [[ ! -f "$DRIVER_CSV" ]]; then
+    echo "Missing mouth-driver CSV: $DRIVER_CSV" >&2
+    echo "Provide MOUTH_DRIVER_CSV or generate data/mouth_driver.csv first." >&2
+    exit 1
+fi
+python3 scripts/generate_table_bc.py --csv "$DRIVER_CSV"
+
+NP="${OPENFOAM_NP:-4}"
+if (( NP > 4 )); then NP=4; fi
+if (( NP < 1 )); then NP=1; fi
+foamDictionary system/decomposeParDict -entry numberOfSubdomains -set "$NP" >/dev/null
+
+cp -a 0.orig 0
+blockMesh > log.blockMesh 2>&1
+checkMesh > log.checkMesh 2>&1
+decomposePar > log.decomposePar 2>&1
+OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
+mpirun -np "$NP" compressibleInterFoam -parallel > log.compressibleInterFoam 2>&1
+echo "CASE_B_2D_TOP_PLUME_DONE"

@@ -1,0 +1,58 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p_rgh;
+}
+
+dimensions      [1 -1 -2 0 0 0 0];
+internalField   uniform 101325;
+
+boundaryField
+{
+    waterInlet
+    {
+        // Table 1: rho_w g (0.586-z), expressed as constant p_rgh.
+        type            fixedValue;
+        value           uniform 107064.462144;
+    }
+    waterOutlet
+    {
+        // Table 1: rho_w g (0.584-z), expressed as constant p_rgh.
+        type            fixedValue;
+        value           uniform 107044.873536;
+    }
+    airInlet
+    {
+        type            fixedFluxPressure;
+        value           uniform 107051.981093;
+    }
+    ambientFloor
+    {
+        // Table 1 boundary 4 at z=1.02 m: zero gauge pressure.
+        type            fixedValue;
+        value           uniform 101337.050643;
+    }
+    ambientSides
+    {
+        // Table 1 boundary 5: rho_air g (1.02-z).
+        type            fixedValue;
+        value           uniform 101337.050643;
+    }
+    ambientTop
+    {
+        // Table 1 boundary 6: rho_air g (1.02-z).
+        type            fixedValue;
+        value           uniform 101337.050643;
+    }
+    walls
+    {
+        type            fixedFluxPressure;
+        value           uniform 101325;
+    }
+    frontAndBack
+    {
+        type            empty;
+    }
+}

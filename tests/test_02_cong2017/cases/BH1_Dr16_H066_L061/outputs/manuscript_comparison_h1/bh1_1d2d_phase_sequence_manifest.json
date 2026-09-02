@@ -1,0 +1,111 @@
+{
+  "figure": "cong2017_bh1_1d2d_phase_sequence",
+  "dominant_claim": "Both calculations select the B-H1 geyser branch, while their eruption timing and resolved interface morphology differ.",
+  "selected_physical_times_s": [
+    8.5,
+    12.8,
+    13.0,
+    14.8
+  ],
+  "event_alignment": false,
+  "smoothing": false,
+  "one_d": {
+    "variant": "paper_Fig1b_axial_layout",
+    "validated_archive_end_s": 13.0,
+    "primary_13s_metrics_unchanged": true,
+    "frames": [
+      {
+        "target_time_s": 8.5,
+        "actual_time_s": 8.5,
+        "available": true,
+        "Yfs_m": 0.8282486322069532,
+        "Yint_m": 0.63,
+        "head_over_H0": 0.9755215319655002,
+        "source": "tests/test_02_cong2017/cases/BH1_Dr16_H066_L061/openfoam/2d/frame_compare/one_d_frames/zoom_0085.png",
+        "file": "source_frames/frames_1d/zoom_data_archive_0000.npz"
+      },
+      {
+        "target_time_s": 12.8,
+        "actual_time_s": 12.8,
+        "available": true,
+        "Yfs_m": 1.7201487125276753,
+        "Yint_m": 0.0,
+        "head_over_H0": 21.12179636341862,
+        "source": "tests/test_02_cong2017/cases/BH1_Dr16_H066_L061/openfoam/2d/frame_compare/one_d_frames/zoom_0128.png",
+        "file": "source_frames/frames_1d/zoom_data_archive_0001.npz"
+      },
+      {
+        "target_time_s": 13.0,
+        "actual_time_s": 13.0,
+        "available": true,
+        "Yfs_m": 1.79,
+        "Yint_m": 0.0,
+        "head_over_H0": 0.1962121212121212,
+        "source": "tests/test_02_cong2017/cases/BH1_Dr16_H066_L061/openfoam/2d/frame_compare/one_d_frames/zoom_0130.png",
+        "file": "source_frames/frames_1d/zoom_data_archive_0002.npz"
+      },
+      {
+        "target_time_s": 14.8,
+        "available": false,
+        "reason": "validated 1D archive ends at 13.0 s"
+      }
+    ]
+  },
+  "two_d": {
+    "run_id": "h1_refined_co015",
+    "normal_end_s": 14.8529203,
+    "paper_contract_audit": "PASS",
+    "assessment": "BASIC_OUTCOME_MATCH_WITH_MAJOR_TRANSIENT_BIASES",
+    "frames": [
+      {
+        "target_time_s": 8.5,
+        "actual_time_s": 8.5,
+        "Yfs_m": 0.6078250000028884,
+        "Yint_m": 0.005648239190198738,
+        "head_over_H0": 0.9270200735700543,
+        "file": "source_frames/frames_2d/full_0000.png"
+      },
+      {
+        "target_time_s": 12.8,
+        "actual_time_s": 12.8,
+        "Yfs_m": 1.4568805500283062,
+        "Yint_m": 0.853514871182836,
+        "head_over_H0": 0.9301508524725596,
+        "file": "source_frames/frames_2d/full_0001.png"
+      },
+      {
+        "target_time_s": 13.0,
+        "actual_time_s": 13.0,
+        "Yfs_m": 1.5118194969718237,
+        "Yint_m": 0.9124262403642835,
+        "head_over_H0": 0.9320605811753233,
+        "file": "source_frames/frames_2d/full_0002.png"
+      },
+      {
+        "target_time_s": 14.8,
+        "actual_time_s": 14.8,
+        "Yfs_m": 0.1825890219531503,
+        "Yint_m": 0.1792547099743233,
+        "head_over_H0": 0.25322631176540744,
+        "file": "source_frames/frames_2d/full_0003.png"
+      }
+    ]
+  },
+  "claim_evidence": {
+    "same_geyser_outcome": "supported",
+    "gas_arrival": "supported",
+    "eruption_timing": "partial",
+    "quantitative_rise_speed": "missing",
+    "postarrival_pressure_surge": "missing"
+  },
+  "artifacts": {
+    "png": {
+      "path": "tests/test_02_cong2017/cases/BH1_Dr16_H066_L061/outputs/manuscript_comparison_h1/cong2017_bh1_1d2d_phase_sequence.png",
+      "sha256": "e9dbdfcec74bb55f32f861823a6067bbd0c13ed920deb53f847ea12819755206"
+    },
+    "pdf": {
+      "path": "tests/test_02_cong2017/cases/BH1_Dr16_H066_L061/outputs/manuscript_comparison_h1/cong2017_bh1_1d2d_phase_sequence.pdf",
+      "sha256": "2260e1f2a166496a46b176f2f2cd9901f6686c5c7b804eb2e9219b22b4a84ff5"
+    }
+  }
+}

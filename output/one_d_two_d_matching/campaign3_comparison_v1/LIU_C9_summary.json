@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "case_id": "LIU_C9",
+  "comparison_scope": "summary-only: the current workspace retains the audited 2-D extrema/events but not the source probe histories",
+  "clock": "1-D ramp-start time; 2-D paper time=t_solver-0.25 s",
+  "probe_order": [
+    "PT1",
+    "PT2",
+    "PT3",
+    "PT4"
+  ],
+  "probe_coordinates_source": "C9 case/system/controlDict: PT1 z=1.25 m, PT2 z=0.448 m, PT3 z=0.02 m, PT4 upstream crown",
+  "one_d_manifest": {
+    "path": "E:/Geysering/output/one_d_two_d_matching/campaign3_case_local_baseline_v1/manifest.json",
+    "sha256": "1e2f7652a4e70bb86d7ce770cce627f1716cc0758c1cb63a1045adebca2b97aa"
+  },
+  "two_d_audit": {
+    "path": "E:/Geysering/output/liu2020_fast_runs/C9_Q25to40_hr03_airpocket/c9_medium_80k_combined_audit_attempt4_attempt7_recovery_v3_20260816T1110Z/FINAL_EVENT_AUDIT.json",
+    "sha256": "68bc67e65f3bb60d6e3ffbd4bea82126fe23504839d66630b06072e4ba7ae375",
+    "decision": "EIGHT_ERUPTIONS_NOT_CONFIRMED"
+  },
+  "variants": {
+    "LIU_C9_ALL_WATER": {
+      "first_rim_arrival_s": {
+        "one_d": 0.910977757034395,
+        "two_d_snapshot_first_episode": 0.75,
+        "one_d_minus_two_d_s": 0.16097775703439499
+      },
+      "independent_rim_arrival_count_1d": 1,
+      "snapshot_overtopping_episode_count_2d": 1,
+      "pressure_extrema": {
+        "PT1": {
+          "one_d_max_kPa_gauge": 4.1119596000000005,
+          "two_d_audited_max_kPa_gauge": 7.384960000000007,
+          "one_d_minus_two_d_max_kPa": -3.273000400000006,
+          "two_d_audited_min_kPa_gauge": -2.4934689999999975
+        },
+        "PT2": {
+          "one_d_max_kPa_gauge": 11.493097119799085,
+          "two_d_audited_max_kPa_gauge": 16.46908,
+          "one_d_minus_two_d_max_kPa": -4.975982880200917,
+          "two_d_audited_min_kPa_gauge": 0.27927999999999886
+        },
+        "PT3": {
+          "one_d_max_kPa_gauge": 16.386977317517644,
+          "two_d_audited_max_kPa_gauge": 22.330029999999997,
+          "one_d_minus_two_d_max_kPa": -5.943052682482353,
+          "two_d_audited_min_kPa_gauge": 6.594830000000002
+        },
+        "PT4": {
+          "one_d_max_kPa_gauge": 12.847477704932869,
+          "two_d_audited_max_kPa_gauge": 19.967149999999993,
+          "one_d_minus_two_d_max_kPa": -7.119672295067124,
+          "two_d_audited_min_kPa_gauge": 3.325470000000001
+        }
+      },
+      "one_d_mass_error_m3": -1.6566403197165736e-13
+    },
+    "LIU_C9_SEALED_POCKET": {
+      "first_rim_arrival_s": {
+        "one_d": 1.0777889408970176,
+        "two_d_snapshot_first_episode": 0.75,
+        "one_d_minus_two_d_s": 0.3277889408970176
+      },
+      "independent_rim_arrival_count_1d": 1,
+      "snapshot_overtopping_episode_count_2d": 1,
+      "pressure_extrema": {
+        "PT1": {
+          "one_d_max_kPa_gauge": 4.1119596000000005,
+          "two_d_audited_max_kPa_gauge": 7.384960000000007,
+          "one_d_minus_two_d_max_kPa": -3.273000400000006,
+          "two_d_audited_min_kPa_gauge": -2.4934689999999975
+        },
+        "PT2": {
+          "one_d_max_kPa_gauge": 16.484777937335306,
+          "two_d_audited_max_kPa_gauge": 16.46908,
+          "one_d_minus_two_d_max_kPa": 0.01569793733530389,
+          "two_d_audited_min_kPa_gauge": 0.27927999999999886
+        },
+        "PT3": {
+          "one_d_max_kPa_gauge": 3323.462509661601,
+          "two_d_audited_max_kPa_gauge": 22.330029999999997,
+          "one_d_minus_two_d_max_kPa": 3301.132479661601,
+          "two_d_audited_min_kPa_gauge": 6.594830000000002
+        },
+        "PT4": {
+          "one_d_max_kPa_gauge": 90.62977099321292,
+          "two_d_audited_max_kPa_gauge": 19.967149999999993,
+          "one_d_minus_two_d_max_kPa": 70.66262099321293,
+          "two_d_audited_min_kPa_gauge": 3.325470000000001
+        }
+      },
+      "one_d_mass_error_m3": 6.15718413754518e-15
+    }
+  }
+}

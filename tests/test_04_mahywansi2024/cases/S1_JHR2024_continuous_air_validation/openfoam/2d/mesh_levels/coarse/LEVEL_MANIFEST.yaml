@@ -1,0 +1,85 @@
+schema_version: 1
+case_id: S1_JHR2024_continuous_air_validation
+mesh_level: coarse_2d_analogue
+physical_condition_id: Mahyawansi_JHR2024_continuous_air_5700Pa
+same_physical_condition_as:
+  - medium_refine_2d_analogue
+  - refined_2d_analogue
+result_role: screening_only
+accepted_for_manuscript_evidence: false
+
+source:
+  citation: "Mahyawansi et al. (2024), Journal of Hydraulic Research 62(1), 25-38"
+  doi: "10.1080/00221686.2024.2305353"
+  pdf_sha256: "A47F144D2339D8760D2DD650B97027E2C64F0A26C6D7791D7998FA509BAAF84B"
+
+geometry:
+  pipe_diameter_m: 0.0254
+  upstream_boundary_x_m: -1.83
+  air_port_center_x_m: -1.52
+  riser_center_x_m: 0.0
+  downstream_boundary_x_m: 1.27
+  riser_rim_z_m: 1.02
+  initial_water_surface_z_m: 0.5842
+
+mesh_translation:
+  source_coarse_cutcell_cells_3d: 300000
+  source_wall_inflation_layers_3d: 5
+  generated_cells_2d: 16240
+  pipe_cells_per_diameter_2d: 8
+  wall_inflation_2d: none
+  evidence_status:
+    source_count_and_inflation_layer_count: published
+    pipe_cells_per_diameter: declared_2d_choice
+    source_first_layer_growth_rate_yplus: missing
+    wall_inflation_translation: omitted_because_parameters_missing
+
+initialization:
+  U_m_per_s: [0.0, 0.0, 0.0]
+  k_numerical_floor_m2_per_s2: 1.0e-6
+  omega_numerical_floor_per_s: 1.0
+  turbulence_seed_source_status: unreported_numerical_floor
+  finite_pocket_U_0p06_transferred: false
+
+stages:
+  stage1:
+    air_port: closed
+    turbulence: kOmegaSST
+  stage2:
+    air_port_gauge_pressure_Pa: 5700
+    turbulence: SmagorinskyLES
+
+numerics:
+  solver: compressibleInterFoam-v2512
+  time_scheme: CrankNicolson_0.9
+  source_time_scheme: implicit_bounded_second_order_Fluent
+  translation_note: "Crank-Nicolson is not asserted to be identical to the Fluent scheme."
+  alpha_transport:
+    nAlphaCorr: 2
+    nAlphaSubCycles: 1
+    nLimiterIter: 5
+  stage2_field_write_interval_s: 0.10
+
+stage2_diagnostics:
+  shared_comparison_interval_s: 0.10
+  six_source_pressure_probe_locations: true
+  riser_alpha_probe_z_m: [0.58, 0.60, 0.65, 1.00]
+  field_min_max: [p, U, alpha.water]
+  domain_alpha_water_volume_average: true
+
+result_acceptance:
+  eruption_expected: true
+  eruption_is_hard_gate: true
+  result_role: screening_only
+  specification: ../RESULT_ACCEPTANCE.yaml
+  solver_completion_is_validation: false
+  note: >-
+    This is the coarse mesh of the same continuous-air physical condition as
+    medium_refine and refined. It is not a third experimental condition and
+    cannot by itself provide decisive manuscript validation evidence.
+
+run_control:
+  smoke_limit_s: 0.02
+  smoke_threads: 1
+  smoke_nice: 19
+  formal_run_authorized: false

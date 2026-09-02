@@ -1,0 +1,94 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+
+application     compressibleInterIsoFoam;
+startFrom       startTime;
+startTime       0;
+stopAt          endTime;
+endTime         5.3;
+deltaT          1e-5;
+
+// Sparse volume checkpoints; the real alpha.water animation is written by
+// frontCentrePlane every 0.02 s without probe-based reconstruction.
+writeControl    adjustableRunTime;
+writeInterval   0.25;
+purgeWrite      0;
+writeFormat     binary;
+writePrecision  8;
+writeCompression on;
+
+timeFormat      general;
+timePrecision   9;
+runTimeModifiable yes;
+adjustTimeStep  yes;
+maxCo           0.50;
+maxAlphaCo      0.15;
+maxDeltaT       0.001;
+
+functions
+{
+    probesPT
+    {
+        type                probes;
+        libs                (sampling);
+        fields              (p p_rgh alpha.water U);
+        interpolationScheme cellPoint;
+        probeLocations
+        (
+            (0.02 0.005 0.02)
+            (0.10 0.005 0.44)
+            (0.15 0.005 1.25)
+            (-0.30 0.005 0.378)
+        );
+        writeControl        adjustableRunTime;
+        writeInterval       0.002;
+    }
+
+    waterVolume
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        fields          (alpha.water);
+        operation       volIntegrate;
+        regionType      all;
+        postOperation   none;
+        writeFields     false;
+        log             false;
+        writeControl    adjustableRunTime;
+        writeInterval   0.01;
+    }
+
+    frontCentrePlane
+    {
+        type                surfaces;
+        libs                (sampling);
+        writeControl        adjustableRunTime;
+        writeInterval       0.02;
+        surfaceFormat       vtk;
+        fields              (alpha.water);
+        interpolationScheme cellPoint;
+        formatOptions
+        {
+            vtk
+            {
+                format      ascii;
+            }
+        }
+        surfaces
+        {
+            frontCentre
+            {
+                type        cuttingPlane;
+                point       (0 0.005 0);
+                normal      (0 1 0);
+                interpolate true;
+                triangulate true;
+            }
+        }
+    }
+}

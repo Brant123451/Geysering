@@ -13,12 +13,14 @@ if str(HERE) not in sys.path:
 
 from casea_horizontal_liquid_operator import (  # noqa: E402
     HorizontalLiquidParameters,
-    LossOfHyperbolicity,
     PressurePotentialState,
+    _circular_depth_and_width,
+    _circular_hydrostatic_state,
     characteristic_spectral_radius,
     decoupled_lambda_and_derivative,
     physical_liquid_flux,
     pressure_potential_state,
+    pressure_potential_wave_state,
     rusanov_face_flux,
     ssprk2_stage_step,
 )
@@ -63,10 +65,86 @@ class HorizontalLiquidOperatorTests(unittest.TestCase):
         )
         self.assertTrue(np.isfinite(float(lam)))
 
-    def test_riemann_speed_matches_published_frozen_coefficient_jacobian(self) -> None:
+    def test_half_full_circular_geometry_uses_exact_endpoint_root(self) -> None:
+        area = 0.5 * self.params.area_full
+        depth, width = _circular_depth_and_width(
+            np.asarray(area), self.params
+        )
+        self.assertEqual(float(depth), 0.5 * self.params.diameter)
+        self.assertEqual(float(width), self.params.diameter)
+
+        potential, _, _, _ = _circular_hydrostatic_state(area, self.params)
+        radius = 0.5 * self.params.diameter
+        expected = self.params.gravity * (2.0 / 3.0) * radius**3
+        self.assertAlmostEqual(float(potential), expected, places=18)
+
+    def test_wave_state_matches_full_pressure_state_for_scalar_topologies(self) -> None:
+        area = 0.63 * self.params.area_full
+        mass, momentum = self._gas_state(area, pressure_ratio=1.03)
+        offset = 2.75e-4
+        for supported in (False, True):
+            full = pressure_potential_state(
+                area,
+                -0.17 * area,
+                mass,
+                momentum,
+                supported,
+                self.params,
+                stratified_potential_offset=offset,
+            )
+            wave = pressure_potential_wave_state(
+                area,
+                supported,
+                self.params,
+                stratified_potential_offset=offset,
+            )
+            np.testing.assert_array_equal(wave.potential, full.potential)
+            np.testing.assert_array_equal(wave.celerity, full.celerity)
+
+    def test_wave_state_matches_full_pressure_state_for_mixed_arrays(self) -> None:
+        area = self.params.area_full * np.array(
+            [[0.42, 0.76, 1.00], [0.58, 0.94, 1.015]]
+        )
+        supported = np.array(
+            [[True, False, True], [False, True, False]],
+            dtype=bool,
+        )
+        discharge = area * np.array(
+            [[-0.20, 0.05, 0.00], [0.13, -0.08, 0.02]]
+        )
+        gas_area = np.maximum(self.params.area_full - area, 1.0e-8)
+        gas_mass = (
+            self.params.atmospheric_gas_density
+            * gas_area
+            * self.params.cell_width
+        )
+        gas_momentum = gas_mass * np.array(
+            [[4.0, -2.0, 0.0], [0.5, 3.0, -1.0]]
+        )
+        offset = np.array(
+            [[1.0e-4, 2.0e-4, 3.0e-4], [4.0e-4, 5.0e-4, 6.0e-4]]
+        )
+
+        full = pressure_potential_state(
+            area,
+            discharge,
+            gas_mass,
+            gas_momentum,
+            supported,
+            self.params,
+            stratified_potential_offset=offset,
+        )
+        wave = pressure_potential_wave_state(
+            area,
+            supported,
+            self.params,
+            stratified_potential_offset=offset,
+        )
+        np.testing.assert_array_equal(wave.potential, full.potential)
+        np.testing.assert_array_equal(wave.celerity, full.celerity)
+
+    def test_riemann_speed_matches_circular_shallow_water_celerity(self) -> None:
         area = 0.68 * self.params.area_full
-        # Zero-slip base state isolates the liquid quasi-linear Jacobian used
-        # by the companion Riemann block (gas/slip variables frozen).
         discharge = 0.0
         mass, _ = self._gas_state(area, pressure_ratio=1.0)
         momentum = 0.0
@@ -99,11 +177,21 @@ class HorizontalLiquidOperatorTests(unittest.TestCase):
         below_area = np.nextafter(transition, 0.0)
         epsilon = transition - below_area
         mass, momentum = self._gas_state(below_area)
-        below = pressure_potential_state(
+        below_natural = pressure_potential_state(
             below_area, 0.0, mass, momentum, True, self.params
         )
         at = pressure_potential_state(
             transition, 0.0, mass, momentum, True, self.params
+        )
+        offset = float(at.potential - below_natural.potential)
+        below = pressure_potential_state(
+            below_area,
+            0.0,
+            mass,
+            momentum,
+            True,
+            self.params,
+            stratified_potential_offset=offset,
         )
         above = pressure_potential_state(
             transition + epsilon, 0.0, mass, momentum, True, self.params
@@ -112,20 +200,44 @@ class HorizontalLiquidOperatorTests(unittest.TestCase):
         self.assertLess(abs(float(below.potential - at.potential)), 2.0e-5 * scale)
         self.assertLess(abs(float(above.potential - at.potential)), 2.0e-5 * scale)
 
-    def test_negative_lambda_is_exposed_while_numerical_speed_stays_finite(self) -> None:
+    def test_gas_liquid_slip_does_not_enter_shallow_water_pressure(self) -> None:
         area = 0.55 * self.params.area_full
         mass, _ = self._gas_state(area)
-        # A sufficiently large gas/liquid slip makes Eq. (A31) non-hyperbolic.
-        momentum = mass * 200.0
-        pressure = pressure_potential_state(
-            area, -0.2 * area, mass, momentum, True, self.params
+        high_slip = pressure_potential_state(
+            area, -0.2 * area, mass, mass * 200.0, True, self.params
         )
-        self.assertLess(float(pressure.lambda_value), 0.0)
+        zero_slip = pressure_potential_state(
+            area, -0.2 * area, mass, -0.2 * mass, True, self.params
+        )
         self.assertAlmostEqual(
-            float(pressure.celerity),
-            self.params.numerical_celerity_floor,
-            places=15,
+            float(high_slip.potential), float(zero_slip.potential), places=14
         )
+        self.assertAlmostEqual(
+            float(high_slip.celerity), float(zero_slip.celerity), places=14
+        )
+        self.assertGreater(float(high_slip.lambda_value), 0.0)
+
+    def test_all_holdups_use_the_same_shallow_water_slip_independent_law(self) -> None:
+        area = 0.90 * self.params.area_full
+        discharge = -0.2 * area
+        mass, _ = self._gas_state(area, pressure_ratio=1.02)
+        high_slip, _ = decoupled_lambda_and_derivative(
+            area, discharge, mass, mass * 200.0, self.params
+        )
+        zero_slip, _ = decoupled_lambda_and_derivative(
+            area, discharge, mass, mass * (discharge / area), self.params
+        )
+        self.assertAlmostEqual(float(high_slip), float(zero_slip), places=12)
+        self.assertGreater(float(high_slip), 0.0)
+
+    def test_vent_connected_underpressure_is_not_negative_liquid_stiffness(self) -> None:
+        area = 0.70 * self.params.area_full
+        discharge = 0.0
+        mass, _ = self._gas_state(area, pressure_ratio=0.25)
+        lam, _ = decoupled_lambda_and_derivative(
+            area, discharge, mass, 0.0, self.params
+        )
+        self.assertGreater(float(lam), 0.0)
 
     def test_ssprk2_recomputes_each_stage_and_does_not_grow_2dx_mode(self) -> None:
         ncell = 64

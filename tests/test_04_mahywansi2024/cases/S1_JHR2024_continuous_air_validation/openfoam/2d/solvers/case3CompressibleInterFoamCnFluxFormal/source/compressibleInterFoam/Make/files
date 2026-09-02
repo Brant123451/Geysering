@@ -1,0 +1,3 @@
+compressibleInterFoam.C
+
+EXE = $(CASE3_FORMAL_APPBIN)/case3CompressibleInterFoamCnFlux

@@ -1,0 +1,19 @@
+{
+  "schema": "geysering.liu2020.c9.independent_final_audit_verification.v2",
+  "created_utc": "2026-08-16T03:29:24Z",
+  "status": "INDEPENDENT_FINAL_AUDIT_VERIFICATION_PASS",
+  "result_accepted": false,
+  "final_manifest_sha256": "97ee9d51ce9cbdfa84d3cdf2662887d66be01f9823992345c10bff28b4edfc44",
+  "event_audit_sha256": "68bc67e65f3bb60d6e3ffbd4bea82126fe23504839d66630b06072e4ba7ae375",
+  "verified_solver_time_s": 20.25,
+  "verified_latest_common_checkpoint_s": 20.25,
+  "verified_staged_hardlink_files": 8922,
+  "verified_staged_logical_bytes": 1133605118,
+  "event_decision": "EIGHT_ERUPTIONS_NOT_CONFIRMED",
+  "episode_counts": {
+    "alpha_ge_0.1": 1,
+    "alpha_ge_0.5": 1,
+    "alpha_ge_0.9": 2
+  },
+  "one_to_one_eight_window_snapshot_alignment": false
+}

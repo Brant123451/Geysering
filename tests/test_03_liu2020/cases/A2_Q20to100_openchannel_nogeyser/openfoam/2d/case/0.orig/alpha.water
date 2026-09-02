@@ -1,0 +1,29 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      alpha.water;
+}
+
+dimensions [0 0 0 0 0 0 0];
+internalField uniform 0;
+
+boundaryField
+{
+    inlet
+    {
+        type variableHeightFlowRate;
+        lowerBound 0;
+        upperBound 1;
+        value uniform 0;
+    }
+    tankAtmosphere { type inletOutlet; inletValue uniform 0; value uniform 0; }
+    riserOutlet    { type inletOutlet; inletValue uniform 0; value uniform 0; }
+    weirOutlet     { type inletOutlet; inletValue uniform 0; value uniform 0; }
+    walls          { type zeroGradient; }
+    frontAndBack
+    {
+        type empty;
+    }
+}

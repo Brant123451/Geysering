@@ -1,0 +1,56 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+
+application         compressibleInterFoam;
+startFrom           latestTime;
+startTime           0;
+stopAt              endTime;
+endTime             0.60;
+deltaT              1e-6;
+writeControl        adjustableRunTime;
+writeInterval       0.10;
+purgeWrite          0;
+writeFormat         binary;
+writePrecision      8;
+writeCompression    off;
+timeFormat          general;
+timePrecision       12;
+runTimeModifiable   yes;
+
+adjustTimeStep      yes;
+maxCo               0.5;
+maxAlphaCo          0.25;
+maxDeltaT           0.001;
+
+functions
+{
+    probesInternal
+    {
+        type            probes;
+        libs            (sampling);
+        writeControl    timeStep;
+        writeInterval   10;
+        probeLocations
+        (
+            ( 0.000 0.005 0.000)
+            ( 0.000 0.005 0.600)
+            ( 0.000 0.005 2.000)
+            (-5.000 0.005 0.000)
+        );
+        fields          (p p_rgh alpha.water U);
+    }
+
+    fieldMinMax1
+    {
+        type            fieldMinMax;
+        libs            (fieldFunctionObjects);
+        writeControl    timeStep;
+        writeInterval   100;
+        fields          (p U alpha.water);
+    }
+}

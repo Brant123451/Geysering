@@ -1,0 +1,252 @@
+{
+  "schema_version": 1,
+  "audit_date": "2026-08-10",
+  "scope": "Independent evidence audit of completed B-H1 and B-H6 OpenFOAM 2D results; reusable gate for B-H3",
+  "overall": {
+    "B-H1": "OUTCOME_AND_ARRIVAL_ONLY_NOT_QUANTITATIVE_TRANSIENT_ALIGNMENT",
+    "B-H6": "QUALITATIVE_REGIME_AND_HYDROSTATIC_PRESSURE_ALIGNMENT_WITH_MAJOR_KINEMATIC_BIAS",
+    "campaign_complete": false,
+    "reason": "The refined B-H3 run is still active and B-H1/B-H6 interface kinematics are not quantitatively aligned."
+  },
+  "uniform_rules": {
+    "time_origin": "seconds after valve opening begins",
+    "supported": "absolute relative error <= 10%, or an exact qualitative match",
+    "partial": "10% < absolute relative error <= 30%, or only part of a qualitative sequence matches",
+    "failed": "absolute relative error > 30%, or the modeled behavior contradicts the published behavior",
+    "missing": "no genuinely comparable experimental or model quantity",
+    "classification": "finite liquid passage across the physical riser rim using the common stored-field outlet gate",
+    "catchup_proxy": "first three consecutive samples with Yfs-Yint <= max(2% initial post-arrival gap, 2 riser dz)",
+    "event_end": "earliest of physical-rim crossing, catch-up proxy, or completed observation end",
+    "average_speed": "endpoint displacement divided by the common event duration",
+    "no_case_specific_thresholds": true
+  },
+  "source_separation": {
+    "published_measurement": "Cong et al. (2017) Table 2 and exact-run figures/prose",
+    "figure_digitization": "values recovered from a rendered published graph and labelled approximate",
+    "parameter_matched_companion": "B-1 or B-32 has the same D, Dr, H0 and L0 but is not B-H1 or B-H6",
+    "two_dimensional_derivation": "centreline alpha=0.5 crossings, gas-fraction-weighted pocket pressure, PT1 probe, or physical-rim surface integration",
+    "not_directly_comparable": "raw 2D per-extrusion flux/volume is not compared to circular experimental discharge or volume"
+  },
+  "parameter_identity": {
+    "support": "partial",
+    "supported": "D=0.05 m, case Dr, H0=0.66 m, L0=0.61 m, paper axial layout, atmospheric initial pocket, constant-head Series B inlet, quiescent start, 23 degC properties, and approximately 0.20 s opening",
+    "limitations": "The calculation is planar area-equivalent; the sine-squared Forchheimer valve path, 0.001 minimum aperture, laminar closure, thermophysical details, and finite atmosphere box are model choices not specified by the paper."
+  },
+  "B-H1": {
+    "classification": {
+      "support": "supported",
+      "experiment": "GEYSER",
+      "model": "GEYSER",
+      "model_true_rim_time_s": 14.0,
+      "evidence": "resolved alpha-supported upward liquid component plus cumulative positive liquid volume across z=1.8250001 m"
+    },
+    "arrival": {
+      "support": "supported",
+      "experiment_s": 8.07,
+      "model_s": 8.5,
+      "relative_error": 0.053283767038413844
+    },
+    "ejection_time": {
+      "support": "failed",
+      "experiment_s": 9.55,
+      "model_s": 14.0,
+      "relative_error": 0.46596858638743444,
+      "experimental_basis": "B-H1 Fig. 8(d)/Fig. 9(a), approximately the first top-reaching frame"
+    },
+    "interface_kinematics": {
+      "comparability": "partial because the paper does not disclose the exact averaging implementation; the model values use one fixed endpoint formula",
+      "vfs": {
+        "support": "failed",
+        "experiment_m_s": 0.924,
+        "model_m_s": 0.21675909090856574,
+        "relative_error": 0.7654122392764441
+      },
+      "vint": {
+        "support": "failed",
+        "experiment_m_s": 1.231,
+        "model_m_s": 0.21754830197077907,
+        "relative_error": 0.823275140559887
+      },
+      "vnet": {
+        "support": "failed",
+        "experiment_m_s": 0.301,
+        "model_m_s": 0.0007892110622133297,
+        "relative_error": 0.9973780363381616,
+        "model_vnet_over_paper_vTaylor": 0.006024511925292593
+      }
+    },
+    "pressure_and_compression": {
+      "exact_BH1_numeric_H_over_H0_peak": {
+        "support": "missing",
+        "reason": "Fig. 10(a) is Run B-1, not B-H1."
+      },
+      "exact_BH1_mechanism": {
+        "support": "failed",
+        "paper": "rapid late acceleration and strong compression/surge before ejection",
+        "model": "vertical-pocket Ha/Lw median 1.019, p05-p95 1.004-1.034; no resolved compression surge before the much later ejection"
+      },
+      "parameter_matched_B1_PT1": {
+        "qualification": "companion evidence only",
+        "global_peak": {
+          "support": "supported",
+          "digitized_experiment_H_over_H0": 1.9287,
+          "model_H_over_H0": 1.776767323916669,
+          "relative_error": 0.07877465447365119
+        },
+        "postarrival_peak": {
+          "support": "failed",
+          "digitized_experiment_H_over_H0": 1.8717,
+          "model_H_over_H0": 0.9511841772693753,
+          "relative_error": 0.49180735306439316
+        }
+      }
+    },
+    "event_sequence": {
+      "support": "partial",
+      "matched": "arrival -> entry/rise -> finite rim ejection",
+      "failed_or_missing": "partial-entry compression, pressure drop followed by sharp surge, and rapid gas/free-surface acceleration are not reproduced"
+    },
+    "basic_alignment_claim": "Supported only for arrival and final geyser/ejection outcome; not supported for transient timing, speed, compression, or mechanism."
+  },
+  "B-H6": {
+    "completion": {
+      "support": "supported",
+      "last_time_s": 20.0,
+      "normal_end": true,
+      "fatal_error": false
+    },
+    "classification": {
+      "support": "supported",
+      "experiment": "NO_GEYSER",
+      "model": "NO_GEYSER",
+      "maximum_rim_alpha": 0.0,
+      "maximum_positive_rim_flow_m3_s": 0.0,
+      "cumulative_positive_rim_volume_m3": 0.0
+    },
+    "arrival": {
+      "support": "supported",
+      "experiment_s": 8.1,
+      "model_s": 8.04,
+      "relative_error": 0.007407407407407469
+    },
+    "level_and_break": {
+      "Yfs_peak": {
+        "support": "partial",
+        "figure_digitized_experiment_m": 1.2008,
+        "model_m": 1.0212230407960985,
+        "relative_error": 0.1495520383113823
+      },
+      "Yint_peak_before_break": {
+        "support": "partial",
+        "figure_digitized_experiment_m": 1.1784,
+        "model_m": 0.9218363551486624,
+        "relative_error": 0.21772134558497765
+      },
+      "break_or_catchup_time": {
+        "support": "failed",
+        "paper_observation_bracket_s": [10.58, 10.9],
+        "model_common_proxy_s": 12.47,
+        "delay_s": [1.57, 1.89],
+        "note": "The model proxy is grid-resolved and common to all cases; it is not claimed identical to visual break identification."
+      }
+    },
+    "interface_kinematics": {
+      "comparability": "partial because the paper does not disclose the exact averaging implementation; the model values use one fixed endpoint formula",
+      "vfs": {
+        "support": "failed",
+        "experiment_m_s": 0.246,
+        "model_m_s": 0.07210521417499152,
+        "relative_error": 0.7068893732723922
+      },
+      "vint": {
+        "support": "failed",
+        "experiment_m_s": 0.476,
+        "model_m_s": 0.20662925008808014,
+        "relative_error": 0.5659049367897476
+      },
+      "vnet": {
+        "support": "failed",
+        "experiment_m_s": 0.235,
+        "model_m_s": 0.13452403591308862,
+        "relative_error": 0.42755729398685693,
+        "model_vnet_over_paper_vTaylor": 0.6142650041693545
+      }
+    },
+    "pressure_and_compression": {
+      "exact_BH6_hydrostatic_pocket_relation": {
+        "support": "supported",
+        "paper_Fig7d_digitized_Ha_over_Lw": {
+          "minimum": 0.8746268656716416,
+          "median": 0.964179104477612,
+          "maximum": 1.155223880597015
+        },
+        "model_Ha_over_Lw": {
+          "p05": 0.850497503235608,
+          "median": 1.0035187290102319,
+          "p95": 1.1729618141093634
+        },
+        "median_relative_error": 0.0408011543959976,
+        "qualification": "Paper values are figure-digitized; model values are gas-fraction-weighted centreline gas pressure."
+      },
+      "exact_BH6_numeric_H_over_H0_peak": {
+        "support": "missing",
+        "reason": "Fig. 10(b) is Run B-32, not B-H6."
+      },
+      "parameter_matched_B32_PT1": {
+        "qualification": "companion evidence only",
+        "global_peak": {
+          "support": "supported",
+          "digitized_experiment_H_over_H0": 1.9286,
+          "model_H_over_H0": 1.8202283540299007,
+          "relative_error": 0.056191872845639014
+        },
+        "postarrival_peak": {
+          "support": "failed",
+          "digitized_experiment_H_over_H0": 1.5857,
+          "model_H_over_H0": 1.1063674316786052,
+          "relative_error": 0.3022845231263132
+        }
+      }
+    },
+    "event_sequence": {
+      "support": "partial",
+      "matched": "arrival -> Taylor-like hydrostatic rise -> gas approaches/catches free surface within the riser -> no rim ejection through 20 s",
+      "bias": "the rise/break stage is too slow and too low, followed by longer internal oscillation"
+    },
+    "basic_alignment_claim": "Supported for no-geyser classification, arrival, qualitative stage order, and hydrostatic pocket pressure; not supported for interface speeds or break timing."
+  },
+  "B-H3_reusable_gate": {
+    "state": "pending refined run completion",
+    "paper_Table2": {
+      "classification": "GEYSER",
+      "Ta_s": 8.18,
+      "vfs_m_s": 0.657,
+      "vint_m_s": 0.916,
+      "vnet_m_s": 0.267,
+      "vTaylor_m_s": 0.174
+    },
+    "required_inputs": [
+      "normal solver End at 20 s with no true FOAM FATAL or NaN",
+      "complete from-zero stored trajectory and PT1 series",
+      "final case-independent physical-rim surface report",
+      "actual case configuration and paper-contract audit",
+      "centreline alpha.water, p and U samples"
+    ],
+    "apply_without_change": [
+      "same valve-opening time origin",
+      "same 5 mm gas-nose arrival definition",
+      "same physical-rim classification gate",
+      "same catch-up proxy and event endpoint",
+      "same endpoint-average vfs, vint and vnet formula",
+      "same 10%/30% support bands",
+      "same gas-pocket pressure extraction"
+    ],
+    "published_evidence_missing_for_exact_BH3": [
+      "physical-rim/ejection time",
+      "full level trajectory",
+      "pressure peak or pressure time series",
+      "case-specific detailed event-stage chronology"
+    ],
+    "consequence": "For B-H3, classification, Ta and Table-2 velocities can be judged quantitatively. Rim time and pressure peak must remain missing rather than borrowing B-H1/B-1 values."
+  }
+}

@@ -1,0 +1,61 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setFieldsDict;
+}
+
+defaultFieldValues
+(
+    volScalarFieldValue alpha.water 0
+    // Table 1 ambient-air hydrostatic datum in absolute reduced pressure.
+    volScalarFieldValue p_rgh 101337.050643
+    volScalarFieldValue p 101325
+    // The continuous-air branch publishes no initial water speed.
+    volVectorFieldValue U (0 0 0)
+);
+
+regions
+(
+    // Water-filled horizontal main line.
+    boxToCell
+    {
+        box (-1.8301 -0.001 -0.0128) (1.2701 0.021 0.0128);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+            volScalarFieldValue p_rgh 107051.981093
+            volScalarFieldValue p 107051.981093
+            volVectorFieldValue U (0 0 0)
+        );
+    }
+
+    // Hydrostatic water column in the riser to Fig. 1 level z=0.5842 m.
+    boxToCell
+    {
+        box (-0.0128 -0.001 0.0126) (0.0128 0.021 0.5842);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+            volScalarFieldValue p_rgh 107051.981093
+            volScalarFieldValue p 107051.981093
+            volVectorFieldValue U (0 0 0)
+        );
+    }
+
+    // Stage-1 water-filled branch below the closed air-inlet boundary.  The
+    // paper describes Stage 1 as simple water flow with this boundary treated
+    // as a wall; no pre-existing gas pocket is introduced before Stage 2.
+    boxToCell
+    {
+        box (-1.5328 -0.001 0.0126) (-1.5072 0.021 0.1501);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+            volScalarFieldValue p_rgh 107051.981093
+            volScalarFieldValue p 107051.981093
+            volVectorFieldValue U (0 0 0)
+        );
+    }
+);

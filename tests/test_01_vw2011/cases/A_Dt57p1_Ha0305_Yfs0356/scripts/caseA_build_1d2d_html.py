@@ -150,7 +150,10 @@ def load_1d_frames(index_path: Path) -> list[dict]:
     for frame in selected:
         t = float(frame["time"])
         surface_height = float(
-            frame.get("materialHeight", frame["wtop"])
+            frame.get(
+                "visibleWaterTop",
+                frame.get("materialHeight", frame["wtop"]),
+            )
         )
         frame["Tstar"] = t * TSTAR_PER_SECOND
         frame["Yint"] = float(frame["itop"])
@@ -281,9 +284,9 @@ def main() -> None:
     parser.add_argument(
         "--model-note",
         default=(
-            "1D 水平管采用与 Case B 相同的 Tosan (2021) 明满流界面拟合、"
-            "有压段 MOC 与守恒湿干前沿算法；Case A 仅替换初始气压头和竖管边界参数。"
-            "气核宽度按面积分数显示；2D OpenFOAM 原始结果未修改。"
+            "1D 结果采用守恒材料前缘、面中心对齐的 T 结点及局部 Taylor 液膜回流闭合；"
+            "竖管按各网格的真实液相体积分数绘制，不使用人为界面线或整段水柱投影。"
+            "2D OpenFOAM 原始结果未修改。"
         ),
     )
     args = parser.parse_args()

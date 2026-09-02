@@ -1,0 +1,14 @@
+{
+  "case": "VW2011 Test 1 Case B",
+  "status": "graphical display correction; not a new simulation result",
+  "display_operation": "constant vertical offset applied to full archived 2D history",
+  "offset_Hstar": -0.1040307324598222,
+  "offset_basis": "experiment median minus stopped shared-input 2D median over T*=1--3",
+  "experiment_plateau_Hstar": 0.748139,
+  "shared_input_partial_2d_plateau_Hstar_raw": 0.8521697324598222,
+  "display_2d_plateau_Hstar": 0.7484816062971239,
+  "display_2d_collapse_below_Hstar_0p3_Tstar": 4.4121104643922955,
+  "display_2d_RMSE_Hstar": 0.16676840819467856,
+  "tail_source": "2d_open_rim_corrected archived full run",
+  "time_shift_or_shape_fit": false
+}

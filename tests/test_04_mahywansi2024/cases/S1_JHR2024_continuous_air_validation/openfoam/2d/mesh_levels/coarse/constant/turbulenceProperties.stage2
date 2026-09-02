@@ -1,0 +1,24 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      turbulenceProperties;
+}
+
+// Source states LES but does not report its coefficient/wall-model details.
+simulationType  LES;
+
+LES
+{
+    LESModel        Smagorinsky;
+    turbulence      on;
+    printCoeffs     on;
+    delta           cubeRootVol;
+
+    cubeRootVolCoeffs
+    {
+        deltaCoeff  1;
+    }
+}
+

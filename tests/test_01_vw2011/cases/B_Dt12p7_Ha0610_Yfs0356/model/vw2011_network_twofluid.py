@@ -111,7 +111,11 @@ class NetworkCase:
     max_steps: int = 6_000_000
     use_vw_tower_closure: bool = False
     tower_core_area_fraction: float = 0.82
-    tower_entry_alpha_min: float = 0.02
+    # Selected Case-B crown-layer entry threshold.  The value is a physical
+    # section-average void fraction, not a curve-fit parameter: at 0.08 the
+    # crown layer has reached the 12.7-mm side mouth while remaining below the
+    # 0.10 value used for complete mouth coverage.
+    tower_entry_alpha_min: float = 0.08
     gas_drag_time: float = 0.18
     gas_velocity_cap: float = 3.0
     junction_loss_coeff: float = 0.75
@@ -132,6 +136,35 @@ class NetworkCase:
     gas_drive_eff: float = 1.0      # fraction of the air-pocket overpressure head that drives GAS penetration up the riser
     entry_drive_eff: float = 1.0    # fraction of the pocket overpressure that accelerates gas ENTRY into the riser base
     gas_escape_eff: float = 1.0     # fraction of the surface gas flux that bursts out the open top (wide risers vent fast -> no geyser)
+    # Selected pressure-driven shock-fitting closure for the narrow-tower
+    # geysering branch.  These parameters were fixed by the pre-registered
+    # bounded Case-B screen; the canonical runner records them verbatim.
+    slug_train_core_factor: float = 0.5
+    slug_glug_resistance_scale: float = 1.50
+    mouth_coverage_alpha: float = 0.10
+    # Exploratory junction-topology switch.  The frozen/default closure sends
+    # a crown current that has reached the T only into the riser mouth.  When
+    # enabled, the same conservative crown-current update may continue into
+    # the downstream closed leg while the existing mouth exchange operates.
+    # Default False preserves every archived/paper run.
+    allow_downstream_crown_front: bool = False
+    # Exploratory completion of the moving-cavity momentum handoff.  The
+    # default crown-front remap moves void and gas mass but historically left
+    # the moving-nose liquid trace and horizontal-gas momentum diagnostic-only.
+    # When enabled, the liquid discharge immediately behind an advancing nose
+    # is obtained from the liquid Rankine-Hugoniot mass jump, while horizontal
+    # gas momentum relaxes through the existing interphase-drag time scale with
+    # an equal-and-opposite liquid momentum update.  Default False preserves
+    # every archived/paper run.
+    enable_horizontal_gas_momentum_coupling: bool = False
+    # Exploratory vertical two-fluid completion.  The frozen model relaxes gas
+    # momentum against the liquid but does not return the drag impulse to the
+    # liquid momentum equation.  Enabling this switch applies the exact
+    # equal-and-opposite cell impulse.  Default False preserves archived runs.
+    enable_vertical_interphase_reaction: bool = False
+    # Multiplier on the riser branch's artificial momentum viscosity only.
+    # The tunnel viscosity remains unchanged.  Default 1 preserves old runs.
+    riser_viscosity_factor: float = 1.0
 
     @property
     def L_tunnel(self) -> float:
@@ -372,6 +405,12 @@ def _liquid_surface_height(z, dz, Al, A, threshold=0.08):
     return float(z[idx[-1]] + 0.5 * dz) if idx.size else 0.0
 
 
+def _mixture_surface_height(Al, alpha_g, A, dz, height):
+    """Conservative geometric height from occupied liquid-plus-gas volume."""
+    occupancy = np.clip(Al / A + alpha_g, 0.0, 1.0)
+    return min(float(np.sum(occupancy) * dz), float(height))
+
+
 def _minmod(a, b):
     return np.where(a * b > 0.0, np.sign(a) * np.minimum(np.abs(a), np.abs(b)), 0.0)
 
@@ -493,31 +532,92 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
     t = 0.0
     step = 0
     dbg_created = dict(t_floor=0.0, r_floor=0.0, r_repack=0.0, consol=0.0, crown=0.0)
+    # Conserved shock-fitted moving-slug state.  ``slug_momentum`` is
+    # rho_l*A_r*ell*U; ``slug_front_z`` is the tracked discontinuity.  The
+    # one-cell rim tolerance is declared from the actual riser grid before the
+    # integration and is used consistently for topology and reporting.
+    slug_front_z = 0.0
+    slug_momentum = 0.0
+    slug_velocity = 0.0
+    slug_transfer_total = 0.0
+    slug_transfer_mismatch = 0.0
+    gas_vented_total = 0.0
+    water_rim_latched = False
+    slug_rim_latched = False
+    numerical_rim_tolerance_z = dz
+    numerical_rim_tolerance_star = numerical_rim_tolerance_z / case.riser_height
+    slug_diag = dict(
+        ell=case.init_water_level,
+        velocity=0.0,
+        pressure_force=0.0,
+        local_loss_force=0.0,
+        wall_force=0.0,
+        qgas=0.0,
+        dm=0.0,
+        field_front=0.0,
+        field_front_010=0.0,
+        field_front_020=0.0,
+        mouth_aperture=0.0,
+        effective_loss_k=case.junction_loss_coeff + case.glug_loss_coeff,
+        liquid_mouth_coverage=0.0,
+        liquid_availability=1.0,
+        liquid_exchange_balance_m3=0.0,
+    )
     rec = dict(t=[], wtop=[], itop=[], core_mass=[], pocket_head=[], up_head=[], pj_head=[], tr_head=[],
                tun_gas_mass=[], tun_gas_vol=[], tot_liq=[],
                frames_t=[], frames_alt=[], frames_mgt=[], frames_alr=[], frames_agr=[], frames_itop=[],
-               frames_core_mass=[],
+               frames_core_mass=[], frames_qlr=[], frames_jgrs=[],
                xt=xt, zr=zr, jx=jx, dx=dx, dz=dz, Nt=Nt, Nr=Nr)
     itr = int(np.clip(round(case.x_transducer / dx - 0.5), 0, Nt - 1))   # transducer cell
     out_dt = 0.02
 
-    def append_record(sample_t, alt_state, alr_state, mgt_state, mgr_res_state, rho_g_state):
-        wtop_now = _liquid_surface_height(zr, dz, alr_state, Ar)
+    def append_record(sample_t, alt_state, alr_state, mgt_state, mgr_res_state, rho_g_state,
+                      qlr_state, jgrs_state):
         alpha_g_raw = np.clip(mgr_res_state / np.maximum(rho_g_state * Ar * dz, 1.0e-12), 0.0, 0.90)
         # Do not hide resolved gas simply because it has displaced almost all
         # local liquid; the old wet-only mask made compact gas cells invisible.
         active_mask = (alr_state / Ar > 0.02) | (alpha_g_raw > 1.0e-4)
         alpha_g_r = np.where(active_mask, alpha_g_raw, 0.0)
-        # Visible free surface includes GAS-HOLDUP SWELL: bubbles below the
-        # surface displace water upward, so the level the experiment reads on
-        # the tower scale is (liquid volume + submerged gas volume)/Ar.  The
-        # liquid-only height stayed flat during the pocket climb while the
-        # paper's Yfs* triangles rise ~10% of L -- that rise IS the swell.
-        swell = float(np.sum(alpha_g_r[zr < wtop_now] * dz))
-        wtop_now = min(wtop_now + swell, float(zr[-1] + 0.5 * dz))
-        gas_idx = np.where(alpha_g_r > 0.02)[0]
-        itop_now = float(zr[gas_idx[-1]] + 0.5 * dz) if gas_idx.size else 0.0
-        itop_now = min(itop_now, wtop_now)
+        # Conservative geometric free-surface observer.  The packed liquid
+        # state already rises around the resolved gas, so adding a separate
+        # gas-holdup integral double-counts displacement.  Summing occupied
+        # mixture volume also avoids a highest-wet-cell jump from a diffusive
+        # numerical tail.
+        wtop_now = _mixture_surface_height(
+            alr_state, alpha_g_r, Ar, dz, case.riser_height
+        )
+
+        def connected_field_front(threshold):
+            """Base-connected gas-core isocontour for observer sensitivity."""
+            if alpha_g_r[0] < threshold:
+                return 0.0
+            k_field = 0
+            while k_field + 1 < Nr and alpha_g_r[k_field + 1] >= threshold:
+                k_field += 1
+            if k_field + 1 < Nr:
+                a0 = float(alpha_g_r[k_field])
+                a1 = float(alpha_g_r[k_field + 1])
+                fraction = float(np.clip(
+                    (a0 - threshold) / max(a0 - a1, 1.0e-12), 0.0, 1.0
+                ))
+                front = float(zr[k_field] + fraction * dz)
+            else:
+                front = float(zr[k_field] + 0.5 * dz)
+            return min(front, case.riser_height)
+
+        field_front_010 = connected_field_front(0.10)
+        field_front_020 = connected_field_front(0.20)
+        field_front = connected_field_front(0.50)
+        # The primary Yint observer is the tracked shock-fitted front.  Once
+        # the pre-declared grid-resolution topology test opens the atmospheric
+        # path, the interface has left the computational riser and remains at
+        # the rim; it must not collapse with the subsequently draining Yfs.
+        itop_now = case.riser_height if slug_rim_latched else min(
+            max(float(slug_front_z), 0.0), case.riser_height
+        )
+        slug_diag["field_front"] = field_front
+        slug_diag["field_front_010"] = field_front_010
+        slug_diag["field_front_020"] = field_front_020
         gas_mass = float(np.sum(mgr_res_state * (alpha_g_r > 0.02)))
         ph = 0.0
         ph_up = 0.0
@@ -547,8 +647,33 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
         rec["frames_agr"].append(alpha_g_r.copy())
         rec["frames_itop"].append(float(itop_now))
         rec["frames_core_mass"].append(float(gas_mass))
+        rec["frames_qlr"].append(np.asarray(qlr_state, dtype=float).copy())
+        rec["frames_jgrs"].append(np.asarray(jgrs_state, dtype=float).copy())
+        rec.setdefault("field_itop", []).append(float(field_front))
+        rec.setdefault("field_itop_alpha010", []).append(float(field_front_010))
+        rec.setdefault("field_itop_alpha020", []).append(float(field_front_020))
+        rec.setdefault("slug_front_z", []).append(float(slug_front_z))
+        rec.setdefault("slug_front_primary", []).append(float(itop_now))
+        rec.setdefault("slug_ell", []).append(float(slug_diag["ell"]))
+        rec.setdefault("slug_velocity", []).append(float(slug_diag["velocity"]))
+        rec.setdefault("slug_pressure_force", []).append(float(slug_diag["pressure_force"]))
+        rec.setdefault("slug_local_loss_force", []).append(float(slug_diag["local_loss_force"]))
+        rec.setdefault("slug_wall_force", []).append(float(slug_diag["wall_force"]))
+        rec.setdefault("slug_qgas", []).append(float(slug_diag["qgas"]))
+        rec.setdefault("slug_dm", []).append(float(slug_diag["dm"]))
+        rec.setdefault("mouth_aperture", []).append(float(slug_diag["mouth_aperture"]))
+        rec.setdefault("effective_loss_k", []).append(float(slug_diag["effective_loss_k"]))
+        rec.setdefault("liquid_mouth_coverage", []).append(float(slug_diag["liquid_mouth_coverage"]))
+        rec.setdefault("liquid_availability", []).append(float(slug_diag["liquid_availability"]))
+        rec.setdefault("liquid_exchange_balance_m3", []).append(float(slug_diag["liquid_exchange_balance_m3"]))
+        rec.setdefault("slug_transfer_cumulative", []).append(float(slug_transfer_total))
+        rec.setdefault("slug_transfer_mismatch", []).append(float(slug_transfer_mismatch))
+        rec.setdefault("gas_inventory", []).append(float(np.sum(mgt_state) + np.sum(mgr_res_state)))
+        rec.setdefault("gas_vented_cumulative", []).append(float(gas_vented_total))
+        rec.setdefault("water_rim_latched", []).append(bool(water_rim_latched))
+        rec.setdefault("slug_rim_latched", []).append(bool(slug_rim_latched))
 
-    append_record(0.0, Alt, Alr, Mgt, Mgrs, np.full(Nr, rho_atm))
+    append_record(0.0, Alt, Alr, Mgt, Mgrs, np.full(Nr, rho_atm), Qlr, Jgrs)
     next_out = out_dt
 
     # Quasi-steady junction coupling state.  The T-mouth (and the tower standing on
@@ -747,6 +872,13 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
         # when the gas front reaches the top).
         rho_g_r_pre = np.maximum(Pr / (R_GAS * T_GAS), rho_atm)
         alpha_gr_pre = np.clip(Mgrs / np.maximum(rho_g_r_pre * Ar * dz, 1.0e-12), 0.0, 0.98)
+        active_observer_pre = (Alr / Ar > 0.02) | (alpha_gr_pre > 1.0e-4)
+        alpha_gr_observer_pre = np.where(
+            active_observer_pre, alpha_gr_pre, 0.0
+        )
+        Yfs_geometric_pre = _mixture_surface_height(
+            Alr, alpha_gr_observer_pre, Ar, dz, case.riser_height
+        )
         capv_pre = Ar * np.clip(1.0 - alpha_gr_pre, 0.0, 1.0) * dz
         liqv_pre = float(np.sum(np.clip(Alr, 0.0, Ar) * dz))
         ksurf_pre = min(int(np.searchsorted(np.cumsum(capv_pre), liqv_pre)), Nr - 1)
@@ -773,10 +905,28 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
             ksurf_pre >= 1
             and np.any(alpha_gr_pre[max(0, ksurf_pre - 1):min(ksurf_pre + 2, Nr)] > 0.10)
         )
-        breakthrough = bool(junction_gassy and ksurf_pre >= 1
-                            and (np.all(alpha_gr_pre[:ksurf_pre] > 0.20) or surface_gassy_pre))
+        # Grid-declared breakthrough topology.  The rim and catch tests use the
+        # exact conservative mixture-volume surface definition reported as the
+        # primary Yfs observer; a highest-wet-cell tail cannot open the vent.
+        # Reaching the final finite-volume cell is a numerical rim event, after
+        # which the tracked front need only close within the same one-cell
+        # uncertainty.  These latches are state events, not post-run clipping.
+        water_rim_latched = bool(
+            water_rim_latched
+            or Yfs_geometric_pre
+            >= case.riser_height - numerical_rim_tolerance_z
+        )
+        shock_front_connected = bool(
+            slug_front_z
+            >= max(Yfs_geometric_pre - numerical_rim_tolerance_z, 0.0)
+        )
+        breakthrough = bool(
+            junction_gassy and ksurf_pre >= 1
+            and water_rim_latched and shock_front_connected
+        )
         if breakthrough:
             vent_latched = True
+            slug_rim_latched = True
         breakthrough = breakthrough or vent_latched
         _bt_dbg = dict(
             bt=breakthrough, jgassy=junction_gassy, ksurf=ksurf_pre,
@@ -800,6 +950,7 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
             float(np.max(np.abs(ulr) + cr)),
             float(np.max(np.abs(ugt_now)) + gas_wave),
             float(np.max(np.abs(ugr_now)) + gas_wave),
+            abs(float(slug_velocity)) + gas_wave,
         )
         dt = min(case.cfl * min(dx, dz) / max(smax, EPS), out_dt, case.t_end - t)
 
@@ -1042,9 +1193,26 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
         if abs(G1[0]) > q_lim:
             G1 = G1.copy(); G1[0] = math.copysign(q_lim, G1[0])
             Alr_new = Alr - dt / dz * (G1[1:] - G1[:-1])   # redo riser mass update with clamped face
+        # Positive liquid inflow and pressure-driven gas lift share the same
+        # finite T mouth.  Partition only the positive liquid face flux by the
+        # pre-step crown-gas coverage; negative return flow is unchanged.  The
+        # riser and tunnel then receive exactly opposite copies of this single
+        # partitioned face volume.
+        mouth_coverage_liquid = min(
+            alpha_g_j_pre / case.mouth_coverage_alpha, 1.0
+        )
+        liquid_availability = 1.0 - mouth_coverage_liquid
+        if G1[0] > 0.0:
+            G1 = G1.copy()
+            G1[0] *= liquid_availability
+            Alr_new = Alr - dt / dz * (G1[1:] - G1[:-1])
         q_up = G1[0]                              # [m^3/s] up the riser base face
+        slug_diag["liquid_mouth_coverage"] = mouth_coverage_liquid
+        slug_diag["liquid_availability"] = liquid_availability
+        slug_diag["liquid_exchange_balance_m3"] = q_up * dt
         for off, wj in ((-1, 0.25), (0, 0.5), (1, 0.25)):
             Alt_new[jx + off] -= wj * q_up * dt / dx
+            slug_diag["liquid_exchange_balance_m3"] -= wj * q_up * dt
         # (riser already received it via its bottom flux G1[0])
 
         # ---------- gas transport: pocket-front propagation (crown gravity current) ----------
@@ -1117,7 +1285,19 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
             # its plateau head forever -- no blowdown, gas gone from the tower
             # after one glug (the T*>8 dead state of earlier runs).
             if i0 <= jx < i1:
-                sgn, tgt = +1, jx                        # feed the vent mouth
+                if case.allow_downstream_crown_front and i1 < Nt:
+                    # The pocket has reached a T, not a terminal outlet.  Its
+                    # horizontal crown front may continue into the closed
+                    # downstream leg; gas removal into the riser remains the
+                    # separate conservative mouth exchange below.
+                    sgn = +1
+                    tgt = (
+                        (i1 - 1)
+                        if (i1 - i0 > 1 and alpha_gt[i1 - 1] < F_HAND * abar)
+                        else i1
+                    )
+                else:
+                    sgn, tgt = +1, jx                    # feed the vent mouth
             elif xt[i1 - 1] < case.x_riser and i1 <= jx:
                 sgn = +1
                 tgt = (i1 - 1) if (i1 - i0 > 1 and alpha_gt[i1 - 1] < F_HAND * abar) else i1
@@ -1132,7 +1312,7 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
             u_rel = min(math.sqrt(2.0 * G * h_dep), v_gc)
             if _DISABLE_CROWN:
                 u_rel = 0.0
-            # Front speed = Benjamin celerity, PERIOD.  The cavity elongates at
+            # Front speed = Benjamin celerity.  The cavity elongates at
             # constant volume: water displaced at the nose drains back UNDER the
             # body, so the net liquid flux through any full section ahead of the
             # nose is zero and the celerity is measured against STILL water.  Both
@@ -1152,11 +1332,43 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
                 continue
             dm = M_reg * dV / V_reg
             thin = dV * (void / V_reg) / dx               # uniform proportional thinning
+            target_area_before = float(Alt_new[tgt])
+            front_expands_region = not (i0 <= tgt < i1)
+            if case.enable_horizontal_gas_momentum_coupling and front_expands_region:
+                # Liquid Rankine-Hugoniot trace at the moving cavity nose:
+                #     Q_body - Q_ahead = w * (A_l,body - A_l,ahead).
+                # Here w is the signed nose speed.  For an east-going gas nose
+                # entering still, full-pipe water this gives the expected
+                # west-going drainback below the cavity.  Applying the trace at
+                # the last body cell (rather than distributing an arbitrary
+                # impulse over the pocket) leaves the pressure/momentum PDE to
+                # propagate and reflect the disturbance at the closed wall.
+                edge = i1 - 1 if sgn > 0 else i0
+                q_nose_rh = float(Qlt_new[tgt]) + float(sgn) * u_front * (
+                    float(Alt_new[edge]) - target_area_before
+                )
             Alt_new[seg] += thin                          # water backfills the body
             if M_reg > 1.0e-30:
                 Mgt_new[seg] -= dm * (Mgt_new[seg] / M_reg)
             Alt_new[tgt] -= dV / dx                       # nose displaces water
             Mgt_new[tgt] += dm                            # mass rides its volume
+            if (
+                case.enable_horizontal_gas_momentum_coupling
+                and front_expands_region
+                and target_area_before > 1.0e-12
+            ):
+                # Water removed from the nose cell carries away its previous
+                # specific momentum; the remaining target state is not allowed
+                # to acquire velocity merely because its area was reduced.
+                Qlt_new[tgt] *= max(float(Alt_new[tgt]), 0.0) / target_area_before
+                # A finite-volume front occupies one cell rather than being a
+                # mathematical discontinuity.  Relax the edge trace over the
+                # physical time dx/u_front needed for the nose to cross that
+                # cell.  This preserves the RH target while avoiding a
+                # grid-scale pressure impulse from a hard one-step assignment.
+                front_crossing_time = dx / max(u_front, 1.0e-12)
+                rh_fraction = min(dt / max(front_crossing_time, dt), 1.0)
+                Qlt_new[edge] += rh_fraction * (q_nose_rh - Qlt_new[edge])
         # ---------- pocket consolidation: one connected pocket, no orphan voids ----------
         # Free gas in this horizontal pipe lives at the crown as ONE connected pocket
         # (attached to the upstream closed end until it reaches the T).  Transient
@@ -1190,9 +1402,49 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
                     Mgt_new[i0:i1] = 0.0
                     Alt_new[m0:m1] -= Vf * w_main                    # pocket deepens uniformly
                     Mgt_new[m0:m1] += mf * w_main
-        # diagnostic gas momentum (drives only the CFL bound): nose speed where gassy
         dir_cell = np.sign(case.x_riser - xt)
-        Jgt_new = Mgt_new * (ult + np.where(alpha_gt > 2.0e-3, dir_cell * v_gc, 0.0))
+        if case.allow_downstream_crown_front:
+            east = xt > case.x_riser
+            wall_contact = bool(alpha_gt2[-1] > body_thr)
+            # Before impact the downstream crown front moves toward the wall;
+            # after impact its characteristic direction is reflected toward T.
+            dir_cell[east] = -1.0 if wall_contact else 1.0
+        liquid_velocity_new = np.divide(
+            Qlt_new,
+            np.maximum(Alt_new, 1.0e-3 * A),
+            out=np.zeros_like(Qlt_new),
+            where=Alt_new > 0.0,
+        )
+        gas_target_velocity = liquid_velocity_new + np.where(
+            alpha_gt2 > 2.0e-3,
+            dir_cell * v_gc,
+            0.0,
+        )
+        if case.enable_horizontal_gas_momentum_coupling:
+            # Retain the momentum of surviving gas mass and give newly moved
+            # mass the local front velocity.  Interphase drag then relaxes the
+            # gas momentum over the existing physical closure time and applies
+            # the exact opposite impulse to the liquid momentum in the cell.
+            retained_fraction = np.minimum(
+                np.divide(
+                    Mgt_new,
+                    np.maximum(Mgt, 1.0e-30),
+                    out=np.zeros_like(Mgt_new),
+                    where=Mgt > 1.0e-30,
+                ),
+                1.0,
+            )
+            added_mass = np.maximum(Mgt_new - Mgt, 0.0)
+            Jgt_advected = Jgt * retained_fraction + added_mass * gas_target_velocity
+            drag_fraction = min(dt / max(case.gas_drag_time + dt, 1.0e-12), 1.0)
+            Jgt_new = Jgt_advected + drag_fraction * (
+                Mgt_new * gas_target_velocity - Jgt_advected
+            )
+            drag_impulse = Jgt_new - Jgt_advected
+            Qlt_new -= drag_impulse / (RHO_L * dx)
+        else:
+            # Frozen implementation: diagnostic gas momentum drives only CFL.
+            Jgt_new = Mgt_new * gas_target_velocity
         # ---- Riser resolved gas: 1D two-fluid mass + momentum (no velocity cap) ----
         # Conserved variables are the cell gas mass [kg] and gas momentum [kg m/s].
         # The rise speed is left to emerge from the momentum balance: buoyancy
@@ -1230,104 +1482,142 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
             Mgrs_new * (Jgrs_star + dt * Kdrag * un_r) / np.maximum(denom, 1.0e-14),
             0.0,
         )
+        if case.enable_vertical_interphase_reaction:
+            # Jgrs_new-Jgrs_star is the gas impulse caused by interphase drag.
+            # The liquid momentum stored in one cell is rho_l*Q_l*dz, so the
+            # opposite discharge increment below closes cell momentum exchange.
+            drag_impulse_r = Jgrs_new - Jgrs_star
+            Qlr_new -= drag_impulse_r / (RHO_L * dz)
 
-        # ---------- junction gas transfer: T-mouth exchange + overpressure injection ----------
-        # Gas at the side-T mouth is Rayleigh-Taylor unstable against the tower water
-        # above: it rises INTO the riser while an equal volume of water comes DOWN
-        # into the junction cell (the inverted-bottle "glug" exchange, rate set by
-        # the Taylor drift).  This drift share is volume-neutral: the pocket loses
-        # mass AND the matching void (the descending water refills it), so the
-        # pocket density m/V -- hence its PRESSURE -- is unchanged, and the tower
-        # level does not move while gas transits the standing column: exactly the
-        # wide-tower phenomenology (V&W Fig.5: flat Yfs, flat plateau, then a sharp
-        # collapse only at breakthrough).  The earlier constant-void mass bleed made
-        # the pocket dive below atmospheric and slowly swelled the tower instead.
-        # Only a genuine pocket OVERPRESSURE (H_op > 0: Case B) adds net injection
-        # beyond the exchange -- gas volume the column must make room for: the
-        # geysering drive.  Arrival detection is AREA-based (crown exchange moves
-        # void with mass): the T admits gas only when the cavity physically reaches it.
+        # ---------- pressure-driven shock-fitted T-mouth gas transfer ----------
+        # The liquid column above the gas nose is represented by its geometric
+        # length ell=Yfs-Yint and conserved axial momentum
+        #     p_s = rho_l A_r ell U.
+        # The force balance contains pocket pressure, hydrostatic load, the
+        # measured-geometry local loss, and Darcy wall shear.  No experimental
+        # trajectory, time shift, or prescribed release rate enters this update.
         rho_g_j = max(Pj / (R_GAS * T_GAS), rho_atm)
         alpha_g_j = float(np.clip(1.0 - Alt_new[jx] / A, 0.0, 0.98))
-        if alpha_g_j > case.tower_entry_alpha_min:
-            # entry velocity = buoyant drift accelerated by the pocket overpressure (gas, not liquid jet)
-            u_drift_in = 0.35 * math.sqrt(G * case.Dr * max(RHO_L - rho_g_j, 0.0) / RHO_L)
-            u_in = math.sqrt(u_drift_in * u_drift_in + 2.0 * G * max(H_op, 0.0) * case.entry_drive_eff)
-            # NOTE (tried, reverted): boosting the entry cross-section to Taylor-slug
-            # fractions (alpha ~ 0.7) to force the Fig.5 H* collapse by MASS drain
-            # breaks volume conservation at the mouth -- the volume-neutral V_ex
-            # share saturates its caps, the pocket expands without refill, dives
-            # BELOW atmospheric (-0.18 L) and siphons the tower down to 0.13 L.
-            # The experimental collapse is a PRESSURE equilibration (only the ~3%
-            # overpressure mass needs venting), handled by the breakthrough vent.
-            #
-            # ENTRY FLUX SCALING (case-B snapshot fix, 2026-07-06).  Two changes:
-            # (1) Mouth aperture: the T taps the pipe CROWN, and the cavity's gas
-            #     layer rides the crown -- a thin layer already blankets the whole
-            #     12.7 mm mouth footprint.  Scaling the aperture by the junction
-            #     cell's BULK void fraction alpha_g_j under-fed the mouth ~10x
-            #     (a 10% crown layer is full mouth coverage, not a 10% orifice).
-            #     The aperture ramps to the full bore by alpha_g_j ~ 0.10.
-            # (2) Flooding limit: the driven blow-through of a narrow riser is
-            #     counter-current-flooding limited (Wallis): superficial gas speed
-            #     j_g <= C_w^2 * sqrt(g Dr (rho_l-rho_g)/rho_l), C_w ~ 0.9 for a
-            #     smooth-flanged tube end.  With the slug-unit fill level ~0.41
-            #     this gives a nose speed ~0.7 m/s -- the paper's V*int ~ 1.4-2.0
-            #     for Dt* = 0.135 (Table 2 / Fig. 8) IS this flooding-limited
-            #     climb; the free-orifice speed sqrt(2 g H_op) ~ 2.2 m/s never
-            #     materialises inside the water-filled bore.
-            C_wallis = 0.9
-            j_flood = (C_wallis * C_wallis) * math.sqrt(
-                G * case.Dr * max(RHO_L - rho_g_j, 0.0) / RHO_L)
-            aperture = min(alpha_g_j / 0.10, 1.0)
-            q_gas = min(aperture * Ar * u_in, Ar * j_flood)     # [m^3/s] into the mouth
-            m_up = min(rho_g_j * q_gas * dt, 0.5 * max(Mgt_new[jx], 0.0))
-            old_mgt = max(Mgt_new[jx], 1.0e-14)
-            Mgt_new[jx] -= m_up
-            Jgt_new[jx] *= max(Mgt_new[jx], 0.0) / old_mgt
-            # POCKET-FED CORE NOSE FEED (case-B snapshot fix, 2026-07-06): while the
-            # pocket holds overpressure and the junction carries gas, the riser gas
-            # from the base is ONE CONNECTED body fed at pocket pressure -- mass
-            # entering the mouth raises the core NOSE (same fill-to-body-level
-            # closure as the tunnel crown current), it does not stack at the base
-            # cell where the drag relaxation would cap the climb at the quiescent
-            # Taylor drift (V* ~ 0.35).  The paper's narrow tower climbs at
-            # V*int ~ 1.4 (Table 2) BECAUSE the climb is this pressure-driven feed,
-            # not buoyant bubble drift.  Base-cell injection is kept for the
-            # undriven exchange (wide tower / H_op = 0), which IS bubble drift.
-            k_inj = 0
-            if H_op > 1.0e-3:
-                rho_gr_inj = np.maximum(Pr / (R_GAS * T_GAS), rho_atm)
-                alpha_inj = Mgrs_new / np.maximum(rho_gr_inj * Ar * dz, 1.0e-12)
-                # Fill-to-slug-level front: the driven core is a Taylor slug train,
-                # not a skinny filament.  A slug unit = Taylor bubble (core area
-                # fraction ~ tower_core_area_fraction) + trailing liquid slug of
-                # comparable length (Fabre & Line 1992), so the CELL-AVERAGE void
-                # of the advancing core is ~ 0.5 * core fraction.  Advancing the
-                # nose at the run-mean fill level let a skinny (alpha ~ 0.09) nose
-                # outrun the surface swell and vent the pocket BEFORE the free
-                # surface reached the top -- the model lost the geysering race the
-                # experiment wins (paper: fs tops at T* ~ 3.9 while the nose is at
-                # ~ 0.35 L; the nose only breaks through at ~ 4.09).
-                alpha_fill = 0.5 * case.tower_core_area_fraction
-                k_top = 0
-                while k_top + 1 < Nr and alpha_inj[k_top + 1] > 0.05:
-                    k_top += 1
-                if alpha_inj[k_top] >= alpha_fill:
-                    k_top = min(k_top + 1, Nr - 1)      # nose advances one cell
-                wet_idx = np.where(Alr_new / Ar > 0.08)[0]
-                ksurf_inj = int(wet_idx[-1]) if wet_idx.size else 0
-                k_inj = min(k_top, ksurf_inj)           # cannot feed above the surface
-            u_inj_eff = q_gas / max(aperture * Ar, 1.0e-12)   # post-cap mean entry speed
-            Mgr_new[k_inj] += m_up
-            Mgrs_new[k_inj] += m_up
-            Jgrs_new[k_inj] += m_up * u_inj_eff
-            # volume-neutral exchange share: water descends from the riser base and
-            # closes the junction void vacated by the departing gas
-            V_ex = (m_up / max(rho_g_j, 1.0e-6)) * (u_drift_in / max(u_in, 1.0e-9))
-            V_ex = min(V_ex, 0.5 * max(Alr_new[0], 0.0) * dz,
-                       0.5 * max(A - Alt_new[jx], 0.0) * dx)
-            Alr_new[0] -= V_ex / dz
-            Alt_new[jx] += V_ex / dx
+        slug_diag.update(
+            ell=max(Yfs - slug_front_z, 0.0),
+            velocity=slug_velocity,
+            pressure_force=0.0,
+            local_loss_force=0.0,
+            wall_force=0.0,
+            qgas=0.0,
+            dm=0.0,
+            mouth_aperture=0.0,
+            effective_loss_k=case.junction_loss_coeff,
+        )
+        if alpha_g_j > case.tower_entry_alpha_min and m_poc > 0.0:
+            # Sub-cell geometric surface from the conservative packed state.
+            rho_geom = np.maximum(Pr / (R_GAS * T_GAS), rho_atm)
+            alpha_geom = np.clip(
+                Mgrs_new / np.maximum(rho_geom * Ar * dz, 1.0e-12),
+                0.0,
+                0.90,
+            )
+            mixture_geom = np.clip(Alr_new / Ar + alpha_geom, 0.0, 1.0)
+            yfs_geom = min(float(np.sum(mixture_geom) * dz), case.riser_height)
+            ell = max(yfs_geom - slug_front_z, 0.5 * dz)
+            pressure_force = Ar * (Pj - P_ATM - RHO_L * G * ell)
+            effective_loss_k = (
+                case.junction_loss_coeff
+                + case.slug_glug_resistance_scale * case.glug_loss_coeff
+                * float(np.clip(
+                    ell / max(case.init_water_level, dz), 0.0, 1.0
+                ))
+            )
+            local_loss_force = (
+                0.5 * RHO_L * Ar * effective_loss_k
+                * slug_velocity * abs(slug_velocity)
+            )
+            wall_darcy_f = 0.02
+            tau_wall = (
+                0.125 * wall_darcy_f * RHO_L
+                * slug_velocity * abs(slug_velocity)
+            )
+            wall_force = tau_wall * math.pi * case.Dr * ell
+            slug_momentum += dt * (
+                pressure_force - local_loss_force - wall_force
+            )
+            slug_velocity = slug_momentum / max(
+                RHO_L * Ar * ell, 1.0e-14
+            )
+
+            alpha_core = float(np.clip(
+                case.slug_train_core_factor * case.tower_core_area_fraction,
+                0.05,
+                0.95,
+            ))
+            mouth_aperture = min(
+                alpha_g_j / case.mouth_coverage_alpha, 1.0
+            )
+            available_advance = max(yfs_geom - slug_front_z, 0.0)
+            requested_advance = min(
+                mouth_aperture * max(slug_velocity, 0.0) * dt,
+                available_advance,
+            )
+            requested_dm = rho_g_j * alpha_core * Ar * requested_advance
+
+            # Transfer gas from the pocket region connected to the T.  Remove
+            # tunnel gas mass and horizontal momentum by the same donor factor;
+            # add the identical mass at the physical riser base.  There is no
+            # remote nose-cell (k_top) deposition.
+            donor_lo = jx
+            donor_hi = jx + 1
+            for i0_donor, i1_donor in _regions((Alt_new / A) < 0.95):
+                if i0_donor <= jx < i1_donor:
+                    donor_lo, donor_hi = i0_donor, i1_donor
+                    break
+            donor_mass = float(np.sum(np.maximum(
+                Mgt_new[donor_lo:donor_hi], 0.0
+            )))
+            dm = min(requested_dm, donor_mass)
+            if donor_mass > 1.0e-20 and dm > 0.0:
+                donor_factor = max(1.0 - dm / donor_mass, 0.0)
+                tunnel_mass_before = float(np.sum(
+                    Mgt_new[donor_lo:donor_hi]
+                ))
+                Mgt_new[donor_lo:donor_hi] *= donor_factor
+                Jgt_new[donor_lo:donor_hi] *= donor_factor
+                tunnel_mass_removed = tunnel_mass_before - float(np.sum(
+                    Mgt_new[donor_lo:donor_hi]
+                ))
+
+                Mgr_new[0] += dm
+                Mgrs_new[0] += dm
+                Jgrs_new[0] += dm * max(slug_velocity, 0.0)
+                actual_advance = dm / max(
+                    rho_g_j * alpha_core * Ar, 1.0e-20
+                )
+                slug_front_z = min(
+                    slug_front_z + actual_advance, yfs_geom
+                )
+                slug_transfer_total += dm
+                slug_transfer_mismatch += tunnel_mass_removed - dm
+                slug_diag.update(
+                    ell=ell,
+                    velocity=slug_velocity,
+                    pressure_force=pressure_force,
+                    local_loss_force=local_loss_force,
+                    wall_force=wall_force,
+                    qgas=(mouth_aperture * alpha_core * Ar
+                          * max(slug_velocity, 0.0)),
+                    dm=dm,
+                    mouth_aperture=mouth_aperture,
+                    effective_loss_k=effective_loss_k,
+                )
+            else:
+                slug_diag.update(
+                    ell=ell,
+                    velocity=slug_velocity,
+                    pressure_force=pressure_force,
+                    local_loss_force=local_loss_force,
+                    wall_force=wall_force,
+                    mouth_aperture=mouth_aperture,
+                    effective_loss_k=effective_loss_k,
+                )
         Jgrs_new = np.where(Mgrs_new > 1.0e-14, Jgrs_new, 0.0)
 
         # ---- gas escape at the free surface (bubbles burst out the open top) ----
@@ -1357,6 +1647,7 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
                 esc = min(rho_g_esc[kk] * alpha_g_esc[kk] * Ar * max(u_burst, ug_kk) * dt
                           * case.gas_escape_eff, Mgrs_new[kk])
                 Mgrs_new[kk] -= esc
+                gas_vented_total += esc
                 Jgrs_new[kk] = Mgrs_new[kk] * ug_kk
 
         # ---- breakthrough blow-down of the trapped pocket ----
@@ -1382,6 +1673,7 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
                     rho_reg = P_reg / (R_GAS * T_GAS)
                     u_vent = min(math.sqrt(2.0 * dP_vent / max(rho_reg, 1.0e-6)), 12.0)
                     m_vent = min(rho_reg * Ar * u_vent * dt, 0.05 * m_reg)
+                    gas_vented_total += m_vent
                     fvent = 1.0 - m_vent / max(m_reg, 1.0e-14)
                     Mgt_new[i0:i1] *= fvent
                     Jgt_new[i0:i1] *= fvent
@@ -1413,17 +1705,19 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
         cap = Ar * np.clip(1.0 - alpha_g_r, 0.0, 1.0) * dz           # liquid capacity per cell around gas
         cum = np.cumsum(cap)
         filled = cum <= liq_vol
-        Alr_new = np.where(filled, cap / dz, 0.0)
+        Alr_packed = np.where(filled, cap / dz, 0.0)
         k = int(np.searchsorted(cum, liq_vol))                      # partially filled surface cell
         if k < Nr:
             prev = float(cum[k - 1]) if k > 0 else 0.0
-            Alr_new[k] = float(np.clip((liq_vol - prev) / dz, 0.0, cap[k] / dz))
+            Alr_packed[k] = float(np.clip((liq_vol - prev) / dz, 0.0, cap[k] / dz))
+        Alr_new = Alr_packed
 
         # viscosity (momentum)
         if case.nu > 0:
-            k = case.nu * case.a_wh
-            Qlt_new[1:-1] += k * dt / dx * (Qlt_new[2:] - 2 * Qlt_new[1:-1] + Qlt_new[:-2])
-            Qlr_new[1:-1] += k * dt / dz * (Qlr_new[2:] - 2 * Qlr_new[1:-1] + Qlr_new[:-2])
+            k_tunnel = case.nu * case.a_wh
+            k_riser = k_tunnel * max(case.riser_viscosity_factor, 0.0)
+            Qlt_new[1:-1] += k_tunnel * dt / dx * (Qlt_new[2:] - 2 * Qlt_new[1:-1] + Qlt_new[:-2])
+            Qlr_new[1:-1] += k_riser * dt / dz * (Qlr_new[2:] - 2 * Qlr_new[1:-1] + Qlr_new[:-2])
 
         # open vented riser region: kill spurious film momentum, refill atmospheric gas
         Alr_new[Alr_new < 0] = 0.0
@@ -1434,6 +1728,7 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
             open_top[ii] = True; ii -= 1
         Qlr_new = np.where(open_top, 0.0, Qlr_new)
         Mgr_new = np.where(open_top, rho_atm * np.maximum(Ar - Alr_new, 1e-4 * Ar) * dz, Mgr_new)
+        gas_vented_total += float(np.sum(Mgrs_new[open_top]))
         Mgrs_new = np.where(open_top, 0.0, Mgrs_new)
         Jgrs_new = np.where(open_top, 0.0, Jgrs_new)
         Jgrs_new = np.where(Mgrs_new > 1.0e-14, Jgrs_new, 0.0)
@@ -1462,7 +1757,7 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
             Pr_rec, _, _ = _pressure(Alr, np.full(Nr, Ar), Mgr, dz, a2, vent_top=True, p_floor=0.0)
             Pr_rec = np.where(Alr / Ar > 0.08, Pr_rec + RHO_L * G * np.maximum(wtop - zr, 0.0), Pr_rec)
             rho_g_rec = np.maximum(Pr_rec / (R_GAS * T_GAS), rho_atm)
-            append_record(t, Alt, Alr, Mgt, Mgrs, rho_g_rec)
+            append_record(t, Alt, Alr, Mgt, Mgrs, rho_g_rec, Qlr, Jgrs)
             rec["pj_head"].append(float((Pt[jx] - P_ATM) / (RHO_L * G)))
             # Transducer reads at the pipe AXIS (paper Fig.5 t=0 value = Yfs0 - D/2):
             # subtract the water column between invert and axis -- min(h, D/2) --
@@ -1508,6 +1803,20 @@ def run_network(case: NetworkCase, verbose: bool = True) -> dict:
 
     rec["geyser_strength"] = geyser_strength
     rec["dbg_created"] = dbg_created
+    rec["caseb_selected_closure"] = {
+        "tower_entry_alpha_min": case.tower_entry_alpha_min,
+        "slug_train_core_factor": case.slug_train_core_factor,
+        "slug_glug_resistance_scale": case.slug_glug_resistance_scale,
+        "mouth_coverage_alpha": case.mouth_coverage_alpha,
+        "wall_Darcy_f": 0.02,
+        "Yfs_primary_observer": "conservative geometric mixture-volume height",
+        "Yint_primary_observer": "shock-fitted slug-train front",
+        "Yint_sensitivity_observers_alpha_g": [0.10, 0.20, 0.50],
+        "numerical_rim_tolerance_m": numerical_rim_tolerance_z,
+        "numerical_rim_tolerance_star": numerical_rim_tolerance_star,
+        "numerical_rim_tolerance_basis": "one vertical finite-volume cell",
+        "post_breakthrough_observer": "atmospheric-path latch at physical riser rim",
+    }
     return rec
 
 

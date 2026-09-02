@@ -1,0 +1,4 @@
+interface:
+  display_name: "Geysering SCI Paper"
+  short_description: "Evidence-grounded Geysering manuscript workflow"
+  default_prompt: "Use $geysering-paper to audit and revise the Geysering manuscript against repository evidence."

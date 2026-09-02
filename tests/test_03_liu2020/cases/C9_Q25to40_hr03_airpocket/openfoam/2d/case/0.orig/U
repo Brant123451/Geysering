@@ -1,0 +1,40 @@
+/* OpenFOAM v2512 ¡ª C9 2D fine mesh (Liu 2020) */
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    object      U;
+}
+
+dimensions      [0 1 -1 0 0 0 0];
+internalField   uniform (0 0 0);
+boundaryField
+{
+    inlet
+    {
+        type            flowRateInletVelocity;
+        volumetricFlowRate table
+        (
+            (0 0.0015915494)
+            (0.25 0.0015915494)
+            (0.65 0.0025464791)
+            (21.25 0.0025464791)
+        );
+        value           uniform (0 0 0);
+    }
+    gateOutlet
+    {
+        type            pressureInletOutletVelocity;
+        value           uniform (0 0 0);
+    }
+    atmosphere
+    {
+        type            pressureInletOutletVelocity;
+        value           uniform (0 0 0);
+    }
+    walls { type noSlip; }
+    riserWall { type noSlip; }
+    gateWall { type noSlip; }
+    frontAndBack { type empty; }
+}

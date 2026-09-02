@@ -28,14 +28,7 @@ import math
 
 import numpy as np
 
-try:
-    from numba import njit
-except ImportError:  # pragma: no cover
-    def njit(*_args, **_kwargs):
-        def decorate(function):
-            return function
-
-        return decorate
+from casea_acceleration import njit
 
 
 @dataclass(frozen=True)
@@ -74,6 +67,11 @@ class CoupledGasParameters:
     # The area-averaged junction therefore never assigns the complete tower
     # bore to the gas core, even when the horizontal crown fully covers it.
     vertical_gas_core_area_fraction: float = 0.80
+    # A shock-fitted vertical front supplies material topology independently
+    # of the interphase-momentum closure.  Keep receiver geometry separate
+    # from ``vertical_confined_interface_kinematics``, which selects who owns
+    # gas--liquid drag.
+    vertical_fitted_front_receivers: bool = False
     # In the fitted Taylor-core regime, pressure work on the upper liquid slug
     # is already transmitted by the moving material interface.  Applying the
     # distributed form-drag exchange as well counts that coupling twice and
@@ -81,6 +79,10 @@ class CoupledGasParameters:
     # the switch off for a generic dispersed two-fluid network; the Case-A
     # Taylor closure enables it explicitly.
     vertical_confined_interface_kinematics: bool = False
+    # Diagnostic sensitivity only.  The physical default admits signed motion;
+    # disabling it reproduces the historical one-way shock-fit front and is
+    # used to isolate regressions in the retreat closure.
+    allow_horizontal_front_retreat: bool = True
     # The isothermal Euler vacuum limit has an unbounded velocity tail.  In
     # this apparatus the physical gas releases from approximately 1.0--1.04
     # atm to an atmospheric opening; states below 50% atmospheric density are
@@ -88,6 +90,9 @@ class CoupledGasParameters:
     # Their mass is still transported and conserved, but their point velocity
     # is excluded until the cell contains a resolved gas state.
     resolved_density_fraction: float = 0.50
+    # Above this density the Riemann solver switches from Roe to the robust
+    # Einfeldt flux.  It is not a phase-velocity cutoff: a compressed gas cell
+    # remains a resolved momentum control volume.
     resolved_density_ceiling: float = 2.0
 
     @property
@@ -136,6 +141,32 @@ class CoupledGasParameters:
             segment / self.horizontal_area,
         )
 
+    @property
+    def vertical_capillary_core_fraction(self) -> float:
+        """Minimum open axial gas core that is not capillary sealed.
+
+        In a vertical circular conduit, an axial gas passage with radius below
+        the water--air capillary length behaves as a closed meniscus rather
+        than a connected Taylor-bubble core.  The corresponding area ratio is
+        ``(l_c/R)^2``.  This supplies a geometry/property-derived topology
+        floor for an already swept gas path; it is not a fitted Taylor-core
+        fraction and does not prescribe the resolved gas volume when the EOS
+        requires a larger core.
+        """
+
+        density_jump = max(self.rho_l - self.rho_atmospheric, 1.0e-12)
+        if self.gravity <= 0.0 or self.surface_tension <= 0.0:
+            return self.active_void_fraction
+        capillary_length = math.sqrt(
+            self.surface_tension / (density_jump * self.gravity)
+        )
+        radius = 0.5 * self.vertical_diameter
+        core_radius = min(max(capillary_length, 0.0), radius)
+        return max(
+            self.active_void_fraction,
+            (core_radius / radius) ** 2,
+        )
+
 
 @dataclass(frozen=True)
 class CoupledGasAdvance:
@@ -155,6 +186,9 @@ class CoupledGasAdvance:
     maximum_velocity: float
     junction_mouth_area: float
     downstream_front_position: float | None
+    downstream_topology_front_position: float | None
+    downstream_front_velocity: float
+    downstream_retired_cell_count: int
 
 
 @dataclass(frozen=True)
@@ -365,6 +399,27 @@ def _mass_backed_gas_topology(
     return supported
 
 
+def _top_connected_active_component(active: np.ndarray) -> np.ndarray:
+    """Return the active vertical gas component connected to the open lip.
+
+    The acoustic graph connects adjacent active cells with a positive shared
+    face.  Its atmospheric component is therefore the contiguous active run
+    descending from the top cell.  Local gas area is not a second connectivity
+    criterion: a capillary neck that remains an active Riemann face cannot be
+    treated simultaneously as a sealed liquid-supported bubble.
+    """
+
+    mask = np.asarray(active, dtype=bool)
+    if mask.ndim != 1:
+        raise ValueError("vertical active-gas mask must be one-dimensional")
+    connected = np.zeros_like(mask)
+    for index in range(mask.size - 1, -1, -1):
+        if not mask[index]:
+            break
+        connected[index] = True
+    return connected
+
+
 def junction_mouth_area(
     horizontal_void_fraction: float,
     params: CoupledGasParameters,
@@ -382,6 +437,40 @@ def junction_mouth_area(
     return params.vertical_area * min(
         exposed, params.vertical_gas_core_area_fraction
     )
+
+
+def _horizontal_downstream_material_fraction(
+    cell_count: int,
+    cell_width: float,
+    junction_index: int,
+    front_position: float | None,
+) -> np.ndarray:
+    """Return the axial gas occupancy of the fitted east-branch front.
+
+    ``junction_index`` is the west donor cell adjacent to the face-aligned T.
+    That cell and the upstream branch retain their ordinary gas topology.  In
+    the east branch, a material front at ``x_f`` occupies the
+    fraction ``clip((x_f-x_left)/dx, 0, 1)`` of each control volume.  This
+    removes the former cell-centre switch: a front can now advance and retreat
+    continuously without leaving a full-size gas cell pinned behind it.
+    """
+
+    if cell_count <= 0 or cell_width <= 0.0:
+        raise ValueError("material-front grid must have positive size and width")
+    if not 0 <= int(junction_index) < int(cell_count):
+        raise ValueError("junction index lies outside the material-front grid")
+    fraction = np.ones(int(cell_count), dtype=float)
+    if front_position is None:
+        return fraction
+    indices = np.arange(int(cell_count), dtype=int)
+    east = indices > int(junction_index)
+    left_faces = indices.astype(float) * float(cell_width)
+    fraction[east] = np.clip(
+        (float(front_position) - left_faces[east]) / float(cell_width),
+        0.0,
+        1.0,
+    )
+    return fraction
 
 
 def _equilibrate_horizontal_front_receivers(
@@ -422,23 +511,90 @@ def _equilibrate_horizontal_front_receivers(
             candidates.append(index + 1)
         if not candidates or area[index] <= 0.0:
             continue
-        donor = max(
-            candidates,
-            key=lambda item: m[item] / max(area[item] * cell_width, 1.0e-18),
-        )
-        donor_volume = area[donor] * cell_width
+        # The receiver is a full finite-volume gas state, rather than a true
+        # fractional axial cut cell.  Equalise it over the attached acoustic
+        # component before the Riemann solve; restricting this operation to a
+        # single small donor launched a gas--vacuum jet and drove the Case-A
+        # front to the closed end in less than one output interval.  This
+        # opening projection is the established stable whole-cell treatment.
+        # Retiring cells use the separate local merge below, so a centimetre-
+        # scale reversal never reprojects the already established pocket.
+        donor_set: set[int] = set()
+        for candidate in candidates:
+            first = candidate
+            while first > 0 and supported[first - 1]:
+                first -= 1
+            last = candidate + 1
+            while last < m.size and supported[last]:
+                last += 1
+            donor_set.update(range(first, last))
+        donor_indices = np.asarray(sorted(donor_set), dtype=int)
+        donor_volume = float(np.sum(area[donor_indices]) * cell_width)
         receiver_volume = area[index] * cell_width
-        total_mass = float(m[donor] + m[index])
-        total_momentum = float(j[donor] + j[index])
+        total_mass = float(np.sum(m[donor_indices]) + m[index])
+        total_momentum = float(np.sum(j[donor_indices]) + j[index])
         total_volume = donor_volume + receiver_volume
         if total_mass <= 0.0 or total_volume <= 0.0:
             continue
         common_density = total_mass / total_volume
         common_velocity = total_momentum / total_mass
-        m[donor] = common_density * donor_volume
+        m[donor_indices] = common_density * area[donor_indices] * cell_width
         m[index] = common_density * receiver_volume
-        j[donor] = m[donor] * common_velocity
+        j[donor_indices] = m[donor_indices] * common_velocity
         j[index] = m[index] * common_velocity
+    return m, j
+
+
+def _collapse_horizontal_front_cells(
+    mass: np.ndarray,
+    momentum: np.ndarray,
+    raw_gas_area: np.ndarray,
+    mass_supported: np.ndarray,
+    closing: np.ndarray,
+    *,
+    cell_width: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Merge completely closed front cells into their west neighbour.
+
+    A partially occupied cut cell remains an active gas volume and is not
+    passed to this helper.  Only when its axial occupancy reaches zero is the
+    residual mass and momentum transferred to the immediately adjacent west
+    cell and the retired storage cleared.  This operation is local, exactly
+    conservative, and leaves the remote pocket bit-for-bit unchanged.
+    """
+
+    m = np.asarray(mass, dtype=float).copy()
+    j = np.asarray(momentum, dtype=float).copy()
+    area = np.maximum(np.asarray(raw_gas_area, dtype=float), 0.0)
+    supported = np.asarray(mass_supported, dtype=bool)
+    close = np.asarray(closing, dtype=bool) & supported
+    if not (
+        m.shape == j.shape == area.shape == supported.shape == close.shape
+    ):
+        raise ValueError("horizontal front-collapse arrays must have equal shape")
+    if m.ndim != 1 or cell_width <= 0.0:
+        raise ValueError(
+            "horizontal front collapse requires a 1-D positive-width grid"
+        )
+
+    index = 0
+    while index < m.size:
+        if not close[index]:
+            index += 1
+            continue
+        first_retired = index
+        while index < m.size and close[index]:
+            index += 1
+        donor = first_retired - 1
+        # The fitted east-branch front retreats westward, so its adjacent
+        # retained cut cell must lie immediately west of the retiring run.
+        if donor < 0 or not supported[donor] or close[donor]:
+            continue
+        retiring = np.arange(first_retired, index, dtype=int)
+        m[donor] = float(m[donor] + np.sum(m[retiring]))
+        j[donor] = float(j[donor] + np.sum(j[retiring]))
+        m[retiring] = 0.0
+        j[retiring] = 0.0
     return m, j
 
 
@@ -559,6 +715,131 @@ def _equilibrate_vertical_front_receivers(
         np.maximum(vc[receiver_indices], 0.0), vm[receiver_indices]
     )
     return hm, hj, vm, vj, vc
+
+
+def _displace_gas_from_closed_vertical_material_cells(
+    total_mass: np.ndarray,
+    momentum: np.ndarray,
+    tracer_mass: np.ndarray,
+    raw_gas_area: np.ndarray,
+    *,
+    full_area: float,
+    cell_width: float,
+    rho_reference: float,
+    void_floor_fraction: float,
+    active_void_fraction: float,
+    topology_density_fraction: float,
+    resolved_density_fraction: float,
+    resolved_density_ceiling: float,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, float]:
+    """Move a material gas parcel out of a liquid-closed riser cell.
+
+    Liquid and gas are advanced in split conservative stages.  During the
+    liquid stage a previously open material-gas cell can become geometrically
+    full.  Keeping its finite tracer inventory in the numerical void floor
+    stores an arbitrarily large delayed EOS pressure.  The liquid closure is
+    instead a moving gas boundary: immediately adjacent open void receives the
+    displaced parcel, carrying total mass, tunnel tracer and gas momentum
+    together.
+
+    Only contiguous cells whose void has fallen to the numerical floor and
+    which contain either material tracer or resolved compressed gas are
+    remapped.  This also covers atmospheric headspace displaced by a rising
+    liquid parcel without touching the ordinary positivity background.  A
+    block is sent to its adjacent open side;
+    when both sides are open, the sign of its resolved gas momentum selects
+    the downstream side, with a volume-weighted split only for a stagnant
+    block.  Remote gas cells are unchanged and all three conserved inventories
+    close to roundoff.
+    """
+
+    mass = np.maximum(np.asarray(total_mass, dtype=float), 0.0).copy()
+    gas_momentum = np.asarray(momentum, dtype=float).copy()
+    tracer = np.maximum(np.asarray(tracer_mass, dtype=float), 0.0).copy()
+    raw = np.maximum(np.asarray(raw_gas_area, dtype=float), 0.0)
+    if not (
+        mass.shape == gas_momentum.shape == tracer.shape == raw.shape
+    ) or mass.ndim != 1:
+        raise ValueError("vertical closure-remap arrays must be equal 1-D fields")
+    if (
+        full_area <= 0.0
+        or cell_width <= 0.0
+        or rho_reference <= 0.0
+        or not 0.0 < void_floor_fraction < active_void_fraction < 1.0
+        or not 0.0 < topology_density_fraction < resolved_density_fraction < 1.0
+        or resolved_density_ceiling <= 1.0
+    ):
+        raise ValueError("invalid vertical closure-remap scales")
+    if np.any(tracer > mass + 1.0e-14):
+        raise ValueError("vertical tracer mass exceeds total gas mass")
+
+    tracer_threshold = (
+        topology_density_fraction
+        * rho_reference
+        * void_floor_fraction
+        * full_area
+        * cell_width
+    )
+    compressed_mass_threshold = (
+        resolved_density_ceiling
+        * rho_reference
+        * void_floor_fraction
+        * full_area
+        * cell_width
+    )
+    closed_material = (
+        raw <= 1.5 * void_floor_fraction * full_area
+    ) & (
+        (tracer > tracer_threshold)
+        | (mass > compressed_mass_threshold)
+    )
+    open_void = raw >= active_void_fraction * full_area
+    displaced = 0.0
+    index = 0
+    while index < mass.size:
+        if not closed_material[index]:
+            index += 1
+            continue
+        first = index
+        while index < mass.size and closed_material[index]:
+            index += 1
+        last = index
+        recipients: list[int] = []
+        if first > 0 and open_void[first - 1]:
+            recipients.append(first - 1)
+        if last < mass.size and open_void[last]:
+            recipients.append(last)
+        if not recipients:
+            # A genuinely sealed capsule remains a compressed gas state; it
+            # cannot be teleported through liquid to a remote void.
+            continue
+
+        block = np.arange(first, last, dtype=int)
+        parcel_mass = float(np.sum(mass[block]))
+        parcel_tracer = float(np.sum(tracer[block]))
+        parcel_momentum = float(np.sum(gas_momentum[block]))
+        if parcel_mass <= 0.0:
+            continue
+        if len(recipients) == 1:
+            weights = np.ones(1, dtype=float)
+        elif parcel_momentum > 1.0e-18:
+            weights = np.array([0.0, 1.0])
+        elif parcel_momentum < -1.0e-18:
+            weights = np.array([1.0, 0.0])
+        else:
+            recipient_void = raw[np.asarray(recipients, dtype=int)]
+            weights = recipient_void / float(np.sum(recipient_void))
+
+        mass[block] = 0.0
+        tracer[block] = 0.0
+        gas_momentum[block] = 0.0
+        for receiver, weight in zip(recipients, weights):
+            mass[receiver] += weight * parcel_mass
+            tracer[receiver] += weight * parcel_tracer
+            gas_momentum[receiver] += weight * parcel_momentum
+        displaced += parcel_mass
+
+    return mass, gas_momentum, tracer, displaced
 
 
 def _apply_side_t_phase_separation(
@@ -978,16 +1259,10 @@ def _network_rhs(
     h_area_g: np.ndarray,
     h_depth_l: np.ndarray,
     h_perimeter_g: np.ndarray,
-    h_interface: np.ndarray,
     h_hydraulic: np.ndarray,
     v_area_g: np.ndarray,
     v_perimeter_g: np.ndarray,
-    v_interface: np.ndarray,
     v_hydraulic: np.ndarray,
-    h_liquid_area: np.ndarray,
-    h_liquid_q: np.ndarray,
-    v_liquid_area: np.ndarray,
-    v_liquid_q: np.ndarray,
     h_face_area: np.ndarray,
     v_face_area: np.ndarray,
     h_active: np.ndarray,
@@ -1015,17 +1290,11 @@ def _network_rhs(
     v_u = np.zeros(nv)
     for i in range(nh):
         h_rho[i] = max(h_mass[i] / h_area_g[i], 1.0e-10)
-        if (
-            h_mass[i] > resolved_density_fraction * rho_atm * h_area_g[i]
-            and h_mass[i] < resolved_density_ceiling * rho_atm * h_area_g[i]
-        ):
+        if h_mass[i] > resolved_density_fraction * rho_atm * h_area_g[i]:
             h_u[i] = h_momentum[i] / h_mass[i]
     for i in range(nv):
         v_rho[i] = max(v_mass[i] / v_area_g[i], 1.0e-10)
-        if (
-            v_mass[i] > resolved_density_fraction * rho_atm * v_area_g[i]
-            and v_mass[i] < resolved_density_ceiling * rho_atm * v_area_g[i]
-        ):
+        if v_mass[i] > resolved_density_fraction * rho_atm * v_area_g[i]:
             v_u[i] = v_momentum[i] / v_mass[i]
 
     h_sr = _slopes(h_rho, limiter_theta)
@@ -1155,8 +1424,6 @@ def _network_rhs(
     rhs_vm = np.zeros(nv)
     rhs_vj = np.zeros(nv)
     rhs_vc = np.zeros(nv)
-    drag_h = np.zeros(nh)
-    drag_v = np.zeros(nv)
 
     for i in range(nh):
         if not h_active[i]:
@@ -1220,8 +1487,6 @@ def _network_rhs(
         rhs_vm,
         rhs_vj,
         rhs_vc,
-        drag_h,
-        drag_v,
         vf_mass[nv],
         vf_tracer[nv],
         junction_mass_flux,
@@ -1257,16 +1522,10 @@ def _compiled_advance(
     h_area_g: np.ndarray,
     h_depth_l: np.ndarray,
     h_perimeter_g: np.ndarray,
-    h_interface: np.ndarray,
     h_hydraulic: np.ndarray,
     v_area_g: np.ndarray,
     v_perimeter_g: np.ndarray,
-    v_interface: np.ndarray,
     v_hydraulic: np.ndarray,
-    h_liquid_area: np.ndarray,
-    h_liquid_q: np.ndarray,
-    v_liquid_area: np.ndarray,
-    v_liquid_q: np.ndarray,
     h_face_area: np.ndarray,
     v_face_area: np.ndarray,
     h_active: np.ndarray,
@@ -1288,8 +1547,6 @@ def _compiled_advance(
     resolved_density_fraction: float,
     resolved_density_ceiling: float,
 ) -> tuple:
-    liquid_h = np.zeros(h_mass.size)
-    liquid_v = np.zeros(v_mass.size)
     elapsed = 0.0
     escaped_tracer = 0.0
     atmospheric_exchange = 0.0
@@ -1303,14 +1560,12 @@ def _compiled_advance(
             if (
                 h_active[i]
                 and h_mass[i] > resolved_density_fraction * rho_atm * h_area_g[i]
-                and h_mass[i] < resolved_density_ceiling * rho_atm * h_area_g[i]
             ):
                 current_max = max(current_max, abs(h_momentum[i] / h_mass[i]))
         for i in range(v_mass.size):
             if (
                 v_active[i]
                 and v_mass[i] > resolved_density_fraction * rho_atm * v_area_g[i]
-                and v_mass[i] < resolved_density_ceiling * rho_atm * v_area_g[i]
             ):
                 current_max = max(current_max, abs(v_momentum[i] / v_mass[i]))
         maximum_velocity = max(maximum_velocity, current_max)
@@ -1323,9 +1578,8 @@ def _compiled_advance(
         for _attempt in range(24):
             first_rhs = _network_rhs(
                 h_mass, h_momentum, v_mass, v_momentum, v_tracer,
-                h_area_g, h_depth_l, h_perimeter_g, h_interface, h_hydraulic,
-                v_area_g, v_perimeter_g, v_interface, v_hydraulic,
-                h_liquid_area, h_liquid_q, v_liquid_area, v_liquid_q,
+                h_area_g, h_depth_l, h_perimeter_g, h_hydraulic,
+                v_area_g, v_perimeter_g, v_hydraulic,
                 h_face_area, v_face_area, h_active, v_active,
                 v_liquid_pressure_coupled,
                 dx, dz, junction_index, mouth_area, rho_l, gravity,
@@ -1342,23 +1596,16 @@ def _compiled_advance(
                 trial_dt *= 0.5
                 continue
             for i in range(h_mass_1.size):
-                if (
-                    h_mass_1[i] <= resolved_density_fraction * rho_atm * h_area_g[i]
-                    or h_mass_1[i] >= resolved_density_ceiling * rho_atm * h_area_g[i]
-                ):
+                if h_mass_1[i] <= resolved_density_fraction * rho_atm * h_area_g[i]:
                     h_momentum_1[i] = 0.0
             for i in range(v_mass_1.size):
-                if (
-                    v_mass_1[i] <= resolved_density_fraction * rho_atm * v_area_g[i]
-                    or v_mass_1[i] >= resolved_density_ceiling * rho_atm * v_area_g[i]
-                ):
+                if v_mass_1[i] <= resolved_density_fraction * rho_atm * v_area_g[i]:
                     v_momentum_1[i] = 0.0
 
             second_rhs = _network_rhs(
                 h_mass_1, h_momentum_1, v_mass_1, v_momentum_1, v_tracer_1,
-                h_area_g, h_depth_l, h_perimeter_g, h_interface, h_hydraulic,
-                v_area_g, v_perimeter_g, v_interface, v_hydraulic,
-                h_liquid_area, h_liquid_q, v_liquid_area, v_liquid_q,
+                h_area_g, h_depth_l, h_perimeter_g, h_hydraulic,
+                v_area_g, v_perimeter_g, v_hydraulic,
                 h_face_area, v_face_area, h_active, v_active,
                 v_liquid_pressure_coupled,
                 dx, dz, junction_index, mouth_area, rho_l, gravity,
@@ -1375,16 +1622,10 @@ def _compiled_advance(
                 trial_dt *= 0.5
                 continue
             for i in range(h_mass_2.size):
-                if (
-                    h_mass_2[i] <= resolved_density_fraction * rho_atm * h_area_g[i]
-                    or h_mass_2[i] >= resolved_density_ceiling * rho_atm * h_area_g[i]
-                ):
+                if h_mass_2[i] <= resolved_density_fraction * rho_atm * h_area_g[i]:
                     h_momentum_2[i] = 0.0
             for i in range(v_mass_2.size):
-                if (
-                    v_mass_2[i] <= resolved_density_fraction * rho_atm * v_area_g[i]
-                    or v_mass_2[i] >= resolved_density_ceiling * rho_atm * v_area_g[i]
-                ):
+                if v_mass_2[i] <= resolved_density_fraction * rho_atm * v_area_g[i]:
                     v_momentum_2[i] = 0.0
 
             h_mass = 0.5 * h_mass + 0.5 * h_mass_2
@@ -1396,20 +1637,14 @@ def _compiled_advance(
                 v_momentum_2
             )
             v_tracer = 0.5 * v_tracer + 0.5 * v_tracer_2
-            liquid_h += 0.5 * trial_dt * (
-                first_rhs[5] + second_rhs[5]
-            ) / rho_l
-            liquid_v += 0.5 * trial_dt * (
-                first_rhs[6] + second_rhs[6]
-            ) / rho_l
             atmospheric_exchange += 0.5 * trial_dt * (
-                first_rhs[7] + second_rhs[7]
+                first_rhs[5] + second_rhs[5]
             )
             escaped_tracer += 0.5 * trial_dt * (
-                first_rhs[8] + second_rhs[8]
+                first_rhs[6] + second_rhs[6]
             )
             junction_transfer += 0.5 * trial_dt * (
-                first_rhs[9] + second_rhs[9]
+                first_rhs[7] + second_rhs[7]
             )
             accepted = True
             break
@@ -1419,27 +1654,21 @@ def _compiled_advance(
         for i in range(h_mass.size):
             if h_mass[i] < 0.0 and h_mass[i] > -1.0e-13:
                 h_mass[i] = 0.0
-            if (
-                h_mass[i] <= resolved_density_fraction * rho_atm * h_area_g[i]
-                or h_mass[i] >= resolved_density_ceiling * rho_atm * h_area_g[i]
-            ):
+            if h_mass[i] <= resolved_density_fraction * rho_atm * h_area_g[i]:
                 h_momentum[i] = 0.0
         for i in range(v_mass.size):
             if v_mass[i] < 0.0 and v_mass[i] > -1.0e-13:
                 v_mass[i] = 0.0
             if v_tracer[i] < 0.0 and v_tracer[i] > -1.0e-13:
                 v_tracer[i] = 0.0
-            if (
-                v_mass[i] <= resolved_density_fraction * rho_atm * v_area_g[i]
-                or v_mass[i] >= resolved_density_ceiling * rho_atm * v_area_g[i]
-            ):
+            if v_mass[i] <= resolved_density_fraction * rho_atm * v_area_g[i]:
                 v_momentum[i] = 0.0
         elapsed += trial_dt
         substeps += 1
 
     return (
         h_mass, h_momentum, v_mass, v_momentum, v_tracer,
-        liquid_h, liquid_v, escaped_tracer, atmospheric_exchange,
+        escaped_tracer, atmospheric_exchange,
         junction_transfer, substeps, maximum_velocity,
     )
 
@@ -1462,6 +1691,7 @@ def _implicit_interphase_drag_exchange(
     liquid_viscosity: float = 1.0e-3,
     confined_bubble_froude: float | None = None,
     liquid_holdup_drag_enhancement: float = 0.0,
+    active_mask: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Exchange gas/liquid momentum without changing mixture momentum.
 
@@ -1470,9 +1700,12 @@ def _implicit_interphase_drag_exchange(
     ``r = u_g-u_l`` this gives ``r_new = r/(1+beta*|r|*dt)``.  The cell mixture
     velocity is invariant, so the two updated momenta are exactly equal and
     opposite.  In a stratified horizontal cell the companion model uses
-    ``lambda_i=lambda_g*(1+C_h*alpha_l)``; ``C_h=75`` is its published
-    closure.  This is the standard stable treatment of a stiff internal drag
-    source and contains no velocity, distance, or response-history limiter.
+    The baseline companion-model closure uses the gas-side friction factor at
+    the interface.  ``liquid_holdup_drag_enhancement`` is retained only as an
+    explicit sensitivity parameter and is zero in the production Case-A run;
+    no fitted enhancement is silently applied.  This is the standard stable
+    treatment of a stiff internal drag source and contains no velocity,
+    distance, or response-history limiter.
     """
 
     gm = np.asarray(gas_mass, dtype=float)
@@ -1498,6 +1731,11 @@ def _implicit_interphase_drag_exchange(
         & (ag > 1.0e-14)
         & (perimeter > 0.0)
     )
+    if active_mask is not None:
+        resolved = np.asarray(active_mask, dtype=bool)
+        if resolved.shape != active.shape:
+            raise ValueError("drag active mask must match the phase arrays")
+        active &= resolved
     for index in np.flatnonzero(active):
         mg = float(gm[index])
         ml = float(liquid_mass[index])
@@ -1602,8 +1840,15 @@ def advance_coupled_gas_network(
     vertical_branch_confined: bool = False,
     vertical_branch_receiving_hint: bool = False,
     horizontal_downstream_front_position: float | None = None,
+    horizontal_downstream_topology_front_position: float | None = None,
+    prefer_vertical_branch: bool = True,
 ) -> CoupledGasAdvance:
-    """Advance the complete Case-A gas graph over one liquid-network step."""
+    """Advance the complete Case-A gas graph over one liquid-network step.
+
+    ``junction_index`` is always the west cell adjacent to the discrete T face;
+    the first downstream cell is therefore ``junction_index + 1``.  The same
+    west cell is the conservative donor for the vertical mouth flux.
+    """
 
     hm = np.asarray(horizontal_mass, dtype=float).copy()
     hj = np.asarray(horizontal_momentum, dtype=float).copy()
@@ -1637,6 +1882,13 @@ def advance_coupled_gas_network(
         and float(horizontal_downstream_front_position) < 0.0
     ):
         raise ValueError("horizontal downstream front position must be non-negative")
+    if (
+        horizontal_downstream_topology_front_position is not None
+        and float(horizontal_downstream_topology_front_position) < 0.0
+    ):
+        raise ValueError(
+            "horizontal downstream topology front position must be non-negative"
+        )
     if not 0.0 < params.resolved_density_fraction < 1.0:
         raise ValueError("resolved density fraction must lie in (0, 1)")
     if not 0.0 < params.topology_density_fraction < 1.0:
@@ -1658,6 +1910,36 @@ def advance_coupled_gas_network(
 
     h_raw_geometric, _, _, _, _, _ = _horizontal_geometry(h_al, params)
     v_raw_geometric, _, _, _, _ = _vertical_geometry(v_al, params)
+    vm, vj, vc, _ = _displace_gas_from_closed_vertical_material_cells(
+        vm,
+        vj,
+        vc,
+        v_raw_geometric,
+        full_area=params.vertical_area,
+        cell_width=dz,
+        rho_reference=params.rho_atmospheric,
+        void_floor_fraction=params.void_floor_fraction,
+        active_void_fraction=params.active_void_fraction,
+        topology_density_fraction=params.topology_density_fraction,
+        resolved_density_fraction=params.resolved_density_fraction,
+        resolved_density_ceiling=params.resolved_density_ceiling,
+    )
+    downstream_front_position = (
+        None
+        if horizontal_downstream_front_position is None
+        else float(horizontal_downstream_front_position)
+    )
+    downstream_topology_front_position = (
+        downstream_front_position
+        if horizontal_downstream_topology_front_position is None
+        else float(horizontal_downstream_topology_front_position)
+    )
+    old_downstream_fraction = _horizontal_downstream_material_fraction(
+        h_al.size,
+        dx,
+        int(junction_index),
+        downstream_front_position,
+    )
     # A_l<A can mean either a true gas-filled crown volume or elastic pressure
     # storage on the rarefaction side of a still-full liquid pipe.  Only void
     # backed by gas mass belongs to the gas topology.  Add one adjacent empty
@@ -1720,58 +2002,178 @@ def advance_coupled_gas_network(
             and float(vertical_pocket_front_height) > 0.0
         )
     )
-    h_front_receiver = _apply_downstream_material_front_kinematics(
-        h_front_receiver,
-        h_mass_supported,
-        h_al,
-        h_ql,
-        junction_index=int(junction_index),
-    )
-    downstream_front_position = (
-        None
-        if horizontal_downstream_front_position is None
-        else float(horizontal_downstream_front_position)
-    )
+    if prefer_vertical_branch:
+        # Before pneumatic breakthrough the right dead leg is still a
+        # liquid-full elastic receiver.  Require motion of that liquid contact
+        # before material gas can enter.  Once the riser core is open to the
+        # atmosphere, however, the measured T supports counter-current branch
+        # flow: gas may turn east along the crown while liquid returns west.
+        # In that regime the liquid plug velocity is not the gas-front speed;
+        # the conservative gas Riemann flux and one-cell receiver topology set
+        # the advance instead.
+        h_front_receiver = _apply_downstream_material_front_kinematics(
+            h_front_receiver,
+            h_mass_supported,
+            h_al,
+            h_ql,
+            junction_index=int(junction_index),
+        )
+        if horizontal_downstream_front_position is not None:
+            # Before pneumatic breakthrough the open riser is the only
+            # material-gas outlet from the side T; the east branch is a
+            # water-filled closed dead leg.  A transient elastic crown-area
+            # deficit there is not a second gas path.  Keep existing supported
+            # gas connected, but do not create a new east receiver until the
+            # caller releases this topology after breakthrough.
+            east = np.arange(h_al.size) > int(junction_index)
+            h_front_receiver[east & ~h_mass_supported] = False
+    front_velocity = 0.0
+    retired_cell_count = 0
     if downstream_front_position is not None:
-        # Shock-fit the axial material front through the wet-side liquid phase
-        # velocity.  The downstream liquid state is the material state ahead of
-        # a gas/liquid contact.  Averaging it with Q/A in the nearly dry gas-side
-        # cut cell made the speed singular at hand-off and advanced the front by
-        # O(0.1 m) in one output interval.
-        # The gas acoustic subsolver may equilibrate pressure inside the already
-        # swept region, but it cannot jump across the unswept elastic deficit.
-        # A whole receiver cell is activated only after the accumulated
-        # interface displacement reaches its centre, so propagation speed is
-        # independent of the outer-step count.
+        # Separate the signed material contact from the whole-cell acoustic
+        # topology envelope.  The latter is the established finite-volume
+        # receiver front and remains one-way; it may contain one pressure guard
+        # cell when material gas retracts.  The signed contact is used for
+        # material kinematics and rendering, so internal pressure storage is
+        # never mistaken for a pinned gas tongue.  A true variable-length ALE
+        # cut cell would combine these roles, but coupling a signed sub-cell
+        # position directly to whole-cell opening/closing creates repeated
+        # O(dx) compression impulses.
+        indices = np.arange(h_al.size, dtype=int)
         centres = (np.arange(h_al.size, dtype=float) + 0.5) * dx
         first_downstream = int(junction_index) + 1
+        topology_front_position = float(
+            max(
+                downstream_front_position,
+                downstream_topology_front_position,
+            )
+        )
         if (
-            not vertical_branch_receiving
+            not prefer_vertical_branch
             and first_downstream < h_al.size
             and h_mass_supported[int(junction_index)]
         ):
-            candidate = np.flatnonzero(
-                (np.arange(h_al.size) >= first_downstream)
-                & (centres > downstream_front_position)
-            )
-            if candidate.size:
-                lead = int(candidate[0])
-                wet_side_velocity = float(
-                    h_ql[lead] / max(h_al[lead], 1.0e-14)
+            material_donors = np.flatnonzero(
+                h_mass_supported
+                & (indices >= int(junction_index))
+                & (
+                    (indices <= int(junction_index))
+                    | (old_downstream_fraction > 0.0)
                 )
-                downstream_front_position += max(
-                    wet_side_velocity, 0.0
-                ) * dt
+            )
+            if material_donors.size:
+                donor = int(material_donors[-1])
+                gas_velocity = float(
+                    hj[donor] / max(hm[donor], 1.0e-18)
+                )
+                # The material gas boundary is advected by the resolved gas
+                # trace.  Its sign is retained; counter-current liquid motion
+                # does not turn the material surface into a check valve.
+                front_velocity = gas_velocity
+                if (
+                    not params.allow_horizontal_front_retreat
+                    and front_velocity < 0.0
+                ):
+                    front_velocity = 0.0
+            # The fitted contact is explicit, so enforce its own geometric CFL
+            # in addition to the subcycled acoustic CFL of the gas network.
+            displacement = float(np.clip(
+                front_velocity * dt,
+                -params.cfl * dx,
+                params.cfl * dx,
+            ))
+            downstream_front_position += displacement
+
+            topology_leads = np.flatnonzero(
+                (indices >= first_downstream)
+                & (centres > topology_front_position)
+            )
+            topology_lead = (
+                int(topology_leads[0])
+                if topology_leads.size
+                else h_al.size
+            )
+            topology_donors = np.flatnonzero(
+                h_mass_supported
+                & (indices >= int(junction_index))
+                & (indices < topology_lead)
+            )
+            if topology_donors.size:
+                topology_donor = int(topology_donors[-1])
+                topology_velocity = float(
+                    hj[topology_donor] / max(hm[topology_donor], 1.0e-18)
+                )
+                topology_displacement = float(np.clip(
+                    max(topology_velocity, 0.0) * dt,
+                    0.0,
+                    params.cfl * dx,
+                ))
+                topology_front_position += topology_displacement
+        downstream_front_anchor = (
+            float(junction_index) + 0.5
+        ) * dx
         downstream_front_position = float(np.clip(
             downstream_front_position,
-            0.0,
+            downstream_front_anchor,
             h_al.size * dx,
         ))
-        unswept_downstream = (
-            (np.arange(h_al.size) >= first_downstream)
-            & (centres > downstream_front_position)
+        topology_front_position = float(np.clip(
+            max(topology_front_position, downstream_front_position),
+            downstream_front_anchor,
+            h_al.size * dx,
+        ))
+        downstream_topology_front_position = topology_front_position
+        # Retain one pressure-active guard cell immediately ahead of a
+        # retreating material contact.  The present gas solver uses whole
+        # finite volumes (not variable-length cut cells), so deleting the tail
+        # exactly at the west face compresses one full-cell inventory in a
+        # single outer step.  A one-cell guard is the bounded first-order
+        # moving-boundary closure: it is excluded from material-front velocity
+        # and phase rendering, remains acoustically reversible if the front
+        # advances again, and is locally merged only after it lies one complete
+        # grid interval behind the contact.
+        cell_left_faces = indices.astype(float) * dx
+        completely_unswept = (
+            (indices >= first_downstream)
+            & (cell_left_faces >= topology_front_position + dx)
         )
-        h_front_receiver[unswept_downstream] = False
+        retiring_downstream = completely_unswept & h_mass_supported
+        retired_cell_count = int(np.count_nonzero(retiring_downstream))
+        if np.any(retiring_downstream):
+            # A tail cell stays pressure-active while any part of it remains
+            # swept.  Once the front crosses its west face, merge only that
+            # cell into its west neighbour and clear it exactly; no distant
+            # gas state is projected or hidden outside the transport graph.
+            hm, hj = _collapse_horizontal_front_cells(
+                hm,
+                hj,
+                h_raw_geometric,
+                h_mass_supported,
+                retiring_downstream,
+                cell_width=dx,
+            )
+            h_mass_supported = _mass_backed_gas_topology(
+                h_raw_geometric,
+                hm,
+                full_area=params.horizontal_area,
+                cell_width=dx,
+                rho_reference=params.rho_atmospheric,
+                void_floor_fraction=params.void_floor_fraction,
+                active_void_fraction=params.active_void_fraction,
+                topology_density_fraction=params.topology_density_fraction,
+                resolved_density_fraction=params.resolved_density_fraction,
+            )
+        h_mass_supported[completely_unswept] = False
+        h_front_receiver[completely_unswept] = False
+        # Opening remains tied to the cell-centre crossing used by the stable
+        # historical finite-volume candidate.  Existing tail cells are not
+        # removed when a retreat merely crosses their centre.
+        pending_open = (
+            (indices >= first_downstream)
+            & (centres > topology_front_position)
+            & ~h_mass_supported
+        )
+        h_front_receiver[pending_open] = False
     # A confined Taylor core is itself the resolved upward-receiving state: its
     # base has been opened by the conservative liquid displacement in this
     # outer step.  Use that geometric state here rather than a gas Riemann
@@ -1783,7 +2185,13 @@ def advance_coupled_gas_network(
         h_front_receiver,
         h_mass_supported,
         junction_index=int(junction_index),
-        vertical_branch_receiving=vertical_branch_receiving,
+        vertical_branch_receiving=(
+            prefer_vertical_branch
+            and (
+                vertical_branch_receiving
+                or horizontal_downstream_front_position is not None
+            )
+        ),
     )
     hm, hj = _equilibrate_horizontal_front_receivers(
         hm,
@@ -1806,6 +2214,13 @@ def advance_coupled_gas_network(
         topology_density_fraction=params.topology_density_fraction,
         resolved_density_fraction=params.resolved_density_fraction,
     )
+    if downstream_front_position is not None:
+        # The topology detector is intentionally mass based and therefore
+        # cannot know that a fitted front has completely vacated an east cell.
+        # Reapply the material-domain mask after the receiver remap so retired
+        # storage cannot be silently reactivated by this second support pass.
+        h_mass_supported[completely_unswept] = False
+        h_front_receiver[completely_unswept | pending_open] = False
     h_topology = h_mass_supported | h_front_receiver
     h_raw_topological = np.where(
         h_topology,
@@ -1865,13 +2280,29 @@ def advance_coupled_gas_network(
     if vertical_pocket_front_height is not None:
         cell_bottom = np.arange(v_tracer_supported.size, dtype=float) * dz
         cell_top = cell_bottom + dz
-        bottom_front_domain = cell_bottom < (
-            float(vertical_pocket_front_height) + dz
+        # A fitted material front is stronger topology evidence than the
+        # generic 5%-void receiver threshold used for unlabelled elastic area
+        # deficits.  Its cut cell must be acoustically filled as soon as the
+        # swept void exceeds the solver's geometric void floor; otherwise the
+        # first several Taylor increments contain only positivity-floor mass
+        # and are advanced as a 0.2--2 kPa near-vacuum beside a 109 kPa pocket.
+        # This marks geometry only.  The conservative component remap below
+        # determines the transferred mass from the donor/receiver volumes and
+        # subtracts it from the attached horizontal gas component.
+        material_swept_receiver = (
+            cell_bottom < float(vertical_pocket_front_height)
+        ) & (
+            v_raw_geometric
+            > params.void_floor_fraction * params.vertical_area
         )
-        # Keep one cut-cell halo at the material front for the Riemann receiver.
-        # The fitted pocket remains attached to the side tee while the
-        # horizontal gas component supplies it; once that connection is lost,
-        # the one-sided front is held rather than creating unsupported void.
+        if params.vertical_fitted_front_receivers:
+            v_front_receiver |= material_swept_receiver
+        # The fitted coordinate already owns interface kinematics.  Admit its
+        # intersected cut cell, but never a complete numerical halo ahead of
+        # it.  The former ``front + dz`` domain could leave tracer gas in an
+        # unswept cell that the liquid-contact projection subsequently filled,
+        # creating an enormous false EOS pressure on the next time step.
+        bottom_front_domain = cell_bottom < float(vertical_pocket_front_height)
         v_tracer_supported &= bottom_front_domain
         v_front_receiver &= bottom_front_domain
         if (
@@ -1962,18 +2393,14 @@ def advance_coupled_gas_network(
     )
     # A confined bubble inside a bulk liquid column feels the liquid pressure
     # gradient and therefore receives the complementary buoyancy source in the
-    # gas momentum equation.  That closure must end once the same gas component
-    # is connected to the atmospheric top as an open gas core.  Applying
-    # ``rho_l g A_g`` through that open core forces the unphysical equilibrium
-    # p_base = p_atm - rho_l g H (95.3 kPa in Case A), even though the ideal-gas
-    # Riemann graph is open.  The existing Taylor-core area is the physical
-    # regime boundary: above it the residual liquid is an open falling wall
-    # film/headspace, not a hydrostatic liquid pressure support for the gas.
-    open_atmospheric_gas_core = v_top_connected & (
-        v_raw_topological
-        >= params.vertical_gas_core_area_fraction * params.vertical_area
-    )
-    v_liquid_pressure_coupled = v_active & ~open_atmospheric_gas_core
+    # gas momentum equation.  That closure must end for the complete gas
+    # component actually connected through active Riemann faces to the open
+    # atmospheric lip.  The former local ``A_g >= 0.8 A`` test could call a
+    # capillary neck sealed even while the acoustic graph carried flux through
+    # it.  It then imposed ``rho_l g`` on an open gas path and created the false
+    # post-breakthrough pressure ramp that held the liquid at about 8 s.
+    open_atmospheric_gas_component = _top_connected_active_component(v_active)
+    v_liquid_pressure_coupled = v_active & ~open_atmospheric_gas_component
     # The gas cannot enter a liquid-full riser cell.  The horizontal pressure
     # first accelerates/displaces that liquid through the coupled liquid node;
     # gas then occupies the resolved base-cell void.  Using the full geometric
@@ -2018,16 +2445,10 @@ def advance_coupled_gas_network(
         h_ag,
         h_depth,
         h_pg,
-        h_pi,
         h_dh,
         v_ag,
         v_pg,
-        v_pi,
         v_dh,
-        h_al,
-        h_ql,
-        v_al,
-        v_ql,
         h_faces,
         v_faces,
         h_active,
@@ -2057,6 +2478,13 @@ def advance_coupled_gas_network(
     # Complete the operator split with one conservative, semi-implicit
     # gas--liquid momentum exchange.  The transport solve above already
     # includes gas wall friction but deliberately excludes interphase drag.
+    h_drag_resolved = (
+        hm_out
+        > params.resolved_density_fraction
+        * params.rho_atmospheric
+        * h_ag
+        * dx
+    )
     hj_out, h_q_after_drag = _implicit_interphase_drag_exchange(
         hm_out,
         hj_out,
@@ -2072,6 +2500,7 @@ def advance_coupled_gas_network(
         liquid_holdup_drag_enhancement=(
             params.horizontal_holdup_drag_enhancement
         ),
+        active_mask=h_drag_resolved,
     )
     if params.vertical_confined_interface_kinematics:
         v_q_after_drag = v_ql.copy()
@@ -2079,6 +2508,13 @@ def advance_coupled_gas_network(
         # The resolved vertical gas is coupled to the liquid by perimeter shear.
         # This equal-and-opposite exchange introduces neither a prescribed flow
         # history nor an external momentum source.
+        v_drag_resolved = (
+            vm_out
+            > params.resolved_density_fraction
+            * params.rho_atmospheric
+            * v_ag
+            * dz
+        )
         vj_out, v_q_after_drag = _implicit_interphase_drag_exchange(
             vm_out,
             vj_out,
@@ -2091,11 +2527,33 @@ def advance_coupled_gas_network(
             dt=dt,
             rho_l=params.rho_l,
             gas_viscosity=params.gas_viscosity,
+            # A fitted, wall-confined Taylor core transfers buoyancy through
+            # pressure/form drag on the liquid-density scale.  Gas-side skin
+            # friction alone is O(rho_g/rho_l) too weak and left the complete
+            # pre-handoff liquid column in near free fall.  The Davies--Taylor
+            # Froude number is the same geometry closure that advances the
+            # material nose; it is not a response-history or case-time fit.
+            form_drag_diameter=(
+                params.vertical_diameter
+                if vertical_pocket_front_height is not None
+                else None
+            ),
+            total_area=(
+                params.vertical_area
+                if vertical_pocket_front_height is not None
+                else None
+            ),
+            confined_bubble_froude=(
+                0.345
+                if vertical_pocket_front_height is not None
+                else None
+            ),
+            active_mask=v_drag_resolved,
         )
-    escaped = float(result[7])
+    escaped = float(result[5])
     tracer_final = float(np.sum(hm_out) + np.sum(vc_out) + escaped)
     total_final = float(
-        np.sum(hm_out) + np.sum(vm_out) + float(result[8])
+        np.sum(hm_out) + np.sum(vm_out) + float(result[6])
     )
     return CoupledGasAdvance(
         horizontal_mass=hm_out,
@@ -2106,14 +2564,19 @@ def advance_coupled_gas_network(
         horizontal_liquid_momentum_increment=h_q_after_drag - h_ql,
         vertical_liquid_momentum_increment=v_q_after_drag - v_ql,
         escaped_tracer_mass=escaped,
-        atmospheric_mass_exchange=float(result[8]),
-        junction_mass_transfer=float(result[9]),
+        atmospheric_mass_exchange=float(result[6]),
+        junction_mass_transfer=float(result[7]),
         total_mass_error=total_final - total_initial,
         tracer_mass_error=tracer_final - tracer_initial,
-        substeps=int(result[10]),
-        maximum_velocity=float(result[11]),
+        substeps=int(result[8]),
+        maximum_velocity=float(result[9]),
         junction_mouth_area=float(mouth_area),
         downstream_front_position=downstream_front_position,
+        downstream_topology_front_position=(
+            downstream_topology_front_position
+        ),
+        downstream_front_velocity=float(front_velocity),
+        downstream_retired_cell_count=int(retired_cell_count),
     )
 
 

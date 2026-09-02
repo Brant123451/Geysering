@@ -1,0 +1,16 @@
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    object valveProperties;
+}
+active true;
+model sineSquaredAreaForchheimer;
+cellZone valveResistanceZone;
+openingDuration 0.2;
+minimumAreaFraction 0.001;
+resistanceLength 0.025;
+// D times the 1 mm planar extrusion.
+referenceFlowArea 0.00005;
+

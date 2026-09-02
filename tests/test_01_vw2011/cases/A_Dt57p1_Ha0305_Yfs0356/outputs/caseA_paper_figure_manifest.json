@@ -1,0 +1,177 @@
+{
+  "case": "VW2011 Test A",
+  "figure_claim": "The accepted shockvisc_fct_v130 1D archive and supporting 2D OpenFOAM calculation select the same non-geysering branch and preserve the event ordering from horizontal-pocket propagation through tower entry, breakthrough, and post-breakthrough drainage; detailed late-time phase topology is not claimed to match.",
+  "time_pairing": "nearest archived 1D and 2D states to the nominal physical times; no time shift; maximum absolute pair mismatch = 0.02 s",
+  "two_d_role": "supporting planar VOF calculation",
+  "two_d_geometry": "vertical-plane rectangular slot; 24 cells across D",
+  "one_d_horizontal_model": "accepted Case-A shockvisc_fct_v130 archive; finite-volume liquid-area states are converted to circular-pipe depth west of the computed material front, with the sealed branch retained as water-filled",
+  "one_d_horizontal_source": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/outputs/vertical_fields_shockvisc_fct_v130_13s_fullzero_display.npz",
+  "one_d_frame_index_source": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/outputs/frames_index_shockvisc_fct_v130_13s_fullzero.json",
+  "one_d_diagnostic_source": "tests/test_01_vw2011/cases/A_Dt57p1_Ha0305_Yfs0356/outputs/vertical_fields_shockvisc_fct_v130_13s.npz",
+  "one_d_rendering": "the horizontal pipe uses the circular-depth shape-preserving cubic reconstruction and an exact vertical material-front closure; the riser uses the accepted HTML annular-core and uppermost-partial-cell convention without an interface outline",
+  "one_d_tower_source": "archived alpha_l(z,t) from the accepted 0--13 s display archive; materialHeight and itop remain diagnostics and do not clip or fill the riser; cells with alpha_l <= 0.02 are omitted from the raster only and remain in the liquid-equivalent height",
+  "input_sha256": {
+    "one_d_fields": "2927a58db1eda550a9c95478d2b92977183a23b95189dfc7f104effea669144b",
+    "one_d_frame_index": "331c52b9748e2986bf08ad512f337b8dd3ebe015ae90a34c5afa5dbf969751f8",
+    "one_d_diagnostics": "c27116b2d4c20a624cb146f05a8025469db29cf292396e1d8f3181ab950e700f"
+  },
+  "selected_frames": [
+    {
+      "stage": "Early post-valve pocket propagation",
+      "one_d": {
+        "frame_index": 37,
+        "time_s": 1.4800000000000004,
+        "Tstar": 1.815868680781327,
+        "Yfs_m": null,
+        "material_trace_top_m": 0.356,
+        "frame_liquid_equivalent_height_m": 0.36599999999999977,
+        "alpha_l_integral_equivalent_height_m": 0.36599999999999994,
+        "alpha_l_integral_volume_m3": 0.0009372235294876985,
+        "vertical_rendering_audit": {
+          "source_liquid_area_m2": 0.020898599999999996,
+          "source_equivalent_height_m": 0.36599999999999994,
+          "displayed_source_liquid_area_m2": 0.0208986,
+          "displayed_source_equivalent_height_m": 0.366,
+          "display_omitted_liquid_area_m2": 0.0,
+          "display_omitted_equivalent_height_m": 0.0,
+          "display_alpha_min": 0.02,
+          "visible_top_m": 0.366
+        },
+        "display_visible_top_m": 0.366,
+        "Yint_m": 0.0,
+        "max_upward_liquid_velocity_m_s": null,
+        "max_downward_liquid_velocity_m_s": null,
+        "max_local_upward_liquid_discharge_m3_s": null,
+        "max_local_downward_liquid_discharge_m3_s": null,
+        "source": "outputs/frames_shockvisc_fct_v130_13s_fullzero/frame_0037.png"
+      },
+      "two_d": {
+        "time_s": 1.5,
+        "Tstar": 1.8404074467378309,
+        "Yfs_m": 0.3511770976617549,
+        "Yint_m": 0.0,
+        "source": "openfoam/2d/VTK_CASEA_HTML/2d_3111/internal.vtu"
+      },
+      "delta_time_s": -0.019999999999999574
+    },
+    {
+      "stage": "Gas entry and interface rise",
+      "one_d": {
+        "frame_index": 181,
+        "time_s": 6.907982586409377,
+        "Tstar": 8.475668395975386,
+        "Yfs_m": null,
+        "material_trace_top_m": 0.3846045972276506,
+        "frame_liquid_equivalent_height_m": 0.29784124052824423,
+        "alpha_l_integral_equivalent_height_m": 0.2978412405282444,
+        "alpha_l_integral_volume_m3": 0.0007626880291663274,
+        "vertical_rendering_audit": {
+          "source_liquid_area_m2": 0.017006734834162755,
+          "source_equivalent_height_m": 0.2978412405282444,
+          "displayed_source_liquid_area_m2": 0.016999857018923394,
+          "displayed_source_equivalent_height_m": 0.2977207884224763,
+          "display_omitted_liquid_area_m2": 6.877815239361013e-06,
+          "display_omitted_equivalent_height_m": 0.00012045210576810961,
+          "display_alpha_min": 0.02,
+          "visible_top_m": 0.4071683442880461
+        },
+        "display_visible_top_m": 0.4071683442880461,
+        "Yint_m": 0.11316061338718812,
+        "max_upward_liquid_velocity_m_s": 0.27427619295013894,
+        "max_downward_liquid_velocity_m_s": -5.373780045556082e-12,
+        "max_local_upward_liquid_discharge_m3_s": 0.0002539220698372446,
+        "max_local_downward_liquid_discharge_m3_s": -1.3760746177559122e-16,
+        "source": "outputs/frames_shockvisc_fct_v130_13s_fullzero/frame_0181.png"
+      },
+      "two_d": {
+        "time_s": 6.9,
+        "Tstar": 8.465874254994022,
+        "Yfs_m": 0.36742548934936703,
+        "Yint_m": 0.13145774148619577,
+        "source": "openfoam/2d/VTK_CASEA_HTML/2d_13997/internal.vtu"
+      },
+      "delta_time_s": 0.007982586409376324
+    },
+    {
+      "stage": "Breakthrough transition and rapid riser drainage",
+      "one_d": {
+        "frame_index": 209,
+        "time_s": 7.607827064361815,
+        "Tstar": 9.33433438849673,
+        "Yfs_m": null,
+        "material_trace_top_m": 0.16945433679823008,
+        "frame_liquid_equivalent_height_m": 0.14964725056158412,
+        "alpha_l_integral_equivalent_height_m": 0.1496472505615842,
+        "alpha_l_integral_volume_m3": 0.0003832047113373168,
+        "vertical_rendering_audit": {
+          "source_liquid_area_m2": 0.008544858007066457,
+          "source_equivalent_height_m": 0.1496472505615842,
+          "displayed_source_liquid_area_m2": 0.008544858007066457,
+          "displayed_source_equivalent_height_m": 0.1496472505615842,
+          "display_omitted_liquid_area_m2": 0.0,
+          "display_omitted_equivalent_height_m": 0.0,
+          "display_alpha_min": 0.02,
+          "visible_top_m": 0.30589558077842705
+        },
+        "display_visible_top_m": 0.30589558077842705,
+        "Yint_m": 0.16266666666666665,
+        "max_upward_liquid_velocity_m_s": 0.0,
+        "max_downward_liquid_velocity_m_s": -2.1423761321149795,
+        "max_local_upward_liquid_discharge_m3_s": 0.0,
+        "max_local_downward_liquid_discharge_m3_s": -0.002776051889425907,
+        "source": "outputs/frames_shockvisc_fct_v130_13s_fullzero/frame_0209.png"
+      },
+      "two_d": {
+        "time_s": 7.6,
+        "Tstar": 9.324731063471676,
+        "Yfs_m": null,
+        "Yint_m": null,
+        "source": "openfoam/2d/VTK_CASEA_HTML/2d_16445/internal.vtu"
+      },
+      "delta_time_s": 0.007827064361815239
+    },
+    {
+      "stage": "Post-breakthrough residual liquid near the riser base",
+      "one_d": {
+        "frame_index": 309,
+        "time_s": 10.107630651870245,
+        "Tstar": 12.401439147051704,
+        "Yfs_m": null,
+        "material_trace_top_m": 0.05976620577870257,
+        "frame_liquid_equivalent_height_m": 0.015464165146577277,
+        "alpha_l_integral_equivalent_height_m": 0.015464165146577282,
+        "alpha_l_integral_volume_m3": 3.9599397375015886e-05,
+        "vertical_rendering_audit": {
+          "source_liquid_area_m2": 0.0008830038298695628,
+          "source_equivalent_height_m": 0.015464165146577282,
+          "displayed_source_liquid_area_m2": 0.0007715811220289158,
+          "displayed_source_equivalent_height_m": 0.01351280423868504,
+          "display_omitted_liquid_area_m2": 0.00011142270784064701,
+          "display_omitted_equivalent_height_m": 0.0019513609078922415,
+          "display_alpha_min": 0.02,
+          "visible_top_m": 0.08184907996916431
+        },
+        "display_visible_top_m": 0.08184907996916431,
+        "Yint_m": 0.05976620577870257,
+        "max_upward_liquid_velocity_m_s": 0.0,
+        "max_downward_liquid_velocity_m_s": -0.24900165293029425,
+        "max_local_upward_liquid_discharge_m3_s": 0.0,
+        "max_local_downward_liquid_discharge_m3_s": -0.0002594903162415902,
+        "source": "outputs/frames_shockvisc_fct_v130_13s_fullzero/frame_0309.png"
+      },
+      "two_d": {
+        "time_s": 10.1,
+        "Tstar": 12.392076808034727,
+        "Yfs_m": null,
+        "Yint_m": null,
+        "source": "openfoam/2d/VTK_CASEA_HTML/2d_21924/internal.vtu"
+      },
+      "delta_time_s": 0.007630651870245586
+    }
+  ],
+  "outputs": [
+    "paper/figures/caseA_1d2d_snapshots_4frame.png",
+    "paper/figures/caseA_1d2d_snapshots_4frame.pdf"
+  ],
+  "manuscript_status": "active four-frame manuscript figure"
+}

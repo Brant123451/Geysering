@@ -1,0 +1,82 @@
+{
+  "schema": "geysering.liu2020.c9.final_medium_grid_audit_manifest.v1",
+  "created_utc": "2026-08-16T03:16:26Z",
+  "simulation": {
+    "attempt": "c9_medium_80k_attempt7_resume1200_20260815T181127Z",
+    "target_solver_time_s": 20.25,
+    "verified_last_solver_time_s": 20.25,
+    "verified_clock_time_s": 18928.0,
+    "normal_End": true,
+    "fatal_evidence": [],
+    "latest_common_checkpoint_s": 20.25,
+    "processor_time_directory_names": {
+      "0": "20.25",
+      "1": "20.25",
+      "2": "20.25",
+      "3": "20.25",
+      "4": "20.25",
+      "5": "20.25"
+    },
+    "solver_log": {
+      "path": "/mnt/d/Geysering/output/liu2020_fast_runs/C9_Q25to40_hr03_airpocket/c9_medium_80k_attempt7_resume1200_20260815T181127Z/case/log.full",
+      "bytes": 129856012,
+      "sha256": "f9fbf834da9e02af95884e7e1934ca495bc0ee00757de7b38b4801a3971106a2"
+    }
+  },
+  "event_evidence_audit": {
+    "decision": "EIGHT_ERUPTIONS_NOT_CONFIRMED",
+    "snapshot_confirmed_episode_counts": {
+      "alpha_ge_0.1": 1,
+      "alpha_ge_0.5": 1,
+      "alpha_ge_0.9": 2
+    },
+    "one_to_one_eight_window_snapshot_alignment": false,
+    "paper_window_count": 8,
+    "cumulative_expelled_volume_resolvable": false
+  },
+  "members": [
+    {
+      "path": "SCAFFOLD_MANIFEST.json",
+      "bytes": 3931,
+      "sha256": "038ac1e1e02124bdd35a008d1b801b5c06ba7b35104182aa3a877a713ba2529d"
+    },
+    {
+      "path": "CHECKPOINT_CONTINUITY.json",
+      "bytes": 2927,
+      "sha256": "d86dff3deb106a5fdbd7679fb786aab4667f0bc1a273039c8ff5679d77a6bf9c"
+    },
+    {
+      "path": "PAPER_EVENT_TARGETS.json",
+      "bytes": 3051,
+      "sha256": "61d3791b376ac8d8b1628f4f1fd5c399711dedaacc6a6b9f0239e9b743ed84b6"
+    },
+    {
+      "path": "STAGED_CASE_PROVENANCE.json",
+      "bytes": 3761,
+      "sha256": "1b43066bac0083aa88f2eb2db32cb92fb1066ac699f2331b37994be629476d33"
+    },
+    {
+      "path": "log.rim_attempt4",
+      "bytes": 7734,
+      "sha256": "415ca1bb7ecaaaed7a7b3ce2e70409f6d09fad467ada43f9d27ec1045754d22e"
+    },
+    {
+      "path": "log.rim_attempt7",
+      "bytes": 5742,
+      "sha256": "ba93e49f01550ba893599a820f8d33a87c6ac94464daf1c9f6b432cdfac29323"
+    },
+    {
+      "path": "log.event_audit",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "FINAL_EVENT_AUDIT.json",
+      "bytes": 21662,
+      "sha256": "68bc67e65f3bb60d6e3ffbd4bea82126fe23504839d66630b06072e4ba7ae375"
+    }
+  ],
+  "scientific_result_status": "EXPLORATORY_EVENT_EVIDENCE_AUDITED_NOT_ACCEPTED",
+  "result_accepted": false,
+  "note": "Normal numerical completion and evidence audit do not by themselves prove reproduction of eight experimental geysers."
+}

@@ -1503,14 +1503,32 @@ def solve_tosan_negative_interface_case_b(
     )
     fs_source = g * data.dt * (fs_friction_foot - data.bed_slope)
 
-    def residual_and_jacobian(x: Array) -> tuple[Array, Array]:
-        u_p, head_p, u_fs, depth_fs = x
-        depth_fs = float(depth_fs)
+    def free_surface_geometry(
+        depth_fs: float,
+    ) -> tuple[float, float, float, float]:
+        """Evaluate the four repeated circular-section quantities once."""
+
         area_fs = float(section.area_from_depth(depth_fs))
         moment_fs = float(section.hydrostatic_moment(depth_fs))
-        c_fs = float(section.free_surface_celerity_from_depth(depth_fs))
-        c_fs = max(c_fs, 1.0e-12)
+        c_fs = max(
+            float(section.free_surface_celerity_from_depth(depth_fs)),
+            1.0e-12,
+        )
         top_width = float(section.top_width(depth_fs))
+        return area_fs, moment_fs, c_fs, top_width
+
+    def residual_and_jacobian(
+        x: Array,
+        geometry: tuple[float, float, float, float] | None = None,
+    ) -> tuple[Array, Array]:
+        u_p, head_p, u_fs, depth_fs = x
+        depth_fs = float(depth_fs)
+        if geometry is None:
+            area_fs, moment_fs, c_fs, top_width = (
+                free_surface_geometry(depth_fs)
+            )
+        else:
+            area_fs, moment_fs, c_fs, top_width = geometry
         mass_momentum = area_full * u_p - area_fs * u_fs
         residual = np.array(
             [
@@ -1568,14 +1586,11 @@ def solve_tosan_negative_interface_case_b(
         )
         return residual, jacobian
 
-    def reduced_state(depth_fs: float) -> tuple[Array, float]:
+    def reduced_state(depth_fs: float) -> tuple[Array, float, Array]:
         """Eliminate both characteristics and mass RH at a trial depth."""
 
-        area_fs = float(section.area_from_depth(depth_fs))
-        c_fs = max(
-            float(section.free_surface_celerity_from_depth(depth_fs)),
-            1.0e-12,
-        )
+        geometry = free_surface_geometry(depth_fs)
+        area_fs, _, c_fs, top_width = geometry
         u_fs = (
             u_foot
             - g * depth_fs / c_fs
@@ -1589,10 +1604,9 @@ def solve_tosan_negative_interface_case_b(
             u_p - u_p_foot + p_source
         )
         x = np.array([u_p, head_p, u_fs, depth_fs], dtype=float)
-        residual, jacobian = residual_and_jacobian(x)
+        residual, jacobian = residual_and_jacobian(x, geometry)
         # Total derivative of the momentum residual along the three eliminated
         # equations.  This is the Schur complement of the 4x4 Newton system.
-        top_width = float(section.top_width(depth_fs))
         c_derivative = 0.5 * c_fs * (
             top_width / max(area_fs, 1.0e-20 * area_full)
             - (section.diameter - 2.0 * depth_fs)
@@ -1617,7 +1631,7 @@ def solve_tosan_negative_interface_case_b(
             + jacobian[3, 2] * du_fs
             + jacobian[3, 3]
         )
-        return x, float(total_derivative)
+        return x, float(total_derivative), residual
 
     # The four equations reduce exactly to one scalar momentum equation after
     # eliminating the two characteristic relations and mass RH.  Solving this
@@ -1644,10 +1658,16 @@ def solve_tosan_negative_interface_case_b(
     reduced_x = np.array(
         [u_p_foot, h_p_foot, u_foot, depth_trial], dtype=float
     )
-    reduced_residual, _ = residual_and_jacobian(reduced_x)
+    reduced_residual = np.zeros(4, dtype=float)
+    cached_trial_state = None
     for reduced_iterations in range(1, min(max_iterations, 16) + 1):
-        reduced_x, derivative = reduced_state(depth_trial)
-        reduced_residual, _ = residual_and_jacobian(reduced_x)
+        if cached_trial_state is None:
+            reduced_x, derivative, reduced_residual = reduced_state(
+                depth_trial
+            )
+        else:
+            reduced_x, derivative, reduced_residual = cached_trial_state
+            cached_trial_state = None
         norm = abs(float(reduced_residual[3])) / max(
             momentum_scale, np.finfo(float).tiny
         )
@@ -1672,10 +1692,17 @@ def solve_tosan_negative_interface_case_b(
                 < candidate_depth
                 < (1.0 - 1.0e-9) * section.diameter
             ):
-                candidate_x, _ = reduced_state(candidate_depth)
-                candidate_residual, _ = residual_and_jacobian(candidate_x)
+                candidate_state = reduced_state(candidate_depth)
+                candidate_x, candidate_derivative, candidate_residual = (
+                    candidate_state
+                )
                 if abs(candidate_residual[3]) < abs(reduced_residual[3]):
                     depth_trial = candidate_depth
+                    cached_trial_state = (
+                        candidate_x,
+                        candidate_derivative,
+                        candidate_residual,
+                    )
                     accepted = True
                     break
             step_fraction *= 0.5

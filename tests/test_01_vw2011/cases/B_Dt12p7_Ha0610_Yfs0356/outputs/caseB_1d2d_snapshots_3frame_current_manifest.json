@@ -1,0 +1,99 @@
+{
+  "case": "VW2011 Test 1 Case B",
+  "artifact_status": "selected main-text full-domain comparison",
+  "figure_claim": "At identical physical times, the current 1-D and archived 2-D results show the progression from horizontal-interface approach through standpipe lift to above-rim liquid discharge.",
+  "claim_limit": "The archived 2-D solver domain remains laterally confined above the physical rim; therefore the last row demonstrates only the initial above-rim response, not a freely developing external plume.",
+  "time_pairing": "same physical time; no time shift or event alignment",
+  "selected_times_s": [
+    6.35,
+    7.25,
+    7.7
+  ],
+  "one_d_role": "current Tosan-based Present 1D model",
+  "two_d_role": "direct archived confined supporting planar VOF result",
+  "two_d_geometry": "area-equivalent W=Dt^2/D planar slit with 0.30-m confined numerical headroom; display-only lateral remapping to 0.080 m",
+  "presentation_geometry": {
+    "physical_tower_diameter_m": 0.0127,
+    "display_tower_width_m": 0.08,
+    "vertical_scale_changed": false,
+    "tower_top": "open; two short wall-coloured strokes denote ground level"
+  },
+  "solver_results_modified_for_figure": false,
+  "panel_layout": "three rows by two columns; panel letters repeated across columns",
+  "selected_frames": [
+    {
+      "panel": "a",
+      "stage": "horizontal gas--water interface approaching the standpipe",
+      "paired_time_s": 6.35,
+      "time_shift_s": 0.0,
+      "one_d": {
+        "source": "current Tosan (2021) shock-fitting horizontal result with retained vertical branch",
+        "source_time_s": 6.349999999999912,
+        "interface_x_m": 3.4702298738502497,
+        "air_pressure_head_m": 0.6803030521594075,
+        "Yfs_m": 0.5968004208649682,
+        "Yint_m": 0.0,
+        "jet_height_m": 0.0
+      },
+      "two_d": {
+        "source_time_s": 6.35,
+        "source_vtu": "openfoam/2d/VTK/2d_25694/internal.vtu",
+        "solver_domain": "old confined 0.30-m numerical headroom above the physical rim",
+        "display_remap": "area-equivalent slit remapped laterally to the common 0.080-m display width"
+      }
+    },
+    {
+      "panel": "b",
+      "stage": "gas entry and liquid-column lift",
+      "paired_time_s": 7.25,
+      "time_shift_s": 0.0,
+      "one_d": {
+        "source": "current Tosan (2021) shock-fitting horizontal result with retained vertical branch",
+        "source_time_s": 7.249999999999887,
+        "interface_x_m": 3.8850713560575985,
+        "air_pressure_head_m": 0.3326709703815209,
+        "Yfs_m": 0.6027376379106228,
+        "Yint_m": 0.27,
+        "jet_height_m": 0.6197509468327095
+      },
+      "two_d": {
+        "source_time_s": 7.25,
+        "source_vtu": "openfoam/2d/VTK/2d_48121/internal.vtu",
+        "solver_domain": "old confined 0.30-m numerical headroom above the physical rim",
+        "display_remap": "area-equivalent slit remapped laterally to the common 0.080-m display width"
+      }
+    },
+    {
+      "panel": "c",
+      "stage": "above-rim liquid-column discharge",
+      "paired_time_s": 7.7,
+      "time_shift_s": 0.0,
+      "one_d": {
+        "source": "current Tosan (2021) shock-fitting horizontal result with retained vertical branch",
+        "source_time_s": 7.699999999999872,
+        "interface_x_m": 4.0006480757304725,
+        "air_pressure_head_m": 0.09395725144906687,
+        "Yfs_m": 0.5939760805575055,
+        "Yint_m": 0.5,
+        "jet_height_m": 0.7158849687971
+      },
+      "two_d": {
+        "source_time_s": 7.7,
+        "source_vtu": "openfoam/2d/VTK/2d_56051/internal.vtu",
+        "solver_domain": "old confined 0.30-m numerical headroom above the physical rim",
+        "display_remap": "area-equivalent slit remapped laterally to the common 0.080-m display width"
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "path": "paper/figures/caseB_1d2d_snapshots_3frame_current.png",
+      "sha256": "23362e11f295548b99261f41d89e954c0581dfa47113b5d340db97bb3f191b90"
+    },
+    {
+      "path": "paper/figures/caseB_1d2d_snapshots_3frame_current.pdf",
+      "sha256": "792f455b7a9dedac2b2f81643115a9e0545250f35da1ed39d6067b1f50cbf121"
+    }
+  ],
+  "manuscript_status": "selected for the Case-B main text; caption must retain the confined-headroom and no-free-external-plume limitation"
+}

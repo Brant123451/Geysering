@@ -1,0 +1,86 @@
+schema_version: 1
+case_id: S1_JHR2024_continuous_air_validation
+mesh_level: refined_2d_analogue
+accepted_for_manuscript_evidence: false
+
+source:
+  citation: "Mahyawansi et al. (2024), Journal of Hydraulic Research 62(1), 25-38"
+  doi: "10.1080/00221686.2024.2305353"
+  open_pdf_url: "https://par.nsf.gov/servlets/purl/10565677"
+  pdf_sha256: "A47F144D2339D8760D2DD650B97027E2C64F0A26C6D7791D7998FA509BAAF84B"
+
+geometry:
+  pipe_diameter_m: 0.0254
+  upstream_boundary_x_m: -1.83
+  air_port_center_x_m: -1.52
+  riser_center_x_m: 0.0
+  downstream_boundary_x_m: 1.27
+  riser_rim_z_m: 1.02
+  initial_water_surface_z_m: 0.5842
+
+mesh_translation:
+  source_refined_cutcell_cells_3d: 1200000
+  source_refined_strategy: medium_eruptive_region_BOI_plus_further_pipe_refinement
+  source_wall_inflation_layers_3d: 5
+  target_cell_count_2d: null
+  expected_generated_cells_2d: 243646
+  pipe_cells_per_diameter_2d: 32
+  pipe_nominal_spacing_m: 0.00079375
+  external_boi_nominal_cells_per_diameter_2d: 16
+  target_boi_analogue: "external plume box x=[-0.10,0.10], z=[1.02,2.00]"
+  wall_inflation_2d: none
+  missing_source_items:
+    - cells_per_diameter
+    - local_cell_step
+    - boi_bounds
+    - first_layer_height
+    - inflation_growth_rate
+    - y_plus
+
+initialization:
+  U_m_per_s: [0.0, 0.0, 0.0]
+  k_numerical_floor_m2_per_s2: 1.0e-6
+  omega_numerical_floor_per_s: 1.0
+  turbulence_seed_source_status: unreported_numerical_floor
+  finite_pocket_U_0p06_transferred: false
+
+stages:
+  stage1: {air_port: closed, turbulence: kOmegaSST}
+  stage2: {air_port_gauge_pressure_Pa: 5700, turbulence: SmagorinskyLES}
+
+numerics:
+  solver: compressibleInterFoam-v2512
+  time_scheme: CrankNicolson_0.9
+  alpha_correctors: 2
+  alpha_subcycles: 1
+  alpha_limiter_iterations: 5
+  compatibility_note: "backward and CrankNicolson with alpha subcycling >1 are rejected by this solver configuration"
+  smoke_limit_s: 0.02
+  smoke_launcher_ready: true
+  smoke_launcher_note: "requires PREFLIGHT_PASSED, SMOKE_AUTHORIZED, one assigned CPU, and confirmed CPU quota"
+  smoke_threads: 1
+  smoke_nice: 19
+  formal_run_authorized: false
+
+preflight_control:
+  launcher_ready: true
+  authorization_marker: OFFLINE_PREFLIGHT_AUTHORIZED
+  cpu_guard_required: true
+  cpu_quota_confirmation_required: true
+  one_assigned_cpu_required: true
+  current_authorized: false
+
+freeze_audit:
+  physics_files_match_public_template: true
+  allowed_declared_differences:
+    - system/blockMeshDict
+    - run_stage1_smoke.sh
+    - run_pipeline.sh
+    - run_stage2_after_approval.sh
+  launch_wrapper_gate_audit_passed: true
+
+result_acceptance:
+  eruption_expected: true
+  eruption_is_hard_gate: true
+  specification: ../RESULT_ACCEPTANCE.yaml
+  solver_completion_is_validation: false

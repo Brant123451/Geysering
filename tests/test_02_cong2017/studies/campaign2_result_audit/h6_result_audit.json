@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "case_id": "BH6_Dr41_H066_L061",
+  "paper_run": "B-H6",
+  "audit_scope": "completed 2D event versus Cong et al. (2017)",
+  "uniform_rules": {
+    "time_origin": "seconds after valve opening begins",
+    "quantitative_support": {
+      "supported": "absolute relative error <= 10%",
+      "partial": "10% < absolute relative error <= 30%",
+      "failed": "absolute relative error > 30%",
+      "missing": "no genuinely comparable value"
+    },
+    "arrival": "first resolved gas nose 5 mm above pipe crown",
+    "classification": "case-independent physical-rim report, not 98% level or image",
+    "catchup_proxy": "first three consecutive trajectory samples with Yfs-Yint <= max(2% of initial post-arrival gap, 2 riser dz)",
+    "event_end": "earliest of physical-rim crossing, catch-up proxy, stored event end",
+    "average_interface_speed": "endpoint displacement divided by event duration",
+    "net_speed": "vint-vfs, equivalent to d[Yfs0-(Yfs-Yint)]/dt",
+    "bubble_pressure": "gas-fraction-weighted pressure of the uppermost enclosed centreline gas component divided by the overlying water-column length"
+  },
+  "source_types": {
+    "experiment": "published Table 2 / figures / prose",
+    "model_trajectory": "2D-derived centreline alpha=0.5 crossings",
+    "model_pressure": "2D-derived centreline gas pressure and archived PT1 probe",
+    "classification": "stored-field physical-rim surface integration"
+  },
+  "paper_contract": {
+    "D_m": 0.05,
+    "Dr_m": 0.041,
+    "H0_m": 0.66,
+    "L0_m": 0.61,
+    "valve_opening_s": 0.2,
+    "planar_area_equivalent_width_m": 0.03362,
+    "limitation": "The 2D plane preserves the circular area ratio, not the drawn 41 mm riser width or the three-dimensional annular wall film."
+  },
+  "completion": {
+    "normal_end": true,
+    "fatal_error": false,
+    "last_computed_time_s": 20.0,
+    "declared_observation_end_reached": true,
+    "classification_final": true
+  },
+  "classification": {
+    "experiment": "NO_GEYSER",
+    "model": "NO_GEYSER",
+    "support": "supported",
+    "physical_rim_first_full_gate_time_s": null,
+    "maximum_rim_plane_alpha": 0.0,
+    "cumulative_positive_liquid_volume_m3": 0.0
+  },
+  "arrival": {
+    "experiment_s": 8.1,
+    "model_s": 8.04,
+    "relative_error": 0.007407407407407469,
+    "support": "supported"
+  },
+  "event": {
+    "model_event_end_s": 12.47,
+    "model_event_duration_after_arrival_s": 4.4300000000000015,
+    "model_catchup_proxy_s": 12.47,
+    "catchup_gap_threshold_m": 0.012128434909785131,
+    "initial_postarrival_gap_m": 0.6064217454892565,
+    "paper_break_bracket_s": [
+      10.58,
+      10.9
+    ],
+    "experiment_rim_time_s": null,
+    "rim_time_relative_error": null,
+    "rim_time_support": "missing",
+    "model_peak_Yfs_m": 1.0212230407960985,
+    "model_peak_Yfs_time_s": 10.43,
+    "model_peak_Yint_before_event_end_m": 0.9218363551486624,
+    "model_peak_Yint_time_s": 12.47
+  },
+  "interface_speeds": {
+    "model_definition": "common event-endpoint averages; not claimed identical to the paper's undisclosed averaging implementation",
+    "vfs": {
+      "experiment_m_s": 0.246,
+      "model_m_s": 0.07210521417499152,
+      "relative_error": 0.7068893732723922,
+      "support": "failed"
+    },
+    "vint": {
+      "experiment_m_s": 0.476,
+      "model_m_s": 0.20662925008808014,
+      "relative_error": 0.5659049367897476,
+      "support": "failed"
+    },
+    "vnet": {
+      "experiment_m_s": 0.235,
+      "model_m_s": 0.13452403591308862,
+      "relative_error": 0.42755729398685693,
+      "support": "failed"
+    },
+    "vTaylor_experiment_m_s": 0.219,
+    "model_vnet_over_vTaylor": 0.6142650041693545
+  },
+  "bubble_pressure": {
+    "definition": "gas-fraction-weighted pressure of the uppermost enclosed centreline gas component divided by the overlying water-column length",
+    "sample_interval_s": 0.05,
+    "minimum_resolved_water_column_m": 0.060642174548925655,
+    "sample_count": 81,
+    "missing_sample_files": 0,
+    "head_over_water_column": {
+      "minimum": 0.706516896253878,
+      "p05": 0.850497503235608,
+      "median": 1.0035187290102319,
+      "p95": 1.1729618141093634,
+      "maximum": 1.381257129994119
+    },
+    "head_m_water": {
+      "minimum": 0.0656732361976654,
+      "p05": 0.09098216840751842,
+      "median": 0.32539058792819897,
+      "p95": 0.5828849271019909,
+      "maximum": 0.6312485371811957
+    },
+    "output_csv": "/mnt/e/Geysering/tests/test_02_cong2017/studies/campaign2_result_audit/h6_bubble_pressure_series.csv"
+  },
+  "pt1_pressure": {
+    "definition": "PT1 gauge pressure head divided by H0",
+    "global": {
+      "minimum_H_over_H0": 0.00043023061537135915,
+      "minimum_time_s": 0.005,
+      "maximum_H_over_H0": 1.8202283540299007,
+      "maximum_time_s": 0.35
+    },
+    "arrival_to_event_end": {
+      "minimum_H_over_H0": 0.7893942520075509,
+      "minimum_time_s": 8.675,
+      "maximum_H_over_H0": 1.1063674316786052,
+      "maximum_time_s": 10.125
+    }
+  },
+  "input_provenance": {
+    "case_config": {
+      "path": "/mnt/e/Geysering/tests/test_02_cong2017/cases/BH6_Dr41_H066_L061/openfoam/2d/case_config.json",
+      "sha256": "f08e51eed2f4e93418a289115f35e4d5d501d7d0f10a189fd8dc8a04b16e86d3"
+    },
+    "model_metrics": {
+      "path": "/mnt/e/Geysering/tests/test_02_cong2017/cases/BH6_Dr41_H066_L061/openfoam/2d/complete_event/end20/results/openfoam_2d_metrics.json",
+      "sha256": "919fa211d5be58789d9b5e8a86ee604609065fc2e09b8a4efd8de861b6165aed"
+    },
+    "rim_report": {
+      "path": "/mnt/e/Geysering/tests/test_02_cong2017/studies/BH1_BH3_BH6_1d_animation/2d_physical_outlet_audit/h6_end20.json",
+      "sha256": "1b9d4bd4a2c7548ed32baccf01851145c93b794f7cada1bbd8a873334f55d25b"
+    },
+    "riser_series": {
+      "path": "/mnt/e/Geysering/tests/test_02_cong2017/cases/BH6_Dr41_H066_L061/openfoam/2d/complete_event/end20/results/openfoam_2d_riser_series.csv",
+      "sha256": "b235bfe10517d2747c8d49af4c174b83e3a77a95c72a52118ccd7a1f3d4d55af"
+    },
+    "pt1_series": {
+      "path": "/mnt/e/Geysering/tests/test_02_cong2017/cases/BH6_Dr41_H066_L061/openfoam/2d/complete_event/end20/results/openfoam_2d_pt1_series.csv",
+      "sha256": "8584b0f25fa1e70241dbbf47ec2472bef2123c87eba13f8f6339b20c03c39b08"
+    },
+    "centreline_root": "/tmp/bh6-2d-study/paper_tau0p2_areaeq/postProcessing/riserCentreline"
+  }
+}

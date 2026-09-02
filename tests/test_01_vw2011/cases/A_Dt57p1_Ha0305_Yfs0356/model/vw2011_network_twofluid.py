@@ -14,10 +14,11 @@ The apparatus and initial state follow the parsed JHE paper values:
   * downstream pipe length 0.490 m, closed end;
   * downstream of the butterfly valve is initially water-filled.
 
-Both the horizontal pipe and vertical tower are advanced with the present paper's
-decoupled two-fluid area formulation: liquid area/discharge evolution, conserved
-    gas mass with an isothermal EOS pressure, gravity, and the pressurized-water
-    water-hammer branch when the liquid reach is full.  The vertical tower is treated
+The horizontal pipe uses a shock-fitted pressurised--free-surface front before
+the side-T event and a circular-pipe Saint--Venant shallow-water liquid branch
+after handoff.  Gas mass and momentum remain conservative with an isothermal EOS,
+and gas pressure couples through the liquid pressure source; no KH/IKH slip term
+is used in the Case-A horizontal liquid equation.  The vertical tower is treated
     as the same 1D model rotated to theta=90 degrees, driven at its base by the tunnel
     junction pressure and open to atmosphere at the top.  When air enters the tower,
     the vertical pipe is displayed as an axial gas/liquid volume-fraction field rather
@@ -34,22 +35,69 @@ import math
 import os
 import time
 from dataclasses import dataclass, field, replace
+from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
 
 from casea_coupled_gas_network import (
     CoupledGasParameters,
-    OpenIsothermalGasInventory,
     _mass_backed_gas_topology,
-    advance_lumped_pocket_vertical_network,
     advance_coupled_gas_network,
     junction_mouth_area,
 )
+from casea_face_aligned_t import face_aligned_t_indices
 from casea_horizontal_liquid_operator import (
-    decoupled_lambda_and_derivative,
     HorizontalLiquidParameters,
     pressure_potential_state,
+    pressure_potential_wave_state,
+)
+from casea_vertical_mouth_twochannel import (
+    DirectionalMouthLosses,
+    TwoChannelMouthResult,
+)
+from casea_vertical_mouth_twochannel_integration import (
+    HorizontalNodeTopology,
+    TwoChannelMouthCouplingPlan,
+    TwoLiquidMomentumBoundaryResidual,
+    apply_twochannel_horizontal_footprint,
+)
+from casea_distributed_tnode_inertance import (
+    DistributedTNodeGeometry,
+    measured_footprint_liquid_inventory,
+)
+from casea_tnode_mouth_phase_area import (
+    resolve_tnode_mouth_phase_areas,
+)
+from casea_dynamic_void_capacity import (
+    compute_dynamic_material_void_capacity,
+)
+from casea_recoupled_capacity_pressure import (
+    flux_inertance_from_characteristic,
+    flux_inertance_from_plug,
+    project_state_mouth_and_capacity_pressure,
+)
+from casea_vertical_bottom_riemann import (
+    resolve_bottom_mouth_riemann,
+    solve_coupled_gross_mouth_characteristics,
+)
+from casea_vertical_twostream_closures import (
+    advance_taylor_sweep_geometry,
+    atmospheric_top_liquid_outflow,
+    coaxial_core_film_geometry,
+)
+from casea_vertical_twostream_fv import (
+    DirectionalBoundaryFlux,
+    PhysicalGasInterphaseState,
+    VerticalTwoStreamLiquidProvenanceState,
+    VerticalTwoStreamBoundaries,
+    VerticalTwoStreamParameters,
+    VerticalTwoStreamState,
+    advance_vertical_two_stream_fv,
+    advance_vertical_two_stream_liquid_provenance,
+    conservative_liquid_provenance_topology_transfer,
+    implicit_physical_three_body_drag_exchange,
+    map_taylor_breakthrough_to_twostream,
 )
 
 HERE = Path(__file__).resolve().parent
@@ -122,6 +170,37 @@ class NetworkCase:
                                     # bubbly churn in the mouth.  Without it the tower
                                     # column rings undamped on the pocket gas spring
                                     # (~2 Hz, +-0.25 L of head) from arrival to the end.
+    vertical_taylor_core_area_fraction: float = 0.80
+                                    # Cross-section-averaged gas-core area used by
+                                    # the side-fed Taylor-bubble shock fit.  The
+                                    # remaining 20% is the resolved counter-current
+                                    # wall-film corridor; this is the frozen network
+                                    # closure, not a Case-A timing or height target.
+    vertical_taylor_return_efficiency: float = 1.0
+                                    # Fraction of the Taylor-core swept liquid that
+                                    # returns through the counter-current wall film.
+                                    # The complement remains in the connected upper
+                                    # liquid slug as resolved liquid entrainment.  A
+                                     # constant value preserves the conservative T
+                                     # balance and contains no event-time prescription.
+    vertical_ccfl_constant: float = 0.50
+                                    # Wallis counter-current-flow limitation
+                                    # constant for the open riser.  It acts only
+                                    # after material breakthrough and limits the
+                                    # downward liquid branch by the resolved
+                                    # upward-gas superficial velocity.
+    enable_vertical_twostream: bool = True
+                                    # Keep the in-development persistent
+                                    # two-stream riser available for dedicated
+                                    # studies.  Horizontal-front verification
+                                    # can retain the established conservative
+                                    # one-stream riser so the two changes are
+                                    # not conflated.
+    allow_horizontal_front_retreat: bool = True
+                                    # Physical default: the downstream material
+                                    # contact may reverse.  False is retained
+                                    # only as a diagnostic reproduction of the
+                                    # historical one-way front.
     valve_loss_coeff: float = 2.0   # butterfly-valve disc stays in the flow when open
                                     # (V&W2011 Fig.2): local K on the through-flow at
                                     # x=L_up damps the release piston mode physically
@@ -567,7 +646,14 @@ def _tpa_hllc_flux(area_l, discharge_l, area_r, discharge_r,
     return f1, f2
 
 
-def _tpa_muscl_faces(area, discharge, area_full, diameter):
+def _tpa_muscl_faces(
+    area,
+    discharge,
+    area_full,
+    diameter,
+    *,
+    first_order=False,
+):
     """Positivity-preserving, monotone MUSCL reconstruction.
 
     Use the standard minmod limiter (theta=1) for the liquid area and
@@ -585,12 +671,14 @@ def _tpa_muscl_faces(area, discharge, area_full, diameter):
     )
     free_surface_cap = 2.0 * math.sqrt(G * diameter)
     velocity_cap = np.where(
-        area < 0.995 * area_full, free_surface_cap, U_FLUX_MAX
+        area < 0.995 * area_full,
+        free_surface_cap,
+        25.0,
     )
     velocity = np.clip(velocity, -velocity_cap, velocity_cap)
     slope_a = np.zeros(n)
     slope_u = np.zeros(n)
-    if n > 2:
+    if n > 2 and not first_order:
         slope_a[1:-1] = _minmod3(
             area[1:-1] - area[:-2],
             0.5 * (area[2:] - area[:-2]),
@@ -609,10 +697,14 @@ def _tpa_muscl_faces(area, discharge, area_full, diameter):
     qr = np.empty(n + 1)
     al[1:-1] = np.maximum(area[:-1] + 0.5 * slope_a[:-1], 0.0)
     ar[1:-1] = np.maximum(area[1:] - 0.5 * slope_a[1:], 0.0)
-    ul = velocity[:-1] + 0.5 * slope_u[:-1]
-    ur = velocity[1:] - 0.5 * slope_u[1:]
-    ql[1:-1] = al[1:-1] * ul
-    qr[1:-1] = ar[1:-1] * ur
+    if first_order:
+        ql[1:-1] = discharge[:-1]
+        qr[1:-1] = discharge[1:]
+    else:
+        ul = velocity[:-1] + 0.5 * slope_u[:-1]
+        ur = velocity[1:] - 0.5 * slope_u[1:]
+        ql[1:-1] = al[1:-1] * ul
+        qr[1:-1] = ar[1:-1] * ur
 
     # Reflecting end walls.
     al[0] = area[0]; ar[0] = area[0]
@@ -632,156 +724,126 @@ def _decoupled_restoring_coefficient(
     diameter,
     cell_width,
 ):
-    """Companion-model stratified restoring coefficient, Eq. (A31).
+    """Circular-pipe shallow-water restoring coefficient ``g/T``.
 
-    The conserved tunnel gas arrays store cell mass and cell momentum, whereas
-    Eq. (A31) uses phase density and velocity.  This adapter performs only that
-    conversion; no fitted wave amplitude or propagation speed is imposed.
+    The gas conserved variables remain arguments for call-site compatibility,
+    but neither gas--liquid slip nor a KH term enters the Case-A liquid wave
+    speed.  Gas pressure is coupled separately through the pressure source.
     """
 
-    area_raw = np.asarray(area_l, dtype=float)
     area = np.clip(
-        area_raw,
+        np.asarray(area_l, dtype=float),
         1.0e-6 * area_full,
         0.995 * area_full,
-    )
-    discharge = np.asarray(discharge_l, dtype=float)
-    mass = np.maximum(np.asarray(gas_mass, dtype=float), 0.0)
-    momentum = np.asarray(gas_momentum, dtype=float)
-    raw_void = np.maximum(
-        area_full - np.clip(area_raw, 0.0, area_full), 0.0
-    )
-    area_g = np.maximum(raw_void, 1.0e-4 * area_full)
-    rho_atm = P_ATM / (R_GAS * T_GAS)
-    mass_consistent = _mass_backed_gas_topology(
-        raw_void,
-        mass,
-        full_area=area_full,
-        cell_width=cell_width,
-        rho_reference=rho_atm,
-        void_floor_fraction=1.0e-4,
-        active_void_fraction=5.0e-4,
-        topology_density_fraction=0.02,
-        resolved_density_fraction=0.50,
-    )
-    rho_g_raw = mass / np.maximum(area_g * cell_width, EPS)
-    rho_g = np.where(
-        mass_consistent,
-        np.clip(rho_g_raw, 0.2 * rho_atm, 12.0 * rho_atm),
-        rho_atm,
-    )
-    u_g_raw = np.where(
-        mass > 1.0e-14,
-        momentum / np.maximum(mass, EPS),
-        0.0,
-    )
-    u_l = np.clip(
-        discharge / np.maximum(area, EPS), -U_FLUX_MAX, U_FLUX_MAX
-    )
-    u_g = np.where(
-        mass_consistent,
-        np.clip(u_g_raw, -U_FLUX_MAX, U_FLUX_MAX),
-        u_l,
     )
     depth = diameter * _depth_frac(np.clip(area / area_full, 0.0, 1.0))
     top_width = 2.0 * np.sqrt(
         np.maximum(depth * (diameter - depth), 0.0)
     )
-    zeta = 1.0 / np.maximum(top_width, 1.0e-10 * diameter)
-    p_g = rho_g * R_GAS * T_GAS
-    h_g = (p_g - P_ATM) / (RHO_L * G)
-    coefficient = (
-        2.0 * G * h_g / area
-        + (RHO_L - rho_g) / RHO_L * G * zeta
-        - rho_g / RHO_L * (u_g - u_l) ** 2 / area_g
-    )
+    coefficient = G / np.maximum(top_width, 1.0e-10 * diameter)
     if not np.all(np.isfinite(coefficient)):
         raise FloatingPointError(
-            "non-finite Eq. (A31) coefficient in T-junction wave branch"
+            "non-finite shallow-water coefficient in T-junction branch"
         )
     return coefficient
 
 
-def _connected_stratified_potential_offsets(
-    area,
-    discharge,
-    gas_mass,
-    gas_momentum,
-    mass_supported,
-    params,
-):
-    """Return one pressure-potential gauge per connected gas component.
+@lru_cache(maxsize=16)
+def _horizontal_liquid_parameters_cached(
+    area_full: float,
+    diameter: float,
+    wave_speed: float,
+    cell_width: float,
+    tension_head: float,
+) -> HorizontalLiquidParameters:
+    """Reuse the immutable horizontal liquid closure across FV stages."""
 
-    ``Psi`` is defined up to a spatial constant inside one barotropic branch.
-    That constant must be common to the complete connected pocket; choosing it
-    independently from each cell's frozen gas mass creates an O(100 kPa)
-    numerical jump at the fitted gas/full-water interface.  Fix the component
-    gauge by matching its boundary liquid pressure potential to the adjacent
-    resolved elastic-liquid trace.  This is a traction-continuity condition,
-    not a fitted wave amplitude or a presentation filter.
+    return HorizontalLiquidParameters(
+        area_full=float(area_full),
+        diameter=float(diameter),
+        wave_speed=float(wave_speed),
+        cell_width=float(cell_width),
+        gravity=G,
+        rho_liquid=RHO_L,
+        gas_constant=R_GAS,
+        gas_temperature=T_GAS,
+        atmospheric_pressure=P_ATM,
+        tension_head=float(tension_head),
+    )
+
+
+def _connected_shallow_water_potential_offsets(
+    area,
+    free_surface_supported,
+    params,
+    *,
+    gas_mass=None,
+    cell_width=None,
+):
+    """Match each connected shallow-water component to elastic traction.
+
+    ``g*I1`` is defined up to a constant in the momentum balance.  A component
+    touching an elastic full-pipe state receives one constant gauge offset from
+    its boundary traction(s); an isolated all-free-surface component retains
+    the natural ``g*I1`` gauge.  The offset changes neither celerity nor wave
+    shape and contains no gas velocity or KH contribution.
     """
 
     area_a = np.asarray(area, dtype=float)
-    q_a = np.asarray(discharge, dtype=float)
-    mass_a = np.asarray(gas_mass, dtype=float)
-    momentum_a = np.asarray(gas_momentum, dtype=float)
-    support = np.asarray(mass_supported, dtype=bool)
-    if not (
-        area_a.shape == q_a.shape == mass_a.shape
-        == momentum_a.shape == support.shape
-    ):
-        raise ValueError("connected-potential fields must have equal shape")
+    support = np.asarray(free_surface_supported, dtype=bool)
+    if area_a.shape != support.shape:
+        raise ValueError("connected-potential area and topology must have equal shape")
     offsets = np.zeros_like(area_a)
     if not np.any(support):
         return offsets
 
+    mass = None
+    if gas_mass is not None:
+        mass = np.asarray(gas_mass, dtype=float)
+        if mass.shape != area_a.shape or not np.all(np.isfinite(mass)):
+            raise ValueError(
+                "connected-potential gas mass and area must be finite and equal"
+            )
+        if cell_width is None or float(cell_width) <= 0.0:
+            raise ValueError("positive cell width is required with gas mass")
     safe_area = np.maximum(area_a, 1.0e-9 * params.area_full)
-    raw_lambda = np.zeros_like(area_a)
-    lam, _ = decoupled_lambda_and_derivative(
-        safe_area[support],
-        q_a[support],
-        mass_a[support],
-        momentum_a[support],
-        params,
-    )
-    raw_lambda[support] = lam
-    raw_potential = 0.5 * raw_lambda * safe_area * safe_area
-
     for i0, i1 in _regions(support):
-        candidates = []
+        natural_indices = []
+        target_indices = []
         if i0 > 0 and not support[i0 - 1]:
-            target = pressure_potential_state(
-                max(float(area_a[i0 - 1]), 1.0e-9 * params.area_full),
-                float(q_a[i0 - 1]),
-                0.0,
-                0.0,
-                False,
-                params,
-            )
-            candidates.append(
-                float(target.potential) - float(raw_potential[i0])
-            )
+            target = i0 - 1
+            if mass is not None:
+                while target >= 0 and (
+                    support[target] or mass[target] > 1.0e-14
+                ):
+                    target -= 1
+            if target >= 0 and not support[target]:
+                natural_indices.append(i0)
+                target_indices.append(target)
         if i1 < area_a.size and not support[i1]:
-            target = pressure_potential_state(
-                max(float(area_a[i1]), 1.0e-9 * params.area_full),
-                float(q_a[i1]),
-                0.0,
-                0.0,
-                False,
+            target = i1
+            if mass is not None:
+                while target < area_a.size and (
+                    support[target] or mass[target] > 1.0e-14
+                ):
+                    target += 1
+            if target < area_a.size and not support[target]:
+                natural_indices.append(i1 - 1)
+                target_indices.append(target)
+        if natural_indices:
+            natural = pressure_potential_wave_state(
+                safe_area[np.asarray(natural_indices, dtype=int)],
+                np.ones(len(natural_indices), dtype=bool),
                 params,
-            )
-            candidates.append(
-                float(target.potential) - float(raw_potential[i1 - 1])
-            )
-        # A component touching only a physical open boundary has no adjacent
-        # liquid traction to set its gauge; the natural companion-model
-        # primitive is then 0.5*Lambda*A^2 (zero offset).
-        component_offset = (
-            math.fsum(candidates) / len(candidates)
-            if candidates
-            else 0.0
-        )
-        offsets[i0:i1] = component_offset
+            ).potential
+            target = pressure_potential_wave_state(
+                safe_area[np.asarray(target_indices, dtype=int)],
+                np.zeros(len(target_indices), dtype=bool),
+                params,
+            ).potential
+            offsets[i0:i1] = math.fsum(
+                float(value) for value in np.asarray(target - natural)
+            ) / len(natural_indices)
     return offsets
 
 
@@ -796,6 +858,9 @@ def _decoupled_liquid_rusanov_flux(
     wave_speed,
     cell_width,
     tension_head=TENSION_HEAD,
+    minimum_stratified_void_fraction=5.0e-4,
+    first_order=False,
+    force_hll=False,
 ):
     """Topology-aware MUSCL-HLLC liquid flux.
 
@@ -805,21 +870,21 @@ def _decoupled_liquid_rusanov_flux(
     still liquid-full pipe and follows the water-hammer continuation through
     ``A=Af``.  Treating every ``A<Af`` state as a free surface nucleates gas in
     a rarefaction; using an unshifted elastic flux creates an O(a^2 Af) jump at
-    the moving interface.  On a genuine stratified cell the liquid momentum
-    flux is the companion model's
+    the moving interface.  On a genuine free-surface cell the liquid momentum
+    flux is the circular-pipe Saint--Venant flux
 
-    ``Q_l**2/A_l + 0.5*Lambda_d*A_l**2``.
+    ``Q_l**2/A_l + g*I1(A_l)``.
 
-    Thus gas pressure, hydrostatic--buoyancy restoration, and slip enter the
-    same conservative flux and wave speed.  Applying only ``A_l dp_g/dx`` as a
-    separate source loses the finite gas-pressure restoring celerity whenever
-    the connected pocket pressure is nearly uniform; in Case A that error lets
-    the post-arrival holdup collapse into a deep trough immediately upstream of
-    the side tee.
+    The KH/IKH slip term is absent.  Gas pressure remains conservative in the
+    gas graph and acts on the liquid once through the regular pressure source.
     """
 
     al, ql, ar, qr = _tpa_muscl_faces(
-        area, discharge, area_full, diameter
+        area,
+        discharge,
+        area_full,
+        diameter,
+        first_order=first_order,
     )
     # A sub-full liquid area is a genuine free-surface/two-fluid state only
     # when resolved gas mass backs its void.  Otherwise it is the elastic
@@ -838,54 +903,56 @@ def _decoupled_liquid_rusanov_flux(
         topology_density_fraction=0.02,
         resolved_density_fraction=0.50,
     )
+    # A mass-backed but sub-capillary crown sliver is not a resolved
+    # free-surface control volume.  Below the capillary opening the
+    # section belongs to the elastic/full-pipe branch; gas mass remains on the
+    # conservative gas graph and is transported to an open neighbouring void.
+    # The production threshold is derived from capillary length and circular
+    # geometry by CoupledGasParameters, rather than fitted to this transient.
+    gas_supported &= (
+        void_cell
+        >= float(minimum_stratified_void_fraction) * float(area_full)
+    )
     support_g = np.concatenate(
         ([gas_supported[0]], gas_supported, [gas_supported[-1]])
     )
     pressurised_l = ~support_g[:-1]
     pressurised_r = ~support_g[1:]
+    mixed_topology = pressurised_l ^ pressurised_r
 
-    # The pressure potential and its characteristic speed must come from the
-    # same Jacobian.  The earlier block used ``sqrt(Lambda*A)`` while the flux
-    # contained ``0.5*Lambda(A)*A**2``; omitting ``dLambda/dA`` under-estimated
-    # the spectral radius by as much as an order of magnitude and made the
-    # MUSCL spatial operator unstable under Forward Euler.  Reconstruct the
-    # caller-owned gas conserved variables piecewise constantly at each face,
-    # then evaluate the complete tangent modulus on both liquid traces.
-    mass_cell = np.asarray(gas_mass, dtype=float)
-    momentum_cell = np.asarray(gas_momentum, dtype=float)
-    mass_ghost = np.concatenate(
-        ([mass_cell[0]], mass_cell, [mass_cell[-1]])
+    # A slope reconstructed from one pressure law must not cross into the
+    # other pressure law.  Use the standard
+    # piecewise-constant, well-balanced trace only on mixed-topology faces;
+    # second-order MUSCL reconstruction remains active inside each branch.
+    area_ghost = np.concatenate(([area_cell[0]], area_cell, [area_cell[-1]]))
+    discharge_cell = np.asarray(discharge, dtype=float)
+    discharge_ghost = np.concatenate(
+        ([-discharge_cell[0]], discharge_cell, [-discharge_cell[-1]])
     )
-    momentum_ghost = np.concatenate(
-        ([momentum_cell[0]], momentum_cell, [momentum_cell[-1]])
-    )
-    mass_l = mass_ghost[:-1]
-    mass_r = mass_ghost[1:]
-    momentum_l = momentum_ghost[:-1]
-    momentum_r = momentum_ghost[1:]
+    al[mixed_topology] = area_ghost[:-1][mixed_topology]
+    ar[mixed_topology] = area_ghost[1:][mixed_topology]
+    ql[mixed_topology] = discharge_ghost[:-1][mixed_topology]
+    qr[mixed_topology] = discharge_ghost[1:][mixed_topology]
 
+    # The pressure potential and characteristic speed are evaluated together:
+    # exact ``g*I1`` with ``sqrt(g*A/T)`` on a free surface, and the elastic
+    # water-hammer continuation in gas-free full-pipe cells.  Gas conserved
+    # variables select the cell topology and component gauge; they do not need
+    # a second face reconstruction in the decoupled liquid pressure law.
     dry = 1.0e-9 * area_full
     al_eval = np.maximum(al, dry)
     ar_eval = np.maximum(ar, dry)
     ql_eval = np.where(al > dry, ql, 0.0)
     qr_eval = np.where(ar > dry, qr, 0.0)
-    liquid_params = HorizontalLiquidParameters(
-        area_full=float(area_full),
-        diameter=float(diameter),
-        wave_speed=float(wave_speed),
-        cell_width=float(cell_width),
-        gravity=G,
-        rho_liquid=RHO_L,
-        gas_constant=R_GAS,
-        gas_temperature=T_GAS,
-        atmospheric_pressure=P_ATM,
-        tension_head=float(tension_head),
+    liquid_params = _horizontal_liquid_parameters_cached(
+        float(area_full),
+        float(diameter),
+        float(wave_speed),
+        float(cell_width),
+        float(tension_head),
     )
-    component_offset_cell = _connected_stratified_potential_offsets(
+    component_offset_cell = _connected_shallow_water_potential_offsets(
         area_cell,
-        np.asarray(discharge, dtype=float),
-        mass_cell,
-        momentum_cell,
         gas_supported,
         liquid_params,
     )
@@ -896,20 +963,14 @@ def _decoupled_liquid_rusanov_flux(
             [component_offset_cell[-1]],
         )
     )
-    pressure_l = pressure_potential_state(
+    pressure_l = pressure_potential_wave_state(
         al_eval,
-        ql_eval,
-        mass_l,
-        momentum_l,
         ~pressurised_l,
         liquid_params,
         stratified_potential_offset=component_offset_ghost[:-1],
     )
-    pressure_r = pressure_potential_state(
+    pressure_r = pressure_potential_wave_state(
         ar_eval,
-        qr_eval,
-        mass_r,
-        momentum_r,
         ~pressurised_r,
         liquid_params,
         stratified_potential_offset=component_offset_ghost[1:],
@@ -968,13 +1029,45 @@ def _decoupled_liquid_rusanov_flux(
         f2l,
         np.where(sm >= 0.0, f2star_l, np.where(sr > 0.0, f2star_r, f2r)),
     )
-    # The published stratified block uses scalar Rusanov dissipation with the
-    # Lambda_d characteristic speed.  Retain HLLC only on an elastic or mixed-
+    # HLLC loses its star state when the contact speed coalesces with an outer
+    # wave.  Dividing by ``S_R-S_M`` (or ``S_L-S_M``) then produces an
+    # arbitrarily large star area and a non-physical liquid impulse.  A
+    # positivity-preserving HLL fallback on only those degenerate faces is the
+    # standard entropy-stable repair; regular contacts still use HLLC and keep
+    # its low diffusion.
+    wave_span = np.maximum(sr - sl, 1.0e-12)
+    star_scale = np.maximum.reduce((al, ar, np.full_like(al, dry)))
+    degenerate_star = (
+        (np.abs(sl - sm) <= 1.0e-8 * wave_span)
+        | (np.abs(sr - sm) <= 1.0e-8 * wave_span)
+        | (~np.isfinite(astar_l))
+        | (~np.isfinite(astar_r))
+        | (astar_l > 10.0 * star_scale)
+        | (astar_r > 10.0 * star_scale)
+    )
+    hll_denominator = np.where(
+        wave_span > 1.0e-14, wave_span, 1.0e-14
+    )
+    f1_hll_middle = (
+        sr * f1l - sl * f1r + sl * sr * (ar - al)
+    ) / hll_denominator
+    f2_hll_middle = (
+        sr * f2l - sl * f2r + sl * sr * (qr - ql)
+    ) / hll_denominator
+    f1_hll = np.where(sl >= 0.0, f1l, np.where(sr <= 0.0, f1r, f1_hll_middle))
+    f2_hll = np.where(sl >= 0.0, f2l, np.where(sr <= 0.0, f2r, f2_hll_middle))
+    # Degeneracy is a property of the HLLC star construction, not of the
+    # topology label.  Apply the positivity-preserving HLL fallback on every
+    # degenerate HLLC face.  Fully stratified faces are overwritten by the
+    # companion model's Rusanov flux below, so this changes only an
+    # inadmissible elastic/mixed HLLC state and imposes no velocity cap.
+    fallback = degenerate_star | bool(force_hll)
+    f1 = np.where(fallback, f1_hll, f1)
+    f2 = np.where(fallback, f2_hll, f2)
+    # The free-surface shallow-water block uses scalar Rusanov dissipation with
+    # its gravity-wave characteristic speed.  Retain HLLC only on an elastic or mixed-
     # topology face, where its contact resolution is needed by the fitted
-    # pressurised front.  Using HLLC inside the complete stratified pocket
-    # removes the model's prescribed block dissipation and lets the strong
-    # gas-pressure restoring wave overshoot into an elastically overfilled T
-    # cell.
+    # pressurised front.
     both_stratified = (~pressurised_l) & (~pressurised_r)
     rusanov_speed = np.maximum(np.abs(ul) + c_l, np.abs(ur) + c_r)
     f1_rusanov = 0.5 * (f1l + f1r) - 0.5 * rusanov_speed * (ar - al)
@@ -985,6 +1078,330 @@ def _decoupled_liquid_rusanov_flux(
     f1[both_dry] = 0.0
     f2[both_dry] = 0.0
     return f1, f2, al, ar
+
+
+def _limit_antidiffusive_liquid_flux(
+    area,
+    discharge,
+    high_volume_flux,
+    high_momentum_flux,
+    low_volume_flux,
+    low_momentum_flux,
+    *,
+    cell_width,
+    dt,
+    momentum_limiter_face_mask=None,
+):
+    """Convex-limit a high-order flux about an invariant-domain HLL update.
+
+    The low-order update supplies the monotone area state.  A Zalesak limiter
+    then admits as much of the paired high-order mass/momentum correction as is
+    compatible with the local area envelope.  One face coefficient multiplies
+    both equations, preserving conservation and avoiding a velocity clip.
+    """
+
+    a = np.asarray(area, dtype=float)
+    q = np.asarray(discharge, dtype=float)
+    fh1 = np.asarray(high_volume_flux, dtype=float)
+    fh2 = np.asarray(high_momentum_flux, dtype=float)
+    fl1 = np.asarray(low_volume_flux, dtype=float)
+    fl2 = np.asarray(low_momentum_flux, dtype=float)
+    if (
+        a.ndim != 1
+        or q.shape != a.shape
+        or fh1.shape != (a.size + 1,)
+        or fh2.shape != fh1.shape
+        or fl1.shape != fh1.shape
+        or fl2.shape != fh1.shape
+    ):
+        raise ValueError("FCT liquid states and face fluxes have incompatible shapes")
+    lam = float(dt) / float(cell_width)
+    low_area = a - lam * (fl1[1:] - fl1[:-1])
+
+    lower = a.copy()
+    upper = a.copy()
+    if a.size > 1:
+        lower[1:] = np.minimum(lower[1:], a[:-1])
+        lower[:-1] = np.minimum(lower[:-1], a[1:])
+        upper[1:] = np.maximum(upper[1:], a[:-1])
+        upper[:-1] = np.maximum(upper[:-1], a[1:])
+    lower = np.minimum(lower, low_area)
+    upper = np.maximum(upper, low_area)
+
+    anti = fh1 - fl1
+    from_left = lam * anti[:-1]
+    from_right = -lam * anti[1:]
+    positive = np.maximum(from_left, 0.0) + np.maximum(from_right, 0.0)
+    negative = np.minimum(from_left, 0.0) + np.minimum(from_right, 0.0)
+    room_up = np.maximum(upper - low_area, 0.0)
+    room_down = np.maximum(low_area - lower, 0.0)
+    r_up = np.ones_like(a)
+    r_down = np.ones_like(a)
+    mask_up = positive > 1.0e-30
+    mask_down = negative < -1.0e-30
+    r_up[mask_up] = np.minimum(1.0, room_up[mask_up] / positive[mask_up])
+    r_down[mask_down] = np.minimum(
+        1.0,
+        room_down[mask_down] / (-negative[mask_down]),
+    )
+
+    theta = np.ones_like(fh1)
+    for face in range(1, a.size):
+        if anti[face] >= 0.0:
+            theta[face] = min(r_down[face - 1], r_up[face])
+        else:
+            theta[face] = min(r_up[face - 1], r_down[face])
+
+    # The area bound alone cannot stop a pressure-law switch from creating an
+    # alternating momentum mode at nearly unchanged area.  Apply the identical
+    # convex-limiting construction to the conserved discharge, then use the
+    # more restrictive face factor for the coupled (A,Q) correction.
+    low_q = q - lam * (fl2[1:] - fl2[:-1])
+    q_lower = q.copy()
+    q_upper = q.copy()
+    if q.size > 1:
+        q_lower[1:] = np.minimum(q_lower[1:], q[:-1])
+        q_lower[:-1] = np.minimum(q_lower[:-1], q[1:])
+        q_upper[1:] = np.maximum(q_upper[1:], q[:-1])
+        q_upper[:-1] = np.maximum(q_upper[:-1], q[1:])
+    q_lower = np.minimum(q_lower, low_q)
+    q_upper = np.maximum(q_upper, low_q)
+    anti_q = fh2 - fl2
+    q_from_left = lam * anti_q[:-1]
+    q_from_right = -lam * anti_q[1:]
+    q_positive = np.maximum(q_from_left, 0.0) + np.maximum(q_from_right, 0.0)
+    q_negative = np.minimum(q_from_left, 0.0) + np.minimum(q_from_right, 0.0)
+    q_r_up = np.ones_like(q)
+    q_r_down = np.ones_like(q)
+    q_mask_up = q_positive > 1.0e-30
+    q_mask_down = q_negative < -1.0e-30
+    q_r_up[q_mask_up] = np.minimum(
+        1.0,
+        (q_upper[q_mask_up] - low_q[q_mask_up]) / q_positive[q_mask_up],
+    )
+    q_r_down[q_mask_down] = np.minimum(
+        1.0,
+        (low_q[q_mask_down] - q_lower[q_mask_down])
+        / (-q_negative[q_mask_down]),
+    )
+    if momentum_limiter_face_mask is None:
+        momentum_mask = np.ones_like(theta, dtype=bool)
+    else:
+        momentum_mask = np.asarray(momentum_limiter_face_mask, dtype=bool)
+        if momentum_mask.shape != theta.shape:
+            raise ValueError("momentum FCT face mask has incompatible shape")
+    for face in range(1, q.size):
+        if not momentum_mask[face]:
+            continue
+        if anti_q[face] >= 0.0:
+            theta_q = min(q_r_down[face - 1], q_r_up[face])
+        else:
+            theta_q = min(q_r_up[face - 1], q_r_down[face])
+        theta[face] = min(theta[face], theta_q)
+    return (
+        fl1 + theta * (fh1 - fl1),
+        fl2 + theta * (fh2 - fl2),
+        theta,
+    )
+
+
+def _advance_horizontal_liquid_hyperbolic_ssprk2(
+    area,
+    discharge,
+    gas_mass,
+    gas_momentum,
+    *,
+    area_full: float,
+    diameter: float,
+    wave_speed: float,
+    cell_width: float,
+    dt: float,
+    valve_face: int,
+    valve_transmissivity: float,
+    junction_wave_active: bool,
+    rho_reference: float,
+    coupled_gas_parameters: CoupledGasParameters,
+    phase_volume_cfl: float,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Advance the horizontal hyperbolic liquid operator with SSP-RK2.
+
+    The MUSCL spatial reconstruction is second order and must not be advanced
+    by a single Forward-Euler stage after the shock-fit hand-off.  This helper
+    recomputes the Riemann fluxes and invariant-domain limiters in both SSP
+    stages.  The returned face flux is the time-integrated SSP average, so the
+    T-junction diagnostics see the same conservative update as the cells.
+    Gas conserved variables are frozen only over this liquid operator split;
+    the coupled gas graph is advanced immediately afterwards.
+    """
+
+    area0 = np.asarray(area, dtype=float)
+    q0 = np.asarray(discharge, dtype=float)
+    if area0.shape != q0.shape or area0.ndim != 1:
+        raise ValueError("horizontal SSP states must be equal one-dimensional arrays")
+    if dt <= 0.0 or cell_width <= 0.0:
+        raise ValueError("positive horizontal SSP timestep and spacing required")
+
+    def limited_flux(stage_area, stage_q):
+        def candidate(*, first_order, force_hll):
+            f1, f2, _, _ = _decoupled_liquid_rusanov_flux(
+                stage_area,
+                stage_q,
+                gas_mass,
+                gas_momentum,
+                area_full=area_full,
+                diameter=diameter,
+                wave_speed=wave_speed,
+                cell_width=cell_width,
+                minimum_stratified_void_fraction=(
+                    coupled_gas_parameters.horizontal_capillary_void_fraction
+                ),
+                first_order=first_order,
+                force_hll=force_hll,
+            )
+            f1[0] = 0.0
+            f1[-1] = 0.0
+            if valve_transmissivity < 1.0:
+                f1[valve_face] *= valve_transmissivity
+                f2[valve_face] *= valve_transmissivity
+            f1, f2 = _limit_liquid_donor_flux(
+                stage_area,
+                f1,
+                f2,
+                cell_width=cell_width,
+                dt=dt,
+                retained_fraction=0.10,
+            )
+            if junction_wave_active:
+                f1, f2 = _limit_gas_void_closure_flux(
+                    stage_area,
+                    gas_mass,
+                    f1,
+                    f2,
+                    full_area=area_full,
+                    cell_width=cell_width,
+                    dt=dt,
+                    rho_reference=rho_reference,
+                    density_fraction=(
+                        coupled_gas_parameters.topology_density_fraction
+                    ),
+                    density_ceiling=(
+                        coupled_gas_parameters.resolved_density_ceiling
+                    ),
+                    void_floor_fraction=(
+                        coupled_gas_parameters.void_floor_fraction
+                    ),
+                    active_void_fraction=(
+                        coupled_gas_parameters.active_void_fraction
+                    ),
+                    closure_fraction=phase_volume_cfl,
+                )
+            return f1, f2
+
+        high1, high2 = candidate(first_order=False, force_hll=False)
+        low1, low2 = candidate(first_order=True, force_hll=True)
+        stage_velocity = np.divide(
+            stage_q,
+            np.maximum(stage_area, 1.0e-9 * area_full),
+        )
+        high_area_trial = stage_area - dt / cell_width * (
+            high1[1:] - high1[:-1]
+        )
+        high_q_trial = stage_q - dt / cell_width * (
+            high2[1:] - high2[:-1]
+        )
+        high_velocity_trial = np.divide(
+            high_q_trial,
+            np.maximum(high_area_trial, 1.0e-9 * area_full),
+        )
+        bore_speed = 2.0 * math.sqrt(G * diameter)
+        unresolved_cell = (
+            (np.abs(stage_velocity) > bore_speed)
+            | (np.abs(high_velocity_trial) > bore_speed)
+        )
+        momentum_face_mask = np.zeros(stage_area.size + 1, dtype=bool)
+        momentum_face_mask[:-1] |= unresolved_cell
+        momentum_face_mask[1:] |= unresolved_cell
+        # Include one adjacent face so the low-order momentum flux can remove,
+        # rather than merely confine, a newly detected two-cell grid mode.
+        momentum_face_mask[:-1] |= momentum_face_mask[1:]
+        momentum_face_mask[1:] |= momentum_face_mask[:-1]
+        f1, f2, _ = _limit_antidiffusive_liquid_flux(
+            stage_area,
+            stage_q,
+            high1,
+            high2,
+            low1,
+            low2,
+            cell_width=cell_width,
+            dt=dt,
+            momentum_limiter_face_mask=momentum_face_mask,
+        )
+        return f1, f2
+
+    f1_0, f2_0 = limited_flux(area0, q0)
+    area1 = area0 - dt / cell_width * (f1_0[1:] - f1_0[:-1])
+    q1 = q0 - dt / cell_width * (f2_0[1:] - f2_0[:-1])
+    if np.any(area1 < -1.0e-12) or not (
+        np.all(np.isfinite(area1)) and np.all(np.isfinite(q1))
+    ):
+        raise FloatingPointError("invalid first SSP-RK2 horizontal liquid stage")
+    area1 = np.maximum(area1, 0.0)
+
+    f1_1, f2_1 = limited_flux(area1, q1)
+    area2 = 0.5 * area0 + 0.5 * (
+        area1 - dt / cell_width * (f1_1[1:] - f1_1[:-1])
+    )
+    q2 = 0.5 * q0 + 0.5 * (
+        q1 - dt / cell_width * (f2_1[1:] - f2_1[:-1])
+    )
+    if np.any(area2 < -1.0e-12) or not (
+        np.all(np.isfinite(area2)) and np.all(np.isfinite(q2))
+    ):
+        raise FloatingPointError("invalid completed SSP-RK2 horizontal liquid stage")
+    area2 = np.maximum(area2, 0.0)
+    return area2, q2, 0.5 * (f1_0 + f1_1), 0.5 * (f2_0 + f2_1)
+
+
+def _branch_consistent_external_pressure_gradient(
+    pressure,
+    stratified_supported,
+    *,
+    cell_width: float,
+):
+    """Differentiate only the residual pressure inside one TPA branch.
+
+    The conservative liquid flux already resolves the traction jump at a
+    stratified/elastic material face.  ``pressure`` contains only the
+    residual source left after that conservative pressure law is subtracted.
+    Centred differencing across a change of branch therefore applies the
+    material-face traction a second time and launches a grid-scale impulse.
+
+    This routine writes the centred derivative as the average of its two face
+    differences and sets a face difference to zero only where the governing
+    pressure branch changes.  Ordinary gradients inside either branch are
+    unchanged; closed end faces remain zero-gradient.  It is a well-balanced
+    source discretisation, not a velocity or wave-amplitude limiter.
+    """
+
+    values = np.asarray(pressure, dtype=float)
+    topology = np.asarray(stratified_supported, dtype=bool)
+    if values.ndim != 1 or topology.shape != values.shape:
+        raise ValueError(
+            "pressure and topology must be equal one-dimensional arrays"
+        )
+    if cell_width <= 0.0:
+        raise ValueError("positive cell width required")
+    if not np.all(np.isfinite(values)):
+        raise ValueError("external pressure must be finite")
+
+    face_jump = np.zeros(values.size + 1, dtype=float)
+    same_branch = topology[:-1] == topology[1:]
+    face_jump[1:-1] = np.where(
+        same_branch,
+        values[1:] - values[:-1],
+        0.0,
+    )
+    return (face_jump[:-1] + face_jump[1:]) / (2.0 * cell_width)
 
 
 def _liquid_surface_height(z, dz, Al, A, threshold=0.08):
@@ -998,6 +1415,50 @@ def _column_material_height(Al, alpha_g, A, dz, initial_volume_offset=0.0):
     occupied = np.clip(Al / A + alpha_g, 0.0, 1.0)
     volume = float(np.sum(occupied) * A * dz) - initial_volume_offset
     return float(max(volume / A, 0.0))
+
+
+def _bulk_material_reaches_riser_outlet(
+    liquid_area,
+    material_gas_fraction,
+    *,
+    full_area: float,
+    cell_width: float,
+    riser_height: float,
+    initial_volume_offset: float = 0.0,
+) -> bool:
+    """Return whether the bulk material free surface has reached the lip.
+
+    A cell-centred phase solver can advect a very small liquid remnant into the
+    top cell while the conserved liquid--gas column still ends far below the
+    outlet.  Treating that remnant as an open-water donor ejects liquid through
+    the boundary before the physical free surface reaches the lip.  The gas
+    boundary remains independently open to atmosphere; this predicate gates
+    only *liquid* outflow.
+
+    The criterion is geometric and conservative: the liquid area plus the
+    tunnel-origin material-gas volume reconstructs the bulk occupied height.
+    No clock, case label, observed event time, or comparison-field value enters
+    the decision.
+    """
+
+    area = np.asarray(liquid_area, dtype=float)
+    gas = np.asarray(material_gas_fraction, dtype=float)
+    if area.shape != gas.shape or area.ndim != 1:
+        raise ValueError("riser liquid and material-gas arrays must match")
+    if full_area <= 0.0 or cell_width <= 0.0 or riser_height <= 0.0:
+        raise ValueError("positive riser geometry required")
+    material_height = _column_material_height(
+        area,
+        gas,
+        full_area,
+        cell_width,
+        initial_volume_offset,
+    )
+    tolerance = max(
+        128.0 * np.finfo(float).eps * float(riser_height),
+        1.0e-12,
+    )
+    return bool(material_height >= float(riser_height) - tolerance)
 
 
 def _vw_laminar_film_closure(
@@ -1165,6 +1626,46 @@ def _mass_supported_vertical_gas_mouth(
     return min(void, float(maximum_gas_area_fraction) * float(full_area))
 
 
+def _vertical_two_phase_mouth_pressure(
+    *,
+    liquid_trace_pressure: float,
+    connected_gas_pressure: float,
+    gas_mouth_area: float,
+    full_area: float,
+) -> float:
+    """Return the single normal-stress trace at the vertical T mouth.
+
+    Before gas opens the mouth, the lower liquid characteristic supplies the
+    pressure at ``z=0``.  Once a mass-supported gas aperture is present, the
+    liquid streams and gas share one resolved interface normal stress, namely
+    the EOS pressure of the gas component connected through the T.  Continuing
+    to use the legacy liquid-column trace in that topology creates a pressure
+    jump at one and the same geometric face.
+
+    The returned value is consumed by both the finite T-node inertance (whose
+    pressure segment ends at ``z=0``) and the vertical FV operator (whose first
+    segment starts at ``z=0``).  Sharing one scalar therefore joins two
+    adjacent pressure-work segments; it does not apply either segment twice.
+    """
+
+    p_liquid = float(liquid_trace_pressure)
+    p_gas = float(connected_gas_pressure)
+    area_gas = float(gas_mouth_area)
+    area_total = float(full_area)
+    if not all(math.isfinite(value) for value in (p_liquid, p_gas, area_gas, area_total)):
+        raise ValueError("vertical mouth pressure inputs must be finite")
+    if p_liquid <= 0.0 or area_total <= 0.0:
+        raise ValueError("vertical liquid pressure and full area must be positive")
+    tolerance = 512.0 * math.ulp(max(area_total, 1.0))
+    if area_gas < -tolerance or area_gas > area_total + tolerance:
+        raise ValueError("vertical gas-mouth area lies outside the riser bore")
+    if area_gas > tolerance:
+        if p_gas <= 0.0:
+            raise ValueError("an open gas mouth requires positive connected pressure")
+        return p_gas
+    return p_liquid
+
+
 def _regularize_near_dry_momentum(
     area,
     discharge,
@@ -1220,11 +1721,19 @@ def _riser_liquid_friction_rate(
     film = np.asarray(annular_film_mask, dtype=bool)
     if a.shape != q.shape or a.shape != film.shape or a.ndim != 1:
         raise ValueError("riser friction arrays must have equal one-dimensional shape")
+    thickness = np.asarray(film_thickness, dtype=float)
+    if thickness.ndim == 0:
+        thickness = np.full_like(a, float(thickness))
+    elif thickness.shape != a.shape:
+        raise ValueError(
+            "film thickness must be scalar or match the riser state"
+        )
     if (
         full_area <= 0.0
         or diameter <= 0.0
-        or film_thickness <= 0.0
         or kinematic_viscosity <= 0.0
+        or np.any(~np.isfinite(thickness))
+        or np.any(thickness[film] <= 0.0)
     ):
         raise ValueError("positive riser friction geometry and viscosity required")
     velocity = np.divide(
@@ -1237,13 +1746,15 @@ def _riser_liquid_friction_rate(
         32.0 * kinematic_viscosity / (diameter * diameter)
         + 0.025 / (2.0 * diameter) * np.abs(velocity)
     )
-    film_hydraulic_diameter = 2.0 * film_thickness
+    film_hydraulic_diameter = np.maximum(
+        2.0 * thickness,
+        1.0e-12 * diameter,
+    )
     reynolds = (
         np.abs(velocity) * film_hydraulic_diameter / kinematic_viscosity
     )
-    laminar_rate = np.full_like(
-        velocity,
-        32.0 * kinematic_viscosity / (film_hydraulic_diameter**2),
+    laminar_rate = (
+        32.0 * kinematic_viscosity / (film_hydraulic_diameter**2)
     )
     turbulent_factor = 0.3164 / np.maximum(reynolds, 1.0) ** 0.25
     turbulent_rate = (
@@ -1255,6 +1766,136 @@ def _riser_liquid_friction_rate(
     blend = blend * blend * (3.0 - 2.0 * blend)
     film_rate = (1.0 - blend) * laminar_rate + blend * turbulent_rate
     return np.where(film, film_rate, bulk_rate)
+
+
+def _top_connected_atmospheric_gas_mask(
+    gas_area,
+    tracer_mass,
+    *,
+    cell_length: float,
+    reference_density: float,
+    dry_area_tolerance: float,
+    tracer_density_fraction: float = 0.02,
+) -> np.ndarray:
+    """Identify the pure ambient headspace connected to the open riser lip.
+
+    The tower initially contains an atmospheric gas column above its free
+    surface.  It is an open reservoir, not a sealed cell inventory.  A
+    Taylor-core parcel injected from the tunnel is distinguished by the
+    conservative gas tracer; scanning downward from the lip stops at either a
+    liquid seal or the first material-gas cell.  Consequently this mask cannot
+    depressurise a confined tunnel-origin pocket.
+    """
+
+    area = np.asarray(gas_area, dtype=float)
+    tracer = np.maximum(np.asarray(tracer_mass, dtype=float), 0.0)
+    if area.shape != tracer.shape or area.ndim != 1:
+        raise ValueError("gas area and tracer mass must be equal 1D arrays")
+    if (
+        cell_length <= 0.0
+        or reference_density <= 0.0
+        or dry_area_tolerance < 0.0
+        or not 0.0 <= tracer_density_fraction < 1.0
+    ):
+        raise ValueError("invalid open-headspace geometry or density scale")
+
+    mask = np.zeros(area.size, dtype=bool)
+    for index in range(area.size - 1, -1, -1):
+        local_area = max(float(area[index]), 0.0)
+        if local_area <= dry_area_tolerance:
+            break
+        tracer_threshold = (
+            tracer_density_fraction
+            * reference_density
+            * local_area
+            * cell_length
+        )
+        if float(tracer[index]) > tracer_threshold:
+            break
+        mask[index] = True
+    return mask
+
+
+def _riser_material_gas_mask(
+    gas_area,
+    tracer_mass,
+    *,
+    full_area: float,
+    cell_length: float,
+    reference_density: float,
+    void_floor_fraction: float,
+    active_void_fraction: float,
+    topology_density_fraction: float,
+    resolved_density_fraction: float,
+) -> np.ndarray:
+    """Return cells whose void is backed by tunnel-origin material gas.
+
+    Total riser gas mass includes the initially atmospheric headspace and the
+    small positivity inventory assigned to nearly full cells.  It therefore
+    cannot by itself select an EOS pressure or an interphase drag interface.
+    The conservative tunnel-gas tracer supplies the missing material topology,
+    while the ordinary active-void threshold rejects sub-grid crown slivers.
+    """
+
+    return _mass_backed_gas_topology(
+        np.maximum(np.asarray(gas_area, dtype=float), 0.0),
+        np.maximum(np.asarray(tracer_mass, dtype=float), 0.0),
+        full_area=full_area,
+        cell_width=cell_length,
+        rho_reference=reference_density,
+        void_floor_fraction=void_floor_fraction,
+        active_void_fraction=active_void_fraction,
+        topology_density_fraction=topology_density_fraction,
+        resolved_density_fraction=resolved_density_fraction,
+    )
+
+
+def _equilibrate_open_riser_headspace(
+    total_mass,
+    gas_momentum,
+    tracer_mass,
+    gas_area,
+    *,
+    cell_length: float,
+    reference_density: float,
+    dry_area_tolerance: float,
+) -> tuple[np.ndarray, np.ndarray, float, np.ndarray]:
+    """Keep the tracer-free, top-connected riser gas at atmosphere.
+
+    A change of free-surface-cell void volume exchanges ambient gas through the
+    open lip on an acoustic time scale.  The projection removes or admits that
+    *ambient* mass at the local gas velocity and returns the signed outward mass
+    for the global atmospheric ledger.  Material-gas tracer is never changed.
+    """
+
+    mass = np.maximum(np.asarray(total_mass, dtype=float), 0.0).copy()
+    momentum = np.asarray(gas_momentum, dtype=float).copy()
+    tracer = np.maximum(np.asarray(tracer_mass, dtype=float), 0.0)
+    area = np.maximum(np.asarray(gas_area, dtype=float), 0.0)
+    if not (mass.shape == momentum.shape == tracer.shape == area.shape):
+        raise ValueError("open-headspace gas arrays must have equal shape")
+    mask = _top_connected_atmospheric_gas_mask(
+        area,
+        tracer,
+        cell_length=cell_length,
+        reference_density=reference_density,
+        dry_area_tolerance=dry_area_tolerance,
+    )
+    old_mass = mass.copy()
+    target_mass = np.maximum(
+        reference_density * area * cell_length,
+        tracer,
+    )
+    velocity = np.divide(
+        momentum,
+        old_mass,
+        out=np.zeros_like(momentum),
+        where=old_mass > 1.0e-14,
+    )
+    mass[mask] = target_mass[mask]
+    momentum[mask] = target_mass[mask] * velocity[mask]
+    outward_exchange = float(np.sum(old_mass[mask] - mass[mask]))
+    return mass, momentum, outward_exchange, mask
 
 
 def _implicit_smagorinsky_momentum_diffusion(
@@ -1306,7 +1947,21 @@ def _implicit_smagorinsky_momentum_diffusion(
     velocity = q / a_eff
     wet_face = (a[:-1] > a_eps) & (a[1:] > a_eps)
     gradient = (velocity[1:] - velocity[:-1]) / spacing
-    nu_face = molecular_viscosity + (coefficient * diameter) ** 2 * np.abs(gradient)
+    velocity_jump = np.abs(velocity[1:] - velocity[:-1])
+    unresolved_jump = np.maximum(
+        velocity_jump - 2.0 * math.sqrt(G * diameter),
+        0.0,
+    )
+    # A topology-pressure impulse first appears as a two-cell velocity jump.
+    # Add the conservative local-Lax--Friedrichs viscosity needed to resolve
+    # that jump on this mesh.  It vanishes identically for smooth/translated
+    # states and redistributes, rather than clips or deletes, axial momentum.
+    shock_viscosity = 0.5 * spacing * unresolved_jump
+    nu_face = (
+        molecular_viscosity
+        + (coefficient * diameter) ** 2 * np.abs(gradient)
+        + shock_viscosity
+    )
     face_area = 2.0 * a[:-1] * a[1:] / np.maximum(a[:-1] + a[1:], a_eps)
     conductance = np.where(
         wet_face,
@@ -1376,6 +2031,359 @@ def _project_single_liquid_column(area, discharge, full_area, dz):
         packed[complete] = remainder / dz
     velocity = momentum / max(volume, EPS)
     return packed, packed * velocity
+
+
+def _sharpen_unswept_riser_liquid_slug(
+    area,
+    discharge,
+    *,
+    material_front_height: float,
+    full_area: float,
+    dz: float,
+    slug_velocity: float | None = None,
+):
+    """Sharpen only the connected liquid slug ahead of a Taylor nose.
+
+    The swept cells below the fitted nose are left bit-for-bit unchanged, so
+    their film holdup remains a finite-volume result.  In the completely
+    unswept cells above the nose, however, the liquid is one connected slug
+    with one atmospheric free surface.  Packing only that subdomain removes
+    advected droplets above the free surface without prescribing a film, a
+    wave footprint, or a target height.  Liquid volume and axial momentum in
+    the sharpened subdomain are conserved exactly when ``slug_velocity`` is
+    omitted.  A fitted Taylor balance may instead supply the coherent slug
+    velocity; this represents its resolved gas/interface momentum reaction.
+    """
+
+    a = np.maximum(np.asarray(area, dtype=float), 0.0).copy()
+    q = np.asarray(discharge, dtype=float).copy()
+    if a.shape != q.shape or a.ndim != 1:
+        raise ValueError("riser area and discharge arrays must match")
+    if full_area <= 0.0 or dz <= 0.0:
+        raise ValueError("positive riser geometry required")
+    if a.size == 0:
+        return a, q
+
+    eps_index = 128.0 * np.finfo(float).eps
+    first_unswept = int(
+        np.clip(
+            math.ceil(float(material_front_height) / float(dz) - eps_index),
+            0,
+            a.size,
+        )
+    )
+    if first_unswept >= a.size:
+        return a, q
+
+    slug_area = a[first_unswept:]
+    slug_discharge = q[first_unswept:]
+    volume = float(np.sum(slug_area) * dz)
+    momentum = float(np.sum(slug_discharge) * dz)
+    packed = np.zeros_like(slug_area)
+    if volume <= 1.0e-16:
+        q[first_unswept:] = 0.0
+        return a, q
+
+    cell_volume = float(full_area) * float(dz)
+    complete = min(int(volume // cell_volume), packed.size)
+    if complete:
+        packed[:complete] = float(full_area)
+    remainder = volume - complete * cell_volume
+    if complete < packed.size:
+        if remainder > 0.0:
+            packed[complete] = remainder / float(dz)
+    elif remainder > 0.0:
+        # Retain a legitimate elastic overfill instead of silently deleting it.
+        packed[0] += remainder / float(dz)
+
+    velocity = (
+        momentum / max(volume, EPS)
+        if slug_velocity is None
+        else float(slug_velocity)
+    )
+    if not math.isfinite(velocity):
+        raise ValueError("finite upper-slug velocity required")
+    a[first_unswept:] = packed
+    q[first_unswept:] = packed * velocity
+    return a, q
+
+
+def _collapse_upper_slug_at_taylor_breakthrough(
+    area,
+    discharge,
+    *,
+    material_front_height: float,
+    full_area: float,
+    dz: float,
+    mixing_zone_height: float,
+):
+    """Return the vanishing upper slug below the nose at breakthrough.
+
+    At the instant a confined Taylor nose meets the free surface, no coherent
+    liquid slug can remain above that material contact.  Cell-centred advection
+    may nevertheless leave one or two upper cells wet.  This one-time topology
+    transition transfers their volume into the gravity-dominated junction
+    mixing zone below the nose, starting at the bottom.  It conserves liquid
+    volume exactly and dissipates the impact momentum locally; no target level
+    or post-breakthrough time history is prescribed.
+    """
+
+    a = np.maximum(np.asarray(area, dtype=float), 0.0).copy()
+    q = np.asarray(discharge, dtype=float).copy()
+    if a.shape != q.shape or a.ndim != 1:
+        raise ValueError("riser area and discharge arrays must match")
+    if full_area <= 0.0 or dz <= 0.0 or mixing_zone_height <= 0.0:
+        raise ValueError("positive breakthrough geometry required")
+    if a.size == 0:
+        return a, q, 0.0
+
+    eps_index = 128.0 * np.finfo(float).eps
+    first_unswept = int(
+        np.clip(
+            math.ceil(float(material_front_height) / float(dz) - eps_index),
+            0,
+            a.size,
+        )
+    )
+    if first_unswept >= a.size:
+        return a, q, 0.0
+
+    returned_volume = float(np.sum(a[first_unswept:]) * float(dz))
+    if returned_volume <= 1.0e-16:
+        return a, q, 0.0
+    a[first_unswept:] = 0.0
+    q[first_unswept:] = 0.0
+
+    # The side-T churn zone scales with the measured riser diameter.  Restrict
+    # this topology transition to that geometric neighbourhood; if it fills,
+    # continue into the nearest lower swept cells rather than recreating an
+    # upper slug.
+    mixing_cells = max(
+        1,
+        min(
+            first_unswept,
+            int(math.ceil(float(mixing_zone_height) / float(dz))),
+        ),
+    )
+    destination_order = list(range(mixing_cells)) + list(
+        range(mixing_cells, first_unswept)
+    )
+    remaining = returned_volume
+    for index in destination_order:
+        if remaining <= 1.0e-16:
+            break
+        capacity = max((float(full_area) - float(a[index])) * float(dz), 0.0)
+        add = min(capacity, remaining)
+        if add <= 0.0:
+            continue
+        a[index] += add / float(dz)
+        # The collapsing slug impacts a counter-current junction pool.  Its
+        # coherent upward momentum is dissipated in that unresolved mixing;
+        # the existing destination-cell momentum remains unchanged.
+        remaining -= add
+    if remaining > 1.0e-12 * max(returned_volume, 1.0):
+        raise FloatingPointError("breakthrough upper slug exceeds lower capacity")
+    return a, q, returned_volume
+
+
+def _remap_vertical_gas_for_liquid_relocation(
+    old_liquid_area,
+    new_liquid_area,
+    total_gas_mass,
+    tracer_gas_mass,
+    gas_momentum,
+    *,
+    full_area: float,
+    dz: float,
+):
+    """Conservatively exchange gas when liquid is relocated between cells.
+
+    A topology event that moves liquid downward opens the same gas volume in
+    its source cells that it closes in the receiving cells.  Leaving gas mass
+    behind while closing that volume turns an ordinary atmospheric/Taylor
+    state into a spurious high-pressure capsule.  This local volume swap moves
+    the gas parcel displaced from each liquid receiver into the liquid donor
+    void, carrying total mass, tunnel tracer, and axial momentum together.
+
+    The fraction removed from a closing cell equals its closed-void fraction,
+    so that cell's gas density, tracer fraction, and velocity are unchanged.
+    No gas is created, deleted, vented, or assigned a prescribed pressure.
+    """
+
+    old = np.asarray(old_liquid_area, dtype=float)
+    new = np.asarray(new_liquid_area, dtype=float)
+    mass = np.maximum(np.asarray(total_gas_mass, dtype=float), 0.0).copy()
+    tracer = np.maximum(np.asarray(tracer_gas_mass, dtype=float), 0.0).copy()
+    momentum = np.asarray(gas_momentum, dtype=float).copy()
+    if not (
+        old.shape == new.shape == mass.shape == tracer.shape == momentum.shape
+    ) or old.ndim != 1:
+        raise ValueError("liquid-relocation gas arrays must be equal 1-D fields")
+    if full_area <= 0.0 or dz <= 0.0:
+        raise ValueError("positive relocation geometry required")
+    if np.any(old < -1.0e-14) or np.any(new < -1.0e-14):
+        raise ValueError("liquid relocation received negative area")
+    if np.any(tracer > mass + 1.0e-14):
+        raise ValueError("vertical tracer mass exceeds total gas mass")
+
+    opening = np.maximum(old - new, 0.0) * float(dz)
+    closing = np.maximum(new - old, 0.0) * float(dz)
+    volume_scale = max(
+        float(np.sum(opening)),
+        float(np.sum(closing)),
+        float(full_area) * float(dz),
+        1.0e-30,
+    )
+    volume_tolerance = 2.0e-12 * volume_scale
+    if not math.isclose(
+        float(np.sum(opening)),
+        float(np.sum(closing)),
+        rel_tol=0.0,
+        abs_tol=volume_tolerance,
+    ):
+        raise FloatingPointError("liquid relocation does not conserve volume")
+    if float(np.sum(closing)) <= 1.0e-18:
+        return mass, tracer, momentum
+
+    source_indices = list(np.flatnonzero(opening > volume_tolerance))
+    source_remaining = opening.copy()
+    source_cursor = 0
+    for receiver in np.flatnonzero(closing > volume_tolerance):
+        old_void = max(
+            (float(full_area) - min(max(float(old[receiver]), 0.0), float(full_area)))
+            * float(dz),
+            0.0,
+        )
+        closed_void = float(closing[receiver])
+        if old_void <= 0.0 or closed_void > old_void + 1.0e-14 * volume_scale:
+            raise FloatingPointError("liquid receiver closes unavailable gas void")
+        fraction = min(max(closed_void / old_void, 0.0), 1.0)
+        parcel_mass = float(mass[receiver]) * fraction
+        parcel_tracer = float(tracer[receiver]) * fraction
+        parcel_momentum = float(momentum[receiver]) * fraction
+        mass[receiver] -= parcel_mass
+        tracer[receiver] -= parcel_tracer
+        momentum[receiver] -= parcel_momentum
+
+        remaining_volume = closed_void
+        while remaining_volume > volume_tolerance:
+            if source_cursor >= len(source_indices):
+                raise FloatingPointError("gas relocation exhausted opened source void")
+            source = source_indices[source_cursor]
+            accepted_volume = min(
+                remaining_volume,
+                float(source_remaining[source]),
+            )
+            parcel_fraction = accepted_volume / closed_void
+            mass[source] += parcel_mass * parcel_fraction
+            tracer[source] += parcel_tracer * parcel_fraction
+            momentum[source] += parcel_momentum * parcel_fraction
+            source_remaining[source] -= accepted_volume
+            remaining_volume -= accepted_volume
+            if source_remaining[source] <= volume_tolerance:
+                source_remaining[source] = 0.0
+                source_cursor += 1
+
+    if float(np.sum(source_remaining)) > volume_tolerance:
+        raise FloatingPointError("gas relocation left unmatched opened void")
+    state_scale = max(float(np.sum(mass)), 1.0)
+    state_tolerance = 1.0e-13 * state_scale
+    if np.any(mass < -state_tolerance) or np.any(tracer < -state_tolerance):
+        raise FloatingPointError("gas relocation produced negative inventory")
+    if np.any(tracer > mass + state_tolerance):
+        raise FloatingPointError("gas relocation produced excess tracer")
+    # Clamp round-off only.  In particular, do not zero momentum merely
+    # because a parcel is small: that would silently violate the momentum
+    # ledger this remap exists to preserve.
+    mass = np.maximum(mass, 0.0)
+    tracer = np.minimum(np.maximum(tracer, 0.0), mass)
+    return mass, tracer, momentum
+
+
+def _return_isolated_top_bulk_liquid(
+    area,
+    discharge,
+    *,
+    material_front_height: float,
+    full_area: float,
+    dz: float,
+    mixing_zone_height: float,
+    bulk_fraction: float = 0.50,
+    separation_fraction: float = 0.10,
+):
+    """Return a disconnected post-breakthrough top liquid island downward.
+
+    A genuine bulk outflow is connected through bulk liquid or to the tracked
+    material front.  A nearly full top cell separated from both by a thin-film
+    or dry gap is instead a cell-centred remnant.  In an open shaft it falls
+    back; retaining it creates the stationary top plug and very large velocity
+    reported by the old one-stream result.  This local topology test contains
+    no case time or comparison target.
+    """
+
+    a = np.maximum(np.asarray(area, dtype=float), 0.0).copy()
+    q = np.asarray(discharge, dtype=float).copy()
+    if a.shape != q.shape or a.ndim != 1:
+        raise ValueError("riser area and discharge arrays must match")
+    if (
+        full_area <= 0.0
+        or dz <= 0.0
+        or mixing_zone_height <= 0.0
+        or not 0.0 < separation_fraction < bulk_fraction < 1.0
+    ):
+        raise ValueError("invalid top-island return inputs")
+    if a.size == 0 or a[-1] < float(bulk_fraction) * float(full_area):
+        return a, q, 0.0
+
+    alpha = a / float(full_area)
+    island_start = a.size - 1
+    while (
+        island_start > 0
+        and alpha[island_start - 1] > float(separation_fraction)
+    ):
+        island_start -= 1
+    first_unswept = int(
+        np.clip(
+            math.ceil(
+                float(material_front_height) / float(dz)
+                - 128.0 * np.finfo(float).eps
+            ),
+            0,
+            a.size,
+        )
+    )
+    if island_start <= first_unswept:
+        return a, q, 0.0
+
+    returned_volume = float(np.sum(a[island_start:]) * float(dz))
+    if returned_volume <= 1.0e-16:
+        return a, q, 0.0
+    a[island_start:] = 0.0
+    q[island_start:] = 0.0
+
+    mixing_cells = max(
+        1,
+        min(
+            island_start,
+            int(math.ceil(float(mixing_zone_height) / float(dz))),
+        ),
+    )
+    destination_order = list(range(mixing_cells)) + list(
+        range(mixing_cells, island_start)
+    )
+    remaining = returned_volume
+    for index in destination_order:
+        if remaining <= 1.0e-16:
+            break
+        capacity = max((float(full_area) - float(a[index])) * float(dz), 0.0)
+        add = min(capacity, remaining)
+        if add <= 0.0:
+            continue
+        a[index] += add / float(dz)
+        remaining -= add
+    if remaining > 1.0e-12 * max(returned_volume, 1.0):
+        raise FloatingPointError("isolated top liquid exceeds lower capacity")
+    return a, q, returned_volume
 
 
 def _fit_riser_taylor_core(
@@ -1455,6 +2463,8 @@ def _project_riser_taylor_topology(
     gas_core_area_fraction,
     full_area,
     dz,
+    film_velocity=None,
+    slug_velocity=None,
 ):
     """Conservatively restore the unresolved Taylor-bubble topology.
 
@@ -1520,10 +2530,31 @@ def _project_riser_taylor_topology(
         if remaining > 1.0e-12 * max(retained_volume, 1.0):
             returned_volume += remaining
 
-    # Retain the momentum collocated with liquid that already occupies its
-    # target volume.  Move the excess parcels into target deficits with their
-    # volume-weighted velocity; this is conservative whenever the tower has
-    # sufficient capacity, which is the normal confined-bubble state.
+    if film_velocity is not None or slug_velocity is not None:
+        # The shock fit represents an unresolved annular cross-section.  Its
+        # phase momentum is closed by Taylor drift kinematics, not by preserving
+        # the cell-centred liquid momentum that existed before the topology
+        # change.  Gas pressure, interfacial shear and wall stress provide the
+        # equal physical reaction, so liquid-phase momentum alone is not an
+        # invariant of this projection.
+        q_target = np.zeros_like(target)
+        q_target[swept] = target[swept] * float(
+            0.0 if film_velocity is None else film_velocity
+        )
+        q_target[~swept] = target[~swept] * float(
+            0.0 if slug_velocity is None else slug_velocity
+        )
+        volume_error = float(
+            np.sum(target) * dz + returned_volume - resolved_volume
+        )
+        if abs(volume_error) > 1.0e-11 * max(resolved_volume, 1.0):
+            raise FloatingPointError("Taylor-topology projection lost liquid")
+        return target, q_target, returned_volume
+
+    # Legacy/default path: retain the momentum collocated with liquid that
+    # already occupies its target volume.  This remains useful for isolated
+    # conservative remap tests; the production Taylor closure supplies the
+    # physically resolved film and slug velocities above.
     overlap = np.minimum(a, target)
     overlap_fraction = np.divide(
         overlap,
@@ -1544,6 +2575,16 @@ def _project_riser_taylor_topology(
     if abs(volume_error) > 1.0e-11 * max(resolved_volume, 1.0):
         raise FloatingPointError("Taylor-topology projection lost liquid")
     return target, q_target, returned_volume
+
+
+def _vertical_liquid_holdup_head(liquid_fraction, dz):
+    """Hydrostatic head above each cell centre from resolved liquid holdup."""
+
+    alpha = np.clip(np.asarray(liquid_fraction, dtype=float), 0.0, 1.0)
+    if alpha.ndim != 1 or float(dz) <= 0.0:
+        raise ValueError("one-dimensional liquid fraction and positive dz required")
+    head_to_top_face = np.cumsum(alpha[::-1])[::-1] * float(dz)
+    return np.maximum(head_to_top_face - 0.5 * alpha * float(dz), 0.0)
 
 
 def _displace_newly_swept_taylor_slice(
@@ -1632,7 +2673,7 @@ def _displace_newly_swept_taylor_slice(
     return a, q, accepted_volume
 
 
-def _sweep_vertical_material_slice_to_junction(
+def _return_new_taylor_sweep_to_side_t(
     area,
     discharge,
     *,
@@ -1642,43 +2683,49 @@ def _sweep_vertical_material_slice_to_junction(
     full_area: float,
     dz: float,
 ) -> tuple[np.ndarray, np.ndarray, float, float]:
-    """Open a swept riser slice and return its liquid to the side tee.
+    """Return liquid displaced by a side-fed Taylor nose to the tee.
 
-    For a side-fed confined bubble, gas entering upward and the annular liquid
-    film returning downward share the same T opening.  Removing the swept liquid
-    and packing it above the nose gives the correct inventory but the wrong
-    topology: it raises the complete upper column instead of producing the
-    counter-current return seen in the two-dimensional solution.  This local
-    cut-cell operation removes only the newly swept volume, preserves the
-    remaining cell velocity, and returns the removed parcel volume and axial
-    velocity to the caller for conservative deposition in the horizontal T
-    footprint.
+    The ventilation tower is fed through a side opening rather than from a
+    piston below the complete liquid column.  As the fitted gas core sweeps a
+    new axial slice, the liquid occupying that core turns downward through the
+    annular return corridor and leaves through the same T opening.  This is the
+    kinematic volume balance of a confined Taylor bubble.
+
+    Only the newly swept slice is changed.  The function removes its liquid
+    volume and collocated vertical momentum and returns both to the caller.
+    The caller deposits the volume over the finite T footprint with zero
+    *horizontal* momentum, as required by the 90-degree turn.  No wave shape,
+    event time, liquid height, or axial impulse is prescribed.
     """
 
     a = np.maximum(np.asarray(area, dtype=float), 0.0).copy()
     q = np.asarray(discharge, dtype=float).copy()
     if a.shape != q.shape or a.ndim != 1:
-        raise ValueError("vertical sweep arrays must be equal and one-dimensional")
+        raise ValueError("Taylor-return arrays must be equal and one-dimensional")
     if (
-        not 0.0 <= gas_core_area_fraction < 1.0
-        or full_area <= 0.0
-        or dz <= 0.0
+        not 0.0 <= float(gas_core_area_fraction) < 1.0
+        or float(full_area) <= 0.0
+        or float(dz) <= 0.0
     ):
-        raise ValueError("invalid vertical sweep geometry")
+        raise ValueError("invalid Taylor-return geometry")
     old_front = max(float(old_front_height), 0.0)
     new_front = max(float(new_front_height), old_front)
     if a.size == 0 or new_front <= old_front + 1.0e-15:
         return a, q, 0.0, 0.0
 
-    cell_bottom = np.arange(a.size, dtype=float) * dz
-    old_fraction = np.clip((old_front - cell_bottom) / dz, 0.0, 1.0)
-    new_fraction = np.clip((new_front - cell_bottom) / dz, 0.0, 1.0)
+    cell_bottom = np.arange(a.size, dtype=float) * float(dz)
+    old_fraction = np.clip(
+        (old_front - cell_bottom) / float(dz), 0.0, 1.0
+    )
+    new_fraction = np.clip(
+        (new_front - cell_bottom) / float(dz), 0.0, 1.0
+    )
     swept_fraction = np.maximum(new_fraction - old_fraction, 0.0)
     removable_area = np.minimum(
-        gas_core_area_fraction * full_area * swept_fraction,
+        float(gas_core_area_fraction) * float(full_area) * swept_fraction,
         a,
     )
-    returned_volume = float(np.sum(removable_area) * dz)
+    returned_volume = float(np.sum(removable_area) * float(dz))
     if returned_volume <= 1.0e-16:
         return a, q, 0.0, 0.0
 
@@ -1687,11 +2734,277 @@ def _sweep_vertical_material_slice_to_junction(
         old_area = float(a[index])
         remove = float(removable_area[index])
         fraction = remove / max(old_area, EPS)
-        returned_momentum += float(q[index]) * dz * fraction
+        returned_momentum += float(q[index]) * float(dz) * fraction
         a[index] = old_area - remove
         q[index] *= max(1.0 - fraction, 0.0)
     returned_velocity = returned_momentum / returned_volume
     return a, q, returned_volume, returned_velocity
+
+
+def _return_refilled_taylor_core_to_side_t(
+    area,
+    discharge,
+    *,
+    front_height: float,
+    gas_core_area_fraction: float,
+    full_area: float,
+    dz: float,
+    maximum_return_volume: float | None = None,
+) -> tuple[np.ndarray, np.ndarray, float, float]:
+    """Remove only liquid that numerically refilled an already swept gas core.
+
+    The fitted Taylor coordinate is a moving internal boundary.  Once a slice
+    has been swept, the one-stream FV stencil must not refill its gas-core
+    portion on the following step.  Any excess above the annular/partial-cell
+    capacity is therefore the liquid parcel crossing that fitted boundary and
+    returns through the side T.  Removal is proportional across the excess
+    field and carries collocated axial momentum.  The caller supplies the
+    finite horizontal receiver limit and deposits exactly the returned volume.
+    """
+
+    a = np.maximum(np.asarray(area, dtype=float), 0.0).copy()
+    q = np.asarray(discharge, dtype=float).copy()
+    if a.shape != q.shape or a.ndim != 1:
+        raise ValueError("Taylor-refill arrays must be equal and one-dimensional")
+    if (
+        not 0.0 <= float(gas_core_area_fraction) < 1.0
+        or float(full_area) <= 0.0
+        or float(dz) <= 0.0
+        or float(front_height) < 0.0
+    ):
+        raise ValueError("invalid Taylor-refill geometry")
+    if maximum_return_volume is not None and (
+        not math.isfinite(float(maximum_return_volume))
+        or float(maximum_return_volume) < 0.0
+    ):
+        raise ValueError("Taylor-refill volume limit must be finite and non-negative")
+
+    cell_bottom = np.arange(a.size, dtype=float) * float(dz)
+    swept_fraction = np.clip(
+        (float(front_height) - cell_bottom) / float(dz),
+        0.0,
+        1.0,
+    )
+    maximum_liquid_area = float(full_area) * (
+        1.0 - float(gas_core_area_fraction) * swept_fraction
+    )
+    excess_area = np.maximum(a - maximum_liquid_area, 0.0)
+    requested_volume = float(np.sum(excess_area) * float(dz))
+    accepted_volume = requested_volume
+    if maximum_return_volume is not None:
+        accepted_volume = min(accepted_volume, float(maximum_return_volume))
+    if accepted_volume <= 1.0e-16:
+        return a, q, 0.0, 0.0
+    excess_area *= accepted_volume / max(requested_volume, EPS)
+
+    returned_momentum = 0.0
+    for index in np.flatnonzero(excess_area > 0.0):
+        old_area = float(a[index])
+        remove = float(excess_area[index])
+        fraction = remove / max(old_area, EPS)
+        returned_momentum += float(q[index]) * float(dz) * fraction
+        a[index] = old_area - remove
+        q[index] *= max(1.0 - fraction, 0.0)
+    returned_velocity = returned_momentum / accepted_volume
+    return a, q, accepted_volume, returned_velocity
+
+
+def _restore_refilled_taylor_core_to_unswept_slug(
+    area,
+    discharge,
+    *,
+    front_height: float,
+    gas_core_area_fraction: float,
+    full_area: float,
+    dz: float,
+) -> tuple[np.ndarray, np.ndarray, float]:
+    """Undo cross-front numerical refill while the Taylor nose is confined.
+
+    Before breakthrough the swept gas core and the unswept upper liquid slug
+    are separated by a fitted material interface.  A cell-centred one-stream
+    stencil can diffuse liquid backward across that interface on later steps.
+    Move only this excess back into the immediately overlying unswept slug,
+    carrying its axial momentum.  This is an idempotent conservative shock-fit
+    remap: it neither changes the riser liquid inventory nor adds another T-mouth
+    return on top of the already accepted Taylor displacement flow.
+    """
+
+    a = np.maximum(np.asarray(area, dtype=float), 0.0).copy()
+    q = np.asarray(discharge, dtype=float).copy()
+    if a.shape != q.shape or a.ndim != 1:
+        raise ValueError("Taylor-refill arrays must be equal and one-dimensional")
+    if (
+        not 0.0 <= float(gas_core_area_fraction) < 1.0
+        or float(full_area) <= 0.0
+        or float(dz) <= 0.0
+        or float(front_height) < 0.0
+    ):
+        raise ValueError("invalid confined Taylor-refill geometry")
+
+    cell_bottom = np.arange(a.size, dtype=float) * float(dz)
+    swept_fraction = np.clip(
+        (float(front_height) - cell_bottom) / float(dz),
+        0.0,
+        1.0,
+    )
+    maximum_liquid_area = float(full_area) * (
+        1.0 - float(gas_core_area_fraction) * swept_fraction
+    )
+    excess_area = np.maximum(a - maximum_liquid_area, 0.0)
+    moved_volume = float(np.sum(excess_area) * float(dz))
+    if moved_volume <= 1.0e-16:
+        return a, q, 0.0
+
+    receiver = swept_fraction <= 1.0e-14
+    capacity_area = np.where(
+        receiver,
+        np.maximum(float(full_area) - a, 0.0),
+        0.0,
+    )
+    if float(np.sum(capacity_area) * float(dz)) + 1.0e-15 < moved_volume:
+        raise FloatingPointError(
+            "confined Taylor refill exceeds the unswept slug capacity"
+        )
+
+    carried_momentum = 0.0
+    for index in np.flatnonzero(excess_area > 0.0):
+        old_area = float(a[index])
+        remove = float(excess_area[index])
+        fraction = remove / max(old_area, EPS)
+        carried_momentum += float(q[index]) * float(dz) * fraction
+        a[index] = old_area - remove
+        q[index] *= max(1.0 - fraction, 0.0)
+    transfer_velocity = carried_momentum / moved_volume
+    remaining = moved_volume
+    for index in np.flatnonzero(receiver):
+        if remaining <= 1.0e-16:
+            break
+        accepted = min(
+            max((float(full_area) - float(a[index])) * float(dz), 0.0),
+            remaining,
+        )
+        if accepted <= 0.0:
+            continue
+        area_add = accepted / float(dz)
+        a[index] += area_add
+        q[index] += area_add * transfer_velocity
+        remaining -= accepted
+    if remaining > 1.0e-12 * max(moved_volume, 1.0):
+        raise FloatingPointError("confined Taylor refill remap lost liquid")
+    return a, q, moved_volume
+
+
+def _relax_elastic_riser_storage_for_twostream_handoff(
+    area,
+    discharge,
+    *,
+    full_area: float,
+    dz: float,
+    area_tolerance: float = 1.0e-14,
+) -> tuple[np.ndarray, np.ndarray, float]:
+    """Release one-stream elastic storage at the incompressible handoff.
+
+    The pre-breakthrough water-hammer branch stores compression as
+    ``A_l > A_r``.  The directional post-breakthrough branch instead carries a
+    true phase partition and cannot own that elastic coordinate.  At the single
+    topology event, release the small excess into available volume of the same
+    contiguous liquid body (or its immediately adjacent top free-surface cell).
+    Each transferred parcel carries its donor velocity, so reference-volume
+    and axial momentum are conserved.  No liquid crosses a dry separation and
+    this operation is never repeated after the owner changes.
+    """
+
+    a = np.asarray(area, dtype=float).copy()
+    q = np.asarray(discharge, dtype=float).copy()
+    if a.shape != q.shape or a.ndim != 1:
+        raise ValueError("riser handoff arrays must be equal and one-dimensional")
+    if full_area <= 0.0 or dz <= 0.0 or area_tolerance < 0.0:
+        raise ValueError("valid riser handoff geometry and tolerance required")
+    if np.any(a < -area_tolerance) or not (
+        np.all(np.isfinite(a)) and np.all(np.isfinite(q))
+    ):
+        raise ValueError("riser handoff state must be finite and non-negative")
+    a = np.maximum(a, 0.0)
+    initial_area = float(np.sum(a))
+    initial_discharge = float(np.sum(q))
+    relaxed_volume = 0.0
+    wet_tolerance = max(float(area_tolerance), 1.0e-12 * float(full_area))
+
+    for start, stop in _regions(a > wet_tolerance):
+        donors = [
+            index
+            for index in range(start, stop)
+            if a[index] > float(full_area) + float(area_tolerance)
+        ]
+        if not donors:
+            continue
+        receivers = [
+            index
+            for index in range(start, stop)
+            if a[index] < float(full_area) - float(area_tolerance)
+        ]
+        # A compressed continuous column may be full up to its free surface.
+        # Admit only the immediately adjacent upper cell; never bridge a dry
+        # gas gap to a detached liquid island.
+        if stop < a.size:
+            receivers.append(stop)
+        component_excess = sum(
+            max(float(a[index]) - float(full_area), 0.0)
+            for index in donors
+        )
+        component_capacity = sum(
+            max(float(full_area) - float(a[index]), 0.0)
+            for index in receivers
+        )
+        if component_capacity + float(area_tolerance) < component_excess:
+            raise FloatingPointError(
+                "elastic riser storage has no local handoff receiving volume"
+            )
+
+        for donor in donors:
+            excess_area = max(float(a[donor]) - float(full_area), 0.0)
+            if excess_area <= float(area_tolerance):
+                continue
+            donor_velocity = float(q[donor]) / max(float(a[donor]), EPS)
+            a[donor] -= excess_area
+            q[donor] -= excess_area * donor_velocity
+            remaining = excess_area
+            for receiver in sorted(receivers, key=lambda index: abs(index - donor)):
+                capacity = max(float(full_area) - float(a[receiver]), 0.0)
+                accepted = min(capacity, remaining)
+                if accepted <= 0.0:
+                    continue
+                a[receiver] += accepted
+                q[receiver] += accepted * donor_velocity
+                remaining -= accepted
+                if remaining <= float(area_tolerance):
+                    remaining = 0.0
+                    break
+            if remaining > float(area_tolerance):
+                raise FloatingPointError(
+                    "elastic riser storage was not fully released at handoff"
+                )
+            relaxed_volume += excess_area * float(dz)
+
+    conservation_scale = max(initial_area, float(full_area), 1.0)
+    if not math.isclose(
+        float(np.sum(a)),
+        initial_area,
+        rel_tol=0.0,
+        abs_tol=2.0e-13 * conservation_scale,
+    ):
+        raise FloatingPointError("riser handoff lost liquid reference volume")
+    momentum_scale = max(abs(initial_discharge), float(full_area), 1.0)
+    if not math.isclose(
+        float(np.sum(q)),
+        initial_discharge,
+        rel_tol=0.0,
+        abs_tol=2.0e-13 * momentum_scale,
+    ):
+        raise FloatingPointError("riser handoff lost axial liquid momentum")
+    if np.max(a, initial=0.0) > float(full_area) + float(area_tolerance):
+        raise FloatingPointError("riser handoff left unresolved elastic overfill")
+    return a, q, relaxed_volume
 
 
 def _advance_riser_taylor_front(
@@ -1707,12 +3020,11 @@ def _advance_riser_taylor_front(
     """Advance a confined Taylor nose only through the liquid column.
 
     A Taylor nose ceases to be a confined material front when it catches the
-    bulk free surface.  Above that point the tunnel gas is connected to the
-    atmospheric gas already occupying the dry part of the riser; advancing the
-    fitted nose through that gas-only region would manufacture an annular film
-    all the way to the outlet.  After breakthrough the reported core extent
-    therefore follows the resolved bulk surface while gas mass and momentum
-    continue to vent through the conservative gas-network equations.
+    bulk free surface.  The fitted coordinate then records the highest slice
+    actually swept by the nose; it must not move downward with the equivalent
+    column height because that would erase already opened gas-core cells in a
+    single step.  Gas mass and momentum still vent through the conservative
+    gas-network equations, while the remaining liquid drains as a wall film.
     """
 
     if dt <= 0.0 or diameter <= 0.0 or riser_height <= 0.0:
@@ -1720,11 +3032,25 @@ def _advance_riser_taylor_front(
     old_front = float(np.clip(front_height, 0.0, riser_height))
     surface = float(np.clip(free_surface_height, 0.0, riser_height))
     if surface <= 0.0:
-        return 0.0, -old_front / dt, bool(already_vented)
+        # A falling/vanishing liquid inventory cannot "unsweep" cells already
+        # traversed by the material Taylor nose.  Losing this height exactly
+        # at breakthrough erased the geometric film corridor and handed the
+        # persistent T node a fictitious full-bore descending liquid trace.
+        return old_front, 0.0, bool(already_vented or old_front > 0.0)
 
     if already_vented:
-        new_front = surface
+        # The swept material domain is irreversible until the tunnel-origin
+        # tracer has left the riser.  Once the nose has met the free surface,
+        # neither a falling nor a gas-filled rising occupied height is a new
+        # confined Taylor sweep.
+        new_front = old_front
         return new_front, (new_front - old_front) / dt, True
+
+    if surface <= old_front:
+        # The free surface has descended onto the already swept material
+        # domain.  This is breakthrough, not a retreat of the gas material
+        # coordinate.
+        return old_front, 0.0, True
 
     drift_velocity = 0.345 * math.sqrt(G * diameter)
     proposed = old_front + max(
@@ -1862,6 +3188,66 @@ def _two_phase_mixing_activation(void_fraction: float) -> float:
     return 4.0 * alpha_g * (1.0 - alpha_g)
 
 
+def _countercurrent_flooding_liquid_flow(
+    requested_flow: float,
+    *,
+    upward_gas_superficial_velocity: float,
+    full_area: float,
+    diameter: float,
+    rho_l: float,
+    rho_g: float,
+    gravity: float,
+    wallis_constant: float,
+    wallis_slope: float = 1.0,
+) -> float:
+    """Apply the Wallis CCFL capacity to downward liquid flow.
+
+    The dimensionless Wallis relation is
+    ``sqrt(Jg*) + m sqrt(Jl*) = C`` with
+    ``Jk* = Jk sqrt(rho_k/(g D (rho_l-rho_g)))``.  Positive/upward liquid
+    flow is unchanged.  For counter-current operation the returned value is
+    the requested downward flow unless it exceeds the flooding capacity.
+    This is a local algebraic two-fluid closure, not a time- or result-based
+    velocity limiter.
+    """
+
+    flow = float(requested_flow)
+    if flow >= 0.0:
+        return flow
+    if float(upward_gas_superficial_velocity) <= 0.0:
+        # CCFL is a counter-current two-phase limit.  With no upward gas phase
+        # there is no flooding mechanism, so single-phase liquid return must
+        # not be capped by the zero-gas intercept of the Wallis envelope.
+        return flow
+    if (
+        full_area <= 0.0
+        or diameter <= 0.0
+        or rho_l <= 0.0
+        or gravity <= 0.0
+        or wallis_constant <= 0.0
+        or wallis_slope <= 0.0
+    ):
+        raise ValueError("positive CCFL geometry, densities, and coefficients required")
+    gas_density = min(max(float(rho_g), 1.0e-12), 0.999999 * float(rho_l))
+    density_difference = max(float(rho_l) - gas_density, 1.0e-12)
+    gas_velocity_scale = math.sqrt(
+        gas_density / (float(gravity) * float(diameter) * density_difference)
+    )
+    jg_star = max(float(upward_gas_superficial_velocity), 0.0) * gas_velocity_scale
+    remaining = max(float(wallis_constant) - math.sqrt(max(jg_star, 0.0)), 0.0)
+    jl_star_capacity = (remaining / float(wallis_slope)) ** 2
+    liquid_velocity_scale = math.sqrt(
+        float(gravity)
+        * float(diameter)
+        * density_difference
+        / float(rho_l)
+    )
+    downward_capacity = (
+        jl_star_capacity * liquid_velocity_scale * float(full_area)
+    )
+    return max(flow, -downward_capacity)
+
+
 def _side_t_opening_weights(
     cell_count: int,
     *,
@@ -1933,6 +3319,93 @@ def _limit_side_t_upward_liquid_flow(
         / (step * weights[active])
     )
     return min(q, float(np.min(capacities)))
+
+
+def _riser_acoustic_momentum_dissipation_flux(
+    discharge,
+    celerity,
+    liquid_area,
+    *,
+    full_area: float,
+    bulk_fraction: float = 0.50,
+):
+    """Return conservative Rusanov damping for the riser momentum faces.
+
+    The sharp liquid-area contact is advected without an acoustic area flux so
+    a stationary free surface cannot be numerically smeared up the shaft.  The
+    momentum equation nevertheless carries water-hammer characteristics.  A
+    centred pressure source without their face dissipation admits an odd-even
+    velocity mode; in Case A that mode reached alternating multi-metre-per-
+    second cells immediately before breakthrough.  This term supplies only
+    the missing ``-0.5 c Delta Q`` momentum flux.  It is conservative, vanishes
+    for uniform discharge, and does not transport liquid area.
+    """
+
+    q = np.asarray(discharge, dtype=float)
+    c = np.asarray(celerity, dtype=float)
+    area = np.asarray(liquid_area, dtype=float)
+    if q.shape != c.shape or q.shape != area.shape or q.ndim != 1:
+        raise ValueError(
+            "riser acoustic arrays must be equal one-dimensional fields"
+        )
+    if (
+        np.any(~np.isfinite(q))
+        or np.any(~np.isfinite(c))
+        or np.any(~np.isfinite(area))
+        or np.any(c < 0.0)
+        or full_area <= 0.0
+        or not 0.0 < bulk_fraction <= 1.0
+    ):
+        raise ValueError("finite bulk-liquid acoustic inputs required")
+    flux = np.zeros(q.size + 1, dtype=float)
+    if q.size > 1:
+        face_celerity = np.maximum(c[:-1], c[1:])
+        bulk_face = (
+            np.minimum(area[:-1], area[1:])
+            >= float(bulk_fraction) * float(full_area)
+        )
+        flux[1:-1] = np.where(
+            bulk_face,
+            -0.5 * face_celerity * (q[1:] - q[:-1]),
+            0.0,
+        )
+    return flux
+
+
+def _limit_riser_bottom_inflow_by_receiving_capacity(
+    area,
+    face_flux,
+    *,
+    requested_flow: float,
+    dt: float,
+    cell_width: float,
+    full_area: float,
+) -> float:
+    """Limit side-T inflow by the first riser control-volume capacity.
+
+    Horizontal donor availability is necessary but not sufficient: a nearly
+    full first riser cell can accept only its geometric void plus liquid that
+    leaves simultaneously through face 1.  Enforcing this finite-volume
+    packing inequality before the source is committed avoids converting an
+    otherwise admissible gross inflow into a one-step elastic pressure needle.
+    """
+
+    a = np.maximum(np.asarray(area, dtype=float), 0.0)
+    flux = np.asarray(face_flux, dtype=float)
+    q = float(requested_flow)
+    step = float(dt)
+    width = float(cell_width)
+    capacity_area = float(full_area)
+    if a.ndim != 1 or a.size < 1 or flux.shape != (a.size + 1,):
+        raise ValueError("riser receiving arrays have inconsistent shape")
+    if step <= 0.0 or width <= 0.0 or capacity_area <= 0.0:
+        raise ValueError("positive riser receiving geometry and timestep required")
+    if q <= 0.0:
+        return q
+    storage_rate = max(capacity_area - float(a[0]), 0.0) * width / step
+    throughflow_rate = float(flux[1])
+    admissible = max(storage_rate + throughflow_rate, 0.0)
+    return min(q, admissible)
 
 
 def _limit_side_t_downward_liquid_flow(
@@ -2010,6 +3483,142 @@ def _limit_side_t_downward_liquid_flow(
     return -min(abs(q), max(float(allowable), 0.0))
 
 
+def _side_t_return_exchange_weights(
+    area,
+    opening_weights,
+    *,
+    full_area: float,
+    gas_supported=None,
+) -> np.ndarray:
+    """Return the actual footprint weights used by a descending side-T jet.
+
+    Returning liquid first occupies the resolved void under the opening.  The
+    same weights must be used by both the receiver-capacity limiter and the
+    subsequent conservative exchange; otherwise a flux that is admissible for
+    the geometric mouth weights can still overfill one gas-bearing receiver
+    after the compliance redistribution.
+    """
+
+    a = np.asarray(area, dtype=float)
+    weights = np.asarray(opening_weights, dtype=float)
+    if a.shape != weights.shape or a.ndim != 1:
+        raise ValueError("side-T area and opening weights must have equal shape")
+    if full_area <= 0.0:
+        raise ValueError("positive side-T full area required")
+    if np.any(weights < 0.0) or float(np.sum(weights)) <= 0.0:
+        raise ValueError("nonnegative side-T opening weights required")
+
+    exchange_weights = weights.copy()
+    if gas_supported is not None:
+        gas_mask = np.asarray(gas_supported, dtype=bool)
+        if gas_mask.shape != a.shape:
+            raise ValueError("side-T gas-support mask must match the area field")
+        # The falling wall film reaches the liquid-filled lower part of the
+        # finite side T.  When the measured footprint overlaps both a
+        # gas-crown cell and a liquid-continuous cell, turn the return into the
+        # latter instead of numerically crushing the crown gas.  This is the
+        # cross-section-averaged representation of vertical liquid entering
+        # below a horizontally stratified gas layer; it uses only local phase
+        # topology and the measured opening overlap.
+        liquid_path = (weights > 0.0) & ~gas_mask & (a > 0.0)
+        if np.any(liquid_path):
+            liquid_weights = np.where(
+                liquid_path,
+                weights * np.minimum(a / float(full_area), 1.0),
+                0.0,
+            )
+            total_liquid_weight = float(np.sum(liquid_weights))
+            if total_liquid_weight > 0.0:
+                return liquid_weights / total_liquid_weight
+    capacity = np.maximum(float(full_area) - a, 0.0)
+    compliant = (weights > 0.0) & (capacity > 0.0)
+    if np.any(compliant):
+        compliance_weight = weights * capacity
+        total_compliance = float(np.sum(compliance_weight))
+        if total_compliance > 0.0:
+            exchange_weights = compliance_weight / total_compliance
+    return exchange_weights
+
+
+def _limit_taylor_return_exchange_flow(
+    riser_liquid_area,
+    riser_volume_flux,
+    horizontal_liquid_area,
+    horizontal_gas_mass,
+    *,
+    requested_return_flow: float,
+    opening_weights,
+    dt: float,
+    riser_cell_width: float,
+    horizontal_cell_width: float,
+    horizontal_full_area: float,
+    rho_reference: float,
+    density_ceiling: float,
+    void_floor_fraction: float,
+    active_void_fraction: float,
+    topology_density_fraction: float,
+    retained_fraction: float = 0.10,
+) -> float:
+    """Limit one Taylor-return face transaction by both adjacent controls.
+
+    ``requested_return_flow`` is a positive magnitude.  The Taylor closure
+    replaces the already limited riser bottom face, so its new value must be
+    limited again.  The bottom-cell donor budget reserves any simultaneous
+    upward outflow through face 1, while the receiver budget uses the exact
+    compliance weights that will deposit the liquid beneath the side opening.
+    The returned positive magnitude can therefore be committed once as
+    ``G1[0] = -return_flow`` without a later positivity clip creating water.
+    """
+
+    riser_area = np.maximum(np.asarray(riser_liquid_area, dtype=float), 0.0)
+    riser_flux = np.asarray(riser_volume_flux, dtype=float)
+    if (
+        riser_area.ndim != 1
+        or riser_area.size < 1
+        or riser_flux.shape != (riser_area.size + 1,)
+    ):
+        raise ValueError("inconsistent riser area and face-flux arrays")
+    step = float(dt)
+    dz = float(riser_cell_width)
+    retain = float(retained_fraction)
+    requested = max(float(requested_return_flow), 0.0)
+    if step <= 0.0 or dz <= 0.0 or not 0.0 <= retain < 1.0:
+        raise ValueError("valid Taylor-return timestep, grid, and retention required")
+    if requested <= 0.0:
+        return 0.0
+
+    # Face 0 and face 1 are the only possible outflows from the bottom riser
+    # cell.  Incoming flow through face 1 is deliberately not borrowed by the
+    # boundary limiter: every explicit step retains the same positive donor
+    # reserve as the ordinary FV donor limiter.
+    donor_rate = (1.0 - retain) * riser_area[0] * dz / step
+    other_outflow = max(float(riser_flux[1]), 0.0)
+    donor_limited = min(requested, max(donor_rate - other_outflow, 0.0))
+    if donor_limited <= 0.0:
+        return 0.0
+
+    receiver_weights = _side_t_return_exchange_weights(
+        horizontal_liquid_area,
+        opening_weights,
+        full_area=horizontal_full_area,
+    )
+    signed_limited = _limit_side_t_downward_liquid_flow(
+        horizontal_liquid_area,
+        horizontal_gas_mass,
+        requested_flow=-donor_limited,
+        opening_weights=receiver_weights,
+        dt=step,
+        cell_width=horizontal_cell_width,
+        full_area=horizontal_full_area,
+        rho_reference=rho_reference,
+        density_ceiling=density_ceiling,
+        void_floor_fraction=void_floor_fraction,
+        active_void_fraction=active_void_fraction,
+        topology_density_fraction=topology_density_fraction,
+    )
+    return max(-float(signed_limited), 0.0)
+
+
 def _apply_finite_width_side_t_exchange(
     area,
     discharge,
@@ -2018,18 +3627,17 @@ def _apply_finite_width_side_t_exchange(
     opening_weights,
     dt: float,
     cell_width: float,
-    incoming_normal_velocity: float = 0.0,
+    full_area: float | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Exchange liquid through the real side-T footprint conservatively.
 
     Positive ``upward_flow`` removes liquid and its local axial momentum from
     the footprint.  A descending stream enters normal to the horizontal axis
-    and impinges on the opposite wall.  Its resolved normal speed is redirected
-    into equal-and-opposite axial parcel momenta on the two halves of the
-    physical opening.  The weighted axial momentum is exactly zero, while the
-    kinetic energy available to the horizontal equations comes only from the
-    computed incoming stream.  No wave amplitude, frequency, or time history
-    is prescribed.
+    and therefore brings zero *axial* momentum into the one-dimensional
+    horizontal equations.  The added volume changes the local pressure state;
+    the ordinary horizontal finite-volume fluxes then generate and propagate
+    the resulting waves.  No signed axial impulse or target wave shape is
+    inserted at the junction.
     """
 
     a = np.asarray(area, dtype=float).copy()
@@ -2039,16 +3647,27 @@ def _apply_finite_width_side_t_exchange(
         raise ValueError("side-T exchange arrays must have equal one-dimensional shape")
     step = float(dt)
     width = float(cell_width)
-    normal_velocity = float(incoming_normal_velocity)
-    if (
-        step <= 0.0
-        or width <= 0.0
-        or not math.isfinite(normal_velocity)
-    ):
+    if step <= 0.0 or width <= 0.0:
         raise ValueError("positive side-T timestep and cell width required")
     volume_change = -float(upward_flow) * step
     old_area = a.copy()
-    a += volume_change * weights / width
+    exchange_weights = weights.copy()
+    if volume_change > 0.0 and full_area is not None:
+        # A descending jet enters the finite T intersection and first occupies
+        # the gas/open-channel volume available beneath the measured mouth.
+        # Applying the same geometric fraction to a liquid-full east cell and
+        # a gassy west cell compressed the former by O(10%) while leaving void
+        # beside it, launching a nonphysical water-hammer jet.  The zero-volume
+        # junction pressure instead distributes an incompressible addition by
+        # local compliance: here that compliance is exactly the available void
+        # within each geometrically overlapped cell.  No cell outside the real
+        # mouth receives water and no axial momentum is prescribed.
+        exchange_weights = _side_t_return_exchange_weights(
+            a,
+            weights,
+            full_area=float(full_area),
+        )
+    a += volume_change * exchange_weights / width
     if np.any(a < -1.0e-12):
         raise FloatingPointError("finite-width side-T exchange emptied a donor cell")
     a = np.maximum(a, 0.0)
@@ -2058,22 +3677,6 @@ def _apply_finite_width_side_t_exchange(
     scale[removing & wet] = a[removing & wet] / old_area[removing & wet]
     scale[removing & ~wet] = 0.0
     q *= scale
-    if volume_change > 0.0 and abs(normal_velocity) > EPS:
-        # Build a grid-independent split shape.  Subtracting its weighted mean
-        # makes the total axial impulse vanish even when the opening is not
-        # centred on a cell face; unit weighted RMS preserves the incoming
-        # parcel kinetic-energy scale before finite-volume mixing.
-        active = weights > 0.0
-        coordinates = np.arange(weights.size, dtype=float)
-        opening_centre = float(np.sum(weights * coordinates))
-        turn_shape = np.zeros_like(weights)
-        turn_shape[active] = np.sign(coordinates[active] - opening_centre)
-        turn_shape[active] -= float(np.sum(weights * turn_shape))
-        shape_norm = math.sqrt(float(np.sum(weights * turn_shape * turn_shape)))
-        if shape_norm > EPS:
-            turn_shape /= shape_norm
-            added_area = np.maximum(a - old_area, 0.0)
-            q += added_area * abs(normal_velocity) * turn_shape
     actual_change = float(np.sum(a - old_area) * width)
     if not math.isclose(
         actual_change,
@@ -2082,6 +3685,72 @@ def _apply_finite_width_side_t_exchange(
         abs_tol=1.0e-16,
     ):
         raise FloatingPointError("finite-width side-T exchange lost liquid volume")
+    return a, q
+
+
+def _apply_finite_width_side_t_gross_exchange(
+    area,
+    discharge,
+    *,
+    upward_flow: float,
+    downward_flow: float,
+    opening_weights,
+    downward_weights=None,
+    dt: float,
+    cell_width: float,
+    full_area: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Commit simultaneous gross liquid exchange over the side-T footprint.
+
+    The upward horizontal donor and downward riser return are distinct parcels
+    even when their net rate is small.  Apply the already limited upward
+    withdrawal first, then place the orthogonal return into the newly available
+    compliance.  The combined horizontal-volume change is exactly
+    ``(Q_down-Q_up) dt``; neither branch is replaced by its signed net.
+    """
+
+    q_up = float(upward_flow)
+    q_down = float(downward_flow)
+    if (
+        not math.isfinite(q_up)
+        or not math.isfinite(q_down)
+        or q_up < 0.0
+        or q_down < 0.0
+    ):
+        raise ValueError("gross side-T rates must be finite and non-negative")
+    before = float(np.sum(np.asarray(area, dtype=float)) * float(cell_width))
+    a, q = _apply_finite_width_side_t_exchange(
+        area,
+        discharge,
+        upward_flow=q_up,
+        opening_weights=opening_weights,
+        dt=dt,
+        cell_width=cell_width,
+        full_area=full_area,
+    )
+    return_weights = (
+        opening_weights
+        if downward_weights is None
+        else downward_weights
+    )
+    a, q = _apply_finite_width_side_t_exchange(
+        a,
+        q,
+        upward_flow=-q_down,
+        opening_weights=return_weights,
+        dt=dt,
+        cell_width=cell_width,
+        full_area=full_area,
+    )
+    after = float(np.sum(a) * float(cell_width))
+    expected = (q_down - q_up) * float(dt)
+    if not math.isclose(
+        after - before,
+        expected,
+        rel_tol=1.0e-10,
+        abs_tol=1.0e-16,
+    ):
+        raise FloatingPointError("gross side-T exchange lost liquid volume")
     return a, q
 
 
@@ -2705,6 +4374,7 @@ def run_network(
     verbose: bool = True,
     *,
     external_horizontal_solver=None,
+    external_horizontal_checkpoint: str | Path | None = None,
     diagnostic_wall_seconds: float | None = None,
     output_interval: float = 0.02,
 ) -> dict:
@@ -2718,13 +4388,16 @@ def run_network(
     Nt = max(20, int(round(case.L_tunnel / case.ds)))
     dx = case.L_tunnel / Nt
     xt = (np.arange(Nt) + 0.5) * dx
-    jx = int(np.clip(round(case.x_riser / dx - 0.5), 1, Nt - 2))   # junction cell
-    junction_face = int(np.clip(jx + 1, 1, Nt - 1))
+    side_t_grid = face_aligned_t_indices(case.x_riser, dx, Nt)
+    junction_face = side_t_grid.face
+    junction_west_cell = side_t_grid.west_cell
+    junction_east_cell = side_t_grid.east_cell
+    junction_face_x = side_t_grid.face_x
     iv = int(np.clip(round(case.L_up / dx - 0.5), 1, Nt - 2))      # nearest butterfly-valve cell
     fv = int(np.clip(round(case.L_up / dx), 1, Nt - 1))             # butterfly-valve FACE
     (
         riser_film_thickness,
-        riser_gas_core_fraction,
+        riser_laminar_gas_core_fraction,
         riser_terminal_film_flow,
         riser_terminal_film_velocity,
     ) = _vw_laminar_film_closure(
@@ -2733,6 +4406,23 @@ def run_network(
         rho_g=rho_atm,
         mu_l=MU_L,
         gravity=G,
+    )
+    if not 0.0 < case.vertical_taylor_core_area_fraction < 1.0:
+        raise ValueError("vertical Taylor-core area fraction must lie in (0, 1)")
+    if not 0.0 < case.vertical_taylor_return_efficiency <= 1.0:
+        raise ValueError(
+            "vertical Taylor return efficiency must lie in (0, 1]"
+        )
+    if not 0.0 < case.vertical_ccfl_constant <= 1.0:
+        raise ValueError("vertical CCFL constant must lie in (0, 1]")
+    # The laminar Nusselt balance is retained as a diagnostic scale, but for
+    # this 57-mm side-fed tower it predicts Re_f > 6000 and an unrealistically
+    # thin 1-mm film.  The network shock fit therefore uses the frozen
+    # side-fed Taylor-core closure, which leaves a finite counter-current film
+    # corridor and is also the area cap used by the conservative gas graph.
+    riser_gas_core_fraction = min(
+        float(riser_laminar_gas_core_fraction),
+        float(case.vertical_taylor_core_area_fraction),
     )
     # Report the annular hydraulic scale for audit only.  The resolved falling
     # film uses the Nusselt wall-stress balance below, not Darcy pipe friction
@@ -2762,6 +4452,26 @@ def run_network(
             case.horizontal_holdup_drag_enhancement
         ),
         vertical_gas_core_area_fraction=riser_gas_core_fraction,
+        # The fitted Taylor front owns material topology in both vertical
+        # momentum formulations; this is independent of the drag owner below.
+        vertical_fitted_front_receivers=True,
+        # The persistent two-stream riser owns the equal-and-opposite gas/film
+        # exchange, so its gas-transport stage must not apply the legacy drag a
+        # second time.  The one-stream fallback retains the conservative
+        # equal-and-opposite gas/liquid exchange.
+        vertical_confined_interface_kinematics=case.enable_vertical_twostream,
+        allow_horizontal_front_retreat=case.allow_horizontal_front_retreat,
+    )
+    # Before directional handoff the legacy liquid column has no separate
+    # three-body drag owner, so the conservative gas network must return its
+    # equal-and-opposite vertical interphase impulse to that one-stream state.
+    # After handoff the persistent two-stream operator owns the same exchange
+    # and the gas stage must suppress its legacy copy.  The previous global
+    # ``case.enable_vertical_twostream`` switch suppressed drag in both
+    # regimes, leaving the pre-handoff film in near free fall.
+    coupled_gas_parameters_one_stream = replace(
+        coupled_gas_parameters,
+        vertical_confined_interface_kinematics=False,
     )
     if external_horizontal_solver is None:
         # Case A has one production horizontal solver.  The locally copied
@@ -2779,7 +4489,37 @@ def run_network(
     Nr = max(20, int(round(case.riser_height / case.dz)))
     dz = case.riser_height / Nr
     zr = (np.arange(Nr) + 0.5) * dz
-
+    twostream_parameters = VerticalTwoStreamParameters(
+        cell_count=Nr,
+        cell_length=dz,
+        diameter=case.Dr,
+        liquid_density=RHO_L,
+        gravity=G,
+        # Wall stress is applied below with the existing Reynolds-aware
+        # bulk/film closure separately to each directional stream.  Leaving
+        # these constant Darcy slots at zero avoids applying it twice.
+        wall_friction_up=0.0,
+        wall_friction_down=0.0,
+        interstream_drag=0.0,
+    )
+    twostream_mouth_losses = DirectionalMouthLosses(
+        upward_turn=case.junction_loss_coeff,
+        downward_turn=case.junction_loss_coeff,
+        # The legacy one-stream ``glug_loss_coeff`` represents unresolved
+        # gas--liquid churn before directional handoff.  After handoff the gas,
+        # upward liquid and falling liquid are advanced by the distributed
+        # three-body momentum exchange below.  Applying that empirical glug
+        # loss again as a concentrated liquid--liquid mouth force double-counts
+        # the churn and can store horizontal pressure until an artificial burst.
+        countercurrent_mixing=0.0,
+    )
+    distributed_tnode_geometry = DistributedTNodeGeometry(
+        horizontal_diameter=case.D,
+        riser_diameter=case.Dr,
+        opening_footprint_length=case.Dr,
+        opening_footprint_volume=A * case.Dr,
+        gravity=G,
+    )
     # ---- initial state (V&W2011): upstream pipe = compressed air pocket; middle+downstream
     #      pipes water-filled; tower water to Y_fs0; both far ends closed ----
     Alt = A * np.ones(Nt)
@@ -2797,14 +4537,11 @@ def run_network(
     external_horizontal_state = None
     external_horizontal_active = False
     external_horizontal_handoff_time = None
-    # Before the gas front reaches the side-T, the copied shock-fitting core
-    # carries a closed polytropic inventory.  At first contact with the open
-    # vertical branch it is rebased continuously onto one open, spatially
-    # lumped ideal-gas reservoir.  From then on its mass can change only through
-    # the conservative T-mouth Riemann flux; it is never split among horizontal
-    # grid cells as independent material pockets.
-    external_open_gas_inventory = None
-    external_open_gas_parameters = None
+    # Latched geometric topology event.  Before it opens, the shock-fitting
+    # front owns the horizontal pipe.  At first contact the complete mapped
+    # conservative fields are handed to the distributed two-fluid FV graph;
+    # the old fitted/lumped pocket is never advanced in parallel afterwards.
+    junction_topology_opened = False
     cfg = external_horizontal_solver.config
     if not math.isclose(
         float(cfg.length), case.L_tunnel, rel_tol=0.0, abs_tol=1.0e-12
@@ -2814,6 +4551,10 @@ def run_network(
         float(cfg.vent_x), case.x_riser, rel_tol=0.0, abs_tol=1.0e-12
     ):
         raise ValueError("external horizontal vent does not match the side-T")
+    if int(external_horizontal_solver.junction_face_index) != junction_face:
+        raise ValueError(
+            "shock-fitting and network solvers disagree on the side-T face"
+        )
     external_horizontal_state = (
         external_horizontal_solver.case_b_initial_state(
             initial_air_gauge_head=case.air_head,
@@ -2822,6 +4563,98 @@ def run_network(
             initial_water_head=case.D + case.init_water_level,
         )
     )
+    if external_horizontal_checkpoint is not None:
+        checkpoint_path = Path(external_horizontal_checkpoint)
+        with np.load(checkpoint_path) as checkpoint:
+            checkpoint_area = np.asarray(
+                checkpoint["area"], dtype=float
+            ).copy()
+            checkpoint_discharge = np.asarray(
+                checkpoint["discharge"], dtype=float
+            ).copy()
+            checkpoint_x = np.asarray(checkpoint["x"], dtype=float)
+            checkpoint_dx = float(np.ravel(checkpoint["dx"])[0])
+            if (
+                checkpoint_area.shape
+                != external_horizontal_state.area.shape
+                or checkpoint_discharge.shape != checkpoint_area.shape
+            ):
+                raise ValueError(
+                    "external horizontal checkpoint grid does not match solver"
+                )
+            if not np.allclose(
+                checkpoint_x,
+                external_horizontal_solver.x,
+                rtol=0.0,
+                atol=2.0e-12,
+            ) or not math.isclose(
+                checkpoint_dx,
+                external_horizontal_solver.dx,
+                rel_tol=0.0,
+                abs_tol=2.0e-12,
+            ):
+                raise ValueError(
+                    "external horizontal checkpoint coordinates do not match solver"
+                )
+            checkpoint_gas = replace(
+                external_horizontal_state.gas,
+                volume=float(np.ravel(checkpoint["gas_volume"])[0]),
+                mass=float(np.ravel(checkpoint["gas_mass"])[0]),
+            )
+            external_horizontal_state = replace(
+                external_horizontal_state,
+                time=float(np.ravel(checkpoint["time"])[0]),
+                area=checkpoint_area,
+                discharge=checkpoint_discharge,
+                gas=checkpoint_gas,
+                air_pressure_abs=float(
+                    np.ravel(checkpoint["air_pressure"])[0]
+                ),
+                interface_x=float(
+                    np.ravel(checkpoint["interface_x"])[0]
+                ),
+                interface_speed=float(
+                    np.ravel(checkpoint["interface_speed"])[0]
+                ),
+                interface_free_surface_depth=float(
+                    np.ravel(
+                        checkpoint["interface_free_surface_depth"]
+                    )[0]
+                ),
+                interface_free_surface_velocity=float(
+                    np.ravel(
+                        checkpoint["interface_free_surface_velocity"]
+                    )[0]
+                ),
+                interface_pressurised_head=float(
+                    np.ravel(
+                        checkpoint["interface_pressurised_head"]
+                    )[0]
+                ),
+                interface_pressurised_velocity=float(
+                    np.ravel(
+                        checkpoint["interface_pressurised_velocity"]
+                    )[0]
+                ),
+                interface_residual_linf=float(
+                    np.ravel(checkpoint["interface_residual_linf"])[0]
+                ),
+                wetting_front_x=float(
+                    np.ravel(checkpoint["wetting_front_x"])[0]
+                ),
+                vented=False,
+                nonlinear_converged=True,
+                liquid_volume_residual=float(
+                    np.ravel(checkpoint["liquid_volume_error"])[0]
+                ),
+                cumulative_liquid_volume_residual=float(
+                    np.ravel(checkpoint["liquid_volume_error"])[0]
+                ),
+            )
+        if external_horizontal_state.time >= case.t_end:
+            raise ValueError(
+                "external horizontal checkpoint must precede case.t_end"
+            )
     Alt, Qlt, Mgt, Jgt = _map_external_horizontal_state(
         external_horizontal_solver,
         external_horizontal_state,
@@ -2848,9 +4681,23 @@ def run_network(
     Mgr = (P_ATM / (R_GAS * T_GAS)) * np.maximum(Ar - Alr, 1e-4 * Ar) * dz
     Mgrs = np.zeros(Nr)                           # resolved gas injected from the tunnel
     Jgrs = np.zeros(Nr)                           # resolved gas momentum in the riser
+    # Created exactly once when the horizontal gas pocket first opens the
+    # measured T mouth.  From then on these four directional inventories are
+    # authoritative; Alr/Qlr are only their exact compatibility totals.
+    riser_twostream_state: VerticalTwoStreamState | None = None
+    riser_twostream_next: VerticalTwoStreamState | None = None
+    riser_liquid_provenance_state: (
+        VerticalTwoStreamLiquidProvenanceState | None
+    ) = None
+    riser_liquid_provenance_next: (
+        VerticalTwoStreamLiquidProvenanceState | None
+    ) = None
+    bidirectional_tnode_upward_speed: float | None = None
+    taylor_swept_fraction = np.zeros(Nr, dtype=float)
+    twostream_activated_time: float | None = None
 
     geyser_strength = 0.0
-    t = 0.0
+    t = float(external_horizontal_state.time)
     step = 0
     dbg_created = dict(t_floor=0.0, r_floor=0.0, r_repack=0.0, consol=0.0, crown=0.0)
     rec = dict(t=[], wtop=[], itop=[], jet_height=[], top_q=[],
@@ -2860,9 +4707,14 @@ def run_network(
                tun_gas_mass=[], tun_gas_vol=[], tot_liq=[], tot_liq_raw=[],
                escaped_gas_mass=[], total_resolved_gas_mass=[],
                escaped_liquid_volume=[], total_liquid_including_escape=[],
-               frames_t=[], frames_alt=[], frames_alt_raw=[], frames_ult=[], frames_mgt=[], frames_alr=[], frames_ulr=[], frames_agr=[], frames_itop=[],
+               frames_t=[], frames_alt=[], frames_alt_raw=[], frames_ult=[], frames_mgt=[], frames_alr=[], frames_alr_raw=[], frames_ulr=[], frames_agr=[], frames_itop=[],
                frames_core_mass=[],
-               xt=xt, zr=zr, jx=jx, iv=iv, fv=fv, dx=dx, dz=dz, Nt=Nt, Nr=Nr)
+               xt=xt, zr=zr, jx=junction_west_cell, iv=iv, fv=fv,
+               junction_face=junction_face,
+               junction_west_cell=junction_west_cell,
+               junction_east_cell=junction_east_cell,
+               junction_face_x=junction_face_x,
+               dx=dx, dz=dz, Nt=Nt, Nr=Nr)
     itr = int(np.clip(round(case.x_transducer / dx - 0.5), 0, Nt - 1))   # transducer cell
     out_dt = float(output_interval)
 
@@ -2872,6 +4724,7 @@ def run_network(
     jet_height_state = 0.0
     gas_escaped_mass = 0.0
     gas_atmospheric_exchange = 0.0
+    vertical_open_headspace_mass_exchange = 0.0
     liquid_escaped_volume = 0.0
     junction_return_requested_volume = 0.0
     junction_return_deposited_volume = 0.0
@@ -2899,11 +4752,72 @@ def run_network(
     side_t_east_cut_opened = False
     side_t_east_cut_volume = 0.0
     side_t_east_cut_gas_mass = 0.0
-    side_t_east_material_front = float(case.x_riser)
+    side_t_east_material_front = float(junction_face_x)
+    side_t_east_topology_front = float(junction_face_x)
+    side_t_east_material_front_velocity = 0.0
+    side_t_east_retired_cell_count = 0
     last_junction_node_pressure = P_ATM + RHO_L * G * Yfs0
     last_junction_west_flow = 0.0
     last_junction_vertical_flow = 0.0
+    last_junction_vertical_characteristic_flow = 0.0
+    last_junction_taylor_return_flow = 0.0
     last_junction_gas_mouth_fraction = 0.0
+    last_junction_gross_upward_flow = 0.0
+    last_junction_gross_downward_flow = 0.0
+    last_junction_circulation_flow = 0.0
+    last_twostream_upward_volume_residual = 0.0
+    last_twostream_downward_volume_residual = 0.0
+    last_twostream_provenance_volume_residual = 0.0
+    last_twostream_horizontal_source_volume = 0.0
+    last_twostream_initial_source_volume = float(np.sum(Alr) * dz)
+    last_twostream_drag_momentum_residual = 0.0
+    last_twostream_bottom_inventory = 0.0
+    last_tnode_pressure_residual = 0.0
+    last_tnode_pressure_raw_residual = 0.0
+    last_tnode_downward_pressure_residual = 0.0
+    last_tnode_downward_pressure_raw_residual = 0.0
+    last_tnode_capacity_pressure_impulse = 0.0
+    last_tnode_capacity_pressure = 0.0
+    last_tnode_capacity_upward_rate_correction = 0.0
+    last_tnode_capacity_downward_rate_correction = 0.0
+    last_tnode_capacity_kkt_residual = 0.0
+    last_tnode_capacity_packing_residual = 0.0
+    last_tnode_capacity_donor_residual = 0.0
+    last_tnode_capacity_donor_multiplier = 0.0
+    last_tnode_capacity_active_cells = 0
+    last_tnode_capacity_topology_iterations = 0
+    last_tnode_momentum_residual = 0.0
+    last_tnode_physical_reaction_pressure = 0.0
+    last_tnode_vertical_mouth_pressure = float(last_junction_vertical_pressure)
+    last_twostream_bottom_pressure = float(last_junction_vertical_pressure)
+    last_tnode_fv_mouth_pressure_residual = 0.0
+    last_tnode_gas_reaction_requested = 0.0
+    last_tnode_gas_reaction_applied = 0.0
+    last_tnode_gas_reaction_application_residual = 0.0
+    last_tnode_liquid_gas_action_residual = 0.0
+    last_combined_interphase_momentum_residual = 0.0
+    last_tnode_cell0_drag_length_fraction = 1.0
+    last_tnode_horizontal_liquid_pressure = float(last_junction_node_pressure)
+    last_tnode_horizontal_liquid_pressure_raw = float(
+        last_junction_node_pressure
+    )
+    last_tnode_vertical_liquid_pressure = float(last_junction_vertical_pressure)
+    last_tnode_upward_old_speed = 0.0
+    last_tnode_upward_unconstrained_speed = 0.0
+    last_tnode_upward_characteristic_speed = 0.0
+    last_tnode_upward_characteristic_rate = 0.0
+    last_tnode_first_cell_downward_rate = 0.0
+    last_tnode_first_cell_downward_speed = 0.0
+    last_tnode_outgoing_mouth_downward_rate = 0.0
+    last_tnode_positive_net_receiving_capacity = 0.0
+    last_tnode_node_liquid_volume = 0.0
+    last_tnode_downward_donor_volume = 0.0
+    last_tnode_mouth_upward_area = 0.0
+    last_tnode_mouth_downward_area = 0.0
+    last_tnode_mouth_gas_area = 0.0
+    last_tnode_mouth_liquid_area = 0.0
+    last_tnode_wallis_downward_reference = 0.0
+    last_tnode_downward_constraint_reaction_flux = 0.0
     last_dt_outer = 0.0
     last_dt_phase = 0.0
     last_dt_junction = 0.0
@@ -2962,6 +4876,17 @@ def run_network(
         record_pocket = _pocket_mask(
             alt_state, A, mgt_state, dx, gas_min=0.002
         )
+        # ``record_pocket`` is the pressure/inventory topology.  Its one-sided
+        # tail cell remains active until a retreating fitted front crosses the
+        # west face, but material gas occupies only the part west of the
+        # continuously tracked front.  Keep these meanings separate: the
+        # former closes the conservative gas ledger, while the latter controls
+        # the phase field shown to the user and prevents an elastic tail cell
+        # from appearing as a permanently pinned air depression.
+        record_material_pocket = record_pocket & (
+            (xt < float(junction_face_x))
+            | (xt <= float(side_t_east_material_front) + 1.0e-12)
+        )
         record_void = float(
             np.sum(np.maximum(A - alt_state[record_pocket], 0.0)) * dx
         )
@@ -3005,9 +4930,15 @@ def run_network(
         rec["pocket_head"].append(float(measured_head))
         rec["base_q"].append(float(last_q_up))
         rec["base_head"].append(float(last_base_head))
-        rec["junction_alpha"].append(float(alt_state[jx] / A))
-        left_alpha = np.asarray(alt_state[:jx + 1] / A, dtype=float)
-        right_alpha = np.asarray(alt_state[jx + 1:] / A, dtype=float)
+        rec["junction_alpha"].append(
+            float(alt_state[junction_west_cell] / A)
+        )
+        left_alpha = np.asarray(
+            alt_state[:junction_face] / A, dtype=float
+        )
+        right_alpha = np.asarray(
+            alt_state[junction_face:] / A, dtype=float
+        )
         rec["left_mean_alpha"].append(float(np.mean(left_alpha)) if left_alpha.size else 0.0)
         rec["right_mean_alpha"].append(float(np.mean(right_alpha)) if right_alpha.size else 0.0)
         rec["right_max_alpha"].append(float(np.max(right_alpha)) if right_alpha.size else 0.0)
@@ -3023,7 +4954,7 @@ def run_network(
         # phase plot from the mass-supported pocket topology so the animation
         # does not display pressure rarefactions as spurious water--air waves.
         horizontal_phase_alpha = np.where(
-            record_pocket,
+            record_material_pocket,
             np.clip(alt_state / A, 0.0, 1.0),
             1.0,
         )
@@ -3034,8 +4965,85 @@ def run_network(
         rec["frames_ult"].append(
             np.where(alt_state > 1.0e-9,
                      Qlt / np.maximum(alt_state, EPS), 0.0).copy())
+        rec.setdefault("frames_qlt", []).append(
+            np.asarray(Qlt, dtype=float).copy()
+        )
         rec["frames_mgt"].append(np.asarray(mgt_state, dtype=float).copy())
+        rec.setdefault("frames_jgt", []).append(
+            np.asarray(Jgt, dtype=float).copy()
+        )
         rec["frames_alr"].append(np.clip(alr_state / Ar, 0, 1).copy())
+        rec["frames_alr_raw"].append(
+            np.asarray(alr_state / Ar, dtype=float).copy()
+        )
+        if riser_twostream_state is None:
+            # Before the physical T mouth opens, embed the legacy one-stream
+            # state only for output/audit.  This does not feed the solver.
+            legacy_q = np.asarray(Qlr, dtype=float)
+            upward_area_record = np.where(legacy_q >= 0.0, alr_state, 0.0)
+            downward_area_record = np.where(legacy_q < 0.0, alr_state, 0.0)
+            upward_discharge_record = np.maximum(legacy_q, 0.0)
+            downward_discharge_record = np.minimum(legacy_q, 0.0)
+        else:
+            upward_area_record = np.asarray(
+                riser_twostream_state.upward_area,
+                dtype=float,
+            )
+            downward_area_record = np.asarray(
+                riser_twostream_state.downward_area,
+                dtype=float,
+            )
+            upward_discharge_record = np.asarray(
+                riser_twostream_state.upward_discharge,
+                dtype=float,
+            )
+            downward_discharge_record = np.asarray(
+                riser_twostream_state.downward_discharge,
+                dtype=float,
+            )
+        rec.setdefault("frames_riser_upward_area", []).append(
+            upward_area_record.copy()
+        )
+        rec.setdefault("frames_riser_downward_area", []).append(
+            downward_area_record.copy()
+        )
+        rec.setdefault("frames_riser_upward_discharge", []).append(
+            upward_discharge_record.copy()
+        )
+        rec.setdefault("frames_riser_downward_discharge", []).append(
+            downward_discharge_record.copy()
+        )
+        if riser_liquid_provenance_state is None:
+            horizontal_source_upward_area = np.zeros_like(
+                upward_area_record
+            )
+            horizontal_source_downward_area = np.zeros_like(
+                downward_area_record
+            )
+        else:
+            horizontal_source_upward_area = np.asarray(
+                riser_liquid_provenance_state.upward_source1_area,
+                dtype=float,
+            )
+            horizontal_source_downward_area = np.asarray(
+                riser_liquid_provenance_state.downward_source1_area,
+                dtype=float,
+            )
+        rec.setdefault(
+            "frames_riser_horizontal_source_upward_area", []
+        ).append(horizontal_source_upward_area.copy())
+        rec.setdefault(
+            "frames_riser_horizontal_source_downward_area", []
+        ).append(horizontal_source_downward_area.copy())
+        rec.setdefault("frames_riser_initial_source_area", []).append(
+            np.maximum(
+                upward_area_record
+                + downward_area_record
+                - horizontal_source_upward_area
+                - horizontal_source_downward_area,
+                0.0,
+            )
+        )
         rec["frames_ulr"].append(
             np.where(
                 alr_state > 1.0e-9,
@@ -3044,6 +5052,15 @@ def run_network(
             ).copy()
         )
         rec["frames_agr"].append(alpha_g_r.copy())
+        rec.setdefault("frames_mgr", []).append(
+            np.asarray(mgr_total_state, dtype=float).copy()
+        )
+        rec.setdefault("frames_mgrs", []).append(
+            np.asarray(mgr_res_state, dtype=float).copy()
+        )
+        rec.setdefault("frames_jgrs", []).append(
+            np.asarray(Jgrs, dtype=float).copy()
+        )
         rec["frames_itop"].append(float(itop_now))
         rec["frames_core_mass"].append(float(gas_mass))
         physical_pocket = record_pocket
@@ -3065,6 +5082,9 @@ def run_network(
         )
         rec.setdefault("atmospheric_gas_mass_exchange", []).append(
             float(gas_atmospheric_exchange)
+        )
+        rec.setdefault("vertical_open_headspace_mass_exchange", []).append(
+            float(vertical_open_headspace_mass_exchange)
         )
         rec.setdefault("total_gas_mass_including_atmosphere", []).append(
             float(
@@ -3097,6 +5117,15 @@ def run_network(
         )
         rec.setdefault("side_t_east_material_front", []).append(
             float(side_t_east_material_front)
+        )
+        rec.setdefault("side_t_east_topology_front", []).append(
+            float(side_t_east_topology_front)
+        )
+        rec.setdefault("side_t_east_material_front_velocity", []).append(
+            float(side_t_east_material_front_velocity)
+        )
+        rec.setdefault("side_t_east_retired_cell_count", []).append(
+            int(side_t_east_retired_cell_count)
         )
         rec.setdefault("annular_film_return_volume", []).append(
             float(annular_film_return_volume)
@@ -3155,8 +5184,179 @@ def run_network(
         rec.setdefault("junction_vertical_liquid_flux", []).append(
             float(last_junction_vertical_flow)
         )
+        rec.setdefault(
+            "junction_vertical_characteristic_liquid_flux", []
+        ).append(float(last_junction_vertical_characteristic_flow))
+        rec.setdefault("junction_taylor_return_liquid_flux", []).append(
+            float(last_junction_taylor_return_flow)
+        )
         rec.setdefault("junction_gas_mouth_fraction", []).append(
             float(last_junction_gas_mouth_fraction)
+        )
+        rec.setdefault("junction_gross_upward_liquid_flux", []).append(
+            float(last_junction_gross_upward_flow)
+        )
+        rec.setdefault("junction_gross_downward_liquid_flux", []).append(
+            float(last_junction_gross_downward_flow)
+        )
+        rec.setdefault("junction_countercurrent_circulation_flux", []).append(
+            float(last_junction_circulation_flow)
+        )
+        rec.setdefault("twostream_upward_volume_residual", []).append(
+            float(last_twostream_upward_volume_residual)
+        )
+        rec.setdefault("twostream_downward_volume_residual", []).append(
+            float(last_twostream_downward_volume_residual)
+        )
+        rec.setdefault("twostream_provenance_volume_residual", []).append(
+            float(last_twostream_provenance_volume_residual)
+        )
+        rec.setdefault("twostream_horizontal_source_volume", []).append(
+            float(last_twostream_horizontal_source_volume)
+        )
+        rec.setdefault("twostream_initial_source_volume", []).append(
+            float(last_twostream_initial_source_volume)
+        )
+        rec.setdefault("twostream_drag_momentum_residual", []).append(
+            float(last_twostream_drag_momentum_residual)
+        )
+        rec.setdefault("twostream_bottom_0p1m_inventory", []).append(
+            float(last_twostream_bottom_inventory)
+        )
+        rec.setdefault("twostream_active", []).append(
+            bool(riser_twostream_state is not None)
+        )
+        rec.setdefault("tnode_pressure_balance_residual", []).append(
+            float(last_tnode_pressure_residual)
+        )
+        rec.setdefault("tnode_pressure_raw_residual", []).append(
+            float(last_tnode_pressure_raw_residual)
+        )
+        rec.setdefault("tnode_downward_pressure_balance_residual", []).append(
+            float(last_tnode_downward_pressure_residual)
+        )
+        rec.setdefault("tnode_downward_pressure_raw_residual", []).append(
+            float(last_tnode_downward_pressure_raw_residual)
+        )
+        rec.setdefault("tnode_capacity_pressure_impulse", []).append(
+            float(last_tnode_capacity_pressure_impulse)
+        )
+        rec.setdefault("tnode_capacity_pressure", []).append(
+            float(last_tnode_capacity_pressure)
+        )
+        rec.setdefault("tnode_capacity_upward_rate_correction", []).append(
+            float(last_tnode_capacity_upward_rate_correction)
+        )
+        rec.setdefault("tnode_capacity_downward_rate_correction", []).append(
+            float(last_tnode_capacity_downward_rate_correction)
+        )
+        rec.setdefault("tnode_capacity_kkt_residual", []).append(
+            float(last_tnode_capacity_kkt_residual)
+        )
+        rec.setdefault("tnode_capacity_packing_residual", []).append(
+            float(last_tnode_capacity_packing_residual)
+        )
+        rec.setdefault("tnode_capacity_donor_residual", []).append(
+            float(last_tnode_capacity_donor_residual)
+        )
+        rec.setdefault("tnode_capacity_donor_multiplier", []).append(
+            float(last_tnode_capacity_donor_multiplier)
+        )
+        rec.setdefault("tnode_capacity_active_cells", []).append(
+            int(last_tnode_capacity_active_cells)
+        )
+        rec.setdefault("tnode_capacity_topology_iterations", []).append(
+            int(last_tnode_capacity_topology_iterations)
+        )
+        rec.setdefault("tnode_momentum_balance_residual", []).append(
+            float(last_tnode_momentum_residual)
+        )
+        rec.setdefault("tnode_physical_reaction_pressure", []).append(
+            float(last_tnode_physical_reaction_pressure)
+        )
+        rec.setdefault("tnode_vertical_mouth_pressure", []).append(
+            float(last_tnode_vertical_mouth_pressure)
+        )
+        rec.setdefault("twostream_bottom_pressure", []).append(
+            float(last_twostream_bottom_pressure)
+        )
+        rec.setdefault("tnode_fv_mouth_pressure_residual", []).append(
+            float(last_tnode_fv_mouth_pressure_residual)
+        )
+        rec.setdefault("tnode_gas_reaction_requested", []).append(
+            float(last_tnode_gas_reaction_requested)
+        )
+        rec.setdefault("tnode_gas_reaction_applied", []).append(
+            float(last_tnode_gas_reaction_applied)
+        )
+        rec.setdefault("tnode_gas_reaction_application_residual", []).append(
+            float(last_tnode_gas_reaction_application_residual)
+        )
+        rec.setdefault("tnode_liquid_gas_action_residual", []).append(
+            float(last_tnode_liquid_gas_action_residual)
+        )
+        rec.setdefault("combined_interphase_momentum_residual", []).append(
+            float(last_combined_interphase_momentum_residual)
+        )
+        rec.setdefault("tnode_cell0_drag_length_fraction", []).append(
+            float(last_tnode_cell0_drag_length_fraction)
+        )
+        rec.setdefault("tnode_horizontal_liquid_pressure", []).append(
+            float(last_tnode_horizontal_liquid_pressure)
+        )
+        rec.setdefault("tnode_horizontal_liquid_pressure_raw", []).append(
+            float(last_tnode_horizontal_liquid_pressure_raw)
+        )
+        rec.setdefault("tnode_vertical_liquid_pressure", []).append(
+            float(last_tnode_vertical_liquid_pressure)
+        )
+        rec.setdefault("tnode_upward_old_speed", []).append(
+            float(last_tnode_upward_old_speed)
+        )
+        rec.setdefault("tnode_upward_unconstrained_speed", []).append(
+            float(last_tnode_upward_unconstrained_speed)
+        )
+        rec.setdefault("tnode_upward_characteristic_speed", []).append(
+            float(last_tnode_upward_characteristic_speed)
+        )
+        rec.setdefault("tnode_upward_characteristic_rate", []).append(
+            float(last_tnode_upward_characteristic_rate)
+        )
+        rec.setdefault("tnode_first_cell_downward_rate", []).append(
+            float(last_tnode_first_cell_downward_rate)
+        )
+        rec.setdefault("tnode_first_cell_downward_speed", []).append(
+            float(last_tnode_first_cell_downward_speed)
+        )
+        rec.setdefault("tnode_outgoing_mouth_downward_rate", []).append(
+            float(last_tnode_outgoing_mouth_downward_rate)
+        )
+        rec.setdefault("tnode_positive_net_receiving_capacity", []).append(
+            float(last_tnode_positive_net_receiving_capacity)
+        )
+        rec.setdefault("tnode_node_liquid_volume", []).append(
+            float(last_tnode_node_liquid_volume)
+        )
+        rec.setdefault("tnode_downward_donor_volume", []).append(
+            float(last_tnode_downward_donor_volume)
+        )
+        rec.setdefault("tnode_mouth_upward_area", []).append(
+            float(last_tnode_mouth_upward_area)
+        )
+        rec.setdefault("tnode_mouth_downward_area", []).append(
+            float(last_tnode_mouth_downward_area)
+        )
+        rec.setdefault("tnode_mouth_gas_area", []).append(
+            float(last_tnode_mouth_gas_area)
+        )
+        rec.setdefault("tnode_mouth_liquid_area", []).append(
+            float(last_tnode_mouth_liquid_area)
+        )
+        rec.setdefault("tnode_wallis_downward_reference", []).append(
+            float(last_tnode_wallis_downward_reference)
+        )
+        rec.setdefault("tnode_downward_constraint_reaction_flux", []).append(
+            float(last_tnode_downward_constraint_reaction_flux)
         )
         rec.setdefault("junction_west_head", []).append(
             float((last_junction_west_pressure - P_ATM) / (RHO_L * G))
@@ -3172,7 +5372,7 @@ def run_network(
         rec.setdefault("dt_junction_limit", []).append(float(last_dt_junction))
 
     append_record(
-        0.0,
+        t,
         Alt,
         Alr,
         Mgt,
@@ -3180,22 +5380,53 @@ def run_network(
         Mgrs,
         np.full(Nr, rho_atm),
     )
-    next_out = out_dt
+    next_out = t + out_dt
 
     dt_prev = 0.0
     wall_start = time.perf_counter()
     while t < case.t_end - 1e-12:
+        resolved_horizontal_handoff_this_step = False
+        twostream_active_step = riser_twostream_state is not None
+        twostream_work_state: VerticalTwoStreamState | None = None
+        twostream_provenance_work_state: (
+            VerticalTwoStreamLiquidProvenanceState | None
+        ) = None
+        riser_liquid_provenance_next = riser_liquid_provenance_state
+        twostream_mouth_plan = None
+        twostream_top_boundary: DirectionalBoundaryFlux | None = None
+        twostream_sweep_overflow_rate = 0.0
+        twostream_handoff_requested = False
+        confined_gross_exchange_active = False
+        confined_gross_upward_flow = 0.0
+        confined_gross_downward_flow = 0.0
+        confined_gross_downward_weights = None
+        external_gross_exchange_applied = False
+        last_tnode_gas_reaction_requested = 0.0
+        last_tnode_gas_reaction_applied = 0.0
+        last_tnode_gas_reaction_application_residual = 0.0
+        last_tnode_liquid_gas_action_residual = 0.0
+        last_combined_interphase_momentum_residual = 0.0
+        last_tnode_cell0_drag_length_fraction = 1.0
+        last_junction_gross_upward_flow = 0.0
+        last_junction_gross_downward_flow = 0.0
+        last_junction_circulation_flow = 0.0
+        bidirectional_tnode_upward_speed_work = (
+            bidirectional_tnode_upward_speed
+        )
+        bidirectional_tnode_upward_speed_next = (
+            bidirectional_tnode_upward_speed
+        )
+        taylor_swept_fraction_next = taylor_swept_fraction.copy()
         liquid_volume_before_step = float(
             np.sum(Alt) * dx + np.sum(Alr) * dz
         )
         junction_wave_active = bool(
-            external_horizontal_state is not None
-            and bool(external_horizontal_state.vented)
-        )
-        if junction_wave_active and external_open_gas_inventory is None:
-            raise FloatingPointError(
-                "vented shock-fit state has no open lumped gas inventory"
+            junction_topology_opened
+            or (
+                external_horizontal_state is not None
+                and bool(external_horizontal_state.vented)
             )
+        )
         # ---------- pressures (closed system: air-pocket compression + hydrostatic head from
         #            the OPEN tower free surface, which well-balances the resting water column) ----------
         # Gas mass and void MIGRATE TOGETHER (crown-exchange transport below), so a
@@ -3323,6 +5554,11 @@ def run_network(
             if i1g < Nt and alpha_l_t[i1g] < 0.999:
                 Pt[i1g] = Pt[i1g - 1] + RHO_L * G * (h_layer[i1g] - h_layer[i1g - 1])
                 Pt_surface[i1g] = Pt_surface[i1g - 1]
+        # Preserve the thermodynamic/interface trace before adding the
+        # artificial bulk-viscosity stress.  The latter is an axial numerical
+        # momentum flux and must not become a normal pressure pump at the
+        # orthogonal riser mouth.
+        Pt_surface_without_bulk = Pt_surface.copy()
         # Linear acoustic bulk viscosity in the (near-)full reach: q = -rho*nu_b*du/dx
         # with nu_b ~ a*dx.  This is the standard sub-cell damper for the stiff
         # elastic branch -- it acts ONLY on cell-scale compression/expansion rate
@@ -3374,19 +5610,34 @@ def run_network(
                 coupled_gas_parameters.resolved_density_fraction
             ),
         )
+        stratified_supported_t &= (
+            horizontal_void_for_flux
+            >= (
+                coupled_gas_parameters.horizontal_capillary_void_fraction
+                * A
+            )
+        )
         Pt_external = np.where(
             stratified_supported_t,
-            P_ATM - bulk_corr_t,
+            Pt_surface,
             Pt_surface - RHO_L * a2 * elastic_dev_t,
         )
-        # In a resolved stratified cell the companion-model flux already
-        # contains gas pressure through ``0.5*Lambda_d*A_l**2``.  Only the
-        # acoustic bulk-viscosity correction remains as a regular pressure
-        # source there.  Gas-free elastic cells retain their external datum
-        # after subtracting the conservative water-hammer pressure.  This
-        # branch-consistent split prevents counting gas pressure twice.
+        Pt_external_tnode = np.where(
+            stratified_supported_t,
+            Pt_surface_without_bulk,
+            Pt_surface_without_bulk - RHO_L * a2 * elastic_dev_t,
+        )
+        # The resolved free-surface flux now contains only the exact circular
+        # Saint--Venant hydrostatic moment.  Its surface-gas pressure therefore
+        # enters once through this regular pressure source.  Gas-free elastic
+        # cells retain their external datum after subtracting the conservative
+        # water-hammer pressure.
         # Hydrostatic pressure of the resolved vertical liquid column.
-        head_r = np.maximum(Yfs - zr, 0.0)
+        head_r = (
+            _vertical_liquid_holdup_head(Alr / Ar, dz)
+            if riser_breakthrough
+            else np.maximum(Yfs - zr, 0.0)
+        )
         Pr = np.where(wetr, Pr + RHO_L * G * head_r, Pr)
         # acoustic bulk viscosity in the riser column (same damper as the tunnel)
         w_bulk_r = np.clip((Alr / Ar - 0.95) / 0.02, 0.0, 1.0)
@@ -3407,9 +5658,8 @@ def run_network(
         # face, not a selected cell centre.  This distinction matters after the
         # fitted front arrives: the two horizontal face flows may differ by the
         # simultaneous vertical flow while the node itself stores no volume.
-        junction_face = int(np.clip(jx + 1, 1, Nt - 1))
-        iw = junction_face - 1
-        ie = junction_face
+        iw = junction_west_cell
+        ie = junction_east_cell
         p_w = float(Pt_crown[iw])
         p_e = float(Pt_crown[ie])
         p_v = float(Pr[0] + RHO_L * G * 0.5 * dz)
@@ -3419,9 +5669,15 @@ def run_network(
         u_w_out = -float(Qlt[iw] / max(Alt[iw], 1.0e-3 * A))
         u_e_out = float(Qlt[ie] / max(Alt[ie], 1.0e-3 * A))
         u_v_out = float(Qlr[0] / max(Alr[0], 1.0e-2 * Ar))
-        alpha_g_j_pre = float(np.clip(1.0 - Alt[jx] / A, 0.0, 0.98))
-        gas_void_j = max(A - Alt[jx], 1.0e-4 * A)
-        gas_density_j = max(Mgt[jx] / max(gas_void_j * dx, EPS), 0.0)
+        alpha_g_j_pre = float(
+            np.clip(1.0 - Alt[junction_west_cell] / A, 0.0, 0.98)
+        )
+        gas_void_j = max(
+            A - Alt[junction_west_cell], 1.0e-4 * A
+        )
+        gas_density_j = max(
+            Mgt[junction_west_cell] / max(gas_void_j * dx, EPS), 0.0
+        )
         P_gas_j = gas_density_j * R_GAS * T_GAS
         P_connected_j = P_gas_j
         horizontal_void_raw = np.maximum(
@@ -3471,11 +5727,38 @@ def run_network(
         junction_pocket_mask = (
             junction_pocket_supported | junction_pocket_receiver
         )
+        # A cell can momentarily be packed to the liquid tolerance while still
+        # carrying finite connected gas mass.  Declaring the crown mouth shut
+        # from ``A_l`` alone then toggles the T pressure owner and creates the
+        # nonphysical 8-s stop/restart.  Retain the Young--Laplace crown passage
+        # when the local gas inventory can support that capillary volume at the
+        # same topology-density criterion used by the gas graph.  Positivity
+        # floor mass is below this threshold and cannot open the mouth.
+        capillary_horizontal_void = (
+            coupled_gas_parameters.horizontal_capillary_void_fraction * A
+        )
+        capillary_junction_mass = (
+            coupled_gas_parameters.topology_density_fraction
+            * rho_atm
+            * capillary_horizontal_void
+            * dx
+        )
+        junction_capillary_mass_supported = bool(
+            Mgt[junction_west_cell] > capillary_junction_mass
+        )
+        effective_alpha_g_j = max(
+            alpha_g_j_pre,
+            (
+                coupled_gas_parameters.horizontal_capillary_void_fraction
+                if junction_capillary_mass_supported
+                else 0.0
+            ),
+        )
         pocket_mass_j, pocket_volume_j = _connected_pocket_inventory(
             Alt,
             Mgt,
             junction_pocket_mask,
-            index=jx,
+            index=junction_west_cell,
             full_area=A,
             cell_width=dx,
         )
@@ -3484,17 +5767,15 @@ def run_network(
                 pocket_mass_j * R_GAS * T_GAS / pocket_volume_j,
                 12.0 * P_ATM,
             )
-        if external_open_gas_inventory is not None:
-            # The post-contact horizontal gas phase is one acoustically
-            # equilibrated reservoir.  Its pressure comes from its complete
-            # mass and geometric volume, not from whichever mapped display
-            # cell happens to contain the T centre.
-            P_gas_j = external_open_gas_inventory.pressure_absolute
-            P_connected_j = P_gas_j
         horizontal_gas_at_junction = bool(
             junction_wave_active
-            and alpha_g_j_pre > case.tower_entry_alpha_min
-            and junction_pocket_mask[jx]
+            and (
+                (
+                    alpha_g_j_pre > case.tower_entry_alpha_min
+                    and junction_pocket_mask[junction_west_cell]
+                )
+                or junction_capillary_mass_supported
+            )
         )
 
         # The positivity-floor atmospheric mass stored in a nominally full
@@ -3575,9 +5856,27 @@ def run_network(
                     common_mass * R_GAS * T_GAS / common_volume,
                     12.0 * P_ATM,
                 )
-
-        if external_open_gas_inventory is not None:
-            P_connected_j = external_open_gas_inventory.pressure_absolute
+            # Before breakthrough the connected gas is a confined acoustic
+            # pocket and the component EOS above is its correct short-time
+            # normal stress.  After the material core reaches the open lip,
+            # however, gas mass and pressure are already advanced by the
+            # distributed vertical gas equation with its vent boundary.  A
+            # second whole-component isothermal EOS treats that open column as
+            # sealed and generated the spurious -40 to -70 kPa T-mouth suction
+            # at 8 s.  Use the collocated resolved base-cell pressure once the
+            # gas path is open.
+            if (
+                riser_breakthrough
+                and vertical_void_raw[0] > EPS
+                and Mgr[0] > 0.0
+            ):
+                P_connected_j = min(
+                    float(Mgr[0])
+                    * R_GAS
+                    * T_GAS
+                    / max(float(vertical_void_raw[0]) * dz, EPS),
+                    12.0 * P_ATM,
+                )
 
         # Gas and liquid share the physical T-mouth area.  Before gas arrival
         # the complete bore belongs to the liquid characteristic.  Once a
@@ -3586,7 +5885,7 @@ def run_network(
         # actually opened void in the first riser cell.
         horizontal_gas_mouth = (
             junction_mouth_area(
-                alpha_g_j_pre, coupled_gas_parameters
+                effective_alpha_g_j, coupled_gas_parameters
             )
             if horizontal_gas_at_junction
             else 0.0
@@ -3658,12 +5957,17 @@ def run_network(
             )
             horizontal_west_node_flow = horizontal_throughflow
             horizontal_east_node_flow = horizontal_throughflow
-            # The remaining tower liquid is a connected water column.  Its
-            # incoming pressure characteristic stays on the water-hammer
-            # branch; the gas/free-surface wave speed belongs to the separately
-            # resolved gas/interface equations and must not be used as liquid
-            # impedance here.
-            riser_wave_speed = case.a_wh
+            # While the Taylor nose remains confined, the upper liquid slug is
+            # still a connected water column and uses the water-hammer
+            # characteristic.  After material breakthrough, the mouth contains
+            # an open gas core and a free liquid film/churn layer; the relevant
+            # branch impedance is then the gravity-wave scale, not the acoustic
+            # impedance of a fictitious full-bore water column.
+            riser_wave_speed = (
+                math.sqrt(G * case.Dr)
+                if riser_breakthrough
+                else case.a_wh
+            )
         u_vertical_characteristic = (
             u_v_out
             + (Pj - p_v) / max(RHO_L * riser_wave_speed, EPS)
@@ -3691,9 +5995,41 @@ def run_network(
         glug_activation = _two_phase_mixing_activation(
             mixing_gas_fraction
         )
+        vertical_gas_density_at_mouth = rho_atm
+        vertical_gas_superficial_velocity = 0.0
+        if gas_at_junction and (
+            case.enable_vertical_twostream or riser_breakthrough
+        ):
+            vertical_void_at_mouth = max(
+                Ar - float(Alr[0]), 1.0e-4 * Ar
+            )
+            vertical_gas_density_at_mouth = float(
+                Mgr[0] / max(vertical_void_at_mouth * dz, EPS)
+            )
+            vertical_gas_velocity_at_mouth = float(
+                Jgrs[0] / max(Mgr[0], EPS)
+            )
+            vertical_gas_superficial_velocity = max(
+                vertical_gas_velocity_at_mouth, 0.0
+            ) * vertical_void_at_mouth / max(Ar, EPS)
+        # The bubbly/glug loss is a counter-current loss.  It must not be
+        # applied when gas and liquid both move upward, because that suppresses
+        # the physically resolved horizontal-to-vertical water tongue.  The
+        # ordinary ninety-degree tee loss remains active in both directions.
+        countercurrent_glug = bool(
+            u_vertical_characteristic < 0.0
+            and vertical_gas_superficial_velocity > 0.0
+        )
+        glug_direction_factor = (
+            float(countercurrent_glug)
+            if case.enable_vertical_twostream
+            else 1.0
+        )
         loss = max(
             float(case.junction_loss_coeff)
-            + float(case.glug_loss_coeff) * glug_activation,
+            + float(case.glug_loss_coeff)
+            * glug_activation
+            * glug_direction_factor,
             0.0,
         )
         speed_characteristic = abs(float(u_vertical_characteristic))
@@ -3724,6 +6060,23 @@ def run_network(
         junction_vertical_node_flow = (
             junction_liquid_area * u_vertical_node
         )
+        last_junction_vertical_characteristic_flow = float(
+            junction_vertical_node_flow
+        )
+        if riser_breakthrough and gas_at_junction:
+            junction_vertical_node_flow = _countercurrent_flooding_liquid_flow(
+                junction_vertical_node_flow,
+                upward_gas_superficial_velocity=(
+                    vertical_gas_superficial_velocity
+                ),
+                full_area=Ar,
+                diameter=case.Dr,
+                rho_l=RHO_L,
+                rho_g=vertical_gas_density_at_mouth,
+                gravity=G,
+                wallis_constant=case.vertical_ccfl_constant,
+            )
+        last_junction_taylor_return_flow = 0.0
         last_junction_node_pressure = float(Pj)
         last_junction_west_flow = float(horizontal_west_node_flow)
         last_junction_east_flow = float(horizontal_east_node_flow)
@@ -3755,7 +6108,7 @@ def run_network(
         # blow-down below was dead code and the recorded H* held its 0.5 plateau to
         # the end of the run (experiment: collapse to zero at T*~8.3).
         junction_gassy = bool(alpha_g_j_pre > max(case.tower_entry_alpha_min, 0.05)
-                              or (1.0 - Alt[jx] / A) > 0.20)
+                              or (1.0 - Alt[junction_west_cell] / A) > 0.20)
         # Two hydraulically-open topologies (both are "the pocket sees atmosphere"):
         #  (a) annular/continuous core -- a resolved-gas column from base to surface
         #      (the narrow tower's channelised vent);
@@ -3771,8 +6124,34 @@ def run_network(
             ksurf_pre >= 1
             and np.any(alpha_gr_pre[max(0, ksurf_pre - 1):min(ksurf_pre + 2, Nr)] > 0.10)
         )
-        breakthrough = bool(junction_gassy and ksurf_pre >= 1
-                            and (np.all(alpha_gr_pre[:ksurf_pre] > 0.20) or surface_gassy_pre))
+        raw_breakthrough = bool(
+            junction_gassy
+            and ksurf_pre >= 1
+            and (
+                np.all(alpha_gr_pre[:ksurf_pre] > 0.20)
+                or surface_gassy_pre
+            )
+        )
+        # Once a fitted Taylor nose exists, acoustic receiver/tracer cells
+        # ahead of it cannot declare pneumatic breakthrough.  The gas path
+        # opens only when that material nose actually reaches the bulk liquid
+        # surface; thereafter the state remains latched until its tracer has
+        # vented.  This is a topology criterion, not a prescribed event time.
+        if case.enable_vertical_twostream:
+            # The directional branch is activated only by the fitted material
+            # nose.  A diffuse acoustic tracer tail may satisfy the legacy
+            # alpha_g test before that nose exists; latching on that tail sets
+            # ``already_vented`` and prevents the material front from ever
+            # starting, leaving no swept film corridor at the mouth.
+            breakthrough = bool(
+                riser_breakthrough and riser_material_front > 0.0
+            )
+        else:
+            breakthrough = (
+                bool(riser_breakthrough)
+                if riser_material_front > 0.0
+                else raw_breakthrough
+            )
         # This is an instantaneous topology state, not a latched event or a
         # prescribed blow-down time.  It may close again if the resolved gas
         # connection disappears.
@@ -3789,6 +6168,24 @@ def run_network(
         # a nearly-emptied cell is a phantom velocity that only shrinks dt.
         ult = Qlt / np.maximum(Alt, 1.0e-3 * A)
         ulr = Qlr / np.maximum(Alr, 1.0e-2 * Ar)
+        if riser_twostream_state is not None:
+            twostream_up_velocity = np.divide(
+                np.asarray(riser_twostream_state.upward_discharge),
+                np.maximum(
+                    np.asarray(riser_twostream_state.upward_area),
+                    1.0e-3 * Ar,
+                ),
+            )
+            twostream_down_velocity = np.divide(
+                np.asarray(riser_twostream_state.downward_discharge),
+                np.maximum(
+                    np.asarray(riser_twostream_state.downward_area),
+                    1.0e-3 * Ar,
+                ),
+            )
+        else:
+            twostream_up_velocity = np.zeros_like(ulr)
+            twostream_down_velocity = np.zeros_like(ulr)
         ugt_now = np.where(Mgt > 1.0e-14, Jgt / np.maximum(Mgt, 1.0e-14), 0.0)
         ct = np.sqrt(a2 * np.clip((Alt / A - 0.6) / 0.35, 0.0, 1.0) + G * case.D + 1e-6)
         cr = np.sqrt(a2 * np.clip((Alr / Ar - 0.6) / 0.35, 0.0, 1.0) + G * case.Dr + 1e-6)
@@ -3830,14 +6227,25 @@ def run_network(
             if junction_wave_active
             else float(np.max(np.abs(ugt_now)) + gas_wave)
         )
+        cfl_horizontal_liquid = float(np.max(np.abs(ult) + ct))
+        cfl_vertical_liquid = float(np.max(np.abs(ulr) + cr))
+        cfl_twostream_up = float(
+            np.max(np.abs(twostream_up_velocity) + cr)
+        )
+        cfl_twostream_down = float(
+            np.max(np.abs(twostream_down_velocity) + cr)
+        )
+        cfl_vertical_gas = float(np.max(np.abs(ugr_now)) + gas_wave)
         smax = max(
-            float(np.max(np.abs(ult) + ct)),
-            float(np.max(np.abs(ulr) + cr)),
+            cfl_horizontal_liquid,
+            cfl_vertical_liquid,
+            cfl_twostream_up,
+            cfl_twostream_down,
             horizontal_gas_outer_speed,
-            float(np.max(np.abs(ugr_now)) + gas_wave),
+            cfl_vertical_gas,
         )
         if junction_wave_active:
-            horizontal_lambda_cfl = _decoupled_restoring_coefficient(
+            horizontal_shallow_coefficient = _decoupled_restoring_coefficient(
                 Alt,
                 Qlt,
                 Mgt,
@@ -3846,13 +6254,16 @@ def run_network(
                 diameter=case.D,
                 cell_width=dx,
             )
-            horizontal_twofluid_celerity = np.sqrt(
-                np.maximum(horizontal_lambda_cfl * np.maximum(Alt, 0.0), 0.0)
+            horizontal_shallow_celerity = np.sqrt(
+                np.maximum(
+                    horizontal_shallow_coefficient * np.maximum(Alt, 0.0),
+                    0.0,
+                )
                 + 1.0e-8
             )
             smax = max(
                 smax,
-                float(np.max(np.abs(ult) + horizontal_twofluid_celerity)),
+                float(np.max(np.abs(ult) + horizontal_shallow_celerity)),
             )
         # Gas-void positivity is enforced locally on the shared liquid face
         # fluxes below.  It must not impose a non-propagating global timestep.
@@ -3877,6 +6288,31 @@ def run_network(
             out_dt,
             case.t_end - t,
         )
+        if (
+            not math.isfinite(dt)
+            or dt < 1.0e-9
+            or not math.isfinite(smax)
+        ):
+            horizontal_speed = np.abs(
+                Qlt / np.maximum(Alt, 1.0e-9 * A)
+            )
+            bad_index = int(np.argmax(horizontal_speed))
+            raise FloatingPointError(
+                "outer CFL collapsed: "
+                f"t={t:.12g}, dt={dt:.12g}, smax={smax:.12g}, "
+                f"cfl_hl={cfl_horizontal_liquid:.12g}, "
+                f"cfl_vl={cfl_vertical_liquid:.12g}, "
+                f"cfl_up={cfl_twostream_up:.12g}, "
+                f"cfl_down={cfl_twostream_down:.12g}, "
+                f"cfl_hg={horizontal_gas_outer_speed:.12g}, "
+                f"cfl_vg={cfl_vertical_gas:.12g}, "
+                f"cell={bad_index}, x={xt[bad_index]:.12g}, "
+                f"alpha_l={Alt[bad_index]/A:.12g}, "
+                f"Q_l={Qlt[bad_index]:.12g}, "
+                f"u_l={Qlt[bad_index]/max(Alt[bad_index], 1.0e-9*A):.12g}, "
+                f"M_g={Mgt[bad_index]:.12g}, "
+                f"J_g={Jgt[bad_index]:.12g}"
+            )
         last_dt_outer = float(dt)
         last_dt_phase = (
             float(dt_phase) if np.isfinite(dt_phase) else 0.0
@@ -3886,6 +6322,7 @@ def run_network(
         )
 
         external_horizontal_next = None
+        external_horizontal_commit_state = None
         if external_horizontal_active:
             # Advance the fitted interface over exactly the same physical time
             # increment as the network.  The shock solver performs its own CFL
@@ -3894,90 +6331,99 @@ def run_network(
             external_horizontal_next = external_horizontal_solver.step(
                 external_horizontal_state,
                 dt,
-                external_pressure_abs=(
-                    None
-                    if external_open_gas_inventory is None
-                    else external_open_gas_inventory.pressure_absolute
-                ),
+                external_pressure_abs=None,
             )
 
         # ================= TUNNEL update =================
-        # One finite-volume liquid operator is used after hand-off.  Before
-        # hand-off its provisional state is replaced by the conservative
-        # shock-fitting solution over the same dt.
-        if phase_horizontal_flux is None:
-            F1, F2, Al_face, Ar_face = _decoupled_liquid_rusanov_flux(
-                Alt,
-                Qlt,
-                Mgt,
-                Jgt,
-                area_full=A,
-                diameter=case.D,
-                wave_speed=case.a_wh,
-                cell_width=dx,
-            )
-        else:
-            F1, F2, Al_face, Ar_face = (
-                component.copy() for component in phase_horizontal_flux
-            )
-        # CLOSED WALLS carry exactly zero volume flux.  The mirror ghost only
-        # guarantees this for the central wet-branch flux (antisymmetric Q
-        # cancels); the CONTACT branch is donor-cell upwind, and at a wall face
-        # uf_t = 0.5*(-u0 + u0) = 0 selects the GHOST flux -Q0 -- i.e. the wall
-        # face passed -Qlt[0] of volume whenever the end cell was gassy (the
-        # capsule end ALWAYS is).  Every slosh cycle of the release transient
-        # pumped water through the closed end: +0.48 L had appeared by t=4 s
-        # (probe9), swelling the tower by 8 cm of level with the tunnel
-        # inventory unchanged -- the "geysering" of the no-geyser case.
-        F1[0] = 0.0
-        F1[-1] = 0.0
-        # Butterfly valve = a BLENDED WALL at its face during the opening stroke.
-        # phi = theta^2 is the orifice transmissivity of the turning disc: at
-        # phi<1 the face passes only phi of its open-valve flux.  Modelling the
-        # stroke as cell FRICTION alone (the old closure) left the pressure
-        # gradient free to slam the first full cell into the under-pressured
-        # capsule at ~12 m/s^2 the instant t>0 -- a grid-sharp impact that rang
-        # the whole slug on the pocket spring at +-0.4 m of head for the rest of
-        # the run (the experiment's release is quasi-static: H* walks smoothly
-        # from 0.50 to its 0.537 plateau with no overshoot, V&W2011 Fig.5).
+        # Before hand-off the distributed state is provisional, but its face
+        # fluxes and donor capacities participate in the coupled T transaction.
+        # Keep that stage until the T coupling is reformulated around a single
+        # owner; replacing it by a mapped-state average changes the riser event.
         theta_v = min(max(t / max(case.valve_open_time, 1.0e-9), 0.02), 1.0)
         phi_v = theta_v * theta_v
         phi_flow = phi_v
-        if phi_flow < 1.0:
-            F1[fv] *= phi_flow
-            F2[fv] *= phi_flow
-        F1, F2 = _limit_liquid_donor_flux(
-            Alt,
-            F1,
-            F2,
-            cell_width=dx,
-            dt=dt,
-            retained_fraction=0.10,
-        )
-        if junction_wave_active:
-            F1, F2 = _limit_gas_void_closure_flux(
+        if junction_wave_active and phase_horizontal_flux is None:
+            # SSP-RK2 evaluates its own two stage fluxes.  Do not compute and
+            # discard a third identical Riemann pass before entering it.
+            Alt_new, Qlt_new, F1, F2 = (
+                _advance_horizontal_liquid_hyperbolic_ssprk2(
+                    Alt,
+                    Qlt,
+                    Mgt,
+                    Jgt,
+                    area_full=A,
+                    diameter=case.D,
+                    wave_speed=case.a_wh,
+                    cell_width=dx,
+                    dt=dt,
+                    valve_face=fv,
+                    valve_transmissivity=phi_flow,
+                    junction_wave_active=True,
+                    rho_reference=rho_atm,
+                    coupled_gas_parameters=coupled_gas_parameters,
+                    phase_volume_cfl=case.phase_volume_cfl,
+                )
+            )
+        else:
+            if phase_horizontal_flux is None:
+                F1, F2, _, _ = _decoupled_liquid_rusanov_flux(
+                    Alt,
+                    Qlt,
+                    Mgt,
+                    Jgt,
+                    area_full=A,
+                    diameter=case.D,
+                    wave_speed=case.a_wh,
+                    cell_width=dx,
+                    minimum_stratified_void_fraction=(
+                        coupled_gas_parameters.horizontal_capillary_void_fraction
+                    ),
+                )
+            else:
+                F1, F2, _, _ = (
+                    component.copy() for component in phase_horizontal_flux
+                )
+            # Closed walls carry zero liquid volume flux.  During valve opening
+            # the turning disc scales the single physical valve face.
+            F1[0] = 0.0
+            F1[-1] = 0.0
+            if phi_flow < 1.0:
+                F1[fv] *= phi_flow
+                F2[fv] *= phi_flow
+            F1, F2 = _limit_liquid_donor_flux(
                 Alt,
-                Mgt,
                 F1,
                 F2,
-                full_area=A,
                 cell_width=dx,
                 dt=dt,
-                rho_reference=rho_atm,
-                density_fraction=(
-                    coupled_gas_parameters.topology_density_fraction
-                ),
-                density_ceiling=(
-                    coupled_gas_parameters.resolved_density_ceiling
-                ),
-                void_floor_fraction=(
-                    coupled_gas_parameters.void_floor_fraction
-                ),
-                active_void_fraction=(
-                    coupled_gas_parameters.active_void_fraction
-                ),
-                closure_fraction=case.phase_volume_cfl,
+                retained_fraction=0.10,
             )
+            if junction_wave_active:
+                F1, F2 = _limit_gas_void_closure_flux(
+                    Alt,
+                    Mgt,
+                    F1,
+                    F2,
+                    full_area=A,
+                    cell_width=dx,
+                    dt=dt,
+                    rho_reference=rho_atm,
+                    density_fraction=(
+                        coupled_gas_parameters.topology_density_fraction
+                    ),
+                    density_ceiling=(
+                        coupled_gas_parameters.resolved_density_ceiling
+                    ),
+                    void_floor_fraction=(
+                        coupled_gas_parameters.void_floor_fraction
+                    ),
+                    active_void_fraction=(
+                        coupled_gas_parameters.active_void_fraction
+                    ),
+                    closure_fraction=case.phase_volume_cfl,
+                )
+            Alt_new = Alt - dt / dx * (F1[1:] - F1[:-1])
+            Qlt_new = Qlt - dt / dx * (F2[1:] - F2[:-1])
         # The horizontal T control volume retains the ordinary west/east
         # finite-volume fluxes.  The vertical exchange is a conservative side
         # source applied below; therefore no horizontal face is frozen or
@@ -3985,53 +6431,48 @@ def run_network(
         last_junction_east_flux = (
             float(F1[junction_face]) if junction_wave_active else 0.0
         )
-        Alt_new = Alt - dt / dx * (F1[1:] - F1[:-1])
-        Qlt_new = Qlt - dt / dx * (F2[1:] - F2[:-1])
-        # sources: pressure gradient (theta=0, no gravity) + friction
         Pt_momentum = Pt_external
-        Pth = np.empty(Nt + 2); Pth[1:-1] = Pt_momentum
-        Pth[0] = Pt_momentum[0]                   # closed upstream: zero-grad
-        Pth[-1] = Pt_momentum[-1]                 # closed downstream: zero-grad
-        dPdx = (Pth[2:] - Pth[:-2]) / (2.0 * dx)
-        # While the disc still blocks the face, the pressure jump across it is
-        # borne by the DISC (a wall force), not by the fluid: blend the two
-        # adjacent cells' gradients toward their wall-reflected (one-sided)
-        # values so the closed valve accelerates nobody.
+        dPdx = _branch_consistent_external_pressure_gradient(
+            Pt_momentum,
+            stratified_supported_t,
+            cell_width=dx,
+        )
         if phi_flow < 1.0 and 1 <= fv <= Nt - 2:
-            dPdx[fv - 1] = (phi_flow * (Pt_momentum[fv] - Pt_momentum[fv - 2]) + (1.0 - phi_flow) * (Pt_momentum[fv - 1] - Pt_momentum[fv - 2])) / (2.0 * dx)
-            dPdx[fv] = (phi_flow * (Pt_momentum[fv + 1] - Pt_momentum[fv - 1]) + (1.0 - phi_flow) * (Pt_momentum[fv + 1] - Pt_momentum[fv])) / (2.0 * dx)
+            dPdx[fv - 1] = (
+                phi_flow * (Pt_momentum[fv] - Pt_momentum[fv - 2])
+                + (1.0 - phi_flow)
+                * (Pt_momentum[fv - 1] - Pt_momentum[fv - 2])
+            ) / (2.0 * dx)
+            dPdx[fv] = (
+                phi_flow * (Pt_momentum[fv + 1] - Pt_momentum[fv - 1])
+                + (1.0 - phi_flow)
+                * (Pt_momentum[fv + 1] - Pt_momentum[fv])
+            ) / (2.0 * dx)
         Dh_t = case.D
-        un = np.where(Alt_new > 1e-9, Qlt_new / np.maximum(Alt_new, EPS), 0.0)
-        # friction: laminar wall shear + turbulent Darcy term (f~0.025) + a mild
-        # interface-churn increment in stratified cells (free-surface sloshing under
-        # the cavity).  Churn must stay MILD: at 1.5 it froze the under-cavity
-        # counter-current, which (a) blocked the pocket from pushing the column back
-        # after the release overshoot (one-way valve: pocket stuck over-compressed at
-        # ~0.45 m instead of relaxing to the ~0.35 m joint equilibrium) and (b)
-        # halved the Benjamin nose speed (drain-back throttled).
+        un = np.where(
+            Alt_new > 1e-9,
+            Qlt_new / np.maximum(Alt_new, EPS),
+            0.0,
+        )
         ag_t = np.clip(1.0 - Alt_new / A, 0.0, 1.0)
         churn_w = 4.0 * ag_t * (1.0 - ag_t)
-        fric_t = (32.0 * MU_L / RHO_L / (Dh_t * Dh_t)
-                  + (
-                      0.025
-                      + case.horizontal_churn_friction * churn_w
-                  ) / (2.0 * Dh_t) * np.abs(un))
-        # butterfly-valve local loss (disc remains in the bore when open, V&W Fig.2):
-        # dP = 0.5*K*rho*u|u| across the valve cell -> friction-like sink over dx.
-        # During the hand-opening stroke (~valve_open_time) the disc throttles the
-        # release: K ~ K_open/theta^2 -> the column accelerates as a body over the
-        # stroke instead of the contact cell alone taking a 0-ms burst.
-        valve_drag = (case.valve_loss_coeff / max(phi_flow, 1.0e-4)) / (4.0 * dx)
+        fric_t = (
+            32.0 * MU_L / RHO_L / (Dh_t * Dh_t)
+            + (
+                0.025
+                + case.horizontal_churn_friction * churn_w
+            )
+            / (2.0 * Dh_t)
+            * np.abs(un)
+        )
+        valve_drag = (
+            case.valve_loss_coeff / max(phi_flow, 1.0e-4)
+        ) / (4.0 * dx)
         fric_t[fv - 1] += valve_drag * abs(un[fv - 1])
         fric_t[fv] += valve_drag * abs(un[fv])
-        # SEMI-IMPLICIT friction: Q/(1+dt*fric) is unconditionally dissipative.
-        # The explicit form -dt*fric*Q flips the sign of u whenever dt*fric > 2 --
-        # which the throttled valve cell reaches for the whole opening stroke
-        # (K/theta^2 ~ 5e3) -- so the "loss" term was a NEGATIVE damper there:
-        # it injected ~11 J of kinetic energy into the slug within 0.1 s (probe12;
-        # the physical release energy is ~0.01 J) and THAT was the hammer that rang
-        # the pocket spring at +-0.4 L of head for the rest of every run.
-        Qlt_new = (Qlt_new - dt * (Alt_new / RHO_L) * dPdx) / (1.0 + dt * fric_t)
+        Qlt_new = (
+            Qlt_new - dt * (Alt_new / RHO_L) * dPdx
+        ) / (1.0 + dt * fric_t)
         # ================= RISER update (Rusanov) =================
         Arg = np.empty(Nr + 2); Qrg = np.empty(Nr + 2); crg = np.empty(Nr + 2)
         Arg[1:-1] = Alr; Qrg[1:-1] = Qlr; crg[1:-1] = cr
@@ -4065,12 +6506,30 @@ def run_network(
             uRf[1:],
         )
         G1 = u_face_r * donor_area_r
-        G2 = G1 * donor_velocity_r
+        G2 = (
+            G1 * donor_velocity_r
+            + _riser_acoustic_momentum_dissipation_flux(
+                Qlr,
+                cr,
+                Alr,
+                full_area=Ar,
+            )
+        )
         # The tower opens into air, not an exterior liquid reservoir.  A
         # negative reconstructed top flux would import water from the copied
-        # ghost state and make the network liquid inventory grow.  Permit
-        # ejection only; pressure/gas characteristics remain bidirectional.
-        if G1[-1] < 0.0:
+        # ghost state and make the network liquid inventory grow.  Conversely,
+        # a tiny cell-centred liquid remnant at the top is not a physical
+        # overflow path while the bulk material surface remains below the lip.
+        # Gate only the liquid boundary; gas remains open to atmosphere.
+        bulk_material_at_outlet = _bulk_material_reaches_riser_outlet(
+            Alr,
+            alpha_gr_pre,
+            full_area=Ar,
+            cell_width=dz,
+            riser_height=case.riser_height,
+            initial_volume_offset=initial_riser_volume_offset,
+        )
+        if G1[-1] < 0.0 or not bulk_material_at_outlet:
             G1[-1] = 0.0
             G2[-1] = 0.0
         # Liquid characteristic boundary at the shared T node.  Extrapolate
@@ -4080,6 +6539,12 @@ def run_network(
         # impedance) instead of both as a ghost-cell force and an unconstrained
         # Rusanov flux.
         p_riser_at_node = float(Pr[0] + RHO_L * G * 0.5 * dz)
+        vertical_two_phase_mouth_pressure = _vertical_two_phase_mouth_pressure(
+            liquid_trace_pressure=p_riser_at_node,
+            connected_gas_pressure=float(P_connected_j),
+            gas_mouth_area=float(geometric_gas_mouth),
+            full_area=Ar,
+        )
         u_riser_inner = float(
             Qlr[0] / max(Alr[0], 1.0e-2 * Ar)
         )
@@ -4188,99 +6653,338 @@ def run_network(
             G1[0] = limited_bottom_flow
             if abs(requested_bottom_flow) > EPS:
                 G2[0] *= limited_bottom_flow / requested_bottom_flow
-        # The V&W terminal-film relation is retained as a diagnostic scale,
-        # not imposed as a second base boundary condition.  The resolved
-        # annular film already receives gravity, wall friction, interphase
-        # exchange, and the T-node pressure characteristic.  Overwriting G1[0]
-        # here after that node solve double-counted drainage and emptied the
-        # Case-A tower several seconds too early.  Its actual bottom flux now
-        # remains the conservative characteristic flux computed above.
+        if G1[0] > 0.0:
+            requested_bottom_flow = float(G1[0])
+            limited_bottom_flow = _limit_riser_bottom_inflow_by_receiving_capacity(
+                Alr,
+                G1,
+                requested_flow=requested_bottom_flow,
+                dt=dt,
+                cell_width=dz,
+                full_area=Ar,
+            )
+            G1[0] = limited_bottom_flow
+            if abs(requested_bottom_flow) > EPS:
+                G2[0] *= limited_bottom_flow / requested_bottom_flow
+        # Outside a fitted Taylor sweep the actual bottom flux remains the
+        # conservative characteristic flux computed above.  During a sweep,
+        # the sub-grid Taylor film/entrainment relation below replaces that
+        # one face flux; it is never added as a second drainage mechanism.
 
         junction_vertical_node_flow = float(G1[0])
         last_junction_vertical_flow = float(G1[0])
         Alr_new = Alr - dt / dz * (G1[1:] - G1[:-1])
         Qlr_new = Qlr - dt / dz * (G2[1:] - G2[:-1])
-        # Side-T entry is a moving cut-cell problem.  A cell-centred two-fluid
-        # topology has no vertical gas face before the first swept volume is
-        # opened, while allowing every geometric void to join the acoustic gas
-        # graph makes the material tracer jump to the top at sound speed.
-        # Advance the contact by the standard confined-bubble drift relation
-        # U_n = J_l + 0.345*sqrt(g*D_r), where J_l is the signed liquid
-        # superficial velocity through the complete riser bore, and move the
-        # swept liquid into the connected upper column conservatively.  Using
-        # Q_l/A_l here would incorrectly attach the gas nose to the fast falling
-        # annular film; the drift relation is explicitly counter-current.
-        # Pressure and momentum remain finite-volume; the cut-cell update only
-        # moves the liquid volume swept by the material contact into available
-        # capacity in the connected upper column.  The operation conserves
-        # liquid volume and axial momentum exactly.  A fitted front may open new
-        # vertical gas volume only while a mass-supported horizontal gas path is
-        # still connected to the T mouth.  Letting vertical gas alone sustain a
-        # one-sided nose sweep creates void volume without a matching horizontal
-        # gas-mass supply.  That defect caused the 7.10--7.15 s pressure collapse
-        # and the near-dry pocket around x=3.5 m.  No Case-A time, transfer
-        # fraction, or target result is imposed by this connectivity condition.
+        # The vertical pressure field remains a distributed two-fluid finite-
+        # volume solve, but its gas/liquid *material contact* is shock fitted.
+        # Without this distinction the acoustic Roe flux transports a tiny
+        # tracer tail through the complete tower and the liquid contact breaks
+        # into spray-like fragments.  The fitted Taylor nose instead advances
+        # with the standard drift relation.  Only the newly swept core volume
+        # is opened; its liquid returns counter-currently through the side tee.
+        material_return_velocity = 0.0
+        material_front_velocity = 0.0
+        active_taylor_core_fraction = riser_gas_core_fraction
         if (
             horizontal_gas_at_junction
-            and (incipient_vertical_gas_receiving or riser_material_front > 0.0)
+            and (
+                incipient_vertical_gas_receiving
+                or riser_material_front > 0.0
+            )
             and geometric_gas_mouth > 0.0
         ):
-            front_cell = min(
-                int(riser_material_front / max(dz, EPS)),
-                Nr - 1,
-            )
-            if front_cell == 0:
-                front_liquid_superficial_velocity = (
-                    junction_vertical_node_flow / max(Ar, EPS)
-                )
-            else:
-                front_liquid_superficial_velocity = float(
-                    Qlr_new[front_cell] / max(Ar, EPS)
-                )
-            material_front_velocity = max(
-                front_liquid_superficial_velocity
-                + 0.345 * math.sqrt(G * case.Dr),
-                0.0,
-            )
             old_material_front = float(riser_material_front)
-            proposed_material_front = min(
-                riser_material_front + material_front_velocity * dt,
-                max(float(wtop), 0.0),
-                case.riser_height,
-            )
             (
-                Alr_new,
-                Qlr_new,
-                material_swept_volume,
-                material_return_velocity,
-            ) = (
-                _sweep_vertical_material_slice_to_junction(
+                proposed_material_front,
+                material_front_velocity,
+                material_front_reached_surface,
+            ) = _advance_riser_taylor_front(
+                old_material_front,
+                free_surface_height=float(Yfs),
+                # Before breakthrough the tower has no mixture outflow at the
+                # open top.  Side-fed gas rises while the displaced annular
+                # film returns through the same T, so the cross-section-
+                # averaged mixture superficial velocity is zero.  Adding the
+                # upward velocity of the upper liquid slug here double counts
+                # displacement and makes the nose about twice too fast.
+                liquid_superficial_velocity=0.0,
+                diameter=case.Dr,
+                riser_height=case.riser_height,
+                dt=dt,
+                already_vented=bool(riser_breakthrough),
+            )
+            active_taylor_core_fraction = min(
+                riser_gas_core_fraction,
+                geometric_gas_mouth / max(Ar, EPS),
+            )
+            swept_height = max(
+                proposed_material_front - old_material_front, 0.0
+            )
+            if swept_height > 0.0 and not riser_breakthrough:
+                # Gas-core displacement supplies the counter-current liquid
+                # film before breakthrough.  ``return_efficiency`` is the
+                # fraction that drains through the T; its complement remains
+                # in the connected upper liquid slug as entrained holdup.
+                # Represent the resulting drainage as the *single* liquid
+                # face flux.  It is not added to the characteristic flux and
+                # therefore cannot count the same returned volume twice.
+                material_displacement_flow = (
+                    active_taylor_core_fraction
+                    * Ar
+                    * swept_height
+                    / dt
+                )
+                requested_material_return_flow = (
+                    case.vertical_taylor_return_efficiency
+                    * material_displacement_flow
+                )
+                # Before the material nose meets the free surface, the V&W
+                # control-volume relation is the confined Taylor displacement
+                # balance.  CCFL belongs to the open, post-breakthrough
+                # topology and is not a second limiter on this same flux.
+                material_return_flow = (
+                    min(
+                        requested_material_return_flow,
+                        riser_terminal_film_flow,
+                    )
+                    if case.enable_vertical_twostream
+                    else requested_material_return_flow
+                )
+                characteristic_upward_preview = max(float(G1[0]), 0.0)
+                preview_horizontal_area, _ = (
+                    _apply_finite_width_side_t_exchange(
+                        Alt_new,
+                        Qlt_new,
+                        upward_flow=characteristic_upward_preview,
+                        opening_weights=side_t_weights,
+                        dt=dt,
+                        cell_width=dx,
+                        full_area=A,
+                    )
+                )
+                return_exchange_weights = _side_t_return_exchange_weights(
+                    preview_horizontal_area,
+                    side_t_weights,
+                    full_area=A,
+                    gas_supported=_mass_backed_gas_topology(
+                        np.maximum(
+                            A - np.clip(preview_horizontal_area, 0.0, A),
+                            0.0,
+                        ),
+                        Mgt,
+                        full_area=A,
+                        cell_width=dx,
+                        rho_reference=rho_atm,
+                        void_floor_fraction=(
+                            coupled_gas_parameters.void_floor_fraction
+                        ),
+                        active_void_fraction=(
+                            coupled_gas_parameters.active_void_fraction
+                        ),
+                        topology_density_fraction=(
+                            coupled_gas_parameters.topology_density_fraction
+                        ),
+                        resolved_density_fraction=(
+                            coupled_gas_parameters.resolved_density_fraction
+                        ),
+                    ),
+                )
+                # The return enters the finite horizontal T footprint, so its
+                # first admissibility limit is the actual receiving capacity
+                # there.  The liquid donor is not the bottom riser cell: it is
+                # the axial slice newly swept by the Taylor nose this step.
+                limited_signed_return = _limit_side_t_downward_liquid_flow(
+                    preview_horizontal_area,
+                    Mgt,
+                    requested_flow=-material_return_flow,
+                    opening_weights=return_exchange_weights,
+                    dt=dt,
+                    cell_width=dx,
+                    full_area=A,
+                    rho_reference=rho_atm,
+                    density_ceiling=(
+                        coupled_gas_parameters.resolved_density_ceiling
+                    ),
+                    void_floor_fraction=(
+                        coupled_gas_parameters.void_floor_fraction
+                    ),
+                    active_void_fraction=(
+                        coupled_gas_parameters.active_void_fraction
+                    ),
+                    topology_density_fraction=(
+                        coupled_gas_parameters.topology_density_fraction
+                    ),
+                )
+                material_return_flow = max(-limited_signed_return, 0.0)
+
+                # The Taylor closure replaces the characteristic bottom face
+                # during a confined sweep.  First undo that face's contribution
+                # to the provisional FV update, then remove exactly the locally
+                # swept return volume.  Depositing the same actual flow over the
+                # horizontal mouth below closes the complete network balance.
+                old_bottom_volume_flux = float(G1[0])
+                old_bottom_momentum_flux = float(G2[0])
+                # Build an interior-only provisional state before the remote
+                # sweep transaction.  Both signs of the old face contribution
+                # are first undone.  Once the newly swept original-water parcel
+                # has been removed, the accepted horizontal inflow is injected
+                # into cell 0.  This ordering prevents new horizontal water
+                # entering during this step from being immediately selected as
+                # Taylor-return donor liquid.
+                characteristic_upward_flow = max(
+                    old_bottom_volume_flux,
+                    0.0,
+                )
+                characteristic_upward_momentum_flux = (
+                    old_bottom_momentum_flux
+                    if old_bottom_volume_flux > 0.0
+                    else 0.0
+                )
+                Alr_new[0] += (
+                    dt / dz * (0.0 - old_bottom_volume_flux)
+                )
+                Qlr_new[0] += (
+                    dt / dz * (0.0 - old_bottom_momentum_flux)
+                )
+                effective_return_core_fraction = (
+                    active_taylor_core_fraction
+                    * material_return_flow
+                    / max(material_displacement_flow, EPS)
+                )
+                (
+                    Alr_new,
+                    Qlr_new,
+                    returned_volume,
+                    _,
+                ) = _return_new_taylor_sweep_to_side_t(
                     Alr_new,
                     Qlr_new,
                     old_front_height=old_material_front,
                     new_front_height=proposed_material_front,
+                    gas_core_area_fraction=effective_return_core_fraction,
+                    full_area=Ar,
+                    dz=dz,
+                )
+                Alr_new[0] += (
+                    dt / dz * characteristic_upward_flow
+                )
+                Qlr_new[0] += (
+                    dt / dz * characteristic_upward_momentum_flux
+                )
+                material_return_flow = returned_volume / dt
+                last_junction_taylor_return_flow = float(material_return_flow)
+                film_velocity = -material_return_flow / max(
+                    (1.0 - active_taylor_core_fraction) * Ar,
+                    EPS,
+                )
+                confined_gross_exchange_active = True
+                confined_gross_upward_flow = characteristic_upward_flow
+                confined_gross_downward_flow = material_return_flow
+                confined_gross_downward_weights = (
+                    return_exchange_weights.copy()
+                )
+                G1[0] = (
+                    confined_gross_upward_flow
+                    - confined_gross_downward_flow
+                )
+                # The remote return already removed its collocated vertical
+                # momentum from the swept slice.  Keep only the true bottom
+                # inflow momentum on this compatibility face; adding a second
+                # film term here would double count it.
+                G2[0] = characteristic_upward_momentum_flux
+                material_return_velocity = film_velocity
+                junction_vertical_node_flow = float(G1[0])
+                last_junction_vertical_flow = float(G1[0])
+                last_junction_gross_upward_flow = float(
+                    confined_gross_upward_flow
+                )
+                last_junction_gross_downward_flow = float(
+                    confined_gross_downward_flow
+                )
+                last_junction_circulation_flow = float(
+                    min(
+                        confined_gross_upward_flow,
+                        confined_gross_downward_flow,
+                    )
+                )
+            if proposed_material_front > old_material_front + 1.0e-15:
+                riser_material_front = proposed_material_front
+                if not vertical_gas_at_junction:
+                    riser_entry_cut_front = riser_material_front
+        else:
+            material_front_reached_surface = bool(riser_breakthrough)
+
+        if (
+            riser_twostream_state is None
+            and riser_material_front > 0.0
+            and not riser_breakthrough
+            and not material_front_reached_surface
+        ):
+            # Keep the fitted material interface sharp without inventing a
+            # second physical return flux.  Refill is moved back into the
+            # connected upper slug with its momentum; the already accepted
+            # side-T Taylor displacement remains the only mouth transaction.
+            Alr_new, Qlr_new, _ = (
+                _restore_refilled_taylor_core_to_unswept_slug(
+                    Alr_new,
+                    Qlr_new,
+                    front_height=riser_material_front,
+                    # A section-averaged grid resolves the churn/entrainment
+                    # layer rather than a perfectly sharp 80/20 interface.
+                    # Use the symmetric two-phase interfacial activation
+                    # 4*alpha_g*alpha_l as the resolved sharpening fraction;
+                    # the remaining excess is retained as prognostic holdup.
                     gas_core_area_fraction=(
-                        geometric_gas_mouth / max(Ar, EPS)
+                        active_taylor_core_fraction
+                        * _two_phase_mixing_activation(
+                            active_taylor_core_fraction
+                        )
                     ),
                     full_area=Ar,
                     dz=dz,
                 )
             )
-            if material_swept_volume > 0.0:
-                riser_material_front = proposed_material_front
-                if not vertical_gas_at_junction:
-                    riser_entry_cut_front = riser_material_front
-                Alt_new, Qlt_new = _apply_finite_width_side_t_exchange(
-                    Alt_new,
-                    Qlt_new,
-                    upward_flow=-material_swept_volume / dt,
-                    opening_weights=side_t_weights,
-                    dt=dt,
-                    cell_width=dx,
-                    incoming_normal_velocity=abs(material_return_velocity),
+
+        material_front_confined = bool(
+            riser_material_front > 0.0
+            and riser_material_front < float(Yfs) - 1.0e-12
+            and not material_front_reached_surface
+            and not riser_breakthrough
+        )
+        material_front_tracked = bool(
+            riser_material_front > 0.0
+            and (
+                horizontal_gas_at_junction
+                or vertical_tracer_present
+                or riser_breakthrough
+            )
+        )
+        if (
+            not twostream_active_step
+            and material_front_tracked
+            and (
+                material_front_confined
+                or (
+                    material_front_reached_surface
+                    and not riser_breakthrough
                 )
-                junction_return_requested_volume += material_swept_volume
-                junction_return_deposited_volume += material_swept_volume
+            )
+        ):
+            # The upper water body is one connected slug separated from the
+            # fitted Taylor core.  Sharpen that contact before either liquid
+            # pressure work or gas topology is evaluated, so both operators
+            # see the same physical void.  The former post-gas ordering could
+            # close a receiver after gas mass had already entered it.
+            Alr_new, Qlr_new = _sharpen_unswept_riser_liquid_slug(
+                Alr_new,
+                Qlr_new,
+                material_front_height=riser_material_front,
+                full_area=Ar,
+                dz=dz,
+            )
+        # The conservative gas Riemann solve below fills exactly this opened
+        # volume; the fitted front restricts tracer topology but does not
+        # replace gas pressure or momentum equations.
         Prh = np.empty(Nr + 2); Prh[1:-1] = Pr
         # Base ghost cell centre sits at z = -dz/2, so its well-balanced hydrostatic
         # value is P_base + rho*g*(dz/2).  Without the half-cell offset the bottom
@@ -4305,9 +7009,20 @@ def run_network(
         # flat Yfs / flat H* plateau); without it the column rings at ~1.5 Hz
         # with +-0.25 L of head from arrival to the end of the run.
         u_base = float(np.clip(Qlr[0] / max(Alr[0], 1.0e-2 * Ar), -U_FLUX_MAX, U_FLUX_MAX))
+        base_countercurrent_glug = bool(
+            u_base < 0.0
+            and vertical_gas_superficial_velocity > 0.0
+        )
+        base_glug_direction_factor = (
+            float(base_countercurrent_glug)
+            if case.enable_vertical_twostream
+            else 1.0
+        )
         K_base = (
             case.junction_loss_coeff
-            + case.glug_loss_coeff * glug_activation
+            + case.glug_loss_coeff
+            * glug_activation
+            * base_glug_direction_factor
         )
         liquid_base_pressure = P_base_liq
         Prh[0] = (liquid_base_pressure + RHO_L * G * (0.5 * dz)
@@ -4317,19 +7032,956 @@ def run_network(
         # Gas momentum uses its own resolved thermodynamic pressure.  The bottom
         # ghost is the local horizontal gas pressure and the top is atmospheric;
         # no extra driving head is added.
-        gas_void_r = np.maximum(Ar - Alr, 1.0e-4 * Ar)
-        P_gas_r = (
-            np.maximum(Mgr, 0.0) * R_GAS * T_GAS
-            / np.maximum(gas_void_r * dz, EPS)
+        gas_void_r_raw = np.maximum(
+            Ar - np.clip(Alr, 0.0, Ar),
+            0.0,
+        )
+        gas_void_r = np.maximum(
+            gas_void_r_raw,
+            coupled_gas_parameters.void_floor_fraction * Ar,
+        )
+        material_pressure_cell = _riser_material_gas_mask(
+            gas_void_r_raw,
+            Mgrs,
+            full_area=Ar,
+            cell_length=dz,
+            reference_density=rho_atm,
+            void_floor_fraction=(
+                coupled_gas_parameters.void_floor_fraction
+            ),
+            active_void_fraction=(
+                coupled_gas_parameters.active_void_fraction
+            ),
+            topology_density_fraction=(
+                coupled_gas_parameters.topology_density_fraction
+            ),
+            resolved_density_fraction=(
+                coupled_gas_parameters.resolved_density_fraction
+            ),
+        )
+        # Positivity mass stored in a liquid-full cell is not a pneumatic
+        # control volume.  Only material-tracer-backed void receives an EOS
+        # pressure; the open atmospheric component and unsupported microvoids
+        # retain the common atmospheric trace.  This prevents a floor volume
+        # from turning harmless background mass into a multi-megapascal source
+        # in the neighbouring resolved film.
+        P_gas_r = np.full(Nr, P_ATM, dtype=float)
+        P_gas_r[material_pressure_cell] = (
+            np.maximum(Mgr[material_pressure_cell], 0.0)
+            * R_GAS
+            * T_GAS
+            / np.maximum(gas_void_r[material_pressure_cell] * dz, EPS)
         )
         Prh_gas = np.empty(Nr + 2)
         Prh_gas[1:-1] = P_gas_r
         Prh_gas[0] = P_gas_j if gas_at_junction else P_ATM
         Prh_gas[-1] = P_ATM
         dPdz_gas = (Prh_gas[2:] - Prh_gas[:-2]) / (2.0 * dz)
-        Qlr_new += dt * (
-            -(Alr_new / RHO_L) * dPdz - Alr_new * G
+        # In an annular Taylor-film cell the liquid does not carry a
+        # cross-section-filling hydrostatic pressure column.  Its normal
+        # stress is the resolved gas/interface pressure, while gravity drives
+        # the wall film downward.  Using ``dPdz`` there cancelled gravity and
+        # left a motionless 5-cm-equivalent film suspended to t=13 s.  Bulk
+        # liquid/slug cells retain the well-balanced liquid pressure gradient.
+        pressure_film_cell = material_pressure_cell & (
+            zr <= max(riser_gas_front, riser_material_front) + dz
+        ) & (
+            Alr_new <= 0.50 * Ar
         )
+        # ``dPdz_gas`` contains the complementary liquid-buoyancy potential
+        # used by the conservative gas momentum equation while the Taylor
+        # core is confined.  Reusing that complete gradient as a second
+        # liquid normal-stress gradient counts the same ``rho_l g`` coupling
+        # twice: the confined gas settles to dP/dz ~= +rho_l g and the film is
+        # then accelerated downward by both that numerical potential and its
+        # own weight.  In the Case-A handoff this produced a 4--5 m/s falling
+        # column before the directional owner even started.  Couple the
+        # liquid film to the corresponding reduced interfacial pressure,
+        # p_r = p_g - rho_l g z, while the fitted material core remains
+        # confined.  Once the core is open, the gas solver already removes
+        # this buoyancy-potential branch and no reduction is applied here.
+        confined_material_core = bool(
+            riser_material_front > 0.0
+            and not riser_breakthrough
+            and not material_front_reached_surface
+        )
+        reduced_gas_pressure_gradient = dPdz_gas.copy()
+        if confined_material_core:
+            reduced_gas_pressure_gradient[material_pressure_cell] -= (
+                RHO_L * G
+            )
+        liquid_pressure_gradient = np.where(
+            pressure_film_cell,
+            reduced_gas_pressure_gradient,
+            dPdz,
+        )
+        Qlr_new += dt * (
+            -(Alr_new / RHO_L) * liquid_pressure_gradient
+            - Alr_new * G
+        )
+
+        # ---------- persistent two-liquid T/riser topology ----------
+        # The crossing step remains wholly owned by the one-stream operator.
+        # Its final conservative state is mapped exactly once at commit below;
+        # the directional FV operator starts on the following step.  This
+        # prevents the same crossing interval from being advanced twice.
+        if riser_twostream_state is not None:
+            if bidirectional_tnode_upward_speed_work is None:
+                raise FloatingPointError(
+                    "two-stream riser has no persistent upward T-node speed"
+                )
+            if riser_liquid_provenance_state is None:
+                raise FloatingPointError(
+                    "two-stream riser has no persistent liquid provenance"
+                )
+            twostream_active_step = True
+            twostream_work_state = riser_twostream_state
+            # Reserve the thermodynamic volume occupied by conserved material
+            # gas in every riser cell.  The former rule protected only cell 0
+            # with a fixed Taylor fraction; cells 1+ could therefore be filled
+            # to ``A_r`` in one falling-film step, deleting their gas corridor
+            # and creating the six-cell numerical water plug seen after
+            # 7.60 s.  This capacity is rebuilt from the current total gas
+            # mass, tunnel tracer and liquid-side normal-stress prediction. It
+            # is neither a fixed 80% core nor a saved target profile.
+            dynamic_void_capacity = compute_dynamic_material_void_capacity(
+                gas_mass=Mgr,
+                tracer_mass=Mgrs,
+                liquid_pressure_target=np.maximum(Pr, 0.10 * P_ATM),
+                current_liquid_area=twostream_work_state.liquid_area,
+                full_area=Ar,
+                cell_length=dz,
+                gas_constant=R_GAS,
+                gas_temperature=T_GAS,
+                tracer_mass_tolerance=0.0,
+                area_tolerance=twostream_parameters.packing_tolerance,
+                minimum_topology_void_area=(
+                    coupled_gas_parameters.vertical_capillary_core_fraction
+                    * Ar
+                    * np.clip(taylor_swept_fraction_next, 0.0, 1.0)
+                ),
+            )
+            twostream_liquid_capacity_area = (
+                dynamic_void_capacity.liquid_capacity_area
+            )
+            twostream_provenance_work_state = (
+                riser_liquid_provenance_state
+            )
+            mouth_swept_tolerance = max(
+                twostream_parameters.packing_tolerance / max(Ar, EPS),
+                128.0 * np.finfo(float).eps,
+            )
+            if taylor_swept_fraction_next[0] < 1.0 - mouth_swept_tolerance:
+                raise FloatingPointError(
+                    "active post-breakthrough T mouth lost its completed "
+                    "Taylor sweep ledger"
+                )
+            new_swept_fraction = np.clip(
+                (
+                    float(riser_material_front)
+                    - np.arange(Nr, dtype=float) * dz
+                )
+                / dz,
+                0.0,
+                1.0,
+            )
+            if not riser_breakthrough and np.any(
+                new_swept_fraction
+                > taylor_swept_fraction + 128.0 * np.finfo(float).eps
+            ):
+                sweep_geometry = advance_taylor_sweep_geometry(
+                    twostream_work_state,
+                    twostream_parameters,
+                    previous_swept_fraction=taylor_swept_fraction,
+                    new_swept_fraction=new_swept_fraction,
+                    taylor_core_area_fraction=riser_gas_core_fraction,
+                    taylor_rise_velocity=max(
+                        float(material_front_velocity),
+                        0.345 * math.sqrt(G * case.Dr),
+                    ),
+                )
+                displacement = sweep_geometry.gas_core_displacement
+                if displacement.source_shortfall_volume > 1.0e-13:
+                    raise FloatingPointError(
+                        "Taylor sweep could not open its resolved gas-core volume"
+                    )
+                twostream_work_state = sweep_geometry.state
+                if displacement.overflow_liquid_volume > 1.0e-13:
+                    raise FloatingPointError(
+                        "Taylor sweep produced liquid overflow before the open-rim boundary solve"
+                    )
+                twostream_sweep_overflow_rate = 0.0
+                taylor_swept_fraction_next = new_swept_fraction.copy()
+
+            resolved_mouth_upward_area = float(
+                twostream_work_state.upward_area[0]
+            )
+            mouth_upward_discharge = float(
+                twostream_work_state.upward_discharge[0]
+            )
+            resolved_mouth_downward_area = float(
+                twostream_work_state.downward_area[0]
+            )
+            mouth_downward_discharge = float(
+                twostream_work_state.downward_discharge[0]
+            )
+            # The horizontal crown opening and the resolved vertical cut-cell
+            # void are apertures in series.  Their shared gas face is their
+            # overlap, not ``max(horizontal, vertical)``: the latter reserved
+            # a Taylor-core-sized gas area while the first riser cell was still
+            # mostly liquid and artificially squeezed both liquid traces.  The
+            # vertical void is admitted only when backed by tracer gas mass or
+            # by the currently swept Taylor cut cell.  The isolated closure
+            # retains the resolved falling film, assigns remaining wet entrance
+            # contact to the upward side-T stream, and closes
+            # A_up+A_down+A_g=Ar without changing a cell inventory.
+            mouth_phase_areas = resolve_tnode_mouth_phase_areas(
+                resolved_upward_area=resolved_mouth_upward_area,
+                resolved_downward_area=resolved_mouth_downward_area,
+                horizontal_gas_opening_area=horizontal_gas_mouth,
+                vertical_tracer_gas_mass=float(Mgrs[0]),
+                full_area=Ar,
+                vertical_cell_length=dz,
+                reference_gas_density=rho_atm,
+                topology_density_fraction=(
+                    coupled_gas_parameters.topology_density_fraction
+                ),
+                taylor_swept_fraction=float(
+                    taylor_swept_fraction_next[0]
+                ),
+                taylor_core_area_fraction=riser_gas_core_fraction,
+                area_tolerance=twostream_parameters.packing_tolerance,
+            )
+            mouth_gas_area = mouth_phase_areas.gas_area
+            mouth_liquid_area = mouth_phase_areas.liquid_area
+            mouth_upward_area = mouth_phase_areas.upward_area
+            mouth_downward_area = mouth_phase_areas.downward_area
+            # The pre-activation characteristic uses the union-like geometric
+            # opening to detect incipient gas entry.  Once the persistent
+            # two-stream state owns the tee, however, the horizontal and
+            # vertical apertures are in series and ``mouth_gas_area`` above is
+            # their actual shared opening.  Select the normal-stress owner from
+            # that resolved partition.  Reusing ``geometric_gas_mouth`` here
+            # applies connected-gas pressure even when the shared gas aperture
+            # is closed; the T node then blocks gross exchange while the FV
+            # bottom face continues to accelerate the trapped liquid with a
+            # fictitious gas-pressure head.
+            vertical_two_phase_mouth_pressure = (
+                _vertical_two_phase_mouth_pressure(
+                    liquid_trace_pressure=p_riser_at_node,
+                    connected_gas_pressure=float(P_connected_j),
+                    gas_mouth_area=float(mouth_gas_area),
+                    full_area=Ar,
+                )
+            )
+            last_junction_gas_mouth_fraction = float(
+                mouth_gas_area / max(Ar, EPS)
+            )
+            node_liquid_volume = measured_footprint_liquid_inventory(
+                np.maximum(Alt_new, 0.0),
+                side_t_weights,
+                geometry=distributed_tnode_geometry,
+            )
+            downward_donor_volume = max(
+                float(twostream_work_state.downward_area[0]) * dz,
+                0.0,
+            )
+            mouth_gas_density = max(
+                float(P_connected_j / (R_GAS * T_GAS)),
+                1.0e-9,
+            )
+            horizontal_liquid_pressure_raw = float(
+                np.sum(side_t_weights * Pt_crown)
+            )
+            # The horizontal FV operator already carries its elastic
+            # water-hammer pressure in the conservative momentum flux.  The
+            # short orthogonal fitting therefore sees the regular external
+            # crown-pressure trace, not a second copy of that elastic term.
+            # Averaging ``Pt_crown`` here made the closed east stub's elastic
+            # reflection (about 15 m of head in the coarse Case-A run) act as
+            # a permanent pump into the riser even though the connected gas
+            # and the 2-D mouth pressure remain near atmospheric.  The
+            # orthogonal trace also excludes ``bulk_corr_t``: that term stays
+            # in the horizontal axial momentum source, but it is a numerical
+            # viscous stress rather than physical normal pressure on the riser.
+            horizontal_liquid_pressure = float(
+                np.sum(side_t_weights * Pt_external_tnode)
+            )
+            # Use the same liquid-inventory weighting as the footprint update:
+            # the ratio of weighted discharge to weighted wet area is the
+            # parcel velocity whose axial momentum is actually removed or
+            # returned.  An arithmetic mean of cell velocities would overvalue
+            # nearly dry cells and break the node/footprint ledger identity.
+            horizontal_parcel_liquid_area = float(
+                np.sum(side_t_weights * np.maximum(Alt_new, 0.0))
+            )
+            horizontal_axial_velocity = (
+                float(np.sum(side_t_weights * Qlt_new))
+                / horizontal_parcel_liquid_area
+                if horizontal_parcel_liquid_area > EPS
+                else 0.0
+            )
+            twostream_top_boundary = atmospheric_top_liquid_outflow(
+                twostream_work_state,
+                twostream_parameters,
+                atmospheric_pressure=P_ATM,
+            ).flux
+            raw_downward_speed = (
+                max(-mouth_downward_discharge, 0.0)
+                / resolved_mouth_downward_area
+                if resolved_mouth_downward_area
+                > twostream_parameters.dry_area_tolerance
+                else 0.0
+            )
+            coupled_mouth_characteristic = (
+                solve_coupled_gross_mouth_characteristics(
+                    old_upward_speed=bidirectional_tnode_upward_speed_work,
+                    raw_downward_speed=raw_downward_speed,
+                    upward_area=mouth_upward_area,
+                    downward_area=mouth_downward_area,
+                    horizontal_liquid_pressure_abs=horizontal_liquid_pressure,
+                    # This is the same z=0 normal-stress trace used by the
+                    # vertical FV bottom face below.  Once the gas aperture is
+                    # open it is the connected-gas interface pressure; using
+                    # the cell-centred liquid-column pressure here joined two
+                    # different pressure traces at one geometric face.  The
+                    # mismatch was grid dependent and could suppress the
+                    # incoming horizontal-water tongue until the footprint
+                    # overfilled and launched an artificial water-hammer pulse.
+                    vertical_liquid_pressure_abs=(
+                        vertical_two_phase_mouth_pressure
+                    ),
+                    liquid_density=RHO_L,
+                    effective_inertance_length=(
+                        distributed_tnode_geometry.effective_inertance_length
+                    ),
+                    time_step=dt,
+                    # The falling film/churn trace is a free-surface outgoing
+                    # characteristic.  Its impedance is the gravity-wave scale;
+                    # using the donor material speed as a celerity makes a fast
+                    # falling parcel artificially resistant to the resolved
+                    # turn loss.
+                    downward_characteristic_celerity=math.sqrt(G * case.Dr),
+                    upward_turn_loss_coefficient=(
+                        twostream_mouth_losses.upward_turn
+                    ),
+                    downward_turn_loss_coefficient=(
+                        twostream_mouth_losses.downward_turn
+                    ),
+                    countercurrent_mixing_coefficient=(
+                        twostream_mouth_losses.countercurrent_mixing
+                    ),
+                    dry_area_tolerance=(
+                        twostream_parameters.dry_area_tolerance
+                    ),
+                )
+            )
+            last_tnode_horizontal_liquid_pressure = float(
+                horizontal_liquid_pressure
+            )
+            last_tnode_horizontal_liquid_pressure_raw = float(
+                horizontal_liquid_pressure_raw
+            )
+            last_tnode_vertical_liquid_pressure = float(
+                vertical_two_phase_mouth_pressure
+            )
+            last_tnode_upward_old_speed = float(
+                coupled_mouth_characteristic.old_upward_speed
+            )
+            last_tnode_upward_unconstrained_speed = float(
+                coupled_mouth_characteristic.uncoupled_upward_speed
+            )
+            last_tnode_upward_characteristic_speed = float(
+                coupled_mouth_characteristic.upward_speed
+            )
+            last_tnode_upward_characteristic_rate = float(
+                coupled_mouth_characteristic.upward_speed
+                * mouth_upward_area
+            )
+            mouth_gas_mass_flow = max(float(Jgrs[0] / dz), 0.0)
+            wallis_active = bool(
+                mouth_gas_area > twostream_parameters.dry_area_tolerance
+                and mouth_gas_mass_flow > 0.0
+            )
+            wallis_gas_superficial_velocity = 0.0
+            wallis_gas_parameter = 0.0
+            wallis_downward_reference = math.inf
+            if wallis_active:
+                wallis_gas_superficial_velocity = (
+                    mouth_gas_mass_flow / (mouth_gas_density * Ar)
+                )
+                density_difference = max(RHO_L - mouth_gas_density, EPS)
+                wallis_gas_parameter = (
+                    wallis_gas_superficial_velocity
+                    * math.sqrt(
+                        mouth_gas_density
+                        / (G * case.Dr * density_difference)
+                    )
+                )
+                wallis_remaining = max(
+                    case.vertical_ccfl_constant
+                    - math.sqrt(max(wallis_gas_parameter, 0.0)),
+                    0.0,
+                )
+                wallis_downward_reference = (
+                    wallis_remaining**2
+                    * math.sqrt(
+                        G
+                        * case.Dr
+                        * density_difference
+                        / RHO_L
+                    )
+                    * Ar
+                )
+            # The first-cell falling stream is an outgoing characteristic;
+            # prescribing a second, independent T-node velocity at that face
+            # over-determines the FV boundary and reflects the falling film.
+            # Form the shared gross trace from the independent upward inlet and
+            # the resolved downward donor.  The same trace is committed to the
+            # vertical FV owner and the horizontal footprint below.
+            candidate_bottom_riemann = resolve_bottom_mouth_riemann(
+                incoming_upward_characteristic_rate=(
+                    coupled_mouth_characteristic.upward_speed
+                    * mouth_upward_area
+                ),
+                liquid_area_capacity=float(mouth_liquid_area),
+                incoming_upward_characteristic_speed=(
+                    coupled_mouth_characteristic.upward_speed
+                ),
+                first_cell_downward_area=float(
+                    resolved_mouth_downward_area
+                ),
+                first_cell_downward_discharge=float(
+                    mouth_downward_discharge
+                ),
+                resolved_downward_mouth_area=float(mouth_downward_area),
+                physical_downward_mouth_speed=(
+                    coupled_mouth_characteristic.downward_speed
+                ),
+                downward_physical_reaction_flux=(
+                    coupled_mouth_characteristic.downward_turn_reaction_flux
+                    + coupled_mouth_characteristic.mixing_kinematic_reaction_flux
+                ),
+                finite_node_liquid_volume=node_liquid_volume,
+                riser_downward_donor_volume=downward_donor_volume,
+                time_step=dt,
+                # Full-column capacity and its conjugate pressure are solved
+                # below with the two gross mouth rates still variable.  A
+                # scalar pre-clip here would destroy the pressure closure.
+                positive_net_receiving_capacity=math.inf,
+                wallis_downward_capacity=float(
+                    wallis_downward_reference
+                ),
+                enforce_wallis_constraint=False,
+                dry_area_tolerance=twostream_parameters.dry_area_tolerance,
+            )
+            preserve_capacity_partition = np.asarray(
+                taylor_swept_fraction_next > mouth_swept_tolerance,
+                dtype=bool,
+            )
+            preserve_capacity_partition[0] = True
+            candidate_flux = candidate_bottom_riemann.flux
+            candidate_upward_rate = float(candidate_flux.upward_rate)
+            candidate_downward_rate = float(candidate_flux.downward_rate)
+            dry_mouth_area = twostream_parameters.dry_area_tolerance
+            upward_characteristic_area = float(mouth_upward_area)
+            downward_characteristic_area = float(mouth_downward_area)
+            downward_linear_coefficient = math.sqrt(G * case.Dr)
+            upward_flux_inertance = flux_inertance_from_plug(
+                liquid_density=RHO_L,
+                effective_length=(
+                    distributed_tnode_geometry.effective_inertance_length
+                ),
+                flow_area=max(upward_characteristic_area, dry_mouth_area),
+            )
+            downward_flux_inertance = flux_inertance_from_characteristic(
+                liquid_density=RHO_L,
+                celerity=downward_linear_coefficient,
+                time_step=dt,
+                flow_area=max(downward_characteristic_area, dry_mouth_area),
+            )
+            recoupled_capacity = project_state_mouth_and_capacity_pressure(
+                twostream_work_state,
+                preserve_stopped_partition=preserve_capacity_partition,
+                candidate_bottom_upward_rate=candidate_upward_rate,
+                candidate_bottom_downward_rate=candidate_downward_rate,
+                bottom_upward_flux_inertance=upward_flux_inertance,
+                bottom_downward_flux_inertance=downward_flux_inertance,
+                bottom_upward_characteristic_area=upward_characteristic_area,
+                bottom_downward_characteristic_area=downward_characteristic_area,
+                bottom_downward_donor_rate_capacity=None,
+                top_downward_rate=float(twostream_top_boundary.downward_rate),
+                liquid_capacity_area=twostream_liquid_capacity_area,
+                dt=dt,
+                dz=dz,
+                liquid_density=RHO_L,
+                bottom_reaction_area=float(mouth_liquid_area),
+                directional_area_tolerance=dry_mouth_area,
+            )
+            if twostream_provenance_work_state is None:
+                raise FloatingPointError(
+                    "capacity recoupling has no liquid-provenance owner"
+                )
+            for topology_transfer in recoupled_capacity.topology_transfers:
+                provenance_topology = (
+                    conservative_liquid_provenance_topology_transfer(
+                        twostream_provenance_work_state,
+                        topology_transfer,
+                        area_tolerance=(
+                            twostream_parameters.packing_tolerance
+                        ),
+                    )
+                )
+                twostream_provenance_work_state = provenance_topology.state
+            twostream_work_state = recoupled_capacity.state
+            capacity_projection = recoupled_capacity.projection
+            last_tnode_capacity_pressure_impulse = float(
+                capacity_projection.ledger.bottom_capacity_pressure_impulse
+            )
+            last_tnode_capacity_pressure = float(
+                last_tnode_capacity_pressure_impulse / dt
+            )
+            last_tnode_capacity_upward_rate_correction = float(
+                capacity_projection.final_bottom_upward_rate
+                - capacity_projection.candidate_bottom_upward_rate
+            )
+            last_tnode_capacity_downward_rate_correction = float(
+                capacity_projection.final_bottom_downward_rate
+                - capacity_projection.candidate_bottom_downward_rate
+            )
+            last_tnode_capacity_kkt_residual = float(
+                max(
+                    capacity_projection.maximum_kkt_stationarity_residual,
+                    capacity_projection.maximum_complementarity_residual,
+                )
+            )
+            last_tnode_capacity_packing_residual = float(
+                max(
+                    capacity_projection.maximum_packing_residual,
+                    capacity_projection.maximum_bound_residual,
+                )
+            )
+            last_tnode_capacity_donor_residual = float(
+                capacity_projection.maximum_downward_donor_residual
+            )
+            last_tnode_capacity_donor_multiplier = float(
+                capacity_projection.downward_upper_bound_multiplier
+            )
+            last_tnode_capacity_active_cells = int(
+                np.count_nonzero(capacity_projection.active_capacity_mask)
+            )
+            last_tnode_capacity_topology_iterations = int(
+                recoupled_capacity.outer_iterations
+            )
+            accepted_upward_candidate = float(
+                capacity_projection.final_bottom_upward_rate
+            )
+            accepted_downward_candidate = float(
+                capacity_projection.final_bottom_downward_rate
+            )
+            accepted_upward_candidate_speed = (
+                accepted_upward_candidate / mouth_upward_area
+                if mouth_upward_area
+                > twostream_parameters.dry_area_tolerance
+                else 0.0
+            )
+            accepted_downward_candidate_speed = (
+                accepted_downward_candidate / mouth_downward_area
+                if mouth_downward_area
+                > twostream_parameters.dry_area_tolerance
+                else 0.0
+            )
+            final_mixing_reaction_flux = (
+                0.5
+                * twostream_mouth_losses.countercurrent_mixing
+                * min(
+                    accepted_upward_candidate,
+                    accepted_downward_candidate,
+                )
+                * (
+                    accepted_upward_candidate_speed
+                    + accepted_downward_candidate_speed
+                )
+            )
+            final_downward_reaction_flux = (
+                0.5
+                * twostream_mouth_losses.downward_turn
+                * accepted_downward_candidate
+                * accepted_downward_candidate_speed
+                + final_mixing_reaction_flux
+            )
+            corrected_downward_donor_volume = max(
+                float(twostream_work_state.downward_area[0]) * dz,
+                0.0,
+            )
+            bottom_riemann = resolve_bottom_mouth_riemann(
+                incoming_upward_characteristic_rate=(
+                    accepted_upward_candidate
+                ),
+                liquid_area_capacity=float(mouth_liquid_area),
+                incoming_upward_characteristic_speed=(
+                    accepted_upward_candidate_speed
+                ),
+                first_cell_downward_area=float(
+                    twostream_work_state.downward_area[0]
+                ),
+                first_cell_downward_discharge=float(
+                    twostream_work_state.downward_discharge[0]
+                ),
+                resolved_downward_mouth_area=float(mouth_downward_area),
+                physical_downward_mouth_speed=(
+                    accepted_downward_candidate_speed
+                ),
+                downward_physical_reaction_flux=(
+                    final_downward_reaction_flux
+                ),
+                finite_node_liquid_volume=node_liquid_volume,
+                riser_downward_donor_volume=(
+                    corrected_downward_donor_volume
+                ),
+                time_step=dt,
+                positive_net_receiving_capacity=math.inf,
+                wallis_downward_capacity=float(
+                    wallis_downward_reference
+                ),
+                enforce_wallis_constraint=False,
+                dry_area_tolerance=twostream_parameters.dry_area_tolerance,
+            )
+            downward_donor_volume = corrected_downward_donor_volume
+            accepted_flux = bottom_riemann.flux
+            last_tnode_first_cell_downward_rate = float(
+                bottom_riemann.ledger.first_cell_downward_rate
+            )
+            last_tnode_first_cell_downward_speed = float(
+                bottom_riemann.ledger.first_cell_downward_speed
+            )
+            last_tnode_outgoing_mouth_downward_rate = float(
+                bottom_riemann.ledger.outgoing_mouth_downward_rate
+            )
+            last_tnode_positive_net_receiving_capacity = float(
+                bottom_riemann.ledger.positive_net_receiving_capacity
+            )
+            last_tnode_node_liquid_volume = float(node_liquid_volume)
+            last_tnode_downward_donor_volume = float(downward_donor_volume)
+            last_tnode_mouth_upward_area = float(mouth_upward_area)
+            last_tnode_mouth_downward_area = float(mouth_downward_area)
+            last_tnode_mouth_gas_area = float(mouth_gas_area)
+            last_tnode_mouth_liquid_area = float(mouth_liquid_area)
+            last_tnode_wallis_downward_reference = float(
+                wallis_downward_reference
+                if math.isfinite(wallis_downward_reference)
+                else 0.0
+            )
+            last_tnode_downward_constraint_reaction_flux = float(
+                bottom_riemann.ledger.downward_constraint_reaction_flux
+            )
+            accepted_upward_flow = float(accepted_flux.upward_rate)
+            accepted_downward_flow = float(accepted_flux.downward_rate)
+            accepted_upward_velocity = float(accepted_flux.upward_speed)
+            accepted_downward_speed = float(accepted_flux.downward_speed)
+            accepted_circulation = min(
+                accepted_upward_flow,
+                accepted_downward_flow,
+            )
+            accepted_liquid_area = (
+                bottom_riemann.upward_area
+                + bottom_riemann.downward_area
+            )
+            gross_convective_momentum = RHO_L * (
+                accepted_upward_flow * accepted_upward_velocity
+                + accepted_downward_flow * accepted_downward_speed
+            )
+            bulk_convective_momentum = (
+                RHO_L
+                * bottom_riemann.q_net**2
+                / max(accepted_liquid_area, EPS)
+            )
+            gross_kinetic_power = 0.5 * RHO_L * (
+                accepted_upward_flow * accepted_upward_velocity**2
+                + accepted_downward_flow * accepted_downward_speed**2
+            )
+            signed_kinetic_flux = 0.5 * RHO_L * (
+                accepted_upward_flow * accepted_upward_velocity**2
+                - accepted_downward_flow * accepted_downward_speed**2
+            )
+            upward_loss_power = (
+                0.5
+                * RHO_L
+                * twostream_mouth_losses.upward_turn
+                * accepted_upward_flow
+                * accepted_upward_velocity**2
+            )
+            downward_loss_power = (
+                0.5
+                * RHO_L
+                * twostream_mouth_losses.downward_turn
+                * accepted_downward_flow
+                * accepted_downward_speed**2
+            )
+            mixing_loss_power = (
+                0.5
+                * RHO_L
+                * twostream_mouth_losses.countercurrent_mixing
+                * accepted_circulation
+                * (
+                    accepted_upward_velocity
+                    + accepted_downward_speed
+                ) ** 2
+            )
+            mouth_radius = 0.5 * case.Dr
+            film_inner_radius = math.sqrt(
+                max(
+                    mouth_radius * mouth_radius
+                    - bottom_riemann.downward_area / math.pi,
+                    0.0,
+                )
+            )
+            mouth_film_thickness = mouth_radius - film_inner_radius
+            mouth_nusselt_velocity = (
+                max(RHO_L - mouth_gas_density, 0.0)
+                * G
+                * mouth_film_thickness**2
+                / (3.0 * MU_L)
+            )
+            mouth_gravity_film_capacity = (
+                bottom_riemann.downward_area * mouth_nusselt_velocity
+            )
+            accepted_exchange = TwoChannelMouthResult(
+                q_net=float(bottom_riemann.q_net),
+                upward_flow=accepted_upward_flow,
+                downward_flow=accepted_downward_flow,
+                circulation_flow=float(accepted_circulation),
+                closure_residual=float(
+                    accepted_upward_flow
+                    - accepted_downward_flow
+                    - bottom_riemann.q_net
+                ),
+                film_thickness=float(mouth_film_thickness),
+                gravity_film_capacity=float(mouth_gravity_film_capacity),
+                wallis_downward_capacity=float(wallis_downward_reference),
+                downward_physical_capacity=float(
+                    bottom_riemann.ledger.outgoing_mouth_downward_rate
+                ),
+                downward_physical_circulation_capacity=float(
+                    max(
+                        bottom_riemann.ledger.outgoing_mouth_downward_rate
+                        - max(-bottom_riemann.q_net, 0.0),
+                        0.0,
+                    )
+                ),
+                finite_node_circulation_capacity=float(
+                    max(
+                        node_liquid_volume / dt
+                        - max(bottom_riemann.q_net, 0.0),
+                        0.0,
+                    )
+                ),
+                riser_circulation_capacity=float(
+                    max(
+                        downward_donor_volume / dt
+                        - max(-bottom_riemann.q_net, 0.0),
+                        0.0,
+                    )
+                ),
+                gas_superficial_velocity=float(
+                    wallis_gas_superficial_velocity
+                ),
+                wallis_gas_parameter=float(wallis_gas_parameter),
+                upward_channel_area=float(bottom_riemann.upward_area),
+                downward_channel_area=float(bottom_riemann.downward_area),
+                upward_channel_velocity=accepted_upward_velocity,
+                downward_channel_velocity=-accepted_downward_speed,
+                resolved_liquid_velocity=float(
+                    bottom_riemann.q_net / max(accepted_liquid_area, EPS)
+                ),
+                resolved_net_flux_mismatch=float(
+                    bottom_riemann.q_net
+                    - (mouth_upward_discharge + mouth_downward_discharge)
+                ),
+                gross_convective_momentum_flux=float(
+                    gross_convective_momentum
+                ),
+                bulk_convective_momentum_flux=float(
+                    bulk_convective_momentum
+                ),
+                countercurrent_momentum_excess=float(
+                    max(
+                        gross_convective_momentum
+                        - bulk_convective_momentum,
+                        0.0,
+                    )
+                ),
+                gross_kinetic_power=float(gross_kinetic_power),
+                signed_kinetic_energy_flux=float(signed_kinetic_flux),
+                upward_turn_loss_power=float(upward_loss_power),
+                downward_turn_loss_power=float(downward_loss_power),
+                countercurrent_mixing_loss_power=float(
+                    mixing_loss_power
+                ),
+                total_dissipation_power=float(
+                    upward_loss_power
+                    + downward_loss_power
+                    + mixing_loss_power
+                ),
+            )
+            twostream_mouth_plan = TwoChannelMouthCouplingPlan(
+                exchange=accepted_exchange,
+                vertical_boundary=TwoLiquidMomentumBoundaryResidual(
+                    upward_volume_rate=accepted_upward_flow,
+                    downward_volume_rate=-accepted_downward_flow,
+                    upward_convective_momentum_flux=(
+                        accepted_upward_flow
+                        * accepted_upward_velocity
+                    ),
+                    downward_convective_momentum_flux=(
+                        accepted_downward_flow
+                        * accepted_downward_speed
+                    ),
+                ),
+                horizontal_liquid_volume_rate=float(
+                    -bottom_riemann.q_net
+                ),
+                vertical_liquid_volume_rate=float(
+                    bottom_riemann.q_net
+                ),
+                horizontal_axial_kinematic_momentum_rate=float(
+                    -accepted_upward_flow * horizontal_axial_velocity
+                ),
+                horizontal_node_topology=(
+                    HorizontalNodeTopology.DISTRIBUTED_FOOTPRINT
+                ),
+                legacy_paths_to_disable=(
+                    "characteristic_bottom_flux_as_update",
+                    "taylor_return_as_mass_flux",
+                    "post_breakthrough_ccfl_on_q_net",
+                    "net_only_horizontal_side_source",
+                ),
+            )
+            bidirectional_tnode_upward_speed_next = float(
+                accepted_upward_velocity
+            )
+            final_mixing_kinematic = (
+                0.5
+                * twostream_mouth_losses.countercurrent_mixing
+                * min(accepted_upward_flow, accepted_downward_flow)
+                * (accepted_upward_velocity + accepted_downward_speed)
+            )
+            final_drive_pressure = float(
+                horizontal_liquid_pressure
+                - vertical_two_phase_mouth_pressure
+            )
+            if (
+                bottom_riemann.upward_area
+                > twostream_parameters.dry_area_tolerance
+            ):
+                last_tnode_pressure_raw_residual = float(
+                    RHO_L
+                    * (
+                        distributed_tnode_geometry.effective_inertance_length
+                        / dt
+                        * (
+                            accepted_upward_velocity
+                            - coupled_mouth_characteristic.old_upward_speed
+                        )
+                        + 0.5
+                        * twostream_mouth_losses.upward_turn
+                        * accepted_upward_velocity**2
+                        + final_mixing_kinematic
+                        / bottom_riemann.upward_area
+                    )
+                    - final_drive_pressure
+                    + last_tnode_capacity_pressure
+                )
+                last_tnode_pressure_residual = float(
+                    last_tnode_pressure_raw_residual
+                    + (
+                        capacity_projection.upward_upper_bound_multiplier
+                        - capacity_projection.upward_lower_bound_multiplier
+                    )
+                    / dt
+                )
+            else:
+                last_tnode_pressure_raw_residual = 0.0
+                last_tnode_pressure_residual = 0.0
+            if (
+                bottom_riemann.downward_area
+                > twostream_parameters.dry_area_tolerance
+            ):
+                last_tnode_downward_pressure_raw_residual = float(
+                    RHO_L
+                    * (
+                        math.sqrt(G * case.Dr)
+                        * (
+                            accepted_downward_speed
+                            - coupled_mouth_characteristic.raw_downward_speed
+                        )
+                        + 0.5
+                        * twostream_mouth_losses.downward_turn
+                        * accepted_downward_speed**2
+                        + final_mixing_kinematic
+                        / bottom_riemann.downward_area
+                    )
+                    - last_tnode_capacity_pressure
+                )
+                last_tnode_downward_pressure_residual = float(
+                    last_tnode_downward_pressure_raw_residual
+                    + (
+                        capacity_projection.downward_upper_bound_multiplier
+                        - capacity_projection.downward_lower_bound_multiplier
+                    )
+                    / dt
+                )
+            else:
+                last_tnode_downward_pressure_raw_residual = 0.0
+                last_tnode_downward_pressure_residual = 0.0
+            last_tnode_momentum_residual = float(
+                bottom_riemann.ledger.momentum_residual
+            )
+            last_tnode_physical_reaction_pressure = float(
+                RHO_L
+                * (
+                    0.5
+                    * twostream_mouth_losses.downward_turn
+                    * accepted_downward_speed**2
+                    + (
+                        final_mixing_kinematic / bottom_riemann.downward_area
+                        if bottom_riemann.downward_area
+                        > twostream_parameters.dry_area_tolerance
+                        else 0.0
+                    )
+                )
+            )
+            last_tnode_vertical_mouth_pressure = float(
+                vertical_two_phase_mouth_pressure
+            )
+            last_junction_gross_upward_flow = float(
+                twostream_mouth_plan.exchange.upward_flow
+            )
+            last_junction_gross_downward_flow = float(
+                twostream_mouth_plan.exchange.downward_flow
+            )
+            last_junction_circulation_flow = float(
+                twostream_mouth_plan.exchange.circulation_flow
+            )
+            # The legacy Taylor-return candidate is not a committed boundary
+            # condition once the persistent two-stream T node owns the mouth.
+            last_junction_taylor_return_flow = 0.0
+            # These compatibility arrays are the only liquid fields seen by
+            # the gas graph.  Their final post-transport values are committed
+            # after the gas stage below.
+            Alr_new = np.asarray(
+                twostream_work_state.liquid_area,
+                dtype=float,
+            )
+            Qlr_new = np.asarray(
+                twostream_work_state.liquid_discharge,
+                dtype=float,
+            )
+            G1[0] = float(bottom_riemann.q_net)
+            G2[0] = float(
+                accepted_flux.upward_momentum_flux
+                + accepted_flux.downward_momentum_flux
+            )
 
         # ---------- conservative finite-volume T exchange ----------
         # Accumulate the vertical exchange here and apply it to the physical
@@ -4337,12 +7989,14 @@ def run_network(
         # remain ordinary finite-volume faces, so the horizontal equations—not
         # a prescribed branch split—determine how the returned liquid launches
         # pressure and free-surface waves away from the tee.
-        q_up = float(G1[0])                       # [m^3/s] up the riser base face
-        # Keep the vertical branch on the resolved two-fluid finite-volume
-        # equations.  The former Davies--Taylor material-front projection
-        # imposed an axisymmetric 93%-area gas core on the asymmetric tongue
-        # entering this side T and converted front advance into a prescribed
-        # return discharge.  The tracer extent is tracked only for diagnostics.
+        # Net liquid exchange at the side tee.  ``G1[0]`` is already the one
+        # selected bottom-face flux: the pressure characteristic outside a
+        # fitted sweep, or the film/entrainment closure during the sweep.
+        # Descending liquid enters the horizontal pipe normal to its axis, so
+        # no axial impulse is manufactured here.
+        q_up = float(G1[0])  # [m^3/s], upward positive
+        junction_vertical_node_flow = q_up
+        last_junction_vertical_flow = q_up
         old_riser_gas_front = float(riser_gas_front)
         riser_gas_front_velocity = 0.0
 
@@ -4363,25 +8017,64 @@ def run_network(
         last_junction_west_flow = float(horizontal_west_node_flow)
         last_junction_east_flow = float(horizontal_east_node_flow)
         junction_volume_change = -q_up * dt
-        if junction_volume_change > 0.0:
+        if confined_gross_exchange_active:
+            returned_volume_step = confined_gross_downward_flow * dt
+            junction_return_requested_volume += returned_volume_step
+            junction_return_deposited_volume += returned_volume_step
+        elif junction_volume_change > 0.0:
             junction_return_requested_volume += junction_volume_change
             junction_return_deposited_volume += junction_volume_change
+        if twostream_active_step and external_horizontal_next is not None:
+            raise FloatingPointError(
+                "two-stream T-node activated before the external horizontal handoff completed"
+            )
         if junction_wave_active and external_horizontal_next is None:
             # The measured tower mouth is a finite side opening, not a
             # zero-volume node at one horizontal face.  Apply the shared riser
             # flux over the exact geometric footprint while the ordinary
             # horizontal west/east fluxes keep evolving without interruption.
-            Alt_new, Qlt_new = _apply_finite_width_side_t_exchange(
-                Alt_new,
-                Qlt_new,
-                upward_flow=q_up,
-                opening_weights=side_t_weights,
-                dt=dt,
-                cell_width=dx,
-                incoming_normal_velocity=(
-                    float(G2[0] / G1[0]) if G1[0] < -EPS else 0.0
-                ),
-            )
+            if twostream_active_step:
+                if twostream_mouth_plan is None:
+                    raise FloatingPointError(
+                        "active two-stream stage has no gross mouth plan"
+                    )
+                horizontal_exchange = apply_twochannel_horizontal_footprint(
+                    Alt_new,
+                    Qlt_new,
+                    side_t_weights,
+                    cell_width=dx,
+                    opening_length=case.Dr,
+                    time_step=dt,
+                    plan=twostream_mouth_plan,
+                )
+                Alt_new = horizontal_exchange.liquid_area
+                Qlt_new = horizontal_exchange.liquid_discharge
+            elif confined_gross_exchange_active:
+                if confined_gross_downward_weights is None:
+                    raise FloatingPointError(
+                        "confined Taylor return has no horizontal phase path"
+                    )
+                Alt_new, Qlt_new = _apply_finite_width_side_t_gross_exchange(
+                    Alt_new,
+                    Qlt_new,
+                    upward_flow=confined_gross_upward_flow,
+                    downward_flow=confined_gross_downward_flow,
+                    opening_weights=side_t_weights,
+                    downward_weights=confined_gross_downward_weights,
+                    dt=dt,
+                    cell_width=dx,
+                    full_area=A,
+                )
+            else:
+                Alt_new, Qlt_new = _apply_finite_width_side_t_exchange(
+                    Alt_new,
+                    Qlt_new,
+                    upward_flow=q_up,
+                    opening_weights=side_t_weights,
+                    dt=dt,
+                    cell_width=dx,
+                    full_area=A,
+                )
             junction_wave_max_source_cells = max(
                 junction_wave_max_source_cells,
                 int(np.count_nonzero(side_t_weights)),
@@ -4392,70 +8085,39 @@ def run_network(
             # shock-fit cells adjacent to the physical T face.  The horizontal
             # solver stays active after gas arrival; no distributed gas-cell
             # hand-off or frozen interface is introduced.
-            horizontal_mean_flow = 0.5 * (
-                horizontal_west_node_flow
-                + horizontal_east_node_flow
-            )
-            horizontal_west_node_flow = (
-                horizontal_mean_flow + 0.5 * q_up
-            )
-            horizontal_east_node_flow = (
-                horizontal_mean_flow - 0.5 * q_up
-            )
-            external_horizontal_next = (
-                external_horizontal_solver.apply_junction_liquid_fluxes(
-                    external_horizontal_next,
-                    west_flow=horizontal_west_node_flow,
-                    east_flow=horizontal_east_node_flow,
-                    dt=dt,
+            if not confined_gross_exchange_active:
+                horizontal_mean_flow = 0.5 * (
+                    horizontal_west_node_flow
+                    + horizontal_east_node_flow
                 )
-            )
+                horizontal_west_node_flow = (
+                    horizontal_mean_flow + 0.5 * q_up
+                )
+                horizontal_east_node_flow = (
+                    horizontal_mean_flow - 0.5 * q_up
+                )
+                external_horizontal_next = (
+                    external_horizontal_solver.apply_junction_liquid_fluxes(
+                        external_horizontal_next,
+                        west_flow=horizontal_west_node_flow,
+                        east_flow=horizontal_east_node_flow,
+                        dt=dt,
+                    )
+                )
 
             if (
                 bool(external_horizontal_next.vented)
-                and external_open_gas_inventory is None
+                and not junction_topology_opened
             ):
-                # Rebase at the instant the fitted front opens the T.  The
-                # temperature is inferred from the closed state so pressure,
-                # mass, and volume are all continuous across the topology
-                # change.  It is subsequently held by the isothermal companion
-                # gas model while mass changes only through resolved boundaries.
-                gas_mass_open = float(external_horizontal_next.gas.mass)
-                gas_volume_open = float(external_horizontal_next.gas.volume)
-                gas_temperature_open = (
-                    float(external_horizontal_next.air_pressure_abs)
-                    * gas_volume_open
-                    / max(gas_mass_open * R_GAS, EPS)
-                )
-                external_open_gas_inventory = OpenIsothermalGasInventory(
-                    mass=gas_mass_open,
-                    volume=gas_volume_open,
-                    gas_constant=R_GAS,
-                    temperature=gas_temperature_open,
-                )
-                external_open_gas_parameters = replace(
-                    coupled_gas_parameters,
-                    gas_temperature=gas_temperature_open,
-                )
+                # This is a change of graph ownership, not a remap to a
+                # lumped reservoir.  The same-grid mapped liquid area,
+                # discharge, gas mass and reconstructed gas momentum below
+                # become the initial state of the distributed two-fluid FV
+                # graph on the next step.  No second gas owner remains.
+                junction_topology_opened = True
+                resolved_horizontal_handoff_this_step = True
+                external_horizontal_active = False
                 external_horizontal_handoff_time = float(t + dt)
-
-            if external_open_gas_inventory is not None:
-                external_open_gas_inventory = (
-                    external_open_gas_inventory.with_state(
-                        volume=float(external_horizontal_next.gas.volume)
-                    )
-                )
-                external_horizontal_next = replace(
-                    external_horizontal_next,
-                    gas=replace(
-                        external_horizontal_next.gas,
-                        mass=external_open_gas_inventory.mass,
-                        volume=external_open_gas_inventory.volume,
-                    ),
-                    air_pressure_abs=(
-                        external_open_gas_inventory.pressure_absolute
-                    ),
-                )
 
             Alt_new, Qlt_new, Mgt_new, Jgt_new = (
                 _map_external_horizontal_state(
@@ -4466,6 +8128,32 @@ def run_network(
                     dx=dx,
                 )
             )
+            if not confined_gross_exchange_active:
+                # The coupled vertical/gas stages below temporarily consume
+                # this mapped owner state, then the shock-fit owner restores
+                # it at commit.  Cache the pure mapping instead of evaluating
+                # the same interpolation a second time later in this step.
+                external_horizontal_commit_state = tuple(
+                    np.asarray(component, dtype=float).copy()
+                    for component in (Alt_new, Qlt_new, Mgt_new, Jgt_new)
+                )
+            if confined_gross_exchange_active:
+                if not bool(external_horizontal_next.vented):
+                    raise FloatingPointError(
+                        "confined Taylor exchange preceded horizontal handoff"
+                    )
+                Alt_new, Qlt_new = _apply_finite_width_side_t_gross_exchange(
+                    Alt_new,
+                    Qlt_new,
+                    upward_flow=confined_gross_upward_flow,
+                    downward_flow=confined_gross_downward_flow,
+                    opening_weights=side_t_weights,
+                    downward_weights=confined_gross_downward_weights,
+                    dt=dt,
+                    cell_width=dx,
+                    full_area=A,
+                )
+                external_gross_exchange_applied = True
 
         # Do not pre-open an artificial gas cut-cell in the liquid-full east
         # branch.  That former seed was tiny in volume but made the complete
@@ -4481,6 +8169,16 @@ def run_network(
         gas_momentum_input = (
             Jgt_new if external_horizontal_next is not None else Jgt
         )
+        vertical_gas_momentum_input = np.asarray(Jgrs, dtype=float).copy()
+        if twostream_active_step:
+            # The bottom owner is now gross-first and contains no independent
+            # half-cell q_c gas/shear solve.  The complete first-cell gas/liquid
+            # action--reaction is applied once by the distributed three-body
+            # operator below.
+            last_tnode_gas_reaction_requested = 0.0
+            last_tnode_gas_reaction_applied = 0.0
+            last_tnode_gas_reaction_application_residual = 0.0
+            last_tnode_liquid_gas_action_residual = 0.0
 
         # ---------- one conservative horizontal--T--vertical gas network ----------
         # The complete horizontal branch, the 90-degree side opening, and the
@@ -4493,84 +8191,61 @@ def run_network(
         Jgt_new = gas_momentum_input.copy()
         Mgr_new = np.maximum(Mgr.copy(), 0.0)
         Mgrs_new = np.maximum(Mgrs.copy(), 0.0)
-        Jgrs_new = Jgrs.copy()
+        Jgrs_new = vertical_gas_momentum_input.copy()
         if junction_wave_active:
-            lumped_horizontal_gas = bool(
-                external_horizontal_next is not None
-                and external_open_gas_inventory is not None
-                and external_open_gas_parameters is not None
-            )
             try:
-                if lumped_horizontal_gas:
-                    horizontal_t_void_area = max(
-                        A - float(np.clip(Alt_new[jx], 0.0, A)),
-                        external_open_gas_parameters.void_floor_fraction * A,
-                    )
-                    gas_advance = advance_lumped_pocket_vertical_network(
-                        external_open_gas_inventory,
-                        horizontal_t_void_area,
-                        Mgr,
-                        Jgrs,
-                        Mgrs,
-                        Alr_new,
-                        Qlr_new,
-                        dz=dz,
-                        dt=dt,
-                        params=external_open_gas_parameters,
-                        vertical_pocket_front_height=(
-                            riser_material_front
-                            if (
-                                riser_material_front > 0.0
-                                and riser_material_front
-                                < max(float(wtop), 0.0) - 1.0e-12
-                            )
-                            else None
-                        ),
-                        vertical_liquid_surface_height=float(wtop),
-                        vertical_branch_confined=bool(
-                            riser_material_front > 0.0
-                            and riser_material_front
-                            < max(float(wtop), 0.0) - 1.0e-12
-                        ),
-                    )
-                else:
-                    gas_advance = advance_coupled_gas_network(
-                        gas_mass_input,
-                        gas_momentum_input,
-                        Mgr,
-                        Jgrs,
-                        Mgrs,
-                        Alt_new,
-                        Qlt_new,
-                        Alr_new,
-                        Qlr_new,
-                        dx=dx,
-                        dz=dz,
-                        dt=dt,
-                        junction_index=jx,
-                        params=coupled_gas_parameters,
-                        vertical_pocket_front_height=(
-                            riser_material_front
-                            if (
-                                riser_material_front > 0.0
-                                and riser_material_front
-                                < max(float(wtop), 0.0) - 1.0e-12
-                            )
-                            else None
-                        ),
-                        vertical_liquid_surface_height=float(wtop),
-                        vertical_branch_confined=bool(
-                            riser_material_front > 0.0
-                            and riser_material_front
-                            < max(float(wtop), 0.0) - 1.0e-12
-                        ),
-                        vertical_branch_receiving_hint=(
-                            vertical_gas_receiving
-                        ),
-                        horizontal_downstream_front_position=(
-                            side_t_east_material_front
-                        ),
-                    )
+                gas_advance = advance_coupled_gas_network(
+                    gas_mass_input,
+                    gas_momentum_input,
+                    Mgr,
+                    vertical_gas_momentum_input,
+                    Mgrs,
+                    Alt_new,
+                    Qlt_new,
+                    Alr_new,
+                    Qlr_new,
+                    dx=dx,
+                    dz=dz,
+                    dt=dt,
+                    junction_index=junction_west_cell,
+                    params=(
+                        coupled_gas_parameters
+                        if twostream_active_step
+                        else coupled_gas_parameters_one_stream
+                    ),
+                    vertical_pocket_front_height=(
+                        riser_material_front
+                        if material_front_tracked and not riser_breakthrough
+                        else None
+                    ),
+                    vertical_liquid_surface_height=float(wtop),
+                    # The material Taylor core continues to make the riser
+                    # the gas-receiving branch after pneumatic breakthrough.
+                    # ``vertical_branch_confined`` is used by the gas graph
+                    # only for side-T phase separation; it does not close the
+                    # atmospheric top face.  Dropping this flag exactly when
+                    # the nose met the free surface switched the tee to the
+                    # east dead leg in one time step and launched a nonphysical
+                    # rarefaction through the horizontal liquid film.
+                    vertical_branch_confined=(
+                        material_front_tracked and not riser_breakthrough
+                    ),
+                    vertical_branch_receiving_hint=(
+                        vertical_gas_receiving
+                    ),
+                    horizontal_downstream_front_position=(
+                        side_t_east_material_front
+                    ),
+                    horizontal_downstream_topology_front_position=(
+                        side_t_east_topology_front
+                    ),
+                    # The upward branch is exclusive only while the Taylor
+                    # core is confined.  After breakthrough the finite T can
+                    # simultaneously vent upward and admit a conservative
+                    # crown-gas flux into the right dead leg, as in the 2-D
+                    # solution.  No gas mass or split fraction is prescribed.
+                    prefer_vertical_branch=not riser_breakthrough,
+                )
             except FloatingPointError as exc:
                 horizontal_velocity = np.divide(
                     Jgt,
@@ -4579,53 +8254,23 @@ def run_network(
                     where=Mgt > 1.0e-14,
                 )
                 vertical_velocity = np.divide(
-                    Jgrs,
+                    vertical_gas_momentum_input,
                     Mgr,
-                    out=np.zeros_like(Jgrs),
+                    out=np.zeros_like(vertical_gas_momentum_input),
                     where=Mgr > 1.0e-14,
                 )
                 raise FloatingPointError(
                     "coupled gas failure "
                     f"at t={t:.12g}, dt={dt:.12g}, "
-                    f"alpha_g_j={1.0-Alt_new[jx]/A:.8g}, "
-                    f"Mgt_j={Mgt[jx]:.8g}, Mgr_0={Mgr[0]:.8g}, "
+                    f"alpha_g_j={1.0-Alt_new[junction_west_cell]/A:.8g}, "
+                    f"Mgt_j={Mgt[junction_west_cell]:.8g}, Mgr_0={Mgr[0]:.8g}, "
                     f"Mgrs_0={Mgrs[0]:.8g}, "
                     f"max_uh={np.max(np.abs(horizontal_velocity)):.8g}, "
                     f"max_uv={np.max(np.abs(vertical_velocity)):.8g}, "
                     f"Alr_0/Ar={Alr_new[0]/Ar:.8g}"
                 ) from exc
-            if lumped_horizontal_gas:
-                external_open_gas_inventory = (
-                    gas_advance.horizontal_inventory
-                )
-                external_horizontal_next = replace(
-                    external_horizontal_next,
-                    gas=replace(
-                        external_horizontal_next.gas,
-                        mass=external_open_gas_inventory.mass,
-                        volume=external_open_gas_inventory.volume,
-                    ),
-                    air_pressure_abs=(
-                        external_open_gas_inventory.pressure_absolute
-                    ),
-                )
-                Mgt_new = _map_external_horizontal_state(
-                    external_horizontal_solver,
-                    external_horizontal_next,
-                    x_target=xt,
-                    full_area=A,
-                    dx=dx,
-                )[2]
-                # The lumped reservoir has no resolved axial gas momentum.
-                # Its T-normal trace is handled inside the Riemann solve.
-                Jgt_new = np.zeros_like(Mgt_new)
-                side_t_east_material_front = max(
-                    float(side_t_east_material_front),
-                    float(external_horizontal_next.interface_x),
-                )
-            else:
-                Mgt_new = gas_advance.horizontal_mass
-                Jgt_new = gas_advance.horizontal_momentum
+            Mgt_new = gas_advance.horizontal_mass
+            Jgt_new = gas_advance.horizontal_momentum
             Mgr_new = gas_advance.vertical_total_mass
             Jgrs_new = gas_advance.vertical_momentum
             Mgrs_new = gas_advance.vertical_tracer_mass
@@ -4657,19 +8302,40 @@ def run_network(
                 if tracer_indices.size
                 else 0.0
             )
+            if material_front_confined:
+                riser_gas_front = min(
+                    riser_gas_front,
+                    float(riser_material_front),
+                )
             riser_gas_front_velocity = (
                 riser_gas_front - old_riser_gas_front
             ) / max(dt, EPS)
             if (
-                not lumped_horizontal_gas
-                and gas_advance.downstream_front_position is not None
+                gas_advance.downstream_front_position is not None
             ):
                 side_t_east_material_front = float(
                     gas_advance.downstream_front_position
                 )
-            if not lumped_horizontal_gas:
-                Qlt_new += gas_advance.horizontal_liquid_momentum_increment
-            Qlr_new += gas_advance.vertical_liquid_momentum_increment
+            if gas_advance.downstream_topology_front_position is not None:
+                side_t_east_topology_front = float(
+                    gas_advance.downstream_topology_front_position
+                )
+            side_t_east_material_front_velocity = float(
+                gas_advance.downstream_front_velocity
+            )
+            side_t_east_retired_cell_count += int(
+                gas_advance.downstream_retired_cell_count
+            )
+            Qlt_new += gas_advance.horizontal_liquid_momentum_increment
+            if twostream_active_step:
+                if np.max(
+                    np.abs(gas_advance.vertical_liquid_momentum_increment)
+                ) > 1.0e-14:
+                    raise FloatingPointError(
+                        "legacy vertical gas drag remained active with two-stream coupling"
+                    )
+            else:
+                Qlr_new += gas_advance.vertical_liquid_momentum_increment
             gas_escaped_mass += max(gas_advance.escaped_tracer_mass, 0.0)
             gas_atmospheric_exchange += gas_advance.atmospheric_mass_exchange
             horizontal_gas_substeps += gas_advance.substeps
@@ -4715,32 +8381,441 @@ def run_network(
                 gas_advance.maximum_velocity,
             )
 
+        if twostream_active_step:
+            if (
+                twostream_work_state is None
+                or twostream_mouth_plan is None
+            ):
+                raise FloatingPointError(
+                    "incomplete persistent two-stream stage after gas advance"
+                )
+            mouth_exchange = twostream_mouth_plan.exchange
+            bottom_boundary = DirectionalBoundaryFlux(
+                upward_rate=float(mouth_exchange.upward_flow),
+                upward_speed=float(mouth_exchange.upward_channel_velocity),
+                downward_rate=float(mouth_exchange.downward_flow),
+                downward_speed=abs(
+                    float(mouth_exchange.downward_channel_velocity)
+                ),
+            )
+            if twostream_top_boundary is None:
+                raise FloatingPointError(
+                    "active two-stream stage has no predicted top boundary"
+                )
+            pressure_geometry = coaxial_core_film_geometry(
+                twostream_work_state,
+                twostream_parameters,
+            )
+            pressure_gas_area = np.asarray(
+                pressure_geometry.gas_area,
+                dtype=float,
+            )
+            common_pressure_cells = np.asarray(Pr, dtype=float).copy()
+            pressure_gas_active = _riser_material_gas_mask(
+                pressure_gas_area,
+                Mgrs_new,
+                full_area=Ar,
+                cell_length=dz,
+                reference_density=rho_atm,
+                void_floor_fraction=(
+                    coupled_gas_parameters.void_floor_fraction
+                ),
+                active_void_fraction=(
+                    coupled_gas_parameters.active_void_fraction
+                ),
+                topology_density_fraction=(
+                    coupled_gas_parameters.topology_density_fraction
+                ),
+                resolved_density_fraction=(
+                    coupled_gas_parameters.resolved_density_fraction
+                ),
+            ) & (Mgr_new > 0.0)
+            common_pressure_cells[pressure_gas_active] = (
+                Mgr_new[pressure_gas_active]
+                * R_GAS
+                * T_GAS
+                / np.maximum(
+                    pressure_gas_area[pressure_gas_active] * dz,
+                    EPS,
+                )
+            )
+            open_ambient_pressure_mask = _top_connected_atmospheric_gas_mask(
+                pressure_gas_area,
+                Mgrs_new,
+                cell_length=dz,
+                reference_density=rho_atm,
+                dry_area_tolerance=twostream_parameters.dry_area_tolerance,
+            )
+            common_pressure_cells[open_ambient_pressure_mask] = P_ATM
+            common_pressure_faces = np.empty(Nr + 1, dtype=float)
+            # This is the same z=0 normal-stress trace used as the upper end of
+            # the finite T-node pressure-work segment.  The FV segment begins
+            # here and extends to face 1, so no pressure drop is duplicated.
+            common_pressure_faces[0] = float(
+                vertical_two_phase_mouth_pressure
+            )
+            last_twostream_bottom_pressure = float(common_pressure_faces[0])
+            last_tnode_fv_mouth_pressure_residual = float(
+                last_twostream_bottom_pressure
+                - last_tnode_vertical_mouth_pressure
+            )
+            common_pressure_faces[-1] = P_ATM
+            if Nr > 1:
+                common_pressure_faces[1:-1] = 0.5 * (
+                    common_pressure_cells[:-1]
+                    + common_pressure_cells[1:]
+                )
+            # A Taylor-gas core separates the rising liquid tongue from the
+            # wall-connected falling film throughout the swept part of the
+            # riser, not only in cell 0.  Keep a stopped directional corridor
+            # there so an arbitrarily small sign crossing cannot relabel the
+            # complete film inventory in one step.  The topology operator may
+            # still transfer the minimum entropy-admissible area when a branch
+            # genuinely reverses.  Unswept single-column cells retain the
+            # ordinary one-stream merge rule.
+            preserve_separated_partition = np.asarray(
+                taylor_swept_fraction_next > mouth_swept_tolerance,
+                dtype=bool,
+            )
+            preserve_separated_partition[0] = True
+            twostream_transport = advance_vertical_two_stream_fv(
+                twostream_work_state,
+                twostream_parameters,
+                dt=dt,
+                pressure_faces=common_pressure_faces,
+                boundaries=VerticalTwoStreamBoundaries(
+                    bottom=bottom_boundary,
+                    top=twostream_top_boundary,
+                ),
+                preserve_stopped_partition=preserve_separated_partition,
+                liquid_capacity_area=twostream_liquid_capacity_area,
+                bottom_downward_reaction_flux=(
+                    bottom_riemann.ledger.downward_physical_reaction_flux
+                ),
+            )
+            accepted_bottom_upward = float(
+                twostream_transport.upward_area_flux[0]
+            )
+            accepted_bottom_downward = float(
+                -twostream_transport.downward_area_flux[0]
+            )
+            transaction_tolerance = max(
+                1.0e-14,
+                2048.0
+                * np.finfo(float).eps
+                * max(
+                    abs(float(mouth_exchange.upward_flow)),
+                    abs(float(mouth_exchange.downward_flow)),
+                    1.0e-12,
+                ),
+            )
+            if (
+                abs(
+                    accepted_bottom_upward
+                    - float(mouth_exchange.upward_flow)
+                )
+                > transaction_tolerance
+                or abs(
+                    accepted_bottom_downward
+                    - float(mouth_exchange.downward_flow)
+                )
+                > transaction_tolerance
+            ):
+                raise FloatingPointError(
+                    "horizontal and vertical T branches did not commit the "
+                    "same capacity-limited gross liquid transaction: "
+                    f"requested_up={mouth_exchange.upward_flow:.12e}, "
+                    f"accepted_up={accepted_bottom_upward:.12e}, "
+                    f"requested_down={mouth_exchange.downward_flow:.12e}, "
+                    f"accepted_down={accepted_bottom_downward:.12e}"
+                )
+            if twostream_provenance_work_state is None:
+                raise FloatingPointError(
+                    "two-stream transport has no liquid-provenance owner"
+                )
+            try:
+                provenance_transport = (
+                    advance_vertical_two_stream_liquid_provenance(
+                        twostream_provenance_work_state,
+                        twostream_work_state,
+                        twostream_transport,
+                        twostream_parameters,
+                        dt=dt,
+                    )
+                )
+            except Exception as exc:
+                raise type(exc)(
+                    f"liquid provenance failed at t={t:.12g}, dt={dt:.12g}: {exc}"
+                ) from exc
+            transported = twostream_transport.state
+
+            # Apply the existing Reynolds-aware wall law independently to the
+            # two prognostic liquid momenta.  A descending channel is treated
+            # as an annular film only where an actual gas void separates it
+            # from the upward core; an unswept full-column downflow remains a
+            # bulk pipe flow.
+            transported_geometry = coaxial_core_film_geometry(
+                transported,
+                twostream_parameters,
+            )
+            transported_gas_area = np.asarray(
+                transported_geometry.gas_area,
+                dtype=float,
+            )
+            (
+                Mgr_new,
+                Jgrs_new,
+                open_headspace_exchange,
+                _,
+            ) = _equilibrate_open_riser_headspace(
+                Mgr_new,
+                Jgrs_new,
+                Mgrs_new,
+                transported_gas_area,
+                cell_length=dz,
+                reference_density=rho_atm,
+                dry_area_tolerance=twostream_parameters.dry_area_tolerance,
+            )
+            gas_atmospheric_exchange += open_headspace_exchange
+            vertical_open_headspace_mass_exchange += open_headspace_exchange
+            upward_area = np.asarray(transported.upward_area, dtype=float)
+            upward_discharge = np.asarray(
+                transported.upward_discharge,
+                dtype=float,
+            )
+            downward_area = np.asarray(
+                transported.downward_area,
+                dtype=float,
+            )
+            downward_discharge = np.asarray(
+                transported.downward_discharge,
+                dtype=float,
+            )
+            upward_friction = _riser_liquid_friction_rate(
+                upward_area,
+                upward_discharge,
+                np.zeros(Nr, dtype=bool),
+                full_area=Ar,
+                diameter=case.Dr,
+                film_thickness=riser_film_thickness,
+            )
+            downward_friction = _riser_liquid_friction_rate(
+                downward_area,
+                downward_discharge,
+                (
+                    downward_area
+                    > twostream_parameters.dry_area_tolerance
+                )
+                & (
+                    transported_gas_area
+                    > twostream_parameters.dry_area_tolerance
+                ),
+                full_area=Ar,
+                diameter=case.Dr,
+                film_thickness=np.where(
+                    transported_gas_area
+                    > twostream_parameters.dry_area_tolerance,
+                    np.maximum(
+                        0.5 * case.Dr
+                        - np.sqrt(
+                            np.maximum(
+                                (0.5 * case.Dr) ** 2
+                                - downward_area / math.pi,
+                                0.0,
+                            )
+                        ),
+                        1.0e-6 * case.Dr,
+                    ),
+                    riser_film_thickness,
+                ),
+            )
+            friction_state = VerticalTwoStreamState.from_iterables(
+                upward_area=upward_area,
+                upward_discharge=(
+                    upward_discharge / (1.0 + dt * upward_friction)
+                ),
+                downward_area=downward_area,
+                downward_discharge=(
+                    downward_discharge / (1.0 + dt * downward_friction)
+                ),
+            )
+
+            # The gas transport stage owns gas mass and pressure.  This source
+            # step only exchanges momentum with both liquid streams and writes
+            # the equal-and-opposite gas reaction back once.
+            drag_geometry = coaxial_core_film_geometry(
+                friction_state,
+                twostream_parameters,
+            )
+            drag_gas_area = np.asarray(drag_geometry.gas_area, dtype=float)
+            drag_active = _riser_material_gas_mask(
+                drag_gas_area,
+                Mgrs_new,
+                full_area=Ar,
+                cell_length=dz,
+                reference_density=rho_atm,
+                void_floor_fraction=(
+                    coupled_gas_parameters.void_floor_fraction
+                ),
+                active_void_fraction=(
+                    coupled_gas_parameters.active_void_fraction
+                ),
+                topology_density_fraction=(
+                    coupled_gas_parameters.topology_density_fraction
+                ),
+                resolved_density_fraction=(
+                    coupled_gas_parameters.resolved_density_fraction
+                ),
+            ) & (Mgr_new > 0.0)
+            drag_gas_mass = np.where(drag_active, Mgr_new, 0.0)
+            drag_gas_momentum = np.where(drag_active, Jgrs_new, 0.0)
+            # No independent half-cell T-node gas/shear solve remains.  The
+            # distributed three-body operator therefore owns the complete
+            # first cell, exactly as it owns every higher cell.
+            distributed_drag_length_fraction = np.ones(Nr, dtype=float)
+            last_tnode_cell0_drag_length_fraction = 1.0
+            physical_drag_state = PhysicalGasInterphaseState.from_iterables(
+                gas_mass=drag_gas_mass,
+                gas_momentum=drag_gas_momentum,
+                gas_area=np.where(drag_active, drag_gas_area, 0.0),
+                upward_interface_perimeter=(
+                    np.where(
+                        drag_active,
+                        drag_geometry.upward_gas_interface_perimeter
+                        * distributed_drag_length_fraction,
+                        0.0,
+                    )
+                ),
+                downward_interface_perimeter=(
+                    np.where(
+                        drag_active,
+                        drag_geometry.downward_gas_interface_perimeter
+                        * distributed_drag_length_fraction,
+                        0.0,
+                    )
+                ),
+                upward_hydraulic_diameter=(
+                    np.where(
+                        drag_active,
+                        drag_geometry.gas_hydraulic_diameter,
+                        case.Dr,
+                    )
+                ),
+                downward_hydraulic_diameter=(
+                    np.where(
+                        drag_active,
+                        drag_geometry.gas_hydraulic_diameter,
+                        case.Dr,
+                    )
+                ),
+                gas_viscosity=coupled_gas_parameters.gas_viscosity,
+            )
+            drag_result = implicit_physical_three_body_drag_exchange(
+                friction_state,
+                twostream_parameters,
+                physical_drag_state,
+                dt=dt,
+                preserve_stopped_partition=preserve_separated_partition,
+            )
+            provenance_after_drag = (
+                conservative_liquid_provenance_topology_transfer(
+                    provenance_transport.state,
+                    drag_result.topology_transfer,
+                    area_tolerance=max(
+                        twostream_parameters.dry_area_tolerance,
+                        twostream_parameters.packing_tolerance,
+                    ),
+                )
+            )
+            riser_liquid_provenance_next = provenance_after_drag.state
+            riser_twostream_next = drag_result.state
+            Jgrs_new = np.where(
+                drag_active,
+                np.asarray(drag_result.gas_momentum, dtype=float),
+                Jgrs_new,
+            )
+            Alr_new = np.asarray(
+                riser_twostream_next.liquid_area,
+                dtype=float,
+            )
+            Qlr_new = np.asarray(
+                riser_twostream_next.liquid_discharge,
+                dtype=float,
+            )
+            last_twostream_upward_volume_residual = float(
+                twostream_transport.ledger.upward_volume_residual
+            )
+            last_twostream_downward_volume_residual = float(
+                twostream_transport.ledger.downward_volume_residual
+            )
+            last_twostream_provenance_volume_residual = float(
+                provenance_transport.ledger.source1_volume_residual
+                + dz * provenance_after_drag.source1_area_residual
+            )
+            last_twostream_horizontal_source_volume = float(
+                dz
+                * sum(
+                    riser_liquid_provenance_next.source1_area
+                )
+            )
+            last_twostream_initial_source_volume = float(
+                dz * sum(riser_twostream_next.liquid_area)
+                - last_twostream_horizontal_source_volume
+            )
+            last_twostream_drag_momentum_residual = float(
+                drag_result.total_momentum_residual
+            )
+            last_combined_interphase_momentum_residual = float(
+                drag_result.total_momentum_residual
+            )
+            bottom_remaining = 0.10
+            bottom_inventory = 0.0
+            for cell_area in riser_twostream_next.liquid_area:
+                if bottom_remaining <= 0.0:
+                    break
+                segment = min(dz, bottom_remaining)
+                bottom_inventory += float(cell_area) * segment
+                bottom_remaining -= segment
+            last_twostream_bottom_inventory = bottom_inventory
+            resolved_top_rate = max(
+                float(twostream_transport.upward_area_flux[-1])
+                + float(twostream_transport.downward_area_flux[-1]),
+                0.0,
+            )
+            G1[-1] = resolved_top_rate + twostream_sweep_overflow_rate
+            G2[-1] = max(
+                float(twostream_transport.upward_momentum_flux[-1])
+                + float(twostream_transport.downward_momentum_flux[-1]),
+                0.0,
+            )
+
         # Complete the vertical momentum split after gas--liquid drag.  Bulk
         # liquid uses ordinary pipe friction; only a resolved thin annular film
         # receives the laminar--turbulent film stress.
-        cell_top_r = (np.arange(Nr, dtype=float) + 1.0) * dz
-        annular_film_cell = (
-            (riser_gas_front > 0.0)
-            & (cell_top_r <= riser_gas_front + 1.0e-12)
-            & (
-                Alr_new
-                <= 1.25
-                * (
-                    1.0
-                    - coupled_gas_parameters.vertical_gas_core_area_fraction
+        if not twostream_active_step:
+            cell_top_r = (np.arange(Nr, dtype=float) + 1.0) * dz
+            annular_film_cell = (
+                (riser_gas_front > 0.0)
+                & (cell_top_r <= riser_gas_front + 1.0e-12)
+                & (
+                    Alr_new
+                    <= 1.25
+                    * (
+                        1.0
+                        - coupled_gas_parameters.vertical_gas_core_area_fraction
+                    )
+                    * Ar
                 )
-                * Ar
             )
-        )
-        fric_r = _riser_liquid_friction_rate(
-            Alr_new,
-            Qlr_new,
-            annular_film_cell,
-            full_area=Ar,
-            diameter=case.Dr,
-            film_thickness=riser_film_thickness,
-        )
-        Qlr_new /= 1.0 + dt * fric_r
+            fric_r = _riser_liquid_friction_rate(
+                Alr_new,
+                Qlr_new,
+                annular_film_cell,
+                full_area=Ar,
+                diameter=case.Dr,
+                film_thickness=riser_film_thickness,
+            )
+            Qlr_new /= 1.0 + dt * fric_r
 
         # Gas leaves the apparatus only through the resolved top Riemann flux.
         _bt_dbg["vented"] = 1.0 if riser_breakthrough else 0.0
@@ -4750,36 +8825,61 @@ def run_network(
         # artificial water-hammer speed and therefore had no physical units).
         # It damps only resolved velocity gradients, is conservative at the
         # closed horizontal ends, and contains no prescribed wave footprint.
-        Qlt_new = _implicit_smagorinsky_momentum_diffusion(
-            Alt_new,
-            Qlt_new,
-            full_area=A,
-            diameter=case.D,
-            spacing=dx,
-            dt=dt,
-            coefficient=case.nu,
+        if external_horizontal_next is None or external_gross_exchange_applied:
+            Qlt_new = _implicit_smagorinsky_momentum_diffusion(
+                Alt_new,
+                Qlt_new,
+                full_area=A,
+                diameter=case.D,
+                spacing=dx,
+                dt=dt,
+                coefficient=case.nu,
+            )
+        if not twostream_active_step:
+            Qlr_new = _implicit_smagorinsky_momentum_diffusion(
+                Alr_new,
+                Qlr_new,
+                full_area=Ar,
+                diameter=case.Dr,
+                spacing=dz,
+                dt=dt,
+                coefficient=case.nu_riser,
+            )
+
+        vertical_tracer_present_new = bool(
+            float(np.sum(Mgrs_new)) > vertical_tracer_presence_mass
         )
-        Qlr_new = _implicit_smagorinsky_momentum_diffusion(
-            Alr_new,
-            Qlr_new,
-            full_area=Ar,
-            diameter=case.Dr,
-            spacing=dz,
-            dt=dt,
-            coefficient=case.nu_riser,
-        )
+        # Breakthrough changes the gas topology but does not teleport the
+        # remaining upper liquid into bottom cells.  The former one-step
+        # ``_collapse_upper_slug_at_taylor_breakthrough`` projection moved
+        # liquid nonlocally, discarded its axial momentum, and filled the T
+        # mouth just before the persistent two-stream handoff.  That artificial
+        # repacking closed the resolved gas aperture and made the falling water
+        # impossible to discharge.  Retain the cell inventories here: the
+        # conservative FV faces, wall stress, gravity, and the open boundaries
+        # now determine their subsequent fall or exit locally.
+
+        if material_front_reached_surface:
+            riser_breakthrough = True
+            twostream_handoff_requested = bool(
+                case.enable_vertical_twostream
+                and riser_twostream_state is None
+                and riser_material_front > 0.0
+                and vertical_tracer_present_new
+            )
+
+        # A detached upper liquid island remains a resolved liquid body.  It is
+        # allowed to fall through local faces after the directional handoff;
+        # do not relocate it into the T mixing cells in one nonlocal operation.
 
         # Repack only a genuinely gas-free riser.  The former condition used
         # the instantaneous horizontal T-mouth state: as soon as a detached
         # Taylor bubble left the mouth, it collapsed the still-two-phase riser
         # into a bottom-packed liquid column and froze all later dynamics.
-        vertical_tracer_present_new = bool(
-            float(np.sum(Mgrs_new)) > vertical_tracer_presence_mass
-        )
         if (
-            not gas_at_junction
+            not twostream_active_step
+            and not material_front_tracked
             and not vertical_tracer_present_new
-            and not riser_breakthrough
         ):
             Alr_new, Qlr_new = _project_single_liquid_column(
                 Alr_new, Qlr_new, Ar, dz
@@ -4787,21 +8887,23 @@ def run_network(
             riser_gas_front = 0.0
             riser_gas_front_velocity = 0.0
             riser_breakthrough = False
+            riser_material_front = 0.0
 
         # Open cells are selected only by the positivity-scale liquid cutoff.
-        Alr_new[Alr_new < 0] = 0.0
-        Qlr_new = _regularize_near_dry_momentum(
-            Alr_new,
-            Qlr_new,
-            full_area=Ar,
-            dry_fraction=1.0e-2,
-        )
-        wetr_new = Alr_new / Ar > 1.0e-6
-        open_top = np.zeros(Nr, dtype=bool)
-        ii = Nr - 1
-        while ii >= 0 and not wetr_new[ii]:
-            open_top[ii] = True; ii -= 1
-        Qlr_new = np.where(open_top, 0.0, Qlr_new)
+        if not twostream_active_step:
+            Alr_new[Alr_new < 0] = 0.0
+            Qlr_new = _regularize_near_dry_momentum(
+                Alr_new,
+                Qlr_new,
+                full_area=Ar,
+                dry_fraction=1.0e-2,
+            )
+            wetr_new = Alr_new / Ar > 1.0e-6
+            open_top = np.zeros(Nr, dtype=bool)
+            ii = Nr - 1
+            while ii >= 0 and not wetr_new[ii]:
+                open_top[ii] = True; ii -= 1
+            Qlr_new = np.where(open_top, 0.0, Qlr_new)
         # Dry riser cells are part of the gas domain, not an instantaneous sink.
         # Their total gas mass, pocket tracer, and momentum have already been
         # advanced to the atmospheric top face by the coupled gas solver.
@@ -4815,26 +8917,136 @@ def run_network(
         # the donor-availability flux limits already prevent runaway.
         dbg_created["t_floor"] += -float(np.sum(np.minimum(Alt_new, 0.0)) * dx)
         Alt_new = np.maximum(Alt_new, 0.0)
-        Alr_new = np.maximum(Alr_new, 0.0)
+        if twostream_active_step:
+            if (
+                np.min(Alr_new) < -twostream_parameters.packing_tolerance
+                or np.max(Alr_new)
+                > Ar + twostream_parameters.packing_tolerance
+            ):
+                raise FloatingPointError(
+                    "two-stream liquid area failed the riser packing audit"
+                )
+        else:
+            Alr_new = np.maximum(Alr_new, 0.0)
+
+        if twostream_handoff_requested:
+            # Complete the crossing step with the old owner, then map its final
+            # state once.  The former mid-step handoff mapped ``Alr/Qlr`` from
+            # the beginning of the interval and immediately advanced another
+            # full dt with the new owner, losing the accepted crossing flux and
+            # creating a post-breakthrough refill gap.
+            Alr_new, Qlr_new, _ = (
+                _relax_elastic_riser_storage_for_twostream_handoff(
+                    Alr_new,
+                    Qlr_new,
+                    full_area=Ar,
+                    dz=dz,
+                    area_tolerance=twostream_parameters.packing_tolerance,
+                )
+            )
+            handoff_swept_fraction = np.clip(
+                (
+                    float(riser_material_front)
+                    - np.arange(Nr, dtype=float) * dz
+                )
+                / dz,
+                0.0,
+                1.0,
+            )
+            # The first control volume contains the finite T intersection.  Its
+            # Taylor corridor is complete when the material nose reaches the
+            # atmospheric headspace, even if the equivalent bulk level has
+            # already fallen into that same cell.
+            handoff_swept_fraction[0] = 1.0
+            breakthrough_mapping = map_taylor_breakthrough_to_twostream(
+                Alr_new,
+                Qlr_new,
+                twostream_parameters,
+                taylor_core_area_fraction=riser_gas_core_fraction,
+                taylor_rise_velocity=0.345 * math.sqrt(G * case.Dr),
+                swept_fraction=handoff_swept_fraction,
+            )
+            riser_twostream_state = breakthrough_mapping.state
+            riser_liquid_provenance_state = (
+                VerticalTwoStreamLiquidProvenanceState.initial_riser_water(
+                    riser_twostream_state
+                )
+            )
+            riser_liquid_provenance_next = riser_liquid_provenance_state
+            taylor_swept_fraction = handoff_swept_fraction.copy()
+
+            if confined_gross_exchange_active:
+                handoff_upward_flow = float(confined_gross_upward_flow)
+                handoff_downward_flow = float(confined_gross_downward_flow)
+            else:
+                handoff_upward_flow = max(float(G1[0]), 0.0)
+                handoff_downward_flow = max(-float(G1[0]), 0.0)
+            bidirectional_tnode_upward_speed = float(
+                handoff_upward_flow
+                / max(
+                    riser_twostream_state.upward_area[0],
+                    twostream_parameters.dry_area_tolerance,
+                )
+            )
+            last_junction_gross_upward_flow = handoff_upward_flow
+            last_junction_gross_downward_flow = handoff_downward_flow
+            last_junction_circulation_flow = min(
+                handoff_upward_flow,
+                handoff_downward_flow,
+            )
+
+            activation_gas_area = np.asarray(
+                coaxial_core_film_geometry(
+                    riser_twostream_state,
+                    twostream_parameters,
+                ).gas_area,
+                dtype=float,
+            )
+            (
+                Mgr_new,
+                Jgrs_new,
+                activation_headspace_exchange,
+                _,
+            ) = _equilibrate_open_riser_headspace(
+                Mgr_new,
+                Jgrs_new,
+                Mgrs_new,
+                activation_gas_area,
+                cell_length=dz,
+                reference_density=rho_atm,
+                dry_area_tolerance=twostream_parameters.dry_area_tolerance,
+            )
+            gas_atmospheric_exchange += activation_headspace_exchange
+            vertical_open_headspace_mass_exchange += (
+                activation_headspace_exchange
+            )
+            Alr_new = np.asarray(
+                riser_twostream_state.liquid_area,
+                dtype=float,
+            )
+            Qlr_new = np.asarray(
+                riser_twostream_state.liquid_discharge,
+                dtype=float,
+            )
+            twostream_activated_time = float(t + dt)
 
         if external_horizontal_next is not None:
             # The conservative T-face correction and open-gas update were
             # applied before the gas solve.  Remap only for the network record;
             # do not apply the branch flux a second time and do not hand the
             # horizontal state to the distributed gas-cell solver.
-            Alt_new, Qlt_new, Mgt_new, Jgt_new = (
-                _map_external_horizontal_state(
-                    external_horizontal_solver,
-                    external_horizontal_next,
-                    x_target=xt,
-                    full_area=A,
-                    dx=dx,
+            if not external_gross_exchange_applied:
+                if external_horizontal_commit_state is None:
+                    raise FloatingPointError(
+                        "external horizontal owner has no cached commit state"
+                    )
+                Alt_new, Qlt_new, Mgt_new, Jgt_new = (
+                    external_horizontal_commit_state
                 )
-            )
-            if external_open_gas_inventory is not None:
-                Jgt_new = np.zeros_like(Mgt_new)
             external_horizontal_state = external_horizontal_next
-            external_horizontal_active = True
+            external_horizontal_active = bool(
+                not resolved_horizontal_handoff_this_step
+            )
         # The horizontal gas core can leave an almost dry liquid film under
         # the side-T.  As in the riser, finite-volume round-off momentum must
         # tend to zero faster than area in that wet/dry limit; otherwise a
@@ -4866,6 +9078,36 @@ def run_network(
         if not (np.all(np.isfinite(Alt_new)) and np.all(np.isfinite(Alr_new))):
             print(f"  [DIVERGED] t={t:.4f} step={step}", flush=True)
             break
+
+        # Commit the directional conserved state exactly once, only after all
+        # coupled liquid/gas/node stages have completed successfully.  The
+        # compatibility totals below are then an exact view of that persistent
+        # state; no legacy single-column projection is allowed to overwrite it.
+        if twostream_active_step:
+            if riser_twostream_next is None:
+                raise FloatingPointError(
+                    "two-stream step completed without a persistent state"
+            )
+            riser_twostream_state = riser_twostream_next
+            if riser_liquid_provenance_next is None:
+                raise FloatingPointError(
+                    "two-stream step completed without liquid provenance"
+                )
+            riser_liquid_provenance_state = (
+                riser_liquid_provenance_next
+            )
+            bidirectional_tnode_upward_speed = (
+                bidirectional_tnode_upward_speed_next
+            )
+            taylor_swept_fraction = taylor_swept_fraction_next
+            Alr_new = np.asarray(
+                riser_twostream_state.liquid_area,
+                dtype=float,
+            )
+            Qlr_new = np.asarray(
+                riser_twostream_state.liquid_discharge,
+                dtype=float,
+            )
 
         # Liquid leaving the open tower is removed by G1[-1], so the resolved
         # mass balance already accounts for ejection.  Continue only its
@@ -4929,7 +9171,9 @@ def run_network(
             rec.setdefault("dbg_alpha_kemax", []).append(float(Alt[ikm] / A))
             rec.setdefault("dbg_u_kemax", []).append(float(u_dbg[ikm]))
             rec.setdefault("dbg_u_iv", []).append(float(u_dbg[iv]))
-            rec.setdefault("dbg_u_jx", []).append(float(u_dbg[jx]))
+            rec.setdefault("dbg_u_jx", []).append(
+                float(u_dbg[junction_west_cell])
+            )
             rec.setdefault("dbg_pj", []).append(float((Pj - P_ATM) / (RHO_L * G)))
             rec.setdefault("dbg_riser_base_alpha", []).append(
                 float(Alr[0] / Ar)
@@ -5016,6 +9260,10 @@ def run_network(
             print(
                 f"  t={t:.3f} step={step} dt={dt:.1e} "
                 f"wtop={wtop:.3f} gmax={geyser_strength:.3f} "
+                f"xf={side_t_east_material_front:.3f} "
+                f"xtop={side_t_east_topology_front:.3f} "
+                f"uf={side_t_east_material_front_velocity:.2f} "
+                f"nret={side_t_east_retired_cell_count} "
                 f"ut={float(np.max(np.abs(ult))):.2f} "
                 f"ur={float(np.max(np.abs(ulr))):.2f} "
                 f"ugr={float(np.max(np.abs(ugr_now))):.2f}",
@@ -5040,7 +9288,7 @@ def run_network(
                     else None
                 ),
                 "junction_vertical_flow": float(G1[0]),
-                "junction_alpha": float(Alt[jx] / A),
+                "junction_alpha": float(Alt[junction_west_cell] / A),
             }
             break
         if step >= case.max_steps:
@@ -5050,6 +9298,12 @@ def run_network(
     rec["riser_film_closure"] = {
         "thickness": float(riser_film_thickness),
         "gas_core_area_fraction": float(riser_gas_core_fraction),
+        "return_efficiency": float(
+            case.vertical_taylor_return_efficiency
+        ),
+        "laminar_gas_core_area_fraction": float(
+            riser_laminar_gas_core_fraction
+        ),
         "terminal_film_flow": float(riser_terminal_film_flow),
         "terminal_film_velocity": float(riser_terminal_film_velocity),
         "film_hydraulic_diameter": float(
@@ -5063,6 +9317,11 @@ def run_network(
     )
     rec["external_horizontal_used"] = bool(
         external_horizontal_solver is not None
+    )
+    rec["twostream_activated_time"] = (
+        None
+        if twostream_activated_time is None
+        else float(twostream_activated_time)
     )
     rec["dbg_created"] = dbg_created
     return rec

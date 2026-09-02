@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+source /usr/lib/openfoam/openfoam2512/etc/bashrc >/dev/null 2>&1
+set -euo pipefail
+cd "$(dirname "$0")"
+
+if find . -maxdepth 1 -type d -printf '%f\n' | grep -Eq '^-?[0-9]+([.][0-9]+)?$'; then
+    echo "Existing time directories found. Run ./Allclean only if a fresh restart is intended." >&2
+    exit 2
+fi
+
+cp -a -- 0.orig ./-12
+cp system/controlDict.init system/controlDict
+blockMesh 2>&1 | tee log.blockMesh
+checkMesh -allGeometry -allTopology 2>&1 | tee log.checkMesh
+setExprFields -time -12 2>&1 | tee log.setExprFields
+
+echo "=== Q0 initialization: t=-12..0 s ==="
+interFoam 2>&1 | tee log.interFoam.init
+
+cp system/controlDict.transient system/controlDict
+echo "=== Dense transient fields: t=0..4 s ==="
+interFoam 2>&1 | tee log.interFoam.transient

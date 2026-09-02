@@ -1,0 +1,355 @@
+schema_version: 1
+case_id: S1_JHR2024_continuous_air_validation
+closure_set_id: S1-1D-F0
+status: preregistered_implementation_pending
+frozen_on: 2026-08-10
+
+purpose:
+  physical_condition_count: 1
+  parameter_set_count: 1
+  applies_to:
+    - horizontal_main
+    - water_initial_air_supply_branch
+    - vertical_riser
+    - air_supply_t_node
+    - riser_t_node
+  statement: >-
+    Result-independent baseline closure set for the source-aligned S1
+    one-dimensional network. This file freezes closure choices; it does not
+    certify their implementation or authorize a physical trajectory.
+
+result_independence:
+  closure_parameters_selected_from_1d_or_2d_results: false
+  target_observables_excluded_from_parameter_selection:
+    - eruption_occurrence
+    - eruption_height
+    - eruption_duration
+    - eruption_period
+    - slug_velocity
+    - pressure_trace
+  post_result_parameter_adjustment: forbidden
+  response_to_failed_alignment: report_model_form_failure_or_numerical_failure
+
+evidence_legend:
+  published: stated by Mahyawansi et al. JHR 2024
+  case1_inherited_algorithm: verified algorithmic lineage from Case 1
+  declared_generic_physics: result-independent standard closure assumption
+  declared_openfoam_translation: property translated from the frozen 2-D case
+  missing: not disclosed by the paper and not to be guessed
+
+source_contracts:
+  source_alignment: S1_source_aligned.yaml
+  model_provenance: ../MODEL_PROVENANCE.md
+  acceptance_contract: ../ACCEPTANCE.yaml
+  paper_condition:
+    pipe_inner_diameter_m: {value: 0.0254, evidence: published}
+    initial_water_surface_z_m: {value: 0.5842, evidence: figure_inferred}
+    riser_top_z_m: {value: 1.02, evidence: published}
+    stage_1_air_boundary: {value: closed_wall, evidence: published}
+    stage_2_air_gauge_pressure_Pa: {value: 5700.0, evidence: published}
+    initial_velocity_m_s: {value: 0.0, evidence: declared_numerical_choice}
+
+shared_fluid_properties:
+  gravity_m_s2: {value: 9.81, evidence: declared_openfoam_translation}
+  liquid_density_kg_m3: {value: 998.4, evidence: declared_openfoam_translation}
+  liquid_dynamic_viscosity_Pa_s: {value: 0.001002, evidence: declared_openfoam_translation}
+  gas_dynamic_viscosity_Pa_s: {value: 0.0000178, evidence: declared_openfoam_translation}
+  atmospheric_absolute_pressure_Pa: {value: 101325.0, evidence: declared_openfoam_translation}
+  temperature_K: {value: 293.15, evidence: declared_openfoam_translation}
+  dry_air_gas_constant_J_kg_K: {value: 287.05, evidence: declared_openfoam_translation}
+  surface_tension_N_m: {value: 0.072, evidence: declared_openfoam_translation}
+  wall_roughness:
+    model: hydraulically_smooth
+    absolute_roughness_m: 0.0
+    evidence: declared_generic_physics
+    disclosure: pipe roughness was not published; this value is not tunable
+
+friction_correlations:
+  smooth_pipe_darcy:
+    reynolds_definition: "Re = rho * abs(u) * D_h / mu"
+    zero_flow: "f_D = 0 when Re <= 1.0e-12"
+    laminar: "f_D = 64/Re for 0 < Re <= 2300"
+    transition: >-
+      Linear interpolation between 64/Re and 0.3164*Re^(-0.25) for
+      2300 < Re < 4000.
+    turbulent: "f_D = 0.3164*Re^(-0.25) for Re >= 4000"
+    evidence: declared_generic_physics
+    tuning_parameters: none
+  case1_gas_side_fanning:
+    reynolds_definition: "Re_i = rho_g * abs(u_g-u_l) * D_h,i / mu_g"
+    laminar: "f_F = 16/Re_i for Re_i < 2100"
+    turbulent: "f_F = 0.046*Re_i^(-0.2) for Re_i >= 2100"
+    numerical_bound: "0 <= f_F <= 4"
+    evidence: case1_inherited_algorithm
+    tuning_parameters: none
+
+horizontal_main:
+  lineage:
+    inherited:
+      - circular liquid area-depth geometry
+      - pressure-flux formulation
+      - Case1_MUSCL_reconstruction
+      - Case1_circular_hydrostatic_pressure_flux
+      - Case1_central_upwind_Riemann_flux
+      - Case1_donor_draining_limiter
+      - Case1_forward_Euler_spatial_stage_inside_whole_network_SSP_RK2
+    current_spatial_evidence: hash_pinned_Case1_three_segment_spatial_adapter
+    two_T_translation: atomic_node_flux_replaces_only_segment_endpoint
+    nonclaim: mutable_vw2011_network_twofluid_application_loop_not_frozen_or_imported
+    production_status: spatial_gate_passed_other_network_gates_pending
+    forbidden_transplants:
+      - finite_lumped_gas_pocket_topology
+      - valve_release_boundary
+      - fixed_Darcy_factor_0.018
+      - fixed_core_fraction_0.80
+      - Taylor_rise_speed_floor
+      - Wallis_turn_or_mixing_fit_constants
+      - Case1_node_inertance
+  liquid_wall_shear:
+    friction_law: smooth_pipe_darcy
+    hydraulic_diameter: "D_h,l = 4*A_l/P_wall,l"
+    force_per_length: "F_wall,l = -f_D*rho_l*P_wall,l*u_l*abs(u_l)/8"
+    recoil: liquid_only_against_wall
+  gas_wall_shear:
+    friction_law: smooth_pipe_darcy
+    hydraulic_diameter: "D_h,g = 4*A_g/P_wall,g"
+    force_per_length: "F_wall,g = -f_D*rho_g*P_wall,g*u_g*abs(u_g)/8"
+    recoil: gas_only_against_wall
+  gas_liquid_interfacial_exchange:
+    friction_law: case1_gas_side_fanning
+    shear: "tau_i = 0.5*f_F*rho_g*abs(u_g-u_l)*(u_g-u_l)"
+    force_per_length: "F_i = tau_i*P_i"
+    recoil: exact_equal_and_opposite_between_gas_and_liquid
+    forbidden_drag_coefficient: 0.44
+  pressure_and_geometry:
+    geometry: dynamic_circular_segment
+    phase_pressure_traction_recoil: exact_equal_and_opposite
+    elastic_T_trace_mapping: >-
+      delta_p_port = rho_l*(pressure_flux(Al)-pressure_flux(Af))/Af for
+      Al>=Af; the Table-1 crown datum is added once and Al>Af is not clipped.
+    one_sided_gas_nose: >-
+      HLL donor gas mass, donor-density liquid-volume displacement and donor
+      advective gas momentum are committed on the same shared face; no donor
+      gas cannot create a new void.
+  table1_water_pressure_boundaries:
+    inlet_source_semantics: published_pressure_inlet_total_head
+    outlet_source_semantics: published_pressure_outlet_static_head
+    current_implementation: inlet_dynamic_total_head_ghost__outlet_static_head_characteristic_ghost
+    outgoing_invariant: retained_from_adjacent_water_cell_at_both_ends
+    inlet_imposed_relation: "H + u^2/(2g) = H_Table1_inlet"
+    outlet_imposed_relation: "H = H_Table1_outlet"
+    elastic_storage_reference_head_m: 0.584
+    initial_field_head_m: 0.5842
+    initial_elastic_mapping_status: implemented_and_round_trip_tested
+    remaining_gate: gas_end_cell_inletOutlet_phase_reentry_translation
+    gas_end_cell_status: fail_closed_until_inletOutlet_phase_reentry_translation
+  liquid_eos:
+    inherited_code_value_wave_speed_m_s: 100.0
+    inherited_value_evidence: Case1_inherited_numerical_parameter_not_published_for_S1
+    frozen_2d_equation_of_state: OpenFOAM_v2512_perfectFluid
+    frozen_2d_perfectFluid_R_J_kg_K: 3000.0
+    frozen_2d_temperature_K: 293.15
+    tangent_relation: "c_l = sqrt(dp/drho) = sqrt(R*T)"
+    effective_wave_speed_m_s: 937.789955160536
+    effective_value_evidence: declared_openfoam_translation
+    production_status: tangent_matched_not_full_EOS_equivalence
+    rule: >-
+      Reuse the Case-1 circular geometry and conservative pressure law, but do
+      not use its apparatus-specific 100 m/s numerical value in the formal S1
+      trajectory. The formal adapter must use the frozen 2-D perfectFluid
+      tangent above; this is a disclosed local storage-tangent translation,
+      not a full thermodynamic EOS reconciliation and not result fitting.
+
+air_supply_branch:
+  initial_phase: full_water
+  initial_velocity_m_s: 0.0
+  finite_length_m: 0.1373
+  stage_1_top_boundary: closed_wall
+  stage_2_top_boundary: pure_air_isothermal_pressure_reservoir
+  stage_2_gauge_pressure_Pa: 5700.0
+  wall_shear:
+    model: smooth_pipe_darcy
+    implementation_status: implemented_sign_preserving_semi_implicit_with_explicit_momentum_ledger
+  forbidden_transplants:
+    - seeded_finite_gas_pocket
+    - initial_air_velocity_0.06_m_s
+    - k_or_omega_derived_from_0.06_m_s
+
+vertical_riser:
+  state_topology:
+    variables: [A_up, Q_up, A_down, Q_down, M_g, J_g]
+    gas_area: "A_g = A_full - A_up - A_down"
+    core_film_partition: prognostic_from_conserved_areas
+    fixed_core_or_film_fraction: forbidden
+  liquid_wall_shear:
+    friction_law: smooth_pipe_darcy
+    hydraulic_geometry: recomputed_from_each_current_phase_area
+  gas_wall_shear:
+    friction_law: smooth_pipe_darcy
+    hydraulic_geometry: recomputed_from_current_gas_area
+  gas_liquid_exchange:
+    friction_law: case1_gas_side_fanning
+    exchange_algorithm: implicit_three_body_equal_recoil
+    coefficient: "C_i = 0.5*f_F*rho_g*P_i*dz"
+    recoil: exact_across_gas_upward_liquid_and_downward_liquid
+  liquid_liquid_contact:
+    gas_separated_streams: no_direct_liquid_liquid_drag
+    gas_free_dual_liquid_cell: conservative_inelastic_topology_merge
+    finite_gas_single_label_reversal: >-
+      Conservative cell-local direction reclassification is allowed only when
+      one liquid label existed before the remap; area and axial momentum are
+      audited per cell.
+    finite_gas_two_existing_labels: fail_closed_without_spatial_interface_closure
+    empirical_drag_coefficient: none
+  bottom_gas_void_opening:
+    physical_stage: stage2_pressure_reservoir
+    stage_rule: >-
+      The dt-integrated riser-bottom gas parcel from the same immutable RK
+      trial participates in the conservative void remap before gas transport.
+    explicit_source_mass: "Delta_m = dt*mdot_g,out_of_node"
+    explicit_source_momentum: "Delta_J = Delta_m*u_g,out_of_node"
+    source_location: riser_bottom_cell_only
+    duplicate_application_in_later_boundary_transport: forbidden
+    newly_isolated_void_without_explicit_source: fail_closed
+    source_full_bottom_cell_rule: >-
+      The parcel EOS volume at the common node pressure opens the bottom cut
+      cell by one conservative finite-volume piston flux through the contiguous
+      upward-liquid column and deposits the displaced volume at the resolved
+      free-surface cut cell.
+    source_cut_cell_initial_level_m: 0.5842
+    piston_liquid_volume_and_directional_momentum_residual_required: true
+    piston_internal_gas_gap_or_isolated_liquid_column: fail_closed
+    piston_unresolved_simultaneous_top_spill: retry_with_smaller_dt_or_fail_closed
+    evidence: declared_generic_physics
+  momentum_audit:
+    result_independent: true
+    known_before_final_state:
+      - accepted_bottom_advective_impulse
+      - accepted_top_advective_impulse
+      - discrete_liquid_pressure_impulse
+      - discrete_gas_pressure_impulse
+      - liquid_and_gas_gravity_impulses
+      - dynamic_wall_shear_impulse
+      - bottom_and_top_common_pressure_tractions
+      - bounded_discrete_pressure_partition_residual
+      - internal_capillary_and_three_body_recoil_residuals
+    bottom_port_requirement: >-
+      The gross riser-bottom packet must independently carry the matching
+      advective momentum and common-pressure traction; a missing or mismatched
+      term fails closed.
+    forbidden_closure: infer_external_force_from_final_minus_initial_momentum
+  forbidden_transplants:
+    - fixed_core_fraction_0.80
+    - Taylor_bubble_velocity_floor
+    - Wallis_or_turn_loss_constants
+
+t_nodes:
+  count: 2
+  topology: ideal_zero_storage_three_port
+  common_pressure_aperture_datum:
+    location: horizontal_pipe_crown
+    z_above_paper_horizontal_centreline_m: 0.0127
+    riser_trace_relation: "p_T = p_gas_at_connected_surface + rho_l*g*(h_connected - D/2)"
+    evidence: declared_dimension_reduction_from_published_crown_connections_not_result_fitted
+  empirical_minor_loss_K: 0.0
+  empirical_loss_evidence: missing
+  declared_baseline_evidence: declared_generic_physics
+  simultaneous_unknowns_per_node:
+    - common_absolute_pressure
+    - node_gas_area_fraction
+  signed_flux_convention: positive_into_node
+  residuals:
+    liquid_volume: "sum(Q_l,port) = 0"
+    gas_mass: "sum(mdot_g,port) = 0"
+  port_flux_rule: all_three_port_Riemann_fluxes_must_use_the_same_node_solution
+  momentum_balance:
+    node_storage: zero
+    wall_reaction: negative_vector_sum_of_all_port_momentum_and_pressure_fluxes
+    ledgers: [Px, Pz]
+  framework_status: implemented_atomic_structural_and_real_physical_owner_validation
+  physical_solver_status: real_six_port_same_RK_trial_owner_and_unique_JointStageRate_integrated__global_production_blockers_remain
+
+capillarity:
+  pressure_jump: "delta_p_sigma = sigma*kappa"
+  surface_tension_N_m: 0.072
+  paper_status: surface_tension_included_but_1d_contact_geometry_not_published
+  comparison_geometry_mode: planar_2d_zeroGradient_walls
+  source_alpha_wall_boundary: zeroGradient
+  contact_angle: not_imposed_in_frozen_2d_case
+  curvature_mapping:
+    stationary_initial_free_surface_1_m: 0.0
+    moving_interface_shape: declared_planar_semicircular_cap
+    moving_interface_magnitude: "abs(kappa)=2/D"
+    sign_rule: gas_nose_positive__gas_tail_negative__fixed_by_phase_topology
+    arbitrary_sign_or_result_selected_sign: forbidden
+    evidence: declared_openfoam_translation_not_a_published_contact_geometry
+  circular_3d_mode:
+    status: fail_closed_without_explicit_contact_angle
+    guessed_contact_angle: forbidden
+  production_status: planar_2d_interface_records_integrated__global_production_blockers_remain
+
+riser_top_boundary:
+  target: atmospheric_two_phase_open_boundary
+  pressure_quantity: static_absolute_pressure
+  current_component_behavior:
+    gas: bidirectional_isothermal_Riemann
+    liquid_outflow: interior_donor_outflow
+    liquid_reentry: >-
+      The persistent exterior owner stores gross airborne and returning
+      liquid inventories. A finite returning queue supplies a state-derived
+      incident downward parcel using P/(rho V), so re-entry can start from
+      zero interior Qdown; its full-rim aperture cap and available volume/dt
+      remain fail-closed receiver limits. The same atomic packet records the
+      consumed volume, momentum, gravity and declared support reaction.
+    infinite_or_unquantified_fallback: fail_closed
+  exterior_owner:
+    status: integrated_validation_only
+    state: [airborne_volume, airborne_vertical_momentum, airborne_first_moment, returning_volume, returning_downward_momentum]
+    return_aperture: declared_full_riser_aperture_not_published
+    return_speed: stored_returning_momentum_divided_by_rho_volume
+    height_status: derived_zeroD_proxy_not_resolved_external_free_surface
+    tested: two_storage_return_cycles_atomic_relabel_rollback_and_single_commit
+  remaining_for_production:
+    - generalized_conservative_bottom_piston_internal_topology_and_top_spill
+    - water_end_inletOutlet_phase_reentry_after_horizontal_gas_arrival
+    - canonical_trajectory_observer_exporter_and_result_acceptance
+  production_status: persistent_exterior_owner_integrated__global_production_blockers_remain
+
+atomic_network_contract:
+  SSP_RK2_whole_network_operator: implemented
+  both_t_nodes_evaluated_at_each_RK_stage: implemented
+  real_six_port_physical_trial_owner: implemented
+  one_unique_physical_JointStageRate_per_RK_evaluation: implemented
+  one_final_averaged_commit: implemented
+  rollback_on_any_stage_or_audit_failure: implemented
+  component_and_port_conservation_ledgers: implemented
+  separate_vector_momentum_ledgers: implemented
+  structural_zero_operator_promotable_to_physical_result: false
+
+hard_fail_conditions:
+  - gas_reaches_water_end_without_inletOutlet_phase_reentry_translation
+  - planar_2d_interface_record_absent_at_any_active_gas_liquid_node
+  - circular_3d_mode_without_explicit_contact_angle
+  - formal_adapter_not_using_frozen_2d_EOS_tangent
+  - atmospheric_top_persistent_exterior_plume_owner_not_ready
+  - any_nonfinite_or_nonpositive_pressure_state
+  - any_phase_area_outside_geometric_bounds
+  - any_node_phase_balance_or_global_conservation_failure
+  - newly_opened_bottom_void_without_same_stage_boundary_gas_parcel
+  - bottom_port_momentum_or_pressure_traction_budget_missing
+  - external_force_inferred_from_final_momentum_difference
+
+authorization:
+  component_or_structural_unit_tests: allowed
+  real_physical_owner_source_initial_1e-7s_microstep: allowed_validation_only_passed
+  physical_0p02s_smoke: blocked
+  formal_stage_1: blocked
+  formal_stage_2: blocked
+  long_trajectory: blocked
+  result_comparison: blocked_until_one_common_F0_trajectory_exists
+
+promotion_rule: >-
+  Implementation of every F0 item, physical two-node closure tests, capillary
+  and EOS tangent matching, and a full atmospheric top boundary must all pass
+  before MODEL_IMPLEMENTATION_ACCEPTED. Unit-test count or the structural zero
+  trajectory alone cannot promote this closure set.

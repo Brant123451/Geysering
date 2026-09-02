@@ -1,0 +1,24 @@
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    object topoSetDict;
+}
+actions
+(
+    {
+        name valveCells;
+        type cellSet;
+        action new;
+        source boxToCell;
+        box (5.954 -0.001 -0.026) (5.980001 0.001 0.026);
+    }
+    {
+        name valveResistanceZone;
+        type cellZoneSet;
+        action new;
+        source setToCellZone;
+        set valveCells;
+    }
+);

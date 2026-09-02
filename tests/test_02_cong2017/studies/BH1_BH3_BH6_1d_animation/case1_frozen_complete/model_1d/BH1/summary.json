@@ -1,0 +1,64 @@
+{
+  "case": "BH1",
+  "paper_run": "B-H1",
+  "variant": "frozen_case1_full_network_complete_v3",
+  "status": "completed",
+  "runtime_s": 469.08181150001474,
+  "source_network": "E:\\Geysering\\tests\\test_02_cong2017\\studies\\criterion_map\\model\\cong2017_network_twofluid.py",
+  "model_provenance": {
+    "frozen_source_sha256": "cea1ffbf6dc5dbae38ab98205f08dbba4544a3e8f951d56de3eb944f3cd9ca23",
+    "horizontal_release": "frozen local FV fluxes with 2% near-dry numerical film",
+    "subsequent_coupling": "Campaign-1 frozen fully synchronous pipe/tee/riser network",
+    "external_case1_adapter": false,
+    "per_case_parameter_fitting": false,
+    "source_transformation": null,
+    "physical_wet_threshold_area_fraction": 0.0201
+  },
+  "paper_conditions": {
+    "pipe_diameter_m": 0.05,
+    "riser_diameter_m": 0.016,
+    "reservoir_head_from_invert_m": 0.66,
+    "applied_constant_head_m": 0.66,
+    "pipe_length_m": 6.59,
+    "riser_x_m": 3.47,
+    "valve_x_m": 5.98,
+    "initial_air_reach_length_m": 0.6099999999999994,
+    "initial_air_gauge_head_m": 0.0,
+    "valve_opening_duration_s": 0.25,
+    "paper_manual_opening_duration_s_approx": 0.2
+  },
+  "events": {
+    "wetting_front_reaches_closed_cap_s": 0.16011548210976073,
+    "gas_nose_reaches_riser_s": 6.8000885898464265,
+    "riser_surface_reaches_rim_s": 12.820004337803478,
+    "maximum_riser_level_time_s": 12.820004337803478
+  },
+  "outcome": {
+    "model_geyser": true,
+    "experiment_geyser": true,
+    "classification_match": true,
+    "maximum_riser_level_m": 1.7999999999999998,
+    "maximum_pocket_head_m": 37.10188403691321
+  },
+  "completion": {
+    "physical_event_complete": true,
+    "minimum_post_peak_tail_s": 3.0,
+    "post_peak_tail_s": 7.1799956621965215,
+    "final_2s_riser": {
+      "duration_s": 1.999973395095381,
+      "minimum_m": 0.6800000012220804,
+      "maximum_m": 1.0800000019599691,
+      "range_m": 0.4000000007378888,
+      "linear_slope_m_per_s": -0.19780644151437562
+    }
+  },
+  "audit": {
+    "liquid_floor_created_m3": 0.02723872002570568,
+    "frame_count": 1001,
+    "end_time_s": 20.0
+  },
+  "artifacts": {
+    "fields": "case1_full_network_frames.npz",
+    "summary": "summary.json"
+  }
+}

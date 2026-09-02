@@ -1,0 +1,50 @@
+schema: case3_stage1_launch_record_v1
+case: S1_JHR2024_continuous_air_validation
+purpose: establish_closed_air_port_water_flow_steady_state
+source_note: paper_requires_steady_state_but_does_not_publish_a_fixed_settling_time
+segment:
+  start_checkpoint_s: 0.02
+  target_end_s: 0.5
+  acceptance_at_target_is_not_automatic: true
+runtime_control:
+  wsl_distribution: Ubuntu
+  attempted_detach: Windows_Start_Process_plus_nohup
+  parent_post_hook_observation: >-
+    The WSL relay did not preserve the shell after the quota-wrapped solver
+    returned, so script-owned completion markers are not trusted for this
+    segment. The solver logs and saved fields are audited externally.
+  validated_future_detach_method: direct_wsl_exec_setsid_f
+  nice: 19
+  cpu_quota_percent: 20
+  load_gate: three_samples_load1_below_9
+  launch_load1: 7.23
+  no_cpu_11: true
+launches:
+  coarse:
+    case_directory: coarse
+    started_local: '2026-08-10T07:50:04+08:00'
+    windows_launcher_pid: 41616
+    linux_quota_pid: 77960
+    linux_solver_pid: 77961
+    cpu: 0
+    log: coarse/log.stage1
+  medium_refine:
+    case_directory: medium_refine/case
+    started_local: '2026-08-10T07:50:04+08:00'
+    windows_launcher_pid: 21196
+    linux_quota_pid: 77963
+    linux_solver_pid: 77966
+    cpu: 3
+    log: medium_refine/case/log.stage1
+  refined:
+    case_directory: refined/case
+    started_local: '2026-08-10T07:50:04+08:00'
+    windows_launcher_pid: 42592
+    linux_quota_pid: 77968
+    linux_solver_pid: 77969
+    cpu: 4
+    log: refined/case/log.stage1
+result_policy:
+  segment_end_is_not_steady_state: true
+  stage1_acceptance_requires_preregistered_pressure_velocity_flow_audit: true
+  stage2_not_authorized: true

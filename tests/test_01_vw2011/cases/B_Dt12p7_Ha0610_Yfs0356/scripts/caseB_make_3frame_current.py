@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Build the provisional Case-B three-frame 1D--2D comparison.
+"""Build the Case-B full-domain three-frame 1D--2D comparison.
 
-This figure intentionally uses the *current* Tosan-based one-dimensional
-result and the archived, confined-headroom OpenFOAM 2-D result.  It is a
-presentation candidate while the external-plume 2-D calculation is running;
-the script does not read from or modify that new calculation.
+This figure intentionally uses the current Tosan-based one-dimensional
+result and the archived, confined-headroom OpenFOAM 2-D result.  It does not
+read or composite the separate top-only plume calculation, so every plotted
+field remains a direct output of the stated full-domain calculation.
 
 The two columns are redrawn in one physical coordinate system.  Every row is
 paired at the same physical time without event alignment or time shifting.
@@ -49,17 +49,18 @@ STAGES = (
 
 D = 0.094
 DT = 0.0127
+DISPLAY_DT = 0.080
 X_TOWER = 3.516
 X_END = 4.006
 TOWER_HEIGHT = 0.610
 SLIT_WIDTH = DT * DT / D
+GROUND_LENGTH = 0.075
 VISIBLE_WATER_AREA_FRACTION = 0.10
 VISIBLE_DISCHARGE_ALPHA = 0.01
 
 WATER = "#2F7FF7"
 AIR = "#F2F4F8"
 WALL = "#4A4A4A"
-RIM = "#D55E00"
 
 
 def _load_module(name: str, path: Path):
@@ -95,9 +96,9 @@ def _configure_style() -> None:
 
 
 def _draw_outline(ax) -> None:
-    """Draw the same connected physical pipe and standpipe in both columns."""
-    tower_left = X_TOWER - 0.5 * DT
-    tower_right = X_TOWER + 0.5 * DT
+    """Draw a shared domain outline with display-widened standpipe walls."""
+    tower_left = X_TOWER - 0.5 * DISPLAY_DT
+    tower_right = X_TOWER + 0.5 * DISPLAY_DT
     wall = dict(color=WALL, linewidth=0.75, zorder=8)
 
     ax.plot([0.0, X_END], [-D, -D], **wall)
@@ -108,14 +109,16 @@ def _draw_outline(ax) -> None:
     ax.plot([tower_left, tower_left], [0.0, TOWER_HEIGHT], **wall)
     ax.plot([tower_right, tower_right], [0.0, TOWER_HEIGHT], **wall)
 
-    # Match the symmetric platform/rim marker established for Case A.
-    platform_half_width = 0.5 * DT + 0.045
+    # Leave the tower open and draw two short ground-level strokes outside it.
     ax.plot(
-        [X_TOWER - platform_half_width, X_TOWER + platform_half_width],
+        [tower_left - GROUND_LENGTH, tower_left],
         [TOWER_HEIGHT, TOWER_HEIGHT],
-        color=RIM,
-        linewidth=0.8,
-        zorder=9,
+        **wall,
+    )
+    ax.plot(
+        [tower_right, tower_right + GROUND_LENGTH],
+        [TOWER_HEIGHT, TOWER_HEIGHT],
+        **wall,
     )
 
 
@@ -159,10 +162,10 @@ def _draw_1d_panel(ax, horizontal: dict, tower: dict) -> None:
         zorder=2,
     )
 
-    tower_left = X_TOWER - 0.5 * DT
+    tower_left = X_TOWER - 0.5 * DISPLAY_DT
     ax.add_patch(
         Rectangle(
-            (tower_left, 0.0), DT, TOWER_HEIGHT,
+            (tower_left, 0.0), DISPLAY_DT, TOWER_HEIGHT,
             facecolor=AIR, edgecolor="none", zorder=0,
         )
     )
@@ -176,8 +179,8 @@ def _draw_1d_panel(ax, horizontal: dict, tower: dict) -> None:
         cell_height = min(dz, water_top - z0)
         if cell_height <= 0.0:
             continue
-        gas_width = math.sqrt(float(np.clip(alpha_g, 0.0, 1.0))) * DT
-        film_width = max(0.5 * (DT - gas_width), 0.0)
+        gas_width = math.sqrt(float(np.clip(alpha_g, 0.0, 1.0))) * DISPLAY_DT
+        film_width = max(0.5 * (DISPLAY_DT - gas_width), 0.0)
         if float(alpha_l) > 1.0e-4 and film_width > 0.0:
             ax.add_patch(
                 Rectangle(
@@ -187,14 +190,14 @@ def _draw_1d_panel(ax, horizontal: dict, tower: dict) -> None:
             )
             ax.add_patch(
                 Rectangle(
-                    (tower_left + DT - film_width, z0), film_width, cell_height,
+                    (tower_left + DISPLAY_DT - film_width, z0), film_width, cell_height,
                     facecolor=WATER, edgecolor="none", zorder=2,
                 )
             )
 
     jet_top = float(tower["jet_height"])
     if jet_top > TOWER_HEIGHT:
-        jet_width = 0.55 * DT
+        jet_width = 0.55 * DISPLAY_DT
         ax.add_patch(
             Rectangle(
                 (X_TOWER - 0.5 * jet_width, TOWER_HEIGHT),
@@ -255,7 +258,7 @@ def _draw_2d_panel(ax, frame: dict, renderer, read_vtu) -> None:
     tx, ty, ta = renderer._structured_cell_field(
         x[tower_cells], y[tower_cells] - pipe_crown, alpha[tower_cells]
     )
-    tx = X_TOWER + (tx - X_TOWER) * (DT / SLIT_WIDTH)
+    tx = X_TOWER + (tx - X_TOWER) * (DISPLAY_DT / SLIT_WIDTH)
 
     row_y = 0.5 * (ty[:-1] + ty[1:])
     above_rim = row_y[:, None] >= TOWER_HEIGHT
@@ -302,7 +305,7 @@ def main() -> None:
         wspace=0.055, hspace=0.48,
     )
     fig.text(
-        0.267, 0.975, "Present model", ha="center", va="top",
+        0.267, 0.975, "Present 1D model", ha="center", va="top",
         fontsize=9.5, fontweight="bold",
     )
     fig.text(
@@ -339,7 +342,10 @@ def main() -> None:
                     "source_time_s": float(frame_2d["time"]),
                     "source_vtu": f"openfoam/2d/{frame_2d['source_vtu']}",
                     "solver_domain": "old confined 0.30-m numerical headroom above the physical rim",
-                    "display_remap": "area-equivalent slit width remapped laterally to physical Dt",
+                    "display_remap": (
+                        "area-equivalent slit remapped laterally to the common "
+                        f"{DISPLAY_DT:.3f}-m display width"
+                    ),
                 },
             }
         )
@@ -367,7 +373,7 @@ def main() -> None:
 
     manifest = {
         "case": "VW2011 Test 1 Case B",
-        "artifact_status": "provisional manuscript-figure candidate",
+        "artifact_status": "selected main-text full-domain comparison",
         "figure_claim": (
             "At identical physical times, the current 1-D and archived 2-D results "
             "show the progression from horizontal-interface approach through "
@@ -375,17 +381,23 @@ def main() -> None:
         ),
         "claim_limit": (
             "The archived 2-D solver domain remains laterally confined above the "
-            "physical rim; therefore the last row does not demonstrate a free "
-            "external plume and must be replaced after the external-plume run."
+            "physical rim; therefore the last row demonstrates only the initial "
+            "above-rim response, not a freely developing external plume."
         ),
         "time_pairing": "same physical time; no time shift or event alignment",
         "selected_times_s": list(TARGET_TIMES),
-        "one_d_role": "current Tosan-based present-model candidate",
-        "two_d_role": "old confined supporting planar VOF result; provisional only",
+        "one_d_role": "current Tosan-based Present 1D model",
+        "two_d_role": "direct archived confined supporting planar VOF result",
         "two_d_geometry": (
             "area-equivalent W=Dt^2/D planar slit with 0.30-m confined numerical "
-            "headroom; display-only lateral remapping to physical Dt"
+            f"headroom; display-only lateral remapping to {DISPLAY_DT:.3f} m"
         ),
+        "presentation_geometry": {
+            "physical_tower_diameter_m": DT,
+            "display_tower_width_m": DISPLAY_DT,
+            "vertical_scale_changed": False,
+            "tower_top": "open; two short wall-coloured strokes denote ground level",
+        },
         "solver_results_modified_for_figure": False,
         "panel_layout": "three rows by two columns; panel letters repeated across columns",
         "selected_frames": selected,
@@ -397,8 +409,8 @@ def main() -> None:
             for path in output_paths
         ],
         "manuscript_status": (
-            "candidate only; manuscript LaTeX intentionally unchanged pending "
-            "visual approval and completion of the external-plume 2-D run"
+            "selected for the Case-B main text; caption must retain the confined-"
+            "headroom and no-free-external-plume limitation"
         ),
     }
     MANIFEST.write_text(json.dumps(manifest, indent=2), encoding="utf-8")

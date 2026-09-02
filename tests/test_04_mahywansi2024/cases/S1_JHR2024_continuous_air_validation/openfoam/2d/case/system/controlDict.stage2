@@ -1,0 +1,87 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+
+application         compressibleInterFoam;
+startFrom           latestTime;
+startTime           0;
+stopAt              endTime;
+// prepare_stage2.sh replaces this with accepted Stage-1 time + 25 s.
+endTime             28.0;
+deltaT              1e-6;
+writeControl        adjustableRunTime;
+writeInterval       0.1;
+purgeWrite          0;
+writeFormat         binary;
+writePrecision      8;
+writeCompression    off;
+timeFormat          general;
+timePrecision       12;
+runTimeModifiable   yes;
+
+adjustTimeStep      yes;
+maxCo               0.50;
+maxAlphaCo          0.25;
+maxDeltaT           0.0005;
+
+functions
+{
+    probesJHR
+    {
+        type            probes;
+        libs            (sampling);
+        writeControl    timeStep;
+        writeInterval   10;
+        probeLocations
+        (
+            ( 0.0 0.0099745566751476 0.0)
+            ( 0.0 0.0099745566751476 0.3)
+            ( 0.0 0.0099745566751476 0.45)
+            (-0.8 0.0099745566751476 0.0)
+            (-0.1 0.0099745566751476 0.0)
+            ( 0.1 0.0099745566751476 0.0)
+        );
+        fields          (p p_rgh alpha.water U);
+    }
+
+    fieldMinMax1
+    {
+        type            fieldMinMax;
+        libs            (fieldFunctionObjects);
+        writeControl    timeStep;
+        writeInterval   25;
+        location        true;
+        fields          (p U alpha.water);
+    }
+
+    riserLevelProbes
+    {
+        type            probes;
+        libs            (sampling);
+        writeControl    timeStep;
+        writeInterval   10;
+        probeLocations
+        (
+            (0.0 0.0099745566751476 0.58)
+            (0.0 0.0099745566751476 0.60)
+            (0.0 0.0099745566751476 0.65)
+            (0.0 0.0099745566751476 1.00)
+        );
+        fields          (alpha.water p U);
+    }
+
+    domainAlphaAverage
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        writeControl    timeStep;
+        writeInterval   25;
+        writeFields     false;
+        operation       volAverage;
+        fields          (alpha.water);
+    }
+}

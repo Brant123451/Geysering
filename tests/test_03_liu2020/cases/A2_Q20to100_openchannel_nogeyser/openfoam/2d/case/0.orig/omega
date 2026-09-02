@@ -1,0 +1,23 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      omega;
+}
+
+dimensions [0 0 -1 0 0 0 0];
+internalField uniform 5;
+
+boundaryField
+{
+    inlet { type fixedValue; value uniform 9.53; }
+    tankAtmosphere { type inletOutlet; inletValue uniform 5; value uniform 5; }
+    riserOutlet    { type inletOutlet; inletValue uniform 5; value uniform 5; }
+    weirOutlet     { type inletOutlet; inletValue uniform 5; value uniform 5; }
+    walls          { type omegaWallFunction; value uniform 5; }
+    frontAndBack
+    {
+        type empty;
+    }
+}

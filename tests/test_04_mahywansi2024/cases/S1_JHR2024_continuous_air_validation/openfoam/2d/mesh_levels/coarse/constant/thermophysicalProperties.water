@@ -1,0 +1,43 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      thermophysicalProperties;
+}
+
+// Declared compressible-water closure; the article gives no exact EOS values.
+thermoType
+{
+    type                heRhoThermo;
+    mixture             pureMixture;
+    transport           const;
+    thermo              hConst;
+    equationOfState     perfectFluid;
+    specie              specie;
+    energy              sensibleInternalEnergy;
+}
+
+mixture
+{
+    specie
+    {
+        molWeight       18.01528;
+    }
+    equationOfState
+    {
+        R               3000;
+        rho0            998.4;
+    }
+    thermodynamics
+    {
+        Cp              4182;
+        Hf              0;
+    }
+    transport
+    {
+        mu              1.002e-03;
+        Pr              7.0;
+    }
+}
+

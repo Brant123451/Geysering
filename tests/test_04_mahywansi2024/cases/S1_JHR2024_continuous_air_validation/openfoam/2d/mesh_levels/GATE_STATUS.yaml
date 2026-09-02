@@ -1,0 +1,101 @@
+schema_version: 1
+updated: 2026-08-10
+campaign: Mahyawansi_JHR2024_continuous_air_quasi2d_mesh_study
+physical_case_note: >-
+  The three levels share one continuous-air physical condition. They are
+  declared 2-D analogues of the paper's coarse, medium-refine, and refined
+  three-dimensional mesh strategies, not three experimental conditions.
+
+mesh_levels:
+  coarse:
+    mesh_quality_evidence: previously_passed
+    old_fixedValue_campaign: rejected_source_alignment_failure
+    old_stage1_end_s: 0.5
+    offline_gate: invalidated_pending_total_pressure_rebuild
+    review_basis:
+      - source_alignment_matrix_checked
+      - blockMesh_16240_hex
+      - strict_checkMesh_OK
+      - CrankNicolson_0p9_with_one_alpha_subcycle
+    pending_review:
+      - generate_facewise_total_pressure_profiles
+      - clean_preflight_and_common_initial_field_audit
+    smoke_gate: prior_smoke_invalidated
+    formal_run: not_authorized
+
+  medium_refine:
+    mesh_quality_evidence: previously_passed
+    old_fixedValue_campaign: rejected_numerical_and_source_alignment_failure
+    old_stage1_end_s: 0.123873702649
+    offline_gate: invalidated_pending_total_pressure_rebuild
+    review_basis:
+      - source_alignment_matrix_checked
+      - blockMesh_116750_hex
+      - strict_checkMesh_OK
+      - CrankNicolson_0p9_with_one_alpha_subcycle
+      - stage1_segment_restores_dictionary_and_requires_physical_acceptance
+    pending_review:
+      - generate_facewise_total_pressure_profiles
+      - clean_preflight_and_common_initial_field_audit
+    evidence_status: partial_translation_with_disclosed_missing_source_inputs
+    smoke_gate: prior_smoke_invalidated
+    formal_run: not_authorized
+
+  refined:
+    mesh_quality_evidence: previously_passed
+    old_fixedValue_campaign: rejected_numerical_and_source_alignment_failure
+    old_stage1_end_s: 0.107860352599
+    model_definition_gate: invalidated_pending_total_pressure_rebuild
+    static_freeze_and_launch_wrapper_audit: requires_new_template_hash
+    offline_gate: invalidated_pending_total_pressure_rebuild
+    stage1_segment_gate: not_authorized
+    smoke_gate: prior_smoke_invalidated
+    formal_run: not_authorized
+
+global_launch_gate:
+  formal_run_authorized: false
+  last_cpu_check_2026_08_10:
+    consecutive_load1_samples:
+      - 6.47
+    threshold: 9.0
+    capacity_sample_gate: passed_at_last_observation
+    logical_cpus: 12
+    case3_solver_running: false
+  current_blocker: >-
+    The paper requires total-pressure inlet/outlet semantics, whereas the old
+    campaign used static fixedValue p_rgh.  All old preflight, smoke and Stage-1
+    outputs are rejected.  A face-centre p0 generator, clean three-level cases,
+    fresh preflight and fresh smoke are required before any Stage-1 restart.
+  smoke_cpu_rule: >-
+    Require load1 below 9 for three consecutive samples; then use one pinned
+    logical core, nice 19, and the verified process-group duty-cycle wrapper at
+    20 percent. Writable cgroup cpu.max and cpulimit are unavailable here, so
+    an environment confirmation alone is not accepted as a quota.
+  production_rule: >-
+    No production run starts until every level passes the offline and smoke
+    gates and safe CPU capacity is available.
+  direct_entry_rule: >-
+    Each preflight entry point now requires a temporary authorization marker,
+    CPU guard/quota flags, one valid cpuset, and three local load1 samples below
+    9; failed preflight retains its invalidation marker and consumes temporary
+    authorization on every exit. All legacy Allrun entries delegate to these
+    preflight launchers.
+
+launch_control_audit:
+  static_audit: passed
+  evidence: launch_gate_audit.json
+  quota_wrapper_self_tests: 4_of_4_passed
+  bash_syntax: passed_all_mesh_level_shell_entries
+  refined_physics_freeze: invalidated_by_total_pressure_boundary_correction
+  openfoam_executed_during_audit: false
+  actual_preflight_or_solver_result: old_results_rejected__clean_rerun_pending
+
+result_acceptance_gate:
+  source_eruption_expected: true
+  eruption_is_hard_gate: true
+  stable_no_eruption_result: physics_alignment_failure
+  decision_specification: RESULT_ACCEPTANCE.yaml
+  solver_end_marker: STAGE2_COMPLETE_UNVALIDATED
+  validated_end_marker: RESULT_ACCEPTED
+  refined_eruption_required_for_campaign_pass: true
+  status: waiting_for_simulation

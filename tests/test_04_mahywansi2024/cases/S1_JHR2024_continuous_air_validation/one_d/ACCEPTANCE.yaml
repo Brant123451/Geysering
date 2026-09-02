@@ -1,0 +1,205 @@
+schema_version: 1
+status: contract_frozen_implementation_pending
+
+identity_gate:
+  physical_condition_count: 1
+  two_d_mesh_level_count: 3
+  rule: >-
+    The three OpenFOAM mesh levels are a grid study of one physical condition;
+    no mesh level may be described as an independent experimental case.
+
+paper_to_2d_gate:
+  source_matrix_required: true
+  exact_branch_match_required: true
+  eruption_required: true
+  stable_but_no_eruption: physics_alignment_failure
+  decisive_level: refined
+  targets:
+    horizontal_slug_velocity_m_s: [0.8, 0.9]
+    external_peak_height_above_rim_m:
+      reference: 0.19
+      comparison: report_signed_error_no_hidden_tuning
+    eruption_duration_s:
+      reference_range: [2.0, 2.2]
+    cycle_s:
+      reference: 9.5
+    post_eruption_oscillation_s:
+      reference: 2.0
+
+one_d_model_gate:
+  supply_branch:
+    length_m: 0.1373
+    stage_1_initial_phase: water
+    stage_1_top_boundary: closed_wall
+    stage_2_top_boundary: {gauge_pressure_Pa: 5700.0, water_fraction: 0.0}
+    required_states: [liquid_area, liquid_discharge, gas_mass, gas_momentum]
+    forbidden:
+      - pre_existing_stage1_gas_pocket_in_main_or_supply_branch
+      - gas_only_supply_branch_for_source_aligned_trajectory
+      - direct_gas_source_at_horizontal_tee
+  horizontal:
+    required_lineage: Case1_conservative_circular_pipe_liquid_spatial_operator_with_S1_distributed_gas_extension
+    forbidden_lineage: Case1_valve_release_shockfit_initial_stage
+    required_states: [liquid_area, liquid_discharge, gas_mass, gas_momentum]
+    current_implementation_evidence: hash_pinned_Case1_MUSCL_central_upwind_donor_draining_three_segment_adapter
+    exact_reuse:
+      - Case1_MUSCL_reconstruction
+      - Case1_circular_hydrostatic_pressure_flux
+      - Case1_central_upwind_Riemann_flux
+      - Case1_donor_draining_limiter
+    topology_adaptation:
+      - atomic_T_flux_replaces_each_segment_endpoint
+      - moving_gas_nose_is_explicit_material_interface_face
+      - global_SSP_RK2_owns_two_Case1_forward_Euler_spatial_stages
+    nonclaim: mutable_full_Case1_application_loop_is_not_a_frozen_dependency
+    production_status: false
+    rule: >-
+      The hash-pinned Case1 spatial seed is reused, but MODEL_IMPLEMENTATION_ACCEPTED
+      still requires complete generalized top and water-end phase boundaries,
+      the remaining topology closures, and a common conserved
+      trajectory. The real six-port/two-node owner and source-aligned 0.5842 m
+      elastic initial state are already implemented.
+  vertical:
+    formulation: persistent_directional_two_fluid
+    required_liquid_states: [A_up, Q_up, A_down, Q_down]
+    required_gas_states: [gas_mass, gas_momentum]
+    forbidden:
+      - reconstruct_directional_streams_from_signed_net_flow_each_step
+      - prescribed_eruption_height_or_time
+      - duplicate_T_node_mass_or_momentum_source
+      - fill_new_isolated_void_without_same_stage_boundary_gas_parcel
+      - apply_same_bottom_gas_parcel_in_remap_and_transport
+      - merge_two_existing_liquid_labels_across_finite_gas_corridor
+      - move_bottom_gas_piston_across_internal_gas_gap
+      - use_unbounded_or_unquantified_atmospheric_liquid_fallback
+      - infer_external_force_from_final_momentum_change
+    production_blockers:
+      - generalized_bottom_piston_with_internal_topology_and_top_spill
+      - water_end_inletOutlet_phase_reentry_after_horizontal_gas_arrival
+      - canonical_trajectory_observer_exporter_and_result_acceptance
+  conservation:
+    liquid_volume_residual_required: true
+    gas_mass_residual_required: true
+    momentum_components_required: [horizontal_x, vertical_z]
+    pressure_gravity_friction_and_node_reaction_impulses_required: true
+    mixture_momentum_exchange_residual_required: true
+  phase_admissibility:
+    finite_gas_mass_requires_positive_gas_area: true
+    positive_gas_area_requires_finite_positive_gas_mass: true
+    phase_front_must_cross_cells_without_seed_pocket: true
+
+source_boundary_numeric_gate:
+  water_inlet_reduced_pressure_Pa: 107064.462144
+  water_outlet_reduced_pressure_Pa: 107044.873536
+  stage_2_air_absolute_total_pressure_Pa: 107025.0
+  horizontal_head_reference: source_coordinate_at_pipe_centreline
+  case1_head_conversion: add_pipe_radius_to_head_above_invert
+  water_boundary_quantities:
+    inlet: total_pressure_head
+    outlet: static_pressure_head
+  one_d_characteristic_translations_required:
+    inlet: outgoing_invariant_plus_total_head
+    outlet: outgoing_invariant_plus_static_head
+  current_status: implemented_inlet_total_pressure_and_outlet_static_pressure_characteristic_ghosts
+  vertical_top_boundary_quantity: static_pressure
+  elastic_storage_reference_head_m: 0.584
+  initial_head_m: 0.5842
+  initial_elastic_mapping_status: implemented_and_round_trip_tested
+  remaining_gate: gas_reaches_water_end_requires_inletOutlet_phase_reentry_translation
+
+one_d_to_2d_gate:
+  reference_2d_level: refined
+  common_physical_time_required: true
+  time_shift_allowed: false
+  event_branch:
+    eruption_yes_no_exact_match: true
+    stable_but_wrong_branch: physics_alignment_failure
+  horizontal_required_series:
+    - horizontal_gas_nose_x_m
+    - horizontal_gas_tail_x_m
+    - horizontal_gas_centroid_x_m
+    - horizontal_slug_nose_x_m
+    - horizontal_slug_tail_x_m
+    - horizontal_slug_velocity_m_s
+    - gas_arrival_at_riser
+  vertical_required_series:
+    - riser_connected_water_top_z_m
+    - riser_upward_liquid_flow_m3_s
+    - riser_downward_liquid_flow_m3_s
+    - mouth_liquid_outflow_m3_s
+    - mouth_gas_outflow_kg_s
+    - cumulative_mouth_liquid_outflow_m3
+    - internal_mouth_event_active
+  vertical_required_profile_fields:
+    - riser_Aup_m2
+    - riser_Qup_m3_s
+    - riser_Adown_m2
+    - riser_Qdown_m3_s
+    - riser_gas_area_m2
+    - riser_gas_mass_kg_m
+    - riser_gas_velocity_m_s
+  profile_rule: >-
+    Export the six persistent riser states and derived gas area/velocity on
+    the native vertical cells at the frozen common physical times. Scalar net
+    flow is not a substitute for these profiles.
+  pressure_required_series: [P1_gauge_Pa, P2_gauge_Pa, P3_gauge_Pa]
+  all_common_probe_series_required: true
+  quantitative_policy: >-
+    Freeze metrics and comparison windows before looking at the completed
+    trajectory. Report signed error, waveform error, phase error and grid
+    spread. Do not tune a missing source parameter separately for each mesh.
+
+eruption_definition_1d:
+  event_name: internal_mouth_event
+  internal_event: >-
+    A face-connected water pathway reaches the riser mouth and the outward
+    liquid flux remains positive while both the mean-flow and cumulative-volume
+    thresholds are met over a continuous 0.10 s window. The gas/liquid topology
+    and every conservation ledger must remain admissible.
+  persistence_s: 0.10
+  minimum_mean_liquid_outflow_m3_s: 3.2175924923e-5
+  minimum_cumulative_liquid_outflow_per_window_m3: 3.2175924923e-6
+  threshold_basis: >-
+    The cumulative threshold is frozen to the same A_pipe*D/4
+    water-equivalent volume used by the 2-D external eruption classifier; the
+    mean-flow threshold is that volume divided by 0.10 s.
+  common_with_2d: true
+  external_2d_event:
+    event_name: external_plume_event
+    source: ../openfoam/2d/mesh_levels/RESULT_ACCEPTANCE.yaml
+    required_for_2d_acceptance: true
+  external_height_status: outside_native_1d_domain
+  allowed_external_output_label: derived_plume_proxy
+
+completion_markers:
+  implementation_ready: MODEL_IMPLEMENTATION_ACCEPTED
+  baseline_finished: RUN_COMPLETE_UNVALIDATED
+  event_accepted: ERUPTION_ACCEPTED
+  joint_result_accepted: RESULT_ACCEPTED
+  rule: >-
+    RESULT_ACCEPTED requires the source-aligned 2-D refined eruption, the 1-D
+    eruption branch, horizontal gas/slug transport, vertical two-fluid motion,
+    pressure histories and conservation ledgers all to pass.
+
+pretrajectory_hard_tests:
+  - three_2d_levels_and_1d_stage1_supply_branch_are_water_filled
+  - stage2_gas_first_enters_supply_branch_top_not_horizontal_tee
+  - supply_branch_local_liquid_gas_and_momentum_ledgers_close
+  - both_T_nodes_close_each_RK_stage_with_one_atomic_packet
+  - persistent_riser_gross_up_and_down_fluxes_share_the_node_packet
+  - first_bottom_gas_parcel_and_new_void_open_atomically_once
+  - source_0p5842_cut_cell_bottom_gas_piston_preserves_liquid_volume_and_momentum
+  - one_label_cut_cell_direction_reversal_is_conservative
+  - two_label_transfer_or_piston_across_finite_internal_gas_fails_closed
+  - source_free_new_isolated_void_fails_closed
+  - finite_top_reentry_parcel_is_inventory_limited_and_budgeted
+  - independent_vertical_mass_and_momentum_perturbations_are_detected
+  - riser_bottom_advective_and_pressure_traction_budget_is_explicit
+  - component_rejection_rolls_back_state_nodes_and_ledgers
+  - actual_S1_stage1_joint_smoke_passes_after_physical_steady_checkpoint
+
+one_d_grid_checks_before_result_acceptance:
+  horizontal_dx_m: [0.01, 0.005]
+  supply_branch_cells: [14, 28]
+  vertical_cells: [160, 320]
+  common_parameter_set_across_all_2d_meshes: true

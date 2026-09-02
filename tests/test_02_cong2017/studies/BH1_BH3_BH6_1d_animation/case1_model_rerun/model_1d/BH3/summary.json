@@ -1,0 +1,56 @@
+{
+  "case": "BH3",
+  "paper_run": "B-H3",
+  "variant": "case1_horizontal_mirror_v3_frozen",
+  "status": "completed",
+  "runtime_s": 388.5083801000146,
+  "source_network": "E:\\Geysering\\tests\\test_02_cong2017\\cases\\BH1_Dr16_H066_L061\\model\\cong2017_network_twofluid.py",
+  "horizontal_provenance": {
+    "model": "Case-1 Tosan shock-fit + circular Saint-Venant wet/dry core",
+    "coordinate_map": "x_mirror = L - x_physical",
+    "core_source": "E:\\Geysering\\tests\\test_01_vw2011\\cases\\A_Dt57p1_Ha0305_Yfs0356\\model\\tosan2021_horizontal_shockfit.py",
+    "core_sha256": "90e84da9afa0ec8465d80f87fc701dfb8f0fad6f97350ea708074a50192b6119",
+    "conservative_map_source": "E:\\Geysering\\tests\\test_02_cong2017\\studies\\BH1_BH3_BH6_1d_animation\\case1_mirrored_horizontal.py",
+    "adapter_sha256": "ad1c767ba3ee3c0b497125503eb60ea6bd281db6c9ebfde87ea7be1f3610d604",
+    "conservative_map": "Case-1 same-grid void-volume map, frozen locally",
+    "valve_open_time_s": 0.2,
+    "network_coupling_interval_s": 0.005,
+    "valve_area_law": "phi=(min(max(t/t_open,0),1))^2",
+    "pre_handoff_reservoir_boundary": "fixed initial state (transmissive Case-1 MOC end)",
+    "handoff_condition": "mirrored fitted gas interface reaches the physical side T"
+  },
+  "paper_conditions": {
+    "pipe_diameter_m": 0.05,
+    "riser_diameter_m": 0.026,
+    "reservoir_head_from_invert_m": 0.66,
+    "model_head_from_pipe_crown_m": 0.61,
+    "riser_x_m": 3.47,
+    "valve_x_m": 5.98,
+    "initial_air_reach_length_m": 0.6099999999999994,
+    "initial_air_gauge_head_m": 0.0,
+    "valve_opening_duration_s": 0.2
+  },
+  "events": {
+    "wetting_front_reaches_closed_cap_s": 0.6200338290861744,
+    "case1_to_campaign2_handoff_s": 9.416114481950304,
+    "gas_nose_reaches_riser_s": 9.400061585770695,
+    "riser_surface_reaches_rim_s": null
+  },
+  "outcome": {
+    "model_geyser": false,
+    "experiment_geyser": true,
+    "maximum_riser_level_m": 1.1811527979912084,
+    "maximum_pocket_head_m": 1.056226800272962
+  },
+  "audit": {
+    "initial_horizontal_gas_mass_kg": 0.001442211279145621,
+    "final_horizontal_gas_mass_kg": 0.0009502034262304428,
+    "liquid_floor_created_m3": 0.0,
+    "frame_count": 651,
+    "end_time_s": 13.0
+  },
+  "artifacts": {
+    "fields": "case1_horizontal_1d_frames.npz",
+    "summary": "summary.json"
+  }
+}

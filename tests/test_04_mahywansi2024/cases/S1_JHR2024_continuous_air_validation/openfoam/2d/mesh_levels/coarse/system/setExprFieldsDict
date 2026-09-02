@@ -1,0 +1,51 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setExprFieldsDict;
+}
+
+// Build an internally hydrostatic absolute-pressure seed after setFields.
+// rho_air=1.204317575 kg/m3 follows the declared 293.15 K perfect-gas closure.
+expressions
+(
+    ambientAirPressure
+    {
+        field       p;
+        dimensions  [1 -1 -2 0 0 0 0];
+        expression  "101325 + 1.204317575*9.81*(1.02-pos().z())";
+    }
+
+    mainPipeWaterPressure
+    {
+        field       p;
+        dimensions  [1 -1 -2 0 0 0 0];
+        fieldMask   "(pos().z() >= -0.0128) && (pos().z() <= 0.0128)";
+        expression  "101325 + 1.204317575*9.81*(1.02-0.5842) + 998.4*9.81*(0.5842-pos().z())";
+    }
+
+    riserWaterPressure
+    {
+        field       p;
+        dimensions  [1 -1 -2 0 0 0 0];
+        fieldMask
+        #{
+            (pos().x() >= -0.0128) && (pos().x() <= 0.0128)
+         && (pos().z() > 0.0126) && (pos().z() <= 0.5842)
+        #};
+        expression  "101325 + 1.204317575*9.81*(1.02-0.5842) + 998.4*9.81*(0.5842-pos().z())";
+    }
+
+    closedWaterStubPressure
+    {
+        field       p;
+        dimensions  [1 -1 -2 0 0 0 0];
+        fieldMask
+        #{
+            (pos().x() >= -1.5328) && (pos().x() <= -1.5072)
+         && (pos().z() > 0.0126) && (pos().z() <= 0.1501)
+        #};
+        expression  "101325 + 1.204317575*9.81*(1.02-0.5842) + 998.4*9.81*(0.5842-pos().z())";
+    }
+);

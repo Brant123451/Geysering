@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "snapshot_utc": "2026-08-10T02:51:40.7053630Z",
+  "run": "h3_refined_iso_riser20",
+  "source_case": "/tmp/bh3-2d-qualification/h3_refined_iso_riser20",
+  "read_only_status": {
+    "one_mpirun_parent_detected": true,
+    "solver_ranks_detected": 6,
+    "solver_running": true,
+    "last_log_time_s": 3.008815299,
+    "last_execution_time_s": 30157.47,
+    "latest_complete_checkpoint_time_directory_s": 3.0,
+    "normal_end": false,
+    "true_fatal_or_nan_detected": false,
+    "trapFpe_startup_line_treated_as_error": false
+  },
+  "unified_physical_rim_metrics": {
+    "maximum_rim_plane_alpha": null,
+    "maximum_positive_alpha_weighted_flow_m3_s": null,
+    "cumulative_positive_liquid_volume_m3": null,
+    "first_resolved_crossing_time_s": null,
+    "final_classification": null
+  },
+  "missing_reason": "The case is actively running and has no completed unified rim-plane series. The current checkpoint was inspected only for process/log/time status; no final outlet claim was made and no image-derived value was substituted.",
+  "next_safe_action": "After a normal completed event, run the same scratch sampler and auditor used for H1, H3 baseline, and H6."
+}

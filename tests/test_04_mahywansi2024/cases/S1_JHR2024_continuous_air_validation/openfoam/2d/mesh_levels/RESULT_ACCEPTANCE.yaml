@@ -1,0 +1,141 @@
+schema_version: 1
+updated: 2026-08-10
+case_id: S1_JHR2024_continuous_air_validation
+source_case: Mahyawansi_et_al_JHR2024_continuous_air
+source_doi: 10.1080/00221686.2024.2305353
+classifier: classify_eruption_2d.py
+
+initial_condition_gate:
+  stage_1_main_pipe: water
+  stage_1_supply_branch_below_boundary_3: water
+  riser_water_level_z_m: 0.5842
+  riser_above_water_level: air
+  stage_1_air_inlet_boundary: wall
+  stage_2_first_air_entry: boundary_3_only
+  evidence_status_supply_branch: method_inferred_from_simple_water_flow_and_closed_isolation_valve
+  forbidden: pre_existing_stage1_gas_pocket_in_main_or_supply_branch
+  rule: >-
+    Every mesh level must rerun setFields/setExprFields and its initial-field
+    audit after this gate changes. A former air-filled-stub preflight cannot
+    authorize smoke or formal calculation.
+
+hard_physics_gate:
+  expected_eruption: true
+  riser_rim_z_m: 1.02
+  water_phase_threshold: 0.5
+  decision: >-
+    A numerically stable run that does not erupt is a physics-alignment
+    failure, not a completed validation result.
+  fixed_physical_event_test:
+    evidence_status: declared_acceptance_criterion
+    launch_band:
+      abs_x_max_m: 0.0127
+      z_min_m: 1.02
+      z_max_m: 1.02635
+    minimum_connected_bulk_top_z_m: 1.0327
+    minimum_height_above_rim_m: 0.0127
+    bulk_top_water_quantile: 0.99
+    bulk_top_definition: >-
+      99th percentile of cell upper-face z, weighted by
+      alpha.water*cellVolume within the face-connected launch-attached wet
+      component.
+    minimum_connected_water_volume_m3: 3.2175924923e-6
+    equivalent_2d_water_area_m2: 1.6129e-4
+    minimum_continuous_duration_s: 0.10
+    comparison_sampling_interval_s: 0.10
+    connectivity: shared_cell_face
+    explanation: >-
+      In the external domain at z >= 1.02 m, alpha.water >= 0.5 cells are
+      grouped by shared-face connectivity. A qualifying component must touch
+      the physical launch band at the riser mouth, reach D/2 above the rim,
+      contain at least A_pipe*D/4 water-equivalent volume, and persist for
+      0.10 s on a common 0.10 s comparison grid. These are fixed physical
+      thresholds, not mesh-dependent cell counts, and reject detached alpha
+      noise or a momentarily wet rim.
+  observation_window:
+    no_final_no_eruption_decision_before_stage2_s: 12.0
+    planned_stage2_duration_s: 25.0
+    incomplete_before_planned_end: inconclusive
+    no_event_after_planned_end: failed_no_eruption
+
+mesh_levels:
+  coarse:
+    nominal_pipe_cells_per_diameter: 8
+    external_nominal_dz_m: 0.0063636364
+    native_stage2_write_interval_s: 0.1
+    result_role: screening_only
+    eruption_expected: true
+  medium_refine:
+    nominal_pipe_cells_per_diameter: 16
+    external_nominal_dz_m: 0.0015909091
+    native_stage2_write_interval_s: 0.1
+    result_role: mesh_sensitivity
+    eruption_expected: true
+  refined:
+    nominal_pipe_cells_per_diameter: 32
+    external_nominal_dz_m: 0.0015909091
+    native_stage2_write_interval_s: 0.1
+    result_role: decisive_validation_level
+    eruption_expected: true
+
+published_and_figure_read_targets:
+  eruption:
+    target: true
+    evidence: direct_text_and_Figure_10
+  maximum_height_above_rim_m:
+    experiment: 0.19
+    refined_source_CFD: [0.19, 0.195]
+    evidence: Figure_11_read
+  eruption_duration_s:
+    experiment: 2.2
+    refined_source_CFD: 2.0
+    evidence: Figure_11_read
+  complete_cycle_s:
+    target: 9.5
+    evidence: direct_text
+  horizontal_slug_velocity_m_per_s:
+    target: [0.8, 0.9]
+    evidence: direct_text_and_Figure_8
+  post_eruption_oscillation_period_s:
+    target: 2.0
+    evidence: direct_text
+
+quantitative_alignment_policy:
+  fixed_pass_tolerance: not_published
+  rule: >-
+    Report the simulated value, the source target, and the relative
+    difference. Do not tune missing geometry, turbulence floors, valve
+    behavior, or unpublished boundary details merely to force agreement.
+  qualitative_morphology_note: >-
+    The source CFD eruption is smoother and more continuous than the
+    experiment because pre-eruption air-water mixing is overpredicted.
+
+acceptance_markers:
+  solver_finished_unvalidated: STAGE2_COMPLETE_UNVALIDATED
+  event_passed: ERUPTION_ACCEPTED
+  final_result_passed: RESULT_ACCEPTED
+  forbidden_completion_shortcut: RUN_COMPLETE
+
+required_acceptance_outputs:
+  time_series: eruption_timeseries.csv
+  summary: eruption_acceptance.json
+  time_series_fields:
+    - target_time_s
+    - actual_time_s
+    - stage2_elapsed_s
+    - launch_component_count
+    - component_water_volume_m3
+    - volume_over_minimum
+    - bulk_top_q99_z_m
+    - bulk_height_above_rim_m
+    - active_raw
+    - active_persistent
+    - water_weighted_uz_m_per_s
+
+manuscript_use:
+  coarse_or_medium_without_eruption: rejected_for_validation
+  refined_without_eruption: campaign_physics_failure
+  refined_with_eruption_but_unreported_secondary_metrics: incomplete
+  accepted_requirement: >-
+    Refined must pass the eruption gate and all secondary source metrics must
+    be extracted and compared before the result can be used in the paper.

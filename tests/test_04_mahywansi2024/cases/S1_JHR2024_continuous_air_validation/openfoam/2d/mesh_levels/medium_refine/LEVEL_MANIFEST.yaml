@@ -1,0 +1,57 @@
+schema_version: 1
+case_id: S1_JHR2024_continuous_air_validation
+mesh_level: medium_refine_2d_analogue
+accepted_for_manuscript_evidence: false
+source_pdf_sha256: A47F144D2339D8760D2DD650B97027E2C64F0A26C6D7791D7998FA509BAAF84B
+
+geometry:
+  pipe_diameter_m: 0.0254
+  upstream_boundary_x_m: -1.83
+  air_port_center_x_m: -1.52
+  riser_center_x_m: 0.0
+  downstream_boundary_x_m: 1.27
+  riser_rim_z_m: 1.02
+  initial_water_surface_z_m: 0.5842
+
+mesh_translation:
+  source_medium_cutcell_cells_3d: 500000
+  source_medium_strategy: eruption_region_body_of_influence
+  source_wall_inflation_layers_3d: 5
+  target_cell_count_2d: null
+  target_cells_per_diameter_2d: 16
+  target_nominal_spacing_m: 0.0015875
+  target_boi_analogue: "external plume box x=[-0.10,0.10], z=[1.02,2.00]"
+  wall_inflation_2d: none
+  evidence_status:
+    source_counts_and_strategy: published
+    cells_per_diameter_and_boi_range: declared_2d_choice
+    source_first_layer_growth_rate_yplus: missing
+    wall_inflation_translation: omitted_because_parameters_missing
+
+stages:
+  stage1:
+    air_port: closed
+    turbulence: kOmegaSST
+  stage2:
+    air_port_gauge_pressure_Pa: 5700
+    turbulence: SmagorinskyLES
+  initial_velocity_m_s: 0.0
+  stage1_turbulence_initial_floors:
+    k_m2_s2: 1.0e-6
+    omega_s-1: 1.0
+    evidence_status: unreported_declared_positive_numerical_floors
+
+numerics:
+  solver: compressibleInterFoam-v2512
+  time_scheme: CrankNicolson_0.9
+  source_time_scheme: implicit_bounded_second_order_Fluent
+  translation_note: "Crank-Nicolson is not asserted to be identical to the Fluent scheme; backward is unsupported by this solver."
+  alpha_transport:
+    nAlphaCorr: 2
+    nAlphaSubCycles: 1
+    nLimiterIter: 5
+    translation_note: "Alpha subcycling is disabled because OpenFOAM v2512 rejects nAlphaSubCycles>1 with Crank-Nicolson."
+  smoke_limit_s: 0.02
+  smoke_threads: 1
+  smoke_nice: 19
+  formal_run_authorized: false

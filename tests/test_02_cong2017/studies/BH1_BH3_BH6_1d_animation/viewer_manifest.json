@@ -1,0 +1,62 @@
+{
+  "artifact": "bh1_bh3_bh6_1d_animation.html",
+  "purpose": "synchronized comparison of Case-1-core horizontal 1D reruns and completed OpenFOAM 2D results",
+  "common_display_clock_s": {
+    "start": 0.0,
+    "end": 13.0,
+    "step": 0.1
+  },
+  "cases": [
+    {
+      "id": "BH1",
+      "label": "B-H1",
+      "detail": "Dr = 16 mm · Dr/D = 0.32 · 1D未喷发 / 2D未喷发 / 实验喷发",
+      "valve": "0.20 s",
+      "index1d": "case1_model_rerun/frames/BH1/frames.json",
+      "index2d": "../../cases/BH1_Dr16_H066_L061/openfoam/2d/frame_compare/two_d_frames",
+      "source2d": "OpenFOAM formal 13 s run (paper_tau0p2_areaeq)",
+      "count1d": 261,
+      "count2d": 131,
+      "start1d": 0.0,
+      "end1d": 13.0,
+      "start2d": 0.0,
+      "end2d": 13.0
+    },
+    {
+      "id": "BH3",
+      "label": "B-H3",
+      "detail": "Dr = 26 mm · Dr/D = 0.52 · 1D未喷发 / 2D未喷发 / 实验喷发",
+      "valve": "0.20 s",
+      "index1d": "case1_model_rerun/frames/BH3/frames.json",
+      "index2d": "../../cases/BH3_Dr26_H066_L061/openfoam/2d/comparison/openfoam_2d/frames.json",
+      "source2d": "OpenFOAM completed 13 s comparison run",
+      "count1d": 261,
+      "count2d": 261,
+      "start1d": 0.0,
+      "end1d": 13.0,
+      "start2d": 0.0,
+      "end2d": 13.0
+    },
+    {
+      "id": "BH6",
+      "label": "B-H6",
+      "detail": "Dr = 41 mm · Dr/D = 0.82 · 1D未喷发 / 2D未喷发 / 实验未喷发",
+      "valve": "0.20 s",
+      "index1d": "case1_model_rerun/frames/BH6/frames.json",
+      "index2d": "../../cases/BH6_Dr41_H066_L061/outputs/1d2d_viewer/frames_2d.json",
+      "source2d": "OpenFOAM completed 13 s comparison run",
+      "count1d": 261,
+      "count2d": 131,
+      "start1d": 0.0,
+      "end1d": 13.0,
+      "start2d": 0.0,
+      "end2d": 13.0
+    }
+  ],
+  "common_conditions": "paper H0=0.66 m from tunnel invert; model crown datum=0.61 m; valve_open_time=0.20 s",
+  "outcomes_at_13s": "BH1: 1D/2D no geyser, experiment geyser; BH3: 1D/2D no geyser, experiment geyser; BH6: 1D/2D/experiment no geyser",
+  "time_alignment": "native physical time, nearest frame, no time shift",
+  "viewer_only_adjustment": "1D horizontal-pipe drawing uses 4x vertical exaggeration for readability; axial geometry and simulation states are unchanged",
+  "two_d_geometry": "cross-sectional-area-equivalent planar OpenFOAM model",
+  "frame_asset_version": "case1-horizontal-v3-frozen-20260809"
+}

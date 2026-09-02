@@ -1,0 +1,38 @@
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class volScalarField;
+    object p_rgh;
+}
+dimensions [1 -1 -2 0 0 0 0];
+// 101325 + rho_w*g*0.635 with rho_w=998 kg/m3.
+internalField uniform 107541.89130;
+boundaryField
+{
+    inlet
+    {
+        type fixedValue;
+        value uniform 107541.89130;
+    }
+    atmosphere
+    {
+        // Hydrostatic air referenced to 101325 Pa at z=0.635 m.
+        type fixedValue;
+        value uniform 101332.42484;
+    }
+    "(walls|downstreamCap|valveWall.*)"
+    {
+        type fixedFluxPressure;
+        value uniform 107541.89130;
+    }
+    "valveCouple.*"
+    {
+        type cyclicACMI;
+    }
+    frontAndBack
+    {
+        type empty;
+    }
+}
+

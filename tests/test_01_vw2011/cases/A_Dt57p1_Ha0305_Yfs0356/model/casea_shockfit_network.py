@@ -17,6 +17,7 @@ from typing import Callable
 
 import numpy as np
 
+from casea_face_aligned_t import face_aligned_t_indices
 import tosan2021_horizontal_shockfit as CASE_A_SHOCKFIT_CORE
 
 
@@ -52,11 +53,9 @@ class CaseASideTShockFit(CASE_A_SHOCKFIT_CORE.Tosan2021HorizontalShockFit):
     def junction_face_index(self) -> int:
         """Finite-volume face nearest the measured side-T centreline."""
 
-        return int(np.clip(
-            round(float(self.config.vent_x) / self.dx),
-            1,
-            self.ncell - 1,
-        ))
+        return face_aligned_t_indices(
+            float(self.config.vent_x), self.dx, self.ncell
+        ).face
 
     @property
     def junction_face_x(self) -> float:

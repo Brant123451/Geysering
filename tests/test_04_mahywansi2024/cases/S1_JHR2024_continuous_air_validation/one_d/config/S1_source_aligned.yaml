@@ -1,0 +1,180 @@
+schema_version: 1
+case_id: S1_JHR2024_continuous_air_validation
+physical_condition_count: 1
+two_d_mesh_levels: [coarse, medium_refine, refined]
+one_d_parameter_sets: 1
+
+source:
+  citation: "Mahyawansi et al. (2024), Journal of Hydraulic Research 62(1), 25-38"
+  doi: "10.1080/00221686.2024.2305353"
+  local_pdf: "E:/Geysering/tmp/pdfs/mahywansi_2024_small_scale.pdf"
+  branch: continuous_air_supply_with_physical_experiment
+
+geometry:
+  pipe_diameter_m: {value: 0.0254, evidence: published}
+  horizontal_upstream_end_x_m: {value: -1.83, evidence: published}
+  air_inlet_x_m: {value: -1.52, evidence: published}
+  riser_x_m: {value: 0.0, evidence: published}
+  horizontal_downstream_end_x_m: {value: 1.27, evidence: published}
+  riser_rim_z_m: {value: 1.02, evidence: published}
+  initial_riser_water_level_z_m: {value: 0.5842, evidence: figure_inferred}
+  air_stub_bottom_z_m: {value: 0.0127, evidence: declared_from_main_pipe_crown}
+  air_stub_top_z_m: {value: 0.15, evidence: figure_inferred}
+  air_stub_length_m: {value: 0.1373, evidence: derived_from_declared_and_figure_inferred}
+  air_stub_diameter_m: {value: 0.0254, evidence: declared_equal_diameter_2d_and_1d_translation}
+
+boundaries:
+  atmospheric_absolute_pressure_Pa:
+    value: 101325.0
+    evidence: declared_OpenFOAM_reference
+  water_inlet_head_m:
+    value: 0.586
+    quantity: total_pressure_head
+    evidence: published_Table_1
+  water_outlet_head_m:
+    value: 0.584
+    quantity: static_pressure_head
+    evidence: published_Table_1
+  stage_2_air_inlet_gauge_pressure_Pa:
+    value: 5700.0
+    value_evidence: published_Table_1
+    reference_interpretation: gauge
+    reference_evidence: method_inferred_from_zero_environment_reference
+  inlet_water_volume_fraction:
+    water_inlet: {value: 1.0, evidence: published_Table_1}
+    water_outlet_on_inflow: {value: 1.0, evidence: published_Table_1}
+    air_inlet_on_inflow: {value: 0.0, evidence: published_Table_1}
+    atmosphere_on_inflow: {value: 0.0, evidence: published_Table_1}
+  source_environment_boundaries:
+    boundary_4:
+      gauge_pressure_law: "p_g = 0"
+      pressure_quantity: static_pressure_outlet
+      water_volume_fraction_on_inflow: 0.0
+      evidence: published_Table_1
+    boundaries_5_and_6:
+      gauge_pressure_law: "p_g = rho_air * g * (1.02 - z)"
+      pressure_quantity: static_pressure_outlet
+      water_volume_fraction_on_inflow: 0.0
+      evidence: published_Table_1
+  one_d_native_top_mapping:
+    gauge_pressure_Pa: 0.0
+    location: riser_rim_z_1p02_m
+    pressure_quantity: static_pressure
+    evidence: declared_dimension_reduction_from_Table_1_environment
+
+initialization:
+  stage_1: {value: closed_air_port_pressure_driven_water_settling, evidence: published}
+  stage_2: {value: open_continuous_5700_Pa_gauge_air_supply, evidence: published}
+  horizontal_velocity_m_s: {value: 0.0, evidence: declared_numerical_choice}
+  forbidden_transplants:
+    - finite_pocket_branch_horizontal_velocity_0p06_m_s
+    - finite_pocket_initial_gas_length_or_mass
+  stage_1_end:
+    value: manual_physical_steady_state_acceptance
+    evidence: published_method_without_fixed_time
+  phase_distribution:
+    horizontal_main_pipe: {phase: water, evidence: published_Figure_1_and_method}
+    riser_below_z_0p5842_m: {phase: water, evidence: figure_inferred}
+    riser_above_z_0p5842_m: {phase: air, evidence: figure_inferred}
+    closed_air_stub: {phase: water, evidence: method_inferred_from_simple_water_flow_and_closed_isolation_valve}
+    closed_air_stub_pressure_profile:
+      value: hydrostatic_water_continuous_with_main_pipe
+      evidence: declared_source_aligned_initialization
+    external_domain: {phase: air, evidence: published_Table_1_and_Figure_2}
+
+one_d_closure_provenance:
+  circular_pipe_liquid_geometry:
+    status: Case1_inherited_algorithm
+    source: tosan2021_horizontal_shockfit.py
+  horizontal_spatial_operator:
+    current_status: hash_pinned_Case1_MUSCL_central_upwind_and_donor_draining_reused_on_three_segments
+    exact_seed: tosan2021_horizontal_shockfit.py
+    seed_sha256: 90E84DA9AFA0EC8465D80F87FC701DFB8F0FAD6F97350EA708074A50192B6119
+    T_face_translation: atomic_node_flux_replaces_only_each_segment_endpoint
+    moving_gas_face_translation: explicit_material_interface_flux
+    whole_network_time_owner: SSP_RK2_using_the_Case1_forward_Euler_spatial_stage
+    nonclaim: mutable_vw2011_network_twofluid_application_loop_not_imported_or_frozen
+  horizontal_water_pressure_boundaries:
+    inlet_source_quantity: total_pressure_head
+    outlet_source_quantity: static_pressure_head
+    current_status: inlet_dynamic_total_head_ghost__outlet_static_head_characteristic_ghost
+    invariant: outgoing_Riemann_invariant_from_each_adjacent_water_cell
+    inlet_imposed_relation: "H + u^2/(2g) = H_Table1_inlet"
+    outlet_imposed_relation: "H = H_Table1_outlet"
+    phase_scope: water_end_cell
+    unresolved: gas_reaches_end_requires_published_inletOutlet_phase_reentry_translation
+  horizontal_grid_spacing_m:
+    value: 0.01
+    status: declared_1d_numerical_choice
+    note: places_air_and_riser_tees_exactly_on_faces
+  horizontal_elastic_wave_speed_m_s:
+    value: 937.789955160536
+    status: declared_OpenFOAM_v2512_perfectFluid_isothermal_tangent
+    relation: "sqrt(R*T)"
+    frozen_2d_R_J_kg_K: 3000.0
+    frozen_2d_temperature_K: 293.15
+    algorithm_source: tosan2021_horizontal_shockfit.py
+    note: Case1_100_m_s_value_is_not_used_for_formal_S1_trajectory
+  horizontal_elastic_overarea_safety_cap_fraction:
+    value: 0.02
+    status: declared_numerical_admissibility_cap_not_a_paper_parameter
+    note: does_not_prescribe_pressure_or_tune_the_eruption_branch
+  horizontal_elastic_storage_head_reference_m:
+    value: 0.584
+    status: declared_lowest_published_Table1_water_head
+    initial_0p5842_mapping: implemented_small_positive_elastic_increment_in_formal_initializer
+  vertical_cell_count:
+    value: 160
+    status: declared_1d_numerical_choice_baseline_requires_grid_check
+  gas_thermodynamic_reference:
+    atmospheric_absolute_pressure_Pa: 101325.0
+    temperature_K: 293.15
+    dry_air_gas_constant_J_kg_K: 287.05
+    status: declared_OpenFOAM_consistent_reference
+  liquid_properties:
+    density_kg_m3: 998.4
+    dynamic_viscosity_Pa_s: 1.002e-3
+    status: declared_OpenFOAM_translation_from_2d_case
+  gas_dynamic_viscosity_Pa_s:
+    value: 1.78e-5
+    status: declared_OpenFOAM_translation_from_2d_case
+  horizontal_distributed_gas_mass_and_momentum:
+    status: implemented_component_and_real_joint_owner_gate
+    reason: Case1_frozen_horizontal_component_has_only_one_lumped_finite_gas_inventory
+  continuous_air_supply_node:
+    status: implemented_real_zero_storage_T_trial_owner__global_production_blocked
+    source_value: 5700_Pa_gauge
+  air_supply_stub_two_phase_transport:
+    length_m: 0.1373
+    required_states: [liquid_area, liquid_discharge, gas_mass, gas_momentum]
+    stage_1_initial_phase: water
+    stage_2_top_boundary: continuous_5700_Pa_gauge_pure_air
+    status: implemented_finite_two_phase_branch_and_common_node_trial_adapter
+  water_wall_friction:
+    status: preregistered_F0_smooth_pipe_Darcy_implemented_at_component_level
+  gas_wall_friction:
+    status: preregistered_F0_smooth_pipe_Darcy_implemented_at_component_level
+  horizontal_interphase_drag:
+    status: implemented_preregistered_Case1_gas_side_Fanning_equal_recoil_not_published
+  vertical_core_film_partition:
+    status: implemented_prognostic_from_six_conserved_states_no_fixed_fraction
+  vertical_liquid_liquid_drag:
+    status: implemented_no_direct_drag_when_gas_separated__conservative_merge_when_gas_free
+  vertical_gas_liquid_drag:
+    status: implemented_preregistered_three_body_Fanning_equal_recoil_not_tuned
+
+paper_validation_targets:
+  eruption_required: true
+  horizontal_slug_velocity_m_s: [0.8, 0.9]
+  approximate_cycle_s: 9.5
+  approximate_post_eruption_oscillation_s: 2.0
+  approximate_external_peak_height_above_rim_m: 0.19
+  approximate_eruption_duration_s: [2.0, 2.2]
+  evidence: published_figures_and_digitization
+
+missing_and_not_tunable:
+  - exact_experimental_ball_valve_opening_and_loss_curve
+  - air_tank_volume_connecting_line_losses_and_experimental_air_flow_history
+  - raw_pressure_PIV_and_geyser_height_CSV
+  - complete_tank_and_air_stub_dimensions
+  - one_d_wall_and_interphase_closure_coefficients_not_published_for_this_case

@@ -15,16 +15,103 @@ from casea_coupled_gas_network import (  # noqa: E402
     OpenIsothermalGasInventory,
     _apply_downstream_material_front_kinematics,
     _apply_side_t_phase_separation,
+    _collapse_horizontal_front_cells,
+    _displace_gas_from_closed_vertical_material_cells,
     _equilibrate_horizontal_front_receivers,
     _equilibrate_vertical_front_receivers,
+    _horizontal_downstream_material_fraction,
     _implicit_interphase_drag_exchange,
     _mass_backed_gas_topology,
+    _top_connected_active_component,
     advance_lumped_pocket_vertical_network,
     advance_lumped_isothermal_side_t,
     advance_coupled_gas_network,
     isothermal_ideal_gas_riemann_flux,
     junction_mouth_area,
 )
+
+
+def test_closed_vertical_material_cells_displace_gas_to_local_open_side() -> None:
+    mass = np.array([0.10, 0.20, 0.30, 0.40])
+    tracer = np.array([0.00, 0.15, 0.25, 0.00])
+    momentum = np.array([0.01, 0.04, 0.06, -0.02])
+    raw = np.array([0.40, 0.0, 0.0, 0.80])
+    remapped_mass, remapped_momentum, remapped_tracer, displaced = (
+        _displace_gas_from_closed_vertical_material_cells(
+            mass,
+            momentum,
+            tracer,
+            raw,
+            full_area=1.0,
+            cell_width=0.10,
+            rho_reference=1.0,
+            void_floor_fraction=1.0e-4,
+            active_void_fraction=5.0e-4,
+            topology_density_fraction=0.02,
+            resolved_density_fraction=0.50,
+            resolved_density_ceiling=25.0,
+        )
+    )
+
+    # Positive block momentum selects the immediately adjacent upper void.
+    np.testing.assert_allclose(remapped_mass, [0.10, 0.0, 0.0, 0.90])
+    np.testing.assert_allclose(remapped_tracer, [0.0, 0.0, 0.0, 0.40])
+    np.testing.assert_allclose(remapped_momentum, [0.01, 0.0, 0.0, 0.08])
+    assert math.isclose(displaced, 0.50)
+    assert math.isclose(float(np.sum(remapped_mass)), float(np.sum(mass)))
+    assert math.isclose(float(np.sum(remapped_tracer)), float(np.sum(tracer)))
+    assert math.isclose(
+        float(np.sum(remapped_momentum)),
+        float(np.sum(momentum)),
+    )
+
+
+def test_sealed_vertical_material_capsule_is_not_teleported() -> None:
+    mass = np.array([0.10, 0.20, 0.30])
+    tracer = np.array([0.00, 0.15, 0.00])
+    momentum = np.array([0.01, -0.04, 0.02])
+    raw = np.zeros(3)
+    result = _displace_gas_from_closed_vertical_material_cells(
+        mass,
+        momentum,
+        tracer,
+        raw,
+        full_area=1.0,
+        cell_width=0.10,
+        rho_reference=1.0,
+        void_floor_fraction=1.0e-4,
+        active_void_fraction=5.0e-4,
+        topology_density_fraction=0.02,
+        resolved_density_fraction=0.50,
+        resolved_density_ceiling=25.0,
+    )
+    np.testing.assert_array_equal(result[0], mass)
+    np.testing.assert_array_equal(result[1], momentum)
+    np.testing.assert_array_equal(result[2], tracer)
+    assert result[3] == 0.0
+
+
+def test_closed_compressed_atmospheric_cell_is_displaced_without_relabelling() -> None:
+    mass, momentum, tracer, displaced = (
+        _displace_gas_from_closed_vertical_material_cells(
+            np.array([0.10, 0.08, 0.20]),
+            np.array([0.0, 0.04, 0.0]),
+            np.zeros(3),
+            np.array([0.50, 0.0, 0.50]),
+            full_area=1.0,
+            cell_width=0.10,
+            rho_reference=1.0,
+            void_floor_fraction=1.0e-4,
+            active_void_fraction=5.0e-4,
+            topology_density_fraction=0.02,
+            resolved_density_fraction=0.50,
+            resolved_density_ceiling=25.0,
+        )
+    )
+    np.testing.assert_allclose(mass, [0.10, 0.0, 0.28])
+    np.testing.assert_allclose(momentum, [0.0, 0.0, 0.04])
+    np.testing.assert_array_equal(tracer, np.zeros(3))
+    assert math.isclose(displaced, 0.08)
 
 
 def _uniform_lumped_vertical_state(
@@ -483,6 +570,77 @@ def test_new_horizontal_front_cell_is_not_initialised_as_vacuum() -> None:
     np.testing.assert_allclose(velocity[0], velocity[1], atol=1.0e-14)
 
 
+def test_new_horizontal_front_cell_equilibrates_connected_donor_component() -> None:
+    mass = np.array([0.06, 0.03, 0.0, 0.0])
+    momentum = np.array([0.012, 0.006, 0.0, 0.0])
+    area = np.array([0.30, 0.15, 0.45, 0.0])
+    supported = np.array([True, True, False, False])
+    receiver = np.array([False, False, True, False])
+    mass_before = float(np.sum(mass))
+    momentum_before = float(np.sum(momentum))
+
+    remapped_mass, remapped_momentum = (
+        _equilibrate_horizontal_front_receivers(
+            mass,
+            momentum,
+            area,
+            supported,
+            receiver,
+            cell_width=0.04,
+        )
+    )
+
+    np.testing.assert_allclose(np.sum(remapped_mass), mass_before, atol=1.0e-15)
+    np.testing.assert_allclose(
+        np.sum(remapped_momentum), momentum_before, atol=1.0e-15
+    )
+    density = remapped_mass[:3] / (area[:3] * 0.04)
+    velocity = remapped_momentum[:3] / remapped_mass[:3]
+    np.testing.assert_allclose(density, density[0], atol=1.0e-14)
+    np.testing.assert_allclose(velocity, velocity[0], atol=1.0e-14)
+
+
+def test_retreating_horizontal_front_closure_is_local_and_conservative() -> None:
+    mass = np.array([0.06, 0.03, 0.02, 0.0])
+    momentum = np.array([0.012, 0.006, -0.004, 0.0])
+    area = np.array([0.30, 0.15, 0.10, 0.0])
+    supported = np.array([True, True, True, False])
+    closing = np.array([False, False, True, False])
+    mass_before = float(np.sum(mass))
+    momentum_before = float(np.sum(momentum))
+
+    collapsed_mass, collapsed_momentum = _collapse_horizontal_front_cells(
+        mass,
+        momentum,
+        area,
+        supported,
+        closing,
+        cell_width=0.04,
+    )
+
+    assert collapsed_mass[2] == 0.0
+    assert collapsed_momentum[2] == 0.0
+    np.testing.assert_allclose(np.sum(collapsed_mass), mass_before, atol=1.0e-15)
+    np.testing.assert_allclose(
+        np.sum(collapsed_momentum), momentum_before, atol=1.0e-15
+    )
+    assert collapsed_mass[0] == mass[0]
+    assert collapsed_momentum[0] == momentum[0]
+    np.testing.assert_allclose(collapsed_mass[1], mass[1] + mass[2])
+    np.testing.assert_allclose(
+        collapsed_momentum[1], momentum[1] + momentum[2]
+    )
+
+
+def test_horizontal_material_fraction_is_continuous_through_a_cell() -> None:
+    fraction = _horizontal_downstream_material_fraction(
+        7, 0.04, 2, 0.135
+    )
+    np.testing.assert_allclose(fraction[:3], 1.0)
+    np.testing.assert_allclose(fraction[3], 0.375)
+    np.testing.assert_allclose(fraction[4:], 0.0)
+
+
 def test_new_vertical_front_cell_is_filled_conservatively_from_tee() -> None:
     horizontal_mass = np.array([0.02, 0.08, 0.01])
     horizontal_momentum = np.array([0.0, 0.024, 0.0])
@@ -631,6 +789,25 @@ def test_taylor_bubble_mouth_retains_a_liquid_film() -> None:
         horizontal_diameter=0.094,
         vertical_diameter=0.0571,
     )
+    capillary_length = math.sqrt(
+        params.surface_tension
+        / (
+            (params.rho_l - params.rho_atmospheric)
+            * params.gravity
+        )
+    )
+    expected = (capillary_length / (0.5 * params.vertical_diameter)) ** 2
+
+    assert math.isclose(
+        params.vertical_capillary_core_fraction,
+        expected,
+        rel_tol=2.0e-15,
+    )
+    assert (
+        params.active_void_fraction
+        < params.vertical_capillary_core_fraction
+        < params.vertical_gas_core_area_fraction
+    )
 
 
 def test_horizontal_front_threshold_follows_capillary_length() -> None:
@@ -670,13 +847,21 @@ def test_uniform_atmospheric_network_remains_at_rest() -> None:
     assert abs(result.tracer_mass_error) < 2.0e-13
 
 
-def test_vertical_gas_receives_shared_hydrostatic_buoyancy() -> None:
+def test_top_sealed_vertical_gas_receives_shared_hydrostatic_buoyancy() -> None:
     params = CoupledGasParameters(
         horizontal_diameter=0.094,
         vertical_diameter=0.0571,
         gravity=9.81,
     )
     state = list(_uniform_state(params))
+    # Mark the lower gas as tunnel-origin material and close the top control
+    # volume with liquid.  This is a genuinely confined gas component; the
+    # uniform open column used previously is connected to the atmospheric
+    # Riemann face and must not receive a liquid-column buoyancy source.
+    state[4][:-1] = state[2][:-1]
+    state[2][-1] = 0.0
+    state[4][-1] = 0.0
+    state[7][-1] = params.vertical_area
     result = advance_coupled_gas_network(
         *state,
         dx=0.02,
@@ -685,7 +870,29 @@ def test_vertical_gas_receives_shared_hydrostatic_buoyancy() -> None:
         junction_index=23,
         params=params,
     )
-    assert float(np.mean(result.vertical_momentum[:-1])) > 0.0
+    assert float(np.mean(result.vertical_momentum[:-2])) > 0.0
+
+
+def test_top_connected_component_follows_active_faces_not_core_area() -> None:
+    active = np.array([True, True, True, False, True, True])
+
+    connected = _top_connected_active_component(active)
+
+    np.testing.assert_array_equal(
+        connected,
+        [False, False, False, False, True, True],
+    )
+
+
+def test_capillary_neck_remains_in_open_atmospheric_component() -> None:
+    # Cell 1 represents a narrow but still active Riemann neck.  Connectivity
+    # cannot depend on whether its local area reaches a historical Taylor-core
+    # fraction.
+    active = np.array([True, True, True, True])
+
+    connected = _top_connected_active_component(active)
+
+    np.testing.assert_array_equal(connected, active)
 
 
 def test_implicit_interphase_drag_conserves_momentum_without_overshoot() -> None:
@@ -732,6 +939,36 @@ def test_implicit_interphase_drag_conserves_momentum_without_overshoot() -> None
         momentum_after, momentum_before, rel_tol=0.0, abs_tol=1.0e-14
     )
     assert 0.0 < relative_after < relative_before
+
+
+def test_unresolved_gas_cell_does_not_regain_momentum_from_split_drag() -> None:
+    gas_mass = np.array([4.0e-7, 2.0e-4])
+    gas_momentum = np.zeros(2)
+    liquid_area = np.array([4.0e-3, 4.0e-3])
+    liquid_discharge = np.array([4.0e-3, 4.0e-3])
+    gas_area = np.array([2.0e-3, 2.0e-3])
+    interface = np.array([0.04, 0.04])
+    hydraulic = np.array([0.02, 0.02])
+
+    gas_after, liquid_after = _implicit_interphase_drag_exchange(
+        gas_mass,
+        gas_momentum,
+        liquid_area,
+        liquid_discharge,
+        gas_area,
+        interface,
+        hydraulic,
+        cell_width=0.04,
+        dt=5.0e-4,
+        rho_l=1000.0,
+        gas_viscosity=1.8e-5,
+        active_mask=np.array([False, True]),
+    )
+
+    assert gas_after[0] == 0.0
+    assert liquid_after[0] == liquid_discharge[0]
+    assert gas_after[1] > 0.0
+    assert liquid_after[1] < liquid_discharge[1]
 
 
 def test_holdup_enhancement_strengthens_only_internal_drag() -> None:
@@ -847,7 +1084,7 @@ def test_pressure_driven_t_flux_is_conservative_and_horizontal_continues() -> No
     assert abs(result.tracer_mass_error) < 2.0e-11
 
 
-def test_resolved_vertical_receiving_hint_blocks_new_east_dead_leg_front() -> None:
+def test_prebreak_topology_blocks_new_east_dead_leg_front_during_predictor_lag() -> None:
     params = CoupledGasParameters(
         horizontal_diameter=0.094,
         vertical_diameter=0.0571,
@@ -875,6 +1112,69 @@ def test_resolved_vertical_receiving_hint_blocks_new_east_dead_leg_front() -> No
     v_momentum = np.zeros(nv)
     v_tracer = np.zeros(nv)
 
+    for receiving_hint in (False, True):
+        result = advance_coupled_gas_network(
+            h_mass,
+            h_momentum,
+            v_mass,
+            v_momentum,
+            v_tracer,
+            h_al,
+            np.full(nh, 0.02 * ah),
+            v_al,
+            np.zeros(nv),
+            dx=dx,
+            dz=dz,
+            dt=2.0e-4,
+            junction_index=junction,
+            params=params,
+            vertical_branch_receiving_hint=receiving_hint,
+            horizontal_downstream_front_position=(junction + 1) * dx,
+        )
+
+        assert result.horizontal_mass[junction + 1] == 0.0
+        assert math.isclose(
+            result.downstream_front_position,
+            (junction + 1) * dx,
+            rel_tol=0.0,
+            abs_tol=1.0e-15,
+        )
+        assert abs(result.total_mass_error) < 2.0e-13
+
+
+def test_postbreak_open_core_allows_conservative_east_gas_receiver() -> None:
+    params = CoupledGasParameters(
+        horizontal_diameter=0.094,
+        vertical_diameter=0.0571,
+        gravity=0.0,
+    )
+    nh = 8
+    nv = 6
+    dx = dz = 0.02
+    junction = 3
+    ah = params.horizontal_area
+    av = params.vertical_area
+    h_al = np.full(nh, ah)
+    h_al[: junction + 1] = 0.55 * ah
+    h_al[junction + 1] = 0.90 * ah
+    h_void = np.maximum(ah - h_al, params.void_floor_fraction * ah)
+    h_mass = np.zeros(nh)
+    h_mass[: junction + 1] = (
+        params.rho_atmospheric * h_void[: junction + 1] * dx
+    )
+    h_momentum = np.zeros(nh)
+    h_momentum[junction] = h_mass[junction] * 0.25
+    v_al = np.full(nv, 0.20 * av)
+    v_void = np.maximum(av - v_al, params.void_floor_fraction * av)
+    v_mass = params.rho_atmospheric * v_void * dz
+    v_momentum = v_mass * 0.25
+    # Mark the complete connected gas component as tunnel-origin gas.  A
+    # partially labelled vertical component would exercise scalar mixing at
+    # the T, whereas this test isolates conservative post-breakthrough branch
+    # transport and the east receiver topology.
+    v_tracer = v_mass.copy()
+    tracer_before = float(np.sum(h_mass) + np.sum(v_tracer))
+
     result = advance_coupled_gas_network(
         h_mass,
         h_momentum,
@@ -882,7 +1182,7 @@ def test_resolved_vertical_receiving_hint_blocks_new_east_dead_leg_front() -> No
         v_momentum,
         v_tracer,
         h_al,
-        np.full(nh, 0.02 * ah),
+        np.full(nh, -0.01 * ah),
         v_al,
         np.zeros(nv),
         dx=dx,
@@ -891,17 +1191,138 @@ def test_resolved_vertical_receiving_hint_blocks_new_east_dead_leg_front() -> No
         junction_index=junction,
         params=params,
         vertical_branch_receiving_hint=True,
-        horizontal_downstream_front_position=(junction + 1) * dx,
+        horizontal_downstream_front_position=(junction + 1.5) * dx,
+        prefer_vertical_branch=False,
     )
 
-    assert result.horizontal_mass[junction + 1] == 0.0
-    assert math.isclose(
-        result.downstream_front_position,
-        (junction + 1) * dx,
-        rel_tol=0.0,
-        abs_tol=1.0e-15,
+    assert result.horizontal_mass[junction + 1] > 0.0
+    assert float(np.sum(result.vertical_tracer_mass)) > 0.0
+    tracer_after = float(
+        np.sum(result.horizontal_mass)
+        + np.sum(result.vertical_tracer_mass)
+        + result.escaped_tracer_mass
     )
-    assert abs(result.total_mass_error) < 2.0e-13
+    assert math.isclose(
+        tracer_after, tracer_before, rel_tol=0.0, abs_tol=2.0e-11
+    )
+    assert abs(result.tracer_mass_error) < 2.0e-11
+
+
+def test_postbreak_east_material_front_can_retreat_with_an_active_tail_cell() -> None:
+    params = CoupledGasParameters(
+        horizontal_diameter=0.094,
+        vertical_diameter=0.0571,
+        gravity=0.0,
+    )
+    nh = 8
+    nv = 6
+    dx = dz = 0.02
+    junction = 3
+    ah = params.horizontal_area
+    av = params.vertical_area
+    h_al = np.full(nh, ah)
+    h_al[: junction + 2] = 0.55 * ah
+    h_void = np.maximum(ah - h_al, params.void_floor_fraction * ah)
+    h_mass = np.zeros(nh)
+    h_mass[: junction + 2] = (
+        params.rho_atmospheric * h_void[: junction + 2] * dx
+    )
+    h_momentum = np.zeros(nh)
+    h_momentum[junction + 1] = -0.25 * h_mass[junction + 1]
+    v_al = np.full(nv, 0.20 * av)
+    v_void = np.maximum(av - v_al, params.void_floor_fraction * av)
+    v_mass = params.rho_atmospheric * v_void * dz
+    initial_front = (junction + 1.5) * dx + 1.0e-6
+
+    h_liquid_q = np.zeros(nh)
+    h_liquid_q[junction + 1] = 0.01 * ah
+    result = advance_coupled_gas_network(
+        h_mass,
+        h_momentum,
+        v_mass,
+        np.zeros(nv),
+        v_mass.copy(),
+        h_al,
+        h_liquid_q,
+        v_al,
+        np.zeros(nv),
+        dx=dx,
+        dz=dz,
+        dt=1.0e-4,
+        junction_index=junction,
+        params=params,
+        vertical_branch_receiving_hint=True,
+        horizontal_downstream_front_position=initial_front,
+        prefer_vertical_branch=False,
+    )
+
+    assert result.downstream_front_position is not None
+    assert result.downstream_front_position < initial_front
+    assert result.downstream_topology_front_position is not None
+    assert result.downstream_topology_front_position >= initial_front
+    assert result.downstream_retired_cell_count == 0
+    assert result.horizontal_mass[junction + 1] > 0.0
+    retired_density = result.horizontal_mass[junction + 1] / (
+        h_void[junction + 1] * dx
+    )
+    assert retired_density > 0.5 * params.rho_atmospheric
+    assert abs(result.total_mass_error) < 2.0e-11
+    assert abs(result.tracer_mass_error) < 2.0e-11
+
+
+def test_postbreak_front_can_retreat_from_closed_end_with_active_tail() -> None:
+    params = CoupledGasParameters(
+        horizontal_diameter=0.094,
+        vertical_diameter=0.0571,
+        gravity=0.0,
+    )
+    nh = 8
+    nv = 6
+    dx = dz = 0.02
+    junction = 3
+    ah = params.horizontal_area
+    av = params.vertical_area
+    h_al = np.full(nh, 0.55 * ah)
+    h_void = ah - h_al
+    h_mass = params.rho_atmospheric * h_void * dx
+    h_momentum = np.zeros(nh)
+    h_momentum[-1] = -2.0 * h_mass[-1]
+    v_al = np.full(nv, 0.20 * av)
+    v_void = av - v_al
+    v_mass = params.rho_atmospheric * v_void * dz
+    initial_front = nh * dx
+
+    h_liquid_q = np.zeros(nh)
+    h_liquid_q[-1] = -0.02 * ah
+    result = advance_coupled_gas_network(
+        h_mass,
+        h_momentum,
+        v_mass,
+        np.zeros(nv),
+        v_mass.copy(),
+        h_al,
+        h_liquid_q,
+        v_al,
+        np.zeros(nv),
+        dx=dx,
+        dz=dz,
+        dt=6.0e-3,
+        junction_index=junction,
+        params=params,
+        vertical_branch_receiving_hint=True,
+        horizontal_downstream_front_position=initial_front,
+        prefer_vertical_branch=False,
+    )
+
+    assert result.downstream_front_position is not None
+    assert result.downstream_front_position < initial_front
+    assert result.downstream_topology_front_position == initial_front
+    assert result.downstream_retired_cell_count == 0
+    assert result.horizontal_mass[-1] > 0.0
+    retired_density = result.horizontal_mass[-1] / (h_void[-1] * dx)
+    assert retired_density > 0.5 * params.rho_atmospheric
+    assert abs(result.total_mass_error) < 2.0e-11
+    assert abs(result.tracer_mass_error) < 2.0e-11
 
 
 def test_adjacent_sub_five_percent_crown_void_accepts_gas_front() -> None:
@@ -956,6 +1377,7 @@ def test_vertical_tracer_cannot_outrun_the_fitted_material_front() -> None:
         horizontal_diameter=0.094,
         vertical_diameter=0.0571,
         gravity=0.0,
+        vertical_fitted_front_receivers=True,
     )
     state = list(_uniform_state(params))
     junction = 23
@@ -980,8 +1402,101 @@ def test_vertical_tracer_cannot_outrun_the_fitted_material_front() -> None:
     # acoustic remap, so the subsequent resolved Riemann flux may have either
     # sign.  Tunnel-origin gas must nevertheless enter the allowed front
     # domain and must not jump beyond it.
-    assert float(np.sum(result.vertical_tracer_mass[:3])) > 0.0
+    assert float(np.sum(result.vertical_tracer_mass[:2])) > 0.0
+    # z=0.04 m is the complete cell ahead of the fitted z=0.025 m front.
+    # It must not be retained as a Riemann halo carrying material tracer.
+    assert result.vertical_tracer_mass[2] == 0.0
     assert np.all(result.vertical_tracer_mass[3:] == 0.0)
+
+
+def test_subthreshold_taylor_cut_cell_is_not_left_as_vacuum() -> None:
+    """A labelled Taylor cut cell bypasses the generic 5%-void threshold."""
+
+    params = CoupledGasParameters(
+        horizontal_diameter=0.094,
+        vertical_diameter=0.0571,
+        gravity=0.0,
+        vertical_confined_interface_kinematics=True,
+        vertical_fitted_front_receivers=True,
+    )
+    dx = 0.02
+    dz = 0.16
+    state = list(_uniform_state(params, dx=dx, dz=dz))
+    junction = 23
+    # Keep an atmospheric, mass-supported horizontal component attached to
+    # the tee.  The first Taylor increment opens only 0.6% of the riser bore,
+    # well below the generic vertical-front receiver threshold.
+    small_void_fraction = 0.006
+    state[7][:] = params.vertical_area
+    state[7][0] = (1.0 - small_void_fraction) * params.vertical_area
+    state[2][:] = 0.0
+    state[3][:] = 0.0
+    state[4][:] = 0.0
+    total_mass_before = float(np.sum(state[0]) + np.sum(state[2]))
+    tracer_before = float(np.sum(state[0]) + np.sum(state[4]))
+    horizontal_velocity_before = np.divide(
+        state[1],
+        state[0],
+        out=np.zeros_like(state[1]),
+        where=state[0] > 0.0,
+    )
+
+    result = advance_coupled_gas_network(
+        *state,
+        dx=dx,
+        dz=dz,
+        dt=1.0e-7,
+        junction_index=junction,
+        params=params,
+        vertical_pocket_front_height=small_void_fraction * dz,
+        vertical_branch_confined=True,
+        vertical_branch_receiving_hint=True,
+    )
+
+    opened_volume = (
+        small_void_fraction * params.vertical_area * dz
+    )
+    receiver_pressure = (
+        result.vertical_total_mass[0]
+        * params.gas_constant
+        * params.gas_temperature
+        / opened_volume
+    )
+    assert result.vertical_tracer_mass[0] > 0.0
+    assert receiver_pressure > 0.90 * params.atmospheric_pressure
+    assert math.isclose(
+        float(
+            np.sum(result.horizontal_mass)
+            + np.sum(result.vertical_total_mass)
+            + result.atmospheric_mass_exchange
+        ),
+        total_mass_before,
+        rel_tol=0.0,
+        abs_tol=2.0e-11,
+    )
+    assert math.isclose(
+        float(
+            np.sum(result.horizontal_mass)
+            + np.sum(result.vertical_tracer_mass)
+            + result.escaped_tracer_mass
+        ),
+        tracer_before,
+        rel_tol=0.0,
+        abs_tol=2.0e-11,
+    )
+    # The remap removes each horizontal donor's mass and axial momentum in
+    # the same fraction; the 90-degree tee supplies the turning reaction.
+    velocity_after = np.divide(
+        result.horizontal_momentum,
+        result.horizontal_mass,
+        out=np.zeros_like(result.horizontal_momentum),
+        where=result.horizontal_mass > 0.0,
+    )
+    np.testing.assert_allclose(
+        velocity_after[:junction],
+        horizontal_velocity_before[:junction],
+        atol=2.0e-6,
+    )
 
 
 def test_open_top_escape_uses_flux_and_closes_tracer_ledger() -> None:
@@ -1041,6 +1556,38 @@ def test_unresolved_vacuum_tail_does_not_set_the_acoustic_time_step() -> None:
     assert result.maximum_velocity < 1.0
     assert abs(result.horizontal_momentum[tail]) < 1.0e-18
     assert math.isclose(total_after, total_before, rel_tol=0.0, abs_tol=2.0e-11)
+
+
+def test_compressed_gas_keeps_resolved_momentum_above_flux_switch() -> None:
+    """The Einfeldt density switch must not erase physical gas momentum."""
+
+    params = CoupledGasParameters(
+        horizontal_diameter=0.094,
+        vertical_diameter=0.0571,
+        gravity=0.0,
+    )
+    state = list(_uniform_state(params))
+    state[0] *= 2.05
+    state[1] = state[0] * 1.0
+    # Close the vertical branch so only the ordinary horizontal gas equation
+    # is exercised.  The middle of the uniform reach cannot feel either end
+    # wall over this short acoustic step.
+    state[7][:] = params.vertical_area
+    state[2][:] = 0.0
+    state[3][:] = 0.0
+    state[4][:] = 0.0
+    result = advance_coupled_gas_network(
+        *state,
+        dx=0.02,
+        dz=0.02,
+        dt=1.0e-6,
+        junction_index=23,
+        params=params,
+    )
+
+    centre = state[0].size // 2
+    assert result.maximum_velocity > 0.9
+    assert result.horizontal_momentum[centre] > 0.9 * state[1][centre]
 
 
 def test_gas_mouth_waits_for_resolved_riser_void() -> None:

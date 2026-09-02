@@ -1,0 +1,54 @@
+/* OpenFOAM v2512 ¡ª C9 2D fine mesh (Liu 2020) */
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setFieldsDict;
+}
+
+defaultFieldValues
+(
+    volScalarFieldValue alpha.water 1
+    volScalarFieldValue p_rgh 108669.256500
+    volScalarFieldValue p 108669.256500
+);
+
+regions
+(
+    // Free surface in riser / plume above HGL z=0.75
+    boxToCell
+    {
+        box (-1e6 -1e6 0.75) (1e6 1e6 1e6);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 0
+            volScalarFieldValue p_rgh 101325.000000
+            volScalarFieldValue p 101325.000000
+        );
+    }
+    // Main pocket body (paper: crown of upstream pipe)
+    boxToCell
+    {
+        box (-4.8 -1e6 0.378)
+            (-1.0 1e6 1e6);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 0
+            volScalarFieldValue p_rgh 105026.505276
+            volScalarFieldValue p 105026.505276
+        );
+    }
+    // Thin crown layer toward chamber
+    boxToCell
+    {
+        box (-1.0 -1e6 0.372)
+            (0.0 1e6 1e6);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 0
+            volScalarFieldValue p_rgh 105026.505276
+            volScalarFieldValue p 105026.505276
+        );
+    }
+);

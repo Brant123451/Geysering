@@ -1,0 +1,3 @@
+compressibleInterFoam.C
+
+EXE = /tmp/case3-compressible-interfoam-v2512/bin/case3CompressibleInterFoam

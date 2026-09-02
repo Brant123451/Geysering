@@ -1,0 +1,43 @@
+{
+  "schema": "geysering.liu2020.a2.fine_openoutfall_audit_manifest.v1",
+  "created_utc": "2026-08-16T03:24:00Z",
+  "scientific_result_status": "EXPLORATORY_BRANCH_EVIDENCE_AUDITED_NOT_ACCEPTED",
+  "result_accepted": false,
+  "members": [
+    {
+      "path": "audit_a2_completion.py",
+      "bytes": 13677,
+      "sha256": "2df833ea2bb611af533c3c9e1d97174a2bc52bf5d24ff1c55cd1931102462844"
+    },
+    {
+      "path": "A2_COMPLETION_AUDIT.json",
+      "bytes": 6222,
+      "sha256": "ef0279cb8ceb6002186df75a8f366e17c5956480cdf2531fd32ede44a27e9ac8"
+    },
+    {
+      "path": "../../../../../tests/test_03_liu2020/cases/A2_Q20to100_openchannel_nogeyser/outputs/caseA_metrics.json",
+      "bytes": 728,
+      "sha256": "fabf8b658488df6f715f629f798449d9afc11f91b1987aabcd22af4576c43bbf"
+    }
+  ],
+  "independent_checks": {
+    "six_probe_source_hashes": "PASS",
+    "joined_riser_rows": 5080,
+    "joined_riser_last_model_time_s": 25.4,
+    "top_probe_maximum_alpha_water": 3.1599691e-56,
+    "top_probe_samples_alpha_ge_0p1": 0
+  },
+  "claim_evidence": {
+    "normal_numerical_completion_to_model_25p4_s": "SUPPORTED",
+    "no_sustained_geyser_at_the_highest_probe": "SUPPORTED_WITH_0P01_M_BELOW_RIM_LIMITATION",
+    "paper_no_geyser_branch": "SUPPORTED",
+    "paper_bore_reach_chamber_approximately_1p2_s": "NOT_REPRODUCED_OBSERVED_PAPER_TIME_0P755_TO_0P795_S",
+    "paper_first_column_height_0p13_m": "NOT_DIRECTLY_REPRODUCED_BY_THRESHOLD_DEPENDENT_SAMPLED_COLUMN_MAXIMA"
+  },
+  "decision": "NUMERICAL_COMPLETION_PASS_NO_GEYSER_BRANCH_SUPPORTED_TRANSIENT_TIMING_MISMATCH_NOT_ACCEPTED",
+  "limitations": [
+    "The highest registered probe is 0.01 m below the physical rim and no rim-flux accumulator was active.",
+    "The open-outfall boundary is an exploratory surrogate because the receiving-tank geometry is not reported in the paper.",
+    "The manifest status validated_primary_case is stale for this exploratory 2D run and is not used as acceptance evidence."
+  ]
+}

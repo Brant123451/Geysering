@@ -1,0 +1,21 @@
+/* OpenFOAM v2512 ¡ª C9 2D fine mesh (Liu 2020) */
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      alphat;
+}
+
+dimensions      [1 -1 -1 0 0 0 0];
+internalField   uniform 1e-06;
+boundaryField
+{
+    inlet { type calculated; value uniform 1e-06; }
+    gateOutlet { type calculated; value uniform 1e-06; }
+    atmosphere { type calculated; value uniform 1e-06; }
+    walls { type compressible::alphatWallFunction; value uniform 1e-06; }
+    riserWall { type compressible::alphatWallFunction; value uniform 1e-06; }
+    gateWall { type compressible::alphatWallFunction; value uniform 1e-06; }
+    frontAndBack { type empty; }
+}

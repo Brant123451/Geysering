@@ -1,0 +1,20 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      alphat;
+}
+
+dimensions      [1 -1 -1 0 0 0 0];
+internalField   uniform 1e-6;
+
+boundaryField
+{
+    waterInlet  { type calculated; value uniform 1e-6; }
+    waterOutlet { type calculated; value uniform 1e-6; }
+    airInlet    { type calculated; value uniform 1e-6; }
+    atmosphere  { type calculated; value uniform 1e-6; }
+    walls       { type compressible::alphatWallFunction; value uniform 1e-6; }
+    frontAndBack { type empty; }
+}

@@ -1,0 +1,41 @@
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    object setFieldsDict;
+}
+// H0=0.66 m above z=-0.025 m, hence free surface z=0.635 m.
+defaultFieldValues
+(
+    volScalarFieldValue alpha.water 1
+    volScalarFieldValue p_rgh 107541.89130
+    volScalarFieldValue p 107541.89130
+    volScalarFieldValue T 296.15
+);
+regions
+(
+    // Atmospheric pocket downstream of the selected valve; L0=0.61 m.
+    boxToCell
+    {
+        box (5.98 -1 -1) (6.591 1 1);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 0
+            volScalarFieldValue p_rgh 101325
+            volScalarFieldValue p 101325
+        );
+    }
+    // Riser headspace and above-rim atmosphere.
+    boxToCell
+    {
+        box (3.30 -1 0.635) (3.64 1 3.026);
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 0
+            volScalarFieldValue p_rgh 101332.42484
+            volScalarFieldValue p 101325
+        );
+    }
+);
+

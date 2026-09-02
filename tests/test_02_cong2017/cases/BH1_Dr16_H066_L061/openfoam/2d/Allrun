@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+
+ACTION="${1:-prepare}"
+CASE_ROOT="$PWD"
+RUN_ID="${BH1_RUN_ID:-paper_tau0p2_areaeq}"
+CONFIG_PATH="${BH1_CONFIG_PATH:-$CASE_ROOT/case_config.json}"
+RESULTS_DIR="${BH1_RESULTS_DIR:-$CASE_ROOT/results}"
+SCRATCH_ROOT="${BH1_2D_SCRATCH:-/tmp/bh1-2d-study}"
+RUN_DIR="$SCRATCH_ROOT/$RUN_ID"
+
+[[ "$RUN_ID" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "Unsafe run id: $RUN_ID" >&2; exit 2; }
+[[ -n "$SCRATCH_ROOT" && "$SCRATCH_ROOT" != "/" ]] || { echo "Unsafe scratch root" >&2; exit 2; }
+[[ -f "$CONFIG_PATH" ]] || { echo "Missing config: $CONFIG_PATH" >&2; exit 2; }
+mkdir -p "$RESULTS_DIR"
+
+OF_ROOT="/usr/lib/openfoam/openfoam2512"
+OF_PLATFORM="${OF_ROOT}/platforms/linux64GccDPInt32Opt"
+export WM_PROJECT_DIR="$OF_ROOT"
+export WM_PROJECT_VERSION=v2512
+export FOAM_API=2512
+export FOAM_APPBIN="${OF_PLATFORM}/bin"
+export FOAM_LIBBIN="${OF_PLATFORM}/lib"
+export PATH="${FOAM_APPBIN}:${OF_ROOT}/bin:/usr/bin:/bin"
+export LD_LIBRARY_PATH="${FOAM_LIBBIN}:${FOAM_LIBBIN}/sys-openmpi:${FOAM_LIBBIN}/dummy:/usr/lib/x86_64-linux-gnu/openmpi/lib"
+export FOAM_USER_APPBIN="${BH1_2D_SOLVER_BIN:-/tmp/bh1-2d-build/bin}"
+mkdir -p "$FOAM_USER_APPBIN"
+SOLVER="$FOAM_USER_APPBIN/bh1CompressibleInterFoam"
+
+if [[ ! -x "$SOLVER" ]]; then
+    bash -lc "source /usr/lib/openfoam/openfoam2512/etc/bashrc >/dev/null 2>&1 && \
+        export FOAM_USER_APPBIN='$FOAM_USER_APPBIN' && \
+        cd '$CASE_ROOT/solver' && wmake"
+fi
+
+for command_name in blockMesh checkMesh topoSet setFields foamDictionary; do
+    command -v "$command_name" >/dev/null || {
+        echo "Missing OpenFOAM command: $command_name" >&2
+        exit 1
+    }
+done
+
+prepare_case()
+{
+    case "$RUN_DIR" in
+        "$SCRATCH_ROOT"/"$RUN_ID") ;;
+        *) echo "Refusing unsafe run directory: $RUN_DIR" >&2; exit 2 ;;
+    esac
+    rm -rf -- "$RUN_DIR"
+    mkdir -p "$RUN_DIR"
+    cp -a case/. "$RUN_DIR"/
+    python3 make_blockmesh.py \
+        --config "$CONFIG_PATH" \
+        --output "$RUN_DIR/system/blockMeshDict" \
+        --stats "$RUN_DIR/mesh_stats.json" \
+        > "$RUN_DIR/log.make_blockmesh" 2>&1
+    (
+        cd "$RUN_DIR"
+        config_values="$(python3 -c 'import json,sys; s=json.load(open(sys.argv[1]))["simulation"]; print(s["end_time_s"],s["max_Courant"],s["max_alpha_Courant"],s["max_delta_t_s"],s["write_interval_s"])' "$CONFIG_PATH")"
+        read -r configured_end configured_co configured_alpha_co configured_max_dt configured_write <<< "$config_values"
+        foamDictionary system/controlDict -entry endTime -set "$configured_end" >/dev/null
+        foamDictionary system/controlDict -entry maxCo -set "$configured_co" >/dev/null
+        foamDictionary system/controlDict -entry maxAlphaCo -set "$configured_alpha_co" >/dev/null
+        foamDictionary system/controlDict -entry maxDeltaT -set "$configured_max_dt" >/dev/null
+        foamDictionary system/controlDict -entry writeInterval -set "$configured_write" >/dev/null
+        blockMesh > log.blockMesh 2>&1
+        cp -a 0.orig 0
+        setFields > log.setFields 2>&1
+        topoSet > log.topoSet 2>&1
+        checkMesh > log.checkMesh 2>&1
+        checkMesh -allGeometry -allTopology > log.checkMesh.extended 2>&1 || true
+    )
+    python3 "$CASE_ROOT/audit_case.py" --config "$CONFIG_PATH" --run-dir "$RUN_DIR" --output "$RUN_DIR/paper_audit.json"
+    echo "PREPARED $RUN_DIR"
+}
+
+run_parallel()
+{
+    local end_time="$1"
+    local log_name="$2"
+    local np="${OPENFOAM_NP:-$(nproc)}"
+    if (( np > 6 )); then np=6; fi
+    if (( np < 1 )); then np=1; fi
+    (
+        cd "$RUN_DIR"
+        foamDictionary system/controlDict -entry endTime -set "$end_time" >/dev/null
+        if (( np == 1 )); then
+            echo "serial run: decomposition not used" > log.decomposePar
+            "$SOLVER" > "$log_name" 2>&1
+        else
+            foamDictionary system/decomposeParDict -entry numberOfSubdomains -set "$np" >/dev/null
+            foamDictionary system/decomposeParDict -entry simpleCoeffs/n -set "($np 1 1)" >/dev/null
+            decomposePar -force > log.decomposePar 2>&1
+            OMPI_ALLOW_RUN_AS_ROOT=1 \
+            OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
+            mpirun --oversubscribe -np "$np" "$SOLVER" -parallel \
+                > "$log_name" 2>&1
+        fi
+    )
+}
+
+case "$ACTION" in
+    prepare)
+        prepare_case
+        ;;
+    smoke)
+        prepare_case
+        run_parallel 0.01 log.smoke
+        echo "SMOKE_OK $RUN_DIR"
+        ;;
+    solve)
+        prepare_case
+        configured_end="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["simulation"]["end_time_s"])' "$CONFIG_PATH")"
+        run_parallel "${BH1_END_TIME:-$configured_end}" log.solve
+        python3 "$CASE_ROOT/postprocess.py" --config "$CONFIG_PATH" --run-id "$RUN_ID" --run-dir "$RUN_DIR" --output-dir "$RESULTS_DIR"
+        python3 "$CASE_ROOT/compare_1d_2d.py" --results-dir "$RESULTS_DIR"
+        mkdir -p "$RESULTS_DIR/run_record"
+        cp -a "$RUN_DIR"/paper_audit.json "$RUN_DIR"/mesh_stats.json \
+            "$RUN_DIR"/log.blockMesh "$RUN_DIR"/log.checkMesh \
+            "$RUN_DIR"/log.checkMesh.extended \
+            "$RUN_DIR"/log.decomposePar "$RUN_DIR"/log.solve \
+            "$RESULTS_DIR/run_record"/
+        echo "SOLVE_DONE $RUN_DIR"
+        ;;
+    resume)
+        [[ -d "$RUN_DIR" ]] || { echo "Missing $RUN_DIR" >&2; exit 1; }
+        (
+            cd "$RUN_DIR"
+            foamDictionary system/controlDict -entry startFrom -set latestTime >/dev/null
+        )
+        configured_end="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["simulation"]["end_time_s"])' "$CONFIG_PATH")"
+        run_parallel "${BH1_END_TIME:-$configured_end}" log.solve.resume
+        python3 "$CASE_ROOT/postprocess.py" --config "$CONFIG_PATH" --run-id "$RUN_ID" --run-dir "$RUN_DIR" --output-dir "$RESULTS_DIR"
+        python3 "$CASE_ROOT/compare_1d_2d.py" --results-dir "$RESULTS_DIR"
+        mkdir -p "$RESULTS_DIR/run_record"
+        cp -a "$RUN_DIR"/paper_audit.json "$RUN_DIR"/mesh_stats.json \
+            "$RUN_DIR"/log.blockMesh "$RUN_DIR"/log.checkMesh \
+            "$RUN_DIR"/log.checkMesh.extended \
+            "$RUN_DIR"/log.decomposePar "$RUN_DIR"/log.solve \
+            "$RUN_DIR"/log.solve.resume \
+            "$RESULTS_DIR/run_record"/
+        echo "SOLVE_DONE $RUN_DIR"
+        ;;
+    post)
+        python3 "$CASE_ROOT/postprocess.py" --config "$CONFIG_PATH" --run-id "$RUN_ID" --run-dir "$RUN_DIR" --output-dir "$RESULTS_DIR"
+        python3 "$CASE_ROOT/compare_1d_2d.py" --results-dir "$RESULTS_DIR"
+        ;;
+    *)
+        echo "Usage: ./Allrun prepare|smoke|solve|resume|post" >&2
+        exit 2
+        ;;
+esac
