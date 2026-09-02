@@ -26,13 +26,20 @@ git config --global core.longpaths true
 - Liu A2 comparison outputs plus compact B3 and C9 reports and manifests.
 - Intentional removal of obsolete Case A comparison HTML variants.
 
-## Large local data not suitable for the normal Git snapshot
+## Large-data branch additions
 
-The following categories remain local unless separately transferred or stored through Git LFS/release assets:
+The companion branch `codex/geysering-migration-large-data-20260902` stores the following through Git LFS:
 
-- Raw OpenFOAM time directories, `processor*` decompositions, VTK/VTU exports, solver logs, temporary renders, caches, and failed/sensitivity attempts.
-- `output/remote_transfer/B3_2d_completed_server_20260816/b3_2d_72k_completed_root_fields_20260816.tar.zst` (about 1.48 GiB).
-- `tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket/openfoam/3d/case/computed_data/phase1_render/VTK.tar.xz` (about 454 MiB).
-- The C9 reconstructed render-field archive (about 289 MiB) under the same campaign output tree.
+- Completed B3 root fields (about 1.55 GB).
+- C9 phase-1 VTK and reconstructed render-field archives (about 779 MB combined).
+- Canonical Cong BH1 3D VTK time sequence (about 693 MB).
+- Compact A2, B3, and C9 recovery/checkpoint archives (about 114 MB combined).
 
-These large raw products are not required to edit or compile the paper, but should be copied separately if the complete CFD archive must be preserved.
+## Large local data intentionally not uploaded
+
+The following regenerable or low-value categories remain local:
+
+- Raw OpenFOAM time directories and `processor*` decompositions not represented by the archives above.
+- Loose VTK/VTU exports, solver logs, temporary renders, caches, operating-system/bootstrap images, and failed or sensitivity attempts.
+
+These excluded products are not required to edit or compile the paper. Copy them separately only if a complete forensic archive of every historical run is required.
