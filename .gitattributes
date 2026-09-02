@@ -1,1 +1,2 @@
 tests/test_01_vw2011/cases/B_Dt12p7_Ha0610_Yfs0356/outputs/sim_data/**/*.tar.xz filter=lfs diff=lfs merge=lfs -text
+tests/test_03_liu2020/cases/C9_Q25to40_hr03_airpocket/openfoam/3d/case/computed_data/phase1_render/reconstructed_render_fields.tar.xz filter=lfs diff=lfs merge=lfs -text
