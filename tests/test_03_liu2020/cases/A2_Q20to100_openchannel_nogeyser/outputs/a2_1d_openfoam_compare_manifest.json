@@ -1,0 +1,12 @@
+{
+  "case": "Liu2020 A2 Q20to100 open-channel no-geyser",
+  "viewer": "a2_1d_openfoam_3d_frame_compare.html",
+  "clock": "t=0 at the start of the 20->100 L/s inflow ramp",
+  "one_d_source": "outputs\\frames_index.json",
+  "openfoam_source": "outputs\\openfoam_3d_refined_front_complete_motion.gif",
+  "openfoam_metrics": "outputs\\openfoam_3d_refined_metrics.json",
+  "one_d_frames": 141,
+  "openfoam_frames": 101,
+  "openfoam_frame_note": "true VTK y=0 at retained t=12,13,14 s; probe reconstruction otherwise",
+  "scientific_status": "OpenFOAM supports no-geyser branch and bore timing; pressure and riser-height amplitudes remain partial"
+}

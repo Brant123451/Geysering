@@ -1,0 +1,16 @@
+{
+  "role": "display-only 0-s archive",
+  "post_event_fields": "E:\\Geysering\\tests\\test_01_vw2011\\cases\\A_Dt57p1_Ha0305_Yfs0356\\outputs\\vertical_fields_shockvisc_fct_v130_13s.npz",
+  "exact_event_checkpoint": "E:\\Geysering\\tests\\test_01_vw2011\\cases\\A_Dt57p1_Ha0305_Yfs0356\\outputs\\casea_port_west_event_dx40_checkpoint.npz",
+  "pre_event_owner": "CaseASideTShockFit",
+  "pre_event_riser_state": "unchanged event-initial state",
+  "integration_dt_s": 0.02,
+  "saved_every_n_steps": 2,
+  "pre_event_frames": 160,
+  "post_event_frames": 266,
+  "total_frames": 426,
+  "event_time_s": 6.38262096518796,
+  "event_area_byte_exact": true,
+  "event_discharge_byte_exact": true,
+  "event_display_phase_byte_exact": true
+}

@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "case": "Cong 2017 B-H1",
+  "comparison_policy": {
+    "native_time_axes": true,
+    "time_shift_applied": false,
+    "outcome_fitting_applied": false,
+    "height_datum": "riser entrance / main-pipe crown"
+  },
+  "geometry": {
+    "experiment_and_2d": {
+      "tee_x_m": 3.47,
+      "valve_x_m": 5.98,
+      "pipe_end_x_m": 6.59
+    },
+    "selected_1d": {
+      "tee_x_m": 3.47,
+      "valve_x_m": 5.98,
+      "source": "/mnt/e/Geysering/tests/test_02_cong2017/cases/BH1_Dr16_H066_L061/outputs/paper_layout_1d"
+    }
+  },
+  "metrics": [
+    {
+      "metric": "gas arrival Ta",
+      "units": "s",
+      "experiment": 8.07,
+      "model_1d": 6.8000885898464265,
+      "openfoam_2d": 8.5
+    },
+    {
+      "metric": "free surface reaches 98% rim",
+      "units": "s",
+      "experiment": 9.55,
+      "model_1d": 12.820004337803478,
+      "openfoam_2d": 13.864929253254049
+    },
+    {
+      "metric": "free-surface rise speed",
+      "units": "m/s",
+      "experiment": 0.924,
+      "model_1d": 1.2693264314494535,
+      "openfoam_2d": 0.23368934356795418
+    },
+    {
+      "metric": "gas-front rise speed",
+      "units": "m/s",
+      "experiment": 1.231,
+      "model_1d": 0.8314408585172216,
+      "openfoam_2d": null
+    },
+    {
+      "metric": "pressure surge H/H0",
+      "units": "-",
+      "experiment": 1.9,
+      "model_1d": 1.8575061132696313,
+      "openfoam_2d": 1.776767323916669
+    },
+    {
+      "metric": "geyser classification",
+      "units": "boolean",
+      "experiment": true,
+      "model_1d": true,
+      "openfoam_2d": true
+    }
+  ],
+  "status_2d": {
+    "last_log_time_s": 14.8529203,
+    "ended_normally": true,
+    "fatal_error": false
+  },
+  "limitations": [
+    "The preferred 1D input is the separately preserved Fig. 1(b) geometry-matched run; the earlier kinematics-derived 1D archive is not overwritten.",
+    "The 2D riser width is area-equivalent (Dr^2/D=5.12 mm); a planar model cannot reproduce the 3D annular wall film.",
+    "Digitized Fig. 10(a) is Run B-1, not an exact B-H1 pressure replicate; it is shown only as a morphology/envelope reference."
+  ]
+}

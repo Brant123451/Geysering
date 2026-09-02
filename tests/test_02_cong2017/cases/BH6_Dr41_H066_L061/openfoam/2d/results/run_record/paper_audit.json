@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "case": "BH6_Dr41_H066_L061",
+  "paper_run": "B-H6",
+  "status": "PASS",
+  "checks": {
+    "D_0p05": true,
+    "Dr_0p041": true,
+    "H0_0p66": true,
+    "L0_0p61": true,
+    "tee_x_3p47": true,
+    "valve_x_5p98": true,
+    "cap_x_6p59": true,
+    "free_surface_z_0p635": true,
+    "pocket_atmospheric": true,
+    "area_ratio_mapping": true,
+    "system/controlDict:endTime         13": true,
+    "system/controlDict:maxCo           0.25": true,
+    "system/setFieldsDict:box (5.98": true,
+    "system/setFieldsDict:0.635": true,
+    "system/setFieldsDict:101325": true,
+    "constant/valveProperties:sineSquaredAreaForchheimer": true,
+    "constant/valveProperties:openingDuration 0.2": true,
+    "constant/valveProperties:referenceFlowArea 0.00005": true,
+    "0.orig/p_rgh:107541.89130": true,
+    "0.orig/p_rgh:101332.42484": true,
+    "mesh_nonempty": true,
+    "standard_checkMesh_pass": true
+  },
+  "mesh": {
+    "schema_version": 1,
+    "cells_total": 129060,
+    "cell_counts": {
+      "nx_left": 1381,
+      "nx_junction": 20,
+      "nx_mid": 997,
+      "nx_pocket": 244,
+      "nz_pipe": 30,
+      "nz_riser": 1200,
+      "nx_external_left": 33,
+      "nx_external_right": 33,
+      "nz_external": 300
+    },
+    "paper_geometry_m": {
+      "pipe_length": 6.59,
+      "tee_axis_x": 3.47,
+      "release_valve_x": 5.98,
+      "physical_riser_diameter": 0.041
+    },
+    "planar_mapping_m": {
+      "riser_width": 0.03362,
+      "extrusion": 0.001
+    }
+  },
+  "declared_2d_limitation": "The 2D plane preserves the circular area ratio, not the drawn 41 mm riser width or the three-dimensional annular wall film."
+}

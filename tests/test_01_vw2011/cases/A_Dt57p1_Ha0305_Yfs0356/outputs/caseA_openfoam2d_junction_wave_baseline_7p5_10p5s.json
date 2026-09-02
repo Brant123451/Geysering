@@ -1,0 +1,2643 @@
+{
+  "case": "Vasconcelos and Wright (2011), Case A",
+  "source": "openfoam/2d/VTK_CASEA_HTML",
+  "report_window_s": [
+    7.5,
+    10.5
+  ],
+  "sample_interval_s": 0.05000000000000071,
+  "mapping_assumptions": {
+    "planar_to_circular": "Preserve tower section-averaged alpha.water, calculate an equivalent liquid height, then multiply by the physical circular tower area.",
+    "positive_flux_direction": "upward from horizontal pipe into riser",
+    "volume_derivative_proxy": "d/dt of mapped total tower liquid volume using a 0.25 s cubic Savitzky-Golay derivative. It equals base liquid flux while the open top is dry.",
+    "horizontal_depth": "D times section-averaged alpha.water in each x column",
+    "horizontal_wave_decomposition": "0.025 m resolved-profile pass, minus a 0.30 m spatial trend; envelope is 0.08 m RMS.",
+    "active_length": "largest connected interval whose residual RMS envelope is at least 2 mm; also reported at half of each frame's maximum envelope."
+  },
+  "tower_geometry": {
+    "diameter_m": 0.0571,
+    "physical_area_m2": 0.0025607200259226744,
+    "height_m": 0.61,
+    "first_sample_row_height_above_crown_m": 0.002006600000000004
+  },
+  "volume_derivative_flux": {
+    "7.5_to_10.5_s": {
+      "time_window_s": [
+        7.5,
+        10.5
+      ],
+      "minimum_m3_s": -0.0005758955135096618,
+      "maximum_m3_s": 0.00014652541283700742,
+      "minimum_L_s": -0.5758955135096617,
+      "maximum_L_s": 0.14652541283700743,
+      "rms_m3_s": 0.0001500698220937127,
+      "rms_L_s": 0.1500698220937127,
+      "mean_m3_s": -8.058938959517594e-05,
+      "mean_L_s": -0.08058938959517595,
+      "reversal_hysteresis_L_s": 0.005,
+      "reversal_times_s": [
+        7.7,
+        7.75,
+        8.1,
+        8.2,
+        8.3,
+        8.4,
+        8.55,
+        8.65,
+        8.8,
+        8.9,
+        9.05,
+        9.15,
+        9.25,
+        9.3
+      ],
+      "reversal_count": 14,
+      "reversal_count_sensitivity": {
+        "zero_threshold": 14,
+        "0.002_L_s": 14,
+        "0.010_L_s": 14
+      }
+    },
+    "8.0_to_10.0_s": {
+      "time_window_s": [
+        8.0,
+        10.0
+      ],
+      "minimum_m3_s": -0.00017650336793502636,
+      "maximum_m3_s": 7.480511400940896e-05,
+      "minimum_L_s": -0.17650336793502636,
+      "maximum_L_s": 0.07480511400940895,
+      "rms_m3_s": 5.4688624449608066e-05,
+      "rms_L_s": 0.054688624449608064,
+      "mean_m3_s": -2.8928342435945737e-05,
+      "mean_L_s": -0.028928342435945737,
+      "reversal_hysteresis_L_s": 0.005,
+      "reversal_times_s": [
+        8.1,
+        8.2,
+        8.3,
+        8.4,
+        8.55,
+        8.65,
+        8.8,
+        8.9,
+        9.05,
+        9.15,
+        9.25,
+        9.3
+      ],
+      "reversal_count": 12,
+      "reversal_count_sensitivity": {
+        "zero_threshold": 12,
+        "0.002_L_s": 12,
+        "0.010_L_s": 12
+      }
+    }
+  },
+  "temporal_smoothing_sensitivity": {
+    "0.25_s": {
+      "8.0_to_10.0_s": {
+        "time_window_s": [
+          8.0,
+          10.0
+        ],
+        "minimum_m3_s": -0.00017650336793502636,
+        "maximum_m3_s": 7.480511400940896e-05,
+        "minimum_L_s": -0.17650336793502636,
+        "maximum_L_s": 0.07480511400940895,
+        "rms_m3_s": 5.4688624449608066e-05,
+        "rms_L_s": 0.054688624449608064,
+        "mean_m3_s": -2.8928342435945737e-05,
+        "mean_L_s": -0.028928342435945737,
+        "reversal_hysteresis_L_s": 0.005,
+        "reversal_times_s": [
+          8.1,
+          8.2,
+          8.3,
+          8.4,
+          8.55,
+          8.65,
+          8.8,
+          8.9,
+          9.05,
+          9.15,
+          9.25,
+          9.3
+        ],
+        "reversal_count": 12,
+        "reversal_count_sensitivity": {
+          "zero_threshold": 12,
+          "0.002_L_s": 12,
+          "0.010_L_s": 12
+        }
+      },
+      "7.5_to_10.5_s": {
+        "time_window_s": [
+          7.5,
+          10.5
+        ],
+        "minimum_m3_s": -0.0005758955135096618,
+        "maximum_m3_s": 0.00014652541283700742,
+        "minimum_L_s": -0.5758955135096617,
+        "maximum_L_s": 0.14652541283700743,
+        "rms_m3_s": 0.0001500698220937127,
+        "rms_L_s": 0.1500698220937127,
+        "mean_m3_s": -8.058938959517594e-05,
+        "mean_L_s": -0.08058938959517595,
+        "reversal_hysteresis_L_s": 0.005,
+        "reversal_times_s": [
+          7.7,
+          7.75,
+          8.1,
+          8.2,
+          8.3,
+          8.4,
+          8.55,
+          8.65,
+          8.8,
+          8.9,
+          9.05,
+          9.15,
+          9.25,
+          9.3
+        ],
+        "reversal_count": 14,
+        "reversal_count_sensitivity": {
+          "zero_threshold": 14,
+          "0.002_L_s": 14,
+          "0.010_L_s": 14
+        }
+      }
+    },
+    "0.45_s": {
+      "8.0_to_10.0_s": {
+        "time_window_s": [
+          8.0,
+          10.0
+        ],
+        "minimum_m3_s": -0.0001120027276857781,
+        "maximum_m3_s": 8.772599918854818e-06,
+        "minimum_L_s": -0.11200272768577811,
+        "maximum_L_s": 0.008772599918854818,
+        "rms_m3_s": 4.20445384883835e-05,
+        "rms_L_s": 0.0420445384883835,
+        "mean_m3_s": -2.7619977490554754e-05,
+        "mean_L_s": -0.027619977490554753,
+        "reversal_hysteresis_L_s": 0.005,
+        "reversal_times_s": [
+          8.15
+        ],
+        "reversal_count": 1,
+        "reversal_count_sensitivity": {
+          "zero_threshold": 7,
+          "0.002_L_s": 1,
+          "0.010_L_s": 0
+        }
+      },
+      "7.5_to_10.5_s": {
+        "time_window_s": [
+          7.5,
+          10.5
+        ],
+        "minimum_m3_s": -0.00036726632323354495,
+        "maximum_m3_s": 8.772599918854818e-06,
+        "minimum_L_s": -0.36726632323354497,
+        "maximum_L_s": 0.008772599918854818,
+        "rms_m3_s": 0.0001245336708642763,
+        "rms_L_s": 0.12453367086427629,
+        "mean_m3_s": -8.101346221591624e-05,
+        "mean_L_s": -0.08101346221591624,
+        "reversal_hysteresis_L_s": 0.005,
+        "reversal_times_s": [
+          8.05,
+          8.15
+        ],
+        "reversal_count": 2,
+        "reversal_count_sensitivity": {
+          "zero_threshold": 8,
+          "0.002_L_s": 2,
+          "0.010_L_s": 0
+        }
+      }
+    },
+    "0.75_s": {
+      "8.0_to_10.0_s": {
+        "time_window_s": [
+          8.0,
+          10.0
+        ],
+        "minimum_m3_s": -8.450224536502601e-05,
+        "maximum_m3_s": 8.275508146775998e-06,
+        "minimum_L_s": -0.08450224536502601,
+        "maximum_L_s": 0.008275508146775998,
+        "rms_m3_s": 4.0243626643947596e-05,
+        "rms_L_s": 0.040243626643947594,
+        "mean_m3_s": -2.8799292239128787e-05,
+        "mean_L_s": -0.028799292239128787,
+        "reversal_hysteresis_L_s": 0.005,
+        "reversal_times_s": [
+          8.1,
+          8.2
+        ],
+        "reversal_count": 2,
+        "reversal_count_sensitivity": {
+          "zero_threshold": 2,
+          "0.002_L_s": 2,
+          "0.010_L_s": 0
+        }
+      },
+      "7.5_to_10.5_s": {
+        "time_window_s": [
+          7.5,
+          10.5
+        ],
+        "minimum_m3_s": -0.00029812536575348023,
+        "maximum_m3_s": 8.275508146775998e-06,
+        "minimum_L_s": -0.29812536575348025,
+        "maximum_L_s": 0.008275508146775998,
+        "rms_m3_s": 0.00011697886068480754,
+        "rms_L_s": 0.11697886068480753,
+        "mean_m3_s": -8.06358894662521e-05,
+        "mean_L_s": -0.08063588946625211,
+        "reversal_hysteresis_L_s": 0.005,
+        "reversal_times_s": [
+          8.1,
+          8.2
+        ],
+        "reversal_count": 2,
+        "reversal_count_sensitivity": {
+          "zero_threshold": 2,
+          "0.002_L_s": 2,
+          "0.010_L_s": 0
+        }
+      }
+    }
+  },
+  "single_frame_velocity_cross_check": {
+    "available_time_s": 9.35,
+    "source": "VTK_KH_935 export containing alpha.water and U",
+    "time_s": 9.35,
+    "first_tower_row_direct_flux_m3_s": -4.6229162452443154e-05,
+    "first_tower_row_direct_flux_L_s": -0.04622916245244316,
+    "inventory_derivative_flux_m3_s": -6.975027753441899e-05,
+    "inventory_derivative_flux_L_s": -0.069750277534419,
+    "same_sign": true
+  },
+  "open_top_dryness_check": {
+    "maximum_top_row_water_fraction": 0.0,
+    "mean_top_row_water_fraction": 0.0,
+    "note": "No velocity was exported in VTK_CASEA_HTML. A negligible top-row water fraction supports treating dV_liquid/dt as the T-junction base liquid flux."
+  },
+  "riser_free_surface_lift": {
+    "source": "existing centreline probe post-processing, 0.005 s samples",
+    "baseline_window_s": [
+      6.0,
+      6.5
+    ],
+    "baseline_median_height_above_crown_m": 0.3501633336222529,
+    "peak_height_above_crown_m": 0.379999955949612,
+    "peak_time_s": 7.53,
+    "peak_lift_from_baseline_m": 0.02983662232735912,
+    "last_finite_level_time_s": 7.535
+  },
+  "horizontal_wave": {
+    "analysis_interval_m": [
+      2.45,
+      3.48745
+    ],
+    "snapshots": {
+      "8.00": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.012958658840294707,
+        "residual_a90_m": 0.008185991126642034,
+        "residual_peak_to_peak_m": 0.013685067534245268,
+        "residual_rms_m": 0.0020601154091031736,
+        "envelope_max_m": 0.004799113885680716,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.15600000000000014,
+          "total_length_m": 0.37200000000000033,
+          "largest_bounds_m": [
+            3.00321,
+            3.1592900000000004
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.1120000000000001,
+          "total_length_m": 0.29200000000000026,
+          "largest_bounds_m": [
+            3.03123,
+            3.14328
+          ]
+        }
+      },
+      "9.00": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.02185952717802482,
+        "residual_a90_m": 0.007703996616969735,
+        "residual_peak_to_peak_m": 0.014691990489738946,
+        "residual_rms_m": 0.0023903811246858697,
+        "envelope_max_m": 0.004344991835341736,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.26000000000000023,
+          "total_length_m": 0.5000000000000004,
+          "largest_bounds_m": [
+            2.81112,
+            3.0712400000000004
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.2160000000000002,
+          "total_length_m": 0.4400000000000004,
+          "largest_bounds_m": [
+            2.85114,
+            3.06724
+          ]
+        }
+      },
+      "9.35": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.01680114716355939,
+        "residual_a90_m": 0.006739318309171318,
+        "residual_peak_to_peak_m": 0.012130963838909978,
+        "residual_rms_m": 0.0021661114820880865,
+        "envelope_max_m": 0.0036046103033533076,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.5000000000000004,
+          "total_length_m": 0.5360000000000005,
+          "largest_bounds_m": [
+            2.6470399999999996,
+            3.1472800000000003
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.5080000000000005,
+          "total_length_m": 0.5600000000000005,
+          "largest_bounds_m": [
+            2.6430350000000002,
+            3.15128
+          ]
+        }
+      },
+      "10.00": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.01272960418523611,
+        "residual_a90_m": 0.006441570231703121,
+        "residual_peak_to_peak_m": 0.009014666101234317,
+        "residual_rms_m": 0.0019417196265828101,
+        "envelope_max_m": 0.003391389649717742,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.2400000000000002,
+          "total_length_m": 0.4520000000000004,
+          "largest_bounds_m": [
+            2.7230749999999997,
+            2.96319
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.26000000000000023,
+          "total_length_m": 0.5280000000000005,
+          "largest_bounds_m": [
+            2.7110700000000003,
+            2.971195
+          ]
+        }
+      },
+      "10.50": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.015077551551193974,
+        "residual_a90_m": 0.005544910425264021,
+        "residual_peak_to_peak_m": 0.007525365034470419,
+        "residual_rms_m": 0.0016385267763122816,
+        "envelope_max_m": 0.0030490822532563385,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.14800000000000013,
+          "total_length_m": 0.19600000000000017,
+          "largest_bounds_m": [
+            3.03923,
+            3.1872999999999996
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.29200000000000026,
+          "total_length_m": 0.4480000000000004,
+          "largest_bounds_m": [
+            2.9111700000000003,
+            3.20331
+          ]
+        }
+      }
+    },
+    "7.5_to_10.5_s_residual_a90_median_m": 0.007469205196950155,
+    "7.5_to_10.5_s_residual_a90_max_m": 0.009881002648546409,
+    "7.5_to_10.5_s_active_length_median_m": 0.26000000000000023,
+    "7.5_to_10.5_s_active_length_max_m": 0.5120000000000005
+  },
+  "trace": [
+    {
+      "time_s": 7.5,
+      "riser_equivalent_liquid_height_m": 0.14943223573246056,
+      "riser_equivalent_liquid_volume_m3": 0.0003826541185585096,
+      "base_row_water_fraction": 0.7734086714537426,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.3760708100925846,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.012568792769279177,
+        "residual_a90_m": 0.007008536895084507,
+        "residual_peak_to_peak_m": 0.015571991304647037,
+        "residual_rms_m": 0.0018521383115014157,
+        "envelope_max_m": 0.004636406769516387,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.27600000000000025,
+          "total_length_m": 0.27600000000000025,
+          "largest_bounds_m": [
+            3.211315,
+            3.48745
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.18400000000000016,
+          "total_length_m": 0.20800000000000018,
+          "largest_bounds_m": [
+            3.3033599999999996,
+            3.48745
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00038269672760708214,
+      "volume_derivative_flux_m3_s": -0.00019195024659759453
+    },
+    {
+      "time_s": 7.55,
+      "riser_equivalent_liquid_height_m": 0.144147919284354,
+      "riser_equivalent_liquid_volume_m3": 0.00036912246360653055,
+      "base_row_water_fraction": 0.7772033139545801,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.060513910935308196,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.013254815423133878,
+        "residual_a90_m": 0.008377834699630313,
+        "residual_peak_to_peak_m": 0.018931890600317622,
+        "residual_rms_m": 0.0025313558544670886,
+        "envelope_max_m": 0.006064456215502386,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.3080000000000003,
+          "total_length_m": 0.3080000000000003,
+          "largest_bounds_m": [
+            3.1792999999999996,
+            3.48745
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.26000000000000023,
+          "total_length_m": 0.26000000000000023,
+          "largest_bounds_m": [
+            3.2193199999999997,
+            3.479445
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0003667769154159377,
+      "volume_derivative_flux_m3_s": -0.00042548884265929555
+    },
+    {
+      "time_s": 7.6,
+      "riser_equivalent_liquid_height_m": 0.13343605272748152,
+      "riser_equivalent_liquid_volume_m3": 0.0003416923723993358,
+      "base_row_water_fraction": 0.570433711421268,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.07317841995684513,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.011499435300703964,
+        "residual_a90_m": 0.00747045969543685,
+        "residual_peak_to_peak_m": 0.019259333099594114,
+        "residual_rms_m": 0.0022740153826592536,
+        "envelope_max_m": 0.006777057527617229,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.28400000000000025,
+          "total_length_m": 0.28400000000000025,
+          "largest_bounds_m": [
+            3.20331,
+            3.48745
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.14800000000000013,
+          "total_length_m": 0.14800000000000013,
+          "largest_bounds_m": [
+            3.3033599999999996,
+            3.45143
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00034111288287221443,
+      "volume_derivative_flux_m3_s": -0.0005758955135096618
+    },
+    {
+      "time_s": 7.65,
+      "riser_equivalent_liquid_height_m": 0.12449921134484354,
+      "riser_equivalent_liquid_volume_m3": 0.00031880762370232026,
+      "base_row_water_fraction": 0.8029340196428058,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.08384900324624474,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.012493097139492496,
+        "residual_a90_m": 0.005850983635711246,
+        "residual_peak_to_peak_m": 0.018809234139777767,
+        "residual_rms_m": 0.0020092255537834808,
+        "envelope_max_m": 0.005706664961356467,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.20400000000000018,
+          "total_length_m": 0.20400000000000018,
+          "largest_bounds_m": [
+            3.2833500000000004,
+            3.48745
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.19600000000000017,
+          "total_length_m": 0.19600000000000017,
+          "largest_bounds_m": [
+            3.2913550000000003,
+            3.48745
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00032413175807477566,
+      "volume_derivative_flux_m3_s": -0.00014068678105091416
+    },
+    {
+      "time_s": 7.7,
+      "riser_equivalent_liquid_height_m": 0.12718013064051542,
+      "riser_equivalent_liquid_volume_m3": 0.00032567270743062975,
+      "base_row_water_fraction": 0.7312972395798317,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.09817613413793118,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.013070045021973703,
+        "residual_a90_m": 0.00586142449994129,
+        "residual_peak_to_peak_m": 0.014751319008711836,
+        "residual_rms_m": 0.0017832159542646704,
+        "envelope_max_m": 0.004159376478828996,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.20800000000000018,
+          "total_length_m": 0.3240000000000003,
+          "largest_bounds_m": [
+            3.211315,
+            3.419415
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.20800000000000018,
+          "total_length_m": 0.28000000000000025,
+          "largest_bounds_m": [
+            3.211315,
+            3.419415
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.000323502155384733,
+      "volume_derivative_flux_m3_s": 0.00014652541283700742
+    },
+    {
+      "time_s": 7.75,
+      "riser_equivalent_liquid_height_m": 0.1270647353844131,
+      "riser_equivalent_liquid_volume_m3": 0.00032537721248743207,
+      "base_row_water_fraction": 0.8463453012260245,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11748350884333232,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.014443750711046643,
+        "residual_a90_m": 0.008340485885118432,
+        "residual_peak_to_peak_m": 0.013125431379307537,
+        "residual_rms_m": 0.001997257057629735,
+        "envelope_max_m": 0.0044127759274660925,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.2360000000000002,
+          "total_length_m": 0.3240000000000003,
+          "largest_bounds_m": [
+            3.251335,
+            3.48745
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.2360000000000002,
+          "total_length_m": 0.30400000000000027,
+          "largest_bounds_m": [
+            3.251335,
+            3.48745
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0003232031848320457,
+      "volume_derivative_flux_m3_s": -0.00019703713817621846
+    },
+    {
+      "time_s": 7.8,
+      "riser_equivalent_liquid_height_m": 0.11962800769976686,
+      "riser_equivalent_liquid_volume_m3": 0.0003063338349780249,
+      "base_row_water_fraction": 0.5426344689299762,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.13331282088441493,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.014164137535771767,
+        "residual_a90_m": 0.0073810692403578435,
+        "residual_peak_to_peak_m": 0.016572962145631906,
+        "residual_rms_m": 0.0021056659353563315,
+        "envelope_max_m": 0.004675819789909721,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.3640000000000003,
+          "total_length_m": 0.3640000000000003,
+          "largest_bounds_m": [
+            3.1232699999999998,
+            3.48745
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.20800000000000018,
+          "total_length_m": 0.3240000000000003,
+          "largest_bounds_m": [
+            3.27935,
+            3.48745
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.000305463837678884,
+      "volume_derivative_flux_m3_s": -0.0004934206427681517
+    },
+    {
+      "time_s": 7.85,
+      "riser_equivalent_liquid_height_m": 0.11024982197555547,
+      "riser_equivalent_liquid_volume_m3": 0.0002823189269872146,
+      "base_row_water_fraction": 0.6864816112085455,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.14582404401993587,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.012613391537255061,
+        "residual_a90_m": 0.006176516649149317,
+        "residual_peak_to_peak_m": 0.011723343753223092,
+        "residual_rms_m": 0.0017287983359267087,
+        "envelope_max_m": 0.0035435344488011808,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.3160000000000003,
+          "total_length_m": 0.3320000000000003,
+          "largest_bounds_m": [
+            3.1512849999999997,
+            3.46744
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.3400000000000003,
+          "total_length_m": 0.4200000000000004,
+          "largest_bounds_m": [
+            3.1392800000000003,
+            3.479445
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00028562269505795463,
+      "volume_derivative_flux_m3_s": -0.00030626472608950633
+    },
+    {
+      "time_s": 7.9,
+      "riser_equivalent_liquid_height_m": 0.10827376920672305,
+      "riser_equivalent_liquid_volume_m3": 0.0002772588090897855,
+      "base_row_water_fraction": 0.7227504598950134,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.1477710576797724,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.01391667810612865,
+        "residual_a90_m": 0.009464126793287782,
+        "residual_peak_to_peak_m": 0.018127259313646227,
+        "residual_rms_m": 0.002565710950151828,
+        "envelope_max_m": 0.006371843898985049,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.2360000000000002,
+          "total_length_m": 0.3280000000000003,
+          "largest_bounds_m": [
+            3.251335,
+            3.48745
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.17200000000000015,
+          "total_length_m": 0.17200000000000015,
+          "largest_bounds_m": [
+            3.3153699999999997,
+            3.48745
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00027658445822143646,
+      "volume_derivative_flux_m3_s": -2.2217770013879205e-05
+    },
+    {
+      "time_s": 7.95,
+      "riser_equivalent_liquid_height_m": 0.10799143921857758,
+      "riser_equivalent_liquid_volume_m3": 0.0002765358410352229,
+      "base_row_water_fraction": 0.8629093726795884,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.0736139129601089,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.012509648605822057,
+        "residual_a90_m": 0.005284825850658298,
+        "residual_peak_to_peak_m": 0.014768749211181348,
+        "residual_rms_m": 0.0017044675598211314,
+        "envelope_max_m": 0.004497853450111797,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.1200000000000001,
+          "total_length_m": 0.2520000000000002,
+          "largest_bounds_m": [
+            3.3673900000000003,
+            3.48745
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.10400000000000009,
+          "total_length_m": 0.1200000000000001,
+          "largest_bounds_m": [
+            3.3834,
+            3.48745
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002757404747568673,
+      "volume_derivative_flux_m3_s": -3.155474109577724e-05
+    },
+    {
+      "time_s": 8.0,
+      "riser_equivalent_liquid_height_m": 0.10676677129976676,
+      "riser_equivalent_liquid_volume_m3": 0.000273399809370419,
+      "base_row_water_fraction": 0.717974347985934,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.063656352497101,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.012958658840294707,
+        "residual_a90_m": 0.008185991126642034,
+        "residual_peak_to_peak_m": 0.013685067534245268,
+        "residual_rms_m": 0.0020601154091031736,
+        "envelope_max_m": 0.004799113885680716,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.15600000000000014,
+          "total_length_m": 0.37200000000000033,
+          "largest_bounds_m": [
+            3.00321,
+            3.1592900000000004
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.1120000000000001,
+          "total_length_m": 0.29200000000000026,
+          "largest_bounds_m": [
+            3.03123,
+            3.14328
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00027319513853944733,
+      "volume_derivative_flux_m3_s": -7.397058137154858e-05
+    },
+    {
+      "time_s": 8.05,
+      "riser_equivalent_liquid_height_m": 0.10558740164978657,
+      "riser_equivalent_liquid_volume_m3": 0.0002703797738897493,
+      "base_row_water_fraction": 0.7460382546410482,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.05750128749535317,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.013540456487647262,
+        "residual_a90_m": 0.005819112062162504,
+        "residual_peak_to_peak_m": 0.013423171007188983,
+        "residual_rms_m": 0.0017968843015165055,
+        "envelope_max_m": 0.003587311638960507,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.20800000000000018,
+          "total_length_m": 0.3160000000000003,
+          "largest_bounds_m": [
+            3.27935,
+            3.48745
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.26000000000000023,
+          "total_length_m": 0.38400000000000034,
+          "largest_bounds_m": [
+            3.2273199999999997,
+            3.48745
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00027109458502274904,
+      "volume_derivative_flux_m3_s": -1.2562401370086723e-05
+    },
+    {
+      "time_s": 8.1,
+      "riser_equivalent_liquid_height_m": 0.10637344887041217,
+      "riser_equivalent_liquid_volume_m3": 0.00027239262074892616,
+      "base_row_water_fraction": 0.7253298868653599,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11031220524387679,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.01427708760597661,
+        "residual_a90_m": 0.006454460816843235,
+        "residual_peak_to_peak_m": 0.02017350156297905,
+        "residual_rms_m": 0.0020533494452353576,
+        "envelope_max_m": 0.005351459818921876,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.19200000000000017,
+          "total_length_m": 0.29600000000000026,
+          "largest_bounds_m": [
+            3.2953599999999996,
+            3.48745
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.17600000000000016,
+          "total_length_m": 0.18400000000000016,
+          "largest_bounds_m": [
+            3.3113650000000003,
+            3.48745
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002727544996323759,
+      "volume_derivative_flux_m3_s": 7.480511400940896e-05
+    },
+    {
+      "time_s": 8.15,
+      "riser_equivalent_liquid_height_m": 0.1077883447199109,
+      "riser_equivalent_liquid_volume_m3": 0.0002760157728853324,
+      "base_row_water_fraction": 0.7004517751314694,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.1251927132415649,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.01612284901820006,
+        "residual_a90_m": 0.00961733376625121,
+        "residual_peak_to_peak_m": 0.02091397671860619,
+        "residual_rms_m": 0.0025369107953285243,
+        "envelope_max_m": 0.005769660928373775,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.2160000000000002,
+          "total_length_m": 0.4600000000000004,
+          "largest_bounds_m": [
+            3.271345,
+            3.48745
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.20000000000000018,
+          "total_length_m": 0.2360000000000002,
+          "largest_bounds_m": [
+            3.28735,
+            3.48745
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.000275047817971695,
+      "volume_derivative_flux_m3_s": 1.8781434160602267e-05
+    },
+    {
+      "time_s": 8.2,
+      "riser_equivalent_liquid_height_m": 0.10684679705695407,
+      "riser_equivalent_liquid_volume_m3": 0.00027360473292943816,
+      "base_row_water_fraction": 0.7130176712785472,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11142644033101769,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.0165537994859013,
+        "residual_a90_m": 0.008734625948888368,
+        "residual_peak_to_peak_m": 0.02003459228104565,
+        "residual_rms_m": 0.002754071333935888,
+        "envelope_max_m": 0.006602561334730564,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.3080000000000003,
+          "total_length_m": 0.4800000000000004,
+          "largest_bounds_m": [
+            3.1792999999999996,
+            3.48745
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.15200000000000014,
+          "total_length_m": 0.15200000000000014,
+          "largest_bounds_m": [
+            3.33538,
+            3.48745
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002734433052674989,
+      "volume_derivative_flux_m3_s": -8.73795248703289e-05
+    },
+    {
+      "time_s": 8.25,
+      "riser_equivalent_liquid_height_m": 0.10497352624117016,
+      "riser_equivalent_liquid_volume_m3": 0.00026880781083748383,
+      "base_row_water_fraction": 0.7816576896673312,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.09837339338014271,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.016363023407497596,
+        "residual_a90_m": 0.007585461335496162,
+        "residual_peak_to_peak_m": 0.016129116335787952,
+        "residual_rms_m": 0.002278331041517222,
+        "envelope_max_m": 0.005064853850520385,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.19600000000000017,
+          "total_length_m": 0.4520000000000004,
+          "largest_bounds_m": [
+            2.9832,
+            3.1792999999999996
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.15600000000000014,
+          "total_length_m": 0.3320000000000003,
+          "largest_bounds_m": [
+            3.3313750000000004,
+            3.48745
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00026925166595537274,
+      "volume_derivative_flux_m3_s": -7.428919582607189e-05
+    },
+    {
+      "time_s": 8.3,
+      "riser_equivalent_liquid_height_m": 0.10432871871343072,
+      "riser_equivalent_liquid_volume_m3": 0.0002671566392883357,
+      "base_row_water_fraction": 0.8501150844134411,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.10221263435540372,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.016363268865636993,
+        "residual_a90_m": 0.007918326515185557,
+        "residual_peak_to_peak_m": 0.014898187131389379,
+        "residual_rms_m": 0.0022556053330169603,
+        "envelope_max_m": 0.004586755451146842,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.28000000000000025,
+          "total_length_m": 0.48800000000000043,
+          "largest_bounds_m": [
+            3.2073099999999997,
+            3.48745
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.16800000000000015,
+          "total_length_m": 0.41200000000000037,
+          "largest_bounds_m": [
+            2.96319,
+            3.1312699999999998
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002676319684159851,
+      "volume_derivative_flux_m3_s": 1.0032071728255376e-05
+    },
+    {
+      "time_s": 8.35,
+      "riser_equivalent_liquid_height_m": 0.10505035245125217,
+      "riser_equivalent_liquid_volume_m3": 0.0002690045412521566,
+      "base_row_water_fraction": 0.9020252677757817,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.0894456225842372,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.016443203640197565,
+        "residual_a90_m": 0.006758524018949476,
+        "residual_peak_to_peak_m": 0.01681751819215241,
+        "residual_rms_m": 0.002123216805312725,
+        "envelope_max_m": 0.0050376082265399386,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.14000000000000012,
+          "total_length_m": 0.4240000000000004,
+          "largest_bounds_m": [
+            2.9832,
+            3.1232699999999998
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.1080000000000001,
+          "total_length_m": 0.20000000000000018,
+          "largest_bounds_m": [
+            3.3794000000000004,
+            3.48745
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002686357065729422,
+      "volume_derivative_flux_m3_s": 3.0162432183075162e-05
+    },
+    {
+      "time_s": 8.4,
+      "riser_equivalent_liquid_height_m": 0.1051108010579501,
+      "riser_equivalent_liquid_volume_m3": 0.0002691593332098671,
+      "base_row_water_fraction": 0.8942858774080493,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.09402211745452695,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.016864602770745155,
+        "residual_a90_m": 0.008513834623850369,
+        "residual_peak_to_peak_m": 0.017276282014384275,
+        "residual_rms_m": 0.002336645506640697,
+        "envelope_max_m": 0.005146297397910387,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.26400000000000023,
+          "total_length_m": 0.3400000000000003,
+          "largest_bounds_m": [
+            3.22332,
+            3.48745
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.1280000000000001,
+          "total_length_m": 0.2320000000000002,
+          "largest_bounds_m": [
+            3.3593900000000003,
+            3.48745
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00026869680589661606,
+      "volume_derivative_flux_m3_s": -2.8756262630627756e-05
+    },
+    {
+      "time_s": 8.45,
+      "riser_equivalent_liquid_height_m": 0.10416285271318605,
+      "riser_equivalent_liquid_volume_m3": 0.0002667319028998895,
+      "base_row_water_fraction": 0.8933895059544883,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.09544419829205204,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.019613987111679942,
+        "residual_a90_m": 0.009119004531932928,
+        "residual_peak_to_peak_m": 0.016446651797064074,
+        "residual_rms_m": 0.0025710710831445952,
+        "envelope_max_m": 0.0051272366281910516,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.30000000000000027,
+          "total_length_m": 0.4240000000000004,
+          "largest_bounds_m": [
+            3.1872999999999996,
+            3.48745
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.26800000000000024,
+          "total_length_m": 0.28000000000000025,
+          "largest_bounds_m": [
+            3.2193199999999997,
+            3.48745
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00026725028536899343,
+      "volume_derivative_flux_m3_s": -3.424423824595433e-05
+    },
+    {
+      "time_s": 8.5,
+      "riser_equivalent_liquid_height_m": 0.10396657477329978,
+      "riser_equivalent_liquid_volume_m3": 0.00026622929004857586,
+      "base_row_water_fraction": 0.8911384751313788,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.09194514124144319,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.019254280566643828,
+        "residual_a90_m": 0.007784796421820777,
+        "residual_peak_to_peak_m": 0.01549253122256325,
+        "residual_rms_m": 0.0023902351421199834,
+        "envelope_max_m": 0.0046756463562179496,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.24400000000000022,
+          "total_length_m": 0.4640000000000004,
+          "largest_bounds_m": [
+            3.2433300000000003,
+            3.48745
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.2360000000000002,
+          "total_length_m": 0.3240000000000003,
+          "largest_bounds_m": [
+            3.251335,
+            3.48745
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00026604589568303167,
+      "volume_derivative_flux_m3_s": -4.641788968725961e-06
+    },
+    {
+      "time_s": 8.55,
+      "riser_equivalent_liquid_height_m": 0.10392027875578276,
+      "riser_equivalent_liquid_volume_m3": 0.0002661107389093996,
+      "base_row_water_fraction": 0.8616252338003628,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.09292125257088137,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.020875823716660455,
+        "residual_a90_m": 0.008245960580354173,
+        "residual_peak_to_peak_m": 0.018623007748125336,
+        "residual_rms_m": 0.0025881159715725978,
+        "envelope_max_m": 0.005596423517618123,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.26000000000000023,
+          "total_length_m": 0.5240000000000005,
+          "largest_bounds_m": [
+            3.2273199999999997,
+            3.48745
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.18400000000000016,
+          "total_length_m": 0.3200000000000003,
+          "largest_bounds_m": [
+            3.271345,
+            3.45543
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00026630597653105767,
+      "volume_derivative_flux_m3_s": 9.258182657796276e-06
+    },
+    {
+      "time_s": 8.6,
+      "riser_equivalent_liquid_height_m": 0.10425782278599073,
+      "riser_equivalent_liquid_volume_m3": 0.0002669750946671838,
+      "base_row_water_fraction": 0.8667844122591886,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11983645344988124,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.021205905165544284,
+        "residual_a90_m": 0.008149379310650554,
+        "residual_peak_to_peak_m": 0.014664808242630112,
+        "residual_rms_m": 0.0022620926976016542,
+        "envelope_max_m": 0.004559465802397467,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.39600000000000035,
+          "total_length_m": 0.4800000000000004,
+          "largest_bounds_m": [
+            3.06724,
+            3.4634400000000003
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.39200000000000035,
+          "total_length_m": 0.40000000000000036,
+          "largest_bounds_m": [
+            3.06724,
+            3.459435
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002669555788221661,
+      "volume_derivative_flux_m3_s": 1.5543862242031053e-05
+    },
+    {
+      "time_s": 8.65,
+      "riser_equivalent_liquid_height_m": 0.10432356038525471,
+      "riser_equivalent_liquid_volume_m3": 0.00026714343025407517,
+      "base_row_water_fraction": 0.8184595989491933,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.12835349053506112,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.02233023560609565,
+        "residual_a90_m": 0.007469205196950155,
+        "residual_peak_to_peak_m": 0.01660936248720267,
+        "residual_rms_m": 0.0023872203113814694,
+        "envelope_max_m": 0.005486987896455918,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.2280000000000002,
+          "total_length_m": 0.5560000000000005,
+          "largest_bounds_m": [
+            3.2273199999999997,
+            3.45543
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.14400000000000013,
+          "total_length_m": 0.14400000000000013,
+          "largest_bounds_m": [
+            3.2553400000000003,
+            3.399405
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002667852938056986,
+      "volume_derivative_flux_m3_s": -2.0232202307171685e-05
+    },
+    {
+      "time_s": 8.7,
+      "riser_equivalent_liquid_height_m": 0.103550759464701,
+      "riser_equivalent_liquid_volume_m3": 0.00026516450346076177,
+      "base_row_water_fraction": 0.7903385122591352,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.12596623422057712,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.02329551873335746,
+        "residual_a90_m": 0.009339580765221366,
+        "residual_peak_to_peak_m": 0.018904498676862794,
+        "residual_rms_m": 0.00284426402716035,
+        "envelope_max_m": 0.006164597703053566,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.37600000000000033,
+          "total_length_m": 0.6640000000000006,
+          "largest_bounds_m": [
+            3.1112650000000004,
+            3.48745
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.24800000000000022,
+          "total_length_m": 0.3240000000000003,
+          "largest_bounds_m": [
+            3.1672900000000004,
+            3.4154099999999996
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.000265223395461587,
+      "volume_derivative_flux_m3_s": -4.1725928396160565e-05
+    },
+    {
+      "time_s": 8.75,
+      "riser_equivalent_liquid_height_m": 0.10300436126252699,
+      "riser_equivalent_liquid_volume_m3": 0.0002637653306423266,
+      "base_row_water_fraction": 0.8335042814360825,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11937038755771694,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.024037523691968626,
+        "residual_a90_m": 0.009881002648546409,
+        "residual_peak_to_peak_m": 0.015145817069026943,
+        "residual_rms_m": 0.002907029771886948,
+        "envelope_max_m": 0.00498026879037581,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.3600000000000003,
+          "total_length_m": 0.6680000000000006,
+          "largest_bounds_m": [
+            2.7430849999999998,
+            3.1032599999999997
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.24400000000000022,
+          "total_length_m": 0.5120000000000005,
+          "largest_bounds_m": [
+            3.2353300000000003,
+            3.479445
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002641603245667501,
+      "volume_derivative_flux_m3_s": -9.058591197595375e-07
+    },
+    {
+      "time_s": 8.8,
+      "riser_equivalent_liquid_height_m": 0.10348099445796032,
+      "riser_equivalent_liquid_volume_m3": 0.0002649858548108923,
+      "base_row_water_fraction": 0.8971558870403309,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.12223814989800015,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.024795061731576945,
+        "residual_a90_m": 0.009230569828070172,
+        "residual_peak_to_peak_m": 0.01684880184513396,
+        "residual_rms_m": 0.0028231041123775564,
+        "envelope_max_m": 0.0051689110261263415,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.20800000000000018,
+          "total_length_m": 0.6080000000000005,
+          "largest_bounds_m": [
+            3.24733,
+            3.45543
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.18400000000000016,
+          "total_length_m": 0.4640000000000004,
+          "largest_bounds_m": [
+            3.2633400000000004,
+            3.4474299999999998
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002650227036136033,
+      "volume_derivative_flux_m3_s": 3.420182814192242e-05
+    },
+    {
+      "time_s": 8.85,
+      "riser_equivalent_liquid_height_m": 0.10397769136477064,
+      "riser_equivalent_liquid_volume_m3": 0.00026625775652697534,
+      "base_row_water_fraction": 0.8611994740806415,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.12306172095714422,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.024313579466565288,
+        "residual_a90_m": 0.008154569652657455,
+        "residual_peak_to_peak_m": 0.015242735757366226,
+        "residual_rms_m": 0.0025679054109187614,
+        "envelope_max_m": 0.004234794150611887,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.26800000000000024,
+          "total_length_m": 0.6800000000000006,
+          "largest_bounds_m": [
+            3.20331,
+            3.4714400000000003
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.2160000000000002,
+          "total_length_m": 0.6000000000000005,
+          "largest_bounds_m": [
+            3.2553400000000003,
+            3.4714400000000003
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002657658126157567,
+      "volume_derivative_flux_m3_s": -3.601913839826505e-06
+    },
+    {
+      "time_s": 8.9,
+      "riser_equivalent_liquid_height_m": 0.10332360077414703,
+      "riser_equivalent_liquid_volume_m3": 0.00026458281365279783,
+      "base_row_water_fraction": 0.7870643243432852,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.12152855617766865,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.02610491879130722,
+        "residual_a90_m": 0.008487412666416479,
+        "residual_peak_to_peak_m": 0.015837893406176126,
+        "residual_rms_m": 0.002651958156092403,
+        "envelope_max_m": 0.004377479254444106,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.26800000000000024,
+          "total_length_m": 0.5960000000000005,
+          "largest_bounds_m": [
+            3.2193199999999997,
+            3.48745
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.26400000000000023,
+          "total_length_m": 0.5480000000000005,
+          "largest_bounds_m": [
+            3.2193199999999997,
+            3.4834500000000004
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00026472880189210897,
+      "volume_derivative_flux_m3_s": -4.18544865566136e-05
+    },
+    {
+      "time_s": 8.95,
+      "riser_equivalent_liquid_height_m": 0.10258917297560116,
+      "riser_equivalent_liquid_volume_m3": 0.00026270214968146717,
+      "base_row_water_fraction": 0.8646439306480039,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.1208247900483697,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.024229754657625224,
+        "residual_a90_m": 0.008879781784572952,
+        "residual_peak_to_peak_m": 0.016612909085319302,
+        "residual_rms_m": 0.0027043466157081007,
+        "envelope_max_m": 0.004588205829376884,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.39600000000000035,
+          "total_length_m": 0.6200000000000006,
+          "largest_bounds_m": [
+            2.7911099999999998,
+            3.1872999999999996
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.3560000000000003,
+          "total_length_m": 0.5360000000000005,
+          "largest_bounds_m": [
+            2.7991099999999998,
+            3.155285
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.000262696759677224,
+      "volume_derivative_flux_m3_s": -3.285578025079283e-05
+    },
+    {
+      "time_s": 9.0,
+      "riser_equivalent_liquid_height_m": 0.10217973434503722,
+      "riser_equivalent_liquid_volume_m3": 0.00026165369198079567,
+      "base_row_water_fraction": 0.8916623581436429,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.12055157779357063,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.02185952717802482,
+        "residual_a90_m": 0.007703996616969735,
+        "residual_peak_to_peak_m": 0.014691990489738946,
+        "residual_rms_m": 0.0023903811246858697,
+        "envelope_max_m": 0.004344991835341736,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.26000000000000023,
+          "total_length_m": 0.5000000000000004,
+          "largest_bounds_m": [
+            2.81112,
+            3.0712400000000004
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.2160000000000002,
+          "total_length_m": 0.4400000000000004,
+          "largest_bounds_m": [
+            2.85114,
+            3.06724
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00026190713677679255,
+      "volume_derivative_flux_m3_s": -3.8025971367365574e-07
+    },
+    {
+      "time_s": 9.05,
+      "riser_equivalent_liquid_height_m": 0.10252516817289964,
+      "riser_equivalent_liquid_volume_m3": 0.00026253825130143413,
+      "base_row_water_fraction": 0.9314564021016078,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.12030148597455416,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.020880459954274483,
+        "residual_a90_m": 0.008247329262501438,
+        "residual_peak_to_peak_m": 0.01140205390757619,
+        "residual_rms_m": 0.0022480433078156115,
+        "envelope_max_m": 0.004136368932981838,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.2560000000000002,
+          "total_length_m": 0.4440000000000004,
+          "largest_bounds_m": [
+            2.85914,
+            3.115265
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.2120000000000002,
+          "total_length_m": 0.38400000000000034,
+          "largest_bounds_m": [
+            2.8631399999999996,
+            3.075245
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00026256174195994695,
+      "volume_derivative_flux_m3_s": 2.510448474598529e-05
+    },
+    {
+      "time_s": 9.1,
+      "riser_equivalent_liquid_height_m": 0.10290066066312505,
+      "riser_equivalent_liquid_volume_m3": 0.0002634997824407379,
+      "base_row_water_fraction": 0.9685012977232813,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.12027163702545811,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.02125463602785424,
+        "residual_a90_m": 0.008290672612783764,
+        "residual_peak_to_peak_m": 0.011680005447593317,
+        "residual_rms_m": 0.002340843130603454,
+        "envelope_max_m": 0.004336467474038362,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.28800000000000026,
+          "total_length_m": 0.5000000000000004,
+          "largest_bounds_m": [
+            2.8271249999999997,
+            3.115265
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.20000000000000018,
+          "total_length_m": 0.4800000000000004,
+          "largest_bounds_m": [
+            3.27935,
+            3.479445
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002631301775191605,
+      "volume_derivative_flux_m3_s": -1.3871072932340224e-06
+    },
+    {
+      "time_s": 9.15,
+      "riser_equivalent_liquid_height_m": 0.10247437433885932,
+      "riser_equivalent_liquid_volume_m3": 0.00026240818251341367,
+      "base_row_water_fraction": 0.9727693730297606,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11939120467662147,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.02021037045494213,
+        "residual_a90_m": 0.00844490106128657,
+        "residual_peak_to_peak_m": 0.013306579180390188,
+        "residual_rms_m": 0.002486536175290694,
+        "envelope_max_m": 0.004437690988235135,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.3240000000000003,
+          "total_length_m": 0.6000000000000005,
+          "largest_bounds_m": [
+            2.79511,
+            3.11927
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.3120000000000003,
+          "total_length_m": 0.5040000000000004,
+          "largest_bounds_m": [
+            2.7991099999999998,
+            3.1112599999999997
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00026246938037082884,
+      "volume_derivative_flux_m3_s": -2.662698732006346e-05
+    },
+    {
+      "time_s": 9.2,
+      "riser_equivalent_liquid_height_m": 0.10209839553168998,
+      "riser_equivalent_liquid_volume_m3": 0.0002614454060525726,
+      "base_row_water_fraction": 0.9893166863397523,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11923150357491615,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.018044376921619976,
+        "residual_a90_m": 0.0071255706461035365,
+        "residual_peak_to_peak_m": 0.01462582038180927,
+        "residual_rms_m": 0.002321267718268243,
+        "envelope_max_m": 0.0038724312711620546,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.4320000000000004,
+          "total_length_m": 0.6120000000000005,
+          "largest_bounds_m": [
+            2.67905,
+            3.1112599999999997
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.4360000000000004,
+          "total_length_m": 0.6160000000000005,
+          "largest_bounds_m": [
+            2.67905,
+            3.115265
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002617330609597054,
+      "volume_derivative_flux_m3_s": -2.5874744915069248e-06
+    },
+    {
+      "time_s": 9.25,
+      "riser_equivalent_liquid_height_m": 0.10234599250799316,
+      "riser_equivalent_liquid_volume_m3": 0.00026207943258815006,
+      "base_row_water_fraction": 0.9464206656741657,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11905707925144877,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.016715784318584698,
+        "residual_a90_m": 0.00742309576463334,
+        "residual_peak_to_peak_m": 0.013183457082809415,
+        "residual_rms_m": 0.0022227711235564642,
+        "envelope_max_m": 0.003923180390919631,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.27200000000000024,
+          "total_length_m": 0.5280000000000005,
+          "largest_bounds_m": [
+            2.8831499999999997,
+            3.155285
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.27600000000000025,
+          "total_length_m": 0.5440000000000005,
+          "largest_bounds_m": [
+            2.87915,
+            3.155285
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00026209620310289466,
+      "volume_derivative_flux_m3_s": 1.6388024773903408e-05
+    },
+    {
+      "time_s": 9.3,
+      "riser_equivalent_liquid_height_m": 0.10247987483089949,
+      "riser_equivalent_liquid_volume_m3": 0.00026242226773353337,
+      "base_row_water_fraction": 0.8965169103326918,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11752288598891043,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.017290367860966174,
+        "residual_a90_m": 0.007794243694431527,
+        "residual_peak_to_peak_m": 0.012292205833760894,
+        "residual_rms_m": 0.0022690805129395196,
+        "envelope_max_m": 0.0039692140656802264,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.5120000000000005,
+          "total_length_m": 0.5720000000000005,
+          "largest_bounds_m": [
+            2.6430350000000002,
+            3.155285
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.5120000000000005,
+          "total_length_m": 0.5760000000000005,
+          "largest_bounds_m": [
+            2.6430350000000002,
+            3.155285
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00026224095004622063,
+      "volume_derivative_flux_m3_s": -1.3471835305123823e-05
+    },
+    {
+      "time_s": 9.35,
+      "riser_equivalent_liquid_height_m": 0.10168634542658923,
+      "riser_equivalent_liquid_volume_m3": 0.0002603902610967576,
+      "base_row_water_fraction": 0.7878940127846562,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11700861368320307,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.01680114716355939,
+        "residual_a90_m": 0.006739318309171318,
+        "residual_peak_to_peak_m": 0.012130963838909978,
+        "residual_rms_m": 0.0021661114820880865,
+        "envelope_max_m": 0.0036046103033533076,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.5000000000000004,
+          "total_length_m": 0.5360000000000005,
+          "largest_bounds_m": [
+            2.6470399999999996,
+            3.1472800000000003
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.5080000000000005,
+          "total_length_m": 0.5600000000000005,
+          "largest_bounds_m": [
+            2.6430350000000002,
+            3.15128
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00026010363880877527,
+      "volume_derivative_flux_m3_s": -6.975027753441899e-05
+    },
+    {
+      "time_s": 9.4,
+      "riser_equivalent_liquid_height_m": 0.09997779246181386,
+      "riser_equivalent_liquid_volume_m3": 0.00025601513530450773,
+      "base_row_water_fraction": 0.6762751234675917,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11707588102903278,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.017608866754627167,
+        "residual_a90_m": 0.006884949163225457,
+        "residual_peak_to_peak_m": 0.009999270498580973,
+        "residual_rms_m": 0.0020888339383699126,
+        "envelope_max_m": 0.0032682190264357487,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.41600000000000037,
+          "total_length_m": 0.4520000000000004,
+          "largest_bounds_m": [
+            2.68706,
+            3.1032599999999997
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.4720000000000004,
+          "total_length_m": 0.5920000000000005,
+          "largest_bounds_m": [
+            2.63903,
+            3.1112599999999997
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00025615290793902523,
+      "volume_derivative_flux_m3_s": -8.57504662631404e-05
+    },
+    {
+      "time_s": 9.45,
+      "riser_equivalent_liquid_height_m": 0.0986724581831451,
+      "riser_equivalent_liquid_volume_m3": 0.0002526725396765973,
+      "base_row_water_fraction": 0.8272709737301982,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11695766827073038,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.016190210267220922,
+        "residual_a90_m": 0.007259976351871948,
+        "residual_peak_to_peak_m": 0.009044917224510632,
+        "residual_rms_m": 0.0020551813679315486,
+        "envelope_max_m": 0.003207451514826208,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.4320000000000004,
+          "total_length_m": 0.4440000000000004,
+          "largest_bounds_m": [
+            2.67905,
+            3.1112599999999997
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.49200000000000044,
+          "total_length_m": 0.6440000000000006,
+          "largest_bounds_m": [
+            2.67105,
+            3.16329
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002531943979247886,
+      "volume_derivative_flux_m3_s": -3.4590687752586793e-05
+    },
+    {
+      "time_s": 9.5,
+      "riser_equivalent_liquid_height_m": 0.09846089130313598,
+      "riser_equivalent_liquid_volume_m3": 0.000252130776130136,
+      "base_row_water_fraction": 0.8467354364273506,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11698661303641443,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.015740981366107645,
+        "residual_a90_m": 0.007242093855898581,
+        "residual_peak_to_peak_m": 0.00970503517325795,
+        "residual_rms_m": 0.0020501716364905533,
+        "envelope_max_m": 0.003169645756852355,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.27200000000000024,
+          "total_length_m": 0.4800000000000004,
+          "largest_bounds_m": [
+            2.6910600000000002,
+            2.96319
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.28800000000000026,
+          "total_length_m": 0.6160000000000005,
+          "largest_bounds_m": [
+            2.67905,
+            2.9671900000000004
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00025174963885212865,
+      "volume_derivative_flux_m3_s": -1.9038248154574014e-05
+    },
+    {
+      "time_s": 9.55,
+      "riser_equivalent_liquid_height_m": 0.09765604901036828,
+      "riser_equivalent_liquid_volume_m3": 0.00025006980035333624,
+      "base_row_water_fraction": 0.8856264073555917,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11586772158697183,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.016490915349638077,
+        "residual_a90_m": 0.007730306063617152,
+        "residual_peak_to_peak_m": 0.011598469550817073,
+        "residual_rms_m": 0.002257558420065576,
+        "envelope_max_m": 0.0043237865284602725,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.41200000000000037,
+          "total_length_m": 0.4440000000000004,
+          "largest_bounds_m": [
+            2.7390800000000004,
+            3.15128
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.40800000000000036,
+          "total_length_m": 0.40800000000000036,
+          "largest_bounds_m": [
+            2.7430849999999998,
+            3.15128
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002499105676946063,
+      "volume_derivative_flux_m3_s": -5.866411332602472e-05
+    },
+    {
+      "time_s": 9.6,
+      "riser_equivalent_liquid_height_m": 0.09630735383588199,
+      "riser_equivalent_liquid_volume_m3": 0.0002466161696111639,
+      "base_row_water_fraction": 0.7843756838877444,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11473466437159337,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.017603333651818945,
+        "residual_a90_m": 0.007189932638633218,
+        "residual_peak_to_peak_m": 0.01132678037454686,
+        "residual_rms_m": 0.0022958608965743,
+        "envelope_max_m": 0.004466005910204839,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.4320000000000004,
+          "total_length_m": 0.4320000000000004,
+          "largest_bounds_m": [
+            2.7230749999999997,
+            3.155285
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.4200000000000004,
+          "total_length_m": 0.4200000000000004,
+          "largest_bounds_m": [
+            2.7310800000000004,
+            3.15128
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002467373567276017,
+      "volume_derivative_flux_m3_s": -6.741427089877045e-05
+    },
+    {
+      "time_s": 9.65,
+      "riser_equivalent_liquid_height_m": 0.09518969393485603,
+      "riser_equivalent_liquid_volume_m3": 0.000243754155520436,
+      "base_row_water_fraction": 0.7225075145356704,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11377161124779643,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.018382789501769872,
+        "residual_a90_m": 0.007983703275406637,
+        "residual_peak_to_peak_m": 0.011421105694362901,
+        "residual_rms_m": 0.0022860681888017195,
+        "envelope_max_m": 0.0038331618057285016,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.4680000000000004,
+          "total_length_m": 0.5560000000000005,
+          "largest_bounds_m": [
+            2.7110700000000003,
+            3.1792999999999996
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.48400000000000043,
+          "total_length_m": 0.5800000000000005,
+          "largest_bounds_m": [
+            2.70707,
+            3.1913
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002438602305790605,
+      "volume_derivative_flux_m3_s": -4.54587318821204e-05
+    },
+    {
+      "time_s": 9.7,
+      "riser_equivalent_liquid_height_m": 0.09452582771870201,
+      "riser_equivalent_liquid_volume_m3": 0.00024205418000619686,
+      "base_row_water_fraction": 0.8899156085813458,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11500153873379991,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.01858315019280915,
+        "residual_a90_m": 0.008214145887332965,
+        "residual_peak_to_peak_m": 0.012043965934534925,
+        "residual_rms_m": 0.002420537669634729,
+        "envelope_max_m": 0.004185296519487337,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.26800000000000024,
+          "total_length_m": 0.5760000000000005,
+          "largest_bounds_m": [
+            2.9111700000000003,
+            3.1792999999999996
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.2200000000000002,
+          "total_length_m": 0.5440000000000005,
+          "largest_bounds_m": [
+            2.9111700000000003,
+            3.1312699999999998
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002421415288746519,
+      "volume_derivative_flux_m3_s": -2.512814380376373e-05
+    },
+    {
+      "time_s": 9.75,
+      "riser_equivalent_liquid_height_m": 0.09405523454524872,
+      "riser_equivalent_liquid_volume_m3": 0.00024084912264287254,
+      "base_row_water_fraction": 0.9262424700524646,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11399337754573648,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.01889113650158053,
+        "residual_a90_m": 0.008615452176280416,
+        "residual_peak_to_peak_m": 0.01130645415922324,
+        "residual_rms_m": 0.0024074854399523437,
+        "envelope_max_m": 0.004010481234668081,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.26800000000000024,
+          "total_length_m": 0.5800000000000005,
+          "largest_bounds_m": [
+            2.7110700000000003,
+            2.9791999999999996
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.26800000000000024,
+          "total_length_m": 0.5800000000000005,
+          "largest_bounds_m": [
+            2.7110700000000003,
+            2.9791999999999996
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002410304616564379,
+      "volume_derivative_flux_m3_s": -2.6867199766114104e-05
+    },
+    {
+      "time_s": 9.8,
+      "riser_equivalent_liquid_height_m": 0.0931194314329602,
+      "riser_equivalent_liquid_volume_m3": 0.00023845279287291454,
+      "base_row_water_fraction": 0.6973443071804319,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11322791140422898,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.016930413708211953,
+        "residual_a90_m": 0.007831603465933324,
+        "residual_peak_to_peak_m": 0.011235652498620713,
+        "residual_rms_m": 0.002223395391262649,
+        "envelope_max_m": 0.00401742193950464,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.20800000000000018,
+          "total_length_m": 0.5120000000000005,
+          "largest_bounds_m": [
+            2.7390800000000004,
+            2.9471800000000004
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.20800000000000018,
+          "total_length_m": 0.5120000000000005,
+          "largest_bounds_m": [
+            2.7390800000000004,
+            2.9471800000000004
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002377942688218294,
+      "volume_derivative_flux_m3_s": -9.798936967533173e-05
+    },
+    {
+      "time_s": 9.85,
+      "riser_equivalent_liquid_height_m": 0.09023375299710464,
+      "riser_equivalent_liquid_volume_m3": 0.00023106337831384598,
+      "base_row_water_fraction": 0.534699900698343,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11333194527660391,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.016092160023861907,
+        "residual_a90_m": 0.006753971116800603,
+        "residual_peak_to_peak_m": 0.01077119648769119,
+        "residual_rms_m": 0.002040590649797215,
+        "envelope_max_m": 0.003658825233522499,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.18800000000000017,
+          "total_length_m": 0.40800000000000036,
+          "largest_bounds_m": [
+            2.7390800000000004,
+            2.9271700000000003
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.19600000000000017,
+          "total_length_m": 0.48800000000000043,
+          "largest_bounds_m": [
+            2.7390800000000004,
+            2.93518
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002308238574419946,
+      "volume_derivative_flux_m3_s": -0.00017650336793502636
+    },
+    {
+      "time_s": 9.9,
+      "riser_equivalent_liquid_height_m": 0.08691377617472686,
+      "riser_equivalent_liquid_volume_m3": 0.0002225618471791841,
+      "base_row_water_fraction": 0.8809681642733104,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.1129152014758925,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.013928266566519285,
+        "residual_a90_m": 0.006471957933999744,
+        "residual_peak_to_peak_m": 0.009310436777077088,
+        "residual_rms_m": 0.0019291952308819467,
+        "envelope_max_m": 0.003180621318005979,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.18000000000000016,
+          "total_length_m": 0.3600000000000003,
+          "largest_bounds_m": [
+            2.7310800000000004,
+            2.9111649999999996
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.20800000000000018,
+          "total_length_m": 0.5320000000000005,
+          "largest_bounds_m": [
+            2.7230749999999997,
+            2.9311749999999996
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002233989976613728,
+      "volume_derivative_flux_m3_s": -0.00012037133983916395
+    },
+    {
+      "time_s": 9.95,
+      "riser_equivalent_liquid_height_m": 0.08576633744835566,
+      "riser_equivalent_liquid_volume_m3": 0.00021962357785404614,
+      "base_row_water_fraction": 0.8491933712782852,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11244992946039102,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.013792188449090872,
+        "residual_a90_m": 0.006509283640872326,
+        "residual_peak_to_peak_m": 0.009907793348490429,
+        "residual_rms_m": 0.0019577952503994013,
+        "envelope_max_m": 0.003346470123948885,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.2520000000000002,
+          "total_length_m": 0.37600000000000033,
+          "largest_bounds_m": [
+            2.7190700000000003,
+            2.971195
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.28800000000000026,
+          "total_length_m": 0.5760000000000005,
+          "largest_bounds_m": [
+            2.71507,
+            3.00321
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00022011043020388058,
+      "volume_derivative_flux_m3_s": -1.4275376541296198e-05
+    },
+    {
+      "time_s": 10.0,
+      "riser_equivalent_liquid_height_m": 0.08558420712902769,
+      "riser_equivalent_liquid_volume_m3": 0.00021915719309801532,
+      "base_row_water_fraction": 0.8815450411557014,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11303846738076014,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.01272960418523611,
+        "residual_a90_m": 0.006441570231703121,
+        "residual_peak_to_peak_m": 0.009014666101234317,
+        "residual_rms_m": 0.0019417196265828101,
+        "envelope_max_m": 0.003391389649717742,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.2400000000000002,
+          "total_length_m": 0.4520000000000004,
+          "largest_bounds_m": [
+            2.7230749999999997,
+            2.96319
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.26000000000000023,
+          "total_length_m": 0.5280000000000005,
+          "largest_bounds_m": [
+            2.7110700000000003,
+            2.971195
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00021740966421099025,
+      "volume_derivative_flux_m3_s": -7.70640532671528e-05
+    },
+    {
+      "time_s": 10.05,
+      "riser_equivalent_liquid_height_m": 0.0829420512352752,
+      "riser_equivalent_liquid_volume_m3": 0.0002123913715892737,
+      "base_row_water_fraction": 0.7493848847633297,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11237572180906814,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.01178276229456754,
+        "residual_a90_m": 0.006676557721829711,
+        "residual_peak_to_peak_m": 0.009832720918616603,
+        "residual_rms_m": 0.0020410279892573275,
+        "envelope_max_m": 0.00339151242894667,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.19200000000000017,
+          "total_length_m": 0.4440000000000004,
+          "largest_bounds_m": [
+            2.76309,
+            2.95519
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.20400000000000018,
+          "total_length_m": 0.5280000000000005,
+          "largest_bounds_m": [
+            2.7590899999999996,
+            2.96319
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00021391152036239082,
+      "volume_derivative_flux_m3_s": -9.130891137927198e-05
+    },
+    {
+      "time_s": 10.1,
+      "riser_equivalent_liquid_height_m": 0.08237629529424643,
+      "riser_equivalent_liquid_volume_m3": 0.00021094262902129663,
+      "base_row_water_fraction": 0.8057189672503788,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.11092146742984331,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.013773114244895884,
+        "residual_a90_m": 0.007071884974740905,
+        "residual_peak_to_peak_m": 0.010048128090872577,
+        "residual_rms_m": 0.002062422845249012,
+        "envelope_max_m": 0.0036324297689721433,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.20400000000000018,
+          "total_length_m": 0.4800000000000004,
+          "largest_bounds_m": [
+            2.76309,
+            2.9671900000000004
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.28000000000000025,
+          "total_length_m": 0.5320000000000005,
+          "largest_bounds_m": [
+            2.7590899999999996,
+            3.03923
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00021108454040793373,
+      "volume_derivative_flux_m3_s": -1.3835029386555057e-05
+    },
+    {
+      "time_s": 10.15,
+      "riser_equivalent_liquid_height_m": 0.0814975514524142,
+      "riser_equivalent_liquid_volume_m3": 0.0002086924120678606,
+      "base_row_water_fraction": 0.6942824891244438,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.10222916387871907,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.013297735027874763,
+        "residual_a90_m": 0.006715954427537019,
+        "residual_peak_to_peak_m": 0.008612791442600326,
+        "residual_rms_m": 0.0019112488401254637,
+        "envelope_max_m": 0.0036359682651734802,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.26400000000000023,
+          "total_length_m": 0.3520000000000003,
+          "largest_bounds_m": [
+            2.7590899999999996,
+            3.0232200000000002
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.28000000000000025,
+          "total_length_m": 0.4360000000000004,
+          "largest_bounds_m": [
+            2.75509,
+            3.0352300000000003
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0002069874681528745,
+      "volume_derivative_flux_m3_s": -0.0001379986779612985
+    },
+    {
+      "time_s": 10.2,
+      "riser_equivalent_liquid_height_m": 0.0772698821251841,
+      "riser_equivalent_liquid_volume_m3": 0.0001978665345586434,
+      "base_row_water_fraction": 0.7693041004203108,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.10692813160880792,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.013597063515361718,
+        "residual_a90_m": 0.006355091191686315,
+        "residual_peak_to_peak_m": 0.008925440443340538,
+        "residual_rms_m": 0.0018471905569771398,
+        "envelope_max_m": 0.0033821812421464905,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.24800000000000022,
+          "total_length_m": 0.3440000000000003,
+          "largest_bounds_m": [
+            2.7590899999999996,
+            3.0072099999999997
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.26400000000000023,
+          "total_length_m": 0.4440000000000004,
+          "largest_bounds_m": [
+            2.74709,
+            3.011215
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.000199639360336899,
+      "volume_derivative_flux_m3_s": -0.00018702370224596204
+    },
+    {
+      "time_s": 10.25,
+      "riser_equivalent_liquid_height_m": 0.07442509166778521,
+      "riser_equivalent_liquid_volume_m3": 0.00019058182266482837,
+      "base_row_water_fraction": 0.7181106420665477,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.10433220512685744,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.01326531032597146,
+        "residual_a90_m": 0.006271890816225891,
+        "residual_peak_to_peak_m": 0.008093997095826838,
+        "residual_rms_m": 0.0017469694579501968,
+        "envelope_max_m": 0.0032052077865777173,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.20800000000000018,
+          "total_length_m": 0.3160000000000003,
+          "largest_bounds_m": [
+            2.7831,
+            2.991205
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.2400000000000002,
+          "total_length_m": 0.40000000000000036,
+          "largest_bounds_m": [
+            2.7670950000000003,
+            3.0072099999999997
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0001895757901580376,
+      "volume_derivative_flux_m3_s": -0.0001869519331885285
+    },
+    {
+      "time_s": 10.3,
+      "riser_equivalent_liquid_height_m": 0.06961797203127777,
+      "riser_equivalent_liquid_volume_m3": 0.00017827213514461763,
+      "base_row_water_fraction": 0.6608792661646449,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.10527502774658533,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.013747019771666286,
+        "residual_a90_m": 0.005978594089216282,
+        "residual_peak_to_peak_m": 0.008552311836487386,
+        "residual_rms_m": 0.0017411523769491602,
+        "envelope_max_m": 0.003145603058795185,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.2120000000000002,
+          "total_length_m": 0.3680000000000003,
+          "largest_bounds_m": [
+            2.7751,
+            2.9871999999999996
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.40800000000000036,
+          "total_length_m": 0.40800000000000036,
+          "largest_bounds_m": [
+            2.76309,
+            3.17129
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00017805657869007113,
+      "volume_derivative_flux_m3_s": -0.0002794955177014939
+    },
+    {
+      "time_s": 10.35,
+      "riser_equivalent_liquid_height_m": 0.06408680957210143,
+      "riser_equivalent_liquid_volume_m3": 0.00016410837666877307,
+      "base_row_water_fraction": 0.8806834837127143,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.09367107689047323,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.0150851252475009,
+        "residual_a90_m": 0.006231239965389518,
+        "residual_peak_to_peak_m": 0.008683926659537211,
+        "residual_rms_m": 0.0017488713384860009,
+        "envelope_max_m": 0.002868654320455303,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.18400000000000016,
+          "total_length_m": 0.3600000000000003,
+          "largest_bounds_m": [
+            2.7670950000000003,
+            2.9511849999999997
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.4760000000000004,
+          "total_length_m": 0.4760000000000004,
+          "largest_bounds_m": [
+            2.75509,
+            3.23132
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00016451995726913442,
+      "volume_derivative_flux_m3_s": -0.00025590805646305646
+    },
+    {
+      "time_s": 10.4,
+      "riser_equivalent_liquid_height_m": 0.060051968061479596,
+      "riser_equivalent_liquid_volume_m3": 0.00015377627721109964,
+      "base_row_water_fraction": 0.8446357771279286,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.023735606245466986,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.015147396457587892,
+        "residual_a90_m": 0.005876983393341969,
+        "residual_peak_to_peak_m": 0.007960905121728548,
+        "residual_rms_m": 0.0016655774822995758,
+        "envelope_max_m": 0.0027293816804917306,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.18000000000000016,
+          "total_length_m": 0.3440000000000003,
+          "largest_bounds_m": [
+            2.9791999999999996,
+            3.1592900000000004
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.5080000000000005,
+          "total_length_m": 0.5440000000000005,
+          "largest_bounds_m": [
+            2.7510899999999996,
+            3.25934
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0001542926816313076,
+      "volume_derivative_flux_m3_s": -0.0001523911598926694
+    },
+    {
+      "time_s": 10.45,
+      "riser_equivalent_liquid_height_m": 0.0578586458397129,
+      "riser_equivalent_liquid_volume_m3": 0.00014815979307452045,
+      "base_row_water_fraction": 0.7498656734151163,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.05161470233551692,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.014560137981222507,
+        "residual_a90_m": 0.005479695820797128,
+        "residual_peak_to_peak_m": 0.007358453478972987,
+        "residual_rms_m": 0.0015887552488417593,
+        "envelope_max_m": 0.0027609847375443214,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.1120000000000001,
+          "total_length_m": 0.2560000000000002,
+          "largest_bounds_m": [
+            3.0432300000000003,
+            3.155285
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.4560000000000004,
+          "total_length_m": 0.4680000000000004,
+          "largest_bounds_m": [
+            2.75509,
+            3.21131
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.0001473382004870567,
+      "volume_derivative_flux_m3_s": -0.00011542068716245148
+    },
+    {
+      "time_s": 10.5,
+      "riser_equivalent_liquid_height_m": 0.05549929741928426,
+      "riser_equivalent_liquid_volume_m3": 0.00014211816232619981,
+      "base_row_water_fraction": 0.5923030662522558,
+      "top_row_water_fraction": 0.0,
+      "primary_wet_segment_top_above_crown_m": 0.03440516268154195,
+      "horizontal_wave": {
+        "x_min_m": 2.45294,
+        "x_max_m": 3.48545,
+        "dx_m": 0.0040000000000000036,
+        "profile_a90_m": 0.015077551551193974,
+        "residual_a90_m": 0.005544910425264021,
+        "residual_peak_to_peak_m": 0.007525365034470419,
+        "residual_rms_m": 0.0016385267763122816,
+        "envelope_max_m": 0.0030490822532563385,
+        "active_fixed_2mm": {
+          "largest_length_m": 0.14800000000000013,
+          "total_length_m": 0.19600000000000017,
+          "largest_bounds_m": [
+            3.03923,
+            3.1872999999999996
+          ]
+        },
+        "active_half_max": {
+          "largest_length_m": 0.29200000000000026,
+          "total_length_m": 0.4480000000000004,
+          "largest_bounds_m": [
+            2.9111700000000003,
+            3.20331
+          ]
+        }
+      },
+      "riser_equivalent_liquid_volume_smoothed_m3": 0.00014334669424711306,
+      "volume_derivative_flux_m3_s": -7.156606092667832e-05
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "case": "Liu2020 B3 Q20to100 full-pipe geyser",
+  "output": "caseB_1d3d_frame_compare.html",
+  "generator": "scripts/caseB_build_real_vof_html.py",
+  "generated_utc": "2026-08-06T08:38:20.812822+00:00",
+  "openfoam_view": "real alpha.water centre-plane only; no probe reconstruction",
+  "production_3d_complete": true,
+  "peak_volume_field_rerun_status": "paused_by_user",
+  "quasi2d_solver_time_s": 0.232418605,
+  "quasi2d_front_slice_frames": 11,
+  "scientific_status": "quasi-2D rendering is diagnostic; production 3-D metrics remain primary"
+}

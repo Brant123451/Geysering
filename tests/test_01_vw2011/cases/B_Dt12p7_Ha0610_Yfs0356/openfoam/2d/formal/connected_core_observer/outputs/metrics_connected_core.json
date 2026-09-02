@@ -1,0 +1,149 @@
+{
+  "case": "VW2011 Test 1 Case B",
+  "observer_status": "formal",
+  "promoted_to_formal_evidence": true,
+  "source_probe": "openfoam\\2d\\postProcessing\\towerCentreline\\0\\alpha.water",
+  "source_experiment": "data/digitized/fig8_caseB_levels_runs_v2.csv",
+  "time_shift_Tstar": 0.0,
+  "time_definition": "Tstar = time_s * sqrt(g*Dt)/L_tower",
+  "observer": {
+    "definition": "alpha.water=0.5 lower edge of the first persistent wet run above the inlet; this is the top of the inlet-connected gas core",
+    "alpha_threshold": 0.5,
+    "minimum_persistent_wet_probes": 3,
+    "probe_spacing_m_median": 0.010000000000000009,
+    "shorter_wet_runs_below_interface": "classified as detached droplets",
+    "free_surface_for_Fig8": "upper edge of the same coherent liquid run; capped at Y*=1 only for Fig.8 comparison"
+  },
+  "simulation_end_s": 8.975,
+  "simulation_end_Tstar": 5.193271005628964,
+  "fig8_rising_track_no_time_shift": {
+    "connected_core_Yint": {
+      "n": 36,
+      "rmse": 0.3033139492217542,
+      "bias": -0.2504450462291925,
+      "mae": 0.2504450462291925
+    },
+    "legacy_Yint": {
+      "n": 36,
+      "rmse": 0.33224706555055694,
+      "bias": -0.2691021781854829,
+      "mae": 0.2691021781854829
+    },
+    "connected_core_Yfs": {
+      "n": 30,
+      "rmse": 0.0520029884708956,
+      "bias": -0.003127238511728229,
+      "mae": 0.04633039660802007
+    },
+    "legacy_Yfs": {
+      "n": 30,
+      "rmse": 0.0520029884708956,
+      "bias": -0.003127238511728229,
+      "mae": 0.04633039660802007
+    }
+  },
+  "rollback_diagnostic_rising_branch": {
+    "window_Tstar": [
+      3.5,
+      4.484295569944064
+    ],
+    "connected_core": {
+      "large_negative_step_dY_lt_minus_0p03": 0,
+      "return_to_zero": 0
+    },
+    "legacy": {
+      "large_negative_step_dY_lt_minus_0p03": 11,
+      "return_to_zero": 9
+    }
+  },
+  "largest_probe_operator_disagreement_within_Fig8_window": {
+    "time_s": 7.2,
+    "Tstar": 4.1661895532622335,
+    "connected_core_Yint_star": 0.36074339783233866,
+    "legacy_Yint_star": 0.0,
+    "detached_wet_probes_below": 1
+  },
+  "archived_2d_field_connectivity_cross_check": {
+    "vtk_file": "openfoam\\2d\\VTK\\2d_48121\\internal.vtu",
+    "vtk_time_s": 7.25,
+    "vtk_Tstar": 4.195121425159888,
+    "tower_grid_rows": 400,
+    "tower_grid_columns": 10,
+    "field_connected_core_Yint_star": 0.403589701199714,
+    "probe_connected_core_Yint_star_interpolated": 0.40927446132306666,
+    "probe_minus_field_Yint_star": 0.005684760123352672
+  },
+  "events": [
+    {
+      "kind": "int",
+      "target_Ystar": 0.02,
+      "experiment_run_count": 0,
+      "experiment_Tstar_median": null,
+      "experiment_Tstar_min": null,
+      "experiment_Tstar_max": null,
+      "connected_core_Tstar": 3.7719347789047455,
+      "connected_core_minus_experiment_median_Tstar": null
+    },
+    {
+      "kind": "int",
+      "target_Ystar": 0.05,
+      "experiment_run_count": 0,
+      "experiment_Tstar_median": null,
+      "experiment_Tstar_min": null,
+      "experiment_Tstar_max": null,
+      "connected_core_Tstar": 3.8456015927660028,
+      "connected_core_minus_experiment_median_Tstar": null
+    },
+    {
+      "kind": "int",
+      "target_Ystar": 0.1,
+      "experiment_run_count": 3,
+      "experiment_Tstar_median": 3.740666666666667,
+      "experiment_Tstar_min": 3.7106470588235294,
+      "experiment_Tstar_max": 3.790848484848485,
+      "connected_core_Tstar": 3.920789282267958,
+      "connected_core_minus_experiment_median_Tstar": 0.18012261560129117
+    },
+    {
+      "kind": "int",
+      "target_Ystar": 0.5,
+      "experiment_run_count": 3,
+      "experiment_Tstar_median": 3.9793956043956045,
+      "experiment_Tstar_min": 3.9609148936170215,
+      "experiment_Tstar_max": 4.067122222222222,
+      "connected_core_Tstar": 4.257722670610538,
+      "connected_core_minus_experiment_median_Tstar": 0.2783270662149335
+    },
+    {
+      "kind": "int",
+      "target_Ystar": 0.8,
+      "experiment_run_count": 3,
+      "experiment_Tstar_median": 4.071904109589041,
+      "experiment_Tstar_min": 4.053035294117647,
+      "experiment_Tstar_max": 4.152843902439024,
+      "connected_core_Tstar": 4.417380288795384,
+      "connected_core_minus_experiment_median_Tstar": 0.34547617920634277
+    },
+    {
+      "kind": "int",
+      "target_Ystar": 0.95,
+      "experiment_run_count": 1,
+      "experiment_Tstar_median": 4.090976470588235,
+      "experiment_Tstar_min": 4.090976470588235,
+      "experiment_Tstar_max": 4.090976470588235,
+      "connected_core_Tstar": 4.484295569944064,
+      "connected_core_minus_experiment_median_Tstar": 0.3933190993558284
+    },
+    {
+      "kind": "fs",
+      "target_Ystar": 1.0,
+      "experiment_run_count": 3,
+      "experiment_Tstar_median": 3.94,
+      "experiment_Tstar_min": 3.91,
+      "experiment_Tstar_max": 3.981,
+      "connected_core_Tstar": 4.114112183846456,
+      "connected_core_minus_experiment_median_Tstar": 0.17411218384645588
+    }
+  ],
+  "interpretation": "The observer removes false downward interface excursions caused by detached bottom droplets. Any remaining timing bias is a simulation discrepancy and is not corrected by shifting the time axis."
+}

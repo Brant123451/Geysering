@@ -1,0 +1,34 @@
+{
+  "case": "VW2011 Test 1 Case B",
+  "dimension": "2d_planar_open_physical_rim",
+  "simulation_end_s": 8.65,
+  "simulation_end_Tstar": 5.005213838294211,
+  "pressure_plateau_Hstar_mean_T1to3": 0.9938546035565748,
+  "pressure_RMSE_Hstar_no_shift": 0.3446334910177119,
+  "free_surface_max_Ystar": 1.0,
+  "free_surface_RMSE_Ystar_no_shift": 0.05120491628535999,
+  "interface_RMSE_Ystar_no_shift": 0.3457132416811153,
+  "interface_liftoff_Tstar": 3.7842888442131954,
+  "interface_catch_Tstar": 4.582808508588457,
+  "geysering": true,
+  "geyser_before_catch": true,
+  "comparison_targets": {
+    "observed_geysering": true,
+    "figure_pressure": "Fig.6",
+    "figure_levels": "Fig.8",
+    "pressure_plateau_Hstar_exp_mean_approx": 0.758
+  },
+  "paper_inputs": {
+    "D_m": 0.094,
+    "Dt_m": 0.0127,
+    "L_m": 0.61,
+    "Ha0_m": 0.61,
+    "Yfs0_m": 0.356,
+    "chamber_m": 0.546,
+    "middle_m": 2.97,
+    "downstream_m": 0.49
+  },
+  "caveat": "Planar 2-D keeps paper lengths, D, Ha0, Yfs0 and BCs. Tower width uses hydraulic equivalence W=Dt^2/D so W/D=(Dt/D)^2; sigma=0 to avoid capillary lock in the thin bore. Valve opening instantaneous (paper: manual <1 s). The physical rim at y=0.657 m opens directly to atmosphere; no confined headroom is retained.",
+  "planar_tower_width_m": 0.0017158510638297872,
+  "sigma": 0.0
+}

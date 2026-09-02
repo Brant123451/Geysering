@@ -1,0 +1,7 @@
+metric,units,experiment,model_1d,openfoam_2d
+gas arrival Ta,s,8.07,6.8000885898464265,8.5
+free surface reaches 98% rim,s,9.55,12.820004337803478,13.864929253254049
+free-surface rise speed,m/s,0.924,1.2693264314494535,0.23368934356795418
+gas-front rise speed,m/s,1.231,0.8314408585172216,
+pressure surge H/H0,-,1.9,1.8575061132696313,1.776767323916669
+geyser classification,boolean,True,True,True

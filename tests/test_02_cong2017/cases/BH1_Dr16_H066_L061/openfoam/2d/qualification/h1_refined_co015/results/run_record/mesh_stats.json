@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "cells_total": 155820,
+  "cell_counts": {
+    "nx_left": 1387,
+    "nx_junction": 20,
+    "nx_mid": 1003,
+    "nx_pocket": 244,
+    "nz_pipe": 30,
+    "nz_riser": 2400,
+    "nx_external_left": 37,
+    "nx_external_right": 37,
+    "nz_external": 300
+  },
+  "paper_geometry_m": {
+    "pipe_length": 6.59,
+    "tee_axis_x": 3.47,
+    "release_valve_x": 5.98,
+    "physical_riser_diameter": 0.016
+  },
+  "planar_mapping_m": {
+    "riser_width": 0.00512,
+    "extrusion": 0.001
+  }
+}

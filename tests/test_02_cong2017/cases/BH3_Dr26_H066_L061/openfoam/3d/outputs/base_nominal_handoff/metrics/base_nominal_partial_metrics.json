@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "case": "B-H3",
+  "run_id": "base_nominal_partial",
+  "run_mode": "event",
+  "valve_opening": "0.2",
+  "simulated_end_time_s": 8.46,
+  "full_13s_window_completed": false,
+  "geometry_model": "3-D circular pipe, circular riser, Boolean tee, external air",
+  "solver": "compressibleInterFoam",
+  "geysering": false,
+  "geyser_detection": "alpha.water >= 0.05 at centreline probes above z=1.85 m",
+  "Ta_3d_s": 7.425,
+  "t_rim_3d_s": null,
+  "Yfs_max_3d_m": 1.0099999999999996,
+  "Yint_max_3d_m": 0.6199999999999997,
+  "vfs_3d_m_per_s": 0.027272205858682827,
+  "vint_3d_m_per_s": 0.6168615448709952,
+  "maximum_sampled_speed_m_per_s": 8.319843326669165,
+  "maximum_all_domain_speed_m_per_s": 12.253825857,
+  "maximum_water_weighted_speed_m_per_s": 2.0630784864,
+  "maximum_gas_weighted_speed_m_per_s": 12.253825857,
+  "field_extrema": null,
+  "initial_pressure_balance": null,
+  "initial_volume_audit": {
+    "pocket_target_m3": 0.0011977321991811086,
+    "pocket_mesh_m3": 0.0011939587248,
+    "pocket_relative_error": -0.0031505159364411117,
+    "paper_riser_water_target_m3": 0.0003504132445814056,
+    "paper_vair_over_vw_target": 3.418056302671687,
+    "mesh_pocket_over_paper_vw": 3.407287661818467,
+    "riser_nonoverlap_water_target_m3": 0.0003238667866585718,
+    "riser_nonoverlap_water_mesh_m3": 0.00031899987714,
+    "riser_nonoverlap_relative_error": -0.015027504267372205,
+    "pocket_ideal_gas_mass_target_kg": 0.0014276407696572862,
+    "pocket_ideal_gas_mass_from_mesh_volume_kg": 0.001423142964660968
+  },
+  "conservation": {
+    "max_abs_water_volume_residual_m3": 2.849846089077473e-08,
+    "max_abs_water_volume_residual_fraction": 2.3603213995844196e-06,
+    "max_abs_global_gas_mass_residual_kg": 6.042518163245161e-07,
+    "max_abs_global_gas_mass_residual_fraction": 4.814122645317974e-06,
+    "max_abs_total_mass_residual_kg": 2.715759038530302e-05,
+    "max_abs_total_mass_residual_fraction": 2.2305344887983834e-06,
+    "internal_air_mass_initial_kg": 0.0021744445295458453,
+    "internal_air_mass_final_kg": 0.0019455844409128856,
+    "maximum_atmosphere_absolute_mass_flux_kg_per_s": 0.0053207101928,
+    "maximum_atmosphere_outflow_mass_flux_kg_per_s": 0.00296674204186,
+    "maximum_atmosphere_inflow_mass_flux_kg_per_s": 0.00235396815094,
+    "total_mass_boundary_flux": "direct sum(rhoPhi) on inlet and atmosphere",
+    "residual_reference": "first common runtime sample; t=0 volumes are audited separately"
+  },
+  "ejection": {
+    "cumulative_positive_rim_water_volume_m3": 5.8906850795006323e-123,
+    "cumulative_positive_rim_water_volume_l": 5.890685079500633e-120,
+    "cumulative_atmosphere_escape_water_volume_m3": 4.367665073693001e-259
+  },
+  "closed_hold": {
+    "applicable": false,
+    "minimum_duration_s": 1.0,
+    "duration_complete": null,
+    "thresholds_pass": null,
+    "free_surface_max_drift_m": 0.3599999999999999,
+    "initial_pocket_zone_max_relative_volume_drift": 0.40850499579941746,
+    "pass": null,
+    "criteria": {
+      "free_surface_drift_m": 0.01,
+      "pocket_relative_volume_drift": 0.01,
+      "water_weighted_speed_m_per_s": 0.02
+    },
+    "all_domain_and_gas_speed_are_reported_but_not_gates": "Low-density gas-side CSF velocity is monitored separately; the hold gate uses phase-weighted water speed plus interface and pocket-volume drift."
+  },
+  "experiment": {
+    "geyser": true,
+    "Ta_s": 8.18,
+    "vfs_m_per_s": 0.657,
+    "vint_m_per_s": 0.916
+  },
+  "existing_1d": {
+    "geyser": false,
+    "Ta_s": 9.56,
+    "vfs_m_per_s": 0.4268,
+    "vint_m_per_s": 1.2369,
+    "Yfs_max_m": 0.82
+  },
+  "classification_changed_by_numerics": null,
+  "honesty_note": "Experimental classification is a comparison target only. No source term or fitted event trigger is used."
+}

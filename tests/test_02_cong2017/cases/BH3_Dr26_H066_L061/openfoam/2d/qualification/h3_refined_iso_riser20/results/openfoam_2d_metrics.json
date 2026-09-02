@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "case": "BH3_Dr26_H066_L061",
+  "run_id": "paper_bh3_tau0p2_areaeq",
+  "dimension": "2D_planar_area_equivalent",
+  "solver": "bh3CompressibleInterFoam-v2512",
+  "paper_contract": {
+    "schema_version": 1,
+    "case_id": "BH3_Dr26_H066_L061",
+    "paper_run": "B-H3",
+    "dimension": "2D_planar_xz",
+    "solver": "bh3CompressibleInterFoam",
+    "openfoam_version": "v2512",
+    "paper_source": {
+      "citation": "Cong, Chan and Lee (2017), Journal of Hydraulic Engineering 143(9), 04017039",
+      "doi": "10.1061/(ASCE)HY.1943-7900.0001332",
+      "figure": "Fig. 1(b)",
+      "table": "Table 2, high-speed-camera row B-H3"
+    },
+    "physical_geometry_m": {
+      "pipe_inner_diameter": 0.05,
+      "pipe_length": 6.59,
+      "tee_axis_x": 3.47,
+      "release_valve_x": 5.98,
+      "closed_cap_x": 6.59,
+      "riser_inner_diameter": 0.026,
+      "riser_height_above_pipe_crown": 1.8,
+      "pipe_invert_z": -0.025,
+      "pipe_crown_z": 0.025,
+      "riser_rim_z": 1.825
+    },
+    "initial_conditions": {
+      "H0_m_above_pipe_invert": 0.66,
+      "free_surface_z_m": 0.635,
+      "free_surface_height_above_pipe_crown_m": 0.61,
+      "pocket_length_m": 0.61,
+      "pocket_interval_x_m": [
+        5.98,
+        6.59
+      ],
+      "pocket_pressure_Pa_abs": 101325.0,
+      "atmosphere_pressure_Pa_abs": 101325.0,
+      "temperature_K": 296.15,
+      "velocity_m_s": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "materials": {
+      "water_density_kg_m3": 998.0,
+      "water_dynamic_viscosity_Pa_s": 0.001003,
+      "water_bulk_modulus_Pa": 2200000000.0,
+      "air_molar_mass_kg_kmol": 28.965,
+      "air_dynamic_viscosity_Pa_s": 1.81e-05,
+      "surface_tension_N_m": 0.072,
+      "gravity_m_s2": 9.81
+    },
+    "boundary_conditions": {
+      "upstream": "pressure-driven constant reservoir head H0=0.66 m",
+      "downstream": "sealed cap",
+      "riser_outlet": "open atmosphere through an above-rim numerical air domain",
+      "walls": "smooth no-slip acrylic; no fitted contact angle",
+      "release_valve": "passive Forchheimer resistance with sine-squared effective-area opening over 0.2 s"
+    },
+    "planar_mapping": {
+      "main_channel_height_m": 0.05,
+      "physical_riser_diameter_m": 0.026,
+      "area_equivalent_riser_width_m": 0.01352,
+      "formula": "W_2D=Dr^2/D so W_2D/D=(Dr/D)^2",
+      "external_width_m": 0.3,
+      "external_height_above_rim_m": 1.2,
+      "extrusion_m": 0.001,
+      "limitation": "The 2D plane preserves the circular area ratio, not the drawn 26 mm riser width or 3D annular film."
+    },
+    "mesh_m": {
+      "pipe_dx": 0.0025,
+      "pipe_dz": 0.0016666666666666668,
+      "riser_dx": 0.001352,
+      "riser_dz": 0.0015,
+      "external_dx": 0.004,
+      "external_dz": 0.004
+    },
+    "experiment": {
+      "classification": "GEYSER",
+      "Ta_s": 8.18,
+      "vfs_m_s": 0.657,
+      "vint_m_s": 0.916,
+      "Vair_over_Vw": 3.42
+    },
+    "simulation": {
+      "end_time_s": 13.0,
+      "write_interval_s": 0.05,
+      "max_Courant": 0.25,
+      "max_alpha_Courant": 0.2,
+      "primary_run_id": "paper_bh3_tau0p2_areaeq"
+    }
+  },
+  "status": {
+    "last_log_time_s": 20.0,
+    "ended_normally": true,
+    "fatal_error": false,
+    "fatal_error_any_segment": false,
+    "latest_log": "log.solve"
+  },
+  "n_riser_samples": 2000,
+  "experiment": {
+    "classification": "GEYSER",
+    "Ta_s": 8.18,
+    "vfs_m_s": 0.657,
+    "vint_m_s": 0.916
+  },
+  "model": {
+    "Ta_s": 8.04,
+    "vfs_m_s": 0.7310752178253511,
+    "vint_m_s": null,
+    "Yfs_max_m_above_crown": 1.7914552214170265,
+    "Yint_max_m_above_crown": 0.8468299592404205,
+    "t_free_surface_at_98pct_rim_s": 10.084942263797627,
+    "PT1_max_head_m_water": 1.1745795362386342,
+    "geysering": true
+  },
+  "errors": {
+    "Ta_s": -0.14000000000000057,
+    "vfs_m_s": 0.07407521782535109,
+    "vint_m_s": null,
+    "classification_match": true
+  },
+  "metric_definition": {
+    "Ta": "first resolved gas-nose crossing at 5 mm above pipe crown",
+    "vfs": "first-passage speed from 0.65 to 1.70 m above pipe crown",
+    "vint": "first-passage speed from 0.05 to 1.65 m above pipe crown",
+    "geyser": "free surface reaches 98% of the 1.8 m physical rim height"
+  }
+}

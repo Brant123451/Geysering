@@ -1,0 +1,2090 @@
+[
+  {
+    "file": "model_1d/frames/full_0000.svg",
+    "riserFile": "model_1d/frames/zoom_0000.svg",
+    "time": 0.0,
+    "Yfs": 0.61,
+    "Yint": 0.0,
+    "head": 3.406663945654187e-05
+  },
+  {
+    "file": "model_1d/frames/full_0001.svg",
+    "riserFile": "model_1d/frames/zoom_0001.svg",
+    "time": 0.04001773550556418,
+    "Yfs": 0.59,
+    "Yint": 0.0,
+    "head": 0.0006073541291541968
+  },
+  {
+    "file": "model_1d/frames/full_0002.svg",
+    "riserFile": "model_1d/frames/zoom_0002.svg",
+    "time": 0.10008399374116957,
+    "Yfs": 0.52,
+    "Yint": 0.0,
+    "head": 0.04790530677627323
+  },
+  {
+    "file": "model_1d/frames/full_0003.svg",
+    "riserFile": "model_1d/frames/zoom_0003.svg",
+    "time": 0.14001421223325092,
+    "Yfs": 0.48000000000000004,
+    "Yint": 0.0,
+    "head": 0.16880228743009384
+  },
+  {
+    "file": "model_1d/frames/full_0004.svg",
+    "riserFile": "model_1d/frames/zoom_0004.svg",
+    "time": 0.20010647285070846,
+    "Yfs": 0.43,
+    "Yint": 0.0,
+    "head": 0.7734835922150107
+  },
+  {
+    "file": "model_1d/frames/full_0005.svg",
+    "riserFile": "model_1d/frames/zoom_0005.svg",
+    "time": 0.24009472845503382,
+    "Yfs": 0.43,
+    "Yint": 0.0,
+    "head": 0.8858557408958003
+  },
+  {
+    "file": "model_1d/frames/full_0006.svg",
+    "riserFile": "model_1d/frames/zoom_0006.svg",
+    "time": 0.3000348331013952,
+    "Yfs": 0.45000709402967787,
+    "Yint": 0.0,
+    "head": 0.3662922556082614
+  },
+  {
+    "file": "model_1d/frames/full_0007.svg",
+    "riserFile": "model_1d/frames/zoom_0007.svg",
+    "time": 0.3400096233825025,
+    "Yfs": 0.45000709761714563,
+    "Yint": 0.0,
+    "head": 0.4381669439839558
+  },
+  {
+    "file": "model_1d/frames/full_0008.svg",
+    "riserFile": "model_1d/frames/zoom_0008.svg",
+    "time": 0.4000190403123849,
+    "Yfs": 0.44000710485038547,
+    "Yint": 0.0,
+    "head": 0.3770085830164045
+  },
+  {
+    "file": "model_1d/frames/full_0009.svg",
+    "riserFile": "model_1d/frames/zoom_0009.svg",
+    "time": 0.44005614232423323,
+    "Yfs": 0.43000711132892827,
+    "Yint": 0.0,
+    "head": 0.44459666039946877
+  },
+  {
+    "file": "model_1d/frames/full_0010.svg",
+    "riserFile": "model_1d/frames/zoom_0010.svg",
+    "time": 0.5000399372380728,
+    "Yfs": 0.4300071139229094,
+    "Yint": 0.0,
+    "head": 0.48355669702478443
+  },
+  {
+    "file": "model_1d/frames/full_0011.svg",
+    "riserFile": "model_1d/frames/zoom_0011.svg",
+    "time": 0.5400020047766512,
+    "Yfs": 0.4200071239879556,
+    "Yint": 0.0,
+    "head": 0.49402947612966697
+  },
+  {
+    "file": "model_1d/frames/full_0012.svg",
+    "riserFile": "model_1d/frames/zoom_0012.svg",
+    "time": 0.6001179513045368,
+    "Yfs": 0.43000712399354024,
+    "Yint": 0.0,
+    "head": 0.49193901767230797
+  },
+  {
+    "file": "model_1d/frames/full_0013.svg",
+    "riserFile": "model_1d/frames/zoom_0013.svg",
+    "time": 0.6400160935676964,
+    "Yfs": 0.4300071302038718,
+    "Yint": 0.0,
+    "head": 0.5790798631895901
+  },
+  {
+    "file": "model_1d/frames/full_0014.svg",
+    "riserFile": "model_1d/frames/zoom_0014.svg",
+    "time": 0.7000066348992047,
+    "Yfs": 0.450007132691794,
+    "Yint": 0.0,
+    "head": 0.6775706396398345
+  },
+  {
+    "file": "model_1d/frames/full_0015.svg",
+    "riserFile": "model_1d/frames/zoom_0015.svg",
+    "time": 0.740070010237878,
+    "Yfs": 0.47000713417725065,
+    "Yint": 0.0,
+    "head": 0.7292492460713347
+  },
+  {
+    "file": "model_1d/frames/full_0016.svg",
+    "riserFile": "model_1d/frames/zoom_0016.svg",
+    "time": 0.8000681750407258,
+    "Yfs": 0.520007128920819,
+    "Yint": 0.0,
+    "head": 0.7779060294510476
+  },
+  {
+    "file": "model_1d/frames/full_0017.svg",
+    "riserFile": "model_1d/frames/zoom_0017.svg",
+    "time": 0.8400168239699479,
+    "Yfs": 0.5600071239071852,
+    "Yint": 0.0,
+    "head": 0.7658560588441401
+  },
+  {
+    "file": "model_1d/frames/full_0018.svg",
+    "riserFile": "model_1d/frames/zoom_0018.svg",
+    "time": 0.9000659878308781,
+    "Yfs": 0.6200071178935063,
+    "Yint": 0.0,
+    "head": 0.6044672150783139
+  },
+  {
+    "file": "model_1d/frames/full_0019.svg",
+    "riserFile": "model_1d/frames/zoom_0019.svg",
+    "time": 0.9400286130710559,
+    "Yfs": 0.6400071254968793,
+    "Yint": 0.0,
+    "head": 0.48160544187921767
+  },
+  {
+    "file": "model_1d/frames/full_0020.svg",
+    "riserFile": "model_1d/frames/zoom_0020.svg",
+    "time": 1.0000301937449152,
+    "Yfs": 0.6500071448990261,
+    "Yint": 0.0,
+    "head": 0.41570813510830806
+  },
+  {
+    "file": "model_1d/frames/full_0021.svg",
+    "riserFile": "model_1d/frames/zoom_0021.svg",
+    "time": 1.040110789049486,
+    "Yfs": 0.6500071585325314,
+    "Yint": 0.0,
+    "head": 0.539752425494818
+  },
+  {
+    "file": "model_1d/frames/full_0022.svg",
+    "riserFile": "model_1d/frames/zoom_0022.svg",
+    "time": 1.1001110456386034,
+    "Yfs": 0.6500071751989331,
+    "Yint": 0.0,
+    "head": 0.844129998122376
+  },
+  {
+    "file": "model_1d/frames/full_0023.svg",
+    "riserFile": "model_1d/frames/zoom_0023.svg",
+    "time": 1.1400702858208291,
+    "Yfs": 0.6700071720297965,
+    "Yint": 0.0,
+    "head": 0.9631587830530719
+  },
+  {
+    "file": "model_1d/frames/full_0024.svg",
+    "riserFile": "model_1d/frames/zoom_0024.svg",
+    "time": 1.2000751532556595,
+    "Yfs": 0.7100071621876268,
+    "Yint": 0.0,
+    "head": 0.6155442086815353
+  },
+  {
+    "file": "model_1d/frames/full_0025.svg",
+    "riserFile": "model_1d/frames/zoom_0025.svg",
+    "time": 1.2400492622973907,
+    "Yfs": 0.7200071673285383,
+    "Yint": 0.0,
+    "head": 0.5819684824143754
+  },
+  {
+    "file": "model_1d/frames/full_0026.svg",
+    "riserFile": "model_1d/frames/zoom_0026.svg",
+    "time": 1.3001080610049778,
+    "Yfs": 0.7200071839001317,
+    "Yint": 0.0,
+    "head": 0.6194364713063059
+  },
+  {
+    "file": "model_1d/frames/full_0027.svg",
+    "riserFile": "model_1d/frames/zoom_0027.svg",
+    "time": 1.3400536071411973,
+    "Yfs": 0.7100072010203484,
+    "Yint": 0.0,
+    "head": 0.6456698801505817
+  },
+  {
+    "file": "model_1d/frames/full_0028.svg",
+    "riserFile": "model_1d/frames/zoom_0028.svg",
+    "time": 1.4000924626129214,
+    "Yfs": 0.7100072156327399,
+    "Yint": 0.0,
+    "head": 0.646956764883596
+  },
+  {
+    "file": "model_1d/frames/full_0029.svg",
+    "riserFile": "model_1d/frames/zoom_0029.svg",
+    "time": 1.4400442402767244,
+    "Yfs": 0.7000072311534206,
+    "Yint": 0.0,
+    "head": 0.6390749846082433
+  },
+  {
+    "file": "model_1d/frames/full_0030.svg",
+    "riserFile": "model_1d/frames/zoom_0030.svg",
+    "time": 1.5001116597411994,
+    "Yfs": 0.7000072428790982,
+    "Yint": 0.0,
+    "head": 0.7684217468470139
+  },
+  {
+    "file": "model_1d/frames/full_0031.svg",
+    "riserFile": "model_1d/frames/zoom_0031.svg",
+    "time": 1.5400669925834083,
+    "Yfs": 0.7000072500633355,
+    "Yint": 0.0,
+    "head": 0.7979883485493454
+  },
+  {
+    "file": "model_1d/frames/full_0032.svg",
+    "riserFile": "model_1d/frames/zoom_0032.svg",
+    "time": 1.600047525217434,
+    "Yfs": 0.7100072532088036,
+    "Yint": 0.0,
+    "head": 0.7828632160309075
+  },
+  {
+    "file": "model_1d/frames/full_0033.svg",
+    "riserFile": "model_1d/frames/zoom_0033.svg",
+    "time": 1.6400446440386127,
+    "Yfs": 0.720007252843629,
+    "Yint": 0.0,
+    "head": 0.7122246408108077
+  },
+  {
+    "file": "model_1d/frames/full_0034.svg",
+    "riserFile": "model_1d/frames/zoom_0034.svg",
+    "time": 1.7000354052425013,
+    "Yfs": 0.7200072628481214,
+    "Yint": 0.0,
+    "head": 0.6270350751784183
+  },
+  {
+    "file": "model_1d/frames/full_0035.svg",
+    "riserFile": "model_1d/frames/zoom_0035.svg",
+    "time": 1.7400840388776475,
+    "Yfs": 0.7100072763011431,
+    "Yint": 0.0,
+    "head": 0.5696435835608127
+  },
+  {
+    "file": "model_1d/frames/full_0036.svg",
+    "riserFile": "model_1d/frames/zoom_0036.svg",
+    "time": 1.8000706606342167,
+    "Yfs": 0.7000072897320521,
+    "Yint": 0.0,
+    "head": 0.5460197788433855
+  },
+  {
+    "file": "model_1d/frames/full_0037.svg",
+    "riserFile": "model_1d/frames/zoom_0037.svg",
+    "time": 1.8400407644298613,
+    "Yfs": 0.6800072894190808,
+    "Yint": 0.0,
+    "head": 0.625563493385103
+  },
+  {
+    "file": "model_1d/frames/full_0038.svg",
+    "riserFile": "model_1d/frames/zoom_0038.svg",
+    "time": 1.9000073150839487,
+    "Yfs": 0.6700071862333135,
+    "Yint": 0.0,
+    "head": 0.7857562079524516
+  },
+  {
+    "file": "model_1d/frames/full_0039.svg",
+    "riserFile": "model_1d/frames/zoom_0039.svg",
+    "time": 1.9400334234845045,
+    "Yfs": 0.6700070915987107,
+    "Yint": 0.0,
+    "head": 0.7639218632875409
+  },
+  {
+    "file": "model_1d/frames/full_0040.svg",
+    "riserFile": "model_1d/frames/zoom_0040.svg",
+    "time": 2.000083330804037,
+    "Yfs": 0.6500065812296808,
+    "Yint": 0.0,
+    "head": 0.4121112766367277
+  },
+  {
+    "file": "model_1d/frames/full_0041.svg",
+    "riserFile": "model_1d/frames/zoom_0041.svg",
+    "time": 2.0400820185641817,
+    "Yfs": 0.6300051092238858,
+    "Yint": 0.0,
+    "head": 0.47571911468168704
+  },
+  {
+    "file": "model_1d/frames/full_0042.svg",
+    "riserFile": "model_1d/frames/zoom_0042.svg",
+    "time": 2.1000357826366156,
+    "Yfs": 0.610002954739137,
+    "Yint": 0.0,
+    "head": 0.6027444961670666
+  },
+  {
+    "file": "model_1d/frames/full_0043.svg",
+    "riserFile": "model_1d/frames/zoom_0043.svg",
+    "time": 2.140091692197155,
+    "Yfs": 0.6000018766690108,
+    "Yint": 0.0,
+    "head": 0.5559228088030935
+  },
+  {
+    "file": "model_1d/frames/full_0044.svg",
+    "riserFile": "model_1d/frames/zoom_0044.svg",
+    "time": 2.2000944405846257,
+    "Yfs": 0.5700006362125648,
+    "Yint": 0.0,
+    "head": 0.5070735840024093
+  },
+  {
+    "file": "model_1d/frames/full_0045.svg",
+    "riserFile": "model_1d/frames/zoom_0045.svg",
+    "time": 2.2400383871326555,
+    "Yfs": 0.5600003113684395,
+    "Yint": 0.0,
+    "head": 0.5791835357752814
+  },
+  {
+    "file": "model_1d/frames/full_0046.svg",
+    "riserFile": "model_1d/frames/zoom_0046.svg",
+    "time": 2.300087249473143,
+    "Yfs": 0.5400001164942622,
+    "Yint": 0.0,
+    "head": 0.6086016922334141
+  },
+  {
+    "file": "model_1d/frames/full_0047.svg",
+    "riserFile": "model_1d/frames/zoom_0047.svg",
+    "time": 2.3400406776987324,
+    "Yfs": 0.5400000836039368,
+    "Yint": 0.0,
+    "head": 0.5405222464244671
+  },
+  {
+    "file": "model_1d/frames/full_0048.svg",
+    "riserFile": "model_1d/frames/zoom_0048.svg",
+    "time": 2.400012993127199,
+    "Yfs": 0.5200000405665206,
+    "Yint": 0.0,
+    "head": 0.5025694199274349
+  },
+  {
+    "file": "model_1d/frames/full_0049.svg",
+    "riserFile": "model_1d/frames/zoom_0049.svg",
+    "time": 2.4400419718215107,
+    "Yfs": 0.5100000218592182,
+    "Yint": 0.0,
+    "head": 0.5352393175277205
+  },
+  {
+    "file": "model_1d/frames/full_0050.svg",
+    "riserFile": "model_1d/frames/zoom_0050.svg",
+    "time": 2.5001116419629605,
+    "Yfs": 0.5000000096768381,
+    "Yint": 0.0,
+    "head": 0.5136883171121239
+  },
+  {
+    "file": "model_1d/frames/full_0051.svg",
+    "riserFile": "model_1d/frames/zoom_0051.svg",
+    "time": 2.540099326911249,
+    "Yfs": 0.490000005606814,
+    "Yint": 0.0,
+    "head": 0.5454742435502499
+  },
+  {
+    "file": "model_1d/frames/full_0052.svg",
+    "riserFile": "model_1d/frames/zoom_0052.svg",
+    "time": 2.6000346933711134,
+    "Yfs": 0.49000000361456847,
+    "Yint": 0.0,
+    "head": 0.6395658012707965
+  },
+  {
+    "file": "model_1d/frames/full_0053.svg",
+    "riserFile": "model_1d/frames/zoom_0053.svg",
+    "time": 2.6400871566807003,
+    "Yfs": 0.490000002981052,
+    "Yint": 0.0,
+    "head": 0.6302677384053748
+  },
+  {
+    "file": "model_1d/frames/full_0054.svg",
+    "riserFile": "model_1d/frames/zoom_0054.svg",
+    "time": 2.7000840063426312,
+    "Yfs": 0.5000000026819891,
+    "Yint": 0.0,
+    "head": 0.49337438533802996
+  },
+  {
+    "file": "model_1d/frames/full_0055.svg",
+    "riserFile": "model_1d/frames/zoom_0055.svg",
+    "time": 2.7400306202258458,
+    "Yfs": 0.5000000025839617,
+    "Yint": 0.0,
+    "head": 0.44315012872016124
+  },
+  {
+    "file": "model_1d/frames/full_0056.svg",
+    "riserFile": "model_1d/frames/zoom_0056.svg",
+    "time": 2.80011267041595,
+    "Yfs": 0.5000000016470397,
+    "Yint": 0.0,
+    "head": 0.4678189445484263
+  },
+  {
+    "file": "model_1d/frames/full_0057.svg",
+    "riserFile": "model_1d/frames/zoom_0057.svg",
+    "time": 2.840066648892575,
+    "Yfs": 0.49000000092034296,
+    "Yint": 0.0,
+    "head": 0.4996196024806026
+  },
+  {
+    "file": "model_1d/frames/full_0058.svg",
+    "riserFile": "model_1d/frames/zoom_0058.svg",
+    "time": 2.90004849350044,
+    "Yfs": 0.49000000052590165,
+    "Yint": 0.0,
+    "head": 0.5878808351270557
+  },
+  {
+    "file": "model_1d/frames/full_0059.svg",
+    "riserFile": "model_1d/frames/zoom_0059.svg",
+    "time": 2.9400765730919733,
+    "Yfs": 0.5000000004356082,
+    "Yint": 0.0,
+    "head": 0.6604495546996715
+  },
+  {
+    "file": "model_1d/frames/full_0060.svg",
+    "riserFile": "model_1d/frames/zoom_0060.svg",
+    "time": 3.0001091681188066,
+    "Yfs": 0.5200000004113827,
+    "Yint": 0.0,
+    "head": 0.6435487186858834
+  },
+  {
+    "file": "model_1d/frames/full_0061.svg",
+    "riserFile": "model_1d/frames/zoom_0061.svg",
+    "time": 3.0401207057428583,
+    "Yfs": 0.5300000004110187,
+    "Yint": 0.0,
+    "head": 0.5361825639835281
+  },
+  {
+    "file": "model_1d/frames/full_0062.svg",
+    "riserFile": "model_1d/frames/zoom_0062.svg",
+    "time": 3.1000464389715914,
+    "Yfs": 0.5300000004110427,
+    "Yint": 0.0,
+    "head": 0.3813102739875376
+  },
+  {
+    "file": "model_1d/frames/full_0063.svg",
+    "riserFile": "model_1d/frames/zoom_0063.svg",
+    "time": 3.1400489100738094,
+    "Yfs": 0.5300000004110555,
+    "Yint": 0.0,
+    "head": 0.4515088886834482
+  },
+  {
+    "file": "model_1d/frames/full_0064.svg",
+    "riserFile": "model_1d/frames/zoom_0064.svg",
+    "time": 3.200073179701553,
+    "Yfs": 0.5200000004114438,
+    "Yint": 0.0,
+    "head": 0.5960340208317765
+  },
+  {
+    "file": "model_1d/frames/full_0065.svg",
+    "riserFile": "model_1d/frames/zoom_0065.svg",
+    "time": 3.240063025192783,
+    "Yfs": 0.5300000004110555,
+    "Yint": 0.0,
+    "head": 0.6912345710189968
+  },
+  {
+    "file": "model_1d/frames/full_0066.svg",
+    "riserFile": "model_1d/frames/zoom_0066.svg",
+    "time": 3.300109893609261,
+    "Yfs": 0.5500000004102813,
+    "Yint": 0.0,
+    "head": 0.7727819367845065
+  },
+  {
+    "file": "model_1d/frames/full_0067.svg",
+    "riserFile": "model_1d/frames/zoom_0067.svg",
+    "time": 3.3401033257678137,
+    "Yfs": 0.5600000004098953,
+    "Yint": 0.0,
+    "head": 0.44188227215702697
+  },
+  {
+    "file": "model_1d/frames/full_0068.svg",
+    "riserFile": "model_1d/frames/zoom_0068.svg",
+    "time": 3.4000179509332864,
+    "Yfs": 0.5600000004098953,
+    "Yint": 0.0,
+    "head": 0.5091160246085121
+  },
+  {
+    "file": "model_1d/frames/full_0069.svg",
+    "riserFile": "model_1d/frames/zoom_0069.svg",
+    "time": 3.440046775324433,
+    "Yfs": 0.5600000004098953,
+    "Yint": 0.0,
+    "head": 0.5050780524054068
+  },
+  {
+    "file": "model_1d/frames/full_0070.svg",
+    "riserFile": "model_1d/frames/zoom_0070.svg",
+    "time": 3.5000662422066595,
+    "Yfs": 0.5600000004098953,
+    "Yint": 0.0,
+    "head": 0.6233831638247372
+  },
+  {
+    "file": "model_1d/frames/full_0071.svg",
+    "riserFile": "model_1d/frames/zoom_0071.svg",
+    "time": 3.54007138530076,
+    "Yfs": 0.5600000004098953,
+    "Yint": 0.0,
+    "head": 0.7113456310418609
+  },
+  {
+    "file": "model_1d/frames/full_0072.svg",
+    "riserFile": "model_1d/frames/zoom_0072.svg",
+    "time": 3.600075732529708,
+    "Yfs": 0.5800000004091254,
+    "Yint": 0.0,
+    "head": 0.6339050347149726
+  },
+  {
+    "file": "model_1d/frames/full_0073.svg",
+    "riserFile": "model_1d/frames/zoom_0073.svg",
+    "time": 3.6400924899137173,
+    "Yfs": 0.5900000004087413,
+    "Yint": 0.0,
+    "head": 0.5963783093793544
+  },
+  {
+    "file": "model_1d/frames/full_0074.svg",
+    "riserFile": "model_1d/frames/zoom_0074.svg",
+    "time": 3.700074577284086,
+    "Yfs": 0.6000000004083582,
+    "Yint": 0.0,
+    "head": 0.5184453909159165
+  },
+  {
+    "file": "model_1d/frames/full_0075.svg",
+    "riserFile": "model_1d/frames/zoom_0075.svg",
+    "time": 3.7400448173295957,
+    "Yfs": 0.6000000004083582,
+    "Yint": 0.0,
+    "head": 0.578719226438462
+  },
+  {
+    "file": "model_1d/frames/full_0076.svg",
+    "riserFile": "model_1d/frames/zoom_0076.svg",
+    "time": 3.8000284263201047,
+    "Yfs": 0.6000000004083582,
+    "Yint": 0.0,
+    "head": 0.6500349486220081
+  },
+  {
+    "file": "model_1d/frames/full_0077.svg",
+    "riserFile": "model_1d/frames/zoom_0077.svg",
+    "time": 3.840053375533164,
+    "Yfs": 0.6100000004079758,
+    "Yint": 0.0,
+    "head": 0.7331001957694477
+  },
+  {
+    "file": "model_1d/frames/full_0078.svg",
+    "riserFile": "model_1d/frames/zoom_0078.svg",
+    "time": 3.900110524370937,
+    "Yfs": 0.6200000004075941,
+    "Yint": 0.0,
+    "head": 0.6981252641131732
+  },
+  {
+    "file": "model_1d/frames/full_0079.svg",
+    "riserFile": "model_1d/frames/zoom_0079.svg",
+    "time": 3.9400658532801827,
+    "Yfs": 0.6400000004068328,
+    "Yint": 0.0,
+    "head": 0.5879452337416323
+  },
+  {
+    "file": "model_1d/frames/full_0080.svg",
+    "riserFile": "model_1d/frames/zoom_0080.svg",
+    "time": 4.0000739624112835,
+    "Yfs": 0.6400000004068328,
+    "Yint": 0.0,
+    "head": 0.49283393273232745
+  },
+  {
+    "file": "model_1d/frames/full_0081.svg",
+    "riserFile": "model_1d/frames/zoom_0081.svg",
+    "time": 4.040043514026343,
+    "Yfs": 0.630000000407213,
+    "Yint": 0.0,
+    "head": 0.5035618750444222
+  },
+  {
+    "file": "model_1d/frames/full_0082.svg",
+    "riserFile": "model_1d/frames/zoom_0082.svg",
+    "time": 4.1000055619416225,
+    "Yfs": 0.6200000004075941,
+    "Yint": 0.0,
+    "head": 0.649381574477358
+  },
+  {
+    "file": "model_1d/frames/full_0083.svg",
+    "riserFile": "model_1d/frames/zoom_0083.svg",
+    "time": 4.140059855929987,
+    "Yfs": 0.6200000004075941,
+    "Yint": 0.0,
+    "head": 0.7391084271710316
+  },
+  {
+    "file": "model_1d/frames/full_0084.svg",
+    "riserFile": "model_1d/frames/zoom_0084.svg",
+    "time": 4.2000043198239485,
+    "Yfs": 0.630000000407213,
+    "Yint": 0.0,
+    "head": 0.7338098715841611
+  },
+  {
+    "file": "model_1d/frames/full_0085.svg",
+    "riserFile": "model_1d/frames/zoom_0085.svg",
+    "time": 4.240032741297123,
+    "Yfs": 0.6400000004068328,
+    "Yint": 0.0,
+    "head": 0.6022642348994105
+  },
+  {
+    "file": "model_1d/frames/full_0086.svg",
+    "riserFile": "model_1d/frames/zoom_0086.svg",
+    "time": 4.30010807885716,
+    "Yfs": 0.6400000004068328,
+    "Yint": 0.0,
+    "head": 0.43373309887774647
+  },
+  {
+    "file": "model_1d/frames/full_0087.svg",
+    "riserFile": "model_1d/frames/zoom_0087.svg",
+    "time": 4.340010989075918,
+    "Yfs": 0.6200000004075941,
+    "Yint": 0.0,
+    "head": 0.4532500020207391
+  },
+  {
+    "file": "model_1d/frames/full_0088.svg",
+    "riserFile": "model_1d/frames/zoom_0088.svg",
+    "time": 4.400049394474734,
+    "Yfs": 0.6000000004083582,
+    "Yint": 0.0,
+    "head": 0.6341871402238443
+  },
+  {
+    "file": "model_1d/frames/full_0089.svg",
+    "riserFile": "model_1d/frames/zoom_0089.svg",
+    "time": 4.4400046864729115,
+    "Yfs": 0.6000000004083582,
+    "Yint": 0.0,
+    "head": 0.7414850770605912
+  },
+  {
+    "file": "model_1d/frames/full_0090.svg",
+    "riserFile": "model_1d/frames/zoom_0090.svg",
+    "time": 4.50004912121874,
+    "Yfs": 0.6000000004083582,
+    "Yint": 0.0,
+    "head": 0.5103611544794201
+  },
+  {
+    "file": "model_1d/frames/full_0091.svg",
+    "riserFile": "model_1d/frames/zoom_0091.svg",
+    "time": 4.5400290122121945,
+    "Yfs": 0.5900000004087413,
+    "Yint": 0.0,
+    "head": 0.5346259024368236
+  },
+  {
+    "file": "model_1d/frames/full_0092.svg",
+    "riserFile": "model_1d/frames/zoom_0092.svg",
+    "time": 4.600021411974937,
+    "Yfs": 0.5800000004091254,
+    "Yint": 0.0,
+    "head": 0.5431773188925574
+  },
+  {
+    "file": "model_1d/frames/full_0093.svg",
+    "riserFile": "model_1d/frames/zoom_0093.svg",
+    "time": 4.640085220007534,
+    "Yfs": 0.5800000004091254,
+    "Yint": 0.0,
+    "head": 0.5204278357952036
+  },
+  {
+    "file": "model_1d/frames/full_0094.svg",
+    "riserFile": "model_1d/frames/zoom_0094.svg",
+    "time": 4.700057388344908,
+    "Yfs": 0.5600000004098953,
+    "Yint": 0.0,
+    "head": 0.5487683300756415
+  },
+  {
+    "file": "model_1d/frames/full_0095.svg",
+    "riserFile": "model_1d/frames/zoom_0095.svg",
+    "time": 4.74000373163166,
+    "Yfs": 0.5500000004102813,
+    "Yint": 0.0,
+    "head": 0.5869745951400859
+  },
+  {
+    "file": "model_1d/frames/full_0096.svg",
+    "riserFile": "model_1d/frames/zoom_0096.svg",
+    "time": 4.800078679171163,
+    "Yfs": 0.5500000004102813,
+    "Yint": 0.0,
+    "head": 0.6234681426853411
+  },
+  {
+    "file": "model_1d/frames/full_0097.svg",
+    "riserFile": "model_1d/frames/zoom_0097.svg",
+    "time": 4.840060660469197,
+    "Yfs": 0.5500000004102813,
+    "Yint": 0.0,
+    "head": 0.6141749519127447
+  },
+  {
+    "file": "model_1d/frames/full_0098.svg",
+    "riserFile": "model_1d/frames/zoom_0098.svg",
+    "time": 4.900102930584847,
+    "Yfs": 0.5500000004102813,
+    "Yint": 0.0,
+    "head": 0.5564649068697622
+  },
+  {
+    "file": "model_1d/frames/full_0099.svg",
+    "riserFile": "model_1d/frames/zoom_0099.svg",
+    "time": 4.940095234144814,
+    "Yfs": 0.5500000004102813,
+    "Yint": 0.0,
+    "head": 0.5186985690941945
+  },
+  {
+    "file": "model_1d/frames/full_0100.svg",
+    "riserFile": "model_1d/frames/zoom_0100.svg",
+    "time": 5.000091743086191,
+    "Yfs": 0.5400000004106681,
+    "Yint": 0.0,
+    "head": 0.5407384334813845
+  },
+  {
+    "file": "model_1d/frames/full_0101.svg",
+    "riserFile": "model_1d/frames/zoom_0101.svg",
+    "time": 5.040075344568134,
+    "Yfs": 0.5400000004106681,
+    "Yint": 0.0,
+    "head": 0.5861291551005746
+  },
+  {
+    "file": "model_1d/frames/full_0102.svg",
+    "riserFile": "model_1d/frames/zoom_0102.svg",
+    "time": 5.100033711130781,
+    "Yfs": 0.5400000004106681,
+    "Yint": 0.0,
+    "head": 0.5925050260645222
+  },
+  {
+    "file": "model_1d/frames/full_0103.svg",
+    "riserFile": "model_1d/frames/zoom_0103.svg",
+    "time": 5.1400741988759,
+    "Yfs": 0.5400000004106681,
+    "Yint": 0.0,
+    "head": 0.5717965349449573
+  },
+  {
+    "file": "model_1d/frames/full_0104.svg",
+    "riserFile": "model_1d/frames/zoom_0104.svg",
+    "time": 5.2000208615393255,
+    "Yfs": 0.5400000004106681,
+    "Yint": 0.0,
+    "head": 0.5024340456408818
+  },
+  {
+    "file": "model_1d/frames/full_0105.svg",
+    "riserFile": "model_1d/frames/zoom_0105.svg",
+    "time": 5.240019824667253,
+    "Yfs": 0.5400000004106681,
+    "Yint": 0.0,
+    "head": 0.49066257279801867
+  },
+  {
+    "file": "model_1d/frames/full_0106.svg",
+    "riserFile": "model_1d/frames/zoom_0106.svg",
+    "time": 5.300033071149263,
+    "Yfs": 0.5300000004110555,
+    "Yint": 0.0,
+    "head": 0.5651285785242044
+  },
+  {
+    "file": "model_1d/frames/full_0107.svg",
+    "riserFile": "model_1d/frames/zoom_0107.svg",
+    "time": 5.3400367011714165,
+    "Yfs": 0.5300000004110555,
+    "Yint": 0.0,
+    "head": 0.6153143975437987
+  },
+  {
+    "file": "model_1d/frames/full_0108.svg",
+    "riserFile": "model_1d/frames/zoom_0108.svg",
+    "time": 5.400075210659239,
+    "Yfs": 0.5400000004106681,
+    "Yint": 0.0,
+    "head": 0.5789944299067192
+  },
+  {
+    "file": "model_1d/frames/full_0109.svg",
+    "riserFile": "model_1d/frames/zoom_0109.svg",
+    "time": 5.440067214126147,
+    "Yfs": 0.5400000004106681,
+    "Yint": 0.0,
+    "head": 0.5440394284582042
+  },
+  {
+    "file": "model_1d/frames/full_0110.svg",
+    "riserFile": "model_1d/frames/zoom_0110.svg",
+    "time": 5.500038453993814,
+    "Yfs": 0.5400000004106681,
+    "Yint": 0.0,
+    "head": 0.49730558086637777
+  },
+  {
+    "file": "model_1d/frames/full_0111.svg",
+    "riserFile": "model_1d/frames/zoom_0111.svg",
+    "time": 5.5400609373847685,
+    "Yfs": 0.5400000004106681,
+    "Yint": 0.0,
+    "head": 0.5512014916199595
+  },
+  {
+    "file": "model_1d/frames/full_0112.svg",
+    "riserFile": "model_1d/frames/zoom_0112.svg",
+    "time": 5.600121828623114,
+    "Yfs": 0.5400000004106681,
+    "Yint": 0.0,
+    "head": 0.6222534525465229
+  },
+  {
+    "file": "model_1d/frames/full_0113.svg",
+    "riserFile": "model_1d/frames/zoom_0113.svg",
+    "time": 5.640074154402959,
+    "Yfs": 0.5500000004102813,
+    "Yint": 0.0,
+    "head": 0.6189181979052011
+  },
+  {
+    "file": "model_1d/frames/full_0114.svg",
+    "riserFile": "model_1d/frames/zoom_0114.svg",
+    "time": 5.700052462111648,
+    "Yfs": 0.5500000004102813,
+    "Yint": 0.0,
+    "head": 0.5484518567965428
+  },
+  {
+    "file": "model_1d/frames/full_0115.svg",
+    "riserFile": "model_1d/frames/zoom_0115.svg",
+    "time": 5.7400393722488845,
+    "Yfs": 0.5600000004098953,
+    "Yint": 0.0,
+    "head": 0.5315092004642122
+  },
+  {
+    "file": "model_1d/frames/full_0116.svg",
+    "riserFile": "model_1d/frames/zoom_0116.svg",
+    "time": 5.800075199368406,
+    "Yfs": 0.5500000004102813,
+    "Yint": 0.0,
+    "head": 0.5584928383209259
+  },
+  {
+    "file": "model_1d/frames/full_0117.svg",
+    "riserFile": "model_1d/frames/zoom_0117.svg",
+    "time": 5.840073432119463,
+    "Yfs": 0.5500000004102813,
+    "Yint": 0.0,
+    "head": 0.6046768221060224
+  },
+  {
+    "file": "model_1d/frames/full_0118.svg",
+    "riserFile": "model_1d/frames/zoom_0118.svg",
+    "time": 5.9000613436749445,
+    "Yfs": 0.5600000004098953,
+    "Yint": 0.0,
+    "head": 0.6373882152268704
+  },
+  {
+    "file": "model_1d/frames/full_0119.svg",
+    "riserFile": "model_1d/frames/zoom_0119.svg",
+    "time": 5.940095059023967,
+    "Yfs": 0.5700000004095099,
+    "Yint": 0.0,
+    "head": 0.5807955925565662
+  },
+  {
+    "file": "model_1d/frames/full_0120.svg",
+    "riserFile": "model_1d/frames/zoom_0120.svg",
+    "time": 6.0000264711394315,
+    "Yfs": 0.5700000004095099,
+    "Yint": 0.0,
+    "head": 0.5228512112296346
+  },
+  {
+    "file": "model_1d/frames/full_0121.svg",
+    "riserFile": "model_1d/frames/zoom_0121.svg",
+    "time": 6.040069086512086,
+    "Yfs": 0.5700000004095099,
+    "Yint": 0.0,
+    "head": 0.5479983335593045
+  },
+  {
+    "file": "model_1d/frames/full_0122.svg",
+    "riserFile": "model_1d/frames/zoom_0122.svg",
+    "time": 6.100024812103677,
+    "Yfs": 0.5700000004095099,
+    "Yint": 0.0,
+    "head": 0.6181532968118455
+  },
+  {
+    "file": "model_1d/frames/full_0123.svg",
+    "riserFile": "model_1d/frames/zoom_0123.svg",
+    "time": 6.140007074861101,
+    "Yfs": 0.5700000004095099,
+    "Yint": 0.0,
+    "head": 0.639545756736378
+  },
+  {
+    "file": "model_1d/frames/full_0124.svg",
+    "riserFile": "model_1d/frames/zoom_0124.svg",
+    "time": 6.200123058393555,
+    "Yfs": 0.5800000004091254,
+    "Yint": 0.0,
+    "head": 0.5634973674182596
+  },
+  {
+    "file": "model_1d/frames/full_0125.svg",
+    "riserFile": "model_1d/frames/zoom_0125.svg",
+    "time": 6.240023317051285,
+    "Yfs": 0.5800000004091254,
+    "Yint": 0.0,
+    "head": 0.5447229869183765
+  },
+  {
+    "file": "model_1d/frames/full_0126.svg",
+    "riserFile": "model_1d/frames/zoom_0126.svg",
+    "time": 6.300025786229868,
+    "Yfs": 0.5800000004091254,
+    "Yint": 0.0,
+    "head": 0.5742101616283325
+  },
+  {
+    "file": "model_1d/frames/full_0127.svg",
+    "riserFile": "model_1d/frames/zoom_0127.svg",
+    "time": 6.340049524047959,
+    "Yfs": 0.5800000004091254,
+    "Yint": 0.0,
+    "head": 0.6196949160894035
+  },
+  {
+    "file": "model_1d/frames/full_0128.svg",
+    "riserFile": "model_1d/frames/zoom_0128.svg",
+    "time": 6.400020124108321,
+    "Yfs": 0.5800000004091254,
+    "Yint": 0.0,
+    "head": 0.6296523473483419
+  },
+  {
+    "file": "model_1d/frames/full_0129.svg",
+    "riserFile": "model_1d/frames/zoom_0129.svg",
+    "time": 6.440014551976795,
+    "Yfs": 0.5900000004087413,
+    "Yint": 0.0,
+    "head": 0.5754085254783577
+  },
+  {
+    "file": "model_1d/frames/full_0130.svg",
+    "riserFile": "model_1d/frames/zoom_0130.svg",
+    "time": 6.500104835165679,
+    "Yfs": 0.5800000004091254,
+    "Yint": 0.0,
+    "head": 0.5452200541117127
+  },
+  {
+    "file": "model_1d/frames/full_0131.svg",
+    "riserFile": "model_1d/frames/zoom_0131.svg",
+    "time": 6.5400146820152,
+    "Yfs": 0.5800000004091254,
+    "Yint": 0.0,
+    "head": 0.5725628056842391
+  },
+  {
+    "file": "model_1d/frames/full_0132.svg",
+    "riserFile": "model_1d/frames/zoom_0132.svg",
+    "time": 6.600000130377487,
+    "Yfs": 0.5800000004091254,
+    "Yint": 0.0,
+    "head": 0.6398672254360623
+  },
+  {
+    "file": "model_1d/frames/full_0133.svg",
+    "riserFile": "model_1d/frames/zoom_0133.svg",
+    "time": 6.640033126395027,
+    "Yfs": 0.5800000004091254,
+    "Yint": 0.0,
+    "head": 0.6157686271827358
+  },
+  {
+    "file": "model_1d/frames/full_0134.svg",
+    "riserFile": "model_1d/frames/zoom_0134.svg",
+    "time": 6.700122121472656,
+    "Yfs": 0.5900000004087413,
+    "Yint": 0.0,
+    "head": 0.5417655995384717
+  },
+  {
+    "file": "model_1d/frames/full_0135.svg",
+    "riserFile": "model_1d/frames/zoom_0135.svg",
+    "time": 6.74001485093104,
+    "Yfs": 0.5800000004091254,
+    "Yint": 0.0,
+    "head": 0.5489521233831933
+  },
+  {
+    "file": "model_1d/frames/full_0136.svg",
+    "riserFile": "model_1d/frames/zoom_0136.svg",
+    "time": 6.800091032236532,
+    "Yfs": 0.5800000004091254,
+    "Yint": 0.0,
+    "head": 0.5901868128110317
+  },
+  {
+    "file": "model_1d/frames/full_0137.svg",
+    "riserFile": "model_1d/frames/zoom_0137.svg",
+    "time": 6.840010681554763,
+    "Yfs": 0.5800000004091254,
+    "Yint": 0.0,
+    "head": 0.6118988221013705
+  },
+  {
+    "file": "model_1d/frames/full_0138.svg",
+    "riserFile": "model_1d/frames/zoom_0138.svg",
+    "time": 6.900027879267326,
+    "Yfs": 0.5800000004091254,
+    "Yint": 0.0,
+    "head": 0.5749052252111799
+  },
+  {
+    "file": "model_1d/frames/full_0139.svg",
+    "riserFile": "model_1d/frames/zoom_0139.svg",
+    "time": 6.940057454178182,
+    "Yfs": 0.5800000004091254,
+    "Yint": 0.0,
+    "head": 0.5428559889856599
+  },
+  {
+    "file": "model_1d/frames/full_0140.svg",
+    "riserFile": "model_1d/frames/zoom_0140.svg",
+    "time": 7.0000075283768535,
+    "Yfs": 0.5700000004095099,
+    "Yint": 0.0,
+    "head": 0.5652646221078237
+  },
+  {
+    "file": "model_1d/frames/full_0141.svg",
+    "riserFile": "model_1d/frames/zoom_0141.svg",
+    "time": 7.04003524402615,
+    "Yfs": 0.5700000004095099,
+    "Yint": 0.0,
+    "head": 0.6088203081539658
+  },
+  {
+    "file": "model_1d/frames/full_0142.svg",
+    "riserFile": "model_1d/frames/zoom_0142.svg",
+    "time": 7.100064270050793,
+    "Yfs": 0.5700000004095099,
+    "Yint": 0.0,
+    "head": 0.5866750960036745
+  },
+  {
+    "file": "model_1d/frames/full_0143.svg",
+    "riserFile": "model_1d/frames/zoom_0143.svg",
+    "time": 7.140101600872247,
+    "Yfs": 0.5700000004095099,
+    "Yint": 0.0,
+    "head": 0.5524249366972486
+  },
+  {
+    "file": "model_1d/frames/full_0144.svg",
+    "riserFile": "model_1d/frames/zoom_0144.svg",
+    "time": 7.200069699577274,
+    "Yfs": 0.5600000004098953,
+    "Yint": 0.0,
+    "head": 0.5456045823401411
+  },
+  {
+    "file": "model_1d/frames/full_0145.svg",
+    "riserFile": "model_1d/frames/zoom_0145.svg",
+    "time": 7.240085590749423,
+    "Yfs": 0.5623840670379268,
+    "Yint": 0.02,
+    "head": 0.5790172202988375
+  },
+  {
+    "file": "model_1d/frames/full_0146.svg",
+    "riserFile": "model_1d/frames/zoom_0146.svg",
+    "time": 7.300034277387405,
+    "Yfs": 0.5925523865634884,
+    "Yint": 0.07,
+    "head": 0.5459237725790544
+  },
+  {
+    "file": "model_1d/frames/full_0147.svg",
+    "riserFile": "model_1d/frames/zoom_0147.svg",
+    "time": 7.340000821941949,
+    "Yfs": 0.6041317461274145,
+    "Yint": 0.1,
+    "head": 0.5312032508893649
+  },
+  {
+    "file": "model_1d/frames/full_0148.svg",
+    "riserFile": "model_1d/frames/zoom_0148.svg",
+    "time": 7.400101661836208,
+    "Yfs": 0.6106663971130187,
+    "Yint": 0.14,
+    "head": 0.5177980204466612
+  },
+  {
+    "file": "model_1d/frames/full_0149.svg",
+    "riserFile": "model_1d/frames/zoom_0149.svg",
+    "time": 7.440054835937987,
+    "Yfs": 0.6361596026037545,
+    "Yint": 0.19,
+    "head": 0.5099485620583531
+  },
+  {
+    "file": "model_1d/frames/full_0150.svg",
+    "riserFile": "model_1d/frames/zoom_0150.svg",
+    "time": 7.500043740291345,
+    "Yfs": 0.6711135224924618,
+    "Yint": 0.26,
+    "head": 0.5245087561267625
+  },
+  {
+    "file": "model_1d/frames/full_0151.svg",
+    "riserFile": "model_1d/frames/zoom_0151.svg",
+    "time": 7.540074163611469,
+    "Yfs": 0.6878972801792255,
+    "Yint": 0.31,
+    "head": 0.5025512827507853
+  },
+  {
+    "file": "model_1d/frames/full_0152.svg",
+    "riserFile": "model_1d/frames/zoom_0152.svg",
+    "time": 7.600097246066422,
+    "Yfs": 0.7175323382002956,
+    "Yint": 0.4,
+    "head": 0.5108735857421072
+  },
+  {
+    "file": "model_1d/frames/full_0153.svg",
+    "riserFile": "model_1d/frames/zoom_0153.svg",
+    "time": 7.64004461235582,
+    "Yfs": 0.697833719567847,
+    "Yint": 0.43,
+    "head": 0.5895915652415552
+  },
+  {
+    "file": "model_1d/frames/full_0154.svg",
+    "riserFile": "model_1d/frames/zoom_0154.svg",
+    "time": 7.700049897362197,
+    "Yfs": 0.7034570001083735,
+    "Yint": 0.47000000000000003,
+    "head": 0.6290998643825766
+  },
+  {
+    "file": "model_1d/frames/full_0155.svg",
+    "riserFile": "model_1d/frames/zoom_0155.svg",
+    "time": 7.740005415442256,
+    "Yfs": 0.7547098950109071,
+    "Yint": 0.53,
+    "head": 0.543112980352837
+  },
+  {
+    "file": "model_1d/frames/full_0156.svg",
+    "riserFile": "model_1d/frames/zoom_0156.svg",
+    "time": 7.80002195953519,
+    "Yfs": 0.7712879965852484,
+    "Yint": 0.59,
+    "head": 0.5469913390056774
+  },
+  {
+    "file": "model_1d/frames/full_0157.svg",
+    "riserFile": "model_1d/frames/zoom_0157.svg",
+    "time": 7.840007981024825,
+    "Yfs": 0.761718194766813,
+    "Yint": 0.5800000000000001,
+    "head": 0.5477630984736934
+  },
+  {
+    "file": "model_1d/frames/full_0158.svg",
+    "riserFile": "model_1d/frames/zoom_0158.svg",
+    "time": 7.900063034491782,
+    "Yfs": 0.7534690021372396,
+    "Yint": 0.5700000000000001,
+    "head": 0.5282299613918601
+  },
+  {
+    "file": "model_1d/frames/full_0159.svg",
+    "riserFile": "model_1d/frames/zoom_0159.svg",
+    "time": 7.9400295141348485,
+    "Yfs": 0.7346141702664513,
+    "Yint": 0.56,
+    "head": 0.5270210864238773
+  },
+  {
+    "file": "model_1d/frames/full_0160.svg",
+    "riserFile": "model_1d/frames/zoom_0160.svg",
+    "time": 8.000003455826139,
+    "Yfs": 0.7082931066653653,
+    "Yint": 0.54,
+    "head": 0.5428720281599816
+  },
+  {
+    "file": "model_1d/frames/full_0161.svg",
+    "riserFile": "model_1d/frames/zoom_0161.svg",
+    "time": 8.040109532811533,
+    "Yfs": 0.6938316028074258,
+    "Yint": 0.53,
+    "head": 0.5303794604003024
+  },
+  {
+    "file": "model_1d/frames/full_0162.svg",
+    "riserFile": "model_1d/frames/zoom_0162.svg",
+    "time": 8.10012028605874,
+    "Yfs": 0.6725758654436863,
+    "Yint": 0.51,
+    "head": 0.5098926961806295
+  },
+  {
+    "file": "model_1d/frames/full_0163.svg",
+    "riserFile": "model_1d/frames/zoom_0163.svg",
+    "time": 8.140071101828598,
+    "Yfs": 0.6588966568261383,
+    "Yint": 0.5,
+    "head": 0.4982834584904061
+  },
+  {
+    "file": "model_1d/frames/full_0164.svg",
+    "riserFile": "model_1d/frames/zoom_0164.svg",
+    "time": 8.200100067804863,
+    "Yfs": 0.6117790770346087,
+    "Yint": 0.48000000000000004,
+    "head": 0.5765845078020024
+  },
+  {
+    "file": "model_1d/frames/full_0165.svg",
+    "riserFile": "model_1d/frames/zoom_0165.svg",
+    "time": 8.240006214379587,
+    "Yfs": 0.6436751177072789,
+    "Yint": 0.49,
+    "head": 0.5113473490832819
+  },
+  {
+    "file": "model_1d/frames/full_0166.svg",
+    "riserFile": "model_1d/frames/zoom_0166.svg",
+    "time": 8.300004082278535,
+    "Yfs": 0.6657739002619281,
+    "Yint": 0.51,
+    "head": 0.4902449958450316
+  },
+  {
+    "file": "model_1d/frames/full_0167.svg",
+    "riserFile": "model_1d/frames/zoom_0167.svg",
+    "time": 8.340008048855351,
+    "Yfs": 0.6681832973144444,
+    "Yint": 0.5,
+    "head": 0.5001079708315138
+  },
+  {
+    "file": "model_1d/frames/full_0168.svg",
+    "riserFile": "model_1d/frames/zoom_0168.svg",
+    "time": 8.400029496856478,
+    "Yfs": 0.6719330936194042,
+    "Yint": 0.51,
+    "head": 0.5787400224078829
+  },
+  {
+    "file": "model_1d/frames/full_0169.svg",
+    "riserFile": "model_1d/frames/zoom_0169.svg",
+    "time": 8.440123616391979,
+    "Yfs": 0.6689921277401819,
+    "Yint": 0.5,
+    "head": 0.6280968656464075
+  },
+  {
+    "file": "model_1d/frames/full_0170.svg",
+    "riserFile": "model_1d/frames/zoom_0170.svg",
+    "time": 8.500007041421005,
+    "Yfs": 0.66752114202622,
+    "Yint": 0.5,
+    "head": 0.6910763747244533
+  },
+  {
+    "file": "model_1d/frames/full_0171.svg",
+    "riserFile": "model_1d/frames/zoom_0171.svg",
+    "time": 8.540087242759057,
+    "Yfs": 0.6769651397134911,
+    "Yint": 0.51,
+    "head": 0.6668564329492468
+  },
+  {
+    "file": "model_1d/frames/full_0172.svg",
+    "riserFile": "model_1d/frames/zoom_0172.svg",
+    "time": 8.60004465989034,
+    "Yfs": 0.7164708921050933,
+    "Yint": 0.52,
+    "head": 0.6155347340152463
+  },
+  {
+    "file": "model_1d/frames/full_0173.svg",
+    "riserFile": "model_1d/frames/zoom_0173.svg",
+    "time": 8.640113913064756,
+    "Yfs": 0.7264660226962303,
+    "Yint": 0.53,
+    "head": 0.6010885254517542
+  },
+  {
+    "file": "model_1d/frames/full_0174.svg",
+    "riserFile": "model_1d/frames/zoom_0174.svg",
+    "time": 8.700115319766077,
+    "Yfs": 0.7482505096161566,
+    "Yint": 0.54,
+    "head": 0.5952663128366706
+  },
+  {
+    "file": "model_1d/frames/full_0175.svg",
+    "riserFile": "model_1d/frames/zoom_0175.svg",
+    "time": 8.740091378916762,
+    "Yfs": 0.7733720468116387,
+    "Yint": 0.54,
+    "head": 0.5431452930206497
+  },
+  {
+    "file": "model_1d/frames/full_0176.svg",
+    "riserFile": "model_1d/frames/zoom_0176.svg",
+    "time": 8.800113818031715,
+    "Yfs": 0.8066407932842882,
+    "Yint": 0.61,
+    "head": 0.5639364555592258
+  },
+  {
+    "file": "model_1d/frames/full_0177.svg",
+    "riserFile": "model_1d/frames/zoom_0177.svg",
+    "time": 8.840102023719075,
+    "Yfs": 0.7987783508705604,
+    "Yint": 0.6,
+    "head": 0.586005046012891
+  },
+  {
+    "file": "model_1d/frames/full_0178.svg",
+    "riserFile": "model_1d/frames/zoom_0178.svg",
+    "time": 8.900028072588173,
+    "Yfs": 0.7458634210074042,
+    "Yint": 0.5700000000000001,
+    "head": 0.5726151299350681
+  },
+  {
+    "file": "model_1d/frames/full_0179.svg",
+    "riserFile": "model_1d/frames/zoom_0179.svg",
+    "time": 8.94003260242262,
+    "Yfs": 0.7409059279625492,
+    "Yint": 0.56,
+    "head": 0.5316304049620668
+  },
+  {
+    "file": "model_1d/frames/full_0180.svg",
+    "riserFile": "model_1d/frames/zoom_0180.svg",
+    "time": 9.0000202001713,
+    "Yfs": 0.7107520590134113,
+    "Yint": 0.55,
+    "head": 0.5224449214347148
+  },
+  {
+    "file": "model_1d/frames/full_0181.svg",
+    "riserFile": "model_1d/frames/zoom_0181.svg",
+    "time": 9.040117092883488,
+    "Yfs": 0.6858595934783945,
+    "Yint": 0.53,
+    "head": 0.527302515122672
+  },
+  {
+    "file": "model_1d/frames/full_0182.svg",
+    "riserFile": "model_1d/frames/zoom_0182.svg",
+    "time": 9.100045799444107,
+    "Yfs": 0.6445647247804707,
+    "Yint": 0.51,
+    "head": 0.5785005811551892
+  },
+  {
+    "file": "model_1d/frames/full_0183.svg",
+    "riserFile": "model_1d/frames/zoom_0183.svg",
+    "time": 9.14010346740182,
+    "Yfs": 0.6389723472577717,
+    "Yint": 0.51,
+    "head": 0.5866433507473003
+  },
+  {
+    "file": "model_1d/frames/full_0184.svg",
+    "riserFile": "model_1d/frames/zoom_0184.svg",
+    "time": 9.200111139490948,
+    "Yfs": 0.645977871802919,
+    "Yint": 0.52,
+    "head": 0.5679544412407549
+  },
+  {
+    "file": "model_1d/frames/full_0185.svg",
+    "riserFile": "model_1d/frames/zoom_0185.svg",
+    "time": 9.240004015326566,
+    "Yfs": 0.6551622014037042,
+    "Yint": 0.52,
+    "head": 0.5775388702253426
+  },
+  {
+    "file": "model_1d/frames/full_0186.svg",
+    "riserFile": "model_1d/frames/zoom_0186.svg",
+    "time": 9.300036548070166,
+    "Yfs": 0.6647070784134812,
+    "Yint": 0.53,
+    "head": 0.6000965658522073
+  },
+  {
+    "file": "model_1d/frames/full_0187.svg",
+    "riserFile": "model_1d/frames/zoom_0187.svg",
+    "time": 9.340108254651462,
+    "Yfs": 0.6845055731695568,
+    "Yint": 0.54,
+    "head": 0.5971973313519284
+  },
+  {
+    "file": "model_1d/frames/full_0188.svg",
+    "riserFile": "model_1d/frames/zoom_0188.svg",
+    "time": 9.400014873481688,
+    "Yfs": 0.6945251096733722,
+    "Yint": 0.55,
+    "head": 0.5642172962149815
+  },
+  {
+    "file": "model_1d/frames/full_0189.svg",
+    "riserFile": "model_1d/frames/zoom_0189.svg",
+    "time": 9.440053852874588,
+    "Yfs": 0.7045183769839656,
+    "Yint": 0.56,
+    "head": 0.5707694930297434
+  },
+  {
+    "file": "model_1d/frames/full_0190.svg",
+    "riserFile": "model_1d/frames/zoom_0190.svg",
+    "time": 9.50000909049801,
+    "Yfs": 0.7145495338860919,
+    "Yint": 0.5700000000000001,
+    "head": 0.6086729387574925
+  },
+  {
+    "file": "model_1d/frames/full_0191.svg",
+    "riserFile": "model_1d/frames/zoom_0191.svg",
+    "time": 9.54011771025906,
+    "Yfs": 0.7245210746138174,
+    "Yint": 0.5800000000000001,
+    "head": 0.6259514101920511
+  },
+  {
+    "file": "model_1d/frames/full_0192.svg",
+    "riserFile": "model_1d/frames/zoom_0192.svg",
+    "time": 9.600005178716772,
+    "Yfs": 0.7362118159340537,
+    "Yint": 0.59,
+    "head": 0.6227505556959487
+  },
+  {
+    "file": "model_1d/frames/full_0193.svg",
+    "riserFile": "model_1d/frames/zoom_0193.svg",
+    "time": 9.640011344801191,
+    "Yfs": 0.7477043953183888,
+    "Yint": 0.6,
+    "head": 0.600137527190239
+  },
+  {
+    "file": "model_1d/frames/full_0194.svg",
+    "riserFile": "model_1d/frames/zoom_0194.svg",
+    "time": 9.700047282240057,
+    "Yfs": 0.7468022931512651,
+    "Yint": 0.62,
+    "head": 0.6324450775393874
+  },
+  {
+    "file": "model_1d/frames/full_0195.svg",
+    "riserFile": "model_1d/frames/zoom_0195.svg",
+    "time": 9.740106106263362,
+    "Yfs": 0.755206398166978,
+    "Yint": 0.62,
+    "head": 0.6415475615017902
+  },
+  {
+    "file": "model_1d/frames/full_0196.svg",
+    "riserFile": "model_1d/frames/zoom_0196.svg",
+    "time": 9.800087305518767,
+    "Yfs": 0.7534039242289209,
+    "Yint": 0.63,
+    "head": 0.6311395242785883
+  },
+  {
+    "file": "model_1d/frames/full_0197.svg",
+    "riserFile": "model_1d/frames/zoom_0197.svg",
+    "time": 9.840055292342594,
+    "Yfs": 0.7520467747297601,
+    "Yint": 0.63,
+    "head": 0.6131263831794885
+  },
+  {
+    "file": "model_1d/frames/full_0198.svg",
+    "riserFile": "model_1d/frames/zoom_0198.svg",
+    "time": 9.900012354754631,
+    "Yfs": 0.7331207257170481,
+    "Yint": 0.62,
+    "head": 0.6194448824703108
+  },
+  {
+    "file": "model_1d/frames/full_0199.svg",
+    "riserFile": "model_1d/frames/zoom_0199.svg",
+    "time": 9.940083071359975,
+    "Yfs": 0.7112991791209258,
+    "Yint": 0.61,
+    "head": 0.6264199625769663
+  },
+  {
+    "file": "model_1d/frames/full_0200.svg",
+    "riserFile": "model_1d/frames/zoom_0200.svg",
+    "time": 10.000043106634024,
+    "Yfs": 0.7049572614475469,
+    "Yint": 0.61,
+    "head": 0.6137628478288503
+  },
+  {
+    "file": "model_1d/frames/full_0201.svg",
+    "riserFile": "model_1d/frames/zoom_0201.svg",
+    "time": 10.040114427971847,
+    "Yfs": 0.7012905428003144,
+    "Yint": 0.61,
+    "head": 0.5976475205295361
+  },
+  {
+    "file": "model_1d/frames/full_0202.svg",
+    "riserFile": "model_1d/frames/zoom_0202.svg",
+    "time": 10.100020111088876,
+    "Yfs": 0.6853049084742165,
+    "Yint": 0.6,
+    "head": 0.5905427645211414
+  },
+  {
+    "file": "model_1d/frames/full_0203.svg",
+    "riserFile": "model_1d/frames/zoom_0203.svg",
+    "time": 10.14006726525766,
+    "Yfs": 0.6708685588997224,
+    "Yint": 0.59,
+    "head": 0.5963871416118224
+  },
+  {
+    "file": "model_1d/frames/full_0204.svg",
+    "riserFile": "model_1d/frames/zoom_0204.svg",
+    "time": 10.200096340699286,
+    "Yfs": 0.6552365176088971,
+    "Yint": 0.5800000000000001,
+    "head": 0.5906680830643598
+  },
+  {
+    "file": "model_1d/frames/full_0205.svg",
+    "riserFile": "model_1d/frames/zoom_0205.svg",
+    "time": 10.240035280747819,
+    "Yfs": 0.6518559134315015,
+    "Yint": 0.5800000000000001,
+    "head": 0.5793608321456207
+  },
+  {
+    "file": "model_1d/frames/full_0206.svg",
+    "riserFile": "model_1d/frames/zoom_0206.svg",
+    "time": 10.30003344044208,
+    "Yfs": 0.6356534170105776,
+    "Yint": 0.5700000000000001,
+    "head": 0.5647319003741013
+  },
+  {
+    "file": "model_1d/frames/full_0207.svg",
+    "riserFile": "model_1d/frames/zoom_0207.svg",
+    "time": 10.340058887113527,
+    "Yfs": 0.6208423593238674,
+    "Yint": 0.56,
+    "head": 0.565918738205681
+  },
+  {
+    "file": "model_1d/frames/full_0208.svg",
+    "riserFile": "model_1d/frames/zoom_0208.svg",
+    "time": 10.400058500388907,
+    "Yfs": 0.604161925510878,
+    "Yint": 0.55,
+    "head": 0.5659620189507277
+  },
+  {
+    "file": "model_1d/frames/full_0209.svg",
+    "riserFile": "model_1d/frames/zoom_0209.svg",
+    "time": 10.440117352959668,
+    "Yfs": 0.6007044866878202,
+    "Yint": 0.55,
+    "head": 0.5591855530229431
+  },
+  {
+    "file": "model_1d/frames/full_0210.svg",
+    "riserFile": "model_1d/frames/zoom_0210.svg",
+    "time": 10.500024430782181,
+    "Yfs": 0.5847172381638424,
+    "Yint": 0.54,
+    "head": 0.5485804116099384
+  },
+  {
+    "file": "model_1d/frames/full_0211.svg",
+    "riserFile": "model_1d/frames/zoom_0211.svg",
+    "time": 10.540084651037121,
+    "Yfs": 0.5708257421683659,
+    "Yint": 0.53,
+    "head": 0.546612363297519
+  },
+  {
+    "file": "model_1d/frames/full_0212.svg",
+    "riserFile": "model_1d/frames/zoom_0212.svg",
+    "time": 10.600004541332803,
+    "Yfs": 0.5663542911129362,
+    "Yint": 0.53,
+    "head": 0.5510006548179188
+  },
+  {
+    "file": "model_1d/frames/full_0213.svg",
+    "riserFile": "model_1d/frames/zoom_0213.svg",
+    "time": 10.640083985929913,
+    "Yfs": 0.5530079163529196,
+    "Yint": 0.52,
+    "head": 0.5509648485074874
+  },
+  {
+    "file": "model_1d/frames/full_0214.svg",
+    "riserFile": "model_1d/frames/zoom_0214.svg",
+    "time": 10.700026315670376,
+    "Yfs": 0.548460455817486,
+    "Yint": 0.52,
+    "head": 0.5437698525476502
+  },
+  {
+    "file": "model_1d/frames/full_0215.svg",
+    "riserFile": "model_1d/frames/zoom_0215.svg",
+    "time": 10.740110918985534,
+    "Yfs": 0.545816304760924,
+    "Yint": 0.52,
+    "head": 0.5424310232568723
+  },
+  {
+    "file": "model_1d/frames/full_0216.svg",
+    "riserFile": "model_1d/frames/zoom_0216.svg",
+    "time": 10.800045673011994,
+    "Yfs": 0.5313956725864071,
+    "Yint": 0.51,
+    "head": 0.5476018439493527
+  },
+  {
+    "file": "model_1d/frames/full_0217.svg",
+    "riserFile": "model_1d/frames/zoom_0217.svg",
+    "time": 10.84009644155063,
+    "Yfs": 0.5395029848395766,
+    "Yint": 0.51,
+    "head": 0.5509238520810591
+  },
+  {
+    "file": "model_1d/frames/full_0218.svg",
+    "riserFile": "model_1d/frames/zoom_0218.svg",
+    "time": 10.900077815108133,
+    "Yfs": 0.5364662187775392,
+    "Yint": 0.52,
+    "head": 0.5512759759064255
+  },
+  {
+    "file": "model_1d/frames/full_0219.svg",
+    "riserFile": "model_1d/frames/zoom_0219.svg",
+    "time": 10.940091803744048,
+    "Yfs": 0.534389069779768,
+    "Yint": 0.52,
+    "head": 0.5508174023854726
+  },
+  {
+    "file": "model_1d/frames/full_0220.svg",
+    "riserFile": "model_1d/frames/zoom_0220.svg",
+    "time": 11.000025162985587,
+    "Yfs": 0.5312975475220577,
+    "Yint": 0.52,
+    "head": 0.5537354990865331
+  },
+  {
+    "file": "model_1d/frames/full_0221.svg",
+    "riserFile": "model_1d/frames/zoom_0221.svg",
+    "time": 11.040124051805453,
+    "Yfs": 0.5294710042089373,
+    "Yint": 0.52,
+    "head": 0.5562785740331871
+  },
+  {
+    "file": "model_1d/frames/full_0222.svg",
+    "riserFile": "model_1d/frames/zoom_0222.svg",
+    "time": 11.1001115431093,
+    "Yfs": 0.5376464176177458,
+    "Yint": 0.52,
+    "head": 0.557407523724072
+  },
+  {
+    "file": "model_1d/frames/full_0223.svg",
+    "riserFile": "model_1d/frames/zoom_0223.svg",
+    "time": 11.140060457782148,
+    "Yfs": 0.5368881269621821,
+    "Yint": 0.53,
+    "head": 0.5584571040699277
+  },
+  {
+    "file": "model_1d/frames/full_0224.svg",
+    "riserFile": "model_1d/frames/zoom_0224.svg",
+    "time": 11.200038368409166,
+    "Yfs": 0.5459559885924318,
+    "Yint": 0.53,
+    "head": 0.562197293382314
+  },
+  {
+    "file": "model_1d/frames/full_0225.svg",
+    "riserFile": "model_1d/frames/zoom_0225.svg",
+    "time": 11.24010891674981,
+    "Yfs": 0.5454278006281167,
+    "Yint": 0.53,
+    "head": 0.5686303136315576
+  },
+  {
+    "file": "model_1d/frames/full_0226.svg",
+    "riserFile": "model_1d/frames/zoom_0226.svg",
+    "time": 11.300070775347505,
+    "Yfs": 0.5548436245363954,
+    "Yint": 0.54,
+    "head": 0.5761669799604607
+  },
+  {
+    "file": "model_1d/frames/full_0227.svg",
+    "riserFile": "model_1d/frames/zoom_0227.svg",
+    "time": 11.340123410841263,
+    "Yfs": 0.5544834382449644,
+    "Yint": 0.54,
+    "head": 0.5802818814347552
+  },
+  {
+    "file": "model_1d/frames/full_0228.svg",
+    "riserFile": "model_1d/frames/zoom_0228.svg",
+    "time": 11.400075660602512,
+    "Yfs": 0.5641578797255119,
+    "Yint": 0.54,
+    "head": 0.5839223208773173
+  },
+  {
+    "file": "model_1d/frames/full_0229.svg",
+    "riserFile": "model_1d/frames/zoom_0229.svg",
+    "time": 11.440004709958405,
+    "Yfs": 0.5739793536436247,
+    "Yint": 0.42000000000000004,
+    "head": 0.5867988185553812
+  },
+  {
+    "file": "model_1d/frames/full_0230.svg",
+    "riserFile": "model_1d/frames/zoom_0230.svg",
+    "time": 11.50009978661708,
+    "Yfs": 0.5737887858070588,
+    "Yint": 0.44,
+    "head": 0.5928417981175006
+  },
+  {
+    "file": "model_1d/frames/full_0231.svg",
+    "riserFile": "model_1d/frames/zoom_0231.svg",
+    "time": 11.540043417793319,
+    "Yfs": 0.5837107680854928,
+    "Yint": 0.45,
+    "head": 0.5948762720309952
+  },
+  {
+    "file": "model_1d/frames/full_0232.svg",
+    "riserFile": "model_1d/frames/zoom_0232.svg",
+    "time": 11.600040413268625,
+    "Yfs": 0.5835914553071136,
+    "Yint": 0.46,
+    "head": 0.5970231979464714
+  },
+  {
+    "file": "model_1d/frames/full_0233.svg",
+    "riserFile": "model_1d/frames/zoom_0233.svg",
+    "time": 11.640013726431473,
+    "Yfs": 0.59354591008343,
+    "Yint": 0.47000000000000003,
+    "head": 0.5985218877418099
+  },
+  {
+    "file": "model_1d/frames/full_0234.svg",
+    "riserFile": "model_1d/frames/zoom_0234.svg",
+    "time": 11.700060838146351,
+    "Yfs": 0.5934704583571866,
+    "Yint": 0.49,
+    "head": 0.6015087160967404
+  },
+  {
+    "file": "model_1d/frames/full_0235.svg",
+    "riserFile": "model_1d/frames/zoom_0235.svg",
+    "time": 11.740060491348032,
+    "Yfs": 0.6034455102379239,
+    "Yint": 0.5,
+    "head": 0.602875512104956
+  },
+  {
+    "file": "model_1d/frames/full_0236.svg",
+    "riserFile": "model_1d/frames/zoom_0236.svg",
+    "time": 11.800020694235041,
+    "Yfs": 0.6034021838221282,
+    "Yint": 0.51,
+    "head": 0.6042945228817463
+  },
+  {
+    "file": "model_1d/frames/full_0237.svg",
+    "riserFile": "model_1d/frames/zoom_0237.svg",
+    "time": 11.840045136879075,
+    "Yfs": 0.6033779011669993,
+    "Yint": 0.52,
+    "head": 0.6034839856917394
+  },
+  {
+    "file": "model_1d/frames/full_0238.svg",
+    "riserFile": "model_1d/frames/zoom_0238.svg",
+    "time": 11.900038424224444,
+    "Yfs": 0.6133543276523493,
+    "Yint": 0.53,
+    "head": 0.6010492859588159
+  },
+  {
+    "file": "model_1d/frames/full_0239.svg",
+    "riserFile": "model_1d/frames/zoom_0239.svg",
+    "time": 11.940105302444001,
+    "Yfs": 0.6133240521598539,
+    "Yint": 0.54,
+    "head": 0.6028587161505181
+  },
+  {
+    "file": "model_1d/frames/full_0240.svg",
+    "riserFile": "model_1d/frames/zoom_0240.svg",
+    "time": 12.000006044651633,
+    "Yfs": 0.6131366246654361,
+    "Yint": 0.5700000000000001,
+    "head": 0.6044147692972163
+  },
+  {
+    "file": "model_1d/frames/full_0241.svg",
+    "riserFile": "model_1d/frames/zoom_0241.svg",
+    "time": 12.040009067461696,
+    "Yfs": 0.6120903571523415,
+    "Yint": 0.5800000000000001,
+    "head": 0.600785882569951
+  },
+  {
+    "file": "model_1d/frames/full_0242.svg",
+    "riserFile": "model_1d/frames/zoom_0242.svg",
+    "time": 12.100006880734316,
+    "Yfs": 0.6102477643326332,
+    "Yint": 0.0,
+    "head": 0.5824004492494379
+  },
+  {
+    "file": "model_1d/frames/full_0243.svg",
+    "riserFile": "model_1d/frames/zoom_0243.svg",
+    "time": 12.140008986631418,
+    "Yfs": 0.6100597259513987,
+    "Yint": 0.0,
+    "head": 0.5645276803970785
+  },
+  {
+    "file": "model_1d/frames/full_0244.svg",
+    "riserFile": "model_1d/frames/zoom_0244.svg",
+    "time": 12.2000870237582,
+    "Yfs": 0.6100004799179254,
+    "Yint": 0.0,
+    "head": 0.5142607773164232
+  },
+  {
+    "file": "model_1d/frames/full_0245.svg",
+    "riserFile": "model_1d/frames/zoom_0245.svg",
+    "time": 12.240091654885866,
+    "Yfs": 0.624073083364534,
+    "Yint": 0.02,
+    "head": 0.49747111601895194
+  },
+  {
+    "file": "model_1d/frames/full_0246.svg",
+    "riserFile": "model_1d/frames/zoom_0246.svg",
+    "time": 12.300107685662299,
+    "Yfs": 0.6246572563188566,
+    "Yint": 0.06,
+    "head": 0.5426631297556777
+  },
+  {
+    "file": "model_1d/frames/full_0247.svg",
+    "riserFile": "model_1d/frames/zoom_0247.svg",
+    "time": 12.34010675448245,
+    "Yfs": 0.6317504924712949,
+    "Yint": 0.09000000000000001,
+    "head": 0.5695990045193899
+  },
+  {
+    "file": "model_1d/frames/full_0248.svg",
+    "riserFile": "model_1d/frames/zoom_0248.svg",
+    "time": 12.400019318175074,
+    "Yfs": 0.6461185092885011,
+    "Yint": 0.14,
+    "head": 0.5731256473601124
+  },
+  {
+    "file": "model_1d/frames/full_0249.svg",
+    "riserFile": "model_1d/frames/zoom_0249.svg",
+    "time": 12.440048451531945,
+    "Yfs": 0.6504487950236666,
+    "Yint": 0.19,
+    "head": 0.5653402375773466
+  },
+  {
+    "file": "model_1d/frames/full_0250.svg",
+    "riserFile": "model_1d/frames/zoom_0250.svg",
+    "time": 12.500017419316624,
+    "Yfs": 0.6767341990712578,
+    "Yint": 0.25,
+    "head": 0.5620193380107975
+  },
+  {
+    "file": "model_1d/frames/full_0251.svg",
+    "riserFile": "model_1d/frames/zoom_0251.svg",
+    "time": 12.540021509042845,
+    "Yfs": 0.6912925080747271,
+    "Yint": 0.31,
+    "head": 0.5512246387144226
+  },
+  {
+    "file": "model_1d/frames/full_0252.svg",
+    "riserFile": "model_1d/frames/zoom_0252.svg",
+    "time": 12.600116584887195,
+    "Yfs": 0.7247562155842172,
+    "Yint": 0.38,
+    "head": 0.5495585426022274
+  },
+  {
+    "file": "model_1d/frames/full_0253.svg",
+    "riserFile": "model_1d/frames/zoom_0253.svg",
+    "time": 12.640024880373623,
+    "Yfs": 0.7149640586251306,
+    "Yint": 0.42000000000000004,
+    "head": 0.611866128099146
+  },
+  {
+    "file": "model_1d/frames/full_0254.svg",
+    "riserFile": "model_1d/frames/zoom_0254.svg",
+    "time": 12.700054312918088,
+    "Yfs": 0.7052395757445562,
+    "Yint": 0.46,
+    "head": 0.6420698604358173
+  },
+  {
+    "file": "model_1d/frames/full_0255.svg",
+    "riserFile": "model_1d/frames/zoom_0255.svg",
+    "time": 12.740005338752596,
+    "Yfs": 0.7152692509903831,
+    "Yint": 0.48000000000000004,
+    "head": 0.6227249722630499
+  },
+  {
+    "file": "model_1d/frames/full_0256.svg",
+    "riserFile": "model_1d/frames/zoom_0256.svg",
+    "time": 12.800091054771864,
+    "Yfs": 0.7052238849449715,
+    "Yint": 0.59,
+    "head": 0.6167018240263467
+  },
+  {
+    "file": "model_1d/frames/full_0257.svg",
+    "riserFile": "model_1d/frames/zoom_0257.svg",
+    "time": 12.840091931283064,
+    "Yfs": 0.7053761298744872,
+    "Yint": 0.5800000000000001,
+    "head": 0.6190116013237199
+  },
+  {
+    "file": "model_1d/frames/full_0258.svg",
+    "riserFile": "model_1d/frames/zoom_0258.svg",
+    "time": 12.900076534640483,
+    "Yfs": 0.7055213084497806,
+    "Yint": 0.59,
+    "head": 0.6084783372616401
+  },
+  {
+    "file": "model_1d/frames/full_0259.svg",
+    "riserFile": "model_1d/frames/zoom_0259.svg",
+    "time": 12.940028755911456,
+    "Yfs": 0.7056050856853422,
+    "Yint": 0.59,
+    "head": 0.5882451032159597
+  },
+  {
+    "file": "model_1d/frames/full_0260.svg",
+    "riserFile": "model_1d/frames/zoom_0260.svg",
+    "time": 13.0,
+    "Yfs": 0.6906147426380154,
+    "Yint": 0.6,
+    "head": 0.5779955661990787
+  }
+]

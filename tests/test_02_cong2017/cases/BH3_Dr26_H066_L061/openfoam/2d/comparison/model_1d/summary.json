@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "case": "BH3_Dr26_H066_L061",
+  "paper_run": "B-H3",
+  "model": "project 1D two-fluid network model",
+  "comparison_role": "geometry-aligned model prediction; not an OpenFOAM validation result",
+  "status": "COMPLETE",
+  "runtime_s": 530.2,
+  "geometry_m": {
+    "D": 0.05,
+    "Dr": 0.026,
+    "riser_height": 1.8,
+    "tank_to_riser": 3.47,
+    "riser_to_valve": 2.51,
+    "valve_to_cap_L0": 0.61,
+    "total_pipe": 6.590000000000001
+  },
+  "initial_conditions": {
+    "paper_H0_above_pipe_invert_m": 0.66,
+    "model_head_above_pipe_crown_m": 0.61,
+    "initial_riser_water_level_above_pipe_crown_m": 0.61,
+    "pocket_gauge_head": 0.0,
+    "valve_opening_duration_s": 0.2
+  },
+  "dimensionless_air_volume": 3.418056302671687,
+  "metrics": {
+    "Ta_model_s": 7.240085590749423,
+    "v_fs_model_m_per_s": 0.5872240560121365,
+    "v_int_model_m_per_s": 1.0740044595100642,
+    "Yfs_max_m": 0.8066407932842882,
+    "Yint_max_m": 0.63,
+    "geyser_model": false,
+    "t_rim_model_s": null
+  },
+  "experiment_targets": {
+    "Ta_s": 8.18,
+    "v_fs_m_per_s": 0.657,
+    "v_int_m_per_s": 0.916,
+    "geyser_observed": true
+  },
+  "artifacts": {
+    "frames_npz": "paper_layout_1d_frames.npz"
+  }
+}

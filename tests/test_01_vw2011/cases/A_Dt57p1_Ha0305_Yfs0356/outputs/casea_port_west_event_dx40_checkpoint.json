@@ -1,0 +1,20 @@
+{
+  "checkpoint": "E:\\Geysering\\tests\\test_01_vw2011\\cases\\A_Dt57p1_Ha0305_Yfs0356\\outputs\\casea_port_west_event_dx40_checkpoint.npz",
+  "event_calls": 320,
+  "time": 6.38262096518796,
+  "cells": 100,
+  "dx": 0.040060000000000005,
+  "physical_port_west_x": 3.48745,
+  "discrete_event_face_x": 3.4852200000000004,
+  "event_position_error": -0.00222999999999951,
+  "interface_speed": 0.46093498023040086,
+  "interface_residual_linf": 1.643794489089058e-16,
+  "liquid_volume": 0.024118593271281987,
+  "initial_liquid_volume": 0.02411859327128197,
+  "liquid_volume_error": 1.734723475976807e-17,
+  "core_cumulative_projection_diagnostic": -0.000967692795300297,
+  "gas_mass": 0.004697033484776326,
+  "gas_volume": 0.003709579213036298,
+  "gas_pressure_abs": 107456.30170129846,
+  "nonlinear_converged": true
+}

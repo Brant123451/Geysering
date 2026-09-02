@@ -21,6 +21,9 @@ git config --global core.longpaths true
 - Current 1D model implementations, test scripts, OpenFOAM setup/source files, and project documentation.
 - Compact CSV, JSON, NPZ, HTML, and image evidence needed for the active validation figures.
 - Case A interactive comparison page and its rendered frame resources.
+- Current Case B aligned 1D/2D frames and formal connected-core metrics.
+- Cong BH1/BH3/BH6 manuscript comparisons, canonical metrics, and the BH6 interactive viewer resources.
+- Liu A2 comparison outputs plus compact B3 and C9 reports and manifests.
 - Intentional removal of obsolete Case A comparison HTML variants.
 
 ## Large local data not suitable for the normal Git snapshot

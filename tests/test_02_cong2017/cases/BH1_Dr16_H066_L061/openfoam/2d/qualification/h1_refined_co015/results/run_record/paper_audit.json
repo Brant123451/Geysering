@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "case": "BH1_Dr16_H066_L061",
+  "paper_run": "B-H1",
+  "run_id": "h1_refined_co015",
+  "config": "/mnt/e/Geysering/tests/test_02_cong2017/cases/BH1_Dr16_H066_L061/openfoam/2d/qualification/h1_refined_co015/case_config.json",
+  "status": "PASS",
+  "checks": {
+    "D_0p05": true,
+    "Dr_0p016": true,
+    "H0_0p66": true,
+    "L0_0p61": true,
+    "tee_x_3p47": true,
+    "valve_x_5p98": true,
+    "cap_x_6p59": true,
+    "free_surface_z_0p635": true,
+    "pocket_atmospheric": true,
+    "area_ratio_mapping": true,
+    "control_end_time": true,
+    "control_max_Courant": true,
+    "control_max_alpha_Courant": true,
+    "control_max_delta_t": true,
+    "system/setFieldsDict:box (5.98": true,
+    "system/setFieldsDict:0.635": true,
+    "system/setFieldsDict:101325": true,
+    "constant/valveProperties:sineSquaredAreaForchheimer": true,
+    "constant/valveProperties:openingDuration 0.2": true,
+    "constant/valveProperties:referenceFlowArea 0.00005": true,
+    "0.orig/p_rgh:107541.89130": true,
+    "0.orig/p_rgh:101332.42484": true,
+    "mesh_nonempty": true,
+    "standard_checkMesh_pass": true
+  },
+  "mesh": {
+    "schema_version": 1,
+    "cells_total": 155820,
+    "cell_counts": {
+      "nx_left": 1387,
+      "nx_junction": 20,
+      "nx_mid": 1003,
+      "nx_pocket": 244,
+      "nz_pipe": 30,
+      "nz_riser": 2400,
+      "nx_external_left": 37,
+      "nx_external_right": 37,
+      "nz_external": 300
+    },
+    "paper_geometry_m": {
+      "pipe_length": 6.59,
+      "tee_axis_x": 3.47,
+      "release_valve_x": 5.98,
+      "physical_riser_diameter": 0.016
+    },
+    "planar_mapping_m": {
+      "riser_width": 0.00512,
+      "extrusion": 0.001
+    }
+  },
+  "declared_2d_limitation": "The 2D plane preserves the circular area ratio, not the drawn 16 mm riser width or 3D annular film."
+}

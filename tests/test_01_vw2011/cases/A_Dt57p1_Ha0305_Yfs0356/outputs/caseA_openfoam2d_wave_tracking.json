@@ -1,0 +1,7803 @@
+{
+  "method": {
+    "source": "OpenFOAM VTK_CASEA_HTML alpha.water cell field",
+    "interface_definition": "planar-pipe equivalent liquid depth h=D*column-area-weighted(alpha.water)",
+    "diagnostic_resolve_window_m": 0.025,
+    "diagnostic_resolve_window_cells": 7,
+    "background_trend_window_m": 0.3,
+    "background_trend_window_cells": 75,
+    "wave_region_m": [
+      2.45,
+      3.45
+    ],
+    "crest_prominence_m": 0.0015,
+    "minimum_crest_separation_m": 0.08,
+    "wave_detection_peak_to_peak_threshold_m": 0.004,
+    "note": "Smoothing is used only to identify the archived 2-D interface; it is not applied to either numerical solver."
+  },
+  "frame_count": 261,
+  "time_interval_s": [
+    0.0,
+    13.0
+  ],
+  "native_axial_spacing_m": 0.004004999999999814,
+  "frames": [
+    {
+      "index": 0,
+      "time_s": 0.0,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 1,
+      "time_s": 0.05,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 2,
+      "time_s": 0.1,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 3,
+      "time_s": 0.15,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 4,
+      "time_s": 0.2,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 5,
+      "time_s": 0.25,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 6,
+      "time_s": 0.3,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 7,
+      "time_s": 0.35,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 8,
+      "time_s": 0.4,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 9,
+      "time_s": 0.45,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 10,
+      "time_s": 0.5,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 11,
+      "time_s": 0.55,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 12,
+      "time_s": 0.6,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 13,
+      "time_s": 0.65,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 14,
+      "time_s": 0.7,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 15,
+      "time_s": 0.75,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 16,
+      "time_s": 0.8,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 17,
+      "time_s": 0.85,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 18,
+      "time_s": 0.9,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 19,
+      "time_s": 0.95,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 20,
+      "time_s": 1.0,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 21,
+      "time_s": 1.05,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 22,
+      "time_s": 1.1,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 23,
+      "time_s": 1.15,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 24,
+      "time_s": 1.2,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 25,
+      "time_s": 1.25,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 26,
+      "time_s": 1.3,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 27,
+      "time_s": 1.35,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 28,
+      "time_s": 1.4,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 29,
+      "time_s": 1.45,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 30,
+      "time_s": 1.5,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 31,
+      "time_s": 1.55,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 32,
+      "time_s": 1.6,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 33,
+      "time_s": 1.65,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 34,
+      "time_s": 1.7,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 35,
+      "time_s": 1.75,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 36,
+      "time_s": 1.8,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 37,
+      "time_s": 1.85,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 38,
+      "time_s": 1.9,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 39,
+      "time_s": 1.95,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 40,
+      "time_s": 2.0,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 41,
+      "time_s": 2.05,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 42,
+      "time_s": 2.1,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 43,
+      "time_s": 2.15,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 44,
+      "time_s": 2.2,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 45,
+      "time_s": 2.25,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 46,
+      "time_s": 2.3,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 47,
+      "time_s": 2.35,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 48,
+      "time_s": 2.4,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 49,
+      "time_s": 2.45,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 50,
+      "time_s": 2.5,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 51,
+      "time_s": 2.55,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 52,
+      "time_s": 2.6,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 53,
+      "time_s": 2.65,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 54,
+      "time_s": 2.7,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 55,
+      "time_s": 2.75,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 56,
+      "time_s": 2.8,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 57,
+      "time_s": 2.85,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 58,
+      "time_s": 2.9,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 59,
+      "time_s": 2.95,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 60,
+      "time_s": 3.0,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 61,
+      "time_s": 3.05,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 62,
+      "time_s": 3.1,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 63,
+      "time_s": 3.15,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 64,
+      "time_s": 3.2,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 65,
+      "time_s": 3.25,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 66,
+      "time_s": 3.3,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 67,
+      "time_s": 3.35,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 68,
+      "time_s": 3.4,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 69,
+      "time_s": 3.45,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 70,
+      "time_s": 3.5,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 71,
+      "time_s": 3.55,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 72,
+      "time_s": 3.6,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 73,
+      "time_s": 3.65,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 74,
+      "time_s": 3.7,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 75,
+      "time_s": 3.75,
+      "residual_peak_to_peak_m": 0.0,
+      "residual_rms_m": 7.008282842946301e-15,
+      "dominant_wavelength_m": null,
+      "dominant_mode_energy_fraction": 0.0,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 76,
+      "time_s": 3.8,
+      "residual_peak_to_peak_m": 1.4240505325779917e-06,
+      "residual_rms_m": 9.006486416568832e-08,
+      "dominant_wavelength_m": 0.5000000000000004,
+      "dominant_mode_energy_fraction": 0.8249235153039591,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 77,
+      "time_s": 3.85,
+      "residual_peak_to_peak_m": 0.00043389887621937684,
+      "residual_rms_m": 3.047224444922263e-05,
+      "dominant_wavelength_m": 0.5000000000000004,
+      "dominant_mode_energy_fraction": 0.8511590147506881,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 78,
+      "time_s": 3.9,
+      "residual_peak_to_peak_m": 0.0018248861326838062,
+      "residual_rms_m": 0.00019829216907266354,
+      "dominant_wavelength_m": 0.142857142857143,
+      "dominant_mode_energy_fraction": 0.10328985381082977,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 79,
+      "time_s": 3.95,
+      "residual_peak_to_peak_m": 0.0024102525697572985,
+      "residual_rms_m": 0.0003942118378027486,
+      "dominant_wavelength_m": 0.2500000000000002,
+      "dominant_mode_energy_fraction": 0.10822134551416247,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 80,
+      "time_s": 4.0,
+      "residual_peak_to_peak_m": 0.0024222911879618336,
+      "residual_rms_m": 0.0004929338425391714,
+      "dominant_wavelength_m": 0.33333333333333365,
+      "dominant_mode_energy_fraction": 0.12729745284407676,
+      "crest_count": 0,
+      "trough_count": 0,
+      "crest_x_m": [],
+      "trough_x_m": [],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [],
+      "wave_detected": false
+    },
+    {
+      "index": 81,
+      "time_s": 4.05,
+      "residual_peak_to_peak_m": 0.0041831880957610285,
+      "residual_rms_m": 0.0005168907940587544,
+      "dominant_wavelength_m": 0.5000000000000004,
+      "dominant_mode_energy_fraction": 0.14887737033199905,
+      "crest_count": 0,
+      "trough_count": 1,
+      "crest_x_m": [],
+      "trough_x_m": [
+        2.50096
+      ],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [
+        0.002432
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 82,
+      "time_s": 4.1,
+      "residual_peak_to_peak_m": 0.00915070987736119,
+      "residual_rms_m": 0.0008946486097971082,
+      "dominant_wavelength_m": 0.5000000000000004,
+      "dominant_mode_energy_fraction": 0.15380919275182542,
+      "crest_count": 0,
+      "trough_count": 1,
+      "crest_x_m": [],
+      "trough_x_m": [
+        2.524975
+      ],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [
+        0.002435
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 83,
+      "time_s": 4.15,
+      "residual_peak_to_peak_m": 0.014369411357160203,
+      "residual_rms_m": 0.0018052873267784004,
+      "dominant_wavelength_m": 0.2500000000000002,
+      "dominant_mode_energy_fraction": 0.13861993544859613,
+      "crest_count": 0,
+      "trough_count": 1,
+      "crest_x_m": [],
+      "trough_x_m": [
+        2.54899
+      ],
+      "crest_prominence_m": [],
+      "trough_prominence_m": [
+        0.002432
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 84,
+      "time_s": 4.2,
+      "residual_peak_to_peak_m": 0.014689659480138964,
+      "residual_rms_m": 0.0019280152020601216,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.16194824747065917,
+      "crest_count": 1,
+      "trough_count": 1,
+      "crest_x_m": [
+        2.48095
+      ],
+      "trough_x_m": [
+        2.573
+      ],
+      "crest_prominence_m": [
+        0.01431
+      ],
+      "trough_prominence_m": [
+        0.002423
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 85,
+      "time_s": 4.25,
+      "residual_peak_to_peak_m": 0.017855807213036715,
+      "residual_rms_m": 0.002082034525901508,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.17889849339852806,
+      "crest_count": 1,
+      "trough_count": 1,
+      "crest_x_m": [
+        2.504965
+      ],
+      "trough_x_m": [
+        2.59301
+      ],
+      "crest_prominence_m": [
+        0.014127
+      ],
+      "trough_prominence_m": [
+        0.002414
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 86,
+      "time_s": 4.3,
+      "residual_peak_to_peak_m": 0.017981007979139603,
+      "residual_rms_m": 0.00225144353573326,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.1831433516413222,
+      "crest_count": 1,
+      "trough_count": 1,
+      "crest_x_m": [
+        2.524975
+      ],
+      "trough_x_m": [
+        2.61702
+      ],
+      "crest_prominence_m": [
+        0.014206
+      ],
+      "trough_prominence_m": [
+        0.002409
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 87,
+      "time_s": 4.35,
+      "residual_peak_to_peak_m": 0.017941712699964175,
+      "residual_rms_m": 0.0023228942097261026,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.18351950240357312,
+      "crest_count": 1,
+      "trough_count": 2,
+      "crest_x_m": [
+        2.54899
+      ],
+      "trough_x_m": [
+        2.49296,
+        2.64103
+      ],
+      "crest_prominence_m": [
+        0.014142
+      ],
+      "trough_prominence_m": [
+        0.003525,
+        0.0024
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 88,
+      "time_s": 4.4,
+      "residual_peak_to_peak_m": 0.018025826319500775,
+      "residual_rms_m": 0.0023381852843122448,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.18944215348088844,
+      "crest_count": 1,
+      "trough_count": 2,
+      "crest_x_m": [
+        2.569
+      ],
+      "trough_x_m": [
+        2.51697,
+        2.66104
+      ],
+      "crest_prominence_m": [
+        0.01419
+      ],
+      "trough_prominence_m": [
+        0.006193,
+        0.002407
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 89,
+      "time_s": 4.45,
+      "residual_peak_to_peak_m": 0.018117293239850826,
+      "residual_rms_m": 0.0023543896867128846,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.19386613048002554,
+      "crest_count": 1,
+      "trough_count": 2,
+      "crest_x_m": [
+        2.59301
+      ],
+      "trough_x_m": [
+        2.54098,
+        2.685055
+      ],
+      "crest_prominence_m": [
+        0.014266
+      ],
+      "trough_prominence_m": [
+        0.007698,
+        0.002411
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 90,
+      "time_s": 4.5,
+      "residual_peak_to_peak_m": 0.018072993126305538,
+      "residual_rms_m": 0.0023715657911915515,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.19712958453619034,
+      "crest_count": 1,
+      "trough_count": 2,
+      "crest_x_m": [
+        2.61702
+      ],
+      "trough_x_m": [
+        2.56099,
+        2.705065
+      ],
+      "crest_prominence_m": [
+        0.014191
+      ],
+      "trough_prominence_m": [
+        0.007762,
+        0.002419
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 91,
+      "time_s": 4.55,
+      "residual_peak_to_peak_m": 0.01812359629055884,
+      "residual_rms_m": 0.002377865723996111,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.19982533448943576,
+      "crest_count": 1,
+      "trough_count": 2,
+      "crest_x_m": [
+        2.63703
+      ],
+      "trough_x_m": [
+        2.585005,
+        2.72908
+      ],
+      "crest_prominence_m": [
+        0.014252
+      ],
+      "trough_prominence_m": [
+        0.007737,
+        0.002431
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 92,
+      "time_s": 4.6,
+      "residual_peak_to_peak_m": 0.01817214736372432,
+      "residual_rms_m": 0.0023758032089392827,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.2020872904299833,
+      "crest_count": 1,
+      "trough_count": 2,
+      "crest_x_m": [
+        2.66104
+      ],
+      "trough_x_m": [
+        2.60902,
+        2.75309
+      ],
+      "crest_prominence_m": [
+        0.01433
+      ],
+      "trough_prominence_m": [
+        0.007685,
+        0.002435
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 93,
+      "time_s": 4.65,
+      "residual_peak_to_peak_m": 0.018152010295566588,
+      "residual_rms_m": 0.0023688983355250456,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.2039337336660546,
+      "crest_count": 1,
+      "trough_count": 2,
+      "crest_x_m": [
+        2.685055
+      ],
+      "trough_x_m": [
+        2.63303,
+        2.7771
+      ],
+      "crest_prominence_m": [
+        0.014347
+      ],
+      "trough_prominence_m": [
+        0.007624,
+        0.002432
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 94,
+      "time_s": 4.7,
+      "residual_peak_to_peak_m": 0.018069643122271314,
+      "residual_rms_m": 0.0023589441397567166,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.20540130244858862,
+      "crest_count": 1,
+      "trough_count": 2,
+      "crest_x_m": [
+        2.70907
+      ],
+      "trough_x_m": [
+        2.65704,
+        2.80111
+      ],
+      "crest_prominence_m": [
+        0.014311
+      ],
+      "trough_prominence_m": [
+        0.007558,
+        0.002422
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 95,
+      "time_s": 4.75,
+      "residual_peak_to_peak_m": 0.017891614563249593,
+      "residual_rms_m": 0.0023498248957749645,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.2066796937544643,
+      "crest_count": 1,
+      "trough_count": 2,
+      "crest_x_m": [
+        2.73308
+      ],
+      "trough_x_m": [
+        2.67705,
+        2.82112
+      ],
+      "crest_prominence_m": [
+        0.01413
+      ],
+      "trough_prominence_m": [
+        0.007552,
+        0.002411
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 96,
+      "time_s": 4.8,
+      "residual_peak_to_peak_m": 0.01797743240832314,
+      "residual_rms_m": 0.0023471423026433687,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.20792064804744737,
+      "crest_count": 2,
+      "trough_count": 2,
+      "crest_x_m": [
+        2.60902,
+        2.75309
+      ],
+      "trough_x_m": [
+        2.70106,
+        2.84513
+      ],
+      "crest_prominence_m": [
+        0.001559,
+        0.014202
+      ],
+      "trough_prominence_m": [
+        0.007592,
+        0.002407
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 97,
+      "time_s": 4.85,
+      "residual_peak_to_peak_m": 0.01796051188876196,
+      "residual_rms_m": 0.0023553459796890955,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.20925934468177895,
+      "crest_count": 2,
+      "trough_count": 3,
+      "crest_x_m": [
+        2.63303,
+        2.7771
+      ],
+      "trough_x_m": [
+        2.49296,
+        2.72107,
+        2.869145
+      ],
+      "crest_prominence_m": [
+        0.001522,
+        0.01415
+      ],
+      "trough_prominence_m": [
+        0.001522,
+        0.007652,
+        0.002401
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 98,
+      "time_s": 4.9,
+      "residual_peak_to_peak_m": 0.01804715673010969,
+      "residual_rms_m": 0.002383456274562455,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.2107970562544837,
+      "crest_count": 2,
+      "trough_count": 3,
+      "crest_x_m": [
+        2.65304,
+        2.79711
+      ],
+      "trough_x_m": [
+        2.53298,
+        2.745085,
+        2.889155
+      ],
+      "crest_prominence_m": [
+        0.001557,
+        0.014198
+      ],
+      "trough_prominence_m": [
+        0.001557,
+        0.007893,
+        0.00241
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 99,
+      "time_s": 4.95,
+      "residual_peak_to_peak_m": 0.01818080745836404,
+      "residual_rms_m": 0.0023959140783914893,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.21248429730631482,
+      "crest_count": 3,
+      "trough_count": 3,
+      "crest_x_m": [
+        2.504965,
+        2.67705,
+        2.82112
+      ],
+      "trough_x_m": [
+        2.54899,
+        2.769095,
+        2.91317
+      ],
+      "crest_prominence_m": [
+        0.00226,
+        0.001639,
+        0.014318
+      ],
+      "trough_prominence_m": [
+        0.001639,
+        0.007824,
+        0.002417
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 100,
+      "time_s": 5.0,
+      "residual_peak_to_peak_m": 0.018185322999004307,
+      "residual_rms_m": 0.002455785500868339,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.21313139422326716,
+      "crest_count": 2,
+      "trough_count": 2,
+      "crest_x_m": [
+        2.70106,
+        2.84513
+      ],
+      "trough_x_m": [
+        2.789105,
+        2.93718
+      ],
+      "crest_prominence_m": [
+        0.006079,
+        0.014322
+      ],
+      "trough_prominence_m": [
+        0.007778,
+        0.002425
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 101,
+      "time_s": 5.05,
+      "residual_peak_to_peak_m": 0.01826433731786542,
+      "residual_rms_m": 0.002598662478367002,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.21213698386845636,
+      "crest_count": 2,
+      "trough_count": 3,
+      "crest_x_m": [
+        2.72107,
+        2.869145
+      ],
+      "trough_x_m": [
+        2.464945,
+        2.81312,
+        2.95719
+      ],
+      "crest_prominence_m": [
+        0.007722,
+        0.014279
+      ],
+      "trough_prominence_m": [
+        0.004773,
+        0.007722,
+        0.002429
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 102,
+      "time_s": 5.1,
+      "residual_peak_to_peak_m": 0.017998425536705775,
+      "residual_rms_m": 0.0025124898797628985,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.20861638221577966,
+      "crest_count": 3,
+      "trough_count": 3,
+      "crest_x_m": [
+        2.48095,
+        2.745085,
+        2.89316
+      ],
+      "trough_x_m": [
+        2.504965,
+        2.83713,
+        2.9812
+      ],
+      "crest_prominence_m": [
+        0.003772,
+        0.006335,
+        0.014178
+      ],
+      "trough_prominence_m": [
+        0.006335,
+        0.008008,
+        0.002431
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 103,
+      "time_s": 5.15,
+      "residual_peak_to_peak_m": 0.01803990487466052,
+      "residual_rms_m": 0.002519766124118257,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.20186319688481852,
+      "crest_count": 3,
+      "trough_count": 3,
+      "crest_x_m": [
+        2.50897,
+        2.769095,
+        2.91317
+      ],
+      "trough_x_m": [
+        2.54098,
+        2.86114,
+        3.00521
+      ],
+      "crest_prominence_m": [
+        0.005273,
+        0.005731,
+        0.01426
+      ],
+      "trough_prominence_m": [
+        0.005731,
+        0.008799,
+        0.002425
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 104,
+      "time_s": 5.2,
+      "residual_peak_to_peak_m": 0.017991934741619628,
+      "residual_rms_m": 0.0025350265309811233,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.1924993475091858,
+      "crest_count": 3,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.52898,
+        2.79311,
+        2.93718
+      ],
+      "trough_x_m": [
+        2.47295,
+        2.577,
+        2.88515,
+        3.029225
+      ],
+      "crest_prominence_m": [
+        0.006297,
+        0.005129,
+        0.01426
+      ],
+      "trough_prominence_m": [
+        0.005199,
+        0.005129,
+        0.009154,
+        0.002412
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 105,
+      "time_s": 5.25,
+      "residual_peak_to_peak_m": 0.017816613026434044,
+      "residual_rms_m": 0.002511287268067227,
+      "dominant_wavelength_m": 0.142857142857143,
+      "dominant_mode_energy_fraction": 0.19162179910362134,
+      "crest_count": 3,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.544985,
+        2.81312,
+        2.96119
+      ],
+      "trough_x_m": [
+        2.49296,
+        2.61302,
+        2.90516,
+        3.04923
+      ],
+      "crest_prominence_m": [
+        0.005213,
+        0.00489,
+        0.014042
+      ],
+      "trough_prominence_m": [
+        0.004328,
+        0.00489,
+        0.008725,
+        0.002405
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 106,
+      "time_s": 5.3,
+      "residual_peak_to_peak_m": 0.018055898864486435,
+      "residual_rms_m": 0.00253598450837767,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.20763889045323908,
+      "crest_count": 4,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.46895,
+        2.59701,
+        2.829125,
+        2.9812
+      ],
+      "trough_x_m": [
+        2.52898,
+        2.645035,
+        2.929175,
+        3.073245
+      ],
+      "crest_prominence_m": [
+        0.00193,
+        0.005106,
+        0.00517,
+        0.014236
+      ],
+      "trough_prominence_m": [
+        0.004382,
+        0.00517,
+        0.009618,
+        0.002405
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 107,
+      "time_s": 5.35,
+      "residual_peak_to_peak_m": 0.018678394676517593,
+      "residual_rms_m": 0.0029534398816961206,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.23858655404745624,
+      "crest_count": 4,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.52097,
+        2.61702,
+        2.86114,
+        3.00521
+      ],
+      "trough_x_m": [
+        2.564995,
+        2.67305,
+        2.949185,
+        3.09726
+      ],
+      "crest_prominence_m": [
+        0.004662,
+        0.011101,
+        0.005524,
+        0.014199
+      ],
+      "trough_prominence_m": [
+        0.010746,
+        0.005524,
+        0.011101,
+        0.002407
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 108,
+      "time_s": 5.4,
+      "residual_peak_to_peak_m": 0.02067237287415853,
+      "residual_rms_m": 0.003170145558304409,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.26741571205819115,
+      "crest_count": 4,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.52097,
+        2.62102,
+        2.88115,
+        3.02522
+      ],
+      "trough_x_m": [
+        2.577,
+        2.705065,
+        2.9732,
+        3.11727
+      ],
+      "crest_prominence_m": [
+        0.00606,
+        0.011157,
+        0.006288,
+        0.014212
+      ],
+      "trough_prominence_m": [
+        0.013569,
+        0.006288,
+        0.011157,
+        0.002421
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 109,
+      "time_s": 5.45,
+      "residual_peak_to_peak_m": 0.019294533116271523,
+      "residual_rms_m": 0.0028829502425939462,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.2763176346565008,
+      "crest_count": 4,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.52898,
+        2.62102,
+        2.90516,
+        3.04923
+      ],
+      "trough_x_m": [
+        2.58901,
+        2.73708,
+        2.99721,
+        3.14128
+      ],
+      "crest_prominence_m": [
+        0.004007,
+        0.010332,
+        0.005351,
+        0.014339
+      ],
+      "trough_prominence_m": [
+        0.010819,
+        0.005351,
+        0.010332,
+        0.002431
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 110,
+      "time_s": 5.5,
+      "residual_peak_to_peak_m": 0.01820288624375297,
+      "residual_rms_m": 0.0027076734145204174,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.27679649940001244,
+      "crest_count": 3,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.62903,
+        2.929175,
+        3.073245
+      ],
+      "trough_x_m": [
+        2.66104,
+        2.76509,
+        3.02122,
+        3.16529
+      ],
+      "crest_prominence_m": [
+        0.00798,
+        0.004898,
+        0.014377
+      ],
+      "trough_prominence_m": [
+        0.008277,
+        0.004898,
+        0.010478,
+        0.002433
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 111,
+      "time_s": 5.55,
+      "residual_peak_to_peak_m": 0.018121616287281483,
+      "residual_rms_m": 0.0026515342836229824,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.29119033753768364,
+      "crest_count": 3,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.69706,
+        2.95319,
+        3.09726
+      ],
+      "trough_x_m": [
+        2.65704,
+        2.79711,
+        3.04523,
+        3.1893
+      ],
+      "crest_prominence_m": [
+        0.008166,
+        0.005159,
+        0.014341
+      ],
+      "trough_prominence_m": [
+        0.007268,
+        0.005159,
+        0.010073,
+        0.002426
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 112,
+      "time_s": 5.6,
+      "residual_peak_to_peak_m": 0.017928906345932583,
+      "residual_rms_m": 0.002637160455530985,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.32078841537129055,
+      "crest_count": 4,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.569,
+        2.70106,
+        2.9732,
+        3.12127
+      ],
+      "trough_x_m": [
+        2.66905,
+        2.82112,
+        3.06524,
+        3.20931
+      ],
+      "crest_prominence_m": [
+        0.001954,
+        0.009732,
+        0.005184,
+        0.014158
+      ],
+      "trough_prominence_m": [
+        0.006095,
+        0.005184,
+        0.011036,
+        0.002415
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 113,
+      "time_s": 5.65,
+      "residual_peak_to_peak_m": 0.01797339764653074,
+      "residual_rms_m": 0.0027039545691804156,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3625380568054801,
+      "crest_count": 4,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.569,
+        2.705065,
+        2.99721,
+        3.14128
+      ],
+      "trough_x_m": [
+        2.65704,
+        2.74108,
+        2.84513,
+        3.08925,
+        3.233325
+      ],
+      "crest_prominence_m": [
+        0.003341,
+        0.009427,
+        0.004721,
+        0.014208
+      ],
+      "trough_prominence_m": [
+        0.006937,
+        0.001911,
+        0.004721,
+        0.010724,
+        0.002409
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 114,
+      "time_s": 5.7,
+      "residual_peak_to_peak_m": 0.017963081041298096,
+      "residual_rms_m": 0.0027170473790547535,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.39906307822588866,
+      "crest_count": 4,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.60902,
+        2.7771,
+        3.01722,
+        3.16529
+      ],
+      "trough_x_m": [
+        2.665045,
+        2.87715,
+        3.10926,
+        3.25734
+      ],
+      "crest_prominence_m": [
+        0.00365,
+        0.008459,
+        0.00509,
+        0.014172
+      ],
+      "trough_prominence_m": [
+        0.006942,
+        0.00509,
+        0.009652,
+        0.002402
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 115,
+      "time_s": 5.75,
+      "residual_peak_to_peak_m": 0.018000565511795644,
+      "residual_rms_m": 0.002787355820388434,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.40490195615696467,
+      "crest_count": 5,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.61702,
+        2.705065,
+        2.84513,
+        3.04123,
+        3.1853
+      ],
+      "trough_x_m": [
+        2.665045,
+        2.74909,
+        2.88515,
+        3.133275,
+        3.27735
+      ],
+      "crest_prominence_m": [
+        0.003115,
+        0.005445,
+        0.008228,
+        0.00531,
+        0.014161
+      ],
+      "trough_prominence_m": [
+        0.005087,
+        0.005445,
+        0.00531,
+        0.010768,
+        0.002411
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 116,
+      "time_s": 5.8,
+      "residual_peak_to_peak_m": 0.018189004680544546,
+      "residual_rms_m": 0.0028745081244822886,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3975607904927325,
+      "crest_count": 5,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.53298,
+        2.71307,
+        2.86114,
+        3.06524,
+        3.20931
+      ],
+      "trough_x_m": [
+        2.75709,
+        2.90516,
+        3.15729,
+        3.30136
+      ],
+      "crest_prominence_m": [
+        0.002378,
+        0.004199,
+        0.009238,
+        0.006583,
+        0.014325
+      ],
+      "trough_prominence_m": [
+        0.005865,
+        0.006583,
+        0.012327,
+        0.002421
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 117,
+      "time_s": 5.85,
+      "residual_peak_to_peak_m": 0.01823146599761949,
+      "residual_rms_m": 0.0029232662089728164,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3471355741320614,
+      "crest_count": 5,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.665045,
+        2.79311,
+        2.87715,
+        3.08525,
+        3.233325
+      ],
+      "trough_x_m": [
+        2.745085,
+        2.83713,
+        2.93718,
+        3.1813,
+        3.32537
+      ],
+      "crest_prominence_m": [
+        0.002528,
+        0.003411,
+        0.009635,
+        0.006648,
+        0.014379
+      ],
+      "trough_prominence_m": [
+        0.004752,
+        0.003411,
+        0.006648,
+        0.012649,
+        0.002428
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 118,
+      "time_s": 5.9,
+      "residual_peak_to_peak_m": 0.018163216560620567,
+      "residual_rms_m": 0.0029674807258710982,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.29879643583710985,
+      "crest_count": 6,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.48896,
+        2.66905,
+        2.7851,
+        2.89316,
+        3.10926,
+        3.25734
+      ],
+      "trough_x_m": [
+        2.569,
+        2.74909,
+        2.829125,
+        2.969195,
+        3.20131,
+        3.34938
+      ],
+      "crest_prominence_m": [
+        0.001686,
+        0.002899,
+        0.004188,
+        0.00961,
+        0.006867,
+        0.014343
+      ],
+      "trough_prominence_m": [
+        0.001686,
+        0.004001,
+        0.005811,
+        0.006867,
+        0.012333,
+        0.002429
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 119,
+      "time_s": 5.95,
+      "residual_peak_to_peak_m": 0.01797008073541139,
+      "residual_rms_m": 0.0028034660967466716,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3051789407693021,
+      "crest_count": 5,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.68105,
+        2.79311,
+        2.90116,
+        3.12927,
+        3.28135
+      ],
+      "trough_x_m": [
+        2.725075,
+        2.84513,
+        3.00521,
+        3.22532,
+        3.36939
+      ],
+      "crest_prominence_m": [
+        0.002544,
+        0.004778,
+        0.008079,
+        0.006383,
+        0.014183
+      ],
+      "trough_prominence_m": [
+        0.004203,
+        0.00586,
+        0.006383,
+        0.010908,
+        0.002423
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 120,
+      "time_s": 6.0,
+      "residual_peak_to_peak_m": 0.01799036373374463,
+      "residual_rms_m": 0.0026317643730965293,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.309588407613517,
+      "crest_count": 5,
+      "trough_count": 7,
+      "crest_x_m": [
+        2.66104,
+        2.79711,
+        2.929175,
+        3.153285,
+        3.30136
+      ],
+      "trough_x_m": [
+        2.52898,
+        2.73308,
+        2.85714,
+        2.969195,
+        3.04923,
+        3.24933,
+        3.3934
+      ],
+      "crest_prominence_m": [
+        0.002713,
+        0.003943,
+        0.006871,
+        0.004747,
+        0.014235
+      ],
+      "trough_prominence_m": [
+        0.001772,
+        0.003707,
+        0.00433,
+        0.001606,
+        0.004747,
+        0.010182,
+        0.002409
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 121,
+      "time_s": 6.05,
+      "residual_peak_to_peak_m": 0.017939645408505393,
+      "residual_rms_m": 0.002631070316660162,
+      "dominant_wavelength_m": 0.1250000000000001,
+      "dominant_mode_energy_fraction": 0.208762107125072,
+      "crest_count": 6,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.60902,
+        2.7851,
+        2.93318,
+        3.01322,
+        3.1773,
+        3.32537
+      ],
+      "trough_x_m": [
+        2.53698,
+        2.745085,
+        2.83313,
+        2.9812,
+        3.08925,
+        3.26934
+      ],
+      "crest_prominence_m": [
+        0.002626,
+        0.003521,
+        0.006854,
+        0.003176,
+        0.004754,
+        0.014184
+      ],
+      "trough_prominence_m": [
+        0.002655,
+        0.002626,
+        0.003521,
+        0.004754,
+        0.003176,
+        0.010853
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 122,
+      "time_s": 6.1,
+      "residual_peak_to_peak_m": 0.017939984465430735,
+      "residual_rms_m": 0.002603258138058816,
+      "dominant_wavelength_m": 0.1250000000000001,
+      "dominant_mode_energy_fraction": 0.1953160597382835,
+      "crest_count": 6,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.62102,
+        2.86114,
+        2.96519,
+        3.07725,
+        3.20531,
+        3.34538
+      ],
+      "trough_x_m": [
+        2.54899,
+        2.89316,
+        2.99321,
+        3.12927,
+        3.293355
+      ],
+      "crest_prominence_m": [
+        0.002805,
+        0.002583,
+        0.007246,
+        0.003648,
+        0.004119,
+        0.014142
+      ],
+      "trough_prominence_m": [
+        0.002387,
+        0.003433,
+        0.004119,
+        0.003648,
+        0.011112
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 123,
+      "time_s": 6.15,
+      "residual_peak_to_peak_m": 0.018137355352718168,
+      "residual_rms_m": 0.0026379438048043866,
+      "dominant_wavelength_m": 0.1250000000000001,
+      "dominant_mode_energy_fraction": 0.3290696638755454,
+      "crest_count": 6,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.72908,
+        2.86514,
+        2.9812,
+        3.08125,
+        3.22532,
+        3.36939
+      ],
+      "trough_x_m": [
+        2.51697,
+        2.81712,
+        2.90516,
+        3.05724,
+        3.16529,
+        3.31737
+      ],
+      "crest_prominence_m": [
+        0.002469,
+        0.00323,
+        0.00798,
+        0.007251,
+        0.003285,
+        0.014077
+      ],
+      "trough_prominence_m": [
+        0.001788,
+        0.002959,
+        0.004856,
+        0.007251,
+        0.003285,
+        0.010742
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 124,
+      "time_s": 6.2,
+      "residual_peak_to_peak_m": 0.018077343227798415,
+      "residual_rms_m": 0.0027560825799360037,
+      "dominant_wavelength_m": 0.1250000000000001,
+      "dominant_mode_energy_fraction": 0.2413817026623914,
+      "crest_count": 6,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.72908,
+        2.84513,
+        3.00121,
+        3.09726,
+        3.24933,
+        3.3934
+      ],
+      "trough_x_m": [
+        2.80111,
+        2.91717,
+        3.06124,
+        3.14128,
+        3.34138
+      ],
+      "crest_prominence_m": [
+        0.001958,
+        0.00423,
+        0.007982,
+        0.009191,
+        0.002566,
+        0.012202
+      ],
+      "trough_prominence_m": [
+        0.003568,
+        0.005191,
+        0.010739,
+        0.004003,
+        0.009191
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 125,
+      "time_s": 6.25,
+      "residual_peak_to_peak_m": 0.018565232222444647,
+      "residual_rms_m": 0.0027673436949410767,
+      "dominant_wavelength_m": 0.142857142857143,
+      "dominant_mode_energy_fraction": 0.224865357723161,
+      "crest_count": 6,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.71707,
+        2.85714,
+        3.02122,
+        3.113265,
+        3.23733,
+        3.417415
+      ],
+      "trough_x_m": [
+        2.605015,
+        2.81312,
+        2.909165,
+        3.06924,
+        3.36139
+      ],
+      "crest_prominence_m": [
+        0.002198,
+        0.004467,
+        0.007717,
+        0.010839,
+        0.003205,
+        0.008265
+      ],
+      "trough_prominence_m": [
+        0.001832,
+        0.003362,
+        0.005751,
+        0.01105,
+        0.010839
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 126,
+      "time_s": 6.3,
+      "residual_peak_to_peak_m": 0.0178452484219603,
+      "residual_rms_m": 0.002515684266130789,
+      "dominant_wavelength_m": 0.142857142857143,
+      "dominant_mode_energy_fraction": 0.15960605056334745,
+      "crest_count": 5,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.86114,
+        3.04523,
+        3.12527,
+        3.26534,
+        3.44143
+      ],
+      "trough_x_m": [
+        2.59301,
+        2.90516,
+        3.08925,
+        3.23733,
+        3.3854
+      ],
+      "crest_prominence_m": [
+        0.002896,
+        0.006049,
+        0.009789,
+        0.006035,
+        0.002629
+      ],
+      "trough_prominence_m": [
+        0.001697,
+        0.00467,
+        0.007362,
+        0.002559,
+        0.011686
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 127,
+      "time_s": 6.35,
+      "residual_peak_to_peak_m": 0.011448114020232346,
+      "residual_rms_m": 0.0018350423198780017,
+      "dominant_wavelength_m": 0.2500000000000002,
+      "dominant_mode_energy_fraction": 0.2025861489567172,
+      "crest_count": 4,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.84513,
+        3.133275,
+        3.213315,
+        3.30536
+      ],
+      "trough_x_m": [
+        2.605015,
+        2.91317,
+        3.10126,
+        3.1853,
+        3.28135,
+        3.40941
+      ],
+      "crest_prominence_m": [
+        0.002474,
+        0.00746,
+        0.003238,
+        0.005486
+      ],
+      "trough_prominence_m": [
+        0.002193,
+        0.003842,
+        0.005969,
+        0.005486,
+        0.003418,
+        0.010349
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 128,
+      "time_s": 6.4,
+      "residual_peak_to_peak_m": 0.009057607952327976,
+      "residual_rms_m": 0.0016786747264580242,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.23007029813782626,
+      "crest_count": 4,
+      "trough_count": 7,
+      "crest_x_m": [
+        2.65304,
+        2.84113,
+        3.14128,
+        3.34938
+      ],
+      "trough_x_m": [
+        2.569,
+        2.74108,
+        2.88515,
+        2.96519,
+        3.1893,
+        3.31737,
+        3.42942
+      ],
+      "crest_prominence_m": [
+        0.002254,
+        0.002499,
+        0.004106,
+        0.005686
+      ],
+      "trough_prominence_m": [
+        0.001863,
+        0.002254,
+        0.002999,
+        0.001517,
+        0.005309,
+        0.00296,
+        0.001523
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 129,
+      "time_s": 6.45,
+      "residual_peak_to_peak_m": 0.00916354086120226,
+      "residual_rms_m": 0.0015094991364345402,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.3122454173092993,
+      "crest_count": 6,
+      "trough_count": 7,
+      "crest_x_m": [
+        2.66104,
+        2.84513,
+        2.989205,
+        3.16529,
+        3.27735,
+        3.3934
+      ],
+      "trough_x_m": [
+        2.573,
+        2.74909,
+        2.89316,
+        3.04523,
+        3.14928,
+        3.25734,
+        3.33738
+      ],
+      "crest_prominence_m": [
+        0.001604,
+        0.002483,
+        0.002091,
+        0.005058,
+        0.007131,
+        0.002985
+      ],
+      "trough_prominence_m": [
+        0.001732,
+        0.001604,
+        0.003451,
+        0.002091,
+        0.003216,
+        0.007131,
+        0.002985
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 130,
+      "time_s": 6.5,
+      "residual_peak_to_peak_m": 0.00956484562689295,
+      "residual_rms_m": 0.0013482837885593856,
+      "dominant_wavelength_m": 0.1111111111111112,
+      "dominant_mode_energy_fraction": 0.26730113793594845,
+      "crest_count": 5,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.61302,
+        2.92517,
+        3.15729,
+        3.293355,
+        3.41341
+      ],
+      "trough_x_m": [
+        2.96519,
+        3.10126,
+        3.19731,
+        3.313365
+      ],
+      "crest_prominence_m": [
+        0.001606,
+        0.002965,
+        0.005994,
+        0.003872,
+        0.005403
+      ],
+      "trough_prominence_m": [
+        0.003836,
+        0.002249,
+        0.007513,
+        0.005403
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 131,
+      "time_s": 6.55,
+      "residual_peak_to_peak_m": 0.008327761310851646,
+      "residual_rms_m": 0.0014090068860717455,
+      "dominant_wavelength_m": 0.1250000000000001,
+      "dominant_mode_energy_fraction": 0.29707257768883893,
+      "crest_count": 4,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.93318,
+        3.173295,
+        3.293355,
+        3.3934
+      ],
+      "trough_x_m": [
+        2.65304,
+        2.969195,
+        3.10926,
+        3.26534,
+        3.40941
+      ],
+      "crest_prominence_m": [
+        0.002834,
+        0.006188,
+        0.006893,
+        0.007511
+      ],
+      "trough_prominence_m": [
+        0.001807,
+        0.004935,
+        0.002591,
+        0.006581,
+        0.002148
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 132,
+      "time_s": 6.6,
+      "residual_peak_to_peak_m": 0.010209725097797148,
+      "residual_rms_m": 0.0016342513769199204,
+      "dominant_wavelength_m": 0.142857142857143,
+      "dominant_mode_energy_fraction": 0.39273504339439086,
+      "crest_count": 5,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.93718,
+        3.03323,
+        3.21732,
+        3.313365,
+        3.417415
+      ],
+      "trough_x_m": [
+        2.66104,
+        2.9772,
+        3.11727,
+        3.25734,
+        3.3894
+      ],
+      "crest_prominence_m": [
+        0.00233,
+        0.002993,
+        0.007576,
+        0.007724,
+        0.004614
+      ],
+      "trough_prominence_m": [
+        0.001666,
+        0.004447,
+        0.002993,
+        0.008982,
+        0.006683
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 133,
+      "time_s": 6.65,
+      "residual_peak_to_peak_m": 0.01805005124680823,
+      "residual_rms_m": 0.0022385455755431897,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.43090069128863456,
+      "crest_count": 5,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.889155,
+        3.03323,
+        3.24533,
+        3.32937,
+        3.43342
+      ],
+      "trough_x_m": [
+        2.64904,
+        2.9732,
+        3.133275,
+        3.273345,
+        3.40941
+      ],
+      "crest_prominence_m": [
+        0.001952,
+        0.002971,
+        0.00801,
+        0.003679,
+        0.007243
+      ],
+      "trough_prominence_m": [
+        0.001677,
+        0.003579,
+        0.002971,
+        0.01512,
+        0.006981
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 134,
+      "time_s": 6.7,
+      "residual_peak_to_peak_m": 0.019538783319904635,
+      "residual_rms_m": 0.002518499923763512,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.4479722111575449,
+      "crest_count": 4,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.89316,
+        3.04123,
+        3.25734,
+        3.42142
+      ],
+      "trough_x_m": [
+        2.625025,
+        2.9772,
+        3.15729,
+        3.30136
+      ],
+      "crest_prominence_m": [
+        0.002483,
+        0.002955,
+        0.005544,
+        0.009658
+      ],
+      "trough_prominence_m": [
+        0.001887,
+        0.003916,
+        0.002955,
+        0.009417
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 135,
+      "time_s": 6.75,
+      "residual_peak_to_peak_m": 0.02361797705813591,
+      "residual_rms_m": 0.0031386300452174044,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.39587525795601863,
+      "crest_count": 4,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.89316,
+        3.04523,
+        3.32937,
+        3.43342
+      ],
+      "trough_x_m": [
+        2.625025,
+        2.95719,
+        3.16129,
+        3.37339
+      ],
+      "crest_prominence_m": [
+        0.002565,
+        0.003655,
+        0.00637,
+        0.005542
+      ],
+      "trough_prominence_m": [
+        0.001868,
+        0.003585,
+        0.002234,
+        0.011667
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 136,
+      "time_s": 6.8,
+      "residual_peak_to_peak_m": 0.021821261794998666,
+      "residual_rms_m": 0.0024174920432803245,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.42120924127448206,
+      "crest_count": 2,
+      "trough_count": 2,
+      "crest_x_m": [
+        2.89316,
+        3.34938
+      ],
+      "trough_x_m": [
+        2.96519,
+        3.3814
+      ],
+      "crest_prominence_m": [
+        0.001828,
+        0.005118
+      ],
+      "trough_prominence_m": [
+        0.002719,
+        0.013567
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 137,
+      "time_s": 6.85,
+      "residual_peak_to_peak_m": 0.014557517319719819,
+      "residual_rms_m": 0.0018556737708969261,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.28150415819854374,
+      "crest_count": 2,
+      "trough_count": 3,
+      "crest_x_m": [
+        3.06524,
+        3.32937
+      ],
+      "trough_x_m": [
+        3.029225,
+        3.233325,
+        3.3814
+      ],
+      "crest_prominence_m": [
+        0.001727,
+        0.004693
+      ],
+      "trough_prominence_m": [
+        0.001969,
+        0.001727,
+        0.010879
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 138,
+      "time_s": 6.9,
+      "residual_peak_to_peak_m": 0.01605696409634918,
+      "residual_rms_m": 0.0019817025178750234,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.23026773968161218,
+      "crest_count": 2,
+      "trough_count": 3,
+      "crest_x_m": [
+        3.06124,
+        3.34138
+      ],
+      "trough_x_m": [
+        3.01722,
+        3.233325,
+        3.3854
+      ],
+      "crest_prominence_m": [
+        0.001997,
+        0.005206
+      ],
+      "trough_prominence_m": [
+        0.002619,
+        0.001997,
+        0.010274
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 139,
+      "time_s": 6.95,
+      "residual_peak_to_peak_m": 0.012448878033337642,
+      "residual_rms_m": 0.0015475549715450215,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.3392916191635605,
+      "crest_count": 3,
+      "trough_count": 3,
+      "crest_x_m": [
+        2.94118,
+        3.073245,
+        3.32537
+      ],
+      "trough_x_m": [
+        3.02522,
+        3.22132,
+        3.3814
+      ],
+      "crest_prominence_m": [
+        0.001645,
+        0.001994,
+        0.004799
+      ],
+      "trough_prominence_m": [
+        0.003553,
+        0.001994,
+        0.007058
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 140,
+      "time_s": 7.0,
+      "residual_peak_to_peak_m": 0.013391518044487682,
+      "residual_rms_m": 0.0019346284078025433,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.4258004354367563,
+      "crest_count": 4,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.93718,
+        3.08125,
+        3.28535,
+        3.42542
+      ],
+      "trough_x_m": [
+        2.67305,
+        3.029225,
+        3.1773,
+        3.377395
+      ],
+      "crest_prominence_m": [
+        0.001923,
+        0.003951,
+        0.001783,
+        0.003457
+      ],
+      "trough_prominence_m": [
+        0.001649,
+        0.003908,
+        0.001783,
+        0.003951
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 141,
+      "time_s": 7.05,
+      "residual_peak_to_peak_m": 0.012374891793747678,
+      "residual_rms_m": 0.0015970666036992489,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.38986468156872095,
+      "crest_count": 3,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.93718,
+        3.10926,
+        3.42142
+      ],
+      "trough_x_m": [
+        2.68105,
+        3.03323,
+        3.35338,
+        3.44143
+      ],
+      "crest_prominence_m": [
+        0.002138,
+        0.002852,
+        0.00762
+      ],
+      "trough_prominence_m": [
+        0.00173,
+        0.003503,
+        0.002852,
+        0.003087
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 142,
+      "time_s": 7.1,
+      "residual_peak_to_peak_m": 0.01411125448817628,
+      "residual_rms_m": 0.0017618190631879577,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.32896187716373093,
+      "crest_count": 1,
+      "trough_count": 3,
+      "crest_x_m": [
+        3.113265
+      ],
+      "trough_x_m": [
+        3.03723,
+        3.273345,
+        3.41341
+      ],
+      "crest_prominence_m": [
+        0.0028
+      ],
+      "trough_prominence_m": [
+        0.002563,
+        0.0028,
+        0.005554
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 143,
+      "time_s": 7.15,
+      "residual_peak_to_peak_m": 0.006158666482707742,
+      "residual_rms_m": 0.0010725896122138784,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3821168789429472,
+      "crest_count": 2,
+      "trough_count": 3,
+      "crest_x_m": [
+        3.10526,
+        3.42142
+      ],
+      "trough_x_m": [
+        3.06124,
+        3.25734,
+        3.3894
+      ],
+      "crest_prominence_m": [
+        0.002484,
+        0.002877
+      ],
+      "trough_prominence_m": [
+        0.002053,
+        0.002861,
+        0.004459
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 144,
+      "time_s": 7.2,
+      "residual_peak_to_peak_m": 0.008165101171190015,
+      "residual_rms_m": 0.0012067302452494321,
+      "dominant_wavelength_m": 0.142857142857143,
+      "dominant_mode_energy_fraction": 0.21764927022969757,
+      "crest_count": 2,
+      "trough_count": 3,
+      "crest_x_m": [
+        3.113265,
+        3.3934
+      ],
+      "trough_x_m": [
+        3.06924,
+        3.24133,
+        3.36139
+      ],
+      "crest_prominence_m": [
+        0.002117,
+        0.005174
+      ],
+      "trough_prominence_m": [
+        0.002124,
+        0.002117,
+        0.004539
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 145,
+      "time_s": 7.25,
+      "residual_peak_to_peak_m": 0.013435974282990745,
+      "residual_rms_m": 0.001696608993241781,
+      "dominant_wavelength_m": 0.142857142857143,
+      "dominant_mode_energy_fraction": 0.25784419954099297,
+      "crest_count": 3,
+      "trough_count": 2,
+      "crest_x_m": [
+        3.03723,
+        3.26134,
+        3.397405
+      ],
+      "trough_x_m": [
+        3.07725,
+        3.33738
+      ],
+      "crest_prominence_m": [
+        0.001506,
+        0.003063,
+        0.011984
+      ],
+      "trough_prominence_m": [
+        0.003063,
+        0.006299
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 146,
+      "time_s": 7.3,
+      "residual_peak_to_peak_m": 0.014007261067294802,
+      "residual_rms_m": 0.001664255158257757,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.22508406628845123,
+      "crest_count": 3,
+      "trough_count": 2,
+      "crest_x_m": [
+        3.04123,
+        3.24533,
+        3.3814
+      ],
+      "trough_x_m": [
+        3.08125,
+        3.32937
+      ],
+      "crest_prominence_m": [
+        0.001844,
+        0.003989,
+        0.009955
+      ],
+      "trough_prominence_m": [
+        0.003571,
+        0.00615
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 147,
+      "time_s": 7.35,
+      "residual_peak_to_peak_m": 0.015023094074030893,
+      "residual_rms_m": 0.001795000137108317,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.31728830401168573,
+      "crest_count": 2,
+      "trough_count": 3,
+      "crest_x_m": [
+        3.24533,
+        3.37339
+      ],
+      "trough_x_m": [
+        3.08525,
+        3.31737,
+        3.417415
+      ],
+      "crest_prominence_m": [
+        0.004402,
+        0.012564
+      ],
+      "trough_prominence_m": [
+        0.003808,
+        0.010683,
+        0.00693
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 148,
+      "time_s": 7.4,
+      "residual_peak_to_peak_m": 0.010197949894767161,
+      "residual_rms_m": 0.0012197074282525337,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.32832976572244765,
+      "crest_count": 3,
+      "trough_count": 2,
+      "crest_x_m": [
+        3.14928,
+        3.33738,
+        3.42942
+      ],
+      "trough_x_m": [
+        3.093255,
+        3.31737
+      ],
+      "crest_prominence_m": [
+        0.004098,
+        0.009686,
+        0.005009
+      ],
+      "trough_prominence_m": [
+        0.003525,
+        0.005412
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 149,
+      "time_s": 7.45,
+      "residual_peak_to_peak_m": 0.010354810782551682,
+      "residual_rms_m": 0.0013262240852834903,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.30701916373410226,
+      "crest_count": 3,
+      "trough_count": 3,
+      "crest_x_m": [
+        3.22532,
+        3.34138,
+        3.43342
+      ],
+      "trough_x_m": [
+        3.10526,
+        3.32137,
+        3.42142
+      ],
+      "crest_prominence_m": [
+        0.003761,
+        0.00966,
+        0.007501
+      ],
+      "trough_prominence_m": [
+        0.002754,
+        0.006401,
+        0.008503
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 150,
+      "time_s": 7.5,
+      "residual_peak_to_peak_m": 0.013715446221030367,
+      "residual_rms_m": 0.001663321678958891,
+      "dominant_wavelength_m": 0.142857142857143,
+      "dominant_mode_energy_fraction": 0.26900063613822933,
+      "crest_count": 3,
+      "trough_count": 3,
+      "crest_x_m": [
+        3.20931,
+        3.293355,
+        3.3814
+      ],
+      "trough_x_m": [
+        3.11727,
+        3.30936,
+        3.42942
+      ],
+      "crest_prominence_m": [
+        0.004255,
+        0.00357,
+        0.010098
+      ],
+      "trough_prominence_m": [
+        0.002522,
+        0.006231,
+        0.004601
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 151,
+      "time_s": 7.55,
+      "residual_peak_to_peak_m": 0.017448355870963828,
+      "residual_rms_m": 0.0022949380515062583,
+      "dominant_wavelength_m": 0.142857142857143,
+      "dominant_mode_energy_fraction": 0.23810446672192906,
+      "crest_count": 2,
+      "trough_count": 3,
+      "crest_x_m": [
+        3.213315,
+        3.36939
+      ],
+      "trough_x_m": [
+        3.12527,
+        3.26934,
+        3.42942
+      ],
+      "crest_prominence_m": [
+        0.005519,
+        0.01427
+      ],
+      "trough_prominence_m": [
+        0.002777,
+        0.013593,
+        0.003918
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 152,
+      "time_s": 7.6,
+      "residual_peak_to_peak_m": 0.01844682905386695,
+      "residual_rms_m": 0.0020942511854403815,
+      "dominant_wavelength_m": 0.2500000000000002,
+      "dominant_mode_energy_fraction": 0.2721808003491018,
+      "crest_count": 2,
+      "trough_count": 3,
+      "crest_x_m": [
+        3.22132,
+        3.36539
+      ],
+      "trough_x_m": [
+        3.11727,
+        3.253335,
+        3.34138
+      ],
+      "crest_prominence_m": [
+        0.005147,
+        0.014827
+      ],
+      "trough_prominence_m": [
+        0.001578,
+        0.006662,
+        0.013429
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 153,
+      "time_s": 7.65,
+      "residual_peak_to_peak_m": 0.013551330161370112,
+      "residual_rms_m": 0.0015860164768151089,
+      "dominant_wavelength_m": 0.142857142857143,
+      "dominant_mode_energy_fraction": 0.27385147076483235,
+      "crest_count": 3,
+      "trough_count": 2,
+      "crest_x_m": [
+        3.11727,
+        3.21732,
+        3.40541
+      ],
+      "trough_x_m": [
+        3.16929,
+        3.32937
+      ],
+      "crest_prominence_m": [
+        0.002063,
+        0.006141,
+        0.006513
+      ],
+      "trough_prominence_m": [
+        0.003686,
+        0.010421
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 154,
+      "time_s": 7.7,
+      "residual_peak_to_peak_m": 0.01404456102678081,
+      "residual_rms_m": 0.0016413964720873673,
+      "dominant_wavelength_m": 0.142857142857143,
+      "dominant_mode_energy_fraction": 0.34805546403893006,
+      "crest_count": 3,
+      "trough_count": 2,
+      "crest_x_m": [
+        3.12127,
+        3.25734,
+        3.35338
+      ],
+      "trough_x_m": [
+        3.153285,
+        3.30136
+      ],
+      "crest_prominence_m": [
+        0.002885,
+        0.009984,
+        0.008836
+      ],
+      "trough_prominence_m": [
+        0.006475,
+        0.01251
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 155,
+      "time_s": 7.75,
+      "residual_peak_to_peak_m": 0.013776310038029024,
+      "residual_rms_m": 0.0019735058110939363,
+      "dominant_wavelength_m": 0.1250000000000001,
+      "dominant_mode_energy_fraction": 0.26989240174229406,
+      "crest_count": 3,
+      "trough_count": 2,
+      "crest_x_m": [
+        3.1813,
+        3.26934,
+        3.36139
+      ],
+      "trough_x_m": [
+        3.12127,
+        3.293355
+      ],
+      "crest_prominence_m": [
+        0.00777,
+        0.002877,
+        0.011884
+      ],
+      "trough_prominence_m": [
+        0.004001,
+        0.010002
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 156,
+      "time_s": 7.8,
+      "residual_peak_to_peak_m": 0.013360718444217767,
+      "residual_rms_m": 0.0019076711549715732,
+      "dominant_wavelength_m": 0.1250000000000001,
+      "dominant_mode_energy_fraction": 0.18570113105874989,
+      "crest_count": 4,
+      "trough_count": 3,
+      "crest_x_m": [
+        3.07725,
+        3.1773,
+        3.333375,
+        3.43342
+      ],
+      "trough_x_m": [
+        3.11727,
+        3.20131,
+        3.40141
+      ],
+      "crest_prominence_m": [
+        0.001723,
+        0.007173,
+        0.010879,
+        0.004861
+      ],
+      "trough_prominence_m": [
+        0.004432,
+        0.008452,
+        0.006686
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 157,
+      "time_s": 7.85,
+      "residual_peak_to_peak_m": 0.012179735369627478,
+      "residual_rms_m": 0.0016943606781118523,
+      "dominant_wavelength_m": 0.142857142857143,
+      "dominant_mode_energy_fraction": 0.31663997231735425,
+      "crest_count": 4,
+      "trough_count": 3,
+      "crest_x_m": [
+        3.04123,
+        3.1813,
+        3.32137,
+        3.437425
+      ],
+      "trough_x_m": [
+        3.08925,
+        3.23733,
+        3.37339
+      ],
+      "crest_prominence_m": [
+        0.001923,
+        0.009889,
+        0.009081,
+        0.002849
+      ],
+      "trough_prominence_m": [
+        0.006501,
+        0.009081,
+        0.011433
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 158,
+      "time_s": 7.9,
+      "residual_peak_to_peak_m": 0.01789263037717642,
+      "residual_rms_m": 0.002433670093889259,
+      "dominant_wavelength_m": 0.090909090909091,
+      "dominant_mode_energy_fraction": 0.23135186001096325,
+      "crest_count": 4,
+      "trough_count": 4,
+      "crest_x_m": [
+        3.04123,
+        3.1853,
+        3.31737,
+        3.42542
+      ],
+      "trough_x_m": [
+        3.06924,
+        3.15729,
+        3.253335,
+        3.3934
+      ],
+      "crest_prominence_m": [
+        0.002477,
+        0.008183,
+        0.010721,
+        0.00694
+      ],
+      "trough_prominence_m": [
+        0.004472,
+        0.006473,
+        0.008183,
+        0.014129
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 159,
+      "time_s": 7.95,
+      "residual_peak_to_peak_m": 0.012034334748064215,
+      "residual_rms_m": 0.0015408523764812471,
+      "dominant_wavelength_m": 0.142857142857143,
+      "dominant_mode_energy_fraction": 0.28068044080832966,
+      "crest_count": 4,
+      "trough_count": 3,
+      "crest_x_m": [
+        3.03323,
+        3.16529,
+        3.28535,
+        3.44543
+      ],
+      "trough_x_m": [
+        3.053235,
+        3.1893,
+        3.40941
+      ],
+      "crest_prominence_m": [
+        0.002627,
+        0.004991,
+        0.00863,
+        0.0016
+      ],
+      "trough_prominence_m": [
+        0.00479,
+        0.006031,
+        0.008688
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 160,
+      "time_s": 8.0,
+      "residual_peak_to_peak_m": 0.014278491154004744,
+      "residual_rms_m": 0.0018886183278179983,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.22468638134576852,
+      "crest_count": 4,
+      "trough_count": 4,
+      "crest_x_m": [
+        3.02522,
+        3.14528,
+        3.30136,
+        3.40941
+      ],
+      "trough_x_m": [
+        3.07725,
+        3.1773,
+        3.28535,
+        3.3854
+      ],
+      "crest_prominence_m": [
+        0.002817,
+        0.009968,
+        0.007236,
+        0.012375
+      ],
+      "trough_prominence_m": [
+        0.008613,
+        0.002453,
+        0.009968,
+        0.007236
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 161,
+      "time_s": 8.05,
+      "residual_peak_to_peak_m": 0.013352816011955287,
+      "residual_rms_m": 0.001779614715283116,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.33893150358136886,
+      "crest_count": 4,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.96519,
+        3.10126,
+        3.22532,
+        3.32937
+      ],
+      "trough_x_m": [
+        3.04923,
+        3.273345,
+        3.36139,
+        3.44143
+      ],
+      "crest_prominence_m": [
+        0.002734,
+        0.006494,
+        0.004276,
+        0.011091
+      ],
+      "trough_prominence_m": [
+        0.008145,
+        0.006494,
+        0.003717,
+        0.003727
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 162,
+      "time_s": 8.1,
+      "residual_peak_to_peak_m": 0.012287930138609418,
+      "residual_rms_m": 0.0016410519789930083,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3107939046855372,
+      "crest_count": 4,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.94118,
+        3.08125,
+        3.20931,
+        3.34938
+      ],
+      "trough_x_m": [
+        3.029225,
+        3.193305,
+        3.29736,
+        3.40941
+      ],
+      "crest_prominence_m": [
+        0.002274,
+        0.007738,
+        0.003766,
+        0.009569
+      ],
+      "trough_prominence_m": [
+        0.006265,
+        0.007738,
+        0.002856,
+        0.009821
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 163,
+      "time_s": 8.15,
+      "residual_peak_to_peak_m": 0.01382028260802999,
+      "residual_rms_m": 0.0021479139610925757,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.31834325444421974,
+      "crest_count": 4,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.95319,
+        3.10526,
+        3.25734,
+        3.33738
+      ],
+      "trough_x_m": [
+        3.01722,
+        3.12927,
+        3.21732,
+        3.3934
+      ],
+      "crest_prominence_m": [
+        0.00301,
+        0.009901,
+        0.005325,
+        0.012067
+      ],
+      "trough_prominence_m": [
+        0.008197,
+        0.004577,
+        0.009901,
+        0.009887
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 164,
+      "time_s": 8.2,
+      "residual_peak_to_peak_m": 0.012550502623746587,
+      "residual_rms_m": 0.0021039477127407728,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3268324132858571,
+      "crest_count": 5,
+      "trough_count": 3,
+      "crest_x_m": [
+        2.929175,
+        3.08125,
+        3.16129,
+        3.32137,
+        3.41341
+      ],
+      "trough_x_m": [
+        3.00521,
+        3.22132,
+        3.3814
+      ],
+      "crest_prominence_m": [
+        0.002701,
+        0.009267,
+        0.003195,
+        0.009622,
+        0.006936
+      ],
+      "trough_prominence_m": [
+        0.006986,
+        0.009267,
+        0.012417
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 165,
+      "time_s": 8.25,
+      "residual_peak_to_peak_m": 0.012412460500032918,
+      "residual_rms_m": 0.0019399517211561572,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.2505816705478892,
+      "crest_count": 5,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.929175,
+        3.05724,
+        3.15729,
+        3.26134,
+        3.42142
+      ],
+      "trough_x_m": [
+        3.009215,
+        3.14128,
+        3.30936,
+        3.40141
+      ],
+      "crest_prominence_m": [
+        0.002493,
+        0.008345,
+        0.002874,
+        0.009895,
+        0.002035
+      ],
+      "trough_prominence_m": [
+        0.006222,
+        0.008345,
+        0.006047,
+        0.011668
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 166,
+      "time_s": 8.3,
+      "residual_peak_to_peak_m": 0.015932800300108088,
+      "residual_rms_m": 0.0023013541588701096,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.15493775170644192,
+      "crest_count": 5,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.95719,
+        3.03723,
+        3.24933,
+        3.34138,
+        3.437425
+      ],
+      "trough_x_m": [
+        2.93718,
+        3.01722,
+        3.14128,
+        3.28535,
+        3.37339
+      ],
+      "crest_prominence_m": [
+        0.005581,
+        0.008351,
+        0.011848,
+        0.006816,
+        0.00701
+      ],
+      "trough_prominence_m": [
+        0.005418,
+        0.009118,
+        0.008351,
+        0.004558,
+        0.011848
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 167,
+      "time_s": 8.35,
+      "residual_peak_to_peak_m": 0.01360349310474547,
+      "residual_rms_m": 0.0020807113785440835,
+      "dominant_wavelength_m": 0.1111111111111112,
+      "dominant_mode_energy_fraction": 0.20994285357607972,
+      "crest_count": 5,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.86514,
+        3.04523,
+        3.24933,
+        3.34538,
+        3.42542
+      ],
+      "trough_x_m": [
+        2.91317,
+        3.02522,
+        3.133275,
+        3.30136,
+        3.40541
+      ],
+      "crest_prominence_m": [
+        0.001808,
+        0.007344,
+        0.00988,
+        0.002629,
+        0.004159
+      ],
+      "trough_prominence_m": [
+        0.003832,
+        0.006405,
+        0.007497,
+        0.006036,
+        0.011735
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 168,
+      "time_s": 8.4,
+      "residual_peak_to_peak_m": 0.01621194640334926,
+      "residual_rms_m": 0.002135931313637974,
+      "dominant_wavelength_m": 0.1250000000000001,
+      "dominant_mode_energy_fraction": 0.20508849268854493,
+      "crest_count": 5,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.95719,
+        3.053235,
+        3.173295,
+        3.26534,
+        3.43342
+      ],
+      "trough_x_m": [
+        2.89316,
+        3.03723,
+        3.12527,
+        3.20931,
+        3.293355,
+        3.3814
+      ],
+      "crest_prominence_m": [
+        0.003287,
+        0.005959,
+        0.00286,
+        0.010543,
+        0.001839
+      ],
+      "trough_prominence_m": [
+        0.002242,
+        0.007393,
+        0.005959,
+        0.00286,
+        0.015844,
+        0.009735
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 169,
+      "time_s": 8.45,
+      "residual_peak_to_peak_m": 0.015034529287345805,
+      "residual_rms_m": 0.0022245114207221006,
+      "dominant_wavelength_m": 0.08333333333333341,
+      "dominant_mode_energy_fraction": 0.37996911436831543,
+      "crest_count": 6,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.84113,
+        2.94118,
+        3.02522,
+        3.12127,
+        3.26134,
+        3.40541
+      ],
+      "trough_x_m": [
+        2.90116,
+        3.053235,
+        3.14128,
+        3.30136,
+        3.42142
+      ],
+      "crest_prominence_m": [
+        0.001838,
+        0.002907,
+        0.005344,
+        0.005951,
+        0.011865,
+        0.007824
+      ],
+      "trough_prominence_m": [
+        0.002678,
+        0.008418,
+        0.005951,
+        0.014649,
+        0.006285
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 170,
+      "time_s": 8.5,
+      "residual_peak_to_peak_m": 0.013842849859745598,
+      "residual_rms_m": 0.002030055765948339,
+      "dominant_wavelength_m": 0.1111111111111112,
+      "dominant_mode_energy_fraction": 0.2495629382647871,
+      "crest_count": 5,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.92117,
+        3.04923,
+        3.133275,
+        3.26934,
+        3.40541
+      ],
+      "trough_x_m": [
+        2.88115,
+        2.9852,
+        3.06924,
+        3.22932,
+        3.30936,
+        3.42542
+      ],
+      "crest_prominence_m": [
+        0.003473,
+        0.006112,
+        0.010898,
+        0.007189,
+        0.009097
+      ],
+      "trough_prominence_m": [
+        0.002041,
+        0.006075,
+        0.008835,
+        0.007189,
+        0.013371,
+        0.007614
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 171,
+      "time_s": 8.55,
+      "residual_peak_to_peak_m": 0.018434552471830026,
+      "residual_rms_m": 0.0024723215130876357,
+      "dominant_wavelength_m": 0.1111111111111112,
+      "dominant_mode_energy_fraction": 0.2499360435994523,
+      "crest_count": 5,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.89716,
+        3.03723,
+        3.14128,
+        3.24133,
+        3.33738
+      ],
+      "trough_x_m": [
+        2.80511,
+        2.969195,
+        3.08525,
+        3.22932,
+        3.32137,
+        3.43342
+      ],
+      "crest_prominence_m": [
+        0.004753,
+        0.006915,
+        0.010229,
+        0.006645,
+        0.008726
+      ],
+      "trough_prominence_m": [
+        0.002567,
+        0.006138,
+        0.011667,
+        0.005107,
+        0.018434,
+        0.005605
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 172,
+      "time_s": 8.6,
+      "residual_peak_to_peak_m": 0.01467105036194069,
+      "residual_rms_m": 0.002227928432508662,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.30639318482396616,
+      "crest_count": 6,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.81712,
+        3.01322,
+        3.093255,
+        3.213315,
+        3.31737,
+        3.417415
+      ],
+      "trough_x_m": [
+        2.93718,
+        3.10926,
+        3.233325,
+        3.33738,
+        3.437425
+      ],
+      "crest_prominence_m": [
+        0.004357,
+        0.008039,
+        0.003435,
+        0.004998,
+        0.012379,
+        0.005255
+      ],
+      "trough_prominence_m": [
+        0.006962,
+        0.011813,
+        0.004998,
+        0.013608,
+        0.005088
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 173,
+      "time_s": 8.65,
+      "residual_peak_to_peak_m": 0.016472623820314933,
+      "residual_rms_m": 0.0023952985847892055,
+      "dominant_wavelength_m": 0.2500000000000002,
+      "dominant_mode_energy_fraction": 0.2768583578280433,
+      "crest_count": 6,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.80511,
+        2.99321,
+        3.113265,
+        3.233325,
+        3.31737,
+        3.40541
+      ],
+      "trough_x_m": [
+        2.829125,
+        2.91317,
+        3.009215,
+        3.12927,
+        3.273345,
+        3.35338
+      ],
+      "crest_prominence_m": [
+        0.006009,
+        0.00798,
+        0.0044,
+        0.009497,
+        0.013758,
+        0.006274
+      ],
+      "trough_prominence_m": [
+        0.003365,
+        0.00798,
+        0.008014,
+        0.01147,
+        0.009497,
+        0.012813
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 174,
+      "time_s": 8.7,
+      "residual_peak_to_peak_m": 0.018453387935161075,
+      "residual_rms_m": 0.002787106447940582,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.23854396003714895,
+      "crest_count": 6,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.79711,
+        3.00521,
+        3.133275,
+        3.233325,
+        3.31737,
+        3.43342
+      ],
+      "trough_x_m": [
+        2.82112,
+        2.90516,
+        3.02522,
+        3.14928,
+        3.28535,
+        3.36939
+      ],
+      "crest_prominence_m": [
+        0.006368,
+        0.010032,
+        0.006247,
+        0.011435,
+        0.013264,
+        0.005013
+      ],
+      "trough_prominence_m": [
+        0.002345,
+        0.009157,
+        0.006247,
+        0.01266,
+        0.011435,
+        0.014942
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 175,
+      "time_s": 8.75,
+      "residual_peak_to_peak_m": 0.015145817069026943,
+      "residual_rms_m": 0.002873652047194281,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.29271097323251094,
+      "crest_count": 6,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.789105,
+        2.9852,
+        3.153285,
+        3.23733,
+        3.31737,
+        3.43342
+      ],
+      "trough_x_m": [
+        2.82512,
+        3.03723,
+        3.21732,
+        3.30136,
+        3.3854
+      ],
+      "crest_prominence_m": [
+        0.006104,
+        0.010291,
+        0.006477,
+        0.007831,
+        0.014418,
+        0.003546
+      ],
+      "trough_prominence_m": [
+        0.010291,
+        0.012076,
+        0.006477,
+        0.01437,
+        0.01263
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 176,
+      "time_s": 8.8,
+      "residual_peak_to_peak_m": 0.016848801845133987,
+      "residual_rms_m": 0.0028489046854425874,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3495696954070372,
+      "crest_count": 6,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.789105,
+        2.989205,
+        3.06924,
+        3.153285,
+        3.293355,
+        3.43342
+      ],
+      "trough_x_m": [
+        2.82112,
+        3.053235,
+        3.193305,
+        3.30936,
+        3.40941
+      ],
+      "crest_prominence_m": [
+        0.005287,
+        0.011313,
+        0.001588,
+        0.007407,
+        0.016205,
+        0.003974
+      ],
+      "trough_prominence_m": [
+        0.009693,
+        0.016205,
+        0.005461,
+        0.016342,
+        0.008922
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 177,
+      "time_s": 8.85,
+      "residual_peak_to_peak_m": 0.015242735757366205,
+      "residual_rms_m": 0.002557818935773639,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.39395071209527793,
+      "crest_count": 6,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.72908,
+        2.95719,
+        3.113265,
+        3.19731,
+        3.30536,
+        3.40941
+      ],
+      "trough_x_m": [
+        2.84513,
+        2.9852,
+        3.06924,
+        3.213315,
+        3.32537,
+        3.42942
+      ],
+      "crest_prominence_m": [
+        0.004001,
+        0.009544,
+        0.002744,
+        0.007978,
+        0.014156,
+        0.003853
+      ],
+      "trough_prominence_m": [
+        0.008416,
+        0.00162,
+        0.013185,
+        0.00209,
+        0.012816,
+        0.008197
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 178,
+      "time_s": 8.9,
+      "residual_peak_to_peak_m": 0.015633898073729502,
+      "residual_rms_m": 0.0026394587354110306,
+      "dominant_wavelength_m": 0.2500000000000002,
+      "dominant_mode_energy_fraction": 0.39417774229943164,
+      "crest_count": 6,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.705065,
+        2.92517,
+        3.073245,
+        3.16929,
+        3.31737,
+        3.40141
+      ],
+      "trough_x_m": [
+        2.83313,
+        3.08925,
+        3.33738,
+        3.44143
+      ],
+      "crest_prominence_m": [
+        0.003148,
+        0.011522,
+        0.003265,
+        0.008138,
+        0.015589,
+        0.009912
+      ],
+      "trough_prominence_m": [
+        0.007617,
+        0.01378,
+        0.009912,
+        0.00411
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 179,
+      "time_s": 8.95,
+      "residual_peak_to_peak_m": 0.01661290908531929,
+      "residual_rms_m": 0.002659765461463385,
+      "dominant_wavelength_m": 0.2500000000000002,
+      "dominant_mode_energy_fraction": 0.2768350745179621,
+      "crest_count": 5,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.71307,
+        2.93318,
+        3.093255,
+        3.1893,
+        3.32537
+      ],
+      "trough_x_m": [
+        2.84513,
+        3.02522,
+        3.10926,
+        3.273345,
+        3.357385
+      ],
+      "crest_prominence_m": [
+        0.002851,
+        0.011417,
+        0.008365,
+        0.007141,
+        0.01328
+      ],
+      "trough_prominence_m": [
+        0.007157,
+        0.008365,
+        0.014282,
+        0.005465,
+        0.008987
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 180,
+      "time_s": 9.0,
+      "residual_peak_to_peak_m": 0.014288332972210521,
+      "residual_rms_m": 0.0023665432317897567,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.2623401943446732,
+      "crest_count": 6,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.65304,
+        2.91317,
+        3.10126,
+        3.1813,
+        3.32937,
+        3.40941
+      ],
+      "trough_x_m": [
+        2.67305,
+        2.85714,
+        3.01322,
+        3.12527,
+        3.3814
+      ],
+      "crest_prominence_m": [
+        0.002827,
+        0.010581,
+        0.007876,
+        0.001572,
+        0.011991,
+        0.004763
+      ],
+      "trough_prominence_m": [
+        0.001993,
+        0.005973,
+        0.007876,
+        0.006945,
+        0.010298
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 181,
+      "time_s": 9.05,
+      "residual_peak_to_peak_m": 0.011063039013548381,
+      "residual_rms_m": 0.002223462689436076,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.28416681807253424,
+      "crest_count": 6,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.64103,
+        2.82512,
+        2.909165,
+        3.07725,
+        3.1853,
+        3.357385
+      ],
+      "trough_x_m": [
+        2.809115,
+        3.00521,
+        3.14928,
+        3.3894
+      ],
+      "crest_prominence_m": [
+        0.002957,
+        0.002549,
+        0.007936,
+        0.00649,
+        0.002524,
+        0.010702
+      ],
+      "trough_prominence_m": [
+        0.005413,
+        0.009144,
+        0.00649,
+        0.005988
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 182,
+      "time_s": 9.1,
+      "residual_peak_to_peak_m": 0.01206123436528328,
+      "residual_rms_m": 0.0023143070205936486,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.2977290367217129,
+      "crest_count": 5,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.62903,
+        2.869145,
+        3.08125,
+        3.1853,
+        3.37339
+      ],
+      "trough_x_m": [
+        2.745085,
+        2.88515,
+        2.9732,
+        3.16929,
+        3.31737,
+        3.42142
+      ],
+      "crest_prominence_m": [
+        0.002638,
+        0.008019,
+        0.008756,
+        0.001675,
+        0.01151
+      ],
+      "trough_prominence_m": [
+        0.004875,
+        0.006417,
+        0.008756,
+        0.005407,
+        0.010652,
+        0.004408
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 183,
+      "time_s": 9.15,
+      "residual_peak_to_peak_m": 0.014099216627887934,
+      "residual_rms_m": 0.0024955265183219666,
+      "dominant_wavelength_m": 0.2500000000000002,
+      "dominant_mode_energy_fraction": 0.355841616080756,
+      "crest_count": 5,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.61702,
+        2.84113,
+        3.06524,
+        3.253335,
+        3.37339
+      ],
+      "trough_x_m": [
+        2.745085,
+        2.89716,
+        3.113265,
+        3.33738,
+        3.437425
+      ],
+      "crest_prominence_m": [
+        0.002258,
+        0.008272,
+        0.010566,
+        0.002836,
+        0.012002
+      ],
+      "trough_prominence_m": [
+        0.004793,
+        0.011064,
+        0.006144,
+        0.010566,
+        0.003281
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 184,
+      "time_s": 9.2,
+      "residual_peak_to_peak_m": 0.013609781848083799,
+      "residual_rms_m": 0.002305669945987337,
+      "dominant_wavelength_m": 0.2500000000000002,
+      "dominant_mode_energy_fraction": 0.39177992241736914,
+      "crest_count": 7,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.60902,
+        2.809115,
+        2.89316,
+        3.05724,
+        3.16529,
+        3.253335,
+        3.3934
+      ],
+      "trough_x_m": [
+        2.725075,
+        2.829125,
+        2.91317,
+        3.11727,
+        3.213315,
+        3.34538
+      ],
+      "crest_prominence_m": [
+        0.001894,
+        0.008281,
+        0.005318,
+        0.008985,
+        0.002587,
+        0.006172,
+        0.009878
+      ],
+      "trough_prominence_m": [
+        0.005201,
+        0.005284,
+        0.012954,
+        0.006172,
+        0.002587,
+        0.008985
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 185,
+      "time_s": 9.25,
+      "residual_peak_to_peak_m": 0.013183457082809422,
+      "residual_rms_m": 0.0022220745884246867,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3507722760770474,
+      "crest_count": 7,
+      "trough_count": 7,
+      "crest_x_m": [
+        2.605015,
+        2.7771,
+        2.85714,
+        3.00521,
+        3.1853,
+        3.26934,
+        3.41341
+      ],
+      "trough_x_m": [
+        2.70106,
+        2.84113,
+        2.929175,
+        3.11727,
+        3.20131,
+        3.357385,
+        3.437425
+      ],
+      "crest_prominence_m": [
+        0.001627,
+        0.009556,
+        0.004269,
+        0.008769,
+        0.002677,
+        0.003922,
+        0.007768
+      ],
+      "trough_prominence_m": [
+        0.006269,
+        0.004269,
+        0.012803,
+        0.00808,
+        0.002677,
+        0.003922,
+        0.003018
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 186,
+      "time_s": 9.3,
+      "residual_peak_to_peak_m": 0.012292205833760866,
+      "residual_rms_m": 0.0022347909912233126,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.37007881026402495,
+      "crest_count": 6,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.60101,
+        2.76509,
+        2.99321,
+        3.1773,
+        3.34938,
+        3.42942
+      ],
+      "trough_x_m": [
+        2.67705,
+        2.849135,
+        2.949185,
+        3.10526,
+        3.24533,
+        3.397405
+      ],
+      "crest_prominence_m": [
+        0.00152,
+        0.009609,
+        0.00851,
+        0.004628,
+        0.003209,
+        0.006883
+      ],
+      "trough_prominence_m": [
+        0.005601,
+        0.006168,
+        0.011179,
+        0.006883,
+        0.003209,
+        0.004628
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 187,
+      "time_s": 9.35,
+      "residual_peak_to_peak_m": 0.01213096383890995,
+      "residual_rms_m": 0.0021610077146394712,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.4170996477365681,
+      "crest_count": 6,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.60101,
+        2.75709,
+        2.88515,
+        3.00521,
+        3.16529,
+        3.36139
+      ],
+      "trough_x_m": [
+        2.685055,
+        2.86114,
+        2.96519,
+        3.10926,
+        3.28135,
+        3.41341
+      ],
+      "crest_prominence_m": [
+        0.001581,
+        0.009613,
+        0.003278,
+        0.007777,
+        0.003868,
+        0.005723
+      ],
+      "trough_prominence_m": [
+        0.004859,
+        0.010277,
+        0.005613,
+        0.006582,
+        0.003868,
+        0.00473
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 188,
+      "time_s": 9.4,
+      "residual_peak_to_peak_m": 0.009999270498580987,
+      "residual_rms_m": 0.0021045438030248835,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.46524938542995614,
+      "crest_count": 6,
+      "trough_count": 7,
+      "crest_x_m": [
+        2.58901,
+        2.745085,
+        2.90116,
+        2.99321,
+        3.1813,
+        3.36939
+      ],
+      "trough_x_m": [
+        2.67705,
+        2.87315,
+        2.9772,
+        3.06524,
+        3.253335,
+        3.34938,
+        3.42942
+      ],
+      "crest_prominence_m": [
+        0.001781,
+        0.007864,
+        0.003116,
+        0.008779,
+        0.004243,
+        0.006632
+      ],
+      "trough_prominence_m": [
+        0.004269,
+        0.009935,
+        0.004812,
+        0.007262,
+        0.004243,
+        0.002272,
+        0.001979
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 189,
+      "time_s": 9.45,
+      "residual_peak_to_peak_m": 0.009044917224510618,
+      "residual_rms_m": 0.0020419083354855498,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.4420846618756054,
+      "crest_count": 6,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.577,
+        2.72107,
+        2.91317,
+        3.009215,
+        3.12927,
+        3.3814
+      ],
+      "trough_x_m": [
+        2.65704,
+        2.83713,
+        2.929175,
+        3.04123,
+        3.25734
+      ],
+      "crest_prominence_m": [
+        0.00196,
+        0.00703,
+        0.008902,
+        0.002326,
+        0.006754,
+        0.005942
+      ],
+      "trough_prominence_m": [
+        0.00418,
+        0.0084,
+        0.004507,
+        0.007089,
+        0.006012
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 190,
+      "time_s": 9.5,
+      "residual_peak_to_peak_m": 0.009705035173257964,
+      "residual_rms_m": 0.0020219187583252595,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.4199939481388234,
+      "crest_count": 6,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.573,
+        2.73308,
+        2.92117,
+        3.10526,
+        3.30136,
+        3.417415
+      ],
+      "trough_x_m": [
+        2.65704,
+        2.80511,
+        2.94118,
+        3.02122,
+        3.26134,
+        3.3814
+      ],
+      "crest_prominence_m": [
+        0.002202,
+        0.005963,
+        0.009404,
+        0.007886,
+        0.003393,
+        0.00193
+      ],
+      "trough_prominence_m": [
+        0.003749,
+        0.008508,
+        0.004013,
+        0.007996,
+        0.0066,
+        0.002576
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 191,
+      "time_s": 9.55,
+      "residual_peak_to_peak_m": 0.011598469550817073,
+      "residual_rms_m": 0.0022394886703700685,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3704321661678526,
+      "crest_count": 6,
+      "trough_count": 7,
+      "crest_x_m": [
+        2.56099,
+        2.70907,
+        2.89316,
+        3.10926,
+        3.213315,
+        3.30136
+      ],
+      "trough_x_m": [
+        2.64103,
+        2.789105,
+        2.95719,
+        3.03723,
+        3.1773,
+        3.26534,
+        3.3934
+      ],
+      "crest_prominence_m": [
+        0.002265,
+        0.004019,
+        0.009054,
+        0.008652,
+        0.002626,
+        0.00473
+      ],
+      "trough_prominence_m": [
+        0.003408,
+        0.006756,
+        0.00374,
+        0.011176,
+        0.002626,
+        0.006479,
+        0.004147
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 192,
+      "time_s": 9.6,
+      "residual_peak_to_peak_m": 0.01132678037454686,
+      "residual_rms_m": 0.0022588542898188215,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3579757752500903,
+      "crest_count": 6,
+      "trough_count": 7,
+      "crest_x_m": [
+        2.54899,
+        2.69706,
+        2.849135,
+        2.93718,
+        3.09726,
+        3.293355
+      ],
+      "trough_x_m": [
+        2.64904,
+        2.7771,
+        2.86514,
+        2.969195,
+        3.1853,
+        3.26934,
+        3.40941
+      ],
+      "crest_prominence_m": [
+        0.002528,
+        0.004841,
+        0.008614,
+        0.003258,
+        0.009702,
+        0.004392
+      ],
+      "trough_prominence_m": [
+        0.004099,
+        0.007011,
+        0.001632,
+        0.008943,
+        0.005933,
+        0.002366,
+        0.003434
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 193,
+      "time_s": 9.65,
+      "residual_peak_to_peak_m": 0.011421105694362915,
+      "residual_rms_m": 0.002182737556938994,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.36145047227195937,
+      "crest_count": 5,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.544985,
+        2.69306,
+        2.84113,
+        3.073245,
+        3.28935
+      ],
+      "trough_x_m": [
+        2.62903,
+        2.75709,
+        2.9852,
+        3.193305,
+        3.273345,
+        3.42542
+      ],
+      "crest_prominence_m": [
+        0.002814,
+        0.004372,
+        0.008556,
+        0.008901,
+        0.004176
+      ],
+      "trough_prominence_m": [
+        0.003819,
+        0.00665,
+        0.010438,
+        0.006108,
+        0.002083,
+        0.001535
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 194,
+      "time_s": 9.7,
+      "residual_peak_to_peak_m": 0.012043965934534953,
+      "residual_rms_m": 0.002282458621181003,
+      "dominant_wavelength_m": 0.2500000000000002,
+      "dominant_mode_energy_fraction": 0.33458257215858267,
+      "crest_count": 6,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.53698,
+        2.69706,
+        2.82512,
+        2.989205,
+        3.073245,
+        3.26534
+      ],
+      "trough_x_m": [
+        2.65304,
+        2.74108,
+        2.95719,
+        3.14128
+      ],
+      "crest_prominence_m": [
+        0.002818,
+        0.003205,
+        0.009014,
+        0.00449,
+        0.010692,
+        0.004633
+      ],
+      "trough_prominence_m": [
+        0.003205,
+        0.006781,
+        0.010042,
+        0.007041
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 195,
+      "time_s": 9.75,
+      "residual_peak_to_peak_m": 0.010543559157878149,
+      "residual_rms_m": 0.002274834177337023,
+      "dominant_wavelength_m": 0.2500000000000002,
+      "dominant_mode_energy_fraction": 0.33707187092003216,
+      "crest_count": 7,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.53298,
+        2.69706,
+        2.81312,
+        2.95719,
+        3.06124,
+        3.253335,
+        3.36939
+      ],
+      "trough_x_m": [
+        2.62903,
+        2.74909,
+        2.9732,
+        3.14928,
+        3.28935
+      ],
+      "crest_prominence_m": [
+        0.002576,
+        0.002925,
+        0.009248,
+        0.00381,
+        0.010521,
+        0.004741,
+        0.001985
+      ],
+      "trough_prominence_m": [
+        0.002925,
+        0.006037,
+        0.010126,
+        0.00751,
+        0.002606
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 196,
+      "time_s": 9.8,
+      "residual_peak_to_peak_m": 0.010100305093486098,
+      "residual_rms_m": 0.002135633177790457,
+      "dominant_wavelength_m": 0.2500000000000002,
+      "dominant_mode_energy_fraction": 0.35581729067827583,
+      "crest_count": 7,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.524975,
+        2.66104,
+        2.79711,
+        3.04923,
+        3.14128,
+        3.24533,
+        3.3814
+      ],
+      "trough_x_m": [
+        2.60902,
+        2.725075,
+        2.909165,
+        3.15729,
+        3.29736
+      ],
+      "crest_prominence_m": [
+        0.002244,
+        0.002569,
+        0.008252,
+        0.008936,
+        0.001726,
+        0.006777,
+        0.002521
+      ],
+      "trough_prominence_m": [
+        0.002569,
+        0.004504,
+        0.008936,
+        0.006777,
+        0.005382
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 197,
+      "time_s": 9.85,
+      "residual_peak_to_peak_m": 0.01068746966431379,
+      "residual_rms_m": 0.002016102875551784,
+      "dominant_wavelength_m": 0.2500000000000002,
+      "dominant_mode_energy_fraction": 0.34787624640774883,
+      "crest_count": 7,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.50897,
+        2.66104,
+        2.7851,
+        3.04923,
+        3.153285,
+        3.24533,
+        3.377395
+      ],
+      "trough_x_m": [
+        2.62903,
+        2.72107,
+        2.87715,
+        3.10126,
+        3.22532,
+        3.30936
+      ],
+      "crest_prominence_m": [
+        0.001977,
+        0.002702,
+        0.008909,
+        0.007649,
+        0.001669,
+        0.005848,
+        0.002628
+      ],
+      "trough_prominence_m": [
+        0.004654,
+        0.002702,
+        0.008217,
+        0.006302,
+        0.001795,
+        0.004454
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 198,
+      "time_s": 9.9,
+      "residual_peak_to_peak_m": 0.009310436777077088,
+      "residual_rms_m": 0.0019566361821168813,
+      "dominant_wavelength_m": 0.2500000000000002,
+      "dominant_mode_energy_fraction": 0.34858416036431605,
+      "crest_count": 6,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.65304,
+        2.7811,
+        2.92517,
+        3.00521,
+        3.193305,
+        3.333375
+      ],
+      "trough_x_m": [
+        2.60902,
+        2.69706,
+        2.869145,
+        3.093255,
+        3.233325,
+        3.31737
+      ],
+      "crest_prominence_m": [
+        0.002962,
+        0.007394,
+        0.00235,
+        0.007509,
+        0.004334,
+        0.002994
+      ],
+      "trough_prominence_m": [
+        0.004378,
+        0.002962,
+        0.007509,
+        0.007101,
+        0.001671,
+        0.003349
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 199,
+      "time_s": 9.95,
+      "residual_peak_to_peak_m": 0.009907793348490429,
+      "residual_rms_m": 0.0019866517904580778,
+      "dominant_wavelength_m": 0.2500000000000002,
+      "dominant_mode_energy_fraction": 0.3442150878560588,
+      "crest_count": 5,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.66905,
+        2.76509,
+        2.92517,
+        3.16929,
+        3.34138
+      ],
+      "trough_x_m": [
+        2.59701,
+        2.705065,
+        2.84113,
+        2.94518,
+        3.08125,
+        3.24533
+      ],
+      "crest_prominence_m": [
+        0.003313,
+        0.007898,
+        0.007961,
+        0.00534,
+        0.002538
+      ],
+      "trough_prominence_m": [
+        0.004633,
+        0.003313,
+        0.007961,
+        0.002403,
+        0.00737,
+        0.004494
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 200,
+      "time_s": 10.0,
+      "residual_peak_to_peak_m": 0.009014666101234303,
+      "residual_rms_m": 0.0019437748798597926,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.33514806875428077,
+      "crest_count": 5,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.66104,
+        2.745085,
+        2.92117,
+        3.13728,
+        3.31737
+      ],
+      "trough_x_m": [
+        2.58901,
+        2.71307,
+        2.83313,
+        3.073245,
+        3.253335,
+        3.33738
+      ],
+      "crest_prominence_m": [
+        0.003732,
+        0.00577,
+        0.008371,
+        0.006149,
+        0.002249
+      ],
+      "trough_prominence_m": [
+        0.004006,
+        0.003732,
+        0.007827,
+        0.006632,
+        0.004961,
+        0.001594
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 201,
+      "time_s": 10.05,
+      "residual_peak_to_peak_m": 0.009832720918616603,
+      "residual_rms_m": 0.0020198088634064285,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.33100496342154506,
+      "crest_count": 6,
+      "trough_count": 7,
+      "crest_x_m": [
+        2.645035,
+        2.73708,
+        2.91317,
+        3.11727,
+        3.28935,
+        3.37339
+      ],
+      "trough_x_m": [
+        2.569,
+        2.705065,
+        2.81312,
+        2.9732,
+        3.06524,
+        3.20131,
+        3.34538
+      ],
+      "crest_prominence_m": [
+        0.006477,
+        0.003195,
+        0.008044,
+        0.005972,
+        0.003115,
+        0.002532
+      ],
+      "trough_prominence_m": [
+        0.004544,
+        0.003195,
+        0.0085,
+        0.001592,
+        0.006993,
+        0.004039,
+        0.00261
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 202,
+      "time_s": 10.1,
+      "residual_peak_to_peak_m": 0.010048128090872535,
+      "residual_rms_m": 0.002031597149212125,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3472835370263116,
+      "crest_count": 6,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.645035,
+        2.74108,
+        2.88115,
+        3.113265,
+        3.28535,
+        3.3814
+      ],
+      "trough_x_m": [
+        2.56099,
+        2.68906,
+        2.81312,
+        2.989205,
+        3.20931,
+        3.34938
+      ],
+      "crest_prominence_m": [
+        0.005773,
+        0.002524,
+        0.008664,
+        0.007727,
+        0.004363,
+        0.002416
+      ],
+      "trough_prominence_m": [
+        0.003642,
+        0.002524,
+        0.008526,
+        0.007727,
+        0.006609,
+        0.002416
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 203,
+      "time_s": 10.15,
+      "residual_peak_to_peak_m": 0.008612791442600312,
+      "residual_rms_m": 0.0018974252701154236,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.38055139814529576,
+      "crest_count": 6,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.64103,
+        2.725075,
+        2.87315,
+        3.09726,
+        3.26134,
+        3.3854
+      ],
+      "trough_x_m": [
+        2.573,
+        2.68906,
+        2.79311,
+        3.00121,
+        3.21732,
+        3.36139
+      ],
+      "crest_prominence_m": [
+        0.004901,
+        0.001697,
+        0.008594,
+        0.007401,
+        0.003113,
+        0.00154
+      ],
+      "trough_prominence_m": [
+        0.002931,
+        0.001697,
+        0.006923,
+        0.008096,
+        0.004945,
+        0.00154
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 204,
+      "time_s": 10.2,
+      "residual_peak_to_peak_m": 0.008925440443340552,
+      "residual_rms_m": 0.001874496018036685,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.38853857504712835,
+      "crest_count": 6,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.61302,
+        2.725075,
+        2.85714,
+        3.08925,
+        3.24933,
+        3.357385
+      ],
+      "trough_x_m": [
+        2.53298,
+        2.685055,
+        2.7811,
+        2.96519,
+        3.14128
+      ],
+      "crest_prominence_m": [
+        0.004289,
+        0.002035,
+        0.008251,
+        0.006815,
+        0.003674,
+        0.001929
+      ],
+      "trough_prominence_m": [
+        0.002498,
+        0.002035,
+        0.006301,
+        0.008461,
+        0.004652
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 205,
+      "time_s": 10.25,
+      "residual_peak_to_peak_m": 0.008093997095826824,
+      "residual_rms_m": 0.0018047331433981996,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.41080838087641725,
+      "crest_count": 6,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.60902,
+        2.71307,
+        2.829125,
+        3.08125,
+        3.253335,
+        3.36539
+      ],
+      "trough_x_m": [
+        2.51697,
+        2.68105,
+        2.7731,
+        2.95319,
+        3.12927,
+        3.293355
+      ],
+      "crest_prominence_m": [
+        0.00412,
+        0.002489,
+        0.006944,
+        0.006613,
+        0.004079,
+        0.002061
+      ],
+      "trough_prominence_m": [
+        0.003065,
+        0.002489,
+        0.004885,
+        0.007535,
+        0.005054,
+        0.002595
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 206,
+      "time_s": 10.3,
+      "residual_peak_to_peak_m": 0.008552311836487414,
+      "residual_rms_m": 0.0017944641990410082,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.4107340246926572,
+      "crest_count": 5,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.58901,
+        2.725075,
+        2.82512,
+        3.053235,
+        3.233325
+      ],
+      "trough_x_m": [
+        2.51697,
+        2.64904,
+        2.75709,
+        2.93318,
+        3.12527,
+        3.30136
+      ],
+      "crest_prominence_m": [
+        0.003758,
+        0.002128,
+        0.007445,
+        0.006956,
+        0.004063
+      ],
+      "trough_prominence_m": [
+        0.003038,
+        0.002128,
+        0.004711,
+        0.007225,
+        0.005957,
+        0.00234
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 207,
+      "time_s": 10.35,
+      "residual_peak_to_peak_m": 0.00868392665953717,
+      "residual_rms_m": 0.0018004944559959382,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3896352124222927,
+      "crest_count": 6,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.581,
+        2.71707,
+        2.81712,
+        3.03323,
+        3.193305,
+        3.32937
+      ],
+      "trough_x_m": [
+        2.50897,
+        2.64103,
+        2.74909,
+        2.89716,
+        3.11727,
+        3.26134
+      ],
+      "crest_prominence_m": [
+        0.003721,
+        0.002672,
+        0.006285,
+        0.006975,
+        0.003618,
+        0.001842
+      ],
+      "trough_prominence_m": [
+        0.002831,
+        0.003756,
+        0.002672,
+        0.006975,
+        0.006392,
+        0.002203
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 208,
+      "time_s": 10.4,
+      "residual_peak_to_peak_m": 0.007960905121728507,
+      "residual_rms_m": 0.0017155599077963608,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.38859705435021963,
+      "crest_count": 6,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.573,
+        2.71707,
+        2.80111,
+        3.01722,
+        3.1813,
+        3.31737
+      ],
+      "trough_x_m": [
+        2.52097,
+        2.66104,
+        2.745085,
+        2.88115,
+        3.10926,
+        3.26534
+      ],
+      "crest_prominence_m": [
+        0.003108,
+        0.002593,
+        0.006152,
+        0.006966,
+        0.004905,
+        0.001818
+      ],
+      "trough_prominence_m": [
+        0.002617,
+        0.003489,
+        0.002593,
+        0.006966,
+        0.006466,
+        0.003472
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 209,
+      "time_s": 10.45,
+      "residual_peak_to_peak_m": 0.007358453478973001,
+      "residual_rms_m": 0.0016147775975750079,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3862742784385229,
+      "crest_count": 6,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.581,
+        2.705065,
+        2.79311,
+        2.989205,
+        3.15729,
+        3.31737
+      ],
+      "trough_x_m": [
+        2.50897,
+        2.64103,
+        2.745085,
+        2.89716,
+        3.09726,
+        3.24133
+      ],
+      "crest_prominence_m": [
+        0.00333,
+        0.002674,
+        0.005424,
+        0.007184,
+        0.004479,
+        0.001688
+      ],
+      "trough_prominence_m": [
+        0.002849,
+        0.00333,
+        0.002674,
+        0.007129,
+        0.006628,
+        0.002592
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 210,
+      "time_s": 10.5,
+      "residual_peak_to_peak_m": 0.007525365034470433,
+      "residual_rms_m": 0.001592561060914003,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3652035966960539,
+      "crest_count": 4,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.564995,
+        2.69306,
+        2.95719,
+        3.14528
+      ],
+      "trough_x_m": [
+        2.504965,
+        2.63303,
+        2.73708,
+        2.84113,
+        3.08525,
+        3.23733
+      ],
+      "crest_prominence_m": [
+        0.003124,
+        0.005138,
+        0.005881,
+        0.005986
+      ],
+      "trough_prominence_m": [
+        0.002542,
+        0.003124,
+        0.00193,
+        0.005575,
+        0.006743,
+        0.00278
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 211,
+      "time_s": 10.55,
+      "residual_peak_to_peak_m": 0.007161529072123696,
+      "residual_rms_m": 0.0015909735049007554,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3462519514676838,
+      "crest_count": 5,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.564995,
+        2.685055,
+        2.95319,
+        3.13728,
+        3.28935
+      ],
+      "trough_x_m": [
+        2.50897,
+        2.605015,
+        2.83313,
+        3.06124,
+        3.22532,
+        3.397405
+      ],
+      "crest_prominence_m": [
+        0.002505,
+        0.005168,
+        0.006096,
+        0.00633,
+        0.003142
+      ],
+      "trough_prominence_m": [
+        0.002865,
+        0.002505,
+        0.005732,
+        0.006096,
+        0.003957,
+        0.002334
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 212,
+      "time_s": 10.6,
+      "residual_peak_to_peak_m": 0.007726478699447009,
+      "residual_rms_m": 0.0016552281140686834,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3280375820317562,
+      "crest_count": 5,
+      "trough_count": 7,
+      "crest_x_m": [
+        2.54899,
+        2.67705,
+        2.87315,
+        3.12127,
+        3.28935
+      ],
+      "trough_x_m": [
+        2.49696,
+        2.61702,
+        2.80511,
+        2.90516,
+        3.029225,
+        3.213315,
+        3.40541
+      ],
+      "crest_prominence_m": [
+        0.002246,
+        0.005684,
+        0.005995,
+        0.006211,
+        0.003159
+      ],
+      "trough_prominence_m": [
+        0.00234,
+        0.002246,
+        0.005995,
+        0.001702,
+        0.006592,
+        0.003159,
+        0.003808
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 213,
+      "time_s": 10.65,
+      "residual_peak_to_peak_m": 0.00787311253478927,
+      "residual_rms_m": 0.0018040260452044032,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.30779834698360087,
+      "crest_count": 5,
+      "trough_count": 7,
+      "crest_x_m": [
+        2.56099,
+        2.66905,
+        2.869145,
+        3.10926,
+        3.253335
+      ],
+      "trough_x_m": [
+        2.50897,
+        2.60902,
+        2.809115,
+        2.909165,
+        3.03723,
+        3.173295,
+        3.397405
+      ],
+      "crest_prominence_m": [
+        0.002003,
+        0.006057,
+        0.007557,
+        0.007163,
+        0.003663
+      ],
+      "trough_prominence_m": [
+        0.002839,
+        0.002003,
+        0.006057,
+        0.002386,
+        0.007705,
+        0.004174,
+        0.003562
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 214,
+      "time_s": 10.7,
+      "residual_peak_to_peak_m": 0.00776780422432348,
+      "residual_rms_m": 0.0018463872962916341,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.31752170965167426,
+      "crest_count": 4,
+      "trough_count": 3,
+      "crest_x_m": [
+        2.64103,
+        2.86114,
+        3.093255,
+        3.24933
+      ],
+      "trough_x_m": [
+        2.70907,
+        2.99721,
+        3.15729
+      ],
+      "crest_prominence_m": [
+        0.004896,
+        0.007612,
+        0.007008,
+        0.003499
+      ],
+      "trough_prominence_m": [
+        0.005782,
+        0.007008,
+        0.005005
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 215,
+      "time_s": 10.75,
+      "residual_peak_to_peak_m": 0.007578762537161471,
+      "residual_rms_m": 0.0018123683901069732,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.37380902490953105,
+      "crest_count": 4,
+      "trough_count": 3,
+      "crest_x_m": [
+        2.63703,
+        2.849135,
+        3.073245,
+        3.22932
+      ],
+      "trough_x_m": [
+        2.71307,
+        2.929175,
+        3.14528
+      ],
+      "crest_prominence_m": [
+        0.004794,
+        0.007153,
+        0.007471,
+        0.002476
+      ],
+      "trough_prominence_m": [
+        0.005912,
+        0.007153,
+        0.005083
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 216,
+      "time_s": 10.8,
+      "residual_peak_to_peak_m": 0.007623457302719877,
+      "residual_rms_m": 0.0018186100042494925,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.4142154051546916,
+      "crest_count": 4,
+      "trough_count": 3,
+      "crest_x_m": [
+        2.61702,
+        2.85314,
+        3.06524,
+        3.213315
+      ],
+      "trough_x_m": [
+        2.71307,
+        2.93318,
+        3.133275
+      ],
+      "crest_prominence_m": [
+        0.003755,
+        0.007614,
+        0.007153,
+        0.002955
+      ],
+      "trough_prominence_m": [
+        0.005469,
+        0.007153,
+        0.005739
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 217,
+      "time_s": 10.85,
+      "residual_peak_to_peak_m": 0.007673643156294568,
+      "residual_rms_m": 0.0018215329057718291,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.4297144316064491,
+      "crest_count": 4,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.61702,
+        2.81312,
+        3.03323,
+        3.20131
+      ],
+      "trough_x_m": [
+        2.705065,
+        2.91717,
+        3.11727,
+        3.27735
+      ],
+      "crest_prominence_m": [
+        0.003925,
+        0.00627,
+        0.007448,
+        0.003299
+      ],
+      "trough_prominence_m": [
+        0.00546,
+        0.006822,
+        0.006193,
+        0.002171
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 218,
+      "time_s": 10.9,
+      "residual_peak_to_peak_m": 0.00759215606826448,
+      "residual_rms_m": 0.001804818024012828,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.4069576184455781,
+      "crest_count": 5,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.52097,
+        2.61702,
+        2.76109,
+        3.00521,
+        3.173295
+      ],
+      "trough_x_m": [
+        2.544985,
+        2.69306,
+        2.93718,
+        3.10526,
+        3.40941
+      ],
+      "crest_prominence_m": [
+        0.00275,
+        0.003815,
+        0.005819,
+        0.007105,
+        0.003068
+      ],
+      "trough_prominence_m": [
+        0.00275,
+        0.005312,
+        0.006098,
+        0.005987,
+        0.002016
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 219,
+      "time_s": 10.95,
+      "residual_peak_to_peak_m": 0.008183662753804097,
+      "residual_rms_m": 0.0017712261132577804,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3690299278315812,
+      "crest_count": 5,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.51297,
+        2.60902,
+        2.75709,
+        2.989205,
+        3.14928
+      ],
+      "trough_x_m": [
+        2.544985,
+        2.665045,
+        2.869145,
+        3.08125,
+        3.233325
+      ],
+      "crest_prominence_m": [
+        0.004453,
+        0.003209,
+        0.005349,
+        0.006672,
+        0.003858
+      ],
+      "trough_prominence_m": [
+        0.003209,
+        0.005226,
+        0.005349,
+        0.006951,
+        0.001712
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 220,
+      "time_s": 11.0,
+      "residual_peak_to_peak_m": 0.008050840316734975,
+      "residual_rms_m": 0.0016108059514988763,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.36992804828478537,
+      "crest_count": 6,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.50096,
+        2.61302,
+        2.73708,
+        2.99321,
+        3.14128,
+        3.28135
+      ],
+      "trough_x_m": [
+        2.55299,
+        2.65304,
+        2.88115,
+        3.08525,
+        3.22132
+      ],
+      "crest_prominence_m": [
+        0.003102,
+        0.003316,
+        0.006261,
+        0.006751,
+        0.005183,
+        0.001546
+      ],
+      "trough_prominence_m": [
+        0.003316,
+        0.00518,
+        0.006261,
+        0.007716,
+        0.002692
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 221,
+      "time_s": 11.05,
+      "residual_peak_to_peak_m": 0.006874985742838208,
+      "residual_rms_m": 0.00149172562606697,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3852625590931067,
+      "crest_count": 6,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.49296,
+        2.605015,
+        2.73308,
+        2.9812,
+        3.12527,
+        3.273345
+      ],
+      "trough_x_m": [
+        2.55699,
+        2.65304,
+        2.849135,
+        3.073245,
+        3.213315
+      ],
+      "crest_prominence_m": [
+        0.00221,
+        0.003479,
+        0.005877,
+        0.005012,
+        0.005641,
+        0.001533
+      ],
+      "trough_prominence_m": [
+        0.003322,
+        0.004754,
+        0.005012,
+        0.005877,
+        0.002695
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 222,
+      "time_s": 11.1,
+      "residual_peak_to_peak_m": 0.008299924498378908,
+      "residual_rms_m": 0.0014787146399843289,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3670019985649541,
+      "crest_count": 6,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.484955,
+        2.605015,
+        2.705065,
+        2.93718,
+        3.11727,
+        3.253335
+      ],
+      "trough_x_m": [
+        2.544985,
+        2.65304,
+        2.82112,
+        3.053235,
+        3.193305
+      ],
+      "crest_prominence_m": [
+        0.001517,
+        0.003284,
+        0.004032,
+        0.004865,
+        0.006987,
+        0.001862
+      ],
+      "trough_prominence_m": [
+        0.002672,
+        0.00336,
+        0.004247,
+        0.006281,
+        0.002964
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 223,
+      "time_s": 11.15,
+      "residual_peak_to_peak_m": 0.006378032496225164,
+      "residual_rms_m": 0.0014021017241365665,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3556936215845396,
+      "crest_count": 6,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.49296,
+        2.59701,
+        2.69706,
+        2.93718,
+        3.11727,
+        3.24133
+      ],
+      "trough_x_m": [
+        2.55299,
+        2.66104,
+        2.82512,
+        3.00521,
+        3.1813
+      ],
+      "crest_prominence_m": [
+        0.001781,
+        0.002243,
+        0.003481,
+        0.004456,
+        0.005507,
+        0.002794
+      ],
+      "trough_prominence_m": [
+        0.002511,
+        0.002243,
+        0.003481,
+        0.005729,
+        0.003391
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 224,
+      "time_s": 11.2,
+      "residual_peak_to_peak_m": 0.008282331804814608,
+      "residual_rms_m": 0.0014495160154594882,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.2900014678496004,
+      "crest_count": 6,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.48896,
+        2.59701,
+        2.685055,
+        2.89716,
+        3.093255,
+        3.22932
+      ],
+      "trough_x_m": [
+        2.524975,
+        2.63303,
+        2.7771,
+        2.99321,
+        3.14928
+      ],
+      "crest_prominence_m": [
+        0.001562,
+        0.001777,
+        0.003295,
+        0.004238,
+        0.006658,
+        0.002253
+      ],
+      "trough_prominence_m": [
+        0.002034,
+        0.001777,
+        0.003485,
+        0.006761,
+        0.004241
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 225,
+      "time_s": 11.25,
+      "residual_peak_to_peak_m": 0.009252791958199807,
+      "residual_rms_m": 0.0015869502763017204,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.26717967839247037,
+      "crest_count": 4,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.665045,
+        2.909165,
+        3.08525,
+        3.22132
+      ],
+      "trough_x_m": [
+        2.74909,
+        3.00121,
+        3.14528,
+        3.333375
+      ],
+      "crest_prominence_m": [
+        0.00287,
+        0.004221,
+        0.007954,
+        0.002744
+      ],
+      "trough_prominence_m": [
+        0.004146,
+        0.006871,
+        0.005691,
+        0.002253
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 226,
+      "time_s": 11.3,
+      "residual_peak_to_peak_m": 0.008494978206703016,
+      "residual_rms_m": 0.0015431569390787609,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.29477481089715085,
+      "crest_count": 5,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.564995,
+        2.665045,
+        2.81712,
+        3.05724,
+        3.213315
+      ],
+      "trough_x_m": [
+        2.63303,
+        2.725075,
+        3.009215,
+        3.133275,
+        3.33738
+      ],
+      "crest_prominence_m": [
+        0.002989,
+        0.001681,
+        0.004521,
+        0.007711,
+        0.002941
+      ],
+      "trough_prominence_m": [
+        0.001681,
+        0.004521,
+        0.005345,
+        0.005998,
+        0.002698
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 227,
+      "time_s": 11.35,
+      "residual_peak_to_peak_m": 0.007992478891426444,
+      "residual_rms_m": 0.0014573382480354072,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3435356569932614,
+      "crest_count": 5,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.55699,
+        2.81312,
+        3.04523,
+        3.1853,
+        3.417415
+      ],
+      "trough_x_m": [
+        2.69706,
+        2.949185,
+        3.133275,
+        3.34138
+      ],
+      "crest_prominence_m": [
+        0.002537,
+        0.005142,
+        0.007501,
+        0.002708,
+        0.001683
+      ],
+      "trough_prominence_m": [
+        0.005191,
+        0.005142,
+        0.005432,
+        0.001959
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 228,
+      "time_s": 11.4,
+      "residual_peak_to_peak_m": 0.00661736744036355,
+      "residual_rms_m": 0.0014555150334438333,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3800543281507402,
+      "crest_count": 5,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.54899,
+        2.789105,
+        3.04923,
+        3.16529,
+        3.40541
+      ],
+      "trough_x_m": [
+        2.50897,
+        2.70106,
+        2.95719,
+        3.093255,
+        3.233325
+      ],
+      "crest_prominence_m": [
+        0.002907,
+        0.004544,
+        0.006614,
+        0.003585,
+        0.001907
+      ],
+      "trough_prominence_m": [
+        0.001639,
+        0.005442,
+        0.004544,
+        0.005734,
+        0.001907
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 229,
+      "time_s": 11.45,
+      "residual_peak_to_peak_m": 0.007544335897569657,
+      "residual_rms_m": 0.001490551118476367,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.3850266705947714,
+      "crest_count": 5,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.48095,
+        2.76109,
+        3.01322,
+        3.16529,
+        3.3934
+      ],
+      "trough_x_m": [
+        2.70106,
+        2.90516,
+        3.09726,
+        3.23733
+      ],
+      "crest_prominence_m": [
+        0.001838,
+        0.005198,
+        0.006533,
+        0.004047,
+        0.002064
+      ],
+      "trough_prominence_m": [
+        0.004779,
+        0.005198,
+        0.006137,
+        0.002064
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 230,
+      "time_s": 11.5,
+      "residual_peak_to_peak_m": 0.008168014220789166,
+      "residual_rms_m": 0.0015415644589242133,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.33714330488140826,
+      "crest_count": 5,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.47695,
+        2.75309,
+        2.99321,
+        3.14128,
+        3.43342
+      ],
+      "trough_x_m": [
+        2.58901,
+        2.87315,
+        3.04923,
+        3.19731
+      ],
+      "crest_prominence_m": [
+        0.001565,
+        0.004559,
+        0.006533,
+        0.00489,
+        0.002233
+      ],
+      "trough_prominence_m": [
+        0.004177,
+        0.005614,
+        0.007484,
+        0.002233
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 231,
+      "time_s": 11.55,
+      "residual_peak_to_peak_m": 0.0089145474660971,
+      "residual_rms_m": 0.001560039849644139,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.2783576351288826,
+      "crest_count": 4,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.605015,
+        2.745085,
+        2.9772,
+        3.12527
+      ],
+      "trough_x_m": [
+        2.581,
+        2.869145,
+        3.06124,
+        3.1893
+      ],
+      "crest_prominence_m": [
+        0.001584,
+        0.004536,
+        0.005987,
+        0.004885
+      ],
+      "trough_prominence_m": [
+        0.004536,
+        0.00529,
+        0.008737,
+        0.002956
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 232,
+      "time_s": 11.6,
+      "residual_peak_to_peak_m": 0.008466569686158734,
+      "residual_rms_m": 0.001462233125806111,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.26992609266633133,
+      "crest_count": 4,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.605015,
+        2.68906,
+        2.96119,
+        3.10526
+      ],
+      "trough_x_m": [
+        2.573,
+        2.86514,
+        3.06924,
+        3.173295
+      ],
+      "crest_prominence_m": [
+        0.0022,
+        0.003164,
+        0.004825,
+        0.006353
+      ],
+      "trough_prominence_m": [
+        0.003164,
+        0.004588,
+        0.007514,
+        0.003382
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 233,
+      "time_s": 11.65,
+      "residual_peak_to_peak_m": 0.006758409806211521,
+      "residual_rms_m": 0.0012952022572153984,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.27977185963950557,
+      "crest_count": 7,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.46895,
+        2.605015,
+        2.69306,
+        2.92117,
+        3.09726,
+        3.22532,
+        3.40941
+      ],
+      "trough_x_m": [
+        2.504965,
+        2.64103,
+        2.84113,
+        3.02122,
+        3.1773,
+        3.377395
+      ],
+      "crest_prominence_m": [
+        0.001613,
+        0.002368,
+        0.003604,
+        0.004236,
+        0.006343,
+        0.002274,
+        0.001728
+      ],
+      "trough_prominence_m": [
+        0.004236,
+        0.002368,
+        0.003604,
+        0.005198,
+        0.003031,
+        0.002015
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 234,
+      "time_s": 11.7,
+      "residual_peak_to_peak_m": 0.006191230397494321,
+      "residual_rms_m": 0.0013389372715141574,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.2378472843479479,
+      "crest_count": 6,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.59701,
+        2.69306,
+        2.92517,
+        3.07725,
+        3.21732,
+        3.397405
+      ],
+      "trough_x_m": [
+        2.504965,
+        2.645035,
+        2.76109,
+        3.009215,
+        3.133275,
+        3.377395
+      ],
+      "crest_prominence_m": [
+        0.00304,
+        0.004745,
+        0.005067,
+        0.006146,
+        0.001739,
+        0.003826
+      ],
+      "trough_prominence_m": [
+        0.004153,
+        0.00304,
+        0.004745,
+        0.005343,
+        0.003826,
+        0.001739
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 235,
+      "time_s": 11.75,
+      "residual_peak_to_peak_m": 0.006638491547778014,
+      "residual_rms_m": 0.0014577455174134574,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.25152658724606225,
+      "crest_count": 6,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.59301,
+        2.67705,
+        2.90516,
+        3.08525,
+        3.20531,
+        3.3894
+      ],
+      "trough_x_m": [
+        2.50897,
+        2.64904,
+        2.769095,
+        2.9852,
+        3.13728,
+        3.31737
+      ],
+      "crest_prominence_m": [
+        0.004808,
+        0.002882,
+        0.004973,
+        0.006141,
+        0.002119,
+        0.00471
+      ],
+      "trough_prominence_m": [
+        0.004071,
+        0.002882,
+        0.004808,
+        0.004973,
+        0.00491,
+        0.002119
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 236,
+      "time_s": 11.8,
+      "residual_peak_to_peak_m": 0.006127388444073997,
+      "residual_rms_m": 0.0015130037166496478,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.28762780409264266,
+      "crest_count": 6,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.585005,
+        2.67705,
+        2.90116,
+        3.04123,
+        3.193305,
+        3.37339
+      ],
+      "trough_x_m": [
+        2.49296,
+        2.65704,
+        2.74909,
+        2.96119,
+        3.11727,
+        3.32537
+      ],
+      "crest_prominence_m": [
+        0.005377,
+        0.002743,
+        0.004233,
+        0.005493,
+        0.002278,
+        0.005394
+      ],
+      "trough_prominence_m": [
+        0.003573,
+        0.002743,
+        0.004233,
+        0.005378,
+        0.005736,
+        0.002278
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 237,
+      "time_s": 11.85,
+      "residual_peak_to_peak_m": 0.006896127069839192,
+      "residual_rms_m": 0.00154437630743189,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.2917661303934023,
+      "crest_count": 6,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.573,
+        2.68105,
+        2.81312,
+        3.029225,
+        3.16929,
+        3.36939
+      ],
+      "trough_x_m": [
+        2.49696,
+        2.73308,
+        2.96119,
+        3.12127,
+        3.30136
+      ],
+      "crest_prominence_m": [
+        0.005356,
+        0.001932,
+        0.004297,
+        0.006165,
+        0.004547,
+        0.002287
+      ],
+      "trough_prominence_m": [
+        0.003325,
+        0.004297,
+        0.005707,
+        0.005853,
+        0.002287
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 238,
+      "time_s": 11.9,
+      "residual_peak_to_peak_m": 0.00586947919130483,
+      "residual_rms_m": 0.0014077676406070057,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.340959934675538,
+      "crest_count": 6,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.56099,
+        2.64103,
+        2.7811,
+        3.009215,
+        3.153285,
+        3.35338
+      ],
+      "trough_x_m": [
+        2.48896,
+        2.67305,
+        2.94518,
+        3.10126,
+        3.293355
+      ],
+      "crest_prominence_m": [
+        0.004444,
+        0.001518,
+        0.00517,
+        0.005622,
+        0.003391,
+        0.001804
+      ],
+      "trough_prominence_m": [
+        0.002339,
+        0.004444,
+        0.00541,
+        0.004939,
+        0.001804
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 239,
+      "time_s": 11.95,
+      "residual_peak_to_peak_m": 0.006136820346518815,
+      "residual_rms_m": 0.0012916568291254345,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.35557040516845034,
+      "crest_count": 6,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.53698,
+        2.645035,
+        2.7851,
+        2.99321,
+        3.14128,
+        3.34538
+      ],
+      "trough_x_m": [
+        2.67705,
+        2.909165,
+        3.073245,
+        3.253335
+      ],
+      "crest_prominence_m": [
+        0.003387,
+        0.001509,
+        0.004656,
+        0.005952,
+        0.003374,
+        0.001508
+      ],
+      "trough_prominence_m": [
+        0.004918,
+        0.004656,
+        0.004895,
+        0.001508
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 240,
+      "time_s": 12.0,
+      "residual_peak_to_peak_m": 0.006038346155994925,
+      "residual_rms_m": 0.0013240839852205358,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.321817530880224,
+      "crest_count": 5,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.53698,
+        2.76509,
+        2.9852,
+        3.13728,
+        3.32937
+      ],
+      "trough_x_m": [
+        2.685055,
+        2.889155,
+        3.06524,
+        3.1813
+      ],
+      "crest_prominence_m": [
+        0.002049,
+        0.004823,
+        0.005851,
+        0.004606,
+        0.001825
+      ],
+      "trough_prominence_m": [
+        0.004026,
+        0.004973,
+        0.005413,
+        0.002503
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 241,
+      "time_s": 12.05,
+      "residual_peak_to_peak_m": 0.005217553888928,
+      "residual_rms_m": 0.0012954533756447766,
+      "dominant_wavelength_m": 0.20000000000000018,
+      "dominant_mode_energy_fraction": 0.32942864634300945,
+      "crest_count": 6,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.49696,
+        2.64103,
+        2.73308,
+        2.9772,
+        3.12527,
+        3.40141
+      ],
+      "trough_x_m": [
+        2.585005,
+        2.685055,
+        2.89316,
+        3.03723,
+        3.1853
+      ],
+      "crest_prominence_m": [
+        0.001817,
+        0.0016,
+        0.004625,
+        0.004994,
+        0.004163,
+        0.001961
+      ],
+      "trough_prominence_m": [
+        0.0016,
+        0.003769,
+        0.00492,
+        0.004906,
+        0.002192
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 242,
+      "time_s": 12.1,
+      "residual_peak_to_peak_m": 0.005738816248587117,
+      "residual_rms_m": 0.0012761658807510237,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.3075555098069766,
+      "crest_count": 5,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.48896,
+        2.73308,
+        2.94118,
+        3.10126,
+        3.28135
+      ],
+      "trough_x_m": [
+        2.577,
+        2.84513,
+        3.02122,
+        3.16129
+      ],
+      "crest_prominence_m": [
+        0.001548,
+        0.00435,
+        0.005279,
+        0.003768,
+        0.001522
+      ],
+      "trough_prominence_m": [
+        0.003714,
+        0.004959,
+        0.004878,
+        0.002129
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 243,
+      "time_s": 12.15,
+      "residual_peak_to_peak_m": 0.0064946844180794605,
+      "residual_rms_m": 0.001353053199197727,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.30937935126532984,
+      "crest_count": 4,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.73708,
+        2.93318,
+        3.093255,
+        3.21732
+      ],
+      "trough_x_m": [
+        2.55699,
+        2.80511,
+        3.00121,
+        3.153285,
+        3.32937
+      ],
+      "crest_prominence_m": [
+        0.004315,
+        0.005861,
+        0.004211,
+        0.001823
+      ],
+      "trough_prominence_m": [
+        0.004315,
+        0.004505,
+        0.005462,
+        0.002814,
+        0.001715
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 244,
+      "time_s": 12.2,
+      "residual_peak_to_peak_m": 0.0062069763642543935,
+      "residual_rms_m": 0.0013896414628386696,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.31779460254728303,
+      "crest_count": 4,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.68906,
+        2.91317,
+        3.06524,
+        3.193305
+      ],
+      "trough_x_m": [
+        2.54098,
+        2.64103,
+        2.81712,
+        2.9852,
+        3.14128,
+        3.30136
+      ],
+      "crest_prominence_m": [
+        0.004033,
+        0.005402,
+        0.004361,
+        0.001705
+      ],
+      "trough_prominence_m": [
+        0.004027,
+        0.001597,
+        0.004033,
+        0.005755,
+        0.003271,
+        0.001705
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 245,
+      "time_s": 12.25,
+      "residual_peak_to_peak_m": 0.005683638318604078,
+      "residual_rms_m": 0.00135388466681634,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.308252094432054,
+      "crest_count": 5,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.605015,
+        2.69306,
+        2.90516,
+        3.04923,
+        3.1773
+      ],
+      "trough_x_m": [
+        2.54098,
+        2.64103,
+        2.7851,
+        2.9732,
+        3.12127,
+        3.30536
+      ],
+      "crest_prominence_m": [
+        0.004505,
+        0.001787,
+        0.005117,
+        0.004495,
+        0.002061
+      ],
+      "trough_prominence_m": [
+        0.003366,
+        0.001787,
+        0.004505,
+        0.005515,
+        0.003302,
+        0.002061
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 246,
+      "time_s": 12.3,
+      "residual_peak_to_peak_m": 0.005655761043176638,
+      "residual_rms_m": 0.0012871993094749623,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.3211962688024441,
+      "crest_count": 4,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.59701,
+        2.889155,
+        3.029225,
+        3.16529
+      ],
+      "trough_x_m": [
+        2.524975,
+        2.75709,
+        2.96519,
+        3.10526
+      ],
+      "crest_prominence_m": [
+        0.004457,
+        0.0043,
+        0.004989,
+        0.002224
+      ],
+      "trough_prominence_m": [
+        0.002315,
+        0.0043,
+        0.005248,
+        0.003622
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 247,
+      "time_s": 12.35,
+      "residual_peak_to_peak_m": 0.005385933978272944,
+      "residual_rms_m": 0.0012677007746617654,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.35964157640916583,
+      "crest_count": 5,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.569,
+        2.86514,
+        3.009215,
+        3.15729,
+        3.31737
+      ],
+      "trough_x_m": [
+        2.74909,
+        2.949185,
+        3.09726,
+        3.233325
+      ],
+      "crest_prominence_m": [
+        0.003958,
+        0.004037,
+        0.004857,
+        0.002932,
+        0.002088
+      ],
+      "trough_prominence_m": [
+        0.004037,
+        0.00507,
+        0.003905,
+        0.002088
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 248,
+      "time_s": 12.4,
+      "residual_peak_to_peak_m": 0.005458784627327837,
+      "residual_rms_m": 0.001215615387544158,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.34681349571630543,
+      "crest_count": 5,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.573,
+        2.829125,
+        3.00521,
+        3.14128,
+        3.31737
+      ],
+      "trough_x_m": [
+        2.75309,
+        2.92517,
+        3.073245,
+        3.24133
+      ],
+      "crest_prominence_m": [
+        0.003527,
+        0.003863,
+        0.004866,
+        0.003247,
+        0.002016
+      ],
+      "trough_prominence_m": [
+        0.003863,
+        0.005453,
+        0.003906,
+        0.002016
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 249,
+      "time_s": 12.45,
+      "residual_peak_to_peak_m": 0.005906322987786178,
+      "residual_rms_m": 0.0012172626123353643,
+      "dominant_wavelength_m": 0.142857142857143,
+      "dominant_mode_energy_fraction": 0.3033276240781678,
+      "crest_count": 5,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.55299,
+        2.83713,
+        2.9812,
+        3.12927,
+        3.34938
+      ],
+      "trough_x_m": [
+        2.66905,
+        2.909165,
+        3.05724,
+        3.24533,
+        3.41341
+      ],
+      "crest_prominence_m": [
+        0.002979,
+        0.003508,
+        0.005469,
+        0.003466,
+        0.002046
+      ],
+      "trough_prominence_m": [
+        0.003508,
+        0.005058,
+        0.004246,
+        0.002046,
+        0.002401
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 250,
+      "time_s": 12.5,
+      "residual_peak_to_peak_m": 0.006597562319791098,
+      "residual_rms_m": 0.0012661314078912683,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.2651472139304871,
+      "crest_count": 5,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.53298,
+        2.76109,
+        2.96519,
+        3.10926,
+        3.28535
+      ],
+      "trough_x_m": [
+        2.61702,
+        2.87715,
+        3.03323,
+        3.173295,
+        3.40941
+      ],
+      "crest_prominence_m": [
+        0.002173,
+        0.003083,
+        0.006319,
+        0.002926,
+        0.001655
+      ],
+      "trough_prominence_m": [
+        0.003083,
+        0.005095,
+        0.004862,
+        0.001655,
+        0.002001
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 251,
+      "time_s": 12.55,
+      "residual_peak_to_peak_m": 0.006785065908559221,
+      "residual_rms_m": 0.0012874408213393023,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.26298907640367164,
+      "crest_count": 5,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.51297,
+        2.73308,
+        2.95319,
+        3.10126,
+        3.27735
+      ],
+      "trough_x_m": [
+        2.625025,
+        2.88515,
+        3.03723,
+        3.153285,
+        3.35338
+      ],
+      "crest_prominence_m": [
+        0.001824,
+        0.003269,
+        0.006324,
+        0.003067,
+        0.001586
+      ],
+      "trough_prominence_m": [
+        0.003269,
+        0.005512,
+        0.005011,
+        0.001965,
+        0.001586
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 252,
+      "time_s": 12.6,
+      "residual_peak_to_peak_m": 0.005937054746580642,
+      "residual_rms_m": 0.0012455102432117485,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.27265586970522737,
+      "crest_count": 5,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.50897,
+        2.725075,
+        2.93718,
+        3.08125,
+        3.3934
+      ],
+      "trough_x_m": [
+        2.585005,
+        2.84113,
+        3.01322,
+        3.14128
+      ],
+      "crest_prominence_m": [
+        0.001518,
+        0.003722,
+        0.005437,
+        0.00332,
+        0.002137
+      ],
+      "trough_prominence_m": [
+        0.004235,
+        0.003722,
+        0.004804,
+        0.002677
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 253,
+      "time_s": 12.65,
+      "residual_peak_to_peak_m": 0.0061377672994738786,
+      "residual_rms_m": 0.0012033211077195156,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.29760056881741126,
+      "crest_count": 4,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.71707,
+        2.92517,
+        3.06524,
+        3.36139
+      ],
+      "trough_x_m": [
+        2.56099,
+        2.84513,
+        2.99321,
+        3.12927
+      ],
+      "crest_prominence_m": [
+        0.003927,
+        0.006129,
+        0.003852,
+        0.001926
+      ],
+      "trough_prominence_m": [
+        0.003882,
+        0.004581,
+        0.005229,
+        0.002521
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 254,
+      "time_s": 12.7,
+      "residual_peak_to_peak_m": 0.005535898732641473,
+      "residual_rms_m": 0.0011853987771028578,
+      "dominant_wavelength_m": 0.142857142857143,
+      "dominant_mode_energy_fraction": 0.2785467947241392,
+      "crest_count": 5,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.67305,
+        2.90116,
+        3.04523,
+        3.16929,
+        3.36139
+      ],
+      "trough_x_m": [
+        2.56099,
+        2.849135,
+        2.9772,
+        3.113265,
+        3.27735,
+        3.40541
+      ],
+      "crest_prominence_m": [
+        0.003391,
+        0.005124,
+        0.004038,
+        0.001517,
+        0.003047
+      ],
+      "trough_prominence_m": [
+        0.004011,
+        0.003391,
+        0.005154,
+        0.003047,
+        0.001517,
+        0.001891
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 255,
+      "time_s": 12.75,
+      "residual_peak_to_peak_m": 0.005060163281243091,
+      "residual_rms_m": 0.001100859130936034,
+      "dominant_wavelength_m": 0.142857142857143,
+      "dominant_mode_energy_fraction": 0.24587820694090212,
+      "crest_count": 5,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.625025,
+        2.909165,
+        3.04523,
+        3.16129,
+        3.34138
+      ],
+      "trough_x_m": [
+        2.54098,
+        2.789105,
+        2.96519,
+        3.10126,
+        3.26534,
+        3.40141
+      ],
+      "crest_prominence_m": [
+        0.00286,
+        0.004352,
+        0.004187,
+        0.00173,
+        0.00283
+      ],
+      "trough_prominence_m": [
+        0.002788,
+        0.00286,
+        0.004892,
+        0.00283,
+        0.00173,
+        0.002766
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 256,
+      "time_s": 12.8,
+      "residual_peak_to_peak_m": 0.005125684683685364,
+      "residual_rms_m": 0.0010795033041803397,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.289859636188743,
+      "crest_count": 5,
+      "trough_count": 6,
+      "crest_x_m": [
+        2.59301,
+        2.889155,
+        3.01722,
+        3.14128,
+        3.32937
+      ],
+      "trough_x_m": [
+        2.544985,
+        2.74909,
+        2.93718,
+        3.08525,
+        3.253335,
+        3.37339
+      ],
+      "crest_prominence_m": [
+        0.003045,
+        0.003517,
+        0.004288,
+        0.001968,
+        0.002353
+      ],
+      "trough_prominence_m": [
+        0.001722,
+        0.003045,
+        0.004478,
+        0.003036,
+        0.001968,
+        0.001817
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 257,
+      "time_s": 12.85,
+      "residual_peak_to_peak_m": 0.006138665641521379,
+      "residual_rms_m": 0.0012228064080532757,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.3371402719672184,
+      "crest_count": 5,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.59301,
+        2.84513,
+        2.99321,
+        3.133275,
+        3.31737
+      ],
+      "trough_x_m": [
+        2.725075,
+        2.94518,
+        3.07725,
+        3.23733,
+        3.36939
+      ],
+      "crest_prominence_m": [
+        0.003821,
+        0.00439,
+        0.005166,
+        0.002203,
+        0.001726
+      ],
+      "trough_prominence_m": [
+        0.003821,
+        0.005747,
+        0.003728,
+        0.001726,
+        0.001639
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 258,
+      "time_s": 12.9,
+      "residual_peak_to_peak_m": 0.0059448583420620565,
+      "residual_rms_m": 0.0012888841146964332,
+      "dominant_wavelength_m": 0.16666666666666682,
+      "dominant_mode_energy_fraction": 0.33279210361589945,
+      "crest_count": 4,
+      "trough_count": 5,
+      "crest_x_m": [
+        2.569,
+        2.849135,
+        2.9852,
+        3.12127
+      ],
+      "trough_x_m": [
+        2.47295,
+        2.72908,
+        2.89716,
+        3.05724,
+        3.34138
+      ],
+      "crest_prominence_m": [
+        0.004788,
+        0.004044,
+        0.005309,
+        0.00225
+      ],
+      "trough_prominence_m": [
+        0.001595,
+        0.004044,
+        0.004788,
+        0.003538,
+        0.00163
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 259,
+      "time_s": 12.95,
+      "residual_peak_to_peak_m": 0.006439220637656826,
+      "residual_rms_m": 0.001303144412015162,
+      "dominant_wavelength_m": 0.142857142857143,
+      "dominant_mode_energy_fraction": 0.28804036931674976,
+      "crest_count": 5,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.54098,
+        2.81712,
+        2.9732,
+        3.10926,
+        3.357385
+      ],
+      "trough_x_m": [
+        2.705065,
+        2.90516,
+        3.04923,
+        3.32537
+      ],
+      "crest_prominence_m": [
+        0.005321,
+        0.00379,
+        0.005161,
+        0.002368,
+        0.001848
+      ],
+      "trough_prominence_m": [
+        0.00379,
+        0.005856,
+        0.003467,
+        0.001881
+      ],
+      "wave_detected": true
+    },
+    {
+      "index": 260,
+      "time_s": 13.0,
+      "residual_peak_to_peak_m": 0.006866793093909085,
+      "residual_rms_m": 0.0013326795685854322,
+      "dominant_wavelength_m": 0.142857142857143,
+      "dominant_mode_energy_fraction": 0.29104413528889966,
+      "crest_count": 5,
+      "trough_count": 4,
+      "crest_x_m": [
+        2.544985,
+        2.76109,
+        2.96519,
+        3.08925,
+        3.35338
+      ],
+      "trough_x_m": [
+        2.71307,
+        2.889155,
+        3.01722,
+        3.313365
+      ],
+      "crest_prominence_m": [
+        0.004752,
+        0.002843,
+        0.005523,
+        0.002764,
+        0.002202
+      ],
+      "trough_prominence_m": [
+        0.002843,
+        0.006273,
+        0.003816,
+        0.002202
+      ],
+      "wave_detected": true
+    }
+  ]
+}
